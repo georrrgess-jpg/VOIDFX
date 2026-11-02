@@ -188,9 +188,26 @@ def main():
     place(fx, buzz(9 / E.FPS, [0, 0, .35, .05, .9, .45, 1, .6, .2], -33), g1)
     # title slam, riser, drop
     place(fx, impact(-17, (90, 45), 0.35, 0.25, 31), T(E.TITLE["e_in"]))
-    rz = riser(E.te(E.DROP_E) - E.te(28), -16)
+    rz = riser(E.te(E.DROP_E) - E.te(28), -19)
     place(fx, rz, d0 - len(rz))
     place(fx, impact(-7, (70, 36), 0.9, 0.45, 3), d0)
+    # blood pour: low rumble + bubbling liquid noise swelling under the curtain, then a downward splash on the reveal
+    p0 = T(30.6); n = d0 - p0
+    t = np.arange(n) / SR; u = t / t[-1]
+    liq = bq(noise(n, 300), "band", np.array([180, 1400]), 2)
+    am = 0.65 + 0.35 * np.abs(np.sin(2 * np.pi * (9 + 5 * u) * t + 3 * np.sin(2 * np.pi * 3.1 * t)))
+    rum = np.sin(2 * np.pi * np.cumsum(38 + 14 * u) / SR) * 0.8
+    pour = (liq * am / (np.abs(liq).max() + 1e-9) + rum * 0.5) * (u ** 1.3)
+    pour = pour / (np.abs(pour).max() + 1e-9) * db(-19)
+    place(fx, np.stack([pour * 0.95, pour], 1), p0)
+    place(fx, whoosh(0.32, -22, 33, False), d0 + int(0.03 * SR))
+    # word thuds (NIGHT heavier)
+    for w_, e_ in E.WORDS:
+        place(fx, impact(-15 if w_ == "NIGHT" else -19, (95, 48), 0.22, 0.45, 50 + e_), T(e_))
+    place(fx, whoosh(0.26, -24, 71, True), T(51.45))
+    # two-clip transitions
+    for kind, e_ in E.TRANS2:
+        place(fx, whoosh(0.28 if kind == "slices" else 0.40, -24, 80 + e_, kind == "slices"), T(e_) - int(0.12 * SR))
     place(fx, bq(glitch_burst(0.15, -25, 4), "low", 7000, 2), 0)                                 # flash-forward hook
     # whip whoosh, glitches, panel slams
     place(fx, whoosh(0.30, -21, 7, True), T(38) - int(0.17 * SR))
@@ -214,6 +231,10 @@ def main():
     lg0 = T(E.BANG_E) + f2s(6)
     place(fx, whoosh(0.34, -24, 17, False), lg0 - int(0.05 * SR))
     place(fx, np.stack([shimmer(1.9, -29)] * 2, 1) * np.array([0.8, 1.0]), T(E.BANG_E) + f2s(24))
+    for j, kf in enumerate((22 + 30, 22 + 44)):                               # drips off the logo
+        n = int(0.18 * SR); tt = np.arange(n) / SR
+        pl = np.sin(2 * np.pi * np.cumsum(1500 * np.exp(-tt / 0.03) + 420) / SR) * env_exp(n, 0.05, 0.001)
+        place(fx, np.stack([pl * (0.9 - 0.3 * j), pl * (0.6 + 0.3 * j)], 1) * db(-30), T(E.BANG_E) + f2s(kf))
     fx = np.tanh(fx * 1.4) / 1.4                                          # soft-saturate the fx bus so hits stay smooth
     # duck the music 2.5 dB under the two biggest impacts (drop, bang) for 120 ms
     duck = np.ones(N, np.float32)

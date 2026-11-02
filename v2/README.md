@@ -131,10 +131,42 @@ Fixes made during review:
   - Loudness: −13.0 LUFS with true peak −2.6 dBTP.
   - Cuts: 24 of 27 re-detected on their exact frames; the other three are deliberately hidden (light-on, whip pan, zoom-through).
 
+
+## Revision 3 (final)
+
+- **Blood transition into the drop (8.7–9.6 s):**
+  - DEXTER is now liquid blood, with gloss, bevel, shadow and a red glow; its drips grow and droplets break off.
+  - At 8.9 s the drips surge and become a full-screen pour: about 30 streams widen until the frame is solid, flowing blood.
+  - On the drop the curtain falls away under gravity, its jagged edge revealing the comic-ink hood shot.
+  - Splatters land just after the reveal.
+  - Sound: a bubbling pour and rumble build under the riser, then a downward splash on the reveal.
+- **TONIGHT'S THE NIGHT:**
+  - The words now stack instead of replacing each other.
+  - Each word has a sticker outline, an ink stroke, a 3D extrusion and a halftone drop shadow. A comic starburst slams in behind each one.
+  - Earlier words get knocked when a new one lands.
+  - NIGHT is liquid red and drips.
+  - All three blast out toward the camera before the next cut.
+  - Each word has its own thud (NIGHT heaviest), plus an exit whoosh.
+- **New transitions:**
+  - A comic-strip slice slam (alternating panel strips, 13.4 s).
+  - An ink bleed, where the next shot spreads in through the darkest ink first (18.1 s).
+  - Both have their own whooshes.
+- **Polish:**
+  - The comic page has a halftone background and panel drop shadows.
+  - The voidfx logo outro gets two blood drips with droplet "plinks".
+  - The drop's white flash is reduced, so the blood reveal carries the moment.
+- **9:16 vertical version** (`out_final_9x16/`):
+  - Every shot is reframed separately for vertical and checked at start and end.
+  - The comic page becomes four stacked panels.
+  - Title, words, name card, splatters and watermark are laid out for vertical, with the watermark above TikTok's caption area.
+- **QC (both versions):**
+  - Picture: 1,541 frames, 60 fps, 25.683 s, full decode with no errors, no frozen runs.
+  - Loudness: −13.0 LUFS with true peak −2.3 dBTP.
+
 ## Limitations
 
 - **I can't watch or listen.** Everything was checked frame by frame and by measurement. Watch once at normal speed with sound before posting.
 - **The "4K" packs are 1280×720** (upscaled 1.5× to 1080p), so close-ups are soft. The ink look hides most of this.
 - **Pack 3 is 24 fps**, so its normal-speed shots keep 24p cadence. The eyes-up close-up is optical-flow interpolated.
 - **No vocals.** The reference's audio and the supplied MP3 match closely spectrally, and I found no vocal layer to replicate. None were added.
-- **16:9 horizontal**, like the reference (3:2 horizontal). TikTok shows it letterboxed. A 9:16 version would need a separate reframe.
+- **Vertical framing:** the 9:16 version crops each 16:9 shot, so some wide moments (the comic page, crowd shots) are tighter than in the horizontal cut.

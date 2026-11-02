@@ -168,6 +168,10 @@ def camera(c, f, u, ow, oh):
         z *= 1 + b * math.exp(-k / 4.5)
         sgn = 1 if (CLIPS.index(c) if c in CLIPS else 0) % 2 else -1
         rot = sgn * 1.8 * math.exp(-k / 6.0)
+    if E.ORIENT == "v" and c in CLIPS:
+        vx = E.VX.get(c["name"])
+        if vx: cx = vx[0] + (vx[1] - vx[0]) * smooth(u)
+        z = 1 + (z - 1) * 0.45
     if c.get("look") == "mono" and f < E.fe(E.DROP_E):                  # intro: camera breathes on each beat
         kb = (f - E.fe(2 * math.floor(f / (2 * E.E * FPS)))) 
         z *= 1 + 0.014 * math.exp(-max(0, kb) / 6.0)
@@ -362,8 +366,8 @@ def draw_namecard(out, f):
     a = 1.0
     k = f - f_out
     lay1 = text_rgba(l1, FONT_SB, 60, tracking=7, shadow=4) if l1.strip() else None
-    lay2 = text_rgba(l2, FONT_MONO, 29, fill=(215, 215, 215), tracking=3, shadow=3) if l2.strip() else None
-    x0, y1, y2 = 150, 772, 852
+    lay2 = text_rgba(l2, FONT_MONO, 29 if E.ORIENT == "h" else 23, fill=(215, 215, 215), tracking=3 if E.ORIENT == "h" else 2, shadow=3) if l2.strip() else None
+    x0, y1, y2 = E.LAYOUT["namecard"]
     if k >= 0:                                                            # glitch out
         a = clamp(1 - k / 10, 0, 1)
         x0 += int((k % 3 - 1) * 26 * (k / 10 + 0.3))
@@ -373,95 +377,226 @@ def draw_namecard(out, f):
     if lay2 is not None: out = paste_rgba(out, lay2, x0 - 7, y2, a)
     return out
 
-# ---- DEXTER title with growing blood drips
+# ---- liquid blood shading (gloss + bevel + edge darkening) for any mask
+def liquid(mask, sigma=5.0, spec=0.6, lift=0.0):
+    b = cv2.GaussianBlur(mask, (0, 0), sigma)
+    gx = cv2.Sobel(b, cv2.CV_32F, 1, 0, ksize=3); gy = cv2.Sobel(b, cv2.CV_32F, 0, 1, ksize=3)
+    d = -(gx * -0.45 + gy * -0.85) * (sigma * 1.6)            # light from upper-left
+    shade = np.clip(0.74 + 1.6 * d, 0.42, 1.18) + lift
+    sp = np.clip(d * 5.0 - 0.55, 0, 1) ** 4.0 * spec
+    inner = cv2.GaussianBlur(cv2.erode(mask, np.ones((5, 5), np.uint8)), (0, 0), sigma * 0.8)
+    shade = shade * (0.70 + 0.30 * inner)
+    col = RED[None, None, :] * shade[..., None] + sp[..., None] * np.array([0.78, 0.80, 0.95], np.float32)
+    return np.clip(col, 0, 1)
+
+def make_drips(al, n, seed, lmin=30, lmax=220, wmin=5, wmax=13):
+    rng = np.random.default_rng(seed)
+    cols = np.where((al > 200).any(0))[0]
+    bottoms = {x: np.max(np.where(al[:, x] > 200)[0]) for x in cols}
+    out = []
+    for x in sorted(rng.choice(cols, n, replace=False)):
+        out.append(dict(x=int(x), y=int(bottoms[x]) - 6, w=int(rng.integers(wmin, wmax)), L=int(rng.integers(lmin, lmax)),
+                        d=float(rng.uniform(0, 14)), dur=float(rng.uniform(26, 60)), drop=bool(rng.random() < 0.3)))
+    return out
+
+def draw_drips(m, drips, k, speed=1.0, extra=0.0):
+    """grow drips (neck + bulb) on uint8 mask m; detached droplets fall with gravity."""
+    for d in drips:
+        L = int(d["L"] * (ease_out((k * speed - d["d"]) / d["dur"], 2) + extra))
+        if L > 2:
+            x, y, w = d["x"], d["y"], d["w"]
+            neck = max(2, int(w * 0.75))
+            cv2.line(m, (x, y), (x, y + L), 255, neck, cv2.LINE_AA)
+            cv2.circle(m, (x, y + L), int(w * 0.8) + 1, 255, -1, cv2.LINE_AA)
+            cv2.circle(m, (x, y + 2), int(w * 1.1), 255, -1, cv2.LINE_AA)
+            tf = k * speed - (d["d"] + d["dur"] * 0.8)
+            if d["drop"] and tf > 0:                                   # a droplet breaks off and falls
+                yy = int(y + L + 14 + 0.9 * tf * tf)
+                if yy < m.shape[0] - 10: cv2.ellipse(m, (x, yy), (int(w * 0.6) + 1, int(w * 0.9) + 1), 0, 0, 360, 255, -1, cv2.LINE_AA)
+    return m
+
 _TITLE = {}
 def title_base():
     if "base" not in _TITLE:
         lay = text_rgba(E.TITLE["text"], FONT_BLACK, 250, tracking=16)
-        al = lay[..., 3]
-        hgt, wdt = al.shape
-        pad = 260
+        al = lay[..., 3]; hgt, wdt = al.shape; pad = 700
         mask = np.zeros((hgt + pad, wdt), np.uint8); mask[:hgt] = al
-        rng = np.random.default_rng(5)
-        cols = np.where((al > 200).any(0))[0]
-        bottoms = {x: np.max(np.where(al[:, x] > 200)[0]) for x in cols}
-        drips = []
-        xs = rng.choice(cols, 20, replace=False)
-        for x in sorted(xs):
-            drips.append(dict(x=int(x), y=int(bottoms[x]) - 6, w=int(rng.integers(5, 13)), L=int(rng.integers(30, 220)),
-                              d=float(rng.uniform(0, 14)), dur=float(rng.uniform(26, 60))))
-        _TITLE.update(base=mask, drips=drips, w=wdt, h=hgt + pad)
-        grit = cv2.GaussianBlur(rng.standard_normal((hgt + pad, wdt)).astype(np.float32), (0, 0), 1.5)
-        _TITLE["grit"] = grit
+        _TITLE.update(base=mask, drips=make_drips(al, 22, 5), w=wdt, h=hgt + pad, th=hgt)
     return _TITLE
 
-def title_rgba(k):
-    """k = frames since title in."""
+def title_rgba(k, f):
     T = title_base(); m = T["base"].copy()
-    for d in T["drips"]:
-        L = int(d["L"] * ease_out((k - d["d"]) / d["dur"], 2))
-        if L > 2:
-            cv2.line(m, (d["x"], d["y"]), (d["x"], d["y"] + L), 255, d["w"], cv2.LINE_AA)
-            cv2.circle(m, (d["x"], d["y"] + L), int(d["w"] * 0.75) + 1, 255, -1, cv2.LINE_AA)
+    surge = 0.0
+    f_pour = E.fe(30.6)
+    if f >= f_pour:                                                     # drips surge as the blood starts to pour
+        surge = 1.6 * ease_in((f - f_pour) / (E.fe(32) - f_pour), 1.5)
+    m = draw_drips(m, T["drips"], k, 1.0, surge)
     a = m.astype(np.float32) / 255
-    er = cv2.erode(m, np.ones((7, 7), np.uint8)).astype(np.float32) / 255
-    edge = np.clip(a - cv2.GaussianBlur(er, (0, 0), 3), 0, 1)
-    shade = 0.78 + 0.22 * np.clip(0.5 + T["grit"] * 0.5, 0, 1) - 0.35 * edge
-    col = np.stack([RED[0] * shade, RED[1] * shade, RED[2] * shade, a], -1)
-    hl = np.clip(cv2.GaussianBlur(er, (0, 0), 2) - cv2.GaussianBlur(np.roll(er, 4, axis=0), (0, 0), 2), 0, 1)
-    col[..., :3] += hl[..., None] * np.array([0.10, 0.10, 0.20], np.float32)
-    return np.clip(col, 0, 1)
+    col = liquid(a, 4.0, 0.7)
+    return np.dstack([col, a])
 
 def draw_title(out, f):
     f_in, f_drop = E.fe(E.TITLE["e_in"]), E.fe(E.TITLE["e_drop"])
-    if not (f_in <= f < f_drop + 6): return out
+    if not (f_in <= f < f_drop): return out
     k = f - f_in
-    rgba = title_rgba(k)
-    hgt, wdt = rgba.shape[:2]
-    sc = 1 + 0.28 * math.exp(-k / 3.0)
-    if sc > 1.001:
-        rgba = cv2.resize(rgba, (int(wdt * sc), int(hgt * sc)), interpolation=cv2.INTER_LINEAR)
-    cx, cy = W // 2, 742
+    cx, cy, tsc = E.LAYOUT["title"]
+    rgba = title_rgba(k, f)
+    sc = tsc * (1 + 0.28 * math.exp(-k / 3.0))
+    rgba = cv2.resize(rgba, (int(rgba.shape[1] * sc), int(rgba.shape[0] * sc)), interpolation=cv2.INTER_AREA if sc < 1 else cv2.INTER_LINEAR)
     jx = jy = 0
     f30 = E.fe(30)
-    if f >= f30 and f < f_drop:
+    if f >= f30:
         amp = 9 * ease_in((f - f30) / (f_drop - f30), 2)
         jx, jy = amp * math.sin(f * 2.7), amp * 0.6 * math.sin(f * 3.9)
-    x0 = int(cx - rgba.shape[1] / 2 + jx); y0 = int(cy - int(250 * 1.35 * sc) / 2 + jy)
-    if f >= f_drop:
-        kk = f - f_drop; a = clamp(1 - kk / 5, 0, 1)
-        nb = 7; hh = rgba.shape[0] // nb
-        for i in range(nb):
-            sl = rgba[i * hh:(i + 1) * hh]
-            dx = int((1 if i % 2 else -1) * (kk ** 1.5) * 110 * (1 + 0.3 * i))
-            out = paste_rgba(out, sl, x0 + dx, y0 + i * hh, a)
-        return out
-    out = paste_rgba(out, rgba, x0, y0, clamp(k / 2, 0, 1))
+    x0 = int(cx - rgba.shape[1] / 2 + jx); y0 = int(cy - _TITLE["th"] * sc / 2 + jy)
+    a = clamp(k / 2, 0, 1)
+    sh = np.zeros_like(rgba); sh[..., 3] = cv2.GaussianBlur(rgba[..., 3], (0, 0), 9) * 0.75
+    out = paste_rgba(out, sh, x0 + int(10 * sc), y0 + int(14 * sc), a)              # soft drop shadow
+    glow = np.zeros_like(rgba); glow[..., :3] = RED; glow[..., 3] = cv2.GaussianBlur(rgba[..., 3], (0, 0), 26) * 0.35
+    out = paste_rgba(out, glow, x0, y0, a)
+    out = paste_rgba(out, rgba, x0, y0, a)
     if f >= f30:
-        d = 6 * ease_in((f - f30) / (f_drop - f30), 2)
-        out = rgb_split(out, d)
+        out = rgb_split(out, 5 * ease_in((f - f30) / (f_drop - f30), 2))
     return out
 
-# ---- kinetic words
+# ---- the blood curtain: pours down over everything, then falls away to reveal the drop
+_CUR = {}
+def curtain_params():
+    if not _CUR:
+        rng = np.random.default_rng(77); N = 30 if E.ORIENT == "h" else 18
+        st = []
+        for i in range(N):
+            st.append(dict(x=(i + 0.5) * W / N + rng.uniform(-0.3, 0.3) * W / N, w=W / N * rng.uniform(0.7, 1.4),
+                           d=rng.uniform(0, 0.38), sp=rng.uniform(0.95, 1.3)))
+        xs = np.arange(W, dtype=np.float32); tg = np.zeros(W, np.float32)
+        for _ in range(16 if E.ORIENT == "h" else 10):
+            xj = rng.uniform(0, W); wj = rng.uniform(14, 46); Lj = rng.uniform(60, 240)
+            tg = np.maximum(tg, Lj * np.sqrt(np.clip(1 - ((xs - xj) / wj) ** 2, 0, 1)))
+        _CUR.update(st=st, tongue=tg, xs=xs)
+    return _CUR
+
+def draw_blood(out, f):
+    fp0, fd = E.fe(30.6), E.fe(32)
+    if not (fp0 <= f < fd + 18): return out
+    C = curtain_params()
+    if f < fd:
+        u = (f - fp0) / (fd - fp0)
+        m = np.zeros((H // 2, W // 2), np.uint8)
+        for s_ in C["st"]:
+            v = clamp((u - s_["d"]) / (1 - s_["d"]), 0, 1)
+            front = (H + 160) * ease_in(v, 1.5) * s_["sp"] / 2
+            wd = s_["w"] * (0.30 + 1.35 * ease_in(v, 2.2)) / 2
+            if front > 1:
+                x = s_["x"] / 2
+                cv2.rectangle(m, (int(x - wd / 2), 0), (int(x + wd / 2), int(front)), 255, -1)
+                cv2.circle(m, (int(x), int(front)), int(wd * 0.62) + 1, 255, -1, cv2.LINE_AA)
+        mask = cv2.resize(m, (W, H), interpolation=cv2.INTER_LINEAR).astype(np.float32) / 255
+        if u > 0.86: mask = np.maximum(mask, (u - 0.86) / 0.14)
+    else:
+        k = f - fd; v = k / 17.0
+        ytop = (H + 320) * ease_in(v, 2.0) - C["tongue"] * (1 - 0.4 * v) - 16 * np.sin(C["xs"] / 85 + k * 0.4)
+        yy = np.arange(H, dtype=np.float32)[:, None]
+        mask = np.clip((yy - ytop[None, :]) / 2.0, 0, 1)
+    mask = cv2.GaussianBlur(mask.astype(np.float32), (0, 0), 1.0)
+    col = liquid(mask, 7.0, 0.45)
+    if "streak" not in _CUR:                                              # vertical flow streaks + depth gradient
+        rng = np.random.default_rng(5)
+        n1 = cv2.resize(rng.standard_normal((6, W // 6)).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC)
+        n2 = cv2.resize(rng.standard_normal((24, W // 3)).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC)
+        _CUR["streak"] = (0.06 * n1 + 0.03 * n2)
+        _CUR["grad"] = np.linspace(1.04, 0.72, H, dtype=np.float32)[:, None]
+    off = int((f - E.fe(30.6)) * 9) % H
+    tex = 1 + np.roll(_CUR["streak"], off, axis=0)
+    col = np.clip(col * (tex * _CUR["grad"])[..., None], 0, 1)
+    hl = np.clip(np.roll(_CUR["streak"], off, axis=0) * 6 - 0.32, 0, 1) ** 2 * 0.10      # glossy sheen bands
+    col = np.clip(col + hl[..., None] * np.array([0.6, 0.6, 0.8], np.float32), 0, 1)
+    return out * (1 - mask[..., None]) + col * mask[..., None]
+
+# ---- TONIGHT'S THE NIGHT: extruded comic lettering that builds up, then blasts out
+_WORD = {}
+def word_art(w, size):
+    if (w, size) in _WORD: return _WORD[(w, size)]
+    fnt = font(FONT_BLACK, size)
+    tw = int(fnt.getlength(w) + 4 * len(w)) + 160; th = int(size * 1.4) + 160
+    def mask(stroke, dx=0, dy=0):
+        im = Image.new("L", (tw, th), 0); d = ImageDraw.Draw(im); x = 60 + dx
+        for ch in w:
+            d.text((x, 50 + dy), ch, font=fnt, fill=255, stroke_width=stroke, stroke_fill=255); x += fnt.getlength(ch) + 4
+        return np.asarray(im).astype(np.float32) / 255
+    fill = mask(0); s7 = mask(7); s16 = mask(16)
+    ext = np.zeros_like(fill)
+    for d_ in range(1, 15): ext = np.maximum(ext, np.roll(np.roll(s7, d_, 0), d_, 1))
+    hs = np.roll(np.roll(s16, 30, 0), 26, 1)
+    yy, xx = np.mgrid[0:th, 0:tw].astype(np.float32)
+    dots = (0.5 + 0.25 * (np.cos(2 * np.pi * (xx + yy) / 1.414 / 9) + np.cos(2 * np.pi * (xx - yy) / 1.414 / 9))) > 0.5
+    art = dict(fill=fill, s7=s7, s16=s16, ext=ext, hs=hs * dots, w=tw, h=th)
+    if w == "NIGHT": art["drips"] = make_drips((fill * 255).astype(np.uint8), 9, 12, 20, 120, 6, 12)
+    _WORD[(w, size)] = art
+    return art
+
+def word_rgba(w, size, k):
+    A = word_art(w, size); th, tw = A["h"], A["w"]
+    col = np.zeros((th, tw, 3), np.float32); al = np.zeros((th, tw), np.float32)
+    def lay(m, c, a=1.0):
+        nonlocal col, al
+        m = m * a; col = col * (1 - m[..., None]) + np.array(c, np.float32) * m[..., None]; al = np.maximum(al, m)
+    lay(A["hs"], (0.02, 0.02, 0.02), 0.9)                                 # halftone drop shadow
+    lay(A["s16"], (0.97, 0.97, 0.96))                                     # sticker outline
+    lay(A["ext"], (0.05, 0.05, 0.07) if w != "NIGHT" else (0.04, 0.03, 0.20))   # 3D extrusion
+    lay(A["s7"], (0.02, 0.02, 0.02))                                      # ink stroke
+    if w == "NIGHT":
+        m = (A["fill"] * 255).astype(np.uint8); m = draw_drips(m, A["drips"], k, 1.6)
+        mf = m.astype(np.float32) / 255
+        face = liquid(mf, 3.0, 0.8, 0.08)
+        col = col * (1 - mf[..., None]) + face * mf[..., None]; al = np.maximum(al, mf)
+    else:
+        g = np.linspace(1.0, 0.80, th, dtype=np.float32)[:, None, None] * np.array([0.97, 0.97, 0.95], np.float32)
+        col = col * (1 - A["fill"][..., None]) + g * A["fill"][..., None]
+        hl = np.clip(A["fill"] - np.roll(A["fill"], 5, 0), 0, 1)      # top-edge highlight
+        col = np.clip(col + hl[..., None] * 0.04, 0, 1)
+    return np.dstack([col, al])
+
+def starburst(out, cx, cy, R, k, seed):
+    if k >= 6: return out
+    rng = np.random.default_rng(seed); n = 18
+    ang = np.linspace(0, 2 * np.pi, 2 * n, endpoint=False) + rng.uniform(0, 0.3)
+    rr = np.where(np.arange(2 * n) % 2 == 0, 1.0, 0.58) * R * (0.85 + 0.35 * ease_out(k / 4)) * rng.uniform(0.9, 1.1, 2 * n)
+    pts = np.stack([cx + rr * np.cos(ang), cy + rr * 0.62 * np.sin(ang)], 1).astype(np.int32)
+    m = np.zeros((H, W), np.uint8); cv2.fillPoly(m, [pts], 255, cv2.LINE_AA)
+    a = (1 - k / 6) * 0.9
+    mm = m.astype(np.float32)[..., None] / 255 * a
+    edge = cv2.morphologyEx(m, cv2.MORPH_GRADIENT, np.ones((7, 7), np.uint8)).astype(np.float32)[..., None] / 255 * a
+    return (out * (1 - mm) + 0.95 * mm) * (1 - edge) + 0.02 * edge
+
 def draw_words(out, f):
-    ws = E.WORDS
+    ws = E.WORDS; fend = E.fe(52); fexit = E.fe(51.45)
     for i, (w, e) in enumerate(ws):
-        fw = E.fe(e); fend = E.fe(ws[i + 1][1]) if i + 1 < len(ws) else E.fe(52)
-        if fw <= f < fend:
-            k = f - fw
-            red = (w == "NIGHT")
-            size = {"TONIGHT'S": 250, "THE": 330, "NIGHT": 350}[w]
-            lay = text_rgba(w, FONT_BLACK, size, fill=(178, 18, 26) if red else (245, 243, 238), stroke=9,
-                            stroke_fill=(5, 5, 5), tracking=4).astype(np.float32) / 255
-            sc = 1 + 0.42 * math.exp(-k / 2.3)
-            if abs(sc - 1) > 0.002:
-                lay = cv2.resize(lay, (int(lay.shape[1] * sc), int(lay.shape[0] * sc)), interpolation=cv2.INTER_LINEAR)
-            if k < 4: lay = hblur(lay, 30 * (1 - k / 4))
-            rot = -4.0 + 1.5 * (1 - math.exp(-k / 6))
-            M = cv2.getRotationMatrix2D((lay.shape[1] / 2, lay.shape[0] / 2), rot, 1.0)
-            lay = cv2.warpAffine(lay, M, (lay.shape[1], lay.shape[0]), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
-            cx, cy = {"TONIGHT'S": (1010, 600), "THE": (1290, 610), "NIGHT": (1080, 640)}[w]
-            out = paste_rgba(out, lay, int(cx - lay.shape[1] / 2), int(cy - lay.shape[0] / 2), clamp(k / 1.5 + 0.34, 0, 1))
+        fw = E.fe(e)
+        if not (fw <= f < fend): continue
+        k = f - fw
+        cx, cy, size = E.LAYOUT["words"][w]
+        if k < 6: out = starburst(out, cx, cy, size * (2.3 if len(w) > 3 else 1.5), k, 40 + i)
+    for i, (w, e) in enumerate(ws):
+        fw = E.fe(e)
+        if not (fw <= f < fend): continue
+        k = f - fw
+        cx, cy, size = E.LAYOUT["words"][w]
+        lay = word_rgba(w, size, k)
+        sc = 1 + 0.42 * math.exp(-k / 2.3)
+        a = clamp(k / 1.5 + 0.34, 0, 1)
+        if f >= fexit:                                                    # blast out toward the camera
+            v = (f - fexit) / (fend - fexit); sc *= 1 + 0.9 * ease_in(v, 2); a *= 1 - ease_in(v, 1.5)
+        jx = jy = 0.0
+        for j, (w2, e2) in enumerate(ws):                                 # knock when a later word lands
+            if j > i and f >= E.fe(e2):
+                kk = f - E.fe(e2); jx += 14 * math.exp(-kk / 3) * math.sin(kk * 2.3); jy += 9 * math.exp(-kk / 3) * math.cos(kk * 3.1)
+        if abs(sc - 1) > 0.002:
+            lay = cv2.resize(lay, (int(lay.shape[1] * sc), int(lay.shape[0] * sc)), interpolation=cv2.INTER_LINEAR)
+        if k < 4: lay = hblur(lay, 30 * (1 - k / 4))
+        rot = [-5.0, 3.0, -2.0][i] + 1.5 * math.exp(-k / 5)
+        M = cv2.getRotationMatrix2D((lay.shape[1] / 2, lay.shape[0] / 2), rot, 1.0)
+        lay = cv2.warpAffine(lay, M, (lay.shape[1], lay.shape[0]), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
+        out = paste_rgba(out, lay, int(cx - lay.shape[1] / 2 + jx), int(cy - lay.shape[0] / 2 + jy), a)
     return out
 
 # ---- comic speed lines
@@ -539,6 +674,40 @@ def transition(out, f):
             return blur_xform(out, 1 + 0.18 * u0 * u0, 1 + 0.18 * u1 * u1, rs * u0 * u0, rs * u1 * u1)
     return out
 
+def transition2(out, f, c):
+    for kind, e in E.TRANS2:
+        fc = E.fe(e); k = f - fc
+        if not (0 <= k < 9): continue
+        outc = [x for x in CLIPS if x["f1"] == fc][0]
+        A = clip_fx(render_clip(outc, outc["f1"] - 1, extra_shake=False), outc, outc["f1"] - 1)
+        if kind == "slices":                                              # comic panel strips slam in, alternating
+            n = 5; res = A * 0.55
+            span = W if E.ORIENT == "h" else H
+            for i in range(n):
+                v = ease_out(clamp((k - i * 0.9) / 5.0, 0, 1), 3)
+                if v <= 0: continue
+                sgn = 1 if i % 2 else -1
+                if E.ORIENT == "h":
+                    x0, x1 = int(i * W / n), int((i + 1) * W / n); dy = int(sgn * (1 - v) * H)
+                    band = np.roll(out[:, x0:x1], dy, axis=0)
+                    if dy > 0: band[:dy] = res[:dy, x0:x1]
+                    elif dy < 0: band[dy:] = res[dy:, x0:x1]
+                    res[:, x0:x1] = band; res[:, max(0, x0 - 3):x0 + 3] = 0.95
+                else:
+                    y0, y1 = int(i * H / n), int((i + 1) * H / n); dx = int(sgn * (1 - v) * W)
+                    band = np.roll(out[y0:y1], dx, axis=1)
+                    if dx > 0: band[:, :dx] = res[y0:y1, :dx]
+                    elif dx < 0: band[:, dx:] = res[y0:y1, dx:]
+                    res[y0:y1] = band; res[max(0, y0 - 3):y0 + 3] = 0.95
+            return res
+        if kind == "inkbleed":                                            # the next shot bleeds in, darkest ink first
+            Lb = cv2.GaussianBlur(out.mean(2), (0, 0), 3)
+            thr = 1.12 * ease_out(k / 8.0, 2)
+            m = np.clip((thr - Lb) / 0.07, 0, 1)
+            edge = np.clip(m * (1 - m) * 4, 0, 1)[..., None]
+            return (A * (1 - m[..., None]) + out * m[..., None]) * (1 - 0.85 * edge)
+    return out
+
 # ============================================================================ clip render
 def render_clip(c, f, ow=W, oh=H, extra_shake=True):
     img, u, speed = source_frame(c, f)
@@ -596,7 +765,7 @@ def glitch(out, f, f0, seed=0):
 
 # ============================================================================ composites
 def render_page(c, f):
-    page = np.full((H, W, 3), 0.03, np.float32)
+    page = np.full((H, W, 3), 0.035, np.float32) + (screen(W, H, 14.0) > 0.72)[..., None] * 0.05
     for p in E.PANELS:
         if f < p["f"]: continue
         poly = np.array(p["poly"], np.float32)
@@ -619,6 +788,8 @@ def render_page(c, f):
             M = cv2.getRotationMatrix2D((cxp, cyp), 0, sc)
             layer = cv2.warpAffine(layer, M, (W, H)); al = cv2.warpAffine(al, M, (W, H))[..., None]
             border = cv2.warpAffine(border, M, (W, H))
+        shd = cv2.GaussianBlur(np.roll(np.roll(al[..., 0], 16, 0), 14, 1), (0, 0), 8)[..., None]
+        page = page * (1 - 0.7 * shd)
         page = page * (1 - al) + layer * al
         b = border.astype(np.float32)[..., None] / 255
         page = page * (1 - b) + 0.95 * b
@@ -637,7 +808,8 @@ def render_page(c, f):
     if f >= fr:
         u = ease_in((f - fr) / (c["f1"] - fr), 3)
         z *= 1 + 1.6 * u
-        tx, ty = W / 2 + (1290 - W / 2) * u, H / 2 + (780 - H / 2) * u
+        rx, ry = E.LAYOUT["rush"]
+        tx, ty = W / 2 + (rx - W / 2) * u, H / 2 + (ry - H / 2) * u
     sdx, sdy = shake(f)
     M = np.float32([[z, 0, W / 2 - z * tx + sdx], [0, z, H / 2 - z * ty + sdy]])
     page = cv2.warpAffine(page, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
@@ -651,7 +823,7 @@ def render_logo(c, f):
         return out * (1 - [1.0, 0.8, 0.5][k]) + [1.0, 0.8, 0.5][k]
     out = np.full((H, W, 3), 0.0, np.float32)
     if k < 6: return out
-    lg = logo(980).astype(np.float32) / 255
+    lg = logo(E.LAYOUT["logo"]).astype(np.float32) / 255
     lh, lw = lg.shape[:2]
     total = c["f1"] - c["f0"]
     sc = 1.0 + 0.045 * clamp((k - 18) / (total - 18), 0, 1)
@@ -682,6 +854,24 @@ def render_logo(c, f):
             dx += (1 if (i + gout) % 2 else -1) * (9 - gout) * 22
         s2 = hblur(sl, min(160, vel * 0.8))
         out = paste_rgba(out, s2, int(x0 + dx), y0 + i * sh, min(1.0, u * 3) * (clamp(gout / 8, 0, 1) if gout <= 8 else 1))
+    # blood drips run off the logo and a red rule draws in under it
+    if k >= 22 and gout > 8:
+        al = (lg[..., 3] * 255).astype(np.uint8)
+        if "ldrips" not in _LOGO:
+            cols = np.where((al > 200).any(0))[0]; bt = np.array([np.max(np.where(al[:, x] > 200)[0]) for x in cols])
+            cand = cols[bt >= np.percentile(bt, 92)]
+            picks = [int(cand[len(cand) // 5]), int(cand[(4 * len(cand)) // 5])]
+            _LOGO["ldrips"] = [dict(x=x, y=int(np.max(np.where(al[:, x] > 200)[0])) - 4, w=w, L=L, d=0.0, dur=30.0, drop=dr)
+                               for x, w, L, dr in zip(picks, (16, 12), (150, 95), (True, False))]
+        dm = np.zeros((lh + 240, lw), np.uint8)
+        dm = draw_drips(dm, _LOGO["ldrips"], k - 22, 1.0)
+        dmf = dm.astype(np.float32) / 255
+        dl = np.dstack([liquid(dmf, 3.0, 0.7), dmf])
+        out = paste_rgba(out, dl, x0, y0, clamp(gout / 8, 0, 1))
+    if False:
+        ln = int(lw * ease_out((k - 18) / 14, 3)); yl = y0 + lh + 28
+        a = clamp(gout / 8, 0, 1)
+        out[yl:yl + 5, x0:x0 + ln] = out[yl:yl + 5, x0:x0 + ln] * (1 - a) + RED * 0.9 * a
     if k < 14: out = rgb_split(out, 10 * (1 - k / 14))
     return out
 
@@ -720,6 +910,7 @@ def render(f):
             u = (f - c["f0"]) / max(1, c["f1"] - c["f0"])
             out = speed_lines(out, f, 0.75 * (1 - smooth(u / 0.7)))
         out = transition(out, f)
+        out = transition2(out, f, c)
         # white slab wipe kill_room_knife -> over_victim
         if c["name"] in ("kill_room_knife", "over_victim"):
             fc = E.fe(48); k = f - fc
@@ -739,14 +930,14 @@ def render(f):
     fD = E.fe(E.DROP_E)
     if fD <= f < fD + 16:
         k = f - fD
-        fl = [1.0, 0.9, 0.62, 0.38, 0.22, 0.12, 0.06][k] if k < 7 else 0
+        fl = [0.0, 0.0, 0.0, 0.25, 0.12, 0.05, 0.0][k] if k < 7 else 0
         out = np.clip(out * (1 + 2.5 * fl), 0, 1) * (1 - fl) + fl * 0.97
         out = rgb_split(out, 16 * math.exp(-k / 4.0))
     if f < E.fe(16) + 40:
         out = draw_namecard(out, f)
     if E.fe(48) <= f < E.fe(52):
         out = draw_words(out, f)
-    out = draw_splats(out, f)
+    if not (E.fe(32) <= f < E.fe(34)): out = draw_splats(out, f)
     # finishing
     look = c.get("look", "ink")
     if c.get("kind") != "logo":
@@ -760,6 +951,8 @@ def render(f):
     if bars > 0:
         out[:bars] = 0; out[H - bars:] = 0
     out = draw_title(out, f)                       # drawn over the bars: the blood runs off the frame
+    out = draw_blood(out, f)                       # the pour and the falling curtain
+    if E.fe(32) <= f < E.fe(34): out = draw_splats(out, f)
     out = draw_watermark(np.clip(out, 0, 1), f)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
 
@@ -777,7 +970,7 @@ def main():
         name = sys.argv[2]; frames = [int(a) for a in sys.argv[3:]]
         ims = []
         for f in frames:
-            im = cv2.resize(render(f), (480, 270), interpolation=cv2.INTER_AREA)
+            im = cv2.resize(render(f), (480, 270) if E.ORIENT == "h" else (216, 384), interpolation=cv2.INTER_AREA)
             cv2.putText(im, str(f), (6, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1, cv2.LINE_AA)
             ims.append(im)
         cols = 4
@@ -807,10 +1000,10 @@ def main():
             cmd += ["-map", "0:v", "-map", "1:a", "-vf", vf, "-c:v", "libx264", "-preset", "slow", "-crf", "17",
                     "-maxrate", "24M", "-bufsize", "48M", "-profile:v", "high", "-level", "4.2", "-g", "120", "-bf", "3", *tags,
                     "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2", "-movflags", "+faststart",
-                    f"{outdir}/the_dark_passenger_voidfx.mp4",
+                    f"{outdir}/the_dark_passenger_voidfx{'' if E.ORIENT == 'h' else '_9x16'}.mp4",
                     "-map", "0:v", "-map", "2:a", "-vf", vf, "-c:v", "libx264", "-preset", "slow", "-crf", "11",
                     "-profile:v", "high", "-level", "5.1", *tags, "-c:a", "pcm_s24le", "-ar", "48000",
-                    f"{outdir}/the_dark_passenger_voidfx_master.mov"]
+                    f"{outdir}/the_dark_passenger_voidfx{'' if E.ORIENT == 'h' else '_9x16'}_master.mov"]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
             for i, fr in enumerate(pool.imap(render_scaled, range(n), chunksize=6)):

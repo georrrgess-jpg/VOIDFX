@@ -8,8 +8,9 @@ cap = cv2.VideoCapture(path); fr = []
 while True:
     ok, f = cap.read()
     if not ok: break
-    fr.append(f)
-n = len(fr); h, w = fr[0].shape[:2]
+    h, w = f.shape[:2]
+    fr.append(cv2.resize(f, (480, int(480 * h / w)), interpolation=cv2.INTER_AREA))   # keep memory small
+n = len(fr)
 sm = [cv2.cvtColor(cv2.resize(f, (160, 90), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2GRAY).astype(np.float32) for f in fr]
 d = np.array([0] + [np.mean(np.abs(sm[i] - sm[i - 1])) for i in range(1, n)])
 lum = np.array([s.mean() for s in sm])

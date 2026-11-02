@@ -13,7 +13,8 @@ OFF_ORIG = 0.2325                # original-file time of half-beat 0 (grid + mea
 HB0 = 34                         # first half-beat used
 E = HB_ORIG * R                  # 0.291771 s per half-beat in the edit
 FPS = 60
-W, H = 1920, 1080
+ORIENT = os.environ.get("ORIENT", "h")          # "h" = 1920x1080, "v" = 1080x1920
+W, H = (1920, 1080) if ORIENT == "h" else (1080, 1920)
 
 def te(e):            # edit seconds of half-beat e
     return e * E
@@ -146,10 +147,26 @@ PANELS = [  # polygon on the 1920x1080 page, appear half-beat, clip
 NAME_CARD = dict(e_in=2, e_out=13, line1="DEXTER MORGAN", line2="BLOOD SPATTER ANALYST  —  MIAMI METRO P.D.")
 TITLE = dict(text="DEXTER", e_in=28, e_drop=DROP_E)
 WORDS = [("TONIGHT'S", 48), ("THE", 49), ("NIGHT", 50)]
-LETTERBOX = 138          # px bars in the intro (2.39:1), snap open on the drop
-WATERMARK = dict(width=250, opacity=0.62, margin=(46, 40))
+LETTERBOX = 138 if ORIENT == "h" else 250     # intro bars, snap open on the drop
+WATERMARK = dict(width=250, opacity=0.62, margin=(46, 40)) if ORIENT == "h" else dict(width=230, opacity=0.62, margin=(150, 330))
 
 # transitions applied around a cut (half-beat): radial zoom-through / spin with motion blur
 TRANS = [("zoom", 36), ("zoom", 42), ("spin", 54), ("zoom", 60)]
+TRANS2 = [("slices", 46), ("inkbleed", 62)]       # two-clip transitions
 # blood-splatter bursts: (half-beat, centre x, y, size px, seed, lifetime in half-beats)
-SPLATS = [(32, 250, 250, 300, 1, 2.0), (32, 1690, 840, 340, 2, 2.0), (50, 640, 800, 260, 3, 2.0)]
+SPLATS = ([(32.6, 250, 250, 300, 1, 2.0), (32.6, 1690, 840, 340, 2, 2.0), (50, 560, 900, 230, 3, 2.0)] if ORIENT == "h" else
+          [(32.6, 190, 520, 260, 1, 2.0), (32.6, 900, 1480, 300, 2, 2.0), (50, 250, 1330, 210, 3, 2.0)])
+LAYOUT = dict(
+    h=dict(title=(960, 742, 1.0), namecard=(150, 772, 852), logo=980,
+           words={"TONIGHT'S": (760, 330, 215), "THE": (1270, 520, 190), "NIGHT": (1060, 770, 340)}, rush=(1290, 780)),
+    v=dict(title=(540, 1240, 0.70), namecard=(80, 1330, 1405), logo=880,
+           words={"TONIGHT'S": (540, 640, 150), "THE": (540, 850, 190), "NIGHT": (540, 1090, 235)}, rush=(540, 1620)),
+)[ORIENT]
+if ORIENT == "v":
+    PANELS[0]["poly"] = [(50, 150), (1030, 150), (1030, 560), (50, 610)]
+    PANELS[1]["poly"] = [(50, 635), (1030, 585), (1030, 1000), (50, 1000)]
+    PANELS[2]["poly"] = [(50, 1025), (1030, 1025), (1030, 1390), (50, 1440)]
+    PANELS[3]["poly"] = [(50, 1465), (1030, 1415), (1030, 1780), (50, 1780)]
+# vertical reframing: subject x centre per clip (source px), gentler zoom; overrides below after checks
+VX = {"tunnel_walk": (860, 830), "eyes_up": (700, 730), "gloves_light": (650, 660), "over_victim": (670, 670),
+      "blue_room": (760, 760), "peek": (790, 800), "drill_flare": (600, 600)}
