@@ -102,6 +102,35 @@ Fixes made during review:
 - **Title shatter:** shortened, so the drop shot reads.
 - **Opening:** a flash-forward hook was added.
 
+
+## Revision 2 (this version)
+
+- **More clips, faster cuts:**
+  - A second intro walk: the hallway with the axe (pack 3).
+  - A glove-snap insert at the crime-scene pool (pack 2).
+  - New montage shots: crime tape (pack 2), axe stare (pack 3) and gloved walk (pack 3).
+  - Two half-beat bursts (crime tape → knife; axe stare → hand on face → face shield → gloved walk) escalate the cut rate before the comic page.
+  - 27 cuts in 25.7 s, up from 21.
+- **New transitions:**
+  - Radial zoom-throughs at 10.5 s, 12.25 s and 17.5 s.
+  - A spin transition at 15.75 s.
+  - All are built from 7-sample motion-blurred camera moves that accelerate into the cut and decelerate out of it.
+  - They join the whip pan, glitch cuts and white slab wipe.
+- **New graphics:**
+  - Animated comic speed lines on the three charge shots. They are drawn as contrast-inverted streaks, so they read on both black and white.
+  - Procedural blood-splatter bursts (body, streaks and droplets; scale-in, then fade) on the drop and on "NIGHT".
+  - The intro camera "breathes" on every beat.
+- **Sound:**
+  - The bang now ends in a 0.42 s tape-stop instead of a dead cut.
+  - A whoosh is timed to each zoom and spin transition, and a panned splat hit to each splatter.
+  - Glitch bursts are softer and low-passed, and the flicker buzz is quieter.
+  - The effects bus is soft-saturated, and the music ducks 2.5 dB under the drop and bang impacts.
+  - The encoded audio was scanned for clicks: every edit point is clean. The two transients the scan flagged are drum hits in the song itself.
+- **QC:**
+  - Picture: 1,541 frames, 60 fps, no decode errors, no frozen runs.
+  - Loudness: −13.0 LUFS with true peak −2.6 dBTP.
+  - Cuts: 24 of 27 re-detected on their exact frames; the other three are deliberately hidden (light-on, whip pan, zoom-through).
+
 ## Limitations
 
 - **I can't watch or listen.** Everything was checked frame by frame and by measurement. Watch once at normal speed with sound before posting.

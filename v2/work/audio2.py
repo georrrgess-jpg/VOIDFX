@@ -163,11 +163,16 @@ def main():
     b0 = T(E.BANG_E) + int(0.20 * SR)                                       # let the final downbeat hit ring
     full[:d0 - xf] = 0; full[d0 - xf:d0] *= fade(xf)[:, None]
     mus[d0 - xf:d0] *= fade(xf, "out")[:, None]
-    stopf = int(0.025 * SR)
-    full[b0:b0 + stopf] *= fade(stopf, "out")[:, None]; full[b0 + stopf:] = 0
+    TS = int(0.42 * SR)                                                  # tape-stop: playback speed ramps 1 -> 0
+    t = np.arange(TS) / SR; pos = b0 + (t - t * t / (2 * TS / SR)) * SR
+    src = seg[:b0 + TS + 10]
+    ts_sig = np.stack([np.interp(pos, np.arange(len(src)), src[:, i]) for i in range(2)], 1).astype(np.float32)
+    ts_sig *= (np.linspace(1, 0, TS) ** 0.6)[:, None]
+    ts_sig = bq(ts_sig, "low", 9000, 2)
+    full[b0:] = 0; full[b0:b0 + TS] = ts_sig[:max(0, min(TS, N - b0))]
     mus += full
-    tail = conv(full[b0 - int(0.45 * SR):b0 + stopf], ir(0.75, seed=4))
-    place(mus, tail * 0.55, b0 - int(0.45 * SR))
+    tail = conv(full[b0 - int(0.35 * SR):b0 + TS], ir(0.8, seed=4))
+    place(mus, tail * 0.45, b0 - int(0.35 * SR))
     # --- sound design
     fx = np.zeros((N, 2), np.float32)
     f2s = lambda f: int(round(f / E.FPS * SR))
@@ -179,27 +184,43 @@ def main():
         if nc["line2"][i - 1] != " ": place(fx, tick(-37, 50 + i), f2s(f2 + int(1.2 * i)))
     # light flicker buzz (matches the picture pattern)
     pat = [1, .15, 1, .9, .05, 0, .7, .1, 0, 0, .35, 0, 0, 0]
-    place(fx, buzz(len(pat) / E.FPS + 0.05, pat, -27), g0)
-    place(fx, buzz(9 / E.FPS, [0, 0, .35, .05, .9, .45, 1, .6, .2], -30), g1)
+    place(fx, buzz(len(pat) / E.FPS + 0.05, pat, -31), g0)
+    place(fx, buzz(9 / E.FPS, [0, 0, .35, .05, .9, .45, 1, .6, .2], -33), g1)
     # title slam, riser, drop
     place(fx, impact(-17, (90, 45), 0.35, 0.25, 31), T(E.TITLE["e_in"]))
     rz = riser(E.te(E.DROP_E) - E.te(28), -16)
     place(fx, rz, d0 - len(rz))
     place(fx, impact(-7, (70, 36), 0.9, 0.45, 3), d0)
-    place(fx, glitch_burst(0.15, -23, 4), 0)                                 # flash-forward hook
+    place(fx, bq(glitch_burst(0.15, -25, 4), "low", 7000, 2), 0)                                 # flash-forward hook
     # whip whoosh, glitches, panel slams
     place(fx, whoosh(0.30, -21, 7, True), T(38) - int(0.17 * SR))
     for e in (53, 72):
-        place(fx, glitch_burst(0.13, -22, 9 + e), T(e) - int(0.035 * SR))
+        place(fx, bq(glitch_burst(0.13, -25, 9 + e), "low", 7000, 2), T(e) - int(0.035 * SR))
     for i, p in enumerate(E.PANELS):
-        place(fx, impact(-21, (110, 60), 0.12, 0.6, 40 + i), T(p["e"]))
+        place(fx, impact(-23, (110, 60), 0.12, 0.5, 40 + i), T(p["e"]))
+    # transition whooshes (peak lands on the cut) and splat hits
+    for kind, e in E.TRANS:
+        w = whoosh(0.30 if kind == "zoom" else 0.36, -24, 60 + e, kind == "zoom")
+        place(fx, w, T(e) - int(0.17 * SR))
+    for e, x, y, size, seed, life in E.SPLATS:
+        n = int(0.16 * SR)
+        sp = bq(noise(n, 200 + seed), "band", np.array([150, 1800]), 2) * env_exp(n, 0.045, 0.001)
+        sp = sp / np.abs(sp).max() * db(-24)
+        pan = (x / E.W) * 2 - 1
+        place(fx, np.stack([sp * (1 - 0.5 * pan), sp * (1 + 0.5 * pan)], 1), T(e) + int(0.01 * SR))
     # bang + logo
     place(fx, impact(-5, (75, 32), 1.3, 0.7, 77), T(E.BANG_E))
     place(fx, conv(np.stack([impact(-12, (75, 32), 1.3, 0.7, 77)] * 2, 1), ir(1.1, seed=8)) * 0.4, T(E.BANG_E))
     lg0 = T(E.BANG_E) + f2s(6)
     place(fx, whoosh(0.34, -24, 17, False), lg0 - int(0.05 * SR))
     place(fx, np.stack([shimmer(1.9, -29)] * 2, 1) * np.array([0.8, 1.0]), T(E.BANG_E) + f2s(24))
-    mix = mus + fx
+    fx = np.tanh(fx * 1.4) / 1.4                                          # soft-saturate the fx bus so hits stay smooth
+    # duck the music 2.5 dB under the two biggest impacts (drop, bang) for 120 ms
+    duck = np.ones(N, np.float32)
+    for i0 in (d0, T(E.BANG_E)):
+        n = int(0.30 * SR); env = 1 - (1 - db(-2.5)) * np.exp(-np.arange(n) / (0.12 * SR))
+        duck[i0:i0 + n] = np.minimum(duck[i0:i0 + n], env[:len(duck[i0:i0 + n])])
+    mix = mus * duck[:, None] + fx
     # 2 ms ramps at the file edges
     r = int(0.002 * SR); mix[:r] *= np.linspace(0, 1, r)[:, None]; mix[-r:] *= np.linspace(1, 0, r)[:, None]
     raw = f"{A}/mix_raw.wav"; wf.write(raw, SR, mix.astype(np.float32))

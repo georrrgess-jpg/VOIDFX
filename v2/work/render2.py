@@ -151,7 +151,7 @@ def source_frame(c, f):
 # ============================================================================ camera
 def shake(f):
     dx = dy = 0.0
-    for fh, amp, tau in ((E.fe(E.DROP_E), 24, 6.0), (E.fe(41), 12, 5.0), (E.fe(E.BANG_E), 30, 7.0), (E.fe(59), 8, 5.0)):
+    for fh, amp, tau in ((E.fe(E.DROP_E), 24, 6.0), (E.fe(41), 12, 5.0), (E.fe(E.BANG_E), 30, 7.0), (E.fe(58), 10, 4.0), (E.fe(56), 8, 4.0)):
         if fh <= f < fh + 6 * tau:
             k = f - fh; env = amp * math.exp(-k / tau)
             dx += env * math.sin(k * 2.1 + 0.3); dy += env * 0.7 * math.sin(k * 2.9 + 1.7)
@@ -168,6 +168,9 @@ def camera(c, f, u, ow, oh):
         z *= 1 + b * math.exp(-k / 4.5)
         sgn = 1 if (CLIPS.index(c) if c in CLIPS else 0) % 2 else -1
         rot = sgn * 1.8 * math.exp(-k / 6.0)
+    if c.get("look") == "mono" and f < E.fe(E.DROP_E):                  # intro: camera breathes on each beat
+        kb = (f - E.fe(2 * math.floor(f / (2 * E.E * FPS)))) 
+        z *= 1 + 0.014 * math.exp(-max(0, kb) / 6.0)
     if c["name"] == "eyes_up" and f >= E.fe(30):                       # pre-drop push accelerates
         z *= 1 + 0.10 * ease_in((f - E.fe(30)) / (E.fe(32) - E.fe(30)), 2)
     return cx, cy, z, rot
@@ -461,6 +464,81 @@ def draw_words(out, f):
             out = paste_rgba(out, lay, int(cx - lay.shape[1] / 2), int(cy - lay.shape[0] / 2), clamp(k / 1.5 + 0.34, 0, 1))
     return out
 
+# ---- comic speed lines
+def speed_lines(out, f, strength):
+    if strength <= 0.02: return out
+    rng = np.random.default_rng(f * 7 + 3)
+    m = np.zeros((H // 2, W // 2), np.uint8)
+    cx, cy = W / 4, H / 4; R = math.hypot(W / 4, H / 4) * 1.1
+    for _ in range(90):
+        a = rng.uniform(0, 2 * math.pi); r0 = R * rng.uniform(0.36, 0.72); wdt = rng.uniform(0.005, 0.022)
+        p0 = (cx + r0 * math.cos(a), cy + r0 * math.sin(a))
+        p1 = (cx + R * math.cos(a - wdt), cy + R * math.sin(a - wdt)); p2 = (cx + R * math.cos(a + wdt), cy + R * math.sin(a + wdt))
+        cv2.fillPoly(m, [np.array([p0, p1, p2], np.int32)], 255, cv2.LINE_AA)
+    mm = cv2.resize(m, (W, H), interpolation=cv2.INTER_LINEAR).astype(np.float32)[..., None] / 255 * strength
+    return out * (1 - mm) + (1 - out) * mm            # streaks always contrast with what is under them
+
+# ---- blood splatter bursts
+_SPL = {}
+def splat_rgba(size, seed):
+    k = (size, seed)
+    if k not in _SPL:
+        rng = np.random.default_rng(seed * 31 + 7); S = size * 2
+        m = np.zeros((S * 2, S * 2), np.uint8); c = S
+        for _ in range(14):                                               # main body
+            r = int(size * rng.uniform(0.18, 0.34)); d = size * rng.uniform(0, 0.16); a = rng.uniform(0, 6.28)
+            cv2.circle(m, (int(c + d * math.cos(a)), int(c + d * math.sin(a))), r, 255, -1, cv2.LINE_AA)
+        for _ in range(26):                                               # arms / streaks
+            a = rng.uniform(0, 6.28); L = size * rng.uniform(0.35, 0.95); w = int(size * rng.uniform(0.02, 0.06))
+            p1 = (int(c + L * math.cos(a)), int(c + L * math.sin(a)))
+            cv2.line(m, (c, c), p1, 255, max(2, w), cv2.LINE_AA)
+            cv2.circle(m, p1, int(w * rng.uniform(0.8, 1.6)), 255, -1, cv2.LINE_AA)
+        for _ in range(70):                                               # droplets
+            a = rng.uniform(0, 6.28); L = size * rng.uniform(0.4, 1.4) ** 1.0; r = max(2, int(size * rng.uniform(0.006, 0.03)))
+            cv2.circle(m, (int(c + L * math.cos(a)), int(c + L * math.sin(a))), r, 255, -1, cv2.LINE_AA)
+        m = cv2.resize(m, (S, S), interpolation=cv2.INTER_AREA).astype(np.float32) / 255
+        er = cv2.GaussianBlur(cv2.erode((m * 255).astype(np.uint8), np.ones((5, 5), np.uint8)).astype(np.float32) / 255, (0, 0), 4)
+        shade = 0.75 + 0.35 * er
+        rgba = np.dstack([RED[0] * shade, RED[1] * shade, RED[2] * shade, m]).astype(np.float32)
+        _SPL[k] = rgba
+    return _SPL[k]
+
+def draw_splats(out, f):
+    for e, x, y, size, seed, life in E.SPLATS:
+        f0 = E.fe(e); f1 = E.fe(e + life)
+        if not (f0 <= f < f1): continue
+        k = f - f0
+        rgba = splat_rgba(size, seed)
+        sc = 0.55 + 0.45 * ease_out(k / 3.0, 3)
+        if sc < 0.999:
+            rgba = cv2.resize(rgba, (int(rgba.shape[1] * sc), int(rgba.shape[0] * sc)), interpolation=cv2.INTER_LINEAR)
+        a = clamp((f1 - f) / 8, 0, 1) * 0.92
+        out = paste_rgba(out, rgba, int(x - rgba.shape[1] / 2), int(y - rgba.shape[0] / 2), a)
+    return out
+
+# ---- zoom-through / spin transitions (motion-blurred camera move across a cut)
+def blur_xform(img, z0, z1, r0, r1, n=7):
+    acc = None
+    for i in range(n):
+        t = i / (n - 1); z = z0 + (z1 - z0) * t; r = r0 + (r1 - r0) * t
+        M = cv2.getRotationMatrix2D((W / 2, H / 2), r, z)
+        w = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        acc = w if acc is None else acc + w
+    return acc / n
+
+def transition(out, f):
+    for kind, e in E.TRANS:
+        fc = E.fe(e); k = f - fc
+        if -5 <= k < 7:
+            if k < 0:                                   # outgoing accelerates into the cut
+                u1 = (k + 6) / 6.0; u0 = u1 - 1 / 6.0; zs, rs = 0.6, 26.0
+            else:                                       # incoming decelerates out of it
+                u0 = 1 - k / 7.0; u1 = max(0.0, u0 - 1 / 7.0); zs, rs = 0.6, -26.0
+            if kind == "zoom":
+                return blur_xform(out, 1 + zs * u0 * u0, 1 + zs * u1 * u1, 0, 0)
+            return blur_xform(out, 1 + 0.18 * u0 * u0, 1 + 0.18 * u1 * u1, rs * u0 * u0, rs * u1 * u1)
+    return out
+
 # ============================================================================ clip render
 def render_clip(c, f, ow=W, oh=H, extra_shake=True):
     img, u, speed = source_frame(c, f)
@@ -638,6 +716,10 @@ def render(f):
     else:
         out = render_clip(c, f)
         out = clip_fx(out, c, f)
+        if "speed_lines" in c.get("fx", []):
+            u = (f - c["f0"]) / max(1, c["f1"] - c["f0"])
+            out = speed_lines(out, f, 0.75 * (1 - smooth(u / 0.7)))
+        out = transition(out, f)
         # white slab wipe kill_room_knife -> over_victim
         if c["name"] in ("kill_room_knife", "over_victim"):
             fc = E.fe(48); k = f - fc
@@ -664,6 +746,7 @@ def render(f):
         out = draw_namecard(out, f)
     if E.fe(48) <= f < E.fe(52):
         out = draw_words(out, f)
+    out = draw_splats(out, f)
     # finishing
     look = c.get("look", "ink")
     if c.get("kind") != "logo":
