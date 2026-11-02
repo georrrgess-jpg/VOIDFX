@@ -163,6 +163,19 @@ Fixes made during review:
   - Picture: 1,541 frames, 60 fps, 25.683 s, full decode with no errors, no frozen runs.
   - Loudness: −13.0 LUFS with true peak −2.3 dBTP.
 
+
+## Revision 4 (audio polish, logo)
+
+- **Logo:** the blood drips and their "plink" sounds are removed from the voidfx logo outro.
+- **Intro audio:**
+  - **Brighter:** it was heavily filtered (high-pass 180 Hz + low-pass 3.2 kHz, which sounded muffled). It is now only lightly trimmed (high-pass 95 Hz + low-pass 7.5 kHz).
+  - **Smooth open-up:** over the last 2.3 s before the drop it opens to full range with an equal-power blend, so the drop no longer jumps from a muffled to a full sound.
+  - **No click at the start:** the filters run on 1 s of lead-in before the edit starts, so they are settled at frame 0.
+  - **Softer gap:** the one-beat gap is a soft −12 dB dip with 60 ms fades and an echo tail, instead of a hard cut to silence.
+  - **Fewer small sounds:** the typing ticks are removed, the light-flicker buzz is 6 dB quieter and low-passed, and the opening glitch burst is 4 dB quieter.
+  - **Level:** the intro now sits about 3–4 dB under the drop (previously ~6 dB).
+  - **Clicks:** a click scan finds only two sharp drum hits that are in the song itself.
+
 ## Limitations
 
 - **I can't watch or listen.** Everything was checked frame by frame and by measurement. Watch once at normal speed with sound before posting.

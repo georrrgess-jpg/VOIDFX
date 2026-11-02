@@ -855,7 +855,7 @@ def render_logo(c, f):
         s2 = hblur(sl, min(160, vel * 0.8))
         out = paste_rgba(out, s2, int(x0 + dx), y0 + i * sh, min(1.0, u * 3) * (clamp(gout / 8, 0, 1) if gout <= 8 else 1))
     # blood drips run off the logo and a red rule draws in under it
-    if k >= 22 and gout > 8:
+    if False:                                                             # logo drips removed (user request)
         al = (lg[..., 3] * 255).astype(np.uint8)
         if "ldrips" not in _LOGO:
             cols = np.where((al > 200).any(0))[0]; bt = np.array([np.max(np.where(al[:, x] > 200)[0]) for x in cols])

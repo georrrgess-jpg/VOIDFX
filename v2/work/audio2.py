@@ -145,16 +145,26 @@ def main():
     seg = song[S0:S0 + N + SR].copy()
     mus = np.zeros((N, 2), np.float32)
     d0 = T(E.DROP_E)
-    # --- intro: band-limited + echo-out gap
-    intro = bq(bq(seg[:d0 + 4800], "high", 180, 4), "low", 3200, 2) * db(-1.5)
+    # --- intro: lightly filtered (not muffled), opening smoothly to full range into the drop
+    PR = SR                                                                  # filter 1 s of lead-in so it starts settled
+    lead = song[S0 - PR:S0 + d0 + 4800]
+    lite = bq(bq(lead, "high", 95, 2), "low", 7500, 2)[PR:] * db(-0.8)
+    fullb = lead[PR:]
+    w = np.zeros(len(lite), np.float32)                                      # 0 = lightly filtered, 1 = full
+    a_, b_ = T(24), d0
+    w[a_:b_] = np.sin(np.linspace(0, np.pi / 2, b_ - a_)) ** 2; w[b_:] = 1
+    intro = lite * np.sqrt(1 - w)[:, None] + fullb * np.sqrt(w)[:, None]   # equal-power open-up
     g0, g1 = T(E.GAP_E[0]), T(E.GAP_E[1])
     gate = np.ones(len(intro), np.float32)
-    nf = int(0.010 * SR)
-    gate[g0:g0 + nf] = fade(nf, "out"); gate[g0 + nf:g1] = 0; gate[g1 - nf:g1] = fade(nf, "in")
+    nf = int(0.060 * SR); floor = db(-12)                                   # soft dip, not a hard cut
+    gate[g0:g0 + nf] = floor + (1 - floor) * fade(nf, "out"); gate[g0 + nf:g1 - nf] = floor
+    gate[g1 - nf:g1] = floor + (1 - floor) * fade(nf, "in")
     dry = intro * gate[:, None]
     wet = conv(dry, ir(0.42, seed=2))
-    wl = np.full(len(intro), 0.10, np.float32)
-    wl[g0:g1] = 0.42                                                        # the echo tail fills the gap
+    wl = np.full(len(intro), 0.08, np.float32)
+    wl[g0 - nf:g1] = 0.30                                                    # echo tail fills the dip
+    wl[g1:g1 + int(0.25 * SR)] = np.linspace(0.30, 0.08, int(0.25 * SR))
+    wl[T(28):d0] = np.linspace(0.08, 0.0, d0 - T(28)); wl[d0:] = 0
     intro_mix = dry + wet * wl[:, None]
     xf = int(0.004 * SR)
     mus[:d0] = intro_mix[:d0]
@@ -179,13 +189,13 @@ def main():
     # typing ticks (name card)
     nc = E.NAME_CARD; fi = E.fe(nc["e_in"]); f2 = E.fe(nc["e_in"] + 3)
     for i in range(1, len(nc["line1"]) + 1):
-        if nc["line1"][i - 1] != " ": place(fx, tick(-33, i), f2s(fi + 2 * i))
+        pass
     for i in range(1, len(nc["line2"]) + 1, 2):
-        if nc["line2"][i - 1] != " ": place(fx, tick(-37, 50 + i), f2s(f2 + int(1.2 * i)))
+        pass
     # light flicker buzz (matches the picture pattern)
     pat = [1, .15, 1, .9, .05, 0, .7, .1, 0, 0, .35, 0, 0, 0]
-    place(fx, buzz(len(pat) / E.FPS + 0.05, pat, -31), g0)
-    place(fx, buzz(9 / E.FPS, [0, 0, .35, .05, .9, .45, 1, .6, .2], -33), g1)
+    place(fx, bq(buzz(len(pat) / E.FPS + 0.05, pat, -37), "low", 5000, 2), g0)
+    place(fx, bq(buzz(9 / E.FPS, [0, 0, .35, .05, .9, .45, 1, .6, .2], -39), "low", 5000, 2), g1)
     # title slam, riser, drop
     place(fx, impact(-17, (90, 45), 0.35, 0.25, 31), T(E.TITLE["e_in"]))
     rz = riser(E.te(E.DROP_E) - E.te(28), -19)
@@ -208,7 +218,7 @@ def main():
     # two-clip transitions
     for kind, e_ in E.TRANS2:
         place(fx, whoosh(0.28 if kind == "slices" else 0.40, -24, 80 + e_, kind == "slices"), T(e_) - int(0.12 * SR))
-    place(fx, bq(glitch_burst(0.15, -25, 4), "low", 7000, 2), 0)                                 # flash-forward hook
+    place(fx, bq(glitch_burst(0.15, -29, 4), "low", 6000, 2), int(0.004 * SR))                                 # flash-forward hook
     # whip whoosh, glitches, panel slams
     place(fx, whoosh(0.30, -21, 7, True), T(38) - int(0.17 * SR))
     for e in (53, 72):
@@ -231,7 +241,7 @@ def main():
     lg0 = T(E.BANG_E) + f2s(6)
     place(fx, whoosh(0.34, -24, 17, False), lg0 - int(0.05 * SR))
     place(fx, np.stack([shimmer(1.9, -29)] * 2, 1) * np.array([0.8, 1.0]), T(E.BANG_E) + f2s(24))
-    for j, kf in enumerate((22 + 30, 22 + 44)):                               # drips off the logo
+    for j, kf in ():                                                          # (logo drips removed)
         n = int(0.18 * SR); tt = np.arange(n) / SR
         pl = np.sin(2 * np.pi * np.cumsum(1500 * np.exp(-tt / 0.03) + 420) / SR) * env_exp(n, 0.05, 0.001)
         place(fx, np.stack([pl * (0.9 - 0.3 * j), pl * (0.6 + 0.3 * j)], 1) * db(-30), T(E.BANG_E) + f2s(kf))
@@ -254,7 +264,7 @@ def main():
     # AAC encoder pre-roll (hidden by an edit list in the mp4): 1024 samples of the song's own lead-in
     sr_, m = wf.read(out); m = m.astype(np.float32) / 2 ** 31
     pre = song[S0 - 1024:S0] * db(gain)
-    pre = bq(bq(pre, "high", 180, 4), "low", 3200, 2) * db(-1.5)
+    pre = bq(bq(pre, "high", 95, 2), "low", 7500, 2) * db(-0.8)
     pre[:256] *= np.linspace(0, 1, 256)[:, None]
     wf.write(f"{A}/mix_preroll.wav", SR, np.vstack([pre, m]).astype(np.float32))
     test = f"{A}/mix_aac_test.m4a"
