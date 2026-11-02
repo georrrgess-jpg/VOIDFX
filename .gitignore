@@ -14,3 +14,4 @@ graphics/*.png
 work/*.log
 __pycache__/
 work/*_diffs.json
+v2/work/*.log
