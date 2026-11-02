@@ -1,0 +1,15 @@
+# Media stays out of git (copyrighted source, large, regenerable)
+src/
+audio/
+inter/
+out/
+frames/
+graphics/*.png
+*.mp4
+*.mov
+*.wav
+*.mp3
+*.m4a
+*.npy
+work/*.log
+__pycache__/
