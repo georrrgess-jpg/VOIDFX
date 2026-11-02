@@ -2,7 +2,7 @@
 src/
 audio/
 inter/
-out/
+out*/
 frames/
 graphics/*.png
 *.mp4
@@ -13,3 +13,4 @@ graphics/*.png
 *.npy
 work/*.log
 __pycache__/
+work/*_diffs.json
