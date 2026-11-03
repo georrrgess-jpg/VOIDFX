@@ -15,3 +15,8 @@ work/*.log
 __pycache__/
 work/*_diffs.json
 v2/work/*.log
+v3/work/*.log
+v3/models/
+v3/audio/
+v3/frames/
+v3/out/
