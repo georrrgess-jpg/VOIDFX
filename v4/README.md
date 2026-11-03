@@ -40,6 +40,29 @@ This revision of the v3 edit is built from your notes. It is 25.0 s at 1080×192
 | Audio | no clicks at any dialogue join, the song entry, the stop or the loop seam |
 | Loop seam | last frame vs first frame differ by 1.8 luma levels (both black); audio is −45.4 / −44.9 dBFS on either side |
 
+
+## Revision 5
+
+- **BLEED IT:** the old version was 14 frames over a dark shot and couldn't be read. It now builds across the end of the scope shot:
+  - a white outline draws in on *"then I"*;
+  - on *"bleed"* the letters fill with glossy blood from the top, with a wavy liquid front;
+  - drips run down from the letter bottoms, over a dark vignette;
+  - the finished title is baked into the muzzle-flash frame, so it **cracks and shatters with the glass** on the drop;
+  - sound: a wet fill and three drips.
+- **"What can I say" cut:** the hard cut to a Doakes reaction is replaced by a **matched-angle morph**. Both shots are the same camera angle on Dexter, so optical flow warps one into the other under a light bloom and a soft reversed swell. Dialogue stays lip-synced.
+- **BAY HARBOR BUTCHER:** the text no longer sits around Dexter. It is now **footage-in-letters knockout type**:
+  - the frame darkens and the three words slam in on Doakes's syllables, stacked full-width;
+  - Dexter is seen *through* the letterforms, with BUTCHER tinted blood red;
+  - on exit the letters fly apart toward the camera and the picture fills back in;
+  - each word has a deep thud.
+- **New transition, knife slash:** a blade glint sweeps diagonally across the frame with a metallic "shing". The frame splits along the cut, and the two halves slide apart with red-lit edges to reveal the next shot. It replaces the cube turn.
+- **Loop audio is now continuous:**
+  - the scene's own room tone fades in under the last 0.58 s, matching what plays at 0:00;
+  - the drone runs at the same level on both sides;
+  - the timeline is built circularly: the last 2,048 samples crossfade into the actual lead-in of the first frame;
+  - the AAC encoder pre-roll is the loop's own tail;
+  - result: the sample step at the wrap equals the surrounding audio, and the level stays about −28 dBFS on both sides.
+
 ## Files
 
 - `out/surprise_v4_voidfx_9x16.mp4`: upload version.

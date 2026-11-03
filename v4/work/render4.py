@@ -757,7 +757,7 @@ def lyric_layer(out, f, person=None):
     for txt, s0, s1 in E.LYRICS:
         a0, a1 = E.s2e(s0), E.s2e(s1)
         if txt == "CAN'T GET CAUGHT": a1 = E.T_STOP + 0.28
-        if txt == "BLEED IT" and f >= E.fh(E.DROP_HB): continue
+        if txt == "BLEED IT": continue                          # drawn by draw_bleed()
         if not (a0 - 0.05 <= t < a1 + 0.16): continue
         k = (t - a0) * FPS; kout = (t - a1) * FPS
         fade = 1.0 if kout <= 0 else clamp(1 - kout / 9, 0, 1)
@@ -936,6 +936,167 @@ def pupil_close(img, f, s):
     o = cv2.warpAffine(o, np.float32([[1, 0, (W / 2 - ex) * ein(u, 2)], [0, 1, (H * 0.42 - ey) * ein(u, 2)]]), (W, H), borderMode=cv2.BORDER_REFLECT)
     return o * (1 - ein(clamp((u - 0.55) / 0.45, 0, 1), 1.4))
 
+# ============================================================================ v5 additions
+# ---- BAY HARBOR BUTCHER: footage-in-letters knockout
+_KO = {}
+def ko_masks():
+    if "m" in _KO: return _KO
+    words = [w for w, _ in E.BHB]; ms = []
+    for w in words:
+        m = text_mask(w, F_BLACK, 200, tracking=-2)
+        sc = min(940 / m.shape[1], 360 / m.shape[0])
+        ms.append(cv2.resize(m, (int(m.shape[1] * sc), int(m.shape[0] * sc)), interpolation=cv2.INTER_AREA))
+    gap = 26; tot = sum(m.shape[0] for m in ms) + gap * (len(ms) - 1); y = 880 - tot / 2
+    full = []
+    for m in ms:
+        F = np.zeros((H, W), np.float32); x0 = int((W - m.shape[1]) / 2); y0 = int(y)
+        F[y0:y0 + m.shape[0], x0:x0 + m.shape[1]] = m
+        full.append((F, (W / 2, y0 + m.shape[0] / 2))); y += m.shape[0] + gap
+    _KO["m"] = full; return _KO
+
+def knockout(out, f, s):
+    t = f / FPS
+    times = [E.d2e(0, ws) for _, ws in E.BHB]
+    t_on, t_exit, t_end = times[0] - 0.08, s["t1"] - 0.30, s["t1"]
+    if not (t_on <= t < t_end): return out
+    K = ko_masks()["m"]
+    dark = clamp((t - t_on) / 0.10, 0, 1)
+    ex = ein((t - t_exit) / (t_end - t_exit), 2.2) if t >= t_exit else 0.0
+    inside = np.zeros((H, W), np.float32); red = np.zeros((H, W), np.float32)
+    for i, ((F, (cx, cy)), ti) in enumerate(zip(K, times)):
+        k = (t - ti) * FPS
+        if k < -1: continue
+        v = eout((k + 1) / 7, 3)
+        sc = (1.30 - 0.30 * v) * (1 + 7.0 * ex)
+        M = cv2.getRotationMatrix2D((cx, 880 if ex > 0 else cy), 0, sc)
+        m = cv2.warpAffine(F, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+        if v < 1: m = cv2.GaussianBlur(m, (0, 0), 0.1 + 5 * (1 - v))
+        m *= v
+        inside = np.maximum(inside, m)
+        if i == 2: red = np.maximum(red, m)
+    if ex > 0: inside = np.maximum(inside, clamp((ex - 0.55) / 0.45, 0, 1))
+    bg = cv2.GaussianBlur(out, (0, 0), 9) * (1 - 0.82 * dark * (1 - ex))
+    fg = np.clip(zoom_about(out, W / 2, 880, 1.04) * 2.1, 0, 1) ** 0.8
+    fg = fg * (1 - red[..., None]) + np.clip(fg.mean(2, keepdims=True) * np.array([0.30, 0.30, 1.45], np.float32) + np.array([0.02, 0.02, 0.18], np.float32), 0, 1) * red[..., None]
+    o = bg * (1 - inside[..., None]) + fg * inside[..., None]
+    edge = np.clip(cv2.dilate(inside, np.ones((5, 5), np.uint8)) - inside, 0, 1)[..., None] * (1 - ex)
+    return np.clip(o * (1 - edge) + 0.92 * edge, 0, 1)
+
+# ---- BLEED IT: outline draws in on "then I", fills with blood on "bleed", drips; baked into the shatter
+_BL = {}
+def bleed_assets():
+    if "m" in _BL: return _BL
+    m = text_mask("BLEED IT", F_BLACK, 200, tracking=-2)
+    sc = 960 / m.shape[1]; m = cv2.resize(m, (960, int(m.shape[0] * sc)), interpolation=cv2.INTER_AREA)
+    pad = 360; M = np.zeros((m.shape[0] + pad, m.shape[1] + 40), np.float32); M[:m.shape[0], 20:20 + m.shape[1]] = m
+    al = (M > 0.5).astype(np.uint8)
+    cols = np.where(al[:m.shape[0]].any(0))[0]; rng = np.random.default_rng(13)
+    bottoms = {x: int(np.max(np.where(al[:m.shape[0], x])[0])) for x in cols}
+    drips = [dict(x=int(x), y=bottoms[int(x)] - 4, w=int(rng.integers(7, 15)), L=int(rng.integers(60, 300)), d=float(rng.uniform(0, 10)))
+             for x in sorted(rng.choice(cols, 14, replace=False))]
+    _BL.update(m=M, h=m.shape[0], drips=drips, x0=(W - M.shape[1]) // 2, y0=int(1120 - m.shape[0] / 2))
+    return _BL
+
+def bleed_layer(t):
+    """RGBA layer (W-cropped) of BLEED IT at edit time t, or None."""
+    B = bleed_assets(); m = B["m"]; hh = B["h"]
+    t_out = E.s2e(16.40); t_fill = E.s2e(16.78)
+    if t < t_out: return None
+    ko = (t - t_out) * FPS; kf = (t - t_fill) * FPS
+    a_out = eout(ko / 8, 3)
+    outline = np.clip(cv2.dilate(m, np.ones((7, 7), np.uint8)) - cv2.erode(m, np.ones((3, 3), np.uint8)), 0, 1) * a_out
+    fill = np.zeros_like(m)
+    if kf > 0:
+        lvl = int(hh * eout(kf / 8, 2)); fill[:lvl] = m[:lvl]
+        # wavy liquid front
+        if lvl < hh:
+            xs = np.arange(m.shape[1]); front = lvl + (6 * np.sin(xs / 23 + kf)).astype(int)
+            yy = np.arange(m.shape[0])[:, None]; fill = np.where(yy < front[None, :], m, 0).astype(np.float32)
+        dm = np.zeros(m.shape, np.uint8)
+        for d in B["drips"]:
+            L = int(d["L"] * eout((kf - 4 - d["d"]) / 26, 2))
+            if L > 2:
+                cv2.line(dm, (d["x"], d["y"]), (d["x"], d["y"] + L), 255, max(2, int(d["w"] * 0.7)), cv2.LINE_AA)
+                cv2.circle(dm, (d["x"], d["y"] + L), int(d["w"] * 0.8) + 1, 255, -1, cv2.LINE_AA)
+        fill = np.maximum(fill, dm.astype(np.float32) / 255)
+    b = cv2.GaussianBlur(fill, (0, 0), 4)
+    gy = cv2.Sobel(b, cv2.CV_32F, 0, 1, ksize=3); gx = cv2.Sobel(b, cv2.CV_32F, 1, 0, ksize=3)
+    d = -(gx * -0.45 + gy * -0.85) * 6
+    shade = np.clip(0.72 + 1.5 * d, 0.40, 1.15)
+    spec = np.clip(d * 5 - 0.6, 0, 1) ** 4 * 0.6
+    col = RED[None, None, :] * 0.85 * shade[..., None] + spec[..., None]
+    col = col * fill[..., None] + WHITE * outline[..., None] * (1 - fill[..., None])
+    al = np.maximum(fill, outline)
+    sh = cv2.GaussianBlur(np.maximum(fill, outline), (0, 0), 14) * 0.7
+    rgba = np.zeros(m.shape + (4,), np.float32); rgba[..., 3] = sh
+    rgba[..., :3] = col * al[..., None] / np.maximum(np.maximum(al, sh)[..., None], 1e-4)
+    rgba[..., 3] = np.maximum(al, sh)
+    return rgba
+
+def draw_bleed(out, t):
+    L = bleed_layer(t)
+    if L is None: return out
+    B = bleed_assets()
+    vg = np.zeros((H, W), np.float32); cv2.ellipse(vg, (W // 2, 1120), (620, 300), 0, 0, 360, 1.0, -1)
+    vg = cv2.GaussianBlur(vg, (0, 0), 80)[..., None] * 0.55 * clamp((t - E.s2e(16.40)) * FPS / 8, 0, 1)
+    out = out * (1 - vg)
+    return paste(out, L, B["x0"], B["y0"])
+
+# ---- matched-angle morph (dex_hate -> dex_right): optical-flow warp + blend
+_DISM = None
+def morph(A, B, v):
+    global _DISM
+    if _DISM is None: _DISM = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+    a = cv2.cvtColor((cv2.resize(A, (W // 4, H // 4)) * 255).astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    b = cv2.cvtColor((cv2.resize(B, (W // 4, H // 4)) * 255).astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    Fab = cv2.resize(_DISM.calc(a, b, None), (W, H)) * 4; Fba = cv2.resize(_DISM.calc(b, a, None), (W, H)) * 4
+    gy, gx = np.mgrid[0:H, 0:W].astype(np.float32)
+    Aw = cv2.remap(A, gx - v * Fba[..., 0], gy - v * Fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    Bw = cv2.remap(B, gx - (1 - v) * Fab[..., 0], gy - (1 - v) * Fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o = Aw * (1 - v) + Bw * v
+    pulse = math.sin(math.pi * v) ** 1.5
+    o = radial_blur(o, W / 2, H * 0.37, 1.0 + 0.04 * pulse, 1.0 + 0.10 * pulse, 5)
+    return np.clip(o * (1 + 0.6 * pulse) + 0.32 * pulse, 0, 1)
+
+# ---- knife slash
+SL_C = (W * 0.5, H * 0.44); SL_ANG = math.radians(-62)
+_SLG = {}
+def slash_geom():
+    if "d" not in _SLG:
+        gy, gx = np.mgrid[0:H, 0:W].astype(np.float32)
+        tx, ty = math.cos(SL_ANG), math.sin(SL_ANG); nx, ny = -ty, tx
+        _SLG.update(d=(gx - SL_C[0]) * nx + (gy - SL_C[1]) * ny, a=(gx - SL_C[0]) * tx + (gy - SL_C[1]) * ty, t=(tx, ty), n=(nx, ny))
+    return _SLG
+
+def slash_out(A, kn):        # kn = -7..-1: the blade glint sweeps across
+    G = slash_geom(); u = eout((kn + 8) / 6, 3)
+    L = math.hypot(W, H) * 0.6; head = -L + 2 * L * u
+    line = np.exp(-(G["d"] / 2.2) ** 2) * (G["a"] < head) * (G["a"] > head - 900)
+    glow = np.exp(-(G["d"] / 18) ** 2) * (G["a"] < head) * (G["a"] > head - 900) * 0.6
+    o = A * (1 - 0.15 * u)
+    o = o + glow[..., None] * np.array([0.25, 0.25, 0.95], np.float32) + line[..., None] * 1.2
+    if kn >= -2: o = o + np.exp(-(G["d"] / 3.0) ** 2)[..., None] * 0.9
+    return np.clip(o, 0, 1)
+
+def slash_in(A, B, k):       # k = 0..11: the two halves of A slide apart along the cut
+    G = slash_geom(); u = eout(k / 11, 2.2)
+    tx, ty = G["t"]; nx, ny = G["n"]
+    sep = 30 + 900 * u; slide = 700 * u
+    Bz = zoom_about(B, W / 2, H * 0.44, 1.18 - 0.18 * eout(k / 11, 3))
+    o = Bz.copy()
+    for side in (1, -1):
+        dx = side * (nx * sep + tx * slide); dy = side * (ny * sep + ty * slide)
+        Ah = cv2.warpAffine(A, np.float32([[1, 0, dx], [0, 1, dy]]), (W, H), borderValue=(0, 0, 0))
+        m = (G["d"] * side > 0).astype(np.float32)
+        mh = cv2.warpAffine(m, np.float32([[1, 0, dx], [0, 1, dy]]), (W, H), borderValue=0)
+        if k < 6: Ah = cv2.filter2D(Ah, -1, np.ones((1, 15), np.float32) / 15) * 0.5 + Ah * 0.5
+        edge = np.clip(cv2.morphologyEx(mh, cv2.MORPH_GRADIENT, np.ones((7, 7), np.uint8)), 0, 1)[..., None]
+        o = o * (1 - mh[..., None]) + Ah * mh[..., None]
+        o = o * (1 - edge) + np.array([0.20, 0.20, 0.95], np.float32) * edge * (1 - u) + o * edge * u
+    if k < 4: o = np.clip(o + np.exp(-(G["d"] / (6 + 12 * k)) ** 2)[..., None] * (0.8 - 0.2 * k), 0, 1)
+    return np.clip(o, 0, 1)
+
+
 # ============================================================================ finishing
 _GR = None
 def grain(f, amt=0.018):
@@ -968,6 +1129,7 @@ def render(f):
             t, u, _ = src_time(bs, bs["f1"] - 1); cx, cy, ch = frame_geom(bs, bs["f1"] - 1, t, u); cw = ch * 9 / 16
             M = np.float32([[W / cw, 0, -(cx - cw / 2) * W / cw], [0, H / ch, -(cy - ch / 2) * H / ch]])
             _SH["frz"] = np.clip(cv2.warpAffine(grade(fz, bs, bs["f1"] - 1), M, (W, H), flags=cv2.INTER_CUBIC) * 1.25, 0, 1)
+            _SH["frz"] = draw_bleed(_SH["frz"], E.te(E.DROP_HB) - 0.5 / FPS)
         A = _SH["frz"]
         if k < 2: out = np.clip(A * (1 + 2.5 * (1 - k / 2)) + (1 - k / 2) * 0.6, 0, 1)
         elif k < 5: out = crack_overlay(A, clamp((k - 1) / 2, 0, 1))
@@ -982,6 +1144,9 @@ def render(f):
             out = cv2.warpAffine(out, np.float32([[1, 0, dx], [0, 1, dy]]), (W, H), borderMode=cv2.BORDER_REFLECT)
         else:
             out = render_shot(s, f)
+        if s.get("morph_to"):
+            B = render_shot(by_name(s["morph_to"]), by_name(s["morph_to"])["f0"], False)
+            out = morph(out, B, smooth((k + 1) / (s["f1"] - s["f0"] + 1)))
         tin = s.get("tin"); tout = s.get("tout")
         P = prev_shot(s)
         # ---- incoming transitions
@@ -997,6 +1162,8 @@ def render(f):
             u = 1 - k / 9; out = roll(out, -85 * u * u, -85 * max(0, u - 0.12) ** 2, 1 + 0.45 * u * u)
         elif tin == "logo" and k < 11:
             out = logo_through(last_frame_of(P), out, k)
+        elif tin == "slash" and k < 12:
+            out = slash_in(last_frame_of(P), out, k)
         elif tin == "cube" and k < 7:
             A = last_frame_of(P); out = cube(A, out, eout((k + 1) / 7, 2))
         elif tin == "photo" and k < 8:
@@ -1018,6 +1185,7 @@ def render(f):
             out = cv2.warpAffine(out, np.float32([[1, 0, (W / 2 - bx) * ein(u, 2)], [0, 1, (H * 0.42 - by) * ein(u, 2)]]), (W, H), borderMode=cv2.BORDER_REFLECT)
             out = out * (1 - ein(clamp((u - 0.5) / 0.5, 0, 1), 1.5))
         if tout == "darkpass" and kn >= -8: out = darkpass_out(out, kn)
+        if tout == "slash" and kn >= -7: out = slash_out(out, kn)
         if tout == "eye" and kn >= -7: out = eye_portal(out, f, n_)
         if tout == "roll" and kn >= -6:
             u = (kn + 7) / 7; out = roll(out, 95 * ein(u, 2.2) - 14 * u, 95 * ein(u, 2.2), 1 + 0.45 * ein(u, 2))
@@ -1042,7 +1210,9 @@ def render(f):
     # ---- graphics
     if s["n"] == "bhb_close" and person is not None:
         PERSON_IMG[0] = out.copy(); out = bhb_title(out, f, s, person)
-    out = lyric_layer(out, f, person if s["n"] in ("fingergun", "freeze") else None)
+    if s.get("knockout"): out = knockout(out, f, s)
+    if E.s2e(16.40) <= f / FPS and f < E.fh(E.DROP_HB): out = draw_bleed(out, f / FPS)
+    out = lyric_layer(out, f, None)
     out = captions(out, f)
     if s.get("look") == "cine": out = bloom(out, 0.22)
     out = out * VIG + grain(f, 0.020 if s.get("look") == "night" else 0.014)

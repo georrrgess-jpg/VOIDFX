@@ -11,8 +11,9 @@ N = int(round(E.DUR * SR))
 def I(t): return int(round(t * SR))
 db = A2.db; bq = A2.bq; noise = A2.noise; env_exp = A2.env_exp
 
+PRE = 2048          # timeline starts PRE samples before edit 0: that audio is the natural lead-in to the loop start
 def place(out, sig, t):
-    A2.place(out, sig if sig.ndim == 2 else np.stack([sig, sig], 1), I(t))
+    A2.place(out, sig if sig.ndim == 2 else np.stack([sig, sig], 1), I(t) + PRE)
 
 def stereo(x, pan=0.0):
     return np.stack([x * (1 - 0.5 * pan), x * (1 + 0.5 * pan)], 1).astype(np.float32)
@@ -83,21 +84,36 @@ def measure(p):
 def main():
     sr, dk = wf.read(f"{AD}/doakes48k.wav"); dk = dk.astype(np.float32)
     sr, song = wf.read(f"{AD}/song48.wav"); song = song.astype(np.float32)
-    dia = np.zeros((N, 2), np.float32); mus = np.zeros((N, 2), np.float32); fx = np.zeros((N, 2), np.float32)
+    dia = np.zeros((N + PRE, 2), np.float32); mus = np.zeros((N + PRE, 2), np.float32); fx = np.zeros((N + PRE, 2), np.float32)
     # ---- dialogue: one continuous take (0-4.30), J-cut into Dexter's reply, closing line; 40 ms equal-power edges
     for i, (a, b, at) in enumerate(E.DIALOGUE):
         seg = dk[I(a):I(b)].copy()
         seg = bq(seg, "high", 75, 2)
         bqp, aqp = ss.iirpeak(3000 / (SR / 2), 1.0); seg = seg + 0.22 * ss.lfilter(bqp, aqp, seg, axis=0).astype(np.float32)
         env = np.sqrt(np.convolve(seg.mean(1) ** 2, np.ones(960) / 960, "same")); act = env > env.max() * 0.12
-        seg *= db(-14.0) / (np.sqrt(np.mean(seg.mean(1)[act] ** 2)) + 1e-9)
+        g_ = db(-14.0) / (np.sqrt(np.mean(seg.mean(1)[act] ** 2)) + 1e-9); seg *= g_
+        if i == 0: g0 = g_
         nf = I(0.040); ramp = np.sin(np.linspace(0, np.pi / 2, nf)) ** 2
-        seg[:nf] *= ramp[:, None]; seg[-nf:] *= ramp[::-1, None]
+        if i != 0: seg[:nf] *= ramp[:, None]                      # edit 0 starts at full level: it continues the loop
+        seg[-nf:] *= ramp[::-1, None]
         place(dia, seg, at - (0.02 if i == 1 else 0.0))
     # ---- cold-open bed: low drone (continuous under both lines) + riser into the white flash
-    place(fx, stereo(drone(E.T_SONG + 0.05, -32)), 0.0)
+    place(fx, stereo(drone(E.T_SONG + 0.85, -32)), -0.80)          # starts before 0 so it is already at level
+    # loop seam: the scene's own room tone (src 15.62-16.20, the gap before "Jesus") fades in under the last 0.58 s,
+    # processed like line 1, so the wrap from 25.00 -> 0.00 is the same ambience continuing
+    rt = dk[I(15.62):I(16.20)].copy(); rt = bq(rt, "high", 75, 2)
+    bqp, aqp = ss.iirpeak(3000 / (SR / 2), 1.0); rt = rt + 0.22 * ss.lfilter(bqp, aqp, rt, axis=0).astype(np.float32)
+    rt *= g0; nf = I(0.30); rt[:nf] *= (np.sin(np.linspace(0, np.pi / 2, nf)) ** 2)[:, None]
+    place(dia, rt, E.DUR - len(rt) / SR)
     place(fx, A2.riser(1.30, -21), E.T_SONG - 1.30)
     place(fx, A2.whoosh(0.40, -25, 70, True)[::-1].copy(), 0.0)                               # iris opens (inhale)
+    # BAY / HARBOR / BUTCHER: a deep thud under each word of the knockout title, a whoosh as it flies apart
+    for j, (w, ws) in enumerate(E.BHB):
+        place(fx, stereo(A2.impact(-20 + 2 * j, (70 - 8 * j, 38), 0.35, 0.2, 90 + j)), E.d2e(0, ws))
+    place(fx, A2.whoosh(0.32, -24, 93, True), [x for x in E.SHOTS if x["n"] == "bhb_close"][0]["t1"] - 0.30)
+    # bridge morph: a soft reversed swell under the light bloom
+    br = [x for x in E.SHOTS if x["n"] == "bridge"][0]
+    place(fx, A2.whoosh(br["t1"] - br["t0"] + 0.1, -27, 94, True)[::-1].copy(), br["t0"] - 0.05)
     # ---- song
     s0, s1 = I(E.SONG_IN), I(E.st(E.SONG_OUT_HB)) + I(0.01)
     sg = song[s0:s1].copy() * db(-2.5)
@@ -119,6 +135,14 @@ def main():
         place(fx, stereo(blip(2900, 0.04, -31)), t); t += step; step = max(0.10, step * 0.80)
     place(fx, stereo(blip(3400, 0.18, -29)), E.te(40.5) - 0.02)
     for h in (38, 39, 40): place(fx, stereo(heartbeat(-13)), E.te(h))
+    # BLEED IT: wet fill + three drips
+    n = I(0.35); tt = np.arange(n) / SR
+    wet = bq(noise(n, 95), "band", np.array([200, 1200]), 2) * np.exp(-tt / 0.12) * (0.6 + 0.4 * np.sin(2 * np.pi * 14 * tt))
+    place(fx, stereo(wet / np.abs(wet).max() * db(-26)), E.s2e(16.78))
+    for j in range(3):
+        m_ = I(0.12); tq = np.arange(m_) / SR
+        pl = np.sin(2 * np.pi * np.cumsum(1300 * np.exp(-tq / 0.025) + 380) / SR) * env_exp(m_, 0.04, 0.001)
+        place(fx, stereo(pl * db(-31), 0.4 - 0.4 * j), E.s2e(16.78) + 0.10 + 0.07 * j)
     D = E.te(E.DROP_HB)
     place(fx, gunshot(-3), D - 0.004)
     place(fx, glass(-10, 7), D + 5 / E.FPS)
@@ -131,7 +155,14 @@ def main():
     place(fx, stereo(A2.impact(-18, (110, 60), 0.12, 0.7, 74)), tin("boat") - 0.20)          # logo slams in
     place(fx, np.stack([A2.shimmer(0.9, -27)] * 2, 1), tin("boat") - 0.15)                   # metal sheen
     place(fx, A2.whoosh(0.32, -21, 75, True), tin("boat") - 0.10)                            # through the 'o'
-    place(fx, A2.whoosh(0.30, -22, 35, False), tin("photos") - 0.12)                         # cube
+    # knife slash: blade "shing" (swept metallic ring) + split whoosh
+    n = I(0.5); tt = np.arange(n) / SR
+    ring = sum(np.sin(2 * np.pi * f0 * tt * (1 + 0.15 * tt)) * np.exp(-tt / (0.10 + 0.03 * j)) for j, f0 in enumerate((3200, 4700, 6900, 8800)))
+    hiss = bq(noise(n, 81), "band", np.array([3000, 11000]), 2) * np.exp(-tt / 0.05)
+    shing = (ring / 4 + 0.8 * hiss) * np.minimum(1, tt / 0.003); shing = shing / np.abs(shing).max() * db(-19)
+    place(fx, np.stack([shing * np.linspace(1.3, 0.6, n), shing * np.linspace(0.6, 1.3, n)], 1), tin("photos") - 7 / E.FPS)
+    place(fx, A2.whoosh(0.30, -21, 35, True), tin("photos") - 0.04)
+    place(fx, stereo(A2.impact(-20, (100, 55), 0.10, 0.6, 82)), tin("photos"))
     place(fx, stereo(shutter(-19)), tin("lamp") - 0.16); place(fx, A2.whoosh(0.28, -22, 76, True), tin("lamp") - 0.14)
     place(fx, stereo(shutter(-17)), tin("lock1")); place(fx, A2.whoosh(0.28, -25, 36, True), tin("lock1") + 0.08)
     for n in ("lock2", "lock3", "lock4"):
@@ -142,14 +173,18 @@ def main():
     place(fx, stereo(A2.impact(-18, (90, 45), 0.2, 0.4, 61)), E.s2e(18.42))                 # BULLETS
     place(fx, stereo(A2.impact(-16, (80, 40), 0.3, 0.45, 62)), E.s2e(27.74))                 # CAUGHT
     place(fx, A2.whoosh(0.40, -24, 39, False), E.T_STOP - 0.05)                             # freeze
-    place(fx, stereo(drone(E.DUR - E.T_STOP, -35)), E.T_STOP)
+    place(fx, stereo(drone(E.DUR - E.T_STOP + 0.85, -32)[I(0.80):]), E.T_STOP)
     pk = A2.whoosh(0.55, -21, 77, True); place(fx, pk[::-1].copy(), E.DUR - 0.55)            # into the pupil -> loops
     fx = np.tanh(fx * 1.3) / 1.3
     # duck music under the drop impact
-    duck = np.ones(N, np.float32); i0 = I(D); n = I(0.35)
+    duck = np.ones(N + PRE, np.float32); i0 = I(D) + PRE; n = I(0.35)
     duck[i0:i0 + n] = 1 - (1 - db(-3)) * np.exp(-np.arange(n) / (0.15 * SR))
-    mix = dia + mus * duck[:, None] + fx
-    r = I(0.002); mix[:r] *= np.linspace(0, 1, r)[:, None]; mix[-r:] *= np.linspace(1, 0, r)[:, None]
+    full = dia + mus * duck[:, None] + fx
+    lead, mix = full[:PRE].copy(), full[PRE:].copy()
+    # circular seam: the last PRE samples crossfade into the lead-in of edit 0, so sample N-1 flows into sample 0
+    w = (np.sin(np.linspace(0, np.pi / 2, PRE)) ** 2)[:, None]
+    mix[-PRE:] = mix[-PRE:] * (1 - w) + lead * w
+    # (no edge fades: the end and start are matched so the TikTok loop is continuous)
     raw = f"{AD}/mix_raw.wav"; wf.write(raw, SR, mix.astype(np.float32))
     Iraw, _ = measure(raw); gain = -13.0 - Iraw
     out = f"{AD}/mix.wav"
@@ -157,7 +192,7 @@ def main():
                     f"alimiter=limit={db(-3.0):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr",
                     "-c:a", "pcm_s24le", out], check=True)
     sr_, m = wf.read(out); m = m.astype(np.float32) / 2 ** 31
-    pre = np.zeros((1024, 2), np.float32)
+    pre = m[-1024:].copy()                                  # AAC encoder pre-roll = the loop's own tail
     wf.write(f"{AD}/mix_preroll.wav", SR, np.vstack([pre, m]).astype(np.float32))
     test = f"{AD}/aac_test.m4a"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-itsoffset", str(-1024 / SR), "-i", f"{AD}/mix_preroll.wav", "-c:a", "aac", "-b:a", "256k", test], check=True)
