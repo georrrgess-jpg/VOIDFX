@@ -137,6 +137,16 @@ The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded
   - risers plus sub drops into the three big sections (drowning, hurting, losing);
   - a low electric crackle bed under the whole chorus.
 
+### Revision 4 checkpoint: **SHIP**
+
+- **Automated criteria:** all 7 PASS.
+  - −13.0 LUFS / −2.9 dBTP.
+  - 0 clicks at 23 cuts.
+  - No frozen runs.
+  - 0 face-centering flags and 0 text-over-face frames.
+  - Loop seam matched (luma 0.6 / 0.6).
+- **Visual sign-off:** FEEL A THING and the three acts of FALLING (plunge, slam with shockwave and sparks, tumble) were verified on frames from the encoded MP4.
+
 ## Files
 
 - `out/fastest_flash_voidfx_9x16.mp4`: upload version.
