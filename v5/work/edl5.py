@@ -69,9 +69,9 @@ for s in SHOTS:
 TITLE = dict(text="THE FASTEST MAN ALIVE", t_in=th(209), t_out=th(219.5))
 # lyric words (song time from whisper large-v3 word timings), styled per moment
 LYR = [("FALLING", 74.16, 75.40, "fall"), ("FADING", 76.74, st(240) - 0.05, "fade"),
-       ("DROWNING", 79.32, st(248) - 0.02, "drown"), ("BREATHE", 81.94, st(256) - 0.02, "breathe"),
-       ("HURTING", 84.32, 85.70, "glitch"), ("LOST IT ALL", 86.92, 88.68, "slam"),
-       ("LOSING", 89.64, st(280) - 0.02, "streak"), ("BREATHE", 92.32, st(288) - 0.30, "breathe")]
+       ("DROWNING", 79.32, st(248) - 0.02, "drown"), ("tell me to", 80.70, st(256) - 0.02, "pre"), ("BREATHE", 81.94, st(256) - 0.02, "breathe"),
+       ("HURTING", 84.32, 85.02, "glitch"), ("LOST IT ALL", 86.92, 88.68, "slam"),
+       ("LOSING", 89.64, st(280) - 0.02, "streak"), ("tell me to", 91.00, st(288) - 0.30, "pre"), ("BREATHE", 92.32, st(288) - 0.30, "breathe")]
 
 # sanity: every lyric window must be non-empty and start on its sung word
 for _w, _s0, _s1, _st in LYR: assert _s1 > _s0 + 0.3, (_w, _s0, _s1)

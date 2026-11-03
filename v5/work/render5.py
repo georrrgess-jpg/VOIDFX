@@ -1467,6 +1467,20 @@ def lyric5(out, f):
             gl = np.zeros_like(L); gl[..., :3] = GOLD; gl[..., 3] = cv2.GaussianBlur(L[..., 3], (0, 0), 22) * (0.45 + 0.2 * math.sin(k * 0.12))
             x0, y0 = int(W / 2 - L.shape[1] / 2), int(y - L.shape[0] / 2)
             out = paste(out, gl, x0, y0, fade * v); out = paste(out, L, x0, y0, fade * v)
+        elif style == "pre":                                  # soft lead-in line: words ease in one at a time
+            fnt = font(F_SB, 54); words = word.upper().split(); sp = fnt.getlength("  ")
+            wts = [s0 + j * 0.30 for j in range(len(words))]
+            widths = [sum(fnt.getlength(c) + 10 for c in w_) for w_ in words]
+            x = W / 2 - (sum(widths) + sp * (len(words) - 1)) / 2
+            for w_, wt, wd in zip(words, wts, widths):
+                kk = (t - E.s2e(wt)) * FPS
+                if kk > -1:
+                    v = eout((kk + 1) / 10, 3)
+                    m = text_mask(w_, F_SB, 54, tracking=10)
+                    if v < 1: m = cv2.GaussianBlur(m, (0, 0), 0.1 + 5 * (1 - v))
+                    L = shadowed(m, WHITE * 0.92, blur=8, sa=0.7)
+                    out = paste(out, L, int(x + wd / 2 - L.shape[1] / 2), int(1350 + 16 * (1 - v) - L.shape[0] / 2), v * fade * 0.95)
+                x += wd + sp
         elif style == "glitch":                               # lands with an RGB tear that settles
             v = eout(k / 6, 3)
             m = text_mask(word, F_BLACK, size)

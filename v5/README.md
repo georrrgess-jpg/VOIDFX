@@ -39,6 +39,12 @@ Review ran in passes on rendered stills while building. Each pass found and fixe
 4. **voidfx logo:** the "o" ring left a white block over the next shot. It now fades as the camera passes through.
 5. **Text that never appeared:** three words never showed because their end times fell before the sung word: **LOST IT ALL's "ALL"**, **FALLING** and **HURTING**. All are fixed, and `edl5.py` now asserts that every lyric window is non-empty.
 
+Checkpoint run 1 passed all 7 automated criteria but **failed visual sign-off**, so the edit was not shipped:
+- **HURTING over a face:** HURTING ran into the next shot and sat over the running Flash's face (also flagged by the text-over-face pass). It now ends on its own shot.
+- **Empty stretch:** the 2.6 s glowing-eyes hold had about 1.3 s with nothing happening before BREATHE. A soft "TELL ME TO" lead-in line now eases in word by word on the sung words, before both BREATHEs.
+
+The edit was re-rendered and the checkpoint run again.
+
 The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded MP4 and checks format and frame count, a clean decode, loudness and true peak, frozen runs, face centering on every shot, text over faces, audio clicks at every cut and the loop seam. It prints PASS/FAIL per criterion and a verdict. After that comes a visual sign-off on contact sheets of every transition. If anything fails, the edit is fixed and re-rendered before delivery.
 
 ## Files
