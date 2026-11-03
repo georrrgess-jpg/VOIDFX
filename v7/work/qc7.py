@@ -71,7 +71,7 @@ def text_bands(t):
     b = []
     for tx in getattr(E, "TEXT", []):
         if tx["words"][0][1] - 0.05 <= t < tx["end"] + 0.2:
-            b.append({"case": (1310, 1530), "stamp": (1330, 1530), "doors": (1330, 1520), "luminol": (1240, 1640), "confess": (1240, 1560)}[tx["style"]] + (tx["style"],))
+            b.append({"case": (1310, 1530), "stamp": (1330, 1530), "doors": (1330, 1520), "luminol": (1240, 1640), "confess": (1240, 1560), "casestamp": (1250, 1640)}[tx["style"]] + (tx["style"],))
     for vi, words, s_end, emph, style in E.CAPS:
         a, b_, at = E.VO[vi]
         if at + (words[0][1] - a) <= t < at + (s_end - a) + 0.6: b.append((1320, 1600, "caption%d" % vi))

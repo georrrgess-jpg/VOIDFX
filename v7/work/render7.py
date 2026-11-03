@@ -3807,8 +3807,7 @@ def text7(out, f):
             out, _ = lay_words(out, f, [(w, wt) for w, wt, _ in ws], 1430, "stamp", [], t1)
         elif st_ == "doors":
             (w0, ta, _), (w1, tb, _) = ws
-            if t < tb: out, _ = lay_words(out, f, [(w0, ta)], 1420, "mono", [], tb - 0.15)   # OPEN is gone before CLOSE lands
-            if t >= tb - 0.02: out, _ = lay_words(out, f, [(w1, tb)], 1420, "doorsbig", [], t1)
+            if t < tb: out, _ = lay_words(out, f, [(w0, ta)], 1420, "mono", [], tb - 0.30)   # OPEN clears as the lid falls; CLOSE is engraved on the lid
         elif st_ == "confess":
             r0 = [(w, wt) for w, wt, l in ws if l == 0]; r1 = [(w, wt) for w, wt, l in ws if l == 1]
             out, _ = lay_words(out, f, r0, 1300, "case", [], t1)
@@ -3827,7 +3826,8 @@ def render(f):
     P = prev_shot(s); tin = s.get("tin"); tout = s.get("tout")
     out = render_shot(s, f)
     if s.get("plastic"): out = plastic_layer(out, f, s)
-    if s.get("lensframe") and k >= 16: out = lens_frame(cv2.GaussianBlur(out, (0, 0), 1.2))
+    if s.get("lensframe") and k >= (TR2[tin][2] if tin in TR2 else 0): out = lens_frame(cv2.GaussianBlur(out, (0, 0), 1.2))
+    out = evidence_markers(out, f, s)
     if tin in TR2 and k < TR2[tin][2]: out = TR2[tin][0](last_visible(P) if P else out * 0, out, k, f, P, s)
     if n_ is not None:
         nt = n_.get("tin")
@@ -3836,9 +3836,343 @@ def render(f):
     h = t / E.HB + E.H0
     if h < E.HDROP and k >= (16 if tin == "lens_open" else 0): out = hud(out, f, 0.42 * clamp(k / 10, 0, 1) if tin == "lens_open" else 0.42)
     out = blood_hits(out, f)
-    out = text7(out, f)
+    out = text7(out, f); out = case_stamp(out, f)
     out = finish_noir(out, f)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+# ============================================================================ v7 rev 2 — new transitions + graphics
+BRASS = np.array([0.22, 0.58, 0.82], np.float32)
+WOOD = np.array([0.08, 0.15, 0.36], np.float32)
+
+def _lowfreq(shape, cells, seed):
+    rng = np.random.default_rng(seed); return cv2.resize(rng.random(cells).astype(np.float32), (shape[1], shape[0]), interpolation=cv2.INTER_CUBIC)
+
+# ---- 1. CLOSE: Dexter's rosewood blood-slide box slams shut on "close", reopens, the camera dives into a blood drop
+_BOX = {}
+def box_lid(engrave):
+    """the lid's outer face: rosewood grain, brass corners + hinges, brass plate with CLOSE engraved (0..1)."""
+    if "lid" not in _BOX:
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        warp = _lowfreq((H, W), (12, 8), 3) * 60 + _lowfreq((H, W), (60, 30), 4) * 8
+        g = 0.5 + 0.5 * np.sin((xx + warp * 0.6) / 5.0); g2 = 0.5 + 0.5 * np.sin((xx * 0.53 + warp * 1.3) / 2.2)
+        fib = cv2.GaussianBlur(np.random.default_rng(6).random((H, W)).astype(np.float32), (0, 0), sigmaX=0.6, sigmaY=9)
+        tone = 0.70 + 0.14 * g + 0.06 * g2 + 0.12 * (fib - 0.5) + 0.16 * (_lowfreq((H, W), (8, 5), 5) - 0.5)
+        lid = WOOD * tone[..., None]
+        lid = lid + np.clip(1 - np.abs((xx - W * 0.25) * 0.6 + (yy - H * 0.3) * 0.35) / 380, 0, 1)[..., None] * 0.10      # varnish sheen
+        vg = np.clip(1 - (((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) * 0.22, 0.6, 1)
+        lid = lid * vg[..., None]
+        for inset in (46, 58):                                                      # inlay lines
+            cv2.rectangle(lid, (inset, inset), (W - inset, H - inset), tuple(float(c) for c in WOOD * 1.7), 2, cv2.LINE_AA)
+        def brass_plate(x0, y0, x1, y1, r=10):
+            m = np.zeros((H, W), np.float32); cv2.rectangle(m, (x0 + r, y0), (x1 - r, y1), 1, -1); cv2.rectangle(m, (x0, y0 + r), (x1, y1 - r), 1, -1)
+            for cx, cy in ((x0 + r, y0 + r), (x1 - r, y0 + r), (x0 + r, y1 - r), (x1 - r, y1 - r)): cv2.circle(m, (cx, cy), r, 1, -1, cv2.LINE_AA)
+            grad = np.clip(1.15 - ((xx - x0) / max(1, x1 - x0)) * 0.25 - ((yy - y0) / max(1, y1 - y0)) * 0.35, 0.6, 1.2)
+            return m, BRASS * grad[..., None]
+        acc = lid.copy()
+        for (x0, y0, x1, y1) in ((24, 24, 180, 60), (24, 24, 60, 180), (W - 180, 24, W - 24, 60), (W - 60, 24, W - 24, 180),
+                                 (24, H - 60, 180, H - 24), (24, H - 180, 60, H - 24), (W - 180, H - 60, W - 24, H - 24), (W - 60, H - 180, W - 24, H - 24),
+                                 (int(W * 0.22), 0, int(W * 0.34), 34), (int(W * 0.66), 0, int(W * 0.78), 34)):
+            m, col = brass_plate(x0, y0, x1, y1, 6); acc = acc * (1 - m[..., None]) + col * m[..., None]
+        px0, py0, px1, py1 = W // 2 - 360, int(H * 0.52) - 120, W // 2 + 360, int(H * 0.52) + 120
+        sh = np.zeros((H, W), np.float32); cv2.rectangle(sh, (px0 + 10, py0 + 14), (px1 + 10, py1 + 14), 1, -1)
+        acc = acc * (1 - cv2.GaussianBlur(sh, (0, 0), 10)[..., None] * 0.55)
+        m, col = brass_plate(px0, py0, px1, py1, 18); acc = acc * (1 - m[..., None]) + col * m[..., None]
+        cv2.rectangle(acc, (px0 + 14, py0 + 14), (px1 - 14, py1 - 14), tuple(float(c) for c in BRASS * 0.7), 2, cv2.LINE_AA)
+        for sx, sy in ((px0 + 30, py0 + 30), (px1 - 30, py0 + 30), (px0 + 30, py1 - 30), (px1 - 30, py1 - 30)):
+            cv2.circle(acc, (sx, sy), 9, tuple(float(c) for c in BRASS * 0.55), -1, cv2.LINE_AA); cv2.line(acc, (sx - 6, sy), (sx + 6, sy), (0.05, 0.08, 0.12), 2, cv2.LINE_AA)
+        tm = text_mask("CLOSE", F_DISP, 150, tracking=22); th_, tw_ = tm.shape
+        T = np.zeros((H, W), np.float32); ty, tx = (py0 + py1) // 2 - th_ // 2, W // 2 - tw_ // 2; T[ty:ty + th_, tx:tx + tw_] = tm
+        _BOX.update(lid=np.clip(acc, 0, 1).astype(np.float32), text=T, plate=(px0, py0, px1, py1))
+    lid = _BOX["lid"]
+    if engrave <= 0: return lid
+    T = _BOX["text"] * engrave
+    hi = np.roll(T, 3, 0) * (1 - T)                                                  # lower lip catches light
+    return np.clip(lid * (1 - T[..., None] * 0.80) + np.array([0.02, 0.04, 0.07], np.float32) * T[..., None] + hi[..., None] * BRASS * 0.5, 0, 1)
+
+def box_interior():
+    """open box: red velvet, a column of glass slides each with a blood drop; the middle drop sits at the frame centre."""
+    if "in" not in _BOX:
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        vel = np.array([0.05, 0.03, 0.30], np.float32) * (0.75 + 0.35 * _lowfreq((H, W), (120, 70), 8))[..., None]
+        o = vel.copy(); rd = 95; sw, sh_ = 820, 210
+        for i in range(-3, 4):
+            cy = H // 2 + i * 262; x0, y0, x1, y1 = W // 2 - sw // 2, cy - sh_ // 2, W // 2 + sw // 2, cy + sh_ // 2
+            cv2.rectangle(o, (x0 - 14, y0 - 16), (x1 + 14, y1 + 16), tuple(float(c) for c in WOOD * 0.8), -1)       # wooden slot
+            sub = o[y0:y1, x0:x1]; o[y0:y1, x0:x1] = sub * 0.45 + np.array([0.80, 0.82, 0.80], np.float32) * 0.40   # glass
+            cv2.rectangle(o, (x0, y0), (x1, y1), (0.95, 0.96, 0.95), 2, cv2.LINE_AA)
+            cv2.rectangle(o, (x0 + 10, y0 + 12), (x0 + 170, y1 - 12), (0.88, 0.90, 0.90), -1)                     # label
+            for k in range(3): cv2.line(o, (x0 + 24, y0 + 40 + k * 40), (x0 + 150 - k * 22, y0 + 40 + k * 40), (0.25, 0.25, 0.3), 3, cv2.LINE_AA)
+            if i != 0:
+                cv2.circle(o, (W // 2 + 60, cy), rd, (0.03, 0.02, 0.45), -1, cv2.LINE_AA)
+                cv2.circle(o, (W // 2 + 60 - 30, cy - 34), 18, (0.55, 0.55, 0.95), -1, cv2.LINE_AA)
+        _BOX["in"] = np.clip(o, 0, 1).astype(np.float32); _BOX["drop"] = (W // 2 + 60, H // 2, rd)
+    return _BOX["in"], _BOX["drop"]
+
+def lid_over(under, phi, img, shade=1.0):
+    """composite the lid (hinged at the top of the frame) rotated phi (deg; 0 = closed, 90 = open/edge-on) over `under`."""
+    p = math.radians(phi); D = 2.6 * H; s = D / (D - H * math.sin(p)); yb = H * math.cos(p) * s
+    if yb < 2: return under
+    q = np.float32([[0, 0], [W, 0], [W / 2 + W / 2 * s, yb], [W / 2 - W / 2 * s, yb]])
+    Mp = cv2.getPerspectiveTransform(np.float32([[0, 0], [W, 0], [W, H], [0, H]]), q)
+    li = cv2.warpPerspective(img * shade, Mp, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
+    lm = cv2.warpPerspective(np.ones((H, W), np.float32), Mp, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)[..., None]
+    shadow = np.clip(1 - (np.arange(H)[:, None] - yb) / 260, 0, 1)[..., None] * (np.arange(H)[:, None] > yb)[..., None] * 0.6
+    return under * (1 - shadow) * (1 - lm) + li * lm
+
+def slidebox_close(A, B, j, f, sa, sb):
+    js = E.fe(E.CLOSE_T) - sb["f0"]
+    if j < 0:
+        if j < js - 11: return A
+        if j < js:                                                                     # lid falls
+            u = (j - (js - 11)) / 11.0; phi = 90 * (1 - ein(u, 2.2))
+            return np.clip(lid_over(A, phi, box_lid(0), 0.75 + 0.25 * u), 0, 1)
+        k = j - js; phi = 3.5 * math.exp(-k / 2.2) * abs(math.sin(k * 1.5))           # slam + bounce
+        e = eout(clamp((k - 2) / 10, 0, 1), 2)
+        lid = box_lid(e)
+        if 2 <= k <= 16:                                                               # glint sweeps across the brass plate
+            px0, py0, px1, py1 = _BOX["plate"]; gx = px0 - 100 + (px1 - px0 + 200) * (k - 2) / 14
+            band = np.exp(-(((_GX - gx) + (_GY - py0) * 0.4) / 30) ** 2) * ((_GX > px0) & (_GX < px1) & (_GY > py0) & (_GY < py1))
+            lid = np.clip(lid + band[..., None] * 0.55, 0, 1)
+        o = lid_over(A, phi, lid) if phi > 0.2 else lid
+        o = zoom_about(o, W / 2, H * 0.52, 1 + 0.035 * clamp(k / 30, 0, 1))
+        dx_, dy_, _ = shake(f); o = cv2.warpAffine(o, np.float32([[1, 0, dx_], [0, 1, dy_]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+        if k < 6:                                                                      # dust puff along the seams
+            puff = (np.exp(-(_GY / 40) ** 2) + np.exp(-((H - _GY) / 40) ** 2) + np.exp(-(_GX / 40) ** 2) + np.exp(-((W - _GX) / 40) ** 2))
+            o = np.clip(o + puff[..., None] * 0.35 * (1 - k / 6), 0, 1)
+        return o
+    v = j + 1; inside, (dx, dy, rd) = box_interior()
+    phi = 90 * eout(clamp(v / 6, 0, 1), 2)
+    Z = math.exp(math.log(12.5) * ein(clamp((v - 3) / 13, 0, 1), 2.3))
+    tx = dx + (W / 2 - dx) * clamp((Z - 1) / 11.5, 0, 1)                              # the drop drifts to the frame centre
+    M = np.float32([[Z, 0, tx - Z * dx], [0, Z, dy - Z * dy]])
+    o = cv2.warpAffine(inside, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    cx = M[0, 0] * dx + M[0, 2]; cy = M[1, 1] * dy + M[1, 2]; R = rd * Z
+    s_ = R / 1150.0; Mz = np.float32([[s_, 0, cx - s_ * W / 2], [0, s_, cy - s_ * H / 2]])
+    con = cv2.warpAffine(B, Mz, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    tint = clamp(1 - (Z - 1) / 9, 0, 1)
+    con = con * (1 - 0.6 * tint) + np.array([0.03, 0.02, 0.45], np.float32) * 0.6 * tint
+    cm = np.zeros((H, W), np.float32); cv2.circle(cm, (int(cx), int(cy)), int(min(R, 5000)), 1.0, -1, cv2.LINE_AA)
+    o = o * (1 - cm[..., None]) + con * cm[..., None]
+    if phi < 89.5: o = lid_over(o, phi, box_lid(1.0), 0.85)
+    return np.clip(o, 0, 1)
+
+# ---- 2. a drop of blood hits the lens and spreads; the next shot is seen through it, then the blood clears
+_BL = {}
+def blood_lens(A, B, j, f, sa, sb):
+    if "n" not in _BL:
+        rng = np.random.default_rng(44); ang = np.linspace(0, 2 * np.pi, 360, endpoint=False)
+        prof = 1 + 0.18 * np.sin(ang * 3 + 1) + 0.10 * np.sin(ang * 7 + 2) + 0.06 * rng.standard_normal(360).cumsum() / 12
+        _BL["prof"] = prof; _BL["a"] = np.arctan2(_GY - H * 0.42, _GX - W / 2); _BL["r"] = np.sqrt((_GX - W / 2) ** 2 + (_GY - H * 0.42) ** 2)
+    r, a = _BL["r"], _BL["a"]; prof = np.interp(a, np.linspace(-np.pi, np.pi, 360, endpoint=False), _BL["prof"])
+    if j < 0:                                                                          # the drop falls toward the lens
+        u = (j + 9) / 9.0; y = -80 + (H * 0.42 + 80) * ein(u, 2.0); rr = 10 + 80 * ein(u, 2.5)
+        o = A.copy(); cv2.ellipse(o, (W // 2, int(y)), (int(rr), int(rr * 1.25)), 0, 0, 360, (0.03, 0.02, 0.42), -1, cv2.LINE_AA)
+        cv2.circle(o, (W // 2 - int(rr * 0.35), int(y - rr * 0.45)), max(2, int(rr * 0.22)), (0.6, 0.6, 1.0), -1, cv2.LINE_AA)
+        return np.clip(o, 0, 1)
+    v = (j + 1) / 18.0; R = 1500 * eout(clamp(v / 0.55, 0, 1), 2.2)
+    m = np.clip((R * prof - r) / 10, 0, 1)[..., None]
+    lensed = barrel(B, 0.25 * (1 - v), W / 2, H * 0.42, 900)
+    tint = clamp(1 - (v - 0.35) / 0.65, 0, 1)
+    inside = lensed * (1 - 0.65 * tint) + np.array([0.04, 0.03, 0.55], np.float32) * 0.65 * tint
+    rim = np.exp(-((R * prof - r) / 18) ** 2)[..., None] * (1 - v)
+    o = A * 0.6 * (1 - m) + inside * m + rim * np.array([0.02, 0.02, 0.30], np.float32)
+    if v > 0.45:                                                                        # drips run down as it clears
+        dr = np.zeros((H, W), np.float32); rng = np.random.default_rng(9)
+        for x in rng.uniform(40, W - 40, 9):
+            L_ = (v - 0.45) * rng.uniform(500, 1200); y0 = rng.uniform(100, 600)
+            cv2.line(dr, (int(x), int(y0)), (int(x), int(y0 + L_)), 1.0, int(rng.integers(6, 14)), cv2.LINE_AA)
+        o = o * (1 - dr[..., None] * 0.5 * tint) + dr[..., None] * np.array([0.03, 0.02, 0.40], np.float32) * 0.5 * tint
+    return np.clip(o, 0, 1)
+
+# ---- 3. HERO: the plastic stretches toward the camera, then bursts open in flaps with a blood spray (the drop)
+_BU = {}
+def burst(A, B, j, f, sa, sb, n_flaps=9):
+    cx, cy = W / 2, H * 0.47; rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2)
+    if j < 0:                                                                          # stretch / bulge
+        u = (j + 19) / 19.0; k_ = 0.34 * ein(u, 1.8)                                    # centre-weighted bulge (title stays clean)
+        g = 1 - k_ * np.exp(-(rr / 430) ** 2)
+        o = cv2.remap(A, (cx + (_GX - cx) * g).astype(np.float32), (cy + (_GY - cy) * g).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        ring = np.exp(-((rr - (560 - 220 * u)) / 70) ** 2)[..., None] * ein(u, 1.5)   # tension highlight around the bulge
+        o = o * (1 + 0.12 * ein(u, 2)) + ring * (WHITE * 0.22 + UV * 0.10) + np.exp(-(rr / (120 + 60 * u)) ** 2)[..., None] * 0.3 * ein(u, 3)
+        if u > 0.7: o = zoom_about(o, cx + 6 * math.sin(j * 2.3), cy + 5 * math.cos(j * 3.1), 1.0)
+        return np.clip(rgb_split(o, 10 * ein(u, 2)), 0, 1)
+    if "seed" not in _BU:
+        rng = np.random.default_rng(77)
+        _BU["edges"] = np.sort(rng.uniform(0, 2 * np.pi, n_flaps)); _BU["drops"] = [(rng.uniform(0, 6.283), rng.uniform(2600, 5200), rng.uniform(5, 16), rng.uniform(0, 0.06)) for _ in range(60)]
+        _BU["jag"] = rng.standard_normal(720).cumsum(); _BU["jag"] = (_BU["jag"] - _BU["jag"].mean()) / (np.abs(_BU["jag"]).max() + 1e-6); _BU["seed"] = 1
+    v = (j + 1) / 18.0; a = np.mod(np.arctan2(_GY - cy, _GX - cx), 2 * np.pi)
+    Rh = 1500 * eout(v, 2.4) * (1 + 0.16 * np.interp(a, np.linspace(0, 2 * np.pi, 720), _BU["jag"]))
+    hole = np.clip((Rh - rr) / 6, 0, 1)
+    o = zoom_about(B, cx, cy, 1.25 - 0.25 * eout(v, 2))
+    shock = np.exp(-((rr - 1700 * eout(v, 1.6)) / 70) ** 2)[..., None] * (1 - v)
+    o = np.clip(o * (1 + 0.8 * (1 - v) ** 3) + shock * (WHITE * 0.5 + BLOOD_HI * 0.5), 0, 1)
+    edges = _BU["edges"]
+    for i in range(len(edges)):
+        a0, a1 = edges[i], edges[(i + 1) % len(edges)] + (2 * np.pi if i == len(edges) - 1 else 0); am = (a0 + a1) / 2
+        inw = (np.mod(a - a0, 2 * np.pi) < np.mod(a1 - a0, 2 * np.pi)).astype(np.float32) * (1 - hole)
+        d = 900 * ein(v, 1.6); sc = 1 + 0.9 * ein(v, 1.8); rot = 25 * v * (1 if i % 2 else -1)
+        M = cv2.getRotationMatrix2D((cx, cy), rot, sc); M[0, 2] += d * math.cos(am); M[1, 2] += d * math.sin(am)
+        fl = cv2.warpAffine(A * (1 - 0.35 * v), M, (W, H), borderMode=cv2.BORDER_CONSTANT)
+        fm = cv2.warpAffine(inw, M, (W, H), borderValue=0)[..., None] * (1 - smooth((v - 0.55) / 0.45))
+        edge = cv2.warpAffine(np.clip(cv2.morphologyEx((inw > 0.5).astype(np.uint8), cv2.MORPH_GRADIENT, np.ones((5, 5), np.uint8)).astype(np.float32), 0, 1), M, (W, H), borderValue=0)[..., None]
+        o = o * (1 - fm) + fl * fm + edge * fm * WHITE * 0.6
+    for ang, sp, rad, dl in _BU["drops"]:                                              # blood spray toward the camera
+        tt = (j + 1) / FPS - dl
+        if tt <= 0: continue
+        dist = 180 + sp * tt; x = cx + dist * math.cos(ang); y = cy + dist * math.sin(ang) + 900 * tt * tt; rr2 = rad * (0.6 + 2.5 * tt)
+        if -80 < x < W + 80 and -80 < y < H + 80 and tt < 0.2:
+            al = clamp(1 - tt / 0.2, 0, 1); lay = o.copy()
+            cv2.ellipse(lay, (int(x), int(y)), (int(rr2 * 5), int(rr2)), math.degrees(ang), 0, 360, (0.03, 0.02, 0.50), -1, cv2.LINE_AA)
+            o = o * (1 - al) + lay * al
+    return np.clip(o, 0, 1)
+
+# ---- 4. body-bag zipper: the bag zips shut over the frame, then unzips onto the next shot
+_ZB = {}
+def bag_tex():
+    if "b" not in _ZB:
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        folds = np.zeros((H, W), np.float32); rng = np.random.default_rng(15)
+        for _ in range(10):
+            a = rng.uniform(-0.8, 0.8); c = rng.uniform(-400, H + 400); wd = rng.uniform(20, 70)
+            folds += rng.uniform(0.4, 1.0) * np.exp(-(((yy - c) - a * (xx - W / 2)) / wd) ** 2)
+        _ZB["b"] = (np.array([0.035, 0.035, 0.04], np.float32) + folds[..., None] * 0.10 * WHITE).astype(np.float32)
+    return _ZB["b"]
+
+def zipper(A, B, j, f, sa, sb):
+    bag = bag_tex(); pre = j < 0
+    v = (j + 10) / 10.0 if pre else (j + 1) / 12.0
+    ys = -80 + (H + 160) * eout(v, 1.6)
+    yy = np.arange(H, dtype=np.float32)[:, None]
+    hw = np.clip((yy - ys) * 0.42, 0, None) if pre else np.clip((ys - yy) * 0.42, 0, None)
+    open_ = (np.abs(_GX - W / 2) < hw).astype(np.float32)
+    o = bag * (1 - open_[..., None]) + (A if pre else B) * open_[..., None]
+    o = o * (1 - 0.5 * (np.exp(-((np.abs(_GX - W / 2) - hw) / 26) ** 2) * (hw > 0))[..., None])   # bag edge shading
+    lay = np.zeros((H, W), np.float32)
+    for y in range(0, H, 14):                                                          # teeth: along the open edges + closed seam
+        h_ = float(hw[y, 0])
+        if h_ > 1:
+            for sg in (-1, 1): cv2.rectangle(lay, (int(W / 2 + sg * h_ - 7), y), (int(W / 2 + sg * h_ + 7), y + 7), 1.0, -1)
+        else: cv2.rectangle(lay, (W // 2 - 9 + (4 if (y // 14) % 2 else -4), y), (W // 2 + 9 + (4 if (y // 14) % 2 else -4), y + 7), 1.0, -1)
+    o = o * (1 - lay[..., None]) + lay[..., None] * np.array([0.55, 0.56, 0.58], np.float32)
+    if -60 < ys < H + 60:                                                              # the slider + pull tab
+        cv2.rectangle(o, (W // 2 - 34, int(ys) - 46), (W // 2 + 34, int(ys) + 46), (0.62, 0.63, 0.66), -1, cv2.LINE_AA)
+        cv2.rectangle(o, (W // 2 - 34, int(ys) - 46), (W // 2 + 34, int(ys) + 46), (0.9, 0.9, 0.92), 2, cv2.LINE_AA)
+        cv2.rectangle(o, (W // 2 - 14, int(ys) + 40), (W // 2 + 14, int(ys) + 150), (0.5, 0.5, 0.53), -1, cv2.LINE_AA)
+    return np.clip(o, 0, 1)
+
+# ---- 5. M99: vision doubles, blurs and the eyelids close; they blink open on the next shot
+def eyelids(img, openness):
+    top = (H / 2 + 40) * (1 - openness); xn = (_GX - W / 2) / (W / 2)
+    m = ((_GY < top * (1 - 0.18 * xn ** 2)) | (_GY > H - top * (1 - 0.18 * xn ** 2))).astype(np.float32)
+    m = cv2.GaussianBlur(m, (0, 0), 14)[..., None]
+    return img * (1 - m) + 0.01 * m
+
+def m99(A, B, j, f, sa, sb):
+    if j < 0:
+        u = (j + 15) / 15.0; d = int(70 * u)
+        o = 0.5 * np.roll(A, d, 1) + 0.5 * np.roll(A, -d, 1)
+        o = cv2.GaussianBlur(o, (0, 0), 0.1 + 7 * u); L = lum(o)[..., None]; o = (L + (o - L) * (1 - 0.6 * u)) * (1 - 0.35 * u)
+        op = 1 - ein(u, 1.6) + 0.25 * math.sin(math.pi * clamp((u - 0.3) / 0.35, 0, 1)) ** 2
+        return np.clip(eyelids(o, clamp(op, 0, 1)), 0, 1)
+    v = (j + 1) / 12.0
+    op = np.interp(v, [0, 0.3, 0.45, 0.6, 1.0], [0.0, 0.55, 0.15, 0.4, 1.0])
+    d = int(50 * (1 - v)); o = 0.5 * np.roll(B, d, 1) + 0.5 * np.roll(B, -d, 1)
+    o = cv2.GaussianBlur(o, (0, 0), 0.1 + 6 * (1 - v))
+    return np.clip(eyelids(o, op), 0, 1)
+
+# ---- 6. the magnifying glass sweeps in over his face; inside it, his eye; the glass becomes the frame
+def mag_sweep(A, B, j, f, sa, sb):
+    R1, cy1 = 640.0, H * 0.40
+    if j < 0:
+        u = eout((j + 11) / 11.0, 2.4); cx = W + 460 + (W / 2 - W - 460) * u; cy = H + 420 + (cy1 - H - 420) * u; R = 360 + (R1 - 360) * u
+    else:
+        v = (j + 1) / 12.0; cx, cy, R = W / 2, cy1, R1
+    rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2); m = np.clip((R - rr) / 5, 0, 1)[..., None]
+    Bm = barrel(zoom_about(B, W / 2, cy1, 1.0), 0.18, W / 2, cy1, R1)
+    Bm = cv2.warpAffine(Bm, np.float32([[1, 0, cx - W / 2], [0, 1, cy - cy1]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+    if j < 0: outside = A
+    else: outside = A * (1 - smooth(v)) + cv2.resize(cv2.GaussianBlur(cv2.resize(B, (W // 4, H // 4)), (0, 0), 6), (W, H)) * 0.22 * smooth(v)
+    o = outside * (1 - m) + Bm * m
+    rim = np.exp(-((rr - R) / 14) ** 2)[..., None]; o = o + rim * (PINK * 0.45 + WHITE * 0.25)
+    hand = np.zeros((H, W), np.float32); ha = math.radians(52)
+    p0 = (cx + (R + 10) * math.cos(ha), cy + (R + 10) * math.sin(ha)); p1 = (p0[0] + 700 * math.cos(ha), p0[1] + 700 * math.sin(ha))
+    cv2.line(hand, (int(p0[0]), int(p0[1])), (int(p1[0]), int(p1[1])), 1.0, 64, cv2.LINE_AA)
+    ha_a = 1.0 if j < 0 else 1 - smooth(v / 0.6)
+    o = o * (1 - hand[..., None] * ha_a) + hand[..., None] * ha_a * np.array([0.16, 0.10, 0.30], np.float32)
+    return np.clip(o, 0, 1)
+
+def logo_orig(A, B, j, f, sa, sb):
+    """the voidfx logo exactly as supplied (its own colours), flown through the 'o' — never restyled."""
+    return logo_through(A, B, j)
+
+TR2.update({"slidebox_close": (slidebox_close, 50, 16), "blood_lens": (blood_lens, 9, 18), "burst": (burst, 19, 18),
+            "zipper": (zipper, 10, 12), "m99": (m99, 15, 12), "mag_sweep": (mag_sweep, 11, 12), "logo_orig": (logo_orig, 12, 11)})
+
+# ---- graphics: crime-scene evidence markers drop in on the beat; the CASE CLOSED rubber stamp
+_EM = {}
+def evidence_markers(out, f, s):
+    if not s.get("markers"): return out
+    if "t" not in _EM:
+        tiles = []
+        for n in (1, 2, 3):
+            tw, tht = 150, 170; t = np.zeros((tht, tw, 4), np.float32)
+            pts = np.int32([[22, tht - 4], [tw - 22, tht - 4], [tw - 44, 8], [44, 8]]); m = np.zeros((tht, tw), np.float32); cv2.fillConvexPoly(m, pts, 1.0, cv2.LINE_AA)
+            t[..., :3] = TAPE_Y * (0.85 + 0.15 * np.linspace(1, 0.7, tht)[:, None, None]); t[..., 3] = m
+            nm = text_mask(str(n), F_DISP, 96); nh, nw = nm.shape; y0, x0 = (tht - nh) // 2 + 8, (tw - nw) // 2
+            t[y0:y0 + nh, x0:x0 + nw, :3] *= (1 - nm[..., None] * 0.95)
+            tiles.append(t)
+        _EM["t"] = tiles
+    pos = [(250, 1540), (560, 1610), (850, 1525)]; hbs = [s["f0"] + 4, E.fe(E.th(546)), E.fe(E.th(548))]
+    for t_img, (x, y), fh_ in zip(_EM["t"], pos, hbs):
+        k = f - fh_
+        if k < 0: continue
+        drop = 1 - eout(k / 7, 2.5); sq = 1 + 0.18 * math.exp(-max(0, k - 7) / 2.5) * math.sin(max(0, k - 7) * 1.7)
+        yy = int(y - 260 * drop); im = cv2.resize(t_img, (int(t_img.shape[1] / sq), int(t_img.shape[0] * sq)))
+        if drop > 0.05: im = cv2.GaussianBlur(im, (0, 0), 0.1 + 3 * drop)
+        sh = np.zeros_like(im); sh[..., 3] = cv2.GaussianBlur(im[..., 3], (0, 0), 8) * 0.55 * (1 - drop)
+        out = paste(out, sh, int(x - im.shape[1] / 2 + 14), int(yy - im.shape[0] + 10), 1.0)
+        out = paste(out, im, int(x - im.shape[1] / 2), int(yy - im.shape[0]), clamp(k / 3, 0, 1))
+    return out
+
+_ST = {}
+def case_stamp(out, f):
+    tx = [t for t in E.TEXT if t["style"] == "casestamp"]
+    if not tx: return out
+    tx = tx[0]; t = f / FPS; t0 = tx["words"][0][1]; k = (t - t0) * FPS
+    if k < 0 or t > tx["end"] + 0.15: return out
+    if "s" not in _ST:
+        tm = text_mask("CASE CLOSED", F_DISP, 112, tracking=10); pad = 46; hh, ww = tm.shape[0] + 2 * pad, tm.shape[1] + 2 * pad
+        m = np.zeros((hh, ww), np.float32); m[pad:pad + tm.shape[0], pad:pad + tm.shape[1]] = tm
+        cv2.rectangle(m, (8, 8), (ww - 9, hh - 9), 1.0, 9, cv2.LINE_AA); cv2.rectangle(m, (24, 24), (ww - 25, hh - 25), 1.0, 3, cv2.LINE_AA)
+        rng = np.random.default_rng(6); n1 = cv2.GaussianBlur(rng.random((hh, ww)).astype(np.float32), (0, 0), 1.3)
+        n2 = cv2.resize(rng.random((hh // 20 + 2, ww // 20 + 2)).astype(np.float32), (ww, hh), interpolation=cv2.INTER_CUBIC)
+        m = m * np.clip((n1 * 0.6 + n2 * 0.6 - 0.12) * 2.8, 0, 1)                     # worn rubber-stamp ink
+        rgba = np.zeros((hh, ww, 4), np.float32); rgba[..., :3] = np.array([0.08, 0.06, 0.78], np.float32); rgba[..., 3] = m * 0.97
+        M = cv2.getRotationMatrix2D((ww / 2, hh / 2), 7, 1.0); big = int(max(hh, ww) * 1.05)
+        M[0, 2] += (big - ww) / 2; M[1, 2] += (big - hh) / 2
+        _ST["s"] = cv2.warpAffine(rgba, M, (big, big), borderValue=(0, 0, 0, 0))
+        sc = min(1.0, 900 / _ST["s"].shape[1]); _ST["s"] = cv2.resize(_ST["s"], (int(_ST["s"].shape[1] * sc), int(_ST["s"].shape[0] * sc)))
+    S_ = _ST["s"]; land = 6
+    sc = 1 + 0.9 * (1 - eout(k / land, 3)) if k < land else 1 + 0.04 * math.exp(-(k - land) / 2) * math.sin((k - land) * 1.8)
+    im = cv2.resize(S_, (int(S_.shape[1] * sc), int(S_.shape[0] * sc)))
+    if k < land: im = cv2.GaussianBlur(im, (0, 0), 0.1 + 5 * (1 - k / land))
+    a = eout(k / 4, 2) * (1.0 if t < tx["end"] else clamp(1 - (t - tx["end"]) * FPS / 8, 0, 1))
+    y = 1440; out = paste(out, im, int(W / 2 - im.shape[1] / 2), int(y - im.shape[0] / 2), a)
+    if land <= k < land + 10:                                                          # ink flecks on impact
+        rng = np.random.default_rng(3); kk = k - land
+        for _ in range(26):
+            ang = rng.uniform(0, 6.28); d = rng.uniform(300, 520) + kk * 6
+            x_, y_ = W / 2 + d * math.cos(ang), y + d * 0.45 * math.sin(ang)
+            cv2.circle(out, (int(x_), int(y_)), int(rng.uniform(2, 6)), (0.10, 0.08, 0.72), -1, cv2.LINE_AA)
+    return out
+
+def init_hits():
+    HITS.clear()
+    for i, h in enumerate(range(E.MONTAGE[0], E.MONTAGE[1], 8)):
+        a = (26, 10, 14, 10, 12)[min(i, 4)]; HITS.append((E.fh(h), a, 4.5))
+    HITS.append((E.fe(E.CLOSE_T), 16, 3.5))                                              # lid slam
+    st_ = [t for t in E.TEXT if t["style"] == "casestamp"]
+    if st_: HITS.append((E.fe(st_[0]["words"][0][1]) + 6, 12, 3.0))                      # stamp lands
 
 def main():
     mode = sys.argv[1]

@@ -238,6 +238,12 @@ def main():
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", E.SONG, "-ar", "48000", "-ac", "2", "-c:a", "pcm_f32le", f"{AD}/song48.wav"], check=True)
     sr, song = wf.read(f"{AD}/song48.wav"); song = song.astype(np.float32)
     mus = music_track(song) * db(-1.5)
+    for s_ in E.SHOTS:                                                 # M99: the world goes muffled while he's under
+        if s_.get("tin") == "m99":
+            a0, a1 = s_["t0"] - 15 / E.FPS, s_["t0"] + 12 / E.FPS
+            tt = (np.arange(N + PRE) - PRE) / SR
+            w = np.clip(np.minimum((tt - a0) / 0.12, (a1 - tt) / 0.15), 0, 1)[:, None]
+            mus = mus * (1 - w) + bq(mus, "low", 700, 2) * w * 1.1
     vo, duck = vo_track()
     mus = mus * db(-6.5 * np.clip(duck, 0, 1.3))[:, None]
     fx = np.zeros((N + PRE, 2), np.float32)
@@ -257,74 +263,111 @@ def main():
             place(fx, stereo(norm(servo * np.sin(np.pi * q / 0.4), -27)), t0 - 0.30)
             place(fx, stereo(shutter_ticks(-26, 3, 0.05, 62)), t0 - 0.05)
             place(fx, A2.whoosh(0.28, -24, 63, False), t0 + 0.05)
-        elif tin == "doors":                                          # heavy steel doors slam shut on "close", then swing open
-            tc = t0 - 22 / E.FPS
-            place(fx, A2.whoosh(0.28, -23, 64, False), tc - 0.26)
-            place(fx, stereo(A2.impact(-11, (60, 30), 0.55, 0.6, 65)), tc)
-            place(fx, stereo(metal_shing(-27, 0.5)), tc + 0.01)
-            n_ = I(0.35); q = np.arange(n_) / SR
-            creak = np.sin(2 * np.pi * np.cumsum(220 + 90 * np.sin(2 * np.pi * 7 * q)) / SR) * np.sin(np.pi * q / 0.35)
-            place(fx, stereo(norm(bq(creak, "band", np.array([150, 2000]), 2), -28)), t0)
-            place(fx, A2.whoosh(0.32, -24, 66, True), t0 + 0.02)
-        elif tin == "redact":                                         # marker strokes
-            for k_ in range(6):
-                n_ = I(0.06); y = bq(noise(n_, 70 + k_), "band", np.array([1200, 5000]), 2) * np.sin(np.pi * np.arange(n_) / n_)
-                place(fx, stereo(norm(y, -27), -0.6 + 0.24 * k_), t0 - 5 / E.FPS + k_ * 0.5 / E.FPS)
+        elif tin == "slidebox_close":                                 # rosewood lid: creak, slam on "close", latch, reopen, glass, dive
+            tc = E.CLOSE_T
+            n_ = I(0.20); q = np.arange(n_) / SR
+            creak = np.sin(2 * np.pi * np.cumsum(180 + 70 * np.sin(2 * np.pi * 9 * q)) / SR) * np.sin(np.pi * q / 0.2)
+            place(fx, stereo(norm(bq(creak, "band", np.array([120, 1800]), 2), -28)), tc - 0.20)
+            place(fx, A2.whoosh(0.20, -24, 64, False), tc - 0.19)
+            place(fx, stereo(A2.impact(-10, (58, 30), 0.45, 0.35, 65)), tc)                       # heavy wood slam
+            n_ = I(0.12); q = np.arange(n_) / SR
+            wood = bq(noise(n_, 66), "band", np.array([150, 1200]), 2) * np.exp(-q / 0.03)
+            place(fx, stereo(norm(wood, -16)), tc)
+            for k_ in range(6): place(fx, stereo(glass_chime(-33 - k_), -0.6 + 0.24 * k_), tc + 0.02 + 0.03 * k_)   # slides rattle inside
+            place(fx, stereo(shutter_ticks(-25, 2, 0.05, 67)), tc + 0.30)                            # latch
+            place(fx, stereo(norm(bq(creak[::-1].copy(), "band", np.array([150, 2200]), 2), -29)), t0 - 0.02)
+            place(fx, stereo(glass_chime(-26), 0.3), t0 + 0.06); place(fx, A2.whoosh(0.30, -21, 68, True), t0 + 0.08)
+            place(fx, stereo(bloop(-24, 69)), t0 + 0.24)                                            # into the drop
         elif tin == "uv_sweep":                                       # UV lamp hum + fluorescent buzz
             place(fx, stereo(neon_buzz(0.45, -27, (0, 1, 1, 0, 1, 1, 1, 1))), t0 - 8 / E.FPS)
             place(fx, A2.whoosh(0.34, -25, 71, True), t0 - 0.12)
-        elif tin == "fingerprint":                                    # scanner sweep
-            n_ = I(0.30); q = np.arange(n_) / SR
-            sc = np.sin(2 * np.pi * np.cumsum(1200 + 1600 * q / 0.3) / SR) * np.sin(np.pi * q / 0.3) + 0.3 * bq(noise(n_, 72), "high", 5000, 2)
-            place(fx, stereo(norm(sc, -27)), t0 - 5 / E.FPS); place(fx, stereo(A2.tick(-26, 73)), t0 + 0.16)
         elif tin == "tape_snap":                                      # tape stretch -> snap
             n_ = I(0.14); q = np.arange(n_) / SR
             str_ = np.sin(2 * np.pi * np.cumsum(600 + 2400 * q / 0.14) / SR) * (q / 0.14) * 0.4 + bq(noise(n_, 74), "band", np.array([1000, 4000]), 2) * 0.5
             place(fx, stereo(norm(str_, -27)), t0 - 0.14)
             place(fx, stereo(A2.impact(-19, (110, 60), 0.10, 0.9, 75)), t0); place(fx, A2.whoosh(0.25, -24, 76, False), t0 + 0.02)
-        elif tin == "strings":                                        # strings twang to the point of origin
-            for k_ in range(5):
-                n_ = I(0.4); q = np.arange(n_) / SR; fq = 330 * (1.12 ** k_)
-                tw = (np.sin(2 * np.pi * fq * q) + 0.4 * np.sin(2 * np.pi * 2 * fq * q)) * np.exp(-q / 0.12)
-                place(fx, stereo(norm(tw, -30), -0.6 + 0.3 * k_), t0 - 0.12 + 0.025 * k_)
-            place(fx, stereo(A2.impact(-23, (90, 45), 0.2, 0.4, 77)), t0)
-        elif tin == "plastic_rip":                                    # the drop: plastic rips open
-            place(fx, A2.riser(0.9, -21), t0 - 0.9)
-            n_ = I(0.45); q = np.arange(n_) / SR
-            rip = bq(noise(n_, 78), "band", np.array([700, 9000]), 2) * (0.5 + 0.5 * (np.random.default_rng(79).random(n_) > 0.6)) * np.exp(-q / 0.18)
-            place(fx, np.stack([norm(rip, -15), np.roll(norm(rip, -15), 40)], 1), t0 - 0.01)
-            place(fx, stereo(A2.impact(-11, (55, 28), 0.7, 0.5, 80)), t0)
+        elif tin == "blood_lens":                                     # a drop falls, splats on the lens, runs
+            place(fx, stereo(drip(-15, 77)), t0 - 0.13)
+            n_ = I(0.35); q = np.arange(n_) / SR
+            sq = bq(noise(n_, 78), "band", np.array([300, 2500]), 2) * np.exp(-q / 0.09) * (1 + 0.5 * np.sin(2 * np.pi * 23 * q))
+            place(fx, stereo(norm(sq, -22)), t0 + 0.02); place(fx, A2.whoosh(0.4, -27, 79, False), t0 + 0.12)
+        elif tin == "burst":                                          # HERO: plastic stretches, bursts, blood spray, sub drop
+            n_ = I(0.40); q = np.arange(n_) / SR
+            stretch = bq(noise(n_, 80), "band", np.array([400, 2500]), 2) * (q / 0.4) ** 1.5 * (1 + 0.6 * np.sin(2 * np.pi * (8 + 30 * q) * q))
+            place(fx, stereo(norm(stretch, -22)), t0 - 0.40)
+            place(fx, A2.riser(0.8, -20), t0 - 0.8)
+            n_ = I(0.55); q = np.arange(n_) / SR
+            rip = bq(noise(n_, 81), "band", np.array([700, 9000]), 2) * (0.5 + 0.5 * (np.random.default_rng(82).random(n_) > 0.55)) * np.exp(-q / 0.16)
+            place(fx, np.stack([norm(rip, -13), np.roll(norm(rip, -13), 50)], 1), t0)
+            place(fx, stereo(A2.impact(-9, (52, 26), 0.8, 0.6, 83)), t0)
+            n_ = I(0.6); q = np.arange(n_) / SR
+            splash = bq(noise(n_, 84), "band", np.array([250, 3500]), 2) * np.exp(-q / 0.12)
+            place(fx, np.stack([norm(splash, -19), np.roll(norm(splash, -19), 90)], 1), t0 + 0.03)
+            place(fx, A2.whoosh(0.45, -18, 85, True), t0 + 0.01)
         elif tin == "slash":
-            place(fx, stereo(swish(-16, 0.11, 81), 0.5), t0 - 5 / E.FPS); place(fx, stereo(metal_shing(-21)), t0 - 0.03)
-            place(fx, stereo(A2.impact(-18, (75, 38), 0.3, 0.6, 82)), t0)
+            place(fx, stereo(swish(-16, 0.11, 86), 0.5), t0 - 5 / E.FPS); place(fx, stereo(metal_shing(-21)), t0 - 0.03)
+            place(fx, stereo(A2.impact(-18, (75, 38), 0.3, 0.6, 87)), t0)
         elif tin == "board":                                          # pins + string pull
-            place(fx, stereo(A2.tick(-25, 83), -0.4), t0 - 0.12); place(fx, stereo(A2.tick(-25, 84), 0.4), t0 + 0.05)
-            place(fx, A2.whoosh(0.30, -22, 85, True), t0 - 0.15)
-        elif tin == "shadow":
-            place(fx, stereo(rev(A2.impact(-18, (55, 28), 0.5, 0.2, 86))[-I(0.25):]), t0 - 0.25)
-            place(fx, A2.whoosh(0.4, -25, 87, False), t0 - 0.2)
+            place(fx, stereo(A2.tick(-25, 88), -0.4), t0 - 0.12); place(fx, stereo(A2.tick(-25, 89), 0.4), t0 + 0.05)
+            place(fx, A2.whoosh(0.30, -22, 90, True), t0 - 0.15)
+        elif tin == "zipper":                                         # body-bag zip shut, then unzip
+            for k0, dur in ((t0 - 10 / E.FPS, 10 / E.FPS), (t0 + 0.0, 12 / E.FPS)):
+                n_ = I(dur); q = np.arange(n_) / SR; rate = 90 + 160 * q / dur
+                teeth = (np.sin(2 * np.pi * np.cumsum(rate) / SR) > 0.85).astype(np.float32)
+                z = bq(noise(n_, int(k0 * 100)), "band", np.array([1500, 7000]), 2) * (0.3 + teeth) * np.sin(np.pi * q / dur) ** 0.5
+                place(fx, stereo(norm(z, -22), 0.2), k0)
+            place(fx, stereo(A2.impact(-24, (70, 40), 0.15, 0.3, 91)), t0 - 0.01)
         elif tin == "lightstreak":                                    # passing cars
-            place(fx, A2.whoosh(0.45, -19, 88, True), t0 - 0.12); place(fx, A2.whoosh(0.35, -24, 89, False), t0 + 0.1)
-        elif tin == "logo_uv":                                        # blacklight flicker on, fly through the 'o'
-            place(fx, stereo(neon_buzz(12 / E.FPS + 0.1, -24, (0, 1, 0, 0, 1, 0, 1))), t0 - 12 / E.FPS)
-            place(fx, A2.whoosh(0.36, -19, 90, True), t0 - 0.22); place(fx, stereo(A2.impact(-18, (74, 38), 0.35, 0.4, 91)), t0 + 0.02)
+            place(fx, A2.whoosh(0.45, -19, 92, True), t0 - 0.12); place(fx, A2.whoosh(0.35, -24, 93, False), t0 + 0.1)
+        elif tin == "logo_orig":                                      # logo slam + fly through the 'o'
+            place(fx, stereo(A2.impact(-19, (110, 60), 0.12, 0.7, 94)), t0 - 0.20)
+            place(fx, np.stack([A2.shimmer(0.9, -27)] * 2, 1), t0 - 0.15); place(fx, A2.whoosh(0.32, -20, 95, True), t0 - 0.10)
         elif tin == "polaroid":
-            place(fx, stereo(flash_pop(-18, 92)), t0 - 0.16); place(fx, stereo(shutter_ticks(-21, 2, 0.04, 93)), t0 - 0.01)
-            place(fx, A2.whoosh(0.3, -23, 94, True), t0 + 6 / E.FPS)
+            place(fx, stereo(flash_pop(-18, 96)), t0 - 0.16); place(fx, stereo(shutter_ticks(-21, 2, 0.04, 97)), t0 - 0.01)
+            place(fx, A2.whoosh(0.3, -23, 98, True), t0 + 6 / E.FPS)
+        elif tin == "m99":                                            # sedative: heartbeat slows, low thump, breath in on waking
+            place(fx, stereo(heartbeat(-15)), t0 - 0.24); place(fx, stereo(heartbeat(-19)), t0 + 0.02)
+            place(fx, stereo(A2.impact(-17, (45, 25), 0.5, 0.0, 99)), t0 - 0.02)
+            n_ = I(0.45); q = np.arange(n_) / SR
+            br = bq(noise(n_, 100), "band", np.array([500, 3000]), 2) * np.sin(np.pi * q / 0.45) ** 2
+            place(fx, stereo(norm(br, -27)), t0 + 0.06)
+        elif tin == "strobe":                                         # flash bulbs on the beat
+            for k_ in (-5, -2, 1, 4): place(fx, stereo(A2.impact(-22, (120, 70), 0.06, 0.9, 101 + k_)), t0 + k_ / E.FPS)
         elif tin == "scan":
             n_ = I(0.28); q = np.arange(n_) / SR
-            sw_ = np.sin(2 * np.pi * np.cumsum(2400 - 1500 * q / 0.28) / SR) * np.sin(np.pi * q / 0.28) * 0.5 + bq(noise(n_, 95), "band", np.array([3000, 9000]), 2) * 0.3
+            sw_ = np.sin(2 * np.pi * np.cumsum(2400 - 1500 * q / 0.28) / SR) * np.sin(np.pi * q / 0.28) * 0.5 + bq(noise(n_, 106), "band", np.array([3000, 9000]), 2) * 0.3
             place(fx, stereo(norm(sw_, -26)), t0 - 6 / E.FPS)
-        elif tin == "strobe":                                         # flash bulbs on the beat
-            for k_ in (-5, -2, 1, 4): place(fx, stereo(A2.impact(-22, (120, 70), 0.06, 0.9, 96 + k_)), t0 + k_ / E.FPS)
-        elif tin == "slidebox":                                       # glass slide clink + slide-along
-            place(fx, stereo(glass_chime(-24), 0.3), t0 - 0.14); place(fx, A2.whoosh(0.34, -24, 97, False), t0 - 0.10)
-            place(fx, stereo(glass_chime(-27), -0.3), t0 + 0.18)
+        elif tin == "mag_sweep":                                      # the glass sweeps in
+            place(fx, A2.whoosh(0.30, -21, 107, False), t0 - 0.20); place(fx, stereo(glass_chime(-25), -0.3), t0 + 0.02)
+    # ---- graphics sounds: evidence markers clack down, plastic sheet rustles in, luminol hiss, blood hits splat, stamp thunk
+    for s_ in E.SHOTS:
+        if s_.get("markers"):
+            for k_, tm in enumerate((s_["f0"] / E.FPS + 4 / E.FPS, E.th(546), E.th(548))):
+                place(fx, stereo(A2.tick(-22, 120 + k_), -0.5 + 0.5 * k_), tm + 7 / E.FPS); place(fx, stereo(A2.impact(-29, (160, 90), 0.04, 0.6, 123 + k_)), tm + 7 / E.FPS)
+        if s_.get("plastic"):
+            n_ = I(0.5); q = np.arange(n_) / SR
+            rus = bq(noise(n_, 126), "band", np.array([800, 6000]), 2) * (np.random.default_rng(127).random(n_) > 0.7) * np.sin(np.pi * q / 0.5)
+            place(fx, stereo(norm(rus, -27), 0.2), s_["t0"] + 0.38)
+    for tx in E.TEXT:
+        if tx["style"] == "luminol":
+            for k_, (w, wt, ln) in enumerate(tx["words"]):
+                n_ = I(0.18); q = np.arange(n_) / SR
+                hiss = bq(noise(n_, 130 + k_), "high", 4000, 2) * np.sin(np.pi * q / 0.18)
+                place(fx, stereo(norm(hiss, -29), -0.3 + 0.3 * k_), wt - 0.06)
+        if tx["style"] == "casestamp":
+            ts = tx["words"][0][1] + 6 / E.FPS
+            place(fx, A2.whoosh(0.12, -26, 131, False), ts - 0.12)
+            place(fx, stereo(A2.impact(-13, (95, 50), 0.12, 0.2, 132)), ts)
+            n_ = I(0.08); q = np.arange(n_) / SR; place(fx, stereo(norm(bq(noise(n_, 133), "band", np.array([200, 1500]), 2) * np.exp(-q / 0.02), -17)), ts)
+    for h in range(E.MONTAGE[0], E.MONTAGE[1], 4):                    # blood hits on the montage beats
+        if h == E.MONTAGE[0]: continue
+        n_ = I(0.14); q = np.arange(n_) / SR
+        sp = bq(noise(n_, 140 + h), "band", np.array([400, 3000]), 2) * np.exp(-q / 0.035)
+        place(fx, stereo(norm(sp, -31), 0.6 if (h // 4) % 2 else -0.6), E.th(h))
     # ---- typewriter keys on the case-note words, stamp hits on the single words, luminol shimmer, confession hit
     for tx in E.TEXT:
         for k_, (w, wt, ln) in enumerate(tx["words"]):
-            if tx["style"] in ("case", "confess"): place(fx, stereo(A2.tick(-30, 110 + k_), -0.3 + 0.12 * k_), wt)
-            elif tx["style"] in ("stamp",): place(fx, stereo(A2.impact(-23, (140, 80), 0.05, 0.8, 120 + k_)), wt)
+            if tx["style"] == "case" or (tx["style"] == "doors" and k_ == 0): place(fx, stereo(A2.tick(-30, 110 + k_), -0.3 + 0.12 * k_), wt)
             elif tx["style"] == "luminol": place(fx, stereo(A2.shimmer(0.7, -29)), wt)
     # ---- ending: tape-stop into the pupil dive (heartbeat + suck-in), black -> loop into the magnifier
     place(fx, stereo(heartbeat(-17)), E.DUR - 0.62); place(fx, stereo(heartbeat(-19)), E.DUR - 0.30)
@@ -340,7 +383,7 @@ def main():
     wf.write(f"{AD}/mix_raw_wrapped.wav", SR, wrapped.astype(np.float32))
     tmp = f"{AD}/mix_wrapped_master.wav"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f"{AD}/mix_raw_wrapped.wav", "-af", f"volume={gain:.2f}dB,aresample=192000,"
-                    f"alimiter=limit={db(-3.4):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr", "-c:a", "pcm_f32le", tmp], check=True)
+                    f"alimiter=limit={db(-4.0):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr", "-c:a", "pcm_f32le", tmp], check=True)
     _, mw = wf.read(tmp); mw = mw.astype(np.float32)
     ref = wrapped[P2:P2 + SR, 0]; seg_ = mw[P2 - 2000:P2 + SR + 2000, 0]
     lag = int(np.argmax(np.correlate(seg_, ref, mode="valid"))) - 2000

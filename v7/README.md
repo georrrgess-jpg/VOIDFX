@@ -173,3 +173,50 @@ python3 -m demucs -n htdemucs --two-stems=vocals -o v7/audio/sep v7/audio/p8_dia
 
 - **I can't watch or listen.** Everything was verified by frames and measurement. Watch once with sound before posting.
 - **Sources are 720p.** The magnifier shot is very soft in the source; the lens frame and grain make that read as intentional.
+
+
+## Revision 2 (user feedback)
+
+**Removed:**
+- the *"A jar of blood"* scene;
+- the *"Dramatic. Cryptic. Playful."* run, with its stamp words and quick cuts;
+- the STAY STRONG text and the string-method lines to his face;
+- the *"I'm a serial killer"* ending.
+
+The only dialogue left is *"Could it be him?"*, answered by Gunna's "HIM ALL ALONG". Gunna's vocal now plays through the breakdown and steps aside only under that one line.
+
+**Logo:** back to the supplied voidfx logo in its own colours, slammed in and flown through the "o". `CLAUDE.md` now says never to recolour it unless asked.
+
+**New CLOSE, Dexter-themed:**
+- On "close", **Dexter's rosewood blood-slide box** slams shut over the frame. The lid has wood grain, brass corners and hinges, and CLOSE is **engraved on a brass plate**, with a glint sweeping across it.
+- There is a dust puff and a shake, then the lid swings open on the slides in red velvet, and the camera dives into a blood drop on a slide to reach the next shot.
+- Sound: creak, a heavy wood slam, the slides rattling, a latch, a glass clink and a drop.
+
+**New hero transition out of HIM ALL ALONG:** the kill-room plastic carrying the luminol title **stretches toward the camera**, then **bursts open in flaps** on the drop, with blood spray, a shock ring and a flash. Sound: plastic stretching, a riser, a rip, a sub impact and a splash.
+
+**New transitions:**
+- **Blood on the lens:** a drop falls, splats, and the next shot is seen through the blood as it drips clear.
+- **Body-bag zipper:** zips shut, then unzips onto the next shot.
+- **M99 sedative:** double vision, the eyelids close, the music goes muffled, and the next shot blinks open.
+- **Magnifying-glass sweep for the ending:** the glass sweeps over his smirk, his stare is inside it, then the camera dives into his pupil and the edit loops to the magnifier opening.
+
+**New graphics:**
+- crime-scene **evidence markers** (1, 2, 3) drop in on the beat;
+- a **CASE CLOSED** rubber stamp slams onto his smirk at the camera.
+
+**More sound:** every new transition and graphic has its own sound, as above, plus:
+- marker clacks;
+- the plastic rustling in;
+- a luminol spray hiss before each glowing word;
+- wet splats on the montage blood hits;
+- the stamp thunk;
+- a muffled-world dip under the M99 blink.
+
+**Review while building** (every-cut sheets plus targeted stills):
+- The pre-burst bulge warped the title, so it was rebuilt as a centre-weighted bulge.
+- The blood spray lingered like petals, so it is now fast streaks.
+- The rosewood grain was too regular, so it is now finer with fibres.
+- The ending eye shot framed the gap between his eyes, so it was replaced with Dexter's kitchen stare.
+- The stamp ink was too faint and was darkened.
+- A zipper shading bug was fixed.
+- True peak after AAC was −2.5 dBTP, so the limiter was tightened.

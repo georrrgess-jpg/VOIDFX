@@ -15,7 +15,7 @@ Read `v6/README.md`, `v4/README.md` and **`docs/TOOLKIT.md`** before starting. B
 - **Text:** every word eases in (fade + rise + blur-to-sharp). Nothing just pops on. Each title or lyric moment gets its own designed animation, and it must be clearly readable (size, contrast, time on screen).
   - Approved examples: footage-in-letters knockout type; a title that fills with blood and drips, then shatters with the glass; light-sweep reveal; fly-in from the camera.
   - Keep text clear of faces and of TikTok's UI areas.
-- **Branding:** no constant watermark and no outro card. The voidfx logo (`src/voidfx_logo.webp`) appears **once, as a transition** (e.g. flying through the "o").
+- **Branding:** no constant watermark and no outro card. The voidfx logo (`src/voidfx_logo.webp`) appears **once, as a transition** (e.g. flying through the "o"). **Never recolour, retheme or restyle the logo** (no neon/UV/tint versions). Use the supplied image as-is (`logo_through` / `tin="logo_orig"`) unless the user explicitly asks for a change.
 - **Transitions:** pronounced and designed, the kind where the viewer wonders "how did they do that". They should feel like **going through something**: barrel, scope, shattering glass, an eye or pupil, a shadow, the logo's "o", a photo on the wall, a knife slash.
   - Avoid plain hard cuts in quiet or dialogue sections.
   - Every transition gets its own sound.
@@ -36,6 +36,8 @@ Read `v6/README.md`, `v4/README.md` and **`docs/TOOLKIT.md`** before starting. B
   - the character's own words as two-line eased captions;
   - graphics that add depth (vapor world tune-in, palm shadows, bokeh, neon light spill, VHS pause).
 - **Avoid:** foreign-language subtitle lines (CJK) and on-screen counters or timecodes (the VHS "SP" timer). The user removed both as clutter.
+- **Dialogue: less is more.** In v7 the user cut rapid single-word dialogue runs ("Dramatic. Cryptic. Playful."), a talking "jar of blood" shot, and an ending where Dexter just states "I'm a serial killer". Use at most one or two short lines that set up the song (e.g. "Could it be him?" answered by the hook). Let the visuals carry the ending.
+- **No "gimmick on the face" effects** (e.g. lines converging on his face with a target ring). Transitions should be physical and themed (slide box, plastic burst, zipper, blood on the lens), not overlays on his face.
 - **Efficiency:** the user asks for quality *and* efficiency. Use the fast loop in `docs/TOOLKIT.md`:
   1. song map;
   2. EDL;
