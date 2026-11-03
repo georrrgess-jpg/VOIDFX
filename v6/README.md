@@ -161,3 +161,46 @@ python3 v6/work/qc6.py v6/out/warmpop_dexter_voidfx_9x16.mp4
 - **I can't watch or listen.** Everything was verified by frames and measurement. Watch once with sound before posting.
 - **Sources are 720p,** and some are 24p or 30p. Duplicate frames are dropped and optical-flow interpolated to 60 fps.
 - **Length:** 26.67 s, which is ten whole bars. That is slightly over the 26 s guideline, kept so the music window ends on a bar.
+
+## Revision 2 (user feedback)
+
+- **Removed:** the Japanese subtitle lines under the captions, and the katakana above MIAMI.
+- **Replaced every transition that wasn't doing much** (three tape rewinds, two flashes, two kaleidoscopes, the VHS roll, the ripple and the second neon trace). There are **10 new designed transitions**, each "going through something" and each with its own sound:
+  - into his eye: pupil, then a hexagonal aperture;
+  - reassemble from pixel blocks;
+  - polaroid toss;
+  - face-match morph;
+  - 3D cube over the vapor world;
+  - through the striped retro sun;
+  - knife slash, with the halves flying apart;
+  - film burn;
+  - through the sunglasses;
+  - shadow pass.
+- **New graphics and animation:**
+  - after the drop, Dexter stands in the vapor world, then reality tunes in behind him scanline by scanline (person matte);
+  - hyperspace light streaks during the CRT dive;
+  - swaying palm-frond shadows on the sunny shots;
+  - VHS colour-echo trails on the run and club shots.
+- **New sound design:** heartbeat and shutter blades, the dissolve played backwards, flash with shutter and print eject, cube landing, a sun chord swell with blind rattles, knife swish with a steel ring, fire crackle, a glass chime, a reverse shadow swell, and signal-lock chirps.
+
+Review while building:
+- The first stills showed every lead-in half missing; the routing had gone into an overridden function, and it was fixed.
+- The eye dive panned to the eye too late; it was retimed.
+- MIAMI overlapped the cube; it now ends first.
+- The palm shadows read as solid spikes; they were redrawn as separated, drooping leaflets and softened.
+- The sunglasses reflections were drawn too tall. These are thin wraparound shades, so the shot now carries its own lens shape.
+- The slash halves now fly apart and tilt.
+- The shadow pass lost its violet wash.
+
+### Revision 2 checkpoint: **SHIP**
+
+- **Automated criteria:** all PASS.
+  - −13.1 LUFS / −2.9 dBTP after AAC.
+  - 1,600 frames, clean decode, no frozen runs.
+  - 0 face-centering flags.
+  - 0 clicks at 17 cuts and at the loop seam.
+  - Loop seam matched static to static, and audio and video are the same length.
+- **Flags that are by design:**
+  - *Text over face (1 frame, 150):* during the eye dive his face fills the screen.
+  - *Near-black frames (1278–1279):* the bottom of the shadow pass.
+- **Visual sign-off:** every new transition, the vapor tune-in and the hyperspace streaks were checked on frames from the encoded MP4.
