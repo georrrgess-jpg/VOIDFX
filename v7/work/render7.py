@@ -3499,7 +3499,7 @@ def luminol_word(word, size=230):
         _LUM[word] = mm.astype(np.float32)
     return _LUM[word]
 
-LUM_Y = (1120, 1300, 1480)
+LUM_Y = (1335, 1515)
 def plastic_layer(out, f, s, title=True):
     """semi-transparent wrinkled kill-room plastic hanging in front of the camera, with HIM / ALL / ALONG in luminol."""
     t = f / FPS; a = smooth((t - (s["t0"] + 0.40)) / 0.45)
@@ -3513,15 +3513,17 @@ def plastic_layer(out, f, s, title=True):
     if title:
         tx = [tw for tw in E.TEXT if tw["style"] == "luminol"]
         if tx:
-            glow_lay = np.zeros((H, W), np.float32)
-            for (word, wt, ln) in tx[0]["words"]:
-                k = (t - wt) * FPS
-                if k < 0: continue
-                mm = luminol_word(word); hh, ww = mm.shape; x0 = int(W / 2 - ww / 2); y0 = int(LUM_Y[ln] - hh / 2)
-                rev = np.clip((np.arange(ww)[None, :] - ww * (eout(k / 7, 2) * 1.3 - 0.15)) / -60, 0, 1)   # UV sweep reveals the word
-                w_ = mm * rev * (0.85 + 0.15 * math.sin(f * 0.9 + ln))
-                ya, xa = max(0, y0), max(0, x0); yb2, xb2 = min(H, y0 + hh), min(W, x0 + ww)
-                glow_lay[ya:yb2, xa:xb2] = np.maximum(glow_lay[ya:yb2, xa:xb2], w_[ya - y0:yb2 - y0, xa - x0:xb2 - x0])
+            glow_lay = np.zeros((H, W), np.float32); ws_ = tx[0]["words"]; gap = 46
+            for ln in sorted({l for _, _, l in ws_}):
+                row = [(w_, wt) for w_, wt, l in ws_ if l == ln]; ims = [luminol_word(w_, 205) for w_, _ in row]
+                x = int(W / 2 - (sum(m_.shape[1] for m_ in ims) + gap * (len(ims) - 1)) / 2)
+                for (word, wt), mm in zip(row, ims):
+                    k = (t - wt) * FPS; hh, ww = mm.shape; x0 = x; y0 = int(LUM_Y[ln] - hh / 2); x += ww + gap
+                    if k < 0: continue
+                    rev = np.clip((np.arange(ww)[None, :] - ww * (eout(k / 7, 2) * 1.3 - 0.15)) / -60, 0, 1)   # UV sweep reveals the word
+                    w_ = mm * rev * (0.85 + 0.15 * math.sin(f * 0.9 + ln))
+                    ya, xa = max(0, y0), max(0, x0); yb2, xb2 = min(H, y0 + hh), min(W, x0 + ww)
+                    glow_lay[ya:yb2, xa:xb2] = np.maximum(glow_lay[ya:yb2, xa:xb2], w_[ya - y0:yb2 - y0, xa - x0:xb2 - x0])
             o = o * (1 - glow_lay[..., None] * 0.8) + glow_lay[..., None] * (UV * 0.75 + WHITE * 0.3)
             o = o + cv2.GaussianBlur(glow_lay, (0, 0), 16)[..., None] * UV * 0.8
     return np.clip(o, 0, 1)
@@ -3802,7 +3804,7 @@ def text7(out, f):
             out, _ = lay_words(out, f, [(w, wt) for w, wt, _ in ws], 1430, "stamp", [], t1)
         elif st_ == "doors":
             (w0, ta, _), (w1, tb, _) = ws
-            if t < tb + 0.1: out, _ = lay_words(out, f, [(w0, ta)], 1420, "mono", [], tb)
+            if t < tb: out, _ = lay_words(out, f, [(w0, ta)], 1420, "mono", [], tb - 0.15)   # OPEN is gone before CLOSE lands
             if t >= tb - 0.02: out, _ = lay_words(out, f, [(w1, tb)], 1420, "doorsbig", [], t1)
         elif st_ == "confess":
             r0 = [(w, wt) for w, wt, l in ws if l == 0]; r1 = [(w, wt) for w, wt, l in ws if l == 1]

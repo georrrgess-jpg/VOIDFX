@@ -34,7 +34,7 @@ The friendly blood-spatter analyst investigates, and the evidence keeps pointing
 | 5.08 | Crime-scene tape. *"Dramatic."* | **Redaction bars** slam across and wipe off (marker strokes) |
 | 5.54 | Lit red at the desk. *"Cryptic."* | **UV luminol sweep**: a blacklight beam crosses the frame and hidden spatter fluoresces (lamp buzz) |
 | 6.00 | Lollipop. *"Playful."* | **Fingerprint**: ridges ripple outward with the next shot between them (scanner) |
-| 6.46 | Studying the slide. *"Could it be him?"* | **Crime-scene tape snaps** as the camera pushes through (stretch → snap) |
+| 6.46 | The answer: Dexter, gloved, on the kill-room floor. *"Could it be him?"* | **Crime-scene tape snaps** as the camera pushes through (stretch → snap) |
 | 9.23 | His smirk. *"stay strong"*, then **HIM ALL ALONG** in luminol on the plastic sheet | **String method**: stains shoot red strings to the point of origin, his face, with a target ring (string twangs) |
 | 11.08 | **Drop:** red kill room | **Plastic rips open** (riser, rip, sub impact) |
 | 12.00 | Over the table | **Knife slash** (swish, steel ring) |
@@ -61,7 +61,7 @@ Every word eases in on its sung or spoken time (fade + rise + blur-to-sharp), in
 - **Case-note lockups** in monospaced type (ON THE WAY TO / REACHING MY **GOALS**, A JAR OF **BLOOD.**, COULD IT BE / **HIM?**, STAY **STRONG**), with a blinking case-file caret and typewriter clicks.
 - **Stamp words** (DRAMATIC. CRYPTIC. PLAYFUL.) punch in with a blood-red offset echo.
 - **OPEN / CLOSE** on the steel doors.
-- **HIM ALL ALONG** in luminol: a UV sweep reveals each word, smeared and dripping.
+- **HIM ALL / ALONG** in luminol: a UV sweep reveals each word, smeared and dripping.
 - **I'M A / SERIAL KILLER.** with dripping blood-red type.
 
 ## Sound
@@ -85,6 +85,25 @@ The every-cut review sheets (`build.sh 7 auto`) and targeted stills caught these
 7. **Blood-slide box:** the drop showed the next shot's background instead of his face, so the inner framing was fixed.
 8. **Blood hits:** they were round blobs; now they are directional spatter with spines and mist.
 9. **True peak:** the AAC check read −2.5 dBTP, right at the limit, so the limiter was tightened.
+
+### Checkpoint run 1: **NOT READY** (not shipped)
+
+Automated results: 8 of 10 criteria passed.
+- −13.4 LUFS / −3.2 dBTP after AAC.
+- 0 clicks at cuts and at the loop seam.
+- Frame count, decode, no freezes, and audio and video the same length all passed.
+
+Two criteria failed, and frame review confirmed real problems behind most of the flags:
+- **Text over face (36 frames):**
+  - The *"Could it be him?"* close-up filled the entire 9:16 frame (face box 349–1895 px), so no text position could clear it. It was **replaced** with Dexter gloved on the kill-room floor, which is a stronger answer to the question.
+  - **HIM ALL ALONG** on the plastic reached his chin. It is now two lines, HIM ALL / ALONG, below the face.
+  - **OPEN** was still fading while **CLOSE** landed on the same spot. OPEN now clears first.
+- **False positives** (checked on frames):
+  - two round pink blood drops on the glass slide read as a pair of eyes (4 frames);
+  - the magnifier's lens is entirely face (1 frame).
+- **Face centering:** the only failing shot is the subject-less South Beach street shot, where a building facade read as a face. QC now skips shots the EDL marks `face=None`.
+
+The edit was re-rendered and the checkpoint run again.
 
 ## Files
 

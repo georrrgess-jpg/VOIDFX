@@ -52,7 +52,9 @@ for f, fl in faces.items():
     big = [x for x in fl if x[2] >= 120]
     if not big: continue
     x, y, w, h, c = max(big, key=lambda q: q[2] * q[3])
-    sn = shot_of(f); cnt[sn] = cnt.get(sn, 0) + 1
+    sn = shot_of(f)
+    if [s_ for s_ in E.SHOTS if s_["n"] == sn][0].get("face", "largest") is None: continue   # subject-less shots (EDL face=None)
+    cnt[sn] = cnt.get(sn, 0) + 1
     cut = x < -0.08 * w or x + w > 1080 + 0.08 * w            # more than 8% of the face outside the frame
     off = not (0.18 * 1080 <= x + w / 2 <= 0.82 * 1080)
     if cut or off: bad.setdefault(sn, []).append((f, "CUT" if cut else "OFF", int(x + w / 2), int(w)))
@@ -69,7 +71,7 @@ def text_bands(t):
     b = []
     for tx in getattr(E, "TEXT", []):
         if tx["words"][0][1] - 0.05 <= t < tx["end"] + 0.2:
-            b.append({"case": (1310, 1530), "stamp": (1330, 1530), "doors": (1330, 1520), "luminol": (1030, 1600), "confess": (1240, 1560)}[tx["style"]] + (tx["style"],))
+            b.append({"case": (1310, 1530), "stamp": (1330, 1530), "doors": (1330, 1520), "luminol": (1240, 1640), "confess": (1240, 1560)}[tx["style"]] + (tx["style"],))
     for vi, words, s_end, emph, style in E.CAPS:
         a, b_, at = E.VO[vi]
         if at + (words[0][1] - a) <= t < at + (s_end - a) + 0.6: b.append((1320, 1600, "caption%d" % vi))
@@ -81,6 +83,9 @@ for f, fl in faces.items():
         for a_, b_, lab in bands:
             if y + h * 0.85 > a_ and y < b_: clash.append((f, lab, int(y), int(y + h)))
 print(f"  {len(clash)} frames where a face box reaches into a text band", clash[:6])
+import collections as _co; _byshot = _co.defaultdict(list)
+for c_ in clash: _byshot[shot_of(c_[0])].append(c_)
+for sn_, cl_ in _byshot.items(): print(f"    {sn_:12s} {len(cl_):3d} frames  {cl_[0][1]}  face y {min(c[2] for c in cl_)}-{max(c[3] for c in cl_)}  frames {cl_[0][0]}-{cl_[-1][0]}")
 
 # ---- 4. cuts / frozen / black
 print("\n== 4. cuts, frozen, black")

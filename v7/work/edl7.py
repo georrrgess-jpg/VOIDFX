@@ -57,7 +57,7 @@ shot("jar", "p8", th(544), th(550), 331.80, 333.18, z=[(0, 1.25), (1, 1.35)], ti
 shot("tape", "p7", th(550), th(552), 22.90, 23.36, z=[(0, 1.00), (1, 1.04)], tin="redact")
 shot("red_desk", "p8", th(552), th(554), 80.00, 80.46, z=[(0, 1.05), (1, 1.10)], tin="uv_sweep")
 shot("lolli", "p8", th(554), th(556), 117.90, 118.36, z=[(0, 1.10), (1, 1.14)], tin="fingerprint")
-shot("slide_stare", "p8", th(556), th(568), 46.60, 49.37, z=[(0, 1.00), (1, 1.14)], tin="tape_snap")
+shot("floor", "p8", th(556), th(568), 392.40, 395.17, z=[(0, 1.00), (1, 1.16)], tin="tape_snap")
 shot("smirk", "p8", th(568), th(576), 346.50, 348.35, z=[(0, 1.00), (1, 1.12)], tin="strings", plastic=True)
 # ---- act 2: the drop — kill-room montage
 shot("red_room", "p7", th(576), th(580), 0.00, 0.92, z=[(0, 1.05), (1, 1.12)], tin="plastic_rip")
@@ -92,7 +92,7 @@ TEXT = [
     dict(style="case", words=[("COULD", vo_e(4, 336.90), 0), ("IT", vo_e(4, 337.38), 0), ("BE", vo_e(4, 337.48), 0), ("HIM?", vo_e(4, 337.58), 1)],
          end=s2e(130.45), emph=["HIM?"]),
     dict(style="case", words=[("STAY", s2e(130.74), 0), ("STRONG", s2e(130.90), 0)], end=th(568) + 0.35, emph=["STRONG"]),
-    dict(style="luminol", words=[("HIM", s2e(131.92), 0), ("ALL", s2e(132.06), 1), ("ALONG", s2e(132.30), 2)], end=th(576), emph=[]),
+    dict(style="luminol", words=[("HIM", s2e(131.92), 0), ("ALL", s2e(132.06), 0), ("ALONG", s2e(132.30), 1)], end=th(576), emph=[]),
     dict(style="confess", words=[("I'M", vo_e(5, 325.23), 0), ("A", vo_e(5, 325.51), 0), ("SERIAL", vo_e(5, 325.55), 1), ("KILLER.", vo_e(5, 325.89), 1)],
          end=th(640) - 0.42, emph=["KILLER."]),
 ]
