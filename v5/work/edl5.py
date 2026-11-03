@@ -70,7 +70,7 @@ for s in SHOTS:
 TITLE = dict(text="THE FASTEST MAN ALIVE", t_in=th(209), t_out=th(219.5))
 # lyric lockups: small lead line + big keyword, every word on its sung time (whisper large-v3)
 PHRASES = [
-    ([("YOU", 67.84), ("DON'T", 68.56), ("EVEN", 69.12)], [("THINK", 69.26), ("A", 69.96), ("THING", 70.12)], "think", st(220) - 0.03),
+    ([("YOU", 67.84), ("DON'T", 68.56), ("EVEN", 69.12)], [("FEEL", 69.26), ("A", 69.96), ("THING", 70.12)], "think", st(220) - 0.03),
     ([("I", 72.46), ("AM", 73.36)], [("FALLING", 74.16)], "fall", 75.40),
     ([("I", 75.50), ("AM", 75.96)], [("FADING", 76.74)], "fade", st(240) - 0.05),
     ([("I", 78.00), ("AM", 78.76)], [("DROWNING", 79.32)], "drown", 80.60),

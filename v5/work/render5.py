@@ -1774,6 +1774,97 @@ def ecg(out, f, t0, t_end, y=1690):
         if p < 1: cv2.circle(out, (int(hx), int(hy)), 7, tuple(float(c) for c in WHITE), -1, cv2.LINE_AA)
     return out
 
+# ============================================================================ v5d: polish + new FALLING + landing bursts
+def anamorphic(out, amt=0.30):
+    """cinematic horizontal flare streaks from the brightest highlights (gold-tinted)."""
+    small = cv2.resize(out, (W // 8, H // 8), interpolation=cv2.INTER_AREA)
+    hi = np.clip(small.max(2) - 0.80, 0, 1) * 4.0
+    st = cv2.GaussianBlur(hi, (0, 0), sigmaX=40, sigmaY=0.6)
+    st = cv2.resize(st, (W, H), interpolation=cv2.INTER_LINEAR)
+    return np.clip(out + st[..., None] * (GOLD * 0.6 + WHITE * 0.25) * amt, 0, 1)
+
+_CA = {}
+def edge_ca(out, amt=3.0):
+    """subtle lens chromatic aberration growing toward the frame edges."""
+    if "g" not in _CA:
+        cx, cy = W / 2, H / 2; dx, dy = _GX - cx, _GY - cy; r = np.sqrt(dx * dx + dy * dy) / math.hypot(cx, cy)
+        _CA["g"] = (dx * r ** 2, dy * r ** 2)
+    dx, dy = _CA["g"]; o = out.copy(); s_ = amt / 400.0
+    o[..., 2] = cv2.remap(out[..., 2], (_GX + dx * s_).astype(np.float32), (_GY + dy * s_).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o[..., 0] = cv2.remap(out[..., 0], (_GX - dx * s_).astype(np.float32), (_GY - dy * s_).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    return o
+
+def spark_burst(out, cx, cy, k, seed, n=60, spread=420, col=None):
+    """sparks fly out from (cx, cy) with gravity, k = frames since impact."""
+    if k < 0 or k > 22: return out
+    col = GOLD if col is None else col
+    rng = np.random.default_rng(seed); lay = np.zeros((H // 2, W // 2), np.float32)
+    for i in range(n):
+        a = rng.uniform(math.pi * 1.05, math.pi * 1.95) if rng.random() < 0.8 else rng.uniform(0, math.pi * 2)
+        sp = rng.uniform(0.4, 1.0) * spread / 14
+        x = cx + math.cos(a) * sp * k; y = cy + math.sin(a) * sp * k + 1.4 * k * k
+        x2 = x - math.cos(a) * sp * 1.6; y2 = y - (math.sin(a) * sp + 2.8 * k) * 1.6
+        cv2.line(lay, (int(x2 / 2), int(y2 / 2)), (int(x / 2), int(y / 2)), float(1 - k / 22), 1, cv2.LINE_AA)
+    lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 0.8) * 2.2, (W, H))
+    return np.clip(out + lay[..., None] * col, 0, 1)
+
+def land_ring(out, cx, cy, k, w=520):
+    """flat elliptical shockwave under a landing word."""
+    if k < 0 or k > 14: return out
+    u = eout(k / 14, 2); a = (1 - k / 14)
+    lay = np.zeros((H, W), np.float32)
+    cv2.ellipse(lay, (int(cx), int(cy)), (int(60 + w * u), int(10 + 40 * u)), 0, 0, 360, 1.0, 3, cv2.LINE_AA)
+    g = cv2.GaussianBlur(lay, (0, 0), 6) * 2
+    return np.clip(out + (lay * 0.8 + g)[..., None] * GOLD * a, 0, 1)
+
+def fall_word(out, f, kw, k, kout, fade, KY, size):
+    """FALLING: plunges from above with a vertical light trail, slams down with squash + shockwave + sparks,
+    holds with a heat shimmer, then the letters break loose and tumble away, spinning, with trails."""
+    m = text_mask(kw, F_BLACK, size); hh, ww = m.shape
+    land = 9                                                  # frames to land
+    if k < land:                                              # the plunge
+        u = ein((k + 1) / land, 2.2); dy = -300 * (1 - u)
+        g, r = rich_word(m, -99)
+        stretch = 1 + 0.6 * (1 - u)
+        r2 = cv2.resize(r, (r.shape[1], int(r.shape[0] * stretch)), interpolation=cv2.INTER_LINEAR)
+        trail = r2.copy(); trail[..., :3] = GOLD; trail = hblur(trail, int(10 + 120 * (1 - u)), vertical=True)
+        out = paste(out, trail, int(W / 2 - trail.shape[1] / 2), int(KY + dy - trail.shape[0] * 0.9), 0.75 * fade)
+        out = paste(out, r2, int(W / 2 - r2.shape[1] / 2), int(KY + dy - r2.shape[0] / 2), fade * clamp(u * 3, 0, 1))
+        return out
+    kl = k - land
+    if kout <= -14:                                           # landed: squash/settle, impact FX, sweep
+        sq = math.exp(-kl / 3.5) * math.cos(kl * 0.9)
+        g, r = rich_word(m, kl - 2)
+        sx, sy = 1 + 0.16 * sq, 1 - 0.20 * sq
+        rr = cv2.resize(r, (int(r.shape[1] * sx), int(r.shape[0] * sy)), interpolation=cv2.INTER_LINEAR)
+        gg = cv2.resize(g, (rr.shape[1], rr.shape[0]), interpolation=cv2.INTER_LINEAR)
+        base = KY + hh / 2
+        out = land_ring(out, W / 2, base + 8, kl)
+        x0, y0 = int(W / 2 - rr.shape[1] / 2), int(base - rr.shape[0] + 30)
+        out = paste(out, gg, x0, y0, fade); out = paste(out, rr, x0, y0, fade)
+        out = spark_burst(out, W / 2, base, kl, 71, 70, 520)
+        if kl < 5: out = np.clip(out + (5 - kl) * 0.03, 0, 1)
+        return out
+    # break loose and tumble, letter by letter (left to right), with spin and light trails
+    ke0 = kout + 14; fnt = font(F_BLACK, size); x = W / 2 - fnt.getlength(kw) / 2
+    for j, ch in enumerate(kw):
+        cw = fnt.getlength(ch); ke = ke0 - j * 1.2
+        g, r = rich_word(text_mask(ch, F_BLACK, size), 99)
+        if ke <= 0:
+            out = place_word(out, g, r, x + cw / 2, KY, fade)
+        else:
+            rng = np.random.default_rng(j * 13 + 5); rot = rng.uniform(-1, 1) * 70 * ke / 12
+            dy = 2.6 * ke * ke; dx = rng.uniform(-6, 6) * ke
+            M = cv2.getRotationMatrix2D((r.shape[1] / 2, r.shape[0] / 2), rot, 1.0)
+            rr = cv2.warpAffine(r, M, (r.shape[1], r.shape[0]), borderValue=(0, 0, 0, 0))
+            tr = rr.copy(); tr[..., :3] = EMBER * 0.6 + GOLD * 0.4; tr = hblur(tr, int(8 + 4 * ke), vertical=True)
+            a = clamp(1 - ke / 22, 0, 1) * fade
+            out = paste(out, tr, int(x + cw / 2 + dx - tr.shape[1] / 2), int(KY + dy - tr.shape[0] / 2 - 4 * ke), 0.6 * a)
+            out = paste(out, rr, int(x + cw / 2 + dx - rr.shape[1] / 2), int(KY + dy - rr.shape[0] / 2), a)
+        x += cw
+    return out
+
+
 _SCR = {}
 def lyric_lockups(out, f):
     t = f / FPS; KY = 1500; LY = 1350
@@ -1803,16 +1894,8 @@ def lyric_lockups(out, f):
                     g, r = rich_word(m, kk - 10)
                     out = place_word(out, g, r, x + wd / 2, KY, v * fade, 1 + 0.15 * (1 - v))
                 x += wd + sp
-        elif style == "fall":                                  # letters drop in with gravity, then fall away
-            fnt = font(F_BLACK, size); x = W / 2 - fnt.getlength(kw) / 2
-            for j, ch in enumerate(kw):
-                cw = fnt.getlength(ch); kk = k - j * 1.5
-                if kk > -1:
-                    v = clamp((kk + 1) / 10, 0, 1); dy = -280 * (1 - v) ** 2 + (16 * math.sin(v * math.pi * 2) * (1 - v) if v < 1 else 0)
-                    if kout > -12: ke = kout + 12 - j * 0.8; dy += 0.0 if ke < 0 else 3.2 * ke * ke
-                    g, r = rich_word(text_mask(ch, F_BLACK, size), kk - 12 - j)
-                    out = place_word(out, g, r, x + cw / 2, KY, clamp(v * 2, 0, 1) * (1 if kout < -12 else clamp(1 - (kout + 12) / 14, 0, 1)), 1.0, 0, dy)
-                x += cw
+        elif style == "fall":                                  # plunge -> slam -> tumble away
+            out = fall_word(out, f, kw, k, kout, fade, KY, size)
         elif style == "fade":                                  # resolves, then dissolves into rising sparks
             m = text_mask(kw, F_BLACK, size, tracking=6); v = eout(k / 8, 3)
             p = clamp((k - dur * 0.40) / (dur * 0.55), 0, 1)
@@ -1851,7 +1934,9 @@ def lyric_lockups(out, f):
             g[..., 3] *= 1.3 + 0.5 * math.sin(k * 0.12)
             out = place_word(out, g, r, W / 2, KY, v * fade, sc)
             out = ecg(out, f, E.s2e(key[0][1]), t1 + 0.1)
-        elif style == "hurt":                                  # lands, then cracks along a lightning fracture
+        if style in ("think", "hurt", "losing") and 0 <= k < 22:
+            out = spark_burst(out, W / 2, KY + 70, k - 4, 90 + len(kw), 28, 300)
+        if style == "hurt":                                    # lands, then cracks along a lightning fracture
             m = text_mask(kw, F_BLACK, size); hh, ww = m.shape; v = eout(k / 6, 3)
             g, r = rich_word(m, k - 6)
             kc = k - 14
@@ -1960,6 +2045,8 @@ def render(f):
     # ---- type
     if not s.get("_lyr_done"): out = lyric_lockups(out, f)
     out = bloom(out, 0.26)
+    out = anamorphic(out, 0.32)
+    out = edge_ca(out, 3.0)
     out = out * VIG + grain(f, 0.014)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
 

@@ -95,6 +95,32 @@ def main():
                 n = I(0.06); tt = np.arange(n) / SR
                 b_ = np.sin(2 * np.pi * np.cumsum(500 + 900 * tt / 0.06) / SR) * env_exp(n, 0.02, 0.002)
                 place(fx, stereo(b_ * db(-33), 0.4 - 0.2 * j), tk + 0.15 + 0.18 * j)
+    # ---- v5d sound polish
+    for pre, key, style, s_end in E.PHRASES:
+        tk = E.s2e(key[0][1])
+        for w_, ws in pre:                                         # soft tick as each lead word appears
+            n = I(0.03); y = bq(noise(n, int(ws * 100)), "band", np.array([3000, 9000]), 2) * env_exp(n, 0.006, 0.0005)
+            place(fx, stereo(y / np.abs(y).max() * db(-36)), E.s2e(ws))
+        if style == "fall":
+            place(fx, A2.whoosh(0.18, -22, 70, False), tk - 0.02)                       # plunge
+            place(fx, stereo(A2.impact(-13, (70, 34), 0.45, 0.6, 71)), tk + 9 / E.FPS)  # slam
+            place(fx, np.stack([A2.shimmer(0.6, -30)] * 2, 1), tk + 10 / E.FPS)          # sparks
+            place(fx, A2.whoosh(0.5, -24, 72, False), E.s2e(s_end) - 14 / E.FPS)        # tumble away
+        elif style in ("think", "hurt", "losing", "drown"):
+            place(fx, stereo(A2.impact(-21, (95, 50), 0.18, 0.5, 73 + len(style))), tk)
+        elif style == "breathe":
+            n = I(0.8); tt = np.arange(n) / SR                                          # inhale (filtered air)
+            air = bq(noise(n, 74), "band", np.array([400, 3000]), 2) * np.sin(np.pi * tt / 0.8) ** 2
+            place(fx, stereo(air / np.abs(air).max() * db(-27)), tk - 0.1)
+    for h in (240, 256, 272):                                     # risers + sub drops into the big sections
+        place(fx, A2.riser(1.2, -24), E.th(h) - 1.2)
+        n = I(1.0); tt = np.arange(n) / SR
+        sub = np.sin(2 * np.pi * np.cumsum(55 * np.exp(-tt / 0.6) + 30) / SR) * env_exp(n, 0.45, 0.004)
+        place(fx, stereo(sub * db(-14)), E.th(h))
+    n = I(E.th(288) - E.th(240)); tt = np.arange(n) / SR           # low electric crackle bed under the chorus
+    bed = bq(noise(n, 75), "band", np.array([1500, 6000]), 2) * (np.random.default_rng(76).random(n) > 0.9985) * 6
+    bed = bed + 0.15 * bq(noise(n, 77), "low", 200, 2)
+    place(fx, stereo(bed / (np.abs(bed).max() + 1e-9) * db(-33)), E.th(240))
     for s in E.SHOTS:                                                # crackle under the arc shots
         if s.get("arcs"):
             t = s["t0"] + 0.1

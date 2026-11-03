@@ -117,6 +117,26 @@ The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded
   - Loop seam: first and last frames both black (luma 0.6 / 0.6).
 - **Visual sign-off:** every lyric lockup, meaning-driven text animation and new transition was verified on frames pulled from the encoded MP4.
 
+
+## Revision 4 (user feedback)
+
+- **Lyric fix:** the opening line is *you don't even **feel** a thing*. The speech model had heard "think". It now reads YOU DON'T EVEN / FEEL A THING.
+- **New FALLING animation, in three acts:**
+  1. **Plunge.** The word drops in from just above, stretched, with a vertical gold light trail.
+  2. **Slam.** It lands with squash-and-settle, an elliptical gold shockwave under it and a burst of gravity-driven sparks, then a light sweep.
+  3. **Tumble.** The letters break loose one by one and fall away, spinning, with ember trails.
+  - Sound: a plunge whoosh, a slam impact, spark shimmer and a tumble whoosh.
+- **Polish:**
+  - an anamorphic gold flare streaks off the brightest highlights;
+  - subtle lens chromatic aberration toward the frame edges;
+  - landing spark bursts on FEEL A THING, HURTING and LOSING.
+- **More sound design:**
+  - a soft tick as each lead word appears;
+  - an impact on each keyword landing;
+  - an inhale under each BREATHE;
+  - risers plus sub drops into the three big sections (drowning, hurting, losing);
+  - a low electric crackle bed under the whole chorus.
+
 ## Files
 
 - `out/fastest_flash_voidfx_9x16.mp4`: upload version.
