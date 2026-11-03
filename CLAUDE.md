@@ -1,8 +1,10 @@
 # voidfx edit standard
 
-**Benchmark:** `v4/` — *SURPRISE* (Doakes × Need It, 9:16). The user approved it as the standard for new edits.
-New edits must match or exceed it. Read `v4/README.md` and `v4/work/` before starting, and reuse the engine (`render4.py`,
-`audio4.py`, `qc4.py`, `facetrack.py`) instead of starting from scratch. Do not reuse its *look*: each edit needs its own style.
+**Benchmarks (both approved by the user as the standard for new edits; match or exceed them):**
+- `v6/`, *WARMPOP* (Dexter × George Clanton "Warmpop", 9:16): the current engine and the reference for the **amount and quality of designed transitions, animations and graphics**, how the music drives the structure, and the text. The user: "wonderful transitions, animations, graphics, while maintaining the style that I like… I like how the music correlates to the edit. I like the text."
+- `v4/`, *SURPRISE* (Doakes × Need It, 9:16): the reference for dialogue-led openings that play as one continuous take.
+
+Read `v6/README.md`, `v4/README.md` and **`docs/TOOLKIT.md`** before starting. Build every new edit on the v6 engine with `python3 tools/new_edit.py N SLUG "TITLE"`, which copies `render6.py`, `audio6.py`, `qc6.py`, `facetrack.py` and `analyze.py`, wired to a new EDL. Don't start from scratch, and **don't reuse a benchmark's look**: each edit needs its own style.
 
 ## User preferences (learned over several revisions)
 
@@ -23,17 +25,33 @@ New edits must match or exceed it. Read `v4/README.md` and `v4/work/` before sta
   - The song is edited on its beat grid; a tape-stop or dead stop is fine for an ending.
   - Mastered to about −13 LUFS with true peak ≤ −2.5 dBTP, measured **after** AAC encoding.
 - **Workflow:** the user wants built-in review passes, not repeated rounds of feedback. Before delivering, always run:
-  1. automated QC on the **encoded** file (`qc4.py`): format/decode, loudness, face centering, text vs faces, cuts, freezes, black frames, audio clicks at every edit, loop seam;
+  1. automated QC on the **encoded** file (`qcN.py`, from the v6 engine): format/decode, loudness, face centering, text vs faces, cuts, freezes, black frames, audio clicks at every edit, loop seam;
   2. a visual review of contact sheets around every transition and title;
   3. a fix-and-re-render for anything weak;
   4. a final pull of key frames from the encoded file.
+- **What v6 got right (do this every time):**
+  - one concept tying picture, sound and text together;
+  - the song's best part (where the full mix or bass returns) lands on the biggest transition;
+  - 15+ designed transitions with no plain cuts;
+  - the character's own words as two-line eased captions;
+  - graphics that add depth (vapor world tune-in, palm shadows, bokeh, neon light spill, VHS pause).
+- **Avoid:** foreign-language subtitle lines (CJK) and on-screen counters or timecodes (the VHS "SP" timer). The user removed both as clutter.
+- **Efficiency:** the user asks for quality *and* efficiency. Use the fast loop in `docs/TOOLKIT.md`:
+  1. song map;
+  2. EDL;
+  3. `build.sh N prep auto` (review sheets of every cut);
+  4. `clip:A:B` for motion;
+  5. `audio`;
+  6. **one** `video qc` per revision.
+  - Check the pitfalls list there before building transitions.
 - **Honesty:** you cannot watch or listen. Report what was verified by frames and measurement, and ask the user to watch once with sound.
 - **Communication:** short progress updates; no long code in chat.
 
 ## Project conventions
 
 - Sources go in `src/` (read-only copies). Each edit gets its own folder (`vN/work`, `vN/out`, ...).
-- One EDL file per edit holds every decision, and the renderer reads only that file.
+- One EDL file per edit holds every decision, and the renderer reads only that file. The EDL also sets `VER`, `SLUG` and `SONG`, plus the engine knobs (`DROP_TITLE`, `MONTAGE`, `VANISH_T0`, `VO_STEM`, `CAPS`, `END_CAP`); the template is `tools/edl_template.py`.
+- Tools: `tools/new_edit.py` (scaffold), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/transcribe.py` (word times), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc).
 - Media (`src/`, audio, frames, outputs, models) stays out of git. Commit the code, EDL, transcripts, tracks and README, then push to the session's branch.
 - Models are downloaded at runtime: YuNet (`v3/models/face_detection_yunet_2023mar.onnx`), MODNet (`Xenova/modnet`), and faster-whisper large-v3 for dialogue and lyric timing.
 - The older guide `7b769aa4-TIKTOK_EDITING_GUIDE.md` (the beat-grid, colour and QC methods) still applies where it doesn't conflict with this file.

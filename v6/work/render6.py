@@ -1,9 +1,12 @@
-"""Renderer for WARMPOP — Dexter × Warmpop (voidfx v6, 1080x1920). Reads v6/work/edl6.py.
+"""voidfx renderer (v6 engine; benchmark edit WARMPOP — Dexter × Warmpop, 1080x1920). Reads the edit's EDL only.
 
-  python3 v6/work/render6.py prep                    # load + face-track every shot -> v3/work/tracks3.json
-  python3 v6/work/render6.py stills NAME f1 f2 ...   # tiled stills -> v3/frames/NAME.jpg
-  python3 v6/work/render6.py full f1 f2 ...          # full-res stills -> v3/frames/full_XXXX.jpg
-  python3 v6/work/render6.py video OUTDIR            # final render (needs v3/audio/mix*.wav)
+  python3 vN/work/renderN.py prep                    # decode + face-track every shot, MODNet mattes for seg=True shots
+  python3 vN/work/renderN.py auto NAME               # review sheets around EVERY cut (no frame lists) -> vN/frames/NAME_*.jpg
+  python3 vN/work/renderN.py stills NAME f1 f2 ...   # tiled stills of chosen frames -> vN/frames/NAME.jpg
+  python3 vN/work/renderN.py full f1 f2 ...          # full-res stills -> vN/frames/full_XXXX.jpg
+  python3 vN/work/renderN.py clip A B                # frames A..B as a 540x960 MP4 with sound (check a transition in motion)
+  python3 vN/work/renderN.py preview                 # whole edit at 30 fps / 540x960 with sound (~half the final render time)
+  python3 vN/work/renderN.py video OUTDIR            # final render: upload MP4 + master MOV (needs vN/audio/mix*.wav)
 """
 import os, sys, json, math, bisect, subprocess
 import numpy as np, cv2
@@ -140,7 +143,7 @@ def prep_tracks():
             if c is not None: prev = c; res.append(dict(t=k / fps, **c))
         out[s["n"]] = res
         print(f"  track {s['n']:12s} {len(res):3d} det", flush=True)
-    json.dump(out, open(f"{ROOT}/v6/work/tracks6.json", "w"))
+    json.dump(out, open(f"{ROOT}/{E.VER}/work/tracks{E.VER[1:]}.json", "w"))
 
 def track_fn(s):
     n = s["n"]
@@ -181,7 +184,7 @@ def prep_seg():
             m = sess.run(None, {sess.get_inputs()[0].name: x.transpose(2, 0, 1)[None].astype(np.float32)})[0][0, 0]
             out[f"{pk}_{k}"] = (np.clip(m, 0, 1) * 255).astype(np.uint8)
         print(f"  seg {s['n']:12s} {len(ks)} frames", flush=True)
-    np.savez_compressed(f"{ROOT}/v6/work/seg6.npz", **out)
+    np.savez_compressed(f"{ROOT}/{E.VER}/work/seg{E.VER[1:]}.npz", **out)
 
 def seg_mask(s, t):
     pk = s["src"]; fps = E.SRC[pk][1]; U = UNIQ[pk]
@@ -2581,7 +2584,9 @@ def miami_title(out, f):
     fs = E.fh(E.HDROP); k = f - fs
     if not (2 <= k < 70): return out
     kk = k - 2; v = eout(kk / 12, 3); fade = clamp((70 - k) / 10, 0, 1)
-    m = text_mask("MIAMI", F_BI, 230, tracking=6); hh, ww = m.shape
+    word = getattr(E, "DROP_TITLE", None)
+    if not word: return out
+    m = text_mask(word, F_BI, 230, tracking=6); hh, ww = m.shape
     y = np.linspace(0, 1, hh, dtype=np.float32)[:, None, None]
     fill = np.where(y < 0.55, CYAN * (1 - y * 1.5) + WHITE * np.clip(y * 1.8, 0, 1), PINK * (0.7 + 0.3 * y))
     fill = np.clip(fill, 0, 1)
@@ -2602,7 +2607,7 @@ def miami_title(out, f):
 def neon_sign(out, f):
     """IT / WAS / ME. — neon tube lettering; each word eases in and flickers on with its spoken word."""
     t = f / FPS; t_end = E.DUR - 40 / FPS
-    if not (E.END_CAP[0][1] - 0.05 <= t < t_end): return out
+    if not getattr(E, "END_CAP", None) or not (E.END_CAP[0][1] - 0.05 <= t < t_end): return out
     def tube_word(word, size):
         m = text_mask(word, F_BOLD, size, tracking=8)
         tube = np.clip(cv2.dilate(m, np.ones((7, 7), np.uint8)) - cv2.erode(m, np.ones((7, 7), np.uint8)), 0, 1)
@@ -2640,7 +2645,7 @@ def render(f):
     if s.get("motes"): out = motes(out, f)
     out = pause_fx(out, s, f)
     if s.get("vanish"):
-        a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05
+        tv0 = E.VANISH_T0
         out = vanish(out, person, f, t, tv0, s["t1"] - 0.08)
     # ---- incoming
     if tin in TR2 and k < TR2[tin][2]: out = TR2[tin][0](last_visible(P), out, k, f, P, s)
@@ -2678,7 +2683,7 @@ def render(f):
     if not in_static:
         out = vo_captions(out, f); out = miami_title(out, f); out = neon_spill(out, f); out = neon_sign(out, f)
         h = t / E.HB + E.H0
-        if h >= E.HDROP and h < 484:
+        if E.MONTAGE[0] <= h < E.MONTAGE[1]:
             kb = int(((h - E.H0) % 8) * E.HB * FPS)
             out = glints(out, f, kb); out = pastel_leak(out, f, f - kb)
         if f < 100: out = osd(out, f, "PLAY ▶", y=235, a=clamp((f - 10) / 6, 0, 1) * clamp((100 - f) / 10, 0, 1))
@@ -2689,13 +2694,14 @@ def render(f):
 
 def beat_bounce(f):
     t = f / FPS; h = t / E.HB + E.H0
-    if h < E.HDROP or h >= 484: return 1.0
+    if not (E.MONTAGE[0] <= h < E.MONTAGE[1]): return 1.0
     ph = ((h - E.H0) % 2) * E.HB
     return 1 + 0.016 * math.exp(-ph / 0.10)
 
 def init_hits():
     HITS.clear()
-    for h, a in ((448, 22), (456, 10), (464, 14), (472, 10), (480, 12)):
+    for i, h in enumerate(range(E.MONTAGE[0], E.MONTAGE[1], 8)):
+        a = (22, 10, 14, 10, 12)[min(i, 4)]
         HITS.append((E.fh(h), a, 4.5))
 
 # ============================================================================ v6 rev 2 — new transitions + graphics
@@ -3047,7 +3053,7 @@ def last_visible(P):
     """last frame of shot P as it was seen (includes the pixel dissolve for the vanish shot)."""
     if P.get("vanish"):
         f = P["f1"] - 1; img, person = render_shot(P, f, want_mask=True)
-        a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05
+        tv0 = E.VANISH_T0
         return vanish(img, person, f, f / FPS, tv0, P["t1"] - 0.08)
     if P.get("pause"): return render_shot(P, pause_frame(P, P["f1"] - 1))
     return last_frame_of(P)
@@ -3189,7 +3195,7 @@ def pause_fx(out, s, f):
 def neon_spill(out, f):
     """the neon words throw coloured light onto his face and shirt."""
     t = f / FPS; t_end = E.DUR - 40 / FPS
-    if not (E.END_CAP[0][1] <= t < t_end): return out
+    if not getattr(E, "END_CAP", None) or not (E.END_CAP[0][1] <= t < t_end): return out
     lay_c = np.zeros((H // 8, W // 8), np.float32); lay_p = np.zeros_like(lay_c)
     for word, tw in E.END_CAP:
         k = (t - tw) * FPS
@@ -3206,31 +3212,59 @@ def main():
     load(); init_hits()
     if mode == "prep":
         prep_tracks(); prep_seg(); return
-    RAW_TRK.update(json.load(open(f"{ROOT}/v6/work/tracks6.json")))
-    z = np.load(f"{ROOT}/v6/work/seg6.npz"); SEG.update({k: z[k] for k in z.files})
+    RAW_TRK.update(json.load(open(f"{ROOT}/{E.VER}/work/tracks{E.VER[1:]}.json")))
+    z = np.load(f"{ROOT}/{E.VER}/work/seg{E.VER[1:]}.npz"); SEG.update({k: z[k] for k in z.files})
     if mode == "stills":
         name = sys.argv[2]; frames = [int(a) for a in sys.argv[3:]]; ims = []
         for f in frames:
             im = cv2.resize(render(f), (270, 480), interpolation=cv2.INTER_AREA)
             cv2.putText(im, str(f), (5, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 255), 1, cv2.LINE_AA); ims.append(im)
         while len(ims) % 6: ims.append(np.zeros_like(ims[0]))
-        cv2.imwrite(f"{ROOT}/v6/frames/{name}.jpg", np.vstack([np.hstack(ims[i:i + 6]) for i in range(0, len(ims), 6)]), [cv2.IMWRITE_JPEG_QUALITY, 88])
+        cv2.imwrite(f"{ROOT}/{E.VER}/frames/{name}.jpg", np.vstack([np.hstack(ims[i:i + 6]) for i in range(0, len(ims), 6)]), [cv2.IMWRITE_JPEG_QUALITY, 88])
         return
+    if mode == "auto":                                                   # sheets around every cut, 6 cuts per sheet
+        name = sys.argv[2]; offs = (-8, -4, -1, 0, 3, 8)
+        cuts = [sh["f0"] for sh in SHOTS[1:]]
+        for si in range(0, len(cuts), 6):
+            frames = [min(E.DUR_F - 1, max(0, c + o)) for c in cuts[si:si + 6] for o in offs]
+            with Pool(4) as pool: rend = pool.map(render, frames, chunksize=2)
+            ims = []
+            for f, r in zip(frames, rend):
+                im = cv2.resize(r, (216, 384), interpolation=cv2.INTER_AREA)
+                cv2.putText(im, str(f), (4, 16), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1, cv2.LINE_AA); ims.append(im)
+            while len(ims) % 6: ims.append(np.zeros_like(ims[0]))
+            out = f"{ROOT}/{E.VER}/frames/{name}_{si // 6 + 1}.jpg"
+            cv2.imwrite(out, np.vstack([np.hstack(ims[i:i + 6]) for i in range(0, len(ims), 6)]), [cv2.IMWRITE_JPEG_QUALITY, 86]); print(out)
+        return
+    if mode in ("clip", "preview"):                                      # quick motion checks with sound
+        a, b, step = (int(sys.argv[2]), int(sys.argv[3]), 1) if mode == "clip" else (0, E.DUR_F - 1, 2)
+        a, b = max(0, a), min(E.DUR_F - 1, b)                            # stay inside the edit
+        frames = list(range(a, b + 1, step)); fps_ = FPS // step
+        out = f"{ROOT}/{E.VER}/frames/clip_{a}_{b}.mp4" if mode == "clip" else f"{ROOT}/{E.VER}/out/preview.mp4"
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        mix = f"{ROOT}/{E.VER}/audio/mix.wav"; aud = ["-ss", str(a / FPS), "-t", str(len(frames) * step / FPS), "-i", mix] if os.path.exists(mix) else []
+        cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W // 2}x{H // 2}", "-r", str(fps_), "-i", "-", *aud,
+               "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", *(["-c:a", "aac", "-b:a", "160k", "-shortest"] if aud else []), out]
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+        with Pool(4) as pool:
+            for fr in pool.imap(render, frames, chunksize=4):
+                p.stdin.write(cv2.resize(fr, (W // 2, H // 2), interpolation=cv2.INTER_AREA).tobytes())
+        p.stdin.close(); p.wait(); print(out); return
     if mode == "full":
         for f in [int(a) for a in sys.argv[2:]]:
-            cv2.imwrite(f"{ROOT}/v6/frames/full_{f:04d}.jpg", render(f), [cv2.IMWRITE_JPEG_QUALITY, 92])
+            cv2.imwrite(f"{ROOT}/{E.VER}/frames/full_{f:04d}.jpg", render(f), [cv2.IMWRITE_JPEG_QUALITY, 92])
         return
     if mode == "video":
         outdir = f"{ROOT}/{sys.argv[2]}"; os.makedirs(outdir, exist_ok=True)
         vf = "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p"
         tags = ["-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"]
         cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
-               "-itsoffset", str(-1024 / 48000), "-i", f"{ROOT}/v6/audio/mix_preroll.wav", "-i", f"{ROOT}/v6/audio/mix.wav",
+               "-itsoffset", str(-1024 / 48000), "-i", f"{ROOT}/{E.VER}/audio/mix_preroll.wav", "-i", f"{ROOT}/{E.VER}/audio/mix.wav",
                "-map", "0:v", "-map", "1:a", "-vf", vf, "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-maxrate", "26M", "-bufsize", "52M",
                "-profile:v", "high", "-level", "4.2", "-g", "120", "-bf", "3", *tags, "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-ac", "2",
-               "-movflags", "+faststart", f"{outdir}/warmpop_dexter_voidfx_9x16.mp4",
+               "-movflags", "+faststart", f"{outdir}/{E.SLUG}_voidfx_9x16.mp4",
                "-map", "0:v", "-map", "2:a", "-vf", vf, "-c:v", "libx264", "-preset", "slow", "-crf", "11", "-profile:v", "high", "-level", "5.1",
-               *tags, "-c:a", "pcm_s24le", "-ar", "48000", f"{outdir}/warmpop_dexter_voidfx_9x16_master.mov"]
+               *tags, "-c:a", "pcm_s24le", "-ar", "48000", f"{outdir}/{E.SLUG}_voidfx_9x16_master.mov"]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
             for i, fr in enumerate(pool.imap(render, range(E.DUR_F), chunksize=4)):

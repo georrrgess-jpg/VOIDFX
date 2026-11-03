@@ -7,6 +7,8 @@ floating over a neon grid + sunset and the camera flies through the screen into 
 Song window: half-beats 416 -> 496 (10 bars of 8 half-beats, 90 BPM), drop at hb448.
 """
 ROOT = "/home/user/VOIDFX"
+VER, SLUG = "v6", "warmpop_dexter"          # folder + output file name (engine reads paths from these)
+SONG = f"{ROOT}/src/warmpop.mp3"
 FPS, W, H = 60, 1080, 1920
 SRC = {"p6": (f"{ROOT}/src/pack6_s5.mp4", 30.0, 1280, 720), "p5": (f"{ROOT}/src/pack5_mixtape120.mp4", 60.0, 1280, 720),
        "p4": (f"{ROOT}/src/pack4_aesthetic.mp4", 29000 / 1001, 1280, 720), "p1": (f"{ROOT}/src/scenepack.mp4", 60.0, 1200, 720),
@@ -75,6 +77,12 @@ _iwm = [s for s in SHOTS if s["n"] == "it_was_me"][0]
 VO[2] = (1.02, 3.55, _iwm["t0"] + (1.02 - 0.85))           # lip-sync to the shot's time map (1:1 speed)
 # neon words light on their spoken times (vocal stem: "It" 1.13, "was" 2.70-2.92, "me" 3.08-3.38)
 END_CAP = [("IT", _iwm["t0"] + (1.13 - 0.85)), ("WAS", _iwm["t0"] + (2.70 - 0.85)), ("ME.", _iwm["t0"] + (3.06 - 0.85))]
+
+# ---- engine knobs (read by render/audio/qc; a new edit sets its own)
+DROP_TITLE = "MIAMI"                     # chrome title word that sweeps in at the drop (None = no title)
+MONTAGE = (HDROP, 484)                   # half-beat range with beat bounce, glints, light leaks and hits
+VANISH_T0 = VO[1][2] + (22.71 - VO[1][0]) + 0.05   # pixel dissolve starts just after "disappear"
+VO_STEM = f"{ROOT}/{VER}/audio/sep/htdemucs/pack6_clip/vocals.wav"   # Demucs vocal stem the VO lines are cut from
 
 if __name__ == "__main__":
     prev = 0

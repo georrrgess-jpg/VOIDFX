@@ -71,8 +71,8 @@ def text_bands(t):
         a, b_, at = E.VO[vi]
         if at + (words[0][1] - a) <= t < at + (s_end - a) + 0.6: b.append((1320, 1600, "caption%d" % vi))
     td = E.th(E.HDROP)
-    if td + 2 / E.FPS <= t < td + 80 / E.FPS: b.append((1380, 1610, "MIAMI"))
-    if E.END_CAP[0][1] <= t < E.DUR - 40 / E.FPS: b.append((1270, 1620, "neon"))
+    if getattr(E, "DROP_TITLE", None) and td + 2 / E.FPS <= t < td + 70 / E.FPS: b.append((1380, 1610, "title"))
+    if getattr(E, "END_CAP", None) and E.END_CAP[0][1] <= t < E.DUR - 40 / E.FPS: b.append((1270, 1620, "neon"))
     return b
 for f, fl in faces.items():
     bands = text_bands(f / E.FPS)
@@ -101,8 +101,8 @@ lum = np.array([x.mean() for x in small]); print("  near-black frames:", [i for 
 
 # ---- 5. audio clicks at edit points
 print("\n== 5. audio clicks at every cut")
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-vn", "-c:a", "pcm_f32le", "/home/user/VOIDFX/v6/audio/qc_dec.wav"], check=True)
-sr, a = wf.read("/home/user/VOIDFX/v6/audio/qc_dec.wav"); m = a.mean(1)
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-vn", "-c:a", "pcm_f32le", f"{E.ROOT}/{E.VER}/audio/qc_dec.wav"], check=True)
+sr, a = wf.read(f"{E.ROOT}/{E.VER}/audio/qc_dec.wav"); m = a.mean(1)
 dd = np.abs(np.diff(m)); loc = np.convolve(dd, np.ones(480) / 480, "same"); clicks = 0
 for s in E.SHOTS[1:]:
     i = int(s["t0"] * sr); w = dd[max(0, i - 480):i + 480]; l = loc[max(0, i - 480):i + 480]
@@ -118,7 +118,7 @@ def sheet(name, ks, cols=10):
     for i in ks:
         im = frames[min(max(0, i), n - 1)].copy(); cv2.putText(im, str(i), (3, 14), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1, cv2.LINE_AA); ims.append(im)
     while len(ims) % cols: ims.append(np.zeros_like(ims[0]))
-    cv2.imwrite(f"{E.ROOT}/v6/frames/qc_{name}.jpg", np.vstack([np.hstack(ims[i:i + cols]) for i in range(0, len(ims), cols)]), [cv2.IMWRITE_JPEG_QUALITY, 85])
+    cv2.imwrite(f"{E.ROOT}/{E.VER}/frames/qc_{name}.jpg", np.vstack([np.hstack(ims[i:i + cols]) for i in range(0, len(ims), cols)]), [cv2.IMWRITE_JPEG_QUALITY, 85])
 sheet("overview", list(range(0, n, 16)), cols=12)
 tr = [s["f0"] for s in E.SHOTS[1:]]
 sheet("transitions_a", [c + o for c in tr[:9] for o in (-6, -3, 0, 3, 6)], cols=10)

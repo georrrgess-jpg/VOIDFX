@@ -239,3 +239,14 @@ Review while building:
   - *Text over face, frame 150:* the eye dive.
   - *One face flag of 27 in pink_wall:* he turns his head; this is within tolerance.
 - **Visual sign-off:** checked on frames from the encoded MP4: the film strip, sticker peel, pause, bang, power-off/on, neon spill and vapor-world palms.
+
+## Benchmark status
+
+The user approved v6 as a reference edit alongside v4. The engine was then made reusable for new edits:
+- **Paths and output names come from the EDL.** `VER`, `SLUG` and `SONG`, plus the knobs `DROP_TITLE`, `MONTAGE`, `VANISH_T0` and `VO_STEM`.
+- **New review modes:** `auto` (sheets around every cut), `clip A B` (a small MP4 with sound) and `preview`.
+- **Music-only edits build without changes.** No VO is needed, and the song is decoded automatically.
+- **Verified unchanged after the refactor:** the audio rebuild matches the shipped mix bit for bit, and fresh renders match the shipped MP4 to within encoding noise (about 3/255).
+- **Whole pipeline smoke-tested:** scaffold, prep, auto, audio and clip were run on a throwaway edit with a different EDL.
+
+See `docs/TOOLKIT.md` and `tools/`.

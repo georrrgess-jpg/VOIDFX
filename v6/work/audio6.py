@@ -13,7 +13,7 @@ sys.path.insert(0, "/home/user/VOIDFX/v2/work")
 import edl6 as E
 import audio2 as A2
 
-SR = 48000; AD = f"{E.ROOT}/v6/audio"
+SR = 48000; AD = f"{E.ROOT}/{E.VER}/audio"
 N = int(round(E.DUR_F / E.FPS * SR))
 PRE = 4800
 def I(t): return int(round(t * SR))
@@ -206,7 +206,9 @@ def music_track(song):
 
 # ------------------------------------------------------------------ dialogue
 def vo_track():
-    sr, v = wf.read(f"{AD}/sep/htdemucs/pack6_clip/vocals.wav"); v = v.astype(np.float32)
+    if not getattr(E, "VO", None):                                   # music-only edit
+        return np.zeros((N + PRE, 2), np.float32), np.zeros(N + PRE, np.float32)
+    sr, v = wf.read(E.VO_STEM); v = v.astype(np.float32)
     if np.abs(v).max() > 2: v /= 32768
     v = ss.resample_poly(v, 160, 147, axis=0).astype(np.float32)
     v = bq(v, "high", 85, 2); v = bq(v, "low", 11000, 2)
@@ -231,6 +233,9 @@ def vo_track():
     return vo, sm
 
 def main():
+    os.makedirs(AD, exist_ok=True)
+    if not os.path.exists(f"{AD}/song48.wav"):                       # decode the song once (E.SONG)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", E.SONG, "-ar", "48000", "-ac", "2", "-c:a", "pcm_f32le", f"{AD}/song48.wav"], check=True)
     sr, song = wf.read(f"{AD}/song48.wav"); song = song.astype(np.float32)
     mus = music_track(song) * db(-1.5)
     vo, duck = vo_track()
@@ -384,9 +389,11 @@ def main():
         n = I(0.05); tt = np.arange(n) / SR
         place(fx, stereo(norm(np.sin(2 * np.pi * fq * tt) * env_exp(n, 0.015, 0.001), -33), -0.4 + 0.25 * i), td + dt / E.FPS)
     # ---- vanish ("disappear myself"): crumble that follows the dissolve
-    a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05; tv1 = T["blue_vanish"]["t1"] - 0.08
-    place(fx, crumble(tv1 - tv0 + 0.25, -21, 38), tv0)
-    place(fx, A2.riser(0.5, -30), tv0 - 0.5)
+    vs = [s_ for s_ in E.SHOTS if s_.get("vanish")]
+    if vs:
+        tv0 = E.VANISH_T0; tv1 = vs[0]["t1"] - 0.08
+        place(fx, crumble(tv1 - tv0 + 0.25, -21, 38), tv0)
+        place(fx, A2.riser(0.5, -30), tv0 - 0.5)
     # ---- captions: a soft tick as each word eases in; MIAMI sweep; neon words; glints on the montage downbeats
     for vi, words, s_end, emph, style in E.CAPS:
         a, b_, at = E.VO[vi]
@@ -396,8 +403,8 @@ def main():
     place(fx, stereo(A2.shimmer(0.9, -29)), E.th(E.HDROP) + 12 / E.FPS)
     for word, tw in E.END_CAP:
         place(fx, stereo(neon_buzz(0.32, -29 if word != "ME." else -26, (1, 0, 1, 0, 1, 1, 0, 1, 1, 1))), tw)
-    for h in range(448, 484, 8):
-        if h != 448: place(fx, stereo(ting(-35, h), 0.5 if h % 16 else -0.5), E.th(h))
+    for h in range(E.MONTAGE[0], E.MONTAGE[1], 8):
+        if h != E.MONTAGE[0]: place(fx, stereo(ting(-35, h), 0.5 if h % 16 else -0.5), E.th(h))
     # ---- ending: the tape rewinds (the song scrubs backwards) -> static -> loop
     Ts = E.DUR - 40 / E.FPS
     place(fx, stereo(vcr_clunk(-22, 40)), Ts - 0.02)
@@ -427,7 +434,8 @@ def main():
     mm = m.mean(1); loop = np.concatenate([mm[-24000:], mm[:24000]]); d = np.abs(np.diff(loop))
     print(f"loop seam step {d[23997:24003].max():.4f} vs local median {np.median(d[21600:26400]):.4f}")
     # levels per section for a sanity check
-    def lv(a, b): x = m[I(a):I(b)]; return 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-9)
+    def lv(a, b):
+        x = m[I(min(a, E.DUR - 0.05)):I(min(b, E.DUR))]; return 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-9) if len(x) else float("nan")
     print("rms: intro", round(lv(0.2, 0.9), 1), "VO", round(lv(1.0, 6.5), 1), "build", round(lv(7, 10.5), 1), "drop", round(lv(10.7, 22.5), 1),
           "it-was-me", round(lv(22.8, 25.4), 1), "rewind", round(lv(26.0, 26.5), 1), "static", round(lv(26.55, 26.66), 1))
 
