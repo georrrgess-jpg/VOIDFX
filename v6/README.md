@@ -18,7 +18,7 @@ The tape then rewinds, drops into static, and the static loops straight back int
 
 The look is a new pastel "vapor" grade, separate from every earlier edit's: lifted pink shadows, cyan-blue highlights and VHS chroma bleed. On top of that sit:
 - scanlines and head-switch noise;
-- a VCR on-screen display: PLAY ▶, the SP counter, and ◀◀ REW at the end;
+- a VCR on-screen display: PLAY ▶ at the start and ◀◀ REW at the end (the SP counter was removed at the user's request);
 - bloom, an anamorphic streak and grain.
 
 ## Song window

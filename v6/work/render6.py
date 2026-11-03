@@ -2682,8 +2682,6 @@ def render(f):
             kb = int(((h - E.H0) % 8) * E.HB * FPS)
             out = glints(out, f, kb); out = pastel_leak(out, f, f - kb)
         if f < 100: out = osd(out, f, "PLAY ▶", y=235, a=clamp((f - 10) / 6, 0, 1) * clamp((100 - f) / 10, 0, 1))
-        if t < E.th(E.HDROP):
-            out = osd(out, f, f"SP  0:{int(t // 60):02d}:{int(t % 60):02d}", x=70, y=300, a=0.75, size=34)
         out = bloom(out, 0.30); out = anamorphic(out, 0.22)
         out = vhs(out, f, 0.9 if t < E.th(E.HDROP) else 0.5)
         out = out * VIG + grain(f, 0.016)
