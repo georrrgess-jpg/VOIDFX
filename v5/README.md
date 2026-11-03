@@ -107,6 +107,16 @@ The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded
   - gold light streaks across the running shots.
 - **Lyric sound design:** a crack on HURTING, bubbles on DROWNING, shimmer on FADING, and whooshes on LOST IT ALL and LOSING.
 
+### Revision 3 checkpoint: **SHIP**
+
+- **Automated criteria:** all 7 PASS.
+  - −13.1 LUFS / −3.0 dBTP.
+  - 0 clicks at 23 cuts.
+  - No frozen runs.
+  - **0 face-centering flags and 0 text-over-face frames** (the first fully clean run).
+  - Loop seam: first and last frames both black (luma 0.6 / 0.6).
+- **Visual sign-off:** every lyric lockup, meaning-driven text animation and new transition was verified on frames pulled from the encoded MP4.
+
 ## Files
 
 - `out/fastest_flash_voidfx_9x16.mp4`: upload version.
