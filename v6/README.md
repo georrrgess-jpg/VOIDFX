@@ -226,3 +226,16 @@ Review while building:
   - The film strip's motion blur was about 30× the strip's real per-frame speed, so it smeared into streaks; it now matches the movement.
   - `putText` can't draw on float frames, so the edge codes are drawn as dashes.
   - The fingertip position for the muzzle flash was measured from the shot.
+
+### Revision 3 checkpoint: **SHIP**
+
+- **Automated criteria:** all PASS.
+  - −13.0 LUFS / −2.8 dBTP after AAC.
+  - 1,600 frames, clean decode, no frozen runs (the VHS pause jitters, so it isn't a freeze).
+  - 0 clicks at 17 cuts and at the loop seam.
+  - Loop seam matched static to static, and audio and video are the same length.
+- **Flags that are by design:**
+  - *Near-black frames 1356–1362:* the CRT power-off.
+  - *Text over face, frame 150:* the eye dive.
+  - *One face flag of 27 in pink_wall:* he turns his head; this is within tolerance.
+- **Visual sign-off:** checked on frames from the encoded MP4: the film strip, sticker peel, pause, bang, power-off/on, neon spill and vapor-world palms.
