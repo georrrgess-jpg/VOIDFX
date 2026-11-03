@@ -128,6 +128,53 @@ def soft_tick(level=-38, seed=0):
     n = I(0.03); y = bq(noise(n, 300 + seed), "band", np.array([3000, 9000]), 2) * env_exp(n, 0.006, 0.0005)
     return norm(y, level)
 
+# ------------------------------------------------------------------ rev 2 transition sounds
+def heartbeat(level=-16):
+    n = I(0.5); t = np.arange(n) / SR; y = np.zeros(n, np.float32)
+    for t0, a in ((0.0, 1.0), (0.17, 0.7)):
+        tt = np.clip(t - t0, 0, None); y += a * np.sin(2 * np.pi * 52 * tt) * np.exp(-tt / 0.07) * (t >= t0)
+    return norm(bq(y, "low", 200, 2), level)
+
+def shutter_ticks(level=-24, n_=4, gap=0.03, seed=50):
+    n = I(gap * n_ + 0.05); y = np.zeros(n, np.float32)
+    for i in range(n_):
+        m = I(0.012); i0 = I(i * gap); y[i0:i0 + m] += bq(noise(m, seed + i), "band", np.array([2500, 9000]), 2) * env_exp(m, 0.003, 0.0002)
+    return norm(y, level)
+
+def metal_shing(level=-19, dur=0.7):
+    n = I(dur); t = np.arange(n) / SR
+    y = sum(a * np.sin(2 * np.pi * f * t + i) * np.exp(-t / d) for i, (f, a, d) in enumerate(((2137, 1.0, 0.30), (3411, 0.7, 0.22), (5233, 0.5, 0.16), (7810, 0.35, 0.10), (1290, 0.4, 0.25))))
+    y = y * np.minimum(1, t / 0.002) + bq(noise(n, 51), "high", 4000, 2) * env_exp(n, 0.04, 0.0005) * 0.6
+    return norm(y, level)
+
+def swish(level=-18, dur=0.13, seed=52):
+    n = I(dur); u = np.arange(n) / n; x = noise(n, seed); out = np.zeros(n, np.float32); blk = 256
+    for i in range(0, n, blk):
+        fc = 1500 * (9000 / 1500) ** u[i]
+        sos = ss.butter(2, [fc / 1.4 / (SR / 2), min(0.95, fc * 1.4 / (SR / 2))], "band", output="sos")
+        seg = x[max(0, i - 1024):i + blk]; y = ss.sosfilt(sos, seg)[-min(blk, n - i):]; out[i:i + len(y)] = y
+    return norm(out * np.sin(np.pi * u) ** 0.8, level)
+
+def chord_swell(level=-24, dur=0.9, freqs=(523.25, 659.25, 783.99, 1046.5)):
+    n = I(dur); t = np.arange(n) / SR
+    y = sum(np.sin(2 * np.pi * f * t + 0.3 * np.sin(2 * np.pi * 5 * t)) for f in freqs)
+    return norm(y * np.minimum(1, t / 0.06) * np.exp(-t / (dur * 0.45)), level)
+
+def glass_chime(level=-26):
+    n = I(0.9); t = np.arange(n) / SR
+    y = sum(a * np.sin(2 * np.pi * f * t) * np.exp(-t / d) for f, a, d in ((1975, 1.0, 0.4), (3136, 0.6, 0.3), (4699, 0.4, 0.2), (2637, 0.5, 0.35)))
+    return norm(y * np.minimum(1, t / 0.003), level)
+
+def fire_whoosh(level=-20, dur=0.5, seed=53):
+    n = I(dur); t = np.arange(n) / SR
+    y = bq(noise(n, seed), "low", 1800, 2) * np.sin(np.pi * t / dur) ** 1.5
+    rng = np.random.default_rng(seed); crk = np.zeros(n, np.float32)
+    for _ in range(70):
+        i = int(rng.uniform(0, 0.9) * n); m = I(0.003); crk[i:i + m] += rng.uniform(0.3, 1) * bq(noise(m, int(rng.integers(1e6))), "high", 2000, 2)
+    return norm(y + 0.5 * crk, level)
+
+def rev(x): return x[::-1].copy()
+
 def measure(p):
     r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", p, "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, text=True).stderr
     return float(r.split("Integrated loudness:")[1].split("I:")[1].split("LUFS")[0]), float(r.split("True peak:")[1].split("Peak:")[1].split("dBFS")[0])
@@ -252,9 +299,60 @@ def main():
             place(fx, A2.whoosh(0.36, -19, 42, True), t0 - 0.22)
             place(fx, stereo(A2.impact(-17, (74, 38), 0.35, 0.4, 43)), t0 + 0.02)
             place(fx, stereo(A2.shimmer(1.0, -28)), t0 + 0.05)
+        elif tin == "eye_dive":                                        # dive into the pupil, heartbeat, aperture blades
+            place(fx, A2.whoosh(0.34, -19, 60, False), t0 - 0.30)
+            place(fx, stereo(rev(A2.impact(-22, (60, 30), 0.25, 0.1, 61))[-I(0.3):]), t0 - 0.30)
+            place(fx, stereo(heartbeat(-15)), t0 - 0.04)
+            place(fx, stereo(shutter_ticks(-23, 5, 0.025, 62), 0.3), t0 + 0.02)
+            place(fx, stereo(A2.shimmer(0.8, -30)), t0 + 0.05)
+        elif tin == "assemble":                                        # the dissolve, played backwards
+            cr = crumble(0.42, -22, 63); place(fx, np.stack([cr[::-1, 1], cr[::-1, 0]], 1), t0)
+            place(fx, stereo(A2.impact(-24, (90, 50), 0.15, 0.4, 64)), t0 + 24 / E.FPS)
+            place(fx, stereo(A2.shimmer(0.6, -31)), t0 + 20 / E.FPS)
+        elif tin == "polaroid":                                        # flash charge, shutter, print eject, toss
+            place(fx, stereo(flash_pop(-18, 65)), t0 - 0.16)
+            place(fx, stereo(shutter_ticks(-21, 2, 0.04, 66)), t0 - 0.01)
+            n = I(0.22); tt = np.arange(n) / SR
+            ej = np.sign(np.sin(2 * np.pi * 310 * tt)) * 0.3 + bq(noise(n, 67), "band", np.array([800, 3000]), 2)
+            place(fx, stereo(norm(ej * np.sin(np.pi * tt / 0.22), -30), 0.3), t0 + 0.02)
+            place(fx, A2.whoosh(0.3, -22, 68, True), t0 + 6 / E.FPS)
+        elif tin == "facematch":
+            place(fx, A2.whoosh(0.26, -21, 69, True), t0 - 0.20)
+            place(fx, stereo(A2.impact(-22, (85, 45), 0.2, 0.5, 70)), t0)
+            place(fx, stereo(A2.shimmer(0.5, -32)), t0 + 0.02)
+        elif tin == "cube":                                            # the box turns and lands
+            place(fx, A2.whoosh(0.32, -19, 71, True), t0 - 0.16)
+            place(fx, stereo(A2.impact(-20, (70, 36), 0.3, 0.3, 72)), t0 + 8 / E.FPS)
+            place(fx, stereo(A2.tick(-28, 73)), t0 + 8 / E.FPS)
+        elif tin == "sun":                                             # the sun rises, the blinds rattle open
+            place(fx, A2.riser(0.30, -22), t0 - 0.30)
+            place(fx, stereo(chord_swell(-23)), t0 - 0.10)
+            for i in range(7): place(fx, stereo(A2.tick(-31, 74 + i), -0.6 + 0.2 * i), t0 + 0.02 + 0.022 * i)
+        elif tin == "slash":                                           # knife swish, steel ring, the halves part
+            place(fx, stereo(swish(-16, 0.11, 75), 0.5), t0 - 5 / E.FPS)
+            place(fx, stereo(metal_shing(-20)), t0 - 0.03)
+            place(fx, stereo(A2.impact(-17, (75, 38), 0.3, 0.6, 76)), t0)
+            place(fx, stereo(drip(-26, 77)[I(0.13):]), t0 + 0.04)
+            place(fx, A2.whoosh(0.3, -24, 78, False), t0 + 0.02)
+        elif tin == "burn":                                            # film catches fire
+            place(fx, stereo(fire_whoosh(-19, 0.5, 79)), t0 - 10 / E.FPS)
+            place(fx, stereo(A2.impact(-23, (60, 32), 0.25, 0.2, 80)), t0)
+        elif tin == "lens":                                            # glint in the shades, dive through the glass
+            place(fx, stereo(glass_chime(-25), 0.3), t0 - 12 / E.FPS)
+            place(fx, A2.whoosh(0.30, -20, 81, True), t0 - 0.22)
+            place(fx, stereo(A2.impact(-21, (95, 50), 0.15, 0.7, 82)), t0)
+        elif tin == "shadow":                                          # darkness sucks in, light blooms out
+            place(fx, stereo(rev(A2.impact(-17, (55, 28), 0.5, 0.2, 83))[-I(0.25):]), t0 - 0.25)
+            place(fx, A2.whoosh(0.4, -24, 84, False), t0 - 0.2)
+            place(fx, stereo(A2.shimmer(0.9, -28)), t0 + 0.04)
         elif tin == "pixel_sort":
             place(fx, melt_sweep(0.34, -20, 36), t0 - 8 / E.FPS)
             place(fx, stereo(A2.impact(-23, (80, 42), 0.22, 0.3, 37)), t0)
+    # ---- vapor world -> reality tunes in behind Dexter after the drop (signal-lock chirps)
+    td = E.th(E.HDROP)
+    for i, (dt, fq) in enumerate(((14, 1800), (22, 2600), (30, 3400), (40, 5200))):
+        n = I(0.05); tt = np.arange(n) / SR
+        place(fx, stereo(norm(np.sin(2 * np.pi * fq * tt) * env_exp(n, 0.015, 0.001), -33), -0.4 + 0.25 * i), td + dt / E.FPS)
     # ---- vanish ("disappear myself"): crumble that follows the dissolve
     a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05; tv1 = T["blue_vanish"]["t1"] - 0.08
     place(fx, crumble(tv1 - tv0 + 0.25, -21, 38), tv0)

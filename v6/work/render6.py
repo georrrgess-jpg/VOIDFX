@@ -2359,6 +2359,7 @@ def crt_through(A_fn, B_fn, f, kn):
     u = (kn + 11) / 11.0; zf = 1.25 * math.exp(math.log(H / h * 1.08 / 1.25) * ein(u, 2.0))
     world = tv_layer(B_fn(), f)
     o = radial_blur(world, cx, cy, zf, zf * (1 + 0.06 * u), 5)
+    o = hyperspace(o, u, cx, cy)
     return np.clip(o + (u ** 4) * 0.5, 0, 1)
 
 def crt_after(img, k):
@@ -2558,8 +2559,8 @@ def jp_sub(out, f):
 
 def miami_title(out, f):
     fs = E.fh(E.HDROP); k = f - fs
-    if not (2 <= k < 80): return out
-    kk = k - 2; v = eout(kk / 12, 3); fade = clamp((80 - k) / 10, 0, 1)
+    if not (2 <= k < 70): return out
+    kk = k - 2; v = eout(kk / 12, 3); fade = clamp((70 - k) / 10, 0, 1)
     m = text_mask("MIAMI", F_BI, 230, tracking=6); hh, ww = m.shape
     y = np.linspace(0, 1, hh, dtype=np.float32)[:, None, None]
     fill = np.where(y < 0.55, CYAN * (1 - y * 1.5) + WHITE * np.clip(y * 1.8, 0, 1), PINK * (0.7 + 0.3 * y))
@@ -2576,9 +2577,7 @@ def miami_title(out, f):
     x0 = int(W / 2 - rgba.shape[1] / 2 - 700 * (1 - v)); y0 = 1380
     if v < 1: rgba = hblur(rgba, 10 + 200 * (1 - v))
     out = paste(out, glow, x0, y0, fade * v); out = paste(out, rgba, x0, y0, fade)
-    jm = text_mask("マイアミ", F_JP, 46, tracking=24)
-    J = shadowed(jm, WHITE, blur=5, sa=0.6)
-    return paste(out, J, int(W / 2 - J.shape[1] / 2), y0 - 70, fade * clamp((kk - 8) / 10, 0, 1))
+    return out
 
 def neon_sign(out, f):
     """IT / WAS / ME. — neon tube lettering; each word eases in and flickers on with its spoken word."""
@@ -2614,11 +2613,15 @@ def render(f):
     person = None
     if s.get("seg"): out, person = render_shot(s, f, want_mask=True)
     else: out = render_shot(s, f)
+    if s.get("vapor_bg"): out = vapor_tune(out, person, k, f)
+    if s.get("echo"): out = echo(out, s, f)
+    if s.get("palms"): out = palm_shadow(out, f)
     if s.get("vanish"):
         a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05
         out = vanish(out, person, f, t, tv0, s["t1"] - 0.08)
     # ---- incoming
-    if tin == "tape_in": out = tape_in(out, f, k)
+    if tin in TR2 and k < TR2[tin][2]: out = TR2[tin][0](last_visible(P), out, k, f, P, s)
+    elif tin == "tape_in": out = tape_in(out, f, k)
     elif tin == "vhs_roll" and k < 8: out = vhs_roll(None, out, k, f)
     elif tin == "kaleido" and k < 12: out = kaleido(out, 1 - eout(k / 12, 2), -1.2 * (1 - k / 12))
     elif tin == "pixel_sort" and k < 12: out = melt(last_frame_of(P), out, 0.55 + 0.45 * eout(k / 12, 2))
@@ -2636,6 +2639,7 @@ def render(f):
     # ---- outgoing (start before the cut)
     if n_ is not None:
         nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, render_shot(n_, n_["f0"], False), kn, f, s, n_)
         if nt == "vhs_roll" and kn >= -5: out = vhs_roll(out, None, kn, f)
         if nt == "kaleido" and kn >= -8: out = kaleido(out, ein((kn + 9) / 9, 2), 1.4 * ein((kn + 9) / 9, 2))
         if nt == "pixel_sort" and kn >= -8: out = melt(out, render_shot(n_, n_["f0"], False), 0.55 * ein((kn + 9) / 9, 1.4))
@@ -2649,7 +2653,7 @@ def render(f):
     # ---- graphics + type
     in_static = (f < 8) or (s.get("tout") == "rewind_end" and s["f1"] - f <= 8)
     if not in_static:
-        out = vo_captions(out, f); out = jp_sub(out, f); out = miami_title(out, f); out = neon_sign(out, f)
+        out = vo_captions(out, f); out = miami_title(out, f); out = neon_sign(out, f)
         h = t / E.HB + E.H0
         if h >= E.HDROP and h < 484:
             kb = int(((h - E.H0) % 8) * E.HB * FPS)
@@ -2672,6 +2676,359 @@ def init_hits():
     HITS.clear()
     for h, a in ((448, 22), (456, 10), (464, 14), (472, 10), (480, 12)):
         HITS.append((E.fh(h), a, 4.5))
+
+# ============================================================================ v6 rev 2 — new transitions + graphics
+# every function: fn(A, B, j, f, sa, sb). j < 0: frames before the cut (A = outgoing live, B = incoming first frame);
+# j >= 0: frames after the cut (A = outgoing last frame, B = incoming live).
+_POLR = {}
+def polar():
+    if "r" not in _POLR:
+        dx, dy = _GX - W / 2, _GY - H / 2
+        _POLR["r"] = np.sqrt(dx * dx + dy * dy); _POLR["a"] = np.arctan2(dy, dx)
+    return _POLR["r"], _POLR["a"]
+
+def face_scr(s, f):
+    """face centre, width and both eyes in output px for shot s at frame f (None without a track)."""
+    t, u, _ = src_time(s, f); fa = face_at(s, t)
+    if fa is None: return None
+    x, y, sc = to_screen(s, f, fa[0], fa[1])
+    e1 = to_screen(s, f, fa[3][0], fa[3][1])[:2]; e2 = to_screen(s, f, fa[3][2], fa[3][3])[:2]
+    return x, y, fa[2] * sc, e1, e2
+
+def neon_glow(lay, col, sig=10, k=1.6):
+    return lay[..., None] * WHITE * 0.9 + cv2.GaussianBlur(lay, (0, 0), sig)[..., None] * col * k
+
+# ---- 1. into his eye -> hexagonal camera aperture opens on the next shot
+def aperture(r, rot, n=6):
+    rr, aa = polar(); seg = 2 * math.pi / n
+    a = np.mod(aa - rot, seg) - seg / 2
+    sd = r * math.cos(math.pi / n) - rr * np.cos(a)            # signed distance to the hexagon edge (px)
+    return sd
+
+def eye_dive(A, B, j, f, sa, sb):
+    if j < 0:
+        u = (j + 15) / 15.0; fs = face_scr(sa, f)
+        if fs is None: ex, ey, fw = W / 2, H * 0.37, 320.0
+        else:
+            e = min((fs[3], fs[4]), key=lambda q: abs(q[0] - W / 2)); ex, ey, fw = e[0], e[1], fs[2]
+        Z = max(10.0, W / (0.16 * fw))
+        sc = math.exp(math.log(Z) * ein(u, 2.4)); v = eout(clamp(u / 0.7, 0, 1), 2)
+        M = cv2.getRotationMatrix2D((ex, ey), 4 * u, sc); M[0, 2] += (W / 2 - ex) * v; M[1, 2] += (H / 2 - ey) * v
+        o = cv2.warpAffine(A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        if sc > 1.4: o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + 0.07 * min(1.0, sc / 8), 6)
+        rr, _ = polar(); pr = 1250 * ein(clamp((u - 0.58) / 0.42, 0, 1), 1.8)
+        if pr > 1:                                                    # the pupil swallows the frame
+            pm = np.clip((pr - rr) / 14, 0, 1)[..., None]
+            ring = np.exp(-((rr - pr) / (10 + 0.05 * pr)) ** 2)[..., None]
+            o = o * (1 - pm) + 0.008 * pm + ring * (PINK * 0.55 + CYAN * 0.45) * 0.9
+        return np.clip(rgb_split(o, 12 * u), 0, 1)
+    u = (j + 1) / 15.0
+    sd = aperture(1150 * eout(u, 2.4), rot=1.2 * (1 - u))
+    m = np.clip(sd / 3.0, 0, 1)[..., None]
+    Bz = zoom_about(B, W / 2, H / 2, 1.3 - 0.3 * eout(u, 2))
+    edge = np.exp(-(sd / 7) ** 2)[..., None]
+    blades = np.clip(-sd / 900, 0, 1)[..., None]                    # faint blade shading outside the opening
+    o = Bz * m + (1 - m) * (0.012 + 0.05 * blades * (PINK * 0.5 + CYAN * 0.5))
+    o = o + edge * (CYAN * 0.6 + WHITE * 0.4) * (1 - u) * 1.2
+    return np.clip(rgb_split(o, 10 * (1 - u)), 0, 1)
+
+# ---- 2. reassemble: the next scene builds itself from flying pixel blocks (reverse of the dissolve)
+_ASM = {}
+def assemble(A, B, j, f, sa, sb, n=24):
+    u = j / n; bs = 18; gh, gw = -(-H // bs), W // bs
+    if "thr" not in _ASM:
+        rng = np.random.default_rng(11)
+        thr = (rng.random((gh, gw)) * 0.45 + np.linspace(0.55, 0.0, gw)[None, :]).astype(np.float32)
+        _ASM.update(thr=thr, vx=rng.uniform(250, 900, (gh, gw)), vy=rng.uniform(-420, 160, (gh, gw)), ph=rng.uniform(0, 6.28, (gh, gw)))
+    thr = _ASM["thr"]; g = np.clip((u * 1.3 - thr) / 0.42, 0, 1)
+    landed = cv2.resize((g >= 1).astype(np.float32), (gw * bs, gh * bs), interpolation=cv2.INTER_NEAREST)[:H, :W]
+    o = A * (1 - eout(u, 2)) * (1 - landed[..., None]) + B * landed[..., None]
+    lb = (landed > 0.5).astype(np.uint8)
+    edge = cv2.GaussianBlur(cv2.morphologyEx(lb, cv2.MORPH_GRADIENT, np.ones((5, 5), np.uint8)).astype(np.float32), (0, 0), 1.5)
+    o = o + edge[..., None] * CYAN * 0.8 * (1 - u)
+    col = cv2.resize(B, (gw, gh), interpolation=cv2.INTER_AREA)
+    js, is_ = np.nonzero((g > 0) & (g < 1))
+    for jj, ii in zip(js, is_):
+        gg = float(g[jj, ii]); e = eout(gg, 2.2)
+        x = ii * bs + _ASM["vx"][jj, ii] * (1 - e); y = jj * bs + _ASM["vy"][jj, ii] * (1 - e) + 16 * math.sin(_ASM["ph"][jj, ii] + 8 * e)
+        sz = max(3, int(bs * (0.35 + 0.65 * e))); xi, yi = int(x), int(y)
+        if xi < 0 or yi < 0 or xi + sz >= W or yi + sz >= H: continue
+        tint = PINK if (ii + jj) % 3 == 0 else (CYAN if (ii + jj) % 3 == 1 else WHITE)
+        c = np.clip(col[jj, ii] * (0.4 + 0.6 * gg) + tint * 0.5 * (1 - gg), 0, 1); a = 0.35 + 0.6 * gg
+        o[yi:yi + sz, xi:xi + sz] = o[yi:yi + sz, xi:xi + sz] * (1 - a) + c * a
+    return np.clip(o, 0, 1)
+
+# ---- 3. polaroid: flash, the frame freezes into a print that is tossed away
+_PLD = {}
+def polaroid(A, B, j, f, sa, sb):
+    if j < 0:
+        fl = ein((j + 7) / 7.0, 3)
+        return np.clip(A * (1 + 1.3 * fl) + 0.4 * fl, 0, 1)
+    key = sa["n"]
+    if _PLD.get("key") != key:
+        b = 46; card = np.ones((H + b + 4 * b, W + 2 * b, 4), np.float32)
+        card[..., :3] = np.array([0.93, 0.95, 0.96], np.float32)
+        card[b:b + H, b:b + W, :3] = np.clip(A * 1.05 + 0.03, 0, 1)
+        _PLD.update(key=key, card=card, b=b)
+    card, b = _PLD["card"], _PLD["b"]; ch, cw = card.shape[:2]
+    u1 = eout(clamp(j / 5.0, 0, 1), 3); u2 = ein(clamp((j - 6) / 10.0, 0, 1), 2.2)
+    sc = 1.0 - 0.36 * u1 - 0.1 * u2; rot = -7 * u1 - 24 * u2
+    cx, cy = W / 2 + 1250 * u2, H / 2 + 40 * u1 + 520 * u2
+    M = cv2.getRotationMatrix2D((cw / 2, ch / 2 - 1.5 * b), rot, sc)   # rotate about the photo centre
+    M[0, 2] += cx - cw / 2; M[1, 2] += cy - (ch / 2 - 1.5 * b)
+    cd = cv2.warpAffine(card, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
+    al = cd[..., 3:4]
+    shd = cv2.GaussianBlur(np.roll(np.roll(cd[..., 3], 34, 0), 26, 1), (0, 0), 22)[..., None] * 0.55
+    Bz = zoom_about(B, W / 2, H / 2, 1.08 - 0.08 * eout(j / 16.0, 2))
+    o = Bz * (1 - shd) * (1 - al) + cd[..., :3] * al
+    fl = clamp(1 - j / 4.0, 0, 1)
+    return np.clip(o + 0.5 * fl * al + 0.25 * fl, 0, 1)
+
+# ---- 4. face-match morph: his face slides and scales onto his face in the next shot
+def facematch(A, B, j, f, sa, sb):
+    fa = face_scr(sa, sa["f1"] - 1); fb = face_scr(sb, sb["f0"])
+    if fa is None or fb is None: fa = fb = (W / 2, H * 0.37, 300.0, None, None)
+    mid = ((fa[0] + fb[0]) / 2, (fa[1] + fb[1]) / 2, math.sqrt(fa[2] * fb[2]))
+    def sim(src, dst, v):
+        x = src[0] + (dst[0] - src[0]) * v; y = src[1] + (dst[1] - src[1]) * v; w = src[2] * (dst[2] / src[2]) ** v
+        s_ = w / src[2]; return np.float32([[s_, 0, x - s_ * src[0]], [0, s_, y - s_ * src[1]]])
+    if j < 0:
+        v = ein((j + 8) / 8.0, 2); o = cv2.warpAffine(A, sim(fa, mid, v), (W, H), borderMode=cv2.BORDER_REFLECT)
+        o = radial_blur(o, mid[0], mid[1], 1.0, 1.0 + 0.05 * v, 5)
+        if j >= -2:
+            Bm = cv2.warpAffine(B, sim(fb, mid, 1.0), (W, H), borderMode=cv2.BORDER_REFLECT); w = 0.3 if j == -2 else 0.55
+            o = o * (1 - w) + Bm * w
+        fl = 0.35 * ein((j + 8) / 8.0, 3)
+        return np.clip(rgb_split(o, 14 * v) + fl, 0, 1)
+    v = eout((j + 1) / 8.0, 2); o = cv2.warpAffine(B, sim(fb, mid, 1 - v), (W, H), borderMode=cv2.BORDER_REFLECT)
+    o = radial_blur(o, mid[0], mid[1], 1.0, 1.0 + 0.05 * (1 - v), 5)
+    if j <= 1:
+        Am = cv2.warpAffine(A, sim(fa, mid, 1.0), (W, H), borderMode=cv2.BORDER_REFLECT); w = 0.4 if j == 0 else 0.2
+        o = o * (1 - w) + Am * w
+    return np.clip(rgb_split(o, 14 * (1 - v)) + 0.3 * (1 - v) ** 2, 0, 1)
+
+# ---- 5. 3D cube: the frame becomes a cube that turns over the vapor sunset world
+def cube(A, B, j, f, sa, sb, n=9):
+    u = clamp((j + n + 0.5) / (2 * n), 0, 1); th = math.radians(90 * smooth(u)); a = W / 2
+    pull = math.sin(math.pi * u) * 0.75 * W; D = 2.0 * W
+    def proj(p):
+        x, y, z = p; xr = x * math.cos(th) + z * math.sin(th); zr = -x * math.sin(th) + z * math.cos(th)
+        zw = zr + a + pull; return (W / 2 + D * xr / (zw + D), H / 2 + D * y / (zw + D)), (xr, y, zr + a + pull)
+    hy = H / 2
+    faces = [(A, [(-a, -hy, -a), (a, -hy, -a), (a, hy, -a), (-a, hy, -a)], (0, 0, -1)),
+             (B, [(a, -hy, -a), (a, -hy, a), (a, hy, a), (a, hy, -a)], (1, 0, 0))]
+    o = vapor_world(f) * 0.9; glow = np.zeros((H, W), np.float32)
+    for img, cs, nrm in faces:
+        P = [proj(c) for c in cs]; q = np.float32([p[0] for p in P])
+        cxw = np.mean([p[1] for p in P], 0); nx = nrm[0] * math.cos(th) + nrm[2] * math.sin(th); nz = -nrm[0] * math.sin(th) + nrm[2] * math.cos(th)
+        view = np.array([cxw[0], cxw[1], cxw[2] + D]); dot = nx * view[0] + nz * view[2]
+        if dot >= 0: continue
+        lit = 0.45 + 0.55 * abs(dot) / (np.linalg.norm(view) + 1e-6)
+        Mp = cv2.getPerspectiveTransform(np.float32([[0, 0], [W, 0], [W, H], [0, H]]), q)
+        wi = cv2.warpPerspective(img * lit, Mp, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
+        wm = cv2.warpPerspective(np.ones((H, W), np.float32), Mp, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)[..., None]
+        o = o * (1 - wm) + wi * wm
+        cv2.polylines(glow, [q.astype(np.int32)], True, 1.0, 3, cv2.LINE_AA)
+    o = o + neon_glow(glow, PINK * 0.6 + CYAN * 0.4, 9, 1.4) * math.sin(math.pi * u)
+    return np.clip(o, 0, 1)
+
+# ---- 6. through the sun: a striped retro sun rises, the camera flies through its stripes
+def sun_through(A, B, j, f, sa, sb, n=10):
+    u = clamp((j + n + 0.5) / (2 * n), 0, 1)
+    rise = eout(clamp(u / 0.45, 0, 1), 2.5); fly = ein(clamp((u - 0.42) / 0.58, 0, 1), 2.2)
+    R0 = W * 0.46; cy0 = H + R0 + 40 - (H + R0 + 40 - H * 0.52) * rise
+    Z = math.exp(math.log(9.0) * fly); fx, fy = W / 2, cy0 + R0 * 0.55     # zoom about a point inside the stripes
+    R = R0 * Z; cy = fy + (cy0 - fy) * Z; cx = fx
+    yy = _GY; d = np.sqrt((_GX - cx) ** 2 + (yy - cy) ** 2)
+    inside = np.clip((R - d) / 3.0, 0, 1)
+    yt = cy - 0.12 * R; yn = np.clip((yy - yt) / (1.12 * R), 0, 1)
+    period = 1.0 / 7; ph = np.mod(yn, period) / period
+    gapf = np.clip(0.10 + 0.55 * yn + 1.15 * fly ** 1.4, 0, 1.05) * (yy > yt)
+    gap = np.clip((gapf - ph) * 40, 0, 1) * (yy > yt)
+    grad = np.clip((yy - (cy - R)) / (2 * R), 0, 1)[..., None]
+    suncol = np.clip(np.array([0.30, 0.88, 1.0], np.float32) * (1 - grad) + np.array([0.70, 0.22, 1.0], np.float32) * grad, 0, 1)
+    under = A if j < 0 else B
+    bar = (inside * (1 - gap))[..., None]; hole = (inside * gap)[..., None]
+    o = under * (1 - inside[..., None]) + suncol * bar + B * hole
+    halo = cv2.GaussianBlur(cv2.resize(inside, (W // 4, H // 4)), (0, 0), 14)
+    o = o + cv2.resize(halo, (W, H))[..., None] * PINK * 0.45 * (1 - inside[..., None]) * (1 - fly)
+    return np.clip(o, 0, 1)
+
+# ---- 7. knife slash: a blade streak cuts the frame, the halves slide apart
+_SLX = {}
+def slash(A, B, j, f, sa, sb):
+    P0 = np.array([W * 0.52, H * 0.42]); dv = np.array([-0.45, 0.893]); nv = np.array([0.893, 0.45]); L = 1300
+    side = (_GX - P0[0]) * nv[0] + (_GY - P0[1]) * nv[1]
+    if j < 0:
+        u = (j + 6) / 6.0; S = P0 - dv * L; Eend = S + dv * 2 * L * eout(u, 2.2)
+        lay = np.zeros((H, W), np.float32)
+        cv2.line(lay, tuple(int(v) for v in S), tuple(int(v) for v in Eend), 1.0, 4, cv2.LINE_AA)
+        tail = S + dv * 2 * L * max(0.0, eout(u, 2.2) - 0.35)
+        cv2.line(lay, tuple(int(v) for v in tail), tuple(int(v) for v in Eend), 1.0, 9, cv2.LINE_AA)
+        o = A * (1 - 0.25 * u) + neon_glow(lay, np.array([0.35, 0.25, 1.0], np.float32), 12, 2.0)
+        return np.clip(o, 0, 1)
+    u = (j + 1) / 14.0; sep = 680 * eout(u, 2.2); slip = 160 * eout(u, 2)
+    Bz = zoom_about(B, W / 2, H / 2, 1.14 - 0.14 * eout(u, 2)); o = Bz.copy(); rims = np.zeros((H, W), np.float32)
+    for sg in (1, -1):
+        dx, dy = sg * (nv * sep / 2 + dv * slip)
+        M = cv2.getRotationMatrix2D((float(P0[0]), float(P0[1])), sg * 7 * eout(u, 2), 1.0); M[0, 2] += dx; M[1, 2] += dy
+        half = cv2.warpAffine(A, M, (W, H), borderMode=cv2.BORDER_REFLECT)
+        m = np.clip(sg * side / 1.5 + 0.5, 0, 1).astype(np.float32); mw = cv2.warpAffine(m, M, (W, H), borderValue=0)
+        fade = 1 - ein(clamp((u - 0.55) / 0.45, 0, 1), 1.5)
+        o = o * (1 - mw[..., None] * fade) + half * mw[..., None] * fade
+        sw = cv2.warpAffine(np.exp(-(side / 4) ** 2).astype(np.float32), M, (W, H), borderValue=0) * fade
+        rims = np.maximum(rims, sw)
+    o = o + neon_glow(rims, np.array([0.30, 0.20, 1.0], np.float32), 8, 1.5) * (1 - u)
+    if "drops" not in _SLX:
+        rng = np.random.default_rng(5); t_ = rng.uniform(-0.6, 0.6, 46)
+        _SLX["drops"] = [(P0 + dv * L * t_[i], rng.uniform(-1, 1) * nv * rng.uniform(250, 700) + dv * rng.uniform(-200, 200), rng.uniform(3, 9)) for i in range(46)]
+    tt = j / FPS
+    for p, v, r in _SLX["drops"]:
+        x = p[0] + v[0] * tt; y = p[1] + v[1] * tt + 1600 * tt * tt
+        if 0 <= x < W and 0 <= y < H: cv2.circle(o, (int(x), int(y)), int(r * (1 - 0.5 * u)), (0.04, 0.02, 0.62), -1, cv2.LINE_AA)
+    return np.clip(o, 0, 1)
+
+# ---- 8. film burn: pastel burn holes eat through the frame
+_BRN = {}
+def burn(A, B, j, f, sa, sb, n_pre=10, n_post=8):
+    if "n" not in _BRN:
+        rng = np.random.default_rng(8); acc = np.zeros((H // 4, W // 4), np.float32)
+        for oc, amp in ((6, 1.0), (14, 0.5), (34, 0.25), (80, 0.12)):
+            acc += cv2.resize(rng.random((oc * 16 // 9, oc)).astype(np.float32), (W // 4, H // 4), interpolation=cv2.INTER_CUBIC) * amp
+        acc = (acc - acc.min()) / (acc.max() - acc.min())
+        yy, xx = np.mgrid[0:H // 4, 0:W // 4].astype(np.float32)
+        bias = np.sqrt((xx / (W / 4) - 0.85) ** 2 + (yy / (H / 4) - 0.25) ** 2)        # starts from the top-right light
+        _BRN["n"] = np.clip(acc * 0.6 + bias * 0.55, 0, None)
+        _BRN["n"] = (_BRN["n"] - _BRN["n"].min()) / (_BRN["n"].max() - _BRN["n"].min())
+    u = clamp((j + n_pre + 0.5) / (n_pre + n_post), 0, 1); T = -0.05 + 1.15 * ein(u, 1.5)
+    N = cv2.resize(_BRN["n"], (W, H), interpolation=cv2.INTER_CUBIC)
+    burned = np.clip((T - 0.04 - N) / 0.02, 0, 1)
+    band = np.clip(1 - np.abs(N - (T - 0.02)) / 0.05, 0, 1)
+    scorch = np.clip(1 - (N - T) / 0.10, 0, 1) * (N > T)
+    hot = np.clip(1 - np.abs(N - (T - 0.02)) / 0.02, 0, 1)
+    base = A * (1 - 0.55 * scorch[..., None]) + np.array([0.05, 0.25, 0.55], np.float32) * 0.35 * scorch[..., None]
+    o = base * (1 - burned[..., None]) + B * burned[..., None]
+    fire = np.array([0.35, 0.65, 1.0], np.float32) * band[..., None] * 1.2 + WHITE * hot[..., None] * 0.9 + PINK * cv2.GaussianBlur(band, (0, 0), 12)[..., None] * 0.9
+    o = o + fire * (1 - burned[..., None] * 0.6)
+    return np.clip(o + 0.18 * burned.mean() * (1 - u) * np.array([0.6, 0.8, 1.0], np.float32), 0, 1)
+
+# ---- 9. through the sunglasses: the next shot shows up in his lenses, the camera dives into one
+def lens_through(A, B, j, f, sa, sb):
+    def barrel(img, k_, cx=W / 2, cy=H / 2, rn=W * 0.7):
+        dx, dy = (_GX - cx) / rn, (_GY - cy) / rn; r2 = dx * dx + dy * dy; s_ = 1 + k_ * r2
+        return cv2.remap(img, (cx + dx * s_ * rn).astype(np.float32), (cy + dy * s_ * rn).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    if j < 0:
+        u = (j + 13) / 13.0; fs = face_scr(sa, f)
+        dy_, kx, ky = sa.get("lens", (0.04, 0.21, 0.15))
+        if fs is None: lenses = [((W / 2, H * 0.37), 120.0, 120.0 * ky / kx)]
+        else: lenses = [((e[0], e[1] + dy_ * fs[2]), kx * fs[2], ky * fs[2]) for e in (fs[3], fs[4])]
+        tgt = min(lenses, key=lambda L_: abs(L_[0][0] - W / 2))
+        o = A.copy(); refl = barrel(B, 0.35); op = 0.9 * smooth(clamp(u / 0.45, 0, 1))
+        for (lx, ly), rx, ry in lenses:
+            m = np.zeros((H, W), np.float32); cv2.ellipse(m, (int(lx), int(ly)), (int(rx), int(ry)), 0, 0, 360, 1.0, -1, cv2.LINE_AA)
+            m = cv2.GaussianBlur(m, (0, 0), 2)[..., None]
+            s_ = 2.2 * rx / W; M = np.float32([[s_, 0, lx - s_ * W / 2], [0, s_, ly - s_ * 0.37 * H]])     # his face at the lens centre
+            r_ = cv2.warpAffine(refl, M, (W, H), borderMode=cv2.BORDER_REFLECT)
+            xs = (_GX - lx) / rx + (_GY - ly) / ry; spec = np.exp(-((xs - (-1.5 + 3.5 * u)) / 0.25) ** 2)[..., None] * 0.5
+            o = o * (1 - m * op) + (r_ * (0.75 + 0.25 * CYAN) + spec) * m * op
+        (lx, ly), rx, ry = tgt; Z = (W * 0.75) / rx
+        sc = math.exp(math.log(Z) * ein(clamp((u - 0.25) / 0.75, 0, 1), 2.3)); v = ein(u, 1.4)
+        Mz = cv2.getRotationMatrix2D((lx, ly), 0, sc); Mz[0, 2] += (W / 2 - lx) * v; Mz[1, 2] += (H / 2 - ly) * v
+        o = cv2.warpAffine(o, Mz, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        if sc > 1.5: o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + 0.05 * min(1, sc / 8), 5)
+        return np.clip(o, 0, 1)
+    u = (j + 1) / 10.0; v = eout(u, 2); s_ = 1.36 + (1 - 1.36) * v; yp = H / 2 * (1 - v) + 0.37 * H * v
+    o = barrel(B, 0.35 * (1 - v))
+    o = cv2.warpAffine(o, np.float32([[s_, 0, W / 2 - s_ * W / 2], [0, s_, yp - s_ * 0.37 * H]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+    _, kx, ky = sa.get("lens", (0.04, 0.21, 0.15))
+    rx = W * 0.75 * (1 + 3.0 * eout(u, 2)); ry = rx * ky / kx
+    d = ((_GX - W / 2) / rx) ** 2 + ((_GY - H / 2) / ry) ** 2
+    rim = np.clip((d - 1) * 6, 0, 1)[..., None]
+    o = o * (0.85 + 0.15 * CYAN * (1 - u)) * (1 - rim) + rim * 0.02
+    return np.clip(o, 0, 1)
+
+# ---- 10. shadow pass: darkness swallows the frame, the next shot emerges brightest-first
+def shadow_pass(A, B, j, f, sa, sb):
+    dark = np.array([0.05, 0.0, 0.035], np.float32)
+    if j < 0:
+        u = (j + 11) / 11.0; Lm = cv2.GaussianBlur(A.mean(2), (0, 0), 6); T = 0.04 + 0.95 * ein(u, 1.4)
+        m = np.clip((T - Lm) / 0.04, 0, 1)[..., None]; edge = np.exp(-((Lm - T) / 0.012) ** 2)[..., None] * (u > 0.15)
+        return np.clip(A * (1 - m) + dark * m + edge * (VIOLET * 0.6 + PINK * 0.4) * 0.45, 0, 1)
+    u = (j + 1) / 13.0; Lm = cv2.GaussianBlur(B.mean(2), (0, 0), 4); T = 1.0 - 1.08 * eout(u, 2)
+    m = np.clip((Lm - T) / 0.05, 0, 1)[..., None]; edge = np.exp(-((Lm - T) / 0.02) ** 2)[..., None]
+    return np.clip(B * m + dark * (1 - m) + edge * (PINK * 0.6 + CYAN * 0.4) * (1 - u) * 1.2, 0, 1)
+
+TR2 = {"eye_dive": (eye_dive, 14, 14), "assemble": (assemble, 0, 24), "polaroid": (polaroid, 6, 16), "facematch": (facematch, 7, 7),
+       "cube": (cube, 9, 9), "sun": (sun_through, 10, 10), "slash": (slash, 5, 14), "burn": (burn, 10, 8),
+       "lens": (lens_through, 12, 9), "shadow": (shadow_pass, 10, 12)}
+
+# ---- graphics
+def vapor_tune(out, person, k, f):
+    """after the CRT drop, Dexter stands in the vapor world; reality tunes in behind him, scanline by scanline."""
+    if k >= 46 or person is None: return out
+    yw = H * eout(clamp((k - 14) / 30, 0, 1), 2.2)
+    rows = (np.arange(H)[:, None] < yw).astype(np.float32)
+    bg = vapor_world(f)
+    real = rows[..., None]; p = np.clip(person * 1.15, 0, 1)[..., None]
+    o = out * p + (out * real + bg * (1 - real)) * (1 - p)
+    line = np.exp(-((np.arange(H) - yw) / 5.0) ** 2)[:, None, None] * (yw < H - 2)
+    return np.clip(o + line * (CYAN * 0.7 + WHITE * 0.3) * (1 - p * 0.7), 0, 1)
+
+_HYP = {}
+def hyperspace(o, u, cx=W / 2, cy=H * 0.42):
+    """light streaks rushing out of the CRT screen as the camera dives in (u 0..1)."""
+    if "s" not in _HYP:
+        rng = np.random.default_rng(4); _HYP["s"] = [(rng.uniform(0, 6.283), rng.uniform(0.0, 1.0), rng.uniform(0.6, 1.0), int(rng.integers(0, 2))) for _ in range(140)]
+    lay_p = np.zeros((H, W), np.float32); lay_c = np.zeros((H, W), np.float32)
+    for a, ph, br, c in _HYP["s"]:
+        r0 = ((ph + u * 1.6) % 1.0) ** 2 * 1300; r1 = r0 + 60 + 900 * u * ((ph + u) % 1.0)
+        p0 = (int(cx + r0 * math.cos(a)), int(cy + r0 * math.sin(a))); p1 = (int(cx + r1 * math.cos(a)), int(cy + r1 * math.sin(a)))
+        cv2.line(lay_p if c else lay_c, p0, p1, br, 2, cv2.LINE_AA)
+    g = u ** 1.5
+    return np.clip(o + (neon_glow(lay_p, PINK, 6, 1.2) + neon_glow(lay_c, CYAN, 6, 1.2)) * g * 0.8, 0, 1)
+
+_PALM = {}
+def palm_shadow(out, f, strength=0.32):
+    """soft palm-frond shadows swaying across the frame (light through the palms)."""
+    hw, hh = W // 2, H // 2; pad = 300; CX, CY = hw + 170, -30
+    if "g" not in _PALM:
+        g = np.zeros((hh + 2 * pad, hw + 2 * pad), np.float32); rng = np.random.default_rng(6)
+        cx, cy = CX + pad, CY + pad
+        for fr in range(7):
+            ang = math.radians(92 + fr * 21 + rng.uniform(-5, 5)); Lf = rng.uniform(560, 760); droop = rng.uniform(0.25, 0.55)
+            pts = []
+            for i in range(60):
+                t_ = i / 59; px = cx + math.cos(ang) * Lf * t_; py = cy + math.sin(ang) * Lf * t_ + droop * Lf * t_ * t_ * 0.6
+                pts.append((px, py))
+            cv2.polylines(g, [np.int32(pts)], False, 1.0, 5, cv2.LINE_AA)
+            for i in range(4, 59, 2):
+                t_ = i / 59; (px, py), (qx, qy) = pts[i], pts[i + 1]
+                dx, dy = qx - px, qy - py; nn = math.hypot(dx, dy) + 1e-6; dx, dy = dx / nn, dy / nn
+                ll = (110 * (1 - t_) ** 0.6 + 25) * rng.uniform(0.85, 1.1)
+                for sg in (1, -1):
+                    ca, sa_ = math.cos(math.radians(62)), math.sin(math.radians(62)) * sg
+                    lx, ly = dx * ca - dy * sa_, dx * sa_ + dy * ca
+                    mid = (px + lx * ll * 0.5, py + ly * ll * 0.5 + 6); end = (px + lx * ll, py + ly * ll + 22)
+                    cv2.polylines(g, [np.int32([(px, py), mid, end])], False, 1.0, 3, cv2.LINE_AA)
+        _PALM["g"] = cv2.GaussianBlur(g, (0, 0), 4.5)
+    g = _PALM["g"]; rot = 3.0 * math.sin(f * 0.035) + 1.2 * math.sin(f * 0.11 + 1)
+    M = cv2.getRotationMatrix2D((CX + pad, CY + pad), rot, 1.0)
+    sh = cv2.warpAffine(g, M, (g.shape[1], g.shape[0]))[pad:pad + hh, pad:pad + hw]
+    sh = cv2.resize(np.clip(sh, 0, 1), (W, H), interpolation=cv2.INTER_LINEAR)[..., None]
+    return np.clip(out * (1 - strength * sh) + sh * strength * 0.3 * out * CYAN, 0, 1)
+
+def echo(out, s, f):
+    """VHS colour echo: two delayed copies trail behind in pink and cyan."""
+    e1 = render_shot(s, max(s["f0"], f - 3)); e2 = render_shot(s, max(s["f0"], f - 7))
+    return np.clip(out * 0.78 + e1 * (PINK * 0.6 + 0.4) * 0.16 + e2 * (CYAN * 0.6 + 0.4) * 0.10, 0, 1)
+
+def last_visible(P):
+    """last frame of shot P as it was seen (includes the pixel dissolve for the vanish shot)."""
+    if P.get("vanish"):
+        f = P["f1"] - 1; img, person = render_shot(P, f, want_mask=True)
+        a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05
+        return vanish(img, person, f, f / FPS, tv0, P["t1"] - 0.08)
+    return last_frame_of(P)
 
 def main():
     mode = sys.argv[1]

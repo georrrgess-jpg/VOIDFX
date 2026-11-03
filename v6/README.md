@@ -27,35 +27,35 @@ The song's half-beat grid is fitted at 90 BPM. The edit plays half-beats **416�
 - **First 4 bars:** the song's own filtered build (the highs are muffled), which sits under the voice-over.
 - **2:29.5, the good part:** the full mix comes back in at half-beat 448, the edit's drop at 10.667 s, which lands exactly as the camera passes through the CRT.
 
-## Timeline
+## Timeline (revision 2)
 
 | Time | Picture | Transition in (each has its own sound) |
 |---|---|---|
 | 0.00 | boat, pastel Miami skyline. VO: *"I've disappeared so many people."* | **tape load**: static, VCR clunk, the picture rolls in while the song winds up to speed |
-| 2.67 | blue night profile. VO: *"My turn now to disappear myself."* → **he dissolves into pixel dust** (clean plate behind) | **VHS roll** (tape warble) |
-| 6.67 | red shirt at the crime scene | **kaleidoscope spin** |
-| 8.00 | interrogation | **tape rewind** (squeal + clunk) |
-| 8.67 | blood-speckled face | **camera flash** (charge whine + pop) |
-| 9.33 | walking out of the dark | **VHS tear** (sliding bands, chroma fringes) |
-| 9.77 → 10.67 | frame shrinks into a CRT on the neon grid, camera dives through the screen | **CRT fly-through** (hum, riser, drop impact, degauss) |
-| 10.67 | boat, sunlight — chrome **MIAMI / マイアミ** title with light sweep | out of the screen |
-| 12.00 | grin by the pink wall | kaleidoscope |
-| 13.33 | running through the grass | rewind |
-| 14.00 | laughing | **card-flip tiles** (glossy pastel backs, tick cascade) |
-| 14.67 | crime-scene crowd | **neon trace** (his outline draws in neon) |
-| 16.00 | grinning mid-kill | **blood drop**: falls, splats, the stain blooms open into the shot |
-| 17.33 | ice cream in the club | **water ripple** (bloop) |
-| 18.67 | night garden | **voidfx logo as a neon sign** flickers on, camera flies through the "o" (the only logo appearance) |
-| 20.00 | cap and sunglasses | rewind |
-| 20.67 | hood | flash |
-| 21.33 | finger gun | neon trace |
-| 22.67 | red-shirt close-up, *"It… was me."* → neon **IT** · **WAS** · **ME.** each lights on its spoken word | **pixel-sort melt** |
+| 2.67 | blue night profile. VO: *"My turn now to disappear myself."* → **he dissolves into pixel dust** | **into his eye**: the camera dives into his pupil, the pupil swallows the frame, a hexagonal camera aperture opens (heartbeat, shutter blades) |
+| 6.67 | red shirt at the crime scene | **reassemble**: the scene builds itself from flying pixel blocks (the dissolve played backwards) |
+| 8.00 | interrogation | **polaroid**: flash, the frame freezes into a print and is tossed away (shutter, print eject) |
+| 8.67 | blood-speckled face | **face-match morph**: his face slides and scales onto his face in the next shot |
+| 9.33 | walking out of the dark | **VHS tear** |
+| 9.77 → 10.67 | frame shrinks into a CRT on the neon grid, camera dives through the screen with **hyperspace light streaks** | **CRT fly-through** (hum, riser, drop impact, degauss) |
+| 10.67 | boat: Dexter stands in the **vapor world** (sunset + neon grid), then reality **tunes in** behind him scanline by scanline. Chrome **MIAMI** title | out of the screen |
+| 12.00 | grin by the pink wall, palm shadows | **3D cube** turning over the vapor sunset world |
+| 13.33 | running through the grass (VHS colour echo) | **through the sun**: a striped retro sun rises and the camera flies through its stripes |
+| 14.00 | laughing, palm shadows | card-flip tiles |
+| 14.67 | crime-scene crowd | neon trace |
+| 16.00 | grinning mid-kill | blood drop splat |
+| 17.33 | ice cream in the club (VHS colour echo) | **knife slash**: a blade cuts the frame and the halves fly apart with blood flecks (swish, steel ring) |
+| 18.67 | night garden | **voidfx logo as a neon sign**, fly through the "o" (the only logo appearance) |
+| 20.00 | cap and sunglasses | **film burn**: pastel burn holes eat through the frame |
+| 20.67 | hood | **through the sunglasses**: the next shot appears reflected in his lenses, the camera dives into one |
+| 21.33 | finger gun | **shadow pass**: darkness swallows the frame, the next shot emerges brightest-first |
+| 22.67 | red-shirt close-up, *"It… was me."* → neon **IT** · **WAS** · **ME.** | pixel-sort melt |
 | 26.00 | the shot rewinds at 8× (◀◀ REW), the song scrubs backwards | → static → loops into the tape load |
 
 ## Text
 
 Every word eases in (fade + rise + blur-to-sharp) and sits in the 1270–1620 px band, clear of faces and of TikTok's UI. Each text moment has its own animation:
-- **Voice-over captions:** two-line retro lockups with pink/cyan offset echoes. *disappeared* and *disappear myself* are in chrome, and the whole second caption breaks apart into flying pixels as he vanishes. A small Japanese subtitle line sits under each caption.
+- **Voice-over captions:** two-line retro lockups with pink/cyan offset echoes. *disappeared* and *disappear myself* are in chrome, and the whole second caption breaks apart into flying pixels as he vanishes.
 - **MIAMI:** chrome type sweeps in from the left with a light sweep across it.
 - **IT / WAS / ME.:** neon tubes that ease in and flicker on, each word on its spoken word.
 - **No labels, name tags, constant watermark or outro card.**
