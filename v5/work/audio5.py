@@ -64,6 +64,10 @@ def main():
         elif t == "slit":
             sw = A2.riser(0.17, -22); place(fx, sw, s["t0"] - 0.17)
             place(fx, stereo(A2.impact(-17, (90, 45), 0.25, 0.6, 43)), s["t0"]); place(fx, A2.whoosh(0.30, -22, 44, False), s["t0"])
+        elif t == "ring": place(fx, A2.whoosh(0.32, -21, 50 + int(s["t0"]), True), s["t0"] - 0.05); place(fx, stereo(A2.impact(-20, (80, 40), 0.2, 0.5, 51)), s["t0"])
+        elif t == "bolt_wipe": place(fx, crack(-17, 52 + int(s["t0"] * 10), 0.4), s["t0"])
+        elif t == "prism": place(fx, stereo(zap(-25, 53, 0.16)), s["t0"]); place(fx, A2.whoosh(0.22, -24, 54, False), s["t0"])
+        elif t == "smear": place(fx, A2.whoosh(0.30, -20, 55, True), s["t0"] - 0.12)
         elif t == "remnant": place(fx, A2.whoosh(0.24, -22, 45 + int(s["t0"]), True), s["t0"] - 0.04); place(fx, stereo(zap(-27, 46, 0.12)), s["t0"])
         elif t == "shockwave":
             place(fx, stereo(A2.impact(-14, (55, 28), 0.7, 0.3, 47)), s["t0"]); place(fx, A2.whoosh(0.35, -22, 48, True), s["t0"])
@@ -80,6 +84,17 @@ def main():
             place(fx, stereo(A2.impact(-19, (110, 60), 0.12, 0.7, 28)), s["t0"] - 0.20)
             place(fx, np.stack([A2.shimmer(0.9, -27)] * 2, 1), s["t0"] - 0.15)
             place(fx, A2.whoosh(0.32, -21, 29, True), s["t0"] - 0.10)
+    for pre, key, style, s_end in E.PHRASES:
+        tk = E.s2e(key[0][1])
+        if style == "hurt": place(fx, crack(-20, 60, 0.3), tk + 14 / E.FPS)
+        elif style == "lost": place(fx, A2.whoosh(0.4, -23, 61, True), E.s2e(s_end) - 10 / E.FPS)
+        elif style == "losing": place(fx, A2.whoosh(0.5, -24, 62, True), tk + 0.45 * (E.s2e(s_end) - tk))
+        elif style == "fade": place(fx, np.stack([A2.shimmer(0.8, -30)] * 2, 1), tk + 0.4 * (E.s2e(s_end) - tk))
+        elif style == "drown":
+            for j in range(5):
+                n = I(0.06); tt = np.arange(n) / SR
+                b_ = np.sin(2 * np.pi * np.cumsum(500 + 900 * tt / 0.06) / SR) * env_exp(n, 0.02, 0.002)
+                place(fx, stereo(b_ * db(-33), 0.4 - 0.2 * j), tk + 0.15 + 0.18 * j)
     for s in E.SHOTS:                                                # crackle under the arc shots
         if s.get("arcs"):
             t = s["t0"] + 0.1

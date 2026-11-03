@@ -1632,6 +1632,269 @@ def slit_end(img, f, s, n=20):
     return np.clip(o + (spark + halo)[..., None] * (WHITE * 0.5 + GOLD * 0.5), 0, 1)
 
 
+# ============================================================================ v5c: more transitions, graphics, lyric lockups
+_GY, _GX = np.mgrid[0:H, 0:W].astype(np.float32)
+
+def ring_wipe(A, B, k, n=13, c=(W / 2, H * 0.44)):
+    if k >= n: return B
+    u = eout(k / n, 2.2); R = 1700 * u
+    r = np.sqrt((_GX - c[0]) ** 2 + (_GY - c[1]) ** 2)
+    m = np.clip((R - r) / 6.0, 0, 1)[..., None]
+    Bz = zoom_about(B, c[0], c[1], 1.25 - 0.25 * u)
+    o = A * (1 - m) * (1 - 0.4 * u) + Bz * m
+    rim = np.exp(-((r - R) / 7.0) ** 2) + 0.5 * np.exp(-((r - R) / 30.0) ** 2) + 0.25 * np.exp(-((r - R * 0.86) / 5.0) ** 2)
+    return np.clip(o + rim[..., None] * (GOLD * 0.9 + WHITE * 0.25) * (1 - 0.5 * u), 0, 1)
+
+_BW = {}
+def bolt_wipe(A, B, k, n=12, seed=3):
+    if k >= n: return B
+    if seed not in _BW:
+        pts = bolt_points((0, -40), (0, H + 40), seed, 0.16, 8); _BW[seed] = pts[:, 0] - pts[:, 0].mean(), pts[:, 1]
+    bx, by = _BW[seed]; u = eout(k / n, 1.8); x0 = -150 + (W + 300) * u
+    edge_x = np.interp(np.arange(H), by, bx + x0).astype(np.float32)[:, None]
+    m = np.clip((edge_x - _GX) / 5.0, 0, 1)[..., None]                   # left of the bolt = B
+    o = A * (1 - m) + B * m
+    pts = np.stack([bx + x0, by], 1)
+    core, glow = draw_bolt((H, W), pts, seed, 4, 4)
+    return add_light(o, core, glow, GOLD, 1.0)
+
+def prism(B, k, n=11):
+    if k >= n: return B
+    v = eout(k / n, 2.4); d = (1 - v) * 260
+    o = np.zeros_like(B)
+    for ch, (dx, dy) in zip(range(3), ((d, -d * 0.4), (0, d * 0.6), (-d, -d * 0.4))):
+        M = cv2.getRotationMatrix2D((W / 2, H * 0.44), (1 - v) * (ch - 1) * 6, 1 + 0.2 * (1 - v)); M[0, 2] += dx; M[1, 2] += dy
+        o[..., ch] = cv2.warpAffine(B[..., ch], M, (W, H), borderMode=cv2.BORDER_REFLECT)
+    return np.clip(o + (1 - v) ** 2 * 0.25, 0, 1)
+
+def smear(img, amt, f):
+    if amt < 0.01: return img
+    rng = np.random.default_rng(f * 3 + 7); o = img.copy()
+    rows = cv2.resize(rng.random((48, 1)).astype(np.float32), (1, H), interpolation=cv2.INTER_NEAREST)[:, 0]
+    for b in range(6):
+        sel = (rows >= b / 6) & (rows < (b + 1) / 6)
+        L = int(20 + 360 * amt * (0.4 + 0.6 * b / 5))
+        sh = int(amt * 220 * (0.3 + 0.7 * b / 5))
+        o[sel] = np.roll(hblur(img, L), sh, axis=1)[sel]
+    return np.clip(o * (1 + 0.6 * amt) + np.clip(o - 0.6, 0, 1) * GOLD * amt, 0, 1)
+
+# ---- ambient graphics
+def embers(out, f, amount):
+    if amount <= 0: return out
+    rng = np.random.default_rng(77); n = int(90 * amount)
+    x0 = rng.uniform(0, W, 200); y0 = rng.uniform(0, H, 200); sp = rng.uniform(2.5, 7, 200); ph = rng.uniform(0, 6.28, 200); sz = rng.uniform(1.2, 3.5, 200)
+    lay = np.zeros((H // 2, W // 2), np.float32)
+    for i in range(n):
+        y = (y0[i] - f * sp[i]) % H; x = x0[i] + 30 * math.sin(f * 0.04 + ph[i])
+        a = 0.5 + 0.5 * math.sin(f * 0.2 + ph[i])
+        cv2.circle(lay, (int(x / 2), int(y / 2)), max(1, int(sz[i] / 2)), a, -1, cv2.LINE_AA)
+    lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 1.2) * 2.0, (W, H))
+    return np.clip(out + lay[..., None] * (GOLD * 0.8 + EMBER * 0.2) * 0.8, 0, 1)
+
+def edge_lightning(out, f):
+    h = (f / FPS) / E.HB + E.H0
+    if h < 240: return out
+    k = ((h - E.H0) % 4) * E.HB * FPS
+    if k > 7: return out
+    a = 1 - k / 7; o = out; seed = int((h - E.H0) // 4)
+    for side in (0, 1):
+        x = 18 if side == 0 else W - 18
+        pts = bolt_points((x, -20), (x + (40 if side == 0 else -40), H + 20), seed * 2 + side, 0.05, 7)
+        core, glow = draw_bolt((H, W), pts, seed * 2 + side, 3, 2)
+        o = add_light(o, core * 0.8, glow * 0.7, GOLD, a * 0.9)
+    return o
+
+def light_streaks(out, f):
+    rng = np.random.default_rng(f // 2); lay = np.zeros((H, W), np.float32)
+    for _ in range(7):
+        y = int(rng.uniform(100, H - 100)); L = int(rng.uniform(200, 700)); x = int(rng.uniform(-L, W))
+        cv2.line(lay, (x, y), (x + L, y), float(rng.uniform(0.3, 1.0)), int(rng.integers(1, 3)), cv2.LINE_AA)
+    lay = hblur(lay, 60) * 1.6
+    return np.clip(out + lay[..., None] * GOLD * 0.7, 0, 1)
+
+# ---- lyric lockups
+CREAM = np.array([0.80, 0.93, 1.00], np.float32)           # BGR pale gold-white
+def rich_word(mask, k_land, sweep=True, gold_edge=True):
+    """detailed type: vertical gradient fill, gold edge, inner shade, soft glow, one light sweep after landing."""
+    hh, ww = mask.shape; pad = 30
+    m = np.pad(mask, pad); H2, W2 = m.shape
+    grad = np.linspace(0, 1, H2, dtype=np.float32)[:, None, None]
+    fill = WHITE * (1 - grad * 0.55) + CREAM * grad * 0.55
+    inner = cv2.GaussianBlur(cv2.erode(m, np.ones((5, 5), np.uint8)), (0, 0), 3)
+    fill = fill * (0.78 + 0.22 * inner[..., None])
+    rgba = np.zeros((H2, W2, 4), np.float32)
+    sh = cv2.GaussianBlur(m, (0, 0), 12) * 0.75
+    rgba[..., 3] = sh
+    if gold_edge:
+        ed = np.clip(cv2.dilate(m, np.ones((5, 5), np.uint8)) - m, 0, 1)
+        rgba[..., :3] = rgba[..., :3] * (1 - ed[..., None]) + GOLD * ed[..., None]; rgba[..., 3] = np.maximum(rgba[..., 3], ed)
+    rgba[..., :3] = rgba[..., :3] * (1 - m[..., None]) + fill * m[..., None]; rgba[..., 3] = np.maximum(rgba[..., 3], m)
+    if sweep and 0 <= k_land < 26:
+        xs = np.arange(W2)[None, :] + 0.6 * np.arange(H2)[:, None]; pos = -120 + (W2 + 400) * (k_land / 26)
+        band = np.exp(-((xs - pos) / 28.0) ** 2) * m
+        rgba[..., :3] = np.clip(rgba[..., :3] + band[..., None] * 0.6, 0, 1)
+    glow = np.zeros_like(rgba); glow[..., :3] = GOLD; glow[..., 3] = cv2.GaussianBlur(m, (0, 0), 20) * 0.35
+    return glow, rgba
+
+def lead_line(out, f, words, y, a_line):
+    t = f / FPS; fnt = font(F_SB, 50); sp = fnt.getlength("  ")
+    widths = [sum(fnt.getlength(c) + 12 for c in w) for w, _ in words]
+    x = W / 2 - (sum(widths) + sp * (len(words) - 1)) / 2
+    for (w, ws), wd in zip(words, widths):
+        k = (t - E.s2e(ws)) * FPS
+        if k > -1:
+            v = eout((k + 1) / 10, 3)
+            m = text_mask(w, F_SB, 50, tracking=12)
+            if v < 1: m = cv2.GaussianBlur(m, (0, 0), 0.1 + 5 * (1 - v))
+            L = shadowed(m, WHITE * 0.95, blur=8, sa=0.7)
+            out = paste(out, L, int(x + wd / 2 - L.shape[1] / 2), int(y + 18 * (1 - v) - L.shape[0] / 2), v * a_line)
+        x += wd + sp
+    return out
+
+def place_word(out, glow, rgba, cx, cy, a, sc=1.0, dx=0, dy=0):
+    if a <= 0: return out
+    if abs(sc - 1) > 0.003:
+        glow = cv2.resize(glow, (int(glow.shape[1] * sc), int(glow.shape[0] * sc)), interpolation=cv2.INTER_LINEAR)
+        rgba = cv2.resize(rgba, (int(rgba.shape[1] * sc), int(rgba.shape[0] * sc)), interpolation=cv2.INTER_LINEAR)
+    x0, y0 = int(cx - rgba.shape[1] / 2 + dx), int(cy - rgba.shape[0] / 2 + dy)
+    out = paste(out, glow, x0, y0, a); return paste(out, rgba, x0, y0, a)
+
+def ecg(out, f, t0, t_end, y=1690):
+    t = f / FPS
+    if not (t0 <= t < t_end): return out
+    p = clamp((t - t0) / 0.9, 0, 1); xs = np.arange(40, W - 40, 4)
+    beat = lambda x: sum(math.exp(-((x - bx) / 10) ** 2) * (-90) + math.exp(-((x - bx - 18) / 14) ** 2) * 40 for bx in (W * 0.32, W * 0.68))
+    pts = np.array([(x, y + beat(x)) for x in xs if x < 40 + p * (W - 80)], np.int32)
+    fade = clamp((t_end - t) / 0.25, 0, 1)
+    if len(pts) > 1:
+        lay = np.zeros((H, W), np.float32); cv2.polylines(lay, [pts], False, 1.0, 3, cv2.LINE_AA)
+        g = cv2.GaussianBlur(lay, (0, 0), 8) * 2.5
+        out = np.clip(out + (lay[..., None] * WHITE * 0.8 + g[..., None] * GOLD) * fade * 0.9, 0, 1)
+        hx, hy = pts[-1]
+        if p < 1: cv2.circle(out, (int(hx), int(hy)), 7, tuple(float(c) for c in WHITE), -1, cv2.LINE_AA)
+    return out
+
+_SCR = {}
+def lyric_lockups(out, f):
+    t = f / FPS; KY = 1500; LY = 1350
+    for pre, key, style, s_end in E.PHRASES:
+        t0 = E.s2e(pre[0][1]) - 0.05; t1 = E.s2e(s_end)
+        if not (t0 <= t < t1 + 0.18): continue
+        kout = (t - t1) * FPS; fade = 1.0 if kout <= 0 else clamp(1 - kout / 10, 0, 1)
+        cyc = 1560 if style == "lost" else 1440
+        if "scrim" not in _SCR: _SCR["scrim"] = {}
+        if cyc not in _SCR["scrim"]:
+            sc_ = np.zeros((H, W), np.float32); cv2.ellipse(sc_, (W // 2, cyc), (600, 300 if style == "lost" else 210), 0, 0, 360, 1.0, -1)
+            _SCR["scrim"][cyc] = cv2.GaussianBlur(sc_, (0, 0), 90)[..., None]
+        out = out * (1 - 0.45 * fade * clamp((t - t0) * FPS / 8, 0, 1) * _SCR["scrim"][cyc])
+        out = lead_line(out, f, pre, 1250 if style == "lost" else LY, fade)
+        kw = " ".join(w for w, _ in key); size = 150 if len(kw) <= 8 else 120
+        k = (t - E.s2e(key[0][1])) * FPS
+        if k < -1: continue
+        dur = (t1 - E.s2e(key[0][1])) * FPS
+        if style == "think":                                   # each word resolves from blur with wide tracking
+            fnt = font(F_BLACK, 120); sp = fnt.getlength("  "); words = key
+            widths = [fnt.getlength(w) for w, _ in words]; x = W / 2 - (sum(widths) + sp * (len(words) - 1)) / 2
+            for (w, ws), wd in zip(words, widths):
+                kk = (t - E.s2e(ws)) * FPS
+                if kk > -1:
+                    v = eout((kk + 1) / 12, 3); m = text_mask(w, F_BLACK, 120)
+                    if v < 1: m = cv2.GaussianBlur(m, (0, 0), 0.1 + 8 * (1 - v))
+                    g, r = rich_word(m, kk - 10)
+                    out = place_word(out, g, r, x + wd / 2, KY, v * fade, 1 + 0.15 * (1 - v))
+                x += wd + sp
+        elif style == "fall":                                  # letters drop in with gravity, then fall away
+            fnt = font(F_BLACK, size); x = W / 2 - fnt.getlength(kw) / 2
+            for j, ch in enumerate(kw):
+                cw = fnt.getlength(ch); kk = k - j * 1.5
+                if kk > -1:
+                    v = clamp((kk + 1) / 10, 0, 1); dy = -280 * (1 - v) ** 2 + (16 * math.sin(v * math.pi * 2) * (1 - v) if v < 1 else 0)
+                    if kout > -12: ke = kout + 12 - j * 0.8; dy += 0.0 if ke < 0 else 3.2 * ke * ke
+                    g, r = rich_word(text_mask(ch, F_BLACK, size), kk - 12 - j)
+                    out = place_word(out, g, r, x + cw / 2, KY, clamp(v * 2, 0, 1) * (1 if kout < -12 else clamp(1 - (kout + 12) / 14, 0, 1)), 1.0, 0, dy)
+                x += cw
+        elif style == "fade":                                  # resolves, then dissolves into rising sparks
+            m = text_mask(kw, F_BLACK, size, tracking=6); v = eout(k / 8, 3)
+            p = clamp((k - dur * 0.40) / (dur * 0.55), 0, 1)
+            if p > 0:
+                nz = cv2.resize(np.random.default_rng(4).random((m.shape[0] // 5 + 1, m.shape[1] // 5 + 1)).astype(np.float32), (m.shape[1], m.shape[0]))
+                edge = np.clip(1 - np.abs(nz - p) / 0.06, 0, 1) * m
+                m = m * np.clip((nz - p) / 0.06, 0, 1)
+            g, r = rich_word(cv2.GaussianBlur(m, (0, 0), 0.1 + 6 * (1 - v)), k - 10)
+            out = place_word(out, g, r, W / 2, KY, v * fade)
+            if p > 0:
+                ys, xs = np.nonzero(edge > 0.5); rng = np.random.default_rng(int(k))
+                lay = np.zeros((H, W), np.float32); ox, oy = W / 2 - m.shape[1] / 2, KY - m.shape[0] / 2
+                for i in rng.choice(len(xs), min(len(xs), 120), replace=False) if len(xs) else []:
+                    cv2.circle(lay, (int(ox + xs[i] + rng.normal(0, 8)), int(oy + ys[i] - rng.uniform(0, 90) * p)), 2, 1.0, -1, cv2.LINE_AA)
+                out = np.clip(out + cv2.GaussianBlur(lay, (0, 0), 1.5)[..., None] * GOLD * 1.6 * fade, 0, 1)
+        elif style == "drown":                                 # sinks through a ripple, cold tint, bubbles rise
+            m = text_mask(kw, F_BLACK, size); hh, ww = m.shape
+            yy = np.arange(hh, dtype=np.float32)[:, None]; xx = np.arange(ww, dtype=np.float32)[None, :]
+            amp = 9 * math.exp(-k / 20) + 3
+            m = cv2.remap(m, (xx + amp * np.sin(yy / 9 + k * 0.45)).astype(np.float32), (yy + amp * 0.6 * np.sin(xx / 17 + k * 0.35)).astype(np.float32), cv2.INTER_LINEAR)
+            v = eout(k / 12, 3); sink = 50 * clamp(k / max(dur, 1), 0, 1)
+            g, r = rich_word(m, k - 12, gold_edge=False)
+            r[..., :3] = r[..., :3] * np.array([1.0, 0.92, 0.80], np.float32)
+            out = place_word(out, g * 0.4, r, W / 2, KY + sink, v * fade, 1.0, 0, 60 * (1 - v))
+            rng = np.random.default_rng(9)
+            for i in range(26):
+                bx = W / 2 + rng.uniform(-ww / 2, ww / 2); sp_ = rng.uniform(4, 9); st0 = rng.uniform(0, 20)
+                by = KY + 60 - (k - st0) * sp_
+                if k > st0 and by > KY - 260:
+                    cv2.circle(out, (int(bx + 6 * math.sin(k * 0.2 + i)), int(by)), int(rng.uniform(3, 9)), tuple(float(c) for c in (WHITE * 0.85 * fade)), 2, cv2.LINE_AA)
+        elif style == "breathe":                               # slow inhale + heartbeat line
+            v = eout(k / 20, 2); sc = 0.94 + 0.10 * clamp(k / 90, 0, 1)
+            m = text_mask(kw, F_SB, 170, tracking=int(34 - 18 * v))
+            if v < 1: m = cv2.GaussianBlur(m, (0, 0), 0.1 + 8 * (1 - v))
+            g, r = rich_word(m, k - 20, gold_edge=False)
+            g[..., 3] *= 1.3 + 0.5 * math.sin(k * 0.12)
+            out = place_word(out, g, r, W / 2, KY, v * fade, sc)
+            out = ecg(out, f, E.s2e(key[0][1]), t1 + 0.1)
+        elif style == "hurt":                                  # lands, then cracks along a lightning fracture
+            m = text_mask(kw, F_BLACK, size); hh, ww = m.shape; v = eout(k / 6, 3)
+            g, r = rich_word(m, k - 6)
+            kc = k - 14
+            if kc <= 0:
+                out = place_word(out, g, r, W / 2, KY, v * fade, 1 + 0.3 * (1 - v))
+            else:
+                sep = 14 * eout(kc / 8, 2); pad = 30
+                pts = bolt_points((pad + ww * 0.52, 0), (pad + ww * 0.46, hh + 2 * pad), 61, 0.12, 6)
+                poly = np.vstack([pts, [[-10, hh + 2 * pad], [-10, 0]]]).astype(np.int32)
+                left = np.zeros(r.shape[:2], np.uint8); cv2.fillPoly(left, [poly], 1)
+                for side, mm in ((-1, left), (1, 1 - left)):
+                    rr = r.copy(); rr[..., 3] *= mm; gg = g.copy(); gg[..., 3] *= mm
+                    out = place_word(out, gg, rr, W / 2, KY, fade, 1.0, side * sep, side * sep * 0.3)
+                core, glow = draw_bolt((H, W), pts + np.float32([W / 2 - ww / 2 - pad, KY - hh / 2 - pad]), 61, 1, 3)
+                out = add_light(out, core, glow, GOLD, fade * clamp(1 - kc / 30, 0.3, 1))
+        elif style == "lost":                                  # LOST / IT / ALL stack, then scatter away
+            yy0 = 1330
+            for wi, (w, ws) in enumerate(key):
+                kk = (t - E.s2e(ws)) * FPS
+                if kk > -1:
+                    v = eout((kk + 1) / 7, 3); m = text_mask(w, F_BLACK, 140)
+                    if v < 1: m = cv2.GaussianBlur(m, (0, 0), 0.1 + 5 * (1 - v))
+                    g, r = rich_word(m, kk - 7)
+                    if w == "ALL": r[..., :3] = r[..., :3] * 0.7 + GOLD * 0.3 * (r[..., 3:4] > 0.5)
+                    if kout > -10:                         # scatter: each word flies a different way
+                        e_ = ein((kout + 10) / 18, 2); ang = (-0.6, 0.4, 1.3)[wi]
+                        out = place_word(out, g, r, W / 2, yy0 + 70, fade * (1 - e_), 1 + 0.6 * e_, 700 * e_ * math.cos(ang), -500 * e_ * math.sin(ang))
+                    else:
+                        out = place_word(out, g, r, W / 2, yy0 + 70, v * fade, 1 + 0.4 * (1 - v))
+                yy0 += 150
+        elif style == "losing":                                # letters arrive, then are pulled away one by one
+            fnt = font(F_BLACK, size); x = W / 2 - fnt.getlength(kw) / 2; n = len(kw)
+            for j, ch in enumerate(kw):
+                cw = fnt.getlength(ch); v = eout((k + 1 - j * 0.8) / 8, 3)
+                pull = clamp((k - dur * 0.45 - (n - 1 - j) * 3) / 10, 0, 1)
+                g, r = rich_word(text_mask(ch, F_BLACK, size), k - 10 - j)
+                if pull > 0:
+                    tr = r.copy(); tr[..., :3] = GOLD; tr = hblur(tr, 10 + 200 * pull)
+                    out = paste(out, tr, int(x + cw / 2 - tr.shape[1] / 2 + 900 * ein(pull, 2) - 100), int(KY - tr.shape[0] / 2), fade * (1 - pull) * 0.8)
+                out = place_word(out, g, r, x + cw / 2, KY, clamp(v, 0, 1) * fade * (1 - pull), 1.0, -600 * (1 - v) + 900 * ein(pull, 2))
+                x += cw
+    return out
+
 # ============================================================================ v5 frame
 def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
@@ -1642,6 +1905,10 @@ def render(f):
     elif tin == "emblem": out = emblem_open(out, f, k)
     elif tin == "slit" and k < 11: out = slit(out, 1 - eout(k / 11, 2.2), f)
     elif tin == "remnant": out = remnant(out, f, s, k)
+    elif tin == "ring" and k < 13: out = ring_wipe(last_frame_of(P), out, k)
+    elif tin == "bolt_wipe" and k < 12: out = bolt_wipe(last_frame_of(P), out, k, seed=3 + s["f0"] % 11)
+    elif tin == "prism" and k < 11: out = prism(out, k)
+    elif tin == "smear" and k < 10: out = smear(out, (1 - k / 10) ** 2, f)
     elif tin == "shockwave" and k < 13: out = shockwave(last_frame_of(P), out, s, f, k)
     elif tin == "flare": out = leak(out, f, s["f0"])
     elif tin == "phase" and k < 12:
@@ -1681,12 +1948,17 @@ def render(f):
             u = (kn + 7) / 7; out = radial_blur(twirl(out, 3.2 * ein(u, 2)), W / 2, H * 0.45, 1.0, 1 + 0.1 * u, 4)
         if tout == "logo" and kn >= -12: out = logo_flash(out, render_shot(n_, n_["f0"], False), kn)
         if nt == "flare" and kn >= -8: out = leak(out, f, n_["f0"])
+        if nt == "smear" and kn >= -6: out = smear(out, ((kn + 7) / 7) ** 2, f)
+        if nt == "prism" and kn >= -3: out = rgb_split(out, 30 * (kn + 4) / 4)
         if nt == "dissolve": pass
     if tout == "eye_out": out = eye_out(out, f, s)
-    if tout == "slit_end": out = slit_end(lyric5(out, f), f, s); s = dict(s, _lyr_done=True)
+    if tout == "slit_end": out = slit_end(lyric_lockups(out, f), f, s); s = dict(s, _lyr_done=True)
     if s.get("arcs"): out = arcs(out, f, s)
+    if s.get("streaks"): out = light_streaks(out, f)
+    out = edge_lightning(out, f)
+    out = embers(out, f, 0.0 if f < 50 else (0.5 if f / FPS < E.th(240) else 1.0))
     # ---- type
-    if not s.get("_lyr_done"): out = lyric5(out, f)
+    if not s.get("_lyr_done"): out = lyric_lockups(out, f)
     out = bloom(out, 0.26)
     out = out * VIG + grain(f, 0.014)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)

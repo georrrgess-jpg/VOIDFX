@@ -77,6 +77,36 @@ The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded
 - **Loop seam:** last and first frames are both black (luma 0.5 vs 0.6).
 - **Visual sign-off:** all new effects were verified on frames pulled from the encoded MP4: the emblem draw-on, the fly through the bolt, the light-speed slit, the afterimages, the shockwave, and the line-to-spark-to-black ending.
 
+
+## Revision 3 (user feedback)
+
+- **Removed:** the slow-motion street run straight at the camera, and the shot of Barry suspended in the air after it.
+- **Replacements:** a masked Barry smiling (on *"think a thing"*), then the emblem crackling with blue lightning (ring-wipe in), then masked Barry with green arcs (bolt-wipe in).
+- **Lyrics as full phrases, not single words.** Every line is a two-tier lockup timed word by word to the vocal:
+  - a small tracked lead line (*I AM*, *TELL ME TO*, *I HAVE*);
+  - a large detailed keyword: gradient fill, gold edge, inner shading, glow, and a light sweep once it lands;
+  - a soft dark backing keeps every line readable over bright lightning.
+  - The intro also gets text now: *YOU DON'T EVEN / THINK A THING*.
+- **Each keyword's animation acts out its meaning:**
+  - FALLING drops in with gravity, then falls away;
+  - FADING dissolves into rising sparks;
+  - DROWNING sinks through a ripple while bubbles rise;
+  - BREATHE inhales slowly while a heartbeat (ECG) line draws across the screen;
+  - HURTING lands, then cracks apart along a lightning fracture;
+  - LOST / IT / ALL stack up, then scatter away;
+  - LOSING arrives letter by letter, then is pulled away one letter at a time.
+- **New transitions:**
+  - **ring wipe:** an expanding gold energy ring reveals the next shot;
+  - **bolt wipe:** a lightning bolt sweeps across the frame, with the next shot behind it;
+  - **prism:** RGB copies converge;
+  - **speed smear:** row-sliced horizontal motion smear.
+  - These replace every remaining plain flash or RGB cut. Each has its own sound.
+- **New ambient graphics:**
+  - drifting gold embers through the whole edit, denser in the second half;
+  - lightning bolts flickering down both edges of the frame on every downbeat of the chorus;
+  - gold light streaks across the running shots.
+- **Lyric sound design:** a crack on HURTING, bubbles on DROWNING, shimmer on FADING, and whooshes on LOST IT ALL and LOSING.
+
 ## Files
 
 - `out/fastest_flash_voidfx_9x16.mp4`: upload version.
