@@ -11,7 +11,7 @@ N = int(round(E.DUR * SR))
 def I(t): return int(round(t * SR))
 db = A2.db; bq = A2.bq; noise = A2.noise; env_exp = A2.env_exp
 
-PRE = 2048          # timeline starts PRE samples before edit 0: that audio is the natural lead-in to the loop start
+PRE = 4800          # timeline starts PRE samples before edit 0: that audio is the natural lead-in to the loop start
 def place(out, sig, t):
     A2.place(out, sig if sig.ndim == 2 else np.stack([sig, sig], 1), I(t) + PRE)
 
@@ -87,7 +87,8 @@ def main():
     dia = np.zeros((N + PRE, 2), np.float32); mus = np.zeros((N + PRE, 2), np.float32); fx = np.zeros((N + PRE, 2), np.float32)
     # ---- dialogue: one continuous take (0-4.30), J-cut into Dexter's reply, closing line; 40 ms equal-power edges
     for i, (a, b, at) in enumerate(E.DIALOGUE):
-        seg = dk[I(a):I(b)].copy()
+        lead_in = PRE if i == 0 else 0                           # line 1 also fills the loop lead-in
+        seg = dk[I(a) - lead_in:I(b)].copy()
         seg = bq(seg, "high", 75, 2)
         bqp, aqp = ss.iirpeak(3000 / (SR / 2), 1.0); seg = seg + 0.22 * ss.lfilter(bqp, aqp, seg, axis=0).astype(np.float32)
         env = np.sqrt(np.convolve(seg.mean(1) ** 2, np.ones(960) / 960, "same")); act = env > env.max() * 0.12
@@ -96,7 +97,7 @@ def main():
         nf = I(0.040); ramp = np.sin(np.linspace(0, np.pi / 2, nf)) ** 2
         if i != 0: seg[:nf] *= ramp[:, None]                      # edit 0 starts at full level: it continues the loop
         seg[-nf:] *= ramp[::-1, None]
-        place(dia, seg, at - (0.02 if i == 1 else 0.0))
+        place(dia, seg, at - (0.02 if i == 1 else 0.0) - lead_in / SR)
     # ---- cold-open bed: low drone (continuous under both lines) + riser into the white flash
     place(fx, stereo(drone(E.T_SONG + 0.85, -32)), -0.80)          # starts before 0 so it is already at level
     # loop seam: the scene's own room tone (src 15.62-16.20, the gap before "Jesus") fades in under the last 0.58 s,
@@ -182,16 +183,26 @@ def main():
     full = dia + mus * duck[:, None] + fx
     lead, mix = full[:PRE].copy(), full[PRE:].copy()
     # circular seam: the last PRE samples crossfade into the lead-in of edit 0, so sample N-1 flows into sample 0
-    w = (np.sin(np.linspace(0, np.pi / 2, PRE)) ** 2)[:, None]
-    mix[-PRE:] = mix[-PRE:] * (1 - w) + lead * w
+    th = np.linspace(0, np.pi / 2, PRE)[:, None]                 # constant-power (signals are uncorrelated)
+    mix[-PRE:] = mix[-PRE:] * np.cos(th) + lead * np.sin(th)
     # (no edge fades: the end and start are matched so the TikTok loop is continuous)
     raw = f"{AD}/mix_raw.wav"; wf.write(raw, SR, mix.astype(np.float32))
     Iraw, _ = measure(raw); gain = -13.0 - Iraw
     out = f"{AD}/mix.wav"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-af", f"volume={gain:.2f}dB,aresample=192000,"
+    # master a circularly padded copy (1 s of tail before, 1 s of head after) so the limiter/resampler
+    # are already settled at both ends of the loop, then trim back to exactly N samples
+    P2 = SR; wrapped = np.vstack([mix[-P2:], mix, mix[:P2]])
+    rawp = f"{AD}/mix_raw_wrapped.wav"; wf.write(rawp, SR, wrapped.astype(np.float32))
+    tmp = f"{AD}/mix_wrapped_master.wav"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", rawp, "-af", f"volume={gain:.2f}dB,aresample=192000,"
                     f"alimiter=limit={db(-3.0):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr",
-                    "-c:a", "pcm_s24le", out], check=True)
-    sr_, m = wf.read(out); m = m.astype(np.float32) / 2 ** 31
+                    "-c:a", "pcm_f32le", tmp], check=True)
+    sr_, mw = wf.read(tmp); mw = mw.astype(np.float32)
+    # locate the trim point by cross-correlating against the unmastered signal (filters add a small delay)
+    ref = wrapped[P2:P2 + SR, 0]; seg_ = mw[P2 - 2000:P2 + SR + 2000, 0]
+    lag = int(np.argmax(np.correlate(seg_, ref, mode="valid"))) - 2000
+    m = mw[P2 + lag:P2 + lag + N]
+    wf.write(out, SR, (np.clip(m, -1, 1) * (2 ** 31 - 1)).astype(np.int32))
     pre = m[-1024:].copy()                                  # AAC encoder pre-roll = the loop's own tail
     wf.write(f"{AD}/mix_preroll.wav", SR, np.vstack([pre, m]).astype(np.float32))
     test = f"{AD}/aac_test.m4a"

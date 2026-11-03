@@ -61,7 +61,8 @@ This revision of the v3 edit is built from your notes. It is 25.0 s at 1080×192
   - the drone runs at the same level on both sides;
   - the timeline is built circularly: the last 2,048 samples crossfade into the actual lead-in of the first frame;
   - the AAC encoder pre-roll is the loop's own tail;
-  - result: the sample step at the wrap equals the surrounding audio, and the level stays about −28 dBFS on both sides.
+  - the mix is mastered (limiter and resampler) on a circularly padded copy and then trimmed, so neither end starts "cold";
+  - result on the final MP4: the level stays about −25 to −30 dBFS across the wrap, the sample step at the wrap is in the normal range (no click), and audio and video are both exactly 25.000 s and sample-aligned.
 
 ## Files
 
