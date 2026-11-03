@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-command build steps for edit vN.  Usage: bash tools/build.sh N STEP [STEP ...]
-#   prep            face tracks + MODNet mattes            audio        soundtrack (circular, mastered, AAC-checked)
+#   prep            source-range audit + face tracks + MODNet mattes            audio        soundtrack (circular, mastered, AAC-checked)
 #   auto            review sheets around every cut         clip:A:B     frames A..B as a small MP4 with sound
 #   preview         whole edit at 30 fps / 540x960         video        final upload MP4 + master MOV
 #   qc              ship checkpoint on the encoded MP4     all          prep audio auto video qc
@@ -12,7 +12,8 @@ SLUG=$(cd "$W" && python3 -c "import edl$N as E; print(E.SLUG)")
 for s in "${STEPS[@]}"; do
   t0=$(date +%s); echo "== $V: $s"
   case "$s" in
-    prep)    python3 "$W/render$N.py" prep > "$W/prep.log" 2>&1; grep -E "track|seg " "$W/prep.log" | tail -40 ;;
+    prep)    python3 "$ROOT/tools/check_sources.py" "$N" | grep -E "BAD|source ranges"
+             python3 "$W/render$N.py" prep > "$W/prep.log" 2>&1; grep -E "track|seg " "$W/prep.log" | tail -40 ;;
     audio)   python3 "$W/audio$N.py" | tail -4 ;;
     auto)    python3 "$W/render$N.py" auto cuts ;;
     clip:*)  IFS=: read -r _ a b <<< "$s"; python3 "$W/render$N.py" clip "$a" "$b" ;;

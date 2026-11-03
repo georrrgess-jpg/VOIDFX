@@ -113,6 +113,14 @@ All automated criteria passed. The only text flags left were the 5 known false p
 
 Both lessons were added to the pitfalls list in `docs/TOOLKIT.md`. The edit was re-rendered and the checkpoint run a third time.
 
+### Checkpoint run 3: automated PASS, **visual sign-off FAIL** (not shipped)
+
+Frames from the encoded file showed **an upside-down head for 3 frames** as the doors open. The jar shot's source range started 0.1 s before its source cut, so frames from the previous shot (an overhead of a victim) leaked in. This was the same class of bug as run 2, so it is now caught by a tool:
+- `tools/check_sources.py` audits every shot's source range against the detected cuts, and `build.sh N prep` runs it automatically.
+- On v7 it found the jar shot and nothing else.
+
+The jar now starts after the cut, and *"A jar of blood"* moves with it, so the lip-sync is unchanged. The look-up shot got one frame of margin before its cut, and CLOSE now fades out before the doors open.
+
 ## Files
 
 - `out/him_all_along_dexter_voidfx_9x16.mp4`: upload version.

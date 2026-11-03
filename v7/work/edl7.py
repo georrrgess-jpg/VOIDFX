@@ -31,7 +31,7 @@ LOCK_FACE = dict(x=540, y=760, w=680)
 
 # ---- dialogue (pack8 seconds; Whisper word times on the pack audio); voice taken from the Demucs stem
 VO = [  # (src_in, src_out, edit_at)
-    (331.90, 333.10, th(544) + 0.10),     # "A jar of blood."          lip-synced on the jar shot
+    (331.90, 333.10, th(544) - 0.02),     # "A jar of blood."          lip-synced on the jar shot (starts at src 331.92)
     (333.56, 334.14, th(550) + 0.00),     # "Dramatic."
     (334.34, 334.92, th(552) + 0.00),     # "Cryptic."
     (335.46, 336.04, th(554) + 0.00),     # "Playful."
@@ -53,7 +53,7 @@ def shot(n, src, t0, t1, a, b, **kw):
 # ---- act 1: the investigation (song's vocal breakdown)
 shot("magnifier", "p8", th(528), th(536), 121.20, 123.05, z=[(0, 1.00), (1, 1.08)], tin="lens_open", face=None, cx=(650, 730), lensframe=True)
 shot("slide_up", "p8", th(536), th(544), 262.20, 264.05, z=[(0, 1.05), (1, 1.14)], tin="microscope", tout="doors")
-shot("jar", "p8", th(544), th(550), 331.80, 333.18, z=[(0, 1.25), (1, 1.35)], tin="doors")
+shot("jar", "p8", th(544), th(550), 331.92, 333.30, z=[(0, 1.25), (1, 1.35)], tin="doors")      # source cut at 331.883
 shot("tape", "p7", th(550), th(552), 22.90, 23.36, z=[(0, 1.00), (1, 1.04)], tin="redact")
 shot("red_desk", "p8", th(552), th(554), 80.00, 80.46, z=[(0, 1.05), (1, 1.10)], tin="uv_sweep")
 shot("lolli", "p8", th(554), th(556), 117.90, 118.36, z=[(0, 1.10), (1, 1.14)], tin="fingerprint")
@@ -68,7 +68,7 @@ shot("drive", "p8", th(592), th(600), 316.00, 317.85, z=[(0, 1.00), (1, 1.10)], 
 shot("street", "p8", th(600), th(604), 2.30, 3.22, z=[(0, 1.00), (1, 1.06)], tin="logo_uv", face=None, cx=(600, 700))
 shot("sweat", "p8", th(604), th(612), 143.80, 145.65, z=[(0, 1.00), (1, 1.08)], tin="polaroid")
 shot("green", "p8", th(612), th(616), 152.20, 153.12, z=[(0, 1.00), (1, 1.06)], tin="scan")
-shot("look_up", "p8", th(616), th(624), 355.60, 357.00, z=[(0, 1.00), (1, 1.08)], tin="strobe")
+shot("look_up", "p8", th(616), th(624), 355.60, 356.96, z=[(0, 1.00), (1, 1.08)], tin="strobe")
 # ---- act 3: the confession -> into his pupil (loops to the magnifier)
 shot("confess", "p8", th(624), th(640), 323.45, 327.14, z=[(0, 1.12), (0.6, 1.24), (1, 1.36)], tin="slidebox", tout="pupil_end")
 SHOTS = S
@@ -83,7 +83,7 @@ def vo_e(vi, src_t): a, b, at = VO[vi]; return at + (src_t - a)
 TEXT = [
     dict(style="case", words=[("ON", s2e(122.56), 0), ("THE", s2e(122.86), 0), ("WAY", s2e(122.98), 0), ("TO", s2e(123.12), 0),
                              ("REACHING", s2e(123.18), 1), ("MY", s2e(123.44), 1), ("GOALS", s2e(123.56), 1)], end=s2e(124.30), emph=["GOALS"]),
-    dict(style="doors", words=[("OPEN", s2e(124.54), 0), ("CLOSE", s2e(124.98), 1)], end=th(544) - 0.06, emph=[]),
+    dict(style="doors", words=[("OPEN", s2e(124.54), 0), ("CLOSE", s2e(124.98), 1)], end=th(544) - 0.14, emph=[]),
     dict(style="case", words=[("A", vo_e(0, 331.94), 0), ("JAR", vo_e(0, 332.22), 0), ("OF", vo_e(0, 332.50), 0), ("BLOOD.", vo_e(0, 332.70), 0)],
          end=th(550) - 0.03, emph=["BLOOD."]),
     dict(style="stamp", words=[("DRAMATIC.", vo_e(1, 333.60), 0)], end=th(552) - 0.02, emph=[]),
