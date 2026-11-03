@@ -95,6 +95,28 @@ python3 v3/work/render3.py video v3/out
 python3 v3/work/qc3.py v3/out/surprise_doakes_voidfx_9x16.mp4
 ```
 
+## Review passes (run on the encoded upload file)
+
+| Pass | Result |
+|---|---|
+| Format | 1080×1920, 60 fps CFR, 1,584 frames, 26.400 s, yuv420p, AAC 48 kHz; full decode with no errors |
+| Loudness | −13.2 LUFS, true peak −2.9 dBTP |
+| Face centering | all 25 shots pass: no face cut by the frame edge, no face outside the middle 64% (YuNet on every 2nd output frame) |
+| Text over faces | the only flags are false detections on Doakes's hands and gun in the first shot; captions sit below every face |
+| Cuts | 25 of 27 re-detected on their exact frames; the cube and datamosh cuts are hidden inside their transitions on purpose |
+| Frozen / black | no frozen runs; black frames only at the logo's fade-in and fade-out |
+| Audio | no clicks at any edit point; audio sample-aligned to the mix at 1, 7, 11, 20 and 23.5 s |
+
+Fixes made between passes:
+- **Ice-cream shot:** re-timed (it showed a crowd instead of Dexter).
+- **Face-lock shot:** replaced (it showed the back of his head).
+- **Tight "peek" close-up:** replaced, because its face was cut in 9:16.
+- **Light leak:** re-routed and softened (it burned out his face).
+- **"BLEED IT":** made to end exactly on the drop.
+- **Newspaper insert:** changed to the framed-clipping layout.
+- **Text and tags:** name tags moved above the heads, reticle labels enlarged, BULLETS resized.
+- **Dialogue:** raised 2.5 dB.
+
 ## Limitations
 
 - **I can't watch or listen.** Everything was checked frame by frame and by measurement. Watch once at normal speed with sound before posting.
