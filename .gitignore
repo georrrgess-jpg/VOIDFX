@@ -25,3 +25,8 @@ v4/audio/
 v4/frames/
 v4/out/
 v4/work/*.npz
+v5/work/*.log
+v5/audio/
+v5/frames/
+v5/out/
+v5/work/*.npz
