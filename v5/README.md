@@ -71,6 +71,12 @@ The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded
 - **New transition, shockwave:** a refracting ring of energy expands out from Barry's face, bending the image and revealing the next shot. Used on the scream.
 - **New ending, collapse:** the last shot and its BREATHE collapse into the glowing line, then a spark, then black. That loops straight into the emblem drawing itself.
 
+### Revision 2 checkpoint: **SHIP**
+
+- **Automated criteria:** all 7 PASS. −13.1 LUFS / −3.0 dBTP, 0 clicks at 22 cuts, no frozen runs, faces centred.
+- **Loop seam:** last and first frames are both black (luma 0.5 vs 0.6).
+- **Visual sign-off:** all new effects were verified on frames pulled from the encoded MP4: the emblem draw-on, the fly through the bolt, the light-speed slit, the afterimages, the shockwave, and the line-to-spark-to-black ending.
+
 ## Files
 
 - `out/fastest_flash_voidfx_9x16.mp4`: upload version.
