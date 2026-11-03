@@ -70,12 +70,12 @@ shot("sweat", "p8", th(604), th(612), 143.80, 145.65, z=[(0, 1.00), (1, 1.08)], 
 shot("green", "p8", th(612), th(616), 152.20, 153.12, z=[(0, 1.00), (1, 1.06)], tin="scan")
 shot("look_up", "p8", th(616), th(624), 355.60, 357.00, z=[(0, 1.00), (1, 1.08)], tin="strobe")
 # ---- act 3: the confession -> into his pupil (loops to the magnifier)
-shot("confess", "p8", th(624), th(640), 323.60, 327.29, z=[(0, 1.12), (0.6, 1.24), (1, 1.36)], tin="slidebox", tout="pupil_end")
+shot("confess", "p8", th(624), th(640), 323.45, 327.14, z=[(0, 1.12), (0.6, 1.24), (1, 1.36)], tin="slidebox", tout="pupil_end")
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
 _cf = [s for s in SHOTS if s["n"] == "confess"][0]
-VO[5] = (325.19, 326.35, _cf["t0"] + (325.19 - 323.60))
+VO[5] = (325.19, 326.35, _cf["t0"] + (325.19 - 323.45))  # source shot ends 327.15 (next is another actor)
 def vo_e(vi, src_t): a, b, at = VO[vi]; return at + (src_t - a)
 
 # ---- text: every word on its sung / spoken time. style: case (forensic case-note lockup), stamp (single word),

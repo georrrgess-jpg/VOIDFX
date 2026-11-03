@@ -89,6 +89,8 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 8. **Titles must end before the next transition starts.** MIAMI over the cube looked broken.
 9. **Quiet-section transitions and VO:** keep caption lines inside 1280–1640 px and keep them two-line, never one long line.
 10. **Never wait on a full render to test a transition**: use `auto`, `stills` and `clip`.
+12. **Packs hide cuts the shot detector misses** (a jump to a closer angle, the next scene starting a few frames early). Interpolating across them makes a ghost frame, and running a source range past the shot's end puts another actor on screen. The sampler now holds frames across hard cuts; also keep every `tmap` inside the shot list's `t0`–`t1` and check the last frames in `auto` sheets (found on v7).
+13. **Text vs very tight close-ups:** a face box that fills the 9:16 frame leaves no text-safe band. Swap the shot (v7: the "Could it be him?" close-up → kill-room floor) rather than shrinking the type.
 11. **CJK subtitles and VHS counters read as clutter** to the user. Don't add them.
 
 ## 5. What made v6 the benchmark (carry the principles, not the look)

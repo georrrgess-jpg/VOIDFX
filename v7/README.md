@@ -45,7 +45,7 @@ The friendly blood-spatter analyst investigates, and the evidence keeps pointing
 | 17.54 | Sweat, syringe | **Crime-scene polaroid** (flash, shutter) |
 | 19.38 | Green-lit stare | **Forensic scanner** line (scan sweep) |
 | 20.31 | Looking up, lit red | **Luminol negative strobe** on the beat (flash bulbs) |
-| 22.15 | *"I'm a serial killer."* (lip-synced) | **Blood-slide box**: the frame shrinks into a drop on a glass slide, glides to the next slide, dives in (glass clinks) |
+| 22.15 | *"I'm a serial killer."* (lip-synced; the show's own jump to a closer angle lands on "I'm") | **Blood-slide box**: the frame shrinks into a drop on a glass slide, glides to the next slide, dives in (glass clinks) |
 | 25.4 → 25.84 | Into his pupil → black → loop | **Pupil dive**, a tape-stop of the song, heartbeat |
 
 **Graphics:**
@@ -104,6 +104,14 @@ Two criteria failed, and frame review confirmed real problems behind most of the
 - **Face centering:** the only failing shot is the subject-less South Beach street shot, where a building facade read as a face. QC now skips shots the EDL marks `face=None`.
 
 The edit was re-rendered and the checkpoint run again.
+
+### Checkpoint run 2: automated PASS, **visual sign-off FAIL** (not shipped)
+
+All automated criteria passed. The only text flags left were the 5 known false positives. Frames pulled from the encoded MP4 still showed two defects the automated checks can't catch:
+- **Ghosted frame (1424):** the S1 pack hides a camera cut at 325.217 s, a jump to a closer angle on *"I'm"*, which the shot detector missed. Frame interpolation blended across it. The sampler now **never interpolates across a hard cut** and holds the nearest frame instead. This guard was also added to the v6 engine.
+- **Another actor in the pupil dive:** the confession's source range ran 0.14 s past the end of Dexter's shot. The source window was shifted 0.15 s earlier at the same 1:1 speed, so the lip-sync stays exact.
+
+Both lessons were added to the pitfalls list in `docs/TOOLKIT.md`. The edit was re-rendered and the checkpoint run a third time.
 
 ## Files
 

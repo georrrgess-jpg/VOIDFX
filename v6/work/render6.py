@@ -113,6 +113,9 @@ def sample(pk, ts, mode="hold"):
     if a < 0.05: return FR[(pk, i0)]
     if a > 0.95: return FR[(pk, i1)]
     if mode == "blend": return cv2.addWeighted(FR[(pk, i0)], 1 - a, FR[(pk, i1)], a, 0)
+    # a hard cut between the two source frames (e.g. a jump cut the shot detector missed): never interpolate across it
+    d_ = np.abs(FR[(pk, i0)][::8, ::8].astype(np.float32) - FR[(pk, i1)][::8, ::8]).mean()
+    if d_ > 14: return FR[(pk, i0)] if a < 0.5 else FR[(pk, i1)]
     # flow breaks on sudden lighting changes (police-light flashes): blend those pairs instead
     m0, m1 = FR[(pk, i0)][::8, ::8].mean(axis=(0, 1)), FR[(pk, i1)][::8, ::8].mean(axis=(0, 1))
     if np.abs(m0.astype(np.float32) - m1).max() > 6: return cv2.addWeighted(FR[(pk, i0)], 1 - a, FR[(pk, i1)], a, 0)
