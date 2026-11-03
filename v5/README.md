@@ -47,6 +47,19 @@ The edit was re-rendered and the checkpoint run again.
 
 The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded MP4 and checks format and frame count, a clean decode, loudness and true peak, frozen runs, face centering on every shot, text over faces, audio clicks at every cut and the loop seam. It prints PASS/FAIL per criterion and a verdict. After that comes a visual sign-off on contact sheets of every transition. If anything fails, the edit is fixed and re-rendered before delivery.
 
+### Checkpoint run 2 (final): **SHIP**
+
+| Criterion | Result |
+|---|---|
+| Format | PASS: 1080×1920, 60 fps, 1,546 frames, 25.767 s |
+| Decode | PASS: clean |
+| Loudness | PASS: −13.1 LUFS, true peak −3.0 dBTP |
+| Frozen runs | PASS: none |
+| Face centering | PASS: all shots (1 frame flagged, the distant running figure in the slow-mo street shot) |
+| Audio clicks | PASS: 0 at 22 cuts |
+| Loop seam | PASS: both ends dark; the loop re-enters on the opening lightning crack |
+| Visual sign-off | PASS: every transition and text moment checked on frames from the encoded file. The one text-over-face flag ("TELL ME TO" in the white-suit shot) sits below his chin; the detector's box just extends lower than the face. |
+
 ## Files
 
 - `out/fastest_flash_voidfx_9x16.mp4`: upload version.
