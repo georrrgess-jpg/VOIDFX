@@ -35,14 +35,14 @@ def shot(n, src, h0, h1, t0s, t1s, **kw):
     d.update(kw); S.append(d)
 
 # ---- intro: "and you don't even think a thing" (calm, title)
-shot("open_mask", "fb", 208, 212, 54.45, 55.75, z=[(0, 1.00), (1, 1.04)], tin="bolt_open")
+shot("open_mask", "fb", 208, 212, 54.45, 55.75, z=[(0, 1.00), (1, 1.04)], tin="emblem")
 shot("barry_dark", "fb", 212, 216, 33.10, 34.40, z=[(0, 1.10), (1, 1.18)], tin="flare")
 shot("cowl", "fb", 216, 220, 69.00, 70.30, z=[(0, 1.00), (1, 1.10)], tin="phase")
-shot("street_run", "fb", 220, 224, 65.10, 65.48, z=[(0, 1.00), (1, 1.15)], tout="tunnel", face=None, cx=(640, 650))
+shot("street_run", "fb", 220, 224, 65.10, 65.48, z=[(0, 1.00), (1, 1.15)], tout="slit", face=None, cx=(640, 650))
 # ---- "I am falling, I am fading"
-shot("falling", "fb", 224, 228, 119.45, 120.75, z=[(0, 1.00), (1, 1.10)], tin="tunnel", face=None, cx=(560, 640))
+shot("falling", "fb", 224, 228, 119.45, 120.75, z=[(0, 1.00), (1, 1.10)], tin="slit", face=None, cx=(560, 640))
 shot("lightning_face", "fb", 228, 232, 83.85, 85.05, z=[(0, 1.05), (1, 1.15)], tin="bolt_split")
-shot("equations", "fb", 232, 236, 59.85, 61.05, z=[(0, 1.05), (1, 1.15)], tin="dissolve")
+shot("equations", "fb", 232, 236, 59.85, 61.05, z=[(0, 1.05), (1, 1.15)], tin="remnant")
 shot("close_up", "fb", 236, 240, 37.15, 38.45, z=[(0, 1.10), (1, 1.20)], tout="phase")
 # ---- "I am drowning, tell me to breathe"
 shot("sparks", "fb", 240, 244, 52.85, 54.30, z=[(0, 1.00), (1, 1.10)], tin="phase", arcs=True)
@@ -53,15 +53,15 @@ shot("hurting", "fb", 256, 260, 104.55, 105.65, z=[(0, 1.05), (1, 1.15)], tin="l
 shot("lab_bolt", "fb", 260, 262, 28.00, 28.64, z=[(0, 1.00), (1, 1.05)], tin="flash", face="right")
 shot("side_run", "fb", 262, 264, 80.90, 81.54, z=[(0, 1.00), (1, 1.05)], tin="whip", arcs=True)
 shot("run_cam", "fb", 264, 266, 66.45, 67.02, z=[(0, 1.00), (1, 1.05)], tin="zoomblur", face=None, cx=(640, 640))
-shot("run_close", "fb", 266, 268, 67.46, 68.10, z=[(0, 1.00), (1, 1.05)], tin="flash")
+shot("run_close", "fb", 266, 268, 67.46, 68.10, z=[(0, 1.00), (1, 1.05)], tin="remnant")
 shot("lightning_run", "fb", 268, 272, 4.35, 5.65, z=[(0, 1.00), (1, 1.08)], tin="roll", arcs=True)
 # ---- "I am losing, tell me to breathe"
-shot("scream", "fb", 272, 274, 127.70, 128.34, z=[(0, 1.00), (1, 1.06)], tin="flash", arcs=True)
+shot("scream", "fb", 272, 274, 127.70, 128.34, z=[(0, 1.00), (1, 1.06)], tin="shockwave", arcs=True)
 shot("beam", "fb", 274, 276, 124.40, 124.76, z=[(0, 1.00), (1, 1.06)], tin="cut_rgb", face=None, cx=(560, 600))
 shot("lab_storm", "fa", 276, 278, 86.70, 87.40, z=[(0, 1.00), (1, 1.06)], tin="flash", interp="blend", arcs=True)
 shot("dark_hand", "fb", 278, 280, 63.00, 63.64, z=[(0, 1.05), (1, 1.10)], tin="twirl")
 shot("white_suit", "fb", 280, 284, 89.75, 91.05, z=[(0, 1.00), (1, 1.10)], tin="bolt_split", arcs=True)
-shot("final_eye", "fb", 284, 288, 85.20, 86.50, z=[(0, 1.05), (0.65, 1.12), (1, 1.20)], tin="flash", tout="eye_out")
+shot("final_eye", "fb", 284, 288, 85.20, 86.50, z=[(0, 1.05), (0.65, 1.12), (1, 1.20)], tin="flash", tout="slit_end")
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

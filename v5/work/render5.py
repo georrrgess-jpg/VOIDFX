@@ -1513,6 +1513,125 @@ def lyric5(out, f):
             out = paste(out, L, int(W / 2 - L.shape[1] / 2 + dx), int(y - L.shape[0] / 2), fade)
     return out
 
+# ============================================================================ v5b: new transitions
+EMB_C = (W / 2, H * 0.45); EMB_R = 300
+_EM = {}
+def emblem_assets():
+    if "ring" in _EM: return _EM
+    cx, cy = EMB_C; r = EMB_R
+    ang = np.linspace(-math.pi / 2, 1.5 * math.pi, 400)
+    ring = np.stack([cx + r * np.cos(ang), cy + r * np.sin(ang)], 1).astype(np.float32)
+    P = np.array([(0.18, -0.92), (-0.46, 0.08), (-0.04, 0.08), (-0.20, 0.92), (0.48, -0.14), (0.05, -0.14)], np.float32)
+    bolt = np.stack([cx + P[:, 0] * r, cy + P[:, 1] * r], 1)
+    seg = np.vstack([bolt, bolt[:1]])
+    dense = []
+    for a, b in zip(seg, seg[1:]):
+        n = int(np.linalg.norm(b - a) / 4) + 1
+        dense += [a + (b - a) * i / n for i in range(n)]
+    fill = np.zeros((H, W), np.uint8); cv2.fillPoly(fill, [bolt.astype(np.int32)], 255, cv2.LINE_AA)
+    _EM.update(ring=ring, bolt=np.array(dense, np.float32), poly=bolt, fill=cv2.GaussianBlur(fill.astype(np.float32) / 255, (0, 0), 1.0))
+    return _EM
+
+def stroke_light(paths, prog, width=5):
+    core = np.zeros((H, W), np.uint8)
+    head = []
+    for pts in paths:
+        n = max(2, int(len(pts) * clamp(prog, 0, 1)))
+        cv2.polylines(core, [pts[:n].astype(np.int32)], False, 255, width, cv2.LINE_AA)
+        if prog < 1: head.append(pts[n - 1])
+    c = core.astype(np.float32) / 255
+    small = cv2.resize(c, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    glow = cv2.resize(cv2.GaussianBlur(small, (0, 0), 3) * 2.5 + cv2.GaussianBlur(small, (0, 0), 10) * 3.0, (W, H))
+    for p in head:                                            # bright spark at the drawing tip
+        cv2.circle(glow, (int(p[0]), int(p[1])), 18, 1.6, -1, cv2.LINE_AA)
+    return c, np.clip(cv2.GaussianBlur(glow, (0, 0), 3), 0, 1.6)
+
+def emblem_open(B, f, k):
+    """k 0-22: emblem draws itself in electric gold; 22-28: bolt fills and flashes; 28-50: fly through the bolt into B."""
+    if k >= 50: return B
+    A = emblem_assets(); o = np.zeros_like(B)
+    if k < 28:
+        core, glow = stroke_light([A["ring"], A["bolt"]], eout(k / 22, 1.6))
+        o = o + glow[..., None] * GOLD + core[..., None]
+        if k >= 22:
+            v = (k - 22) / 6; o = o + A["fill"][..., None] * (0.5 + 0.5 * v) * (WHITE * 0.7 + GOLD * 0.3)
+        if k >= 8: o = arcs_around(o, f, A, 0.6)
+        return np.clip(o, 0, 1)
+    u = (k - 28) / 22.0; sc = math.exp(4.4 * ein(u, 2.2))
+    bc = A["poly"].mean(0)
+    M = cv2.getRotationMatrix2D((float(bc[0]), float(bc[1])), -8 * u, sc)
+    m = cv2.warpAffine(A["fill"], M, (W, H), flags=cv2.INTER_LINEAR)
+    if sc > 10: m = np.maximum(m, clamp((sc - 10) / 20, 0, 1))
+    ringc, ringg = stroke_light([A["ring"]], 1.0)
+    rg = cv2.warpAffine(ringg, M, (W, H)); rc = cv2.warpAffine(ringc, M, (W, H))
+    Bz = zoom_about(B, W / 2, H * 0.45, 1.25 - 0.25 * eout(u, 2))
+    edge = np.clip(cv2.morphologyEx(m, cv2.MORPH_GRADIENT, np.ones((5, 5), np.uint8)), 0, 1)
+    o = Bz * m[..., None] + (rg[..., None] * GOLD + rc[..., None]) * (1 - u) * (1 - m[..., None])
+    o = o + cv2.GaussianBlur(edge, (0, 0), 6)[..., None] * GOLD * 1.5 * (1 - u)
+    if k < 32: o = o + m[..., None] * (32 - k) * 0.22 * (WHITE * 0.6 + GOLD * 0.4)   # the bolt itself flashes
+    return np.clip(o, 0, 1)
+
+def arcs_around(o, f, A, a):
+    rng = np.random.default_rng(f // 2 * 3 + 1); cx, cy = EMB_C
+    for j in range(2):
+        t0 = rng.uniform(0, 2 * math.pi); t1 = t0 + rng.uniform(0.4, 1.0)
+        p0 = (cx + (EMB_R + 8) * math.cos(t0), cy + (EMB_R + 8) * math.sin(t0)); p1 = (cx + (EMB_R + 60) * math.cos(t1), cy + (EMB_R + 60) * math.sin(t1))
+        pts = bolt_points(p0, p1, f // 2 * 5 + j, 0.3, 5)
+        core, glow = draw_bolt((H, W), pts, f // 2 * 5 + j, 1, 2)
+        o = add_light(o, core, glow * 0.8, GOLD if j else ICE, a)
+    return o
+
+# ---- light-speed slit: frame collapses into a glowing line, next shot bursts open from it
+def slit(img, closed, f):
+    """closed 0 -> full frame, 1 -> a single line."""
+    sy = max(0.004, 1 - ein(closed, 1.6)); sx = 1 + 0.35 * closed
+    M = np.float32([[sx, 0, W / 2 * (1 - sx)], [0, sy, H * 0.5 * (1 - sy)]])
+    o = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
+    o = hblur(o, 4 + 160 * closed) * (1 + 1.4 * closed)
+    yy = np.arange(H, dtype=np.float32)[:, None]; xx = np.arange(W, dtype=np.float32)[None, :]
+    line = np.exp(-((yy - H * 0.5) / (2 + 6 * closed)) ** 2) * np.exp(-((xx - W / 2) / (W * (0.25 + 0.5 * closed))) ** 2)
+    flare = np.exp(-((yy - H * 0.5) / 40) ** 2) * np.exp(-((xx - W / 2) / 260) ** 2) * closed
+    return np.clip(o + (line[..., None] * 1.3 * closed + flare[..., None] * 0.7) * (WHITE * 0.5 + GOLD * 0.5), 0, 1)
+
+# ---- speed afterimages: the shot arrives as converging time-remnants
+def remnant(B, f, s, k, n=14):
+    if k >= n: return B
+    v = eout(k / n, 2.4); acc = B * (0.40 + 0.60 * v)
+    cols = (np.array([0.20, 0.25, 1.0], np.float32), GOLD, np.array([0.25, 0.45, 1.0], np.float32), ICE)
+    for j in range(4):
+        d = (1 - v) * (j + 1) * 210 * (1 if j % 2 else -1)
+        sh = cv2.warpAffine(B, np.float32([[1, 0, d], [0, 1, 0]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+        L = sh.mean(2, keepdims=True)
+        acc = acc + L * cols[j] * 0.85 * (1 - v) / (1 + 0.35 * j)
+    return np.clip(acc, 0, 1)
+
+# ---- shockwave: a refracting ring of energy expands from the face and reveals the next shot
+def shockwave(A, B, s, f, k, n=13):
+    if k >= n: return B
+    t, u, _ = src_time(s, f); fa = face_at(s, t)
+    cx, cy = (to_screen(s, f, fa[0], fa[1])[:2] if fa else (W / 2, H * 0.42))
+    R = 1700 * eout(k / n, 2.0)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32); dx, dy = xx - cx, yy - cy; r = np.sqrt(dx * dx + dy * dy) + 1e-3
+    band = np.exp(-((r - R) / 55.0) ** 2)
+    disp = band * 45 * (1 - k / n)
+    src = np.where((r < R)[..., None], B, A)
+    o = cv2.remap(src.astype(np.float32), (xx - dx / r * disp).astype(np.float32), (yy - dy / r * disp).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    rim = np.exp(-((r - R) / 8.0) ** 2) + 0.4 * band
+    return np.clip(o + rim[..., None] * (GOLD * 0.9 + WHITE * 0.3) * (1 - 0.6 * k / n), 0, 1)
+
+def slit_end(img, f, s, n=20):
+    kk = s["f1"] - f
+    if kk > n: return img
+    u = 1 - kk / n
+    if u < 0.75: return slit(img, ein(u / 0.75, 1.3), f)
+    v = (u - 0.75) / 0.25                                   # line -> spark -> black
+    o = np.zeros_like(img); yy = np.arange(H, dtype=np.float32)[:, None]; xx = np.arange(W, dtype=np.float32)[None, :]
+    wdt = W * 0.5 * (1 - v) + 6
+    spark = np.exp(-((yy - H * 0.5) / 3) ** 2) * np.exp(-((xx - W / 2) / wdt) ** 2) * (1.6 - 1.4 * v)
+    halo = np.exp(-(((yy - H * 0.5) / 60) ** 2 + ((xx - W / 2) / 60) ** 2)) * 0.8 * (1 - v)
+    return np.clip(o + (spark + halo)[..., None] * (WHITE * 0.5 + GOLD * 0.5), 0, 1)
+
+
 # ============================================================================ v5 frame
 def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
@@ -1520,6 +1639,10 @@ def render(f):
     tin = s.get("tin"); tout = s.get("tout"); P = prev_shot(s)
     # ---- incoming
     if tin == "bolt_open": out = bolt_open(out, k)
+    elif tin == "emblem": out = emblem_open(out, f, k)
+    elif tin == "slit" and k < 11: out = slit(out, 1 - eout(k / 11, 2.2), f)
+    elif tin == "remnant": out = remnant(out, f, s, k)
+    elif tin == "shockwave" and k < 13: out = shockwave(last_frame_of(P), out, s, f, k)
     elif tin == "flare": out = leak(out, f, s["f0"])
     elif tin == "phase" and k < 12:
         A = last_frame_of(P); v = smooth(k / 12)
@@ -1546,6 +1669,7 @@ def render(f):
     if n_ is not None:
         nt = n_.get("tin")
         if tout == "tunnel" and kn >= -10: out = tunnel(out, f, kn, "out")
+        if tout == "slit" and kn >= -9: out = slit(out, ein((kn + 10) / 10, 1.8), f)
         if nt == "bolt_split" and kn >= -5: out = bolt_split(out, None, kn, seed=11 + n_["f0"] % 7)
         if tout == "phase" and kn >= -10: out = phase(out, f, ein((kn + 11) / 11, 1.6))
         if nt == "whip" and kn >= -4: out = whip(out, f, n_)
@@ -1559,10 +1683,10 @@ def render(f):
         if nt == "flare" and kn >= -8: out = leak(out, f, n_["f0"])
         if nt == "dissolve": pass
     if tout == "eye_out": out = eye_out(out, f, s)
+    if tout == "slit_end": out = slit_end(lyric5(out, f), f, s); s = dict(s, _lyr_done=True)
     if s.get("arcs"): out = arcs(out, f, s)
     # ---- type
-    out = title_card(out, f)
-    out = lyric5(out, f)
+    if not s.get("_lyr_done"): out = lyric5(out, f)
     out = bloom(out, 0.26)
     out = out * VIG + grain(f, 0.014)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)

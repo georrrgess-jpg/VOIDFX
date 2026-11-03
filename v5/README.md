@@ -60,6 +60,17 @@ The final **ship / no-ship checkpoint** is `work/qc5.py`. It runs on the encoded
 | Loop seam | PASS: both ends dark; the loop re-enters on the opening lightning crack |
 | Visual sign-off | PASS: every transition and text moment checked on frames from the encoded file. The one text-over-face flag ("TELL ME TO" in the white-suit shot) sits below his chin; the detector's box just extends lower than the face. |
 
+
+## Revision 2 (user feedback)
+
+- **Removed:** the THE FASTEST MAN ALIVE title card.
+- **Removed:** the speed-force "starburst" tunnel (the burst you didn't like), both mid-edit and at the end.
+- **New opening, emblem draw-on:** on black, the Flash emblem draws itself in electric gold. Its ring and lightning bolt are traced by bright sparks, with small arcs crackling around it. The bolt fills and flashes, then the camera **flies through the lightning bolt** into the first shot. Sound: an electric hum, crackles, then a crack and a whoosh through the bolt.
+- **New transition, light-speed slit:** the street run collapses into a single glowing horizontal line, and the next shot bursts open from it. Used for the drop into "I am falling".
+- **New transition, speed afterimages:** the incoming shot arrives as four converging red and gold time-remnants that snap together. Used twice.
+- **New transition, shockwave:** a refracting ring of energy expands out from Barry's face, bending the image and revealing the next shot. Used on the scream.
+- **New ending, collapse:** the last shot and its BREATHE collapse into the glowing line, then a spark, then black. That loops straight into the emblem drawing itself.
+
 ## Files
 
 - `out/fastest_flash_voidfx_9x16.mp4`: upload version.

@@ -51,11 +51,22 @@ def main():
     mus[:] = song[s0 - PRE:s0 - PRE + N + PRE] * db(-1.5)            # includes the natural lead-in before edit 0
     T = {s["n"]: s for s in E.SHOTS}
     tin = lambda n: T[n]["t0"]
-    # opening lightning strike (also what you hear on every loop)
-    place(fx, crack(-11, 1, 1.0), 0.0)
+    # opening: electric hum while the emblem draws, crackles, then a crack + whoosh through the bolt
+    n = I(0.47); tt = np.arange(n) / SR
+    hum = (np.sin(2 * np.pi * 60 * tt) + 0.5 * np.sin(2 * np.pi * 120 * tt) + 0.3 * bq(noise(n, 40), "band", np.array([2000, 6000]), 2)) * np.minimum(1, tt / 0.12)
+    place(fx, stereo(hum / np.abs(hum).max() * db(-26)), 0.0)
+    for j in range(4): place(fx, stereo(zap(-30, 41 + j, 0.08), 0.5 - 0.3 * j), 0.13 + 0.08 * j)
+    place(fx, crack(-12, 1, 0.8), 28 / E.FPS - 0.01)
+    place(fx, A2.whoosh(0.40, -20, 42, True), 28 / E.FPS)
     for s in E.SHOTS:
         t = s.get("tin")
         if t == "bolt_split": place(fx, crack(-14, 7 + int(s["t0"] * 10), 0.6), s["t0"] - 5 / E.FPS)
+        elif t == "slit":
+            sw = A2.riser(0.17, -22); place(fx, sw, s["t0"] - 0.17)
+            place(fx, stereo(A2.impact(-17, (90, 45), 0.25, 0.6, 43)), s["t0"]); place(fx, A2.whoosh(0.30, -22, 44, False), s["t0"])
+        elif t == "remnant": place(fx, A2.whoosh(0.24, -22, 45 + int(s["t0"]), True), s["t0"] - 0.04); place(fx, stereo(zap(-27, 46, 0.12)), s["t0"])
+        elif t == "shockwave":
+            place(fx, stereo(A2.impact(-14, (55, 28), 0.7, 0.3, 47)), s["t0"]); place(fx, A2.whoosh(0.35, -22, 48, True), s["t0"])
         elif t == "tunnel": place(fx, A2.whoosh(0.45, -19, 20, True), s["t0"] - 0.30); place(fx, stereo(A2.impact(-18, (60, 30), 0.5, 0.2, 21)), s["t0"])
         elif t == "phase": place(fx, stereo(shimmer_phase(-25, 0.45)), s["t0"] - 0.18)
         elif t == "flare": place(fx, A2.whoosh(0.35, -26, 22, False), s["t0"] - 0.15)
@@ -75,7 +86,9 @@ def main():
             while t < s["t1"] - 0.1:
                 place(fx, stereo(zap(-31, int(t * 100), 0.10), np.random.default_rng(int(t * 10)).uniform(-0.6, 0.6)), t); t += 0.27
     # final fly into the eye -> streak rush (rises into the loop's opening crack)
-    fin = T["final_eye"]; place(fx, A2.whoosh(0.55, -19, 30, True)[::-1].copy(), E.DUR - 0.55)
+    sw = A2.riser(0.30, -22); place(fx, sw, E.DUR - 20 / E.FPS - 0.05)            # collapse to the line
+    n = I(0.30); tt = np.arange(n) / SR; tone = np.sin(2 * np.pi * np.cumsum(3000 - 2500 * tt / 0.3) / SR) * np.exp(-tt / 0.12)
+    place(fx, stereo(tone * db(-30)), E.DUR - 0.30)
     fx = np.tanh(fx * 1.3) / 1.3
     full = mus + fx
     lead, mix = full[:PRE].copy(), full[PRE:].copy()
