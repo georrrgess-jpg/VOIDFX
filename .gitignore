@@ -41,3 +41,9 @@ v7/frames/
 v7/out/
 v7/work/*.npz
 v7/work/*.npy
+v8/work/*.log
+v8/audio/
+v8/frames/
+v8/out/
+v8/work/*.npz
+v8/work/*.npy
