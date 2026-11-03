@@ -1,0 +1,55 @@
+# SURPRISE v4 — Doakes × Need It (voidfx, 9:16)
+
+This revision of the v3 edit is built from your notes. It is 25.0 s at 1080×1920, 60 fps, and it loops.
+
+## What changed and why
+
+| Your note | What v4 does |
+|---|---|
+| Beginning is sloppy; BAY HARBOR BUTCHER sat under the captions | The cold open is rebuilt. The title is now set **behind Dexter's head** using person matting (MODNet): BUTCHER is red and behind his neck, BAY HARBOR is small and above him. Each word lands on Doakes's syllable, and the captions sit low and clear of it. |
+| Don't label Doakes and Dexter | Name tags, speaker chips and the stamp are removed. |
+| Dexter's lines are choppy, "stuck together with glue" | The first 4.3 s is **one continuous take** of the scene's audio. The shots change underneath it: Doakes, Dexter listening, then Dexter answering. "What can I say?" comes in as a J-cut under a Doakes reaction shot. The 24p night footage is optical-flow smoothed to 60 fps, the cuts are dissolves, and every audio join has a 40 ms equal-power fade. |
+| Text animation not appealing | Every word now eases in: fade, a 22 px rise and blur-to-sharp over 9 frames. Lines re-centre smoothly as words arrive and fade upward on exit. Each lyric moment has its own smooth move: mask-rise, tracking-resolve, light-sweep reveal, fly-in from the camera. Nothing just pops on. |
+| TARGET ACQUIRED / I NEED IT felt shoved together | It is now one continuous move. The camera pushes into Doakes's barrel, flies through into black, and comes out in a **rifle-scope view of Dexter**. The scope sways, tightens and drains to grey through the bass gap with accelerating lock-on beeps, then cuts to the real gunshot. |
+| More pronounced transitions | Every montage cut now has a stronger, designed move (listed below), each with its own sound. |
+| The loop didn't work because of the outro | The outro logo is removed. The edit ends by **flying into Dexter's pupil to black** and starts by **irising out of black onto Doakes**, so the wrap lands black-to-black. The audio at the seam is matched: an inhale at the start, a suck at the end, both about −44 dBFS at the join. |
+| No constant watermark | The watermark is gone. The voidfx logo appears **once**, as a transition: it slams in over the fight shot, a sheen runs across the metal, and the camera **flies through the "o"** into the next shot. |
+| Feel like you're going *through* something | There are fly-through transitions throughout: into the gun barrel, into the scope, through shattered glass, into his shadow, into his eye, through the voidfx "o", into a photo on the kill-room wall, and finally into his pupil. |
+
+## Timeline
+
+| Time | Section |
+|---|---|
+| 0.00–6.60 | Iris opens on Doakes. One continuous exchange: *"Jesus fucking Christ, you're the Bay Harbor Butcher."* → *"I really hate that name."* → Doakes reaction → *"What can I say? You were right about me."* Then a white flash. |
+| 6.60–11.06 | *"I said I need it…"*: Doakes's gun, then push into the barrel, then scope view of Dexter (*"undefeated"*), then drain and lock-on, then the barrel of the real gun. |
+| 11.06 | Drop: muzzle flash, cracked glass, shatter. |
+| 11.06–22.31 | Montage, one transition per beat: shatter → dark pass → eye portal → 3D roll → flash cuts → **voidfx "o" fly-through** → cube → **through the photo** → polaroid flick → face-lock burst → zoom-through with echo → datamosh → split slam |
+| 22.31 | Freeze on *"…can't get caught up"*, then tape-stop. |
+| 22.62–25.00 | Doakes: *"I always knew there was something with you."* Then into the pupil, then black, then the loop. |
+
+## Files
+
+- `out/surprise_v4_voidfx_9x16.mp4`: upload version.
+- `out/surprise_v4_voidfx_9x16_master.mov`: master.
+- `work/edl4.py`: every decision.
+- `work/render4.py`: picture (face tracking and person matting).
+- `work/audio4.py`: sound.
+- `work/qc4.py`: automated review passes.
+
+### Re-render
+
+```bash
+python3 v4/work/render4.py prep
+python3 v4/work/audio4.py
+python3 v4/work/render4.py video v4/out
+python3 v4/work/qc4.py v4/out/surprise_v4_voidfx_9x16.mp4
+```
+
+The MODNet portrait-matting model (`v3/models/modnet/onnx/model.onnx`) and the YuNet face detector are downloaded from Hugging Face. The models are not committed.
+
+## Limitations
+
+- **I can't watch or listen.** Everything was checked frame by frame and by measurement. Watch once at normal speed with sound.
+- **Sources are 720p**, so the 9:16 crops are upscaled.
+- **The datamosh is meant to look messy.** It smears pixels on purpose.
+- **Explicit language.** The lyrics and dialogue are explicit.

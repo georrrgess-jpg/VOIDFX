@@ -20,3 +20,8 @@ v3/models/
 v3/audio/
 v3/frames/
 v3/out/
+v4/work/*.log
+v4/audio/
+v4/frames/
+v4/out/
+v4/work/*.npz
