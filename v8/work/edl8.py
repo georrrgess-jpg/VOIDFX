@@ -63,20 +63,20 @@ shot("garden", "p5", th(80), th(88), 0, 0, tmap=[(0, 30.95), (0.62, 31.52), (1, 
 shot("lights", "p8", th(88), th(97), 230.75, 232.70, z=[(0, 1.00), (1, 1.08)], tin="headlights", seg=True, face_x=0.33)
 shot("glove", "p1", th(97), th(100), 101.78, 102.44, z=[(0, 1.00), (1, 1.06)], tin="whip")
 shot("fence", "p5", th(100), th(104), 49.10, 49.98, z=[(0, 1.02), (1, 1.08)], tin="facematch", interp="flow")
-shot("rapture", "p1", th(104), th(111), 133.96, 135.12, z=[(0, 1.00), (1, 1.10)], tin="light_leak", interp="flow", seg=True)
+shot("rapture", "p1", th(104), th(111), 133.96, 135.12, z=[(0, 1.00), (1, 1.10)], tin="light_leak", interp="flow", seg=True, ev=-0.35)
 shot("look_up", "p8", th(111), th(118), 355.40, 356.92, z=[(0, 1.00), (1, 1.07)], tin="whip_up")
 shot("kill_lamp", "p8", th(118), th(122), 99.00, 99.87, z=[(0, 1.05), (1, 1.12)], tin="logo_orig")
 shot("plastic", "p8", th(122), th(125), 130.55, 131.20, z=[(0, 1.00), (1, 1.06)], tin="wrap")
 shot("mask", "p1", th(125), th(128), 58.56, 59.17, z=[(0, 1.00), (1, 1.06)], tin="impact", interp="flow")
 # ---- act 3: the break — "Tonight's the night." / "Darling," / the drop of blood falls
-shot("tonight", "p8", th(128), th(136), 0.05, 1.90, z=[(0, 1.02), (1, 1.12)], tin="rainfocus", face=None, cx=(1010, 990), rain=True, sweeps=True)
+shot("tonight", "p8", th(128), th(136), 0.05, 1.90, z=[(0, 1.02), (1, 1.12)], tin="rainfocus", face=None, cx=(1010, 990), rain=True, sweeps=True, ev=-0.30)
 shot("darling", "p8", th(136), th(144), 0, 0, tmap=[(0, 109.50), (0.25, 109.93), (1, 109.95)], z=[(0, 1.00), (0.25, 1.05), (1, 1.12)],
-     tin="shadow", seg=True, freeze=DARLING_T)
+     tin="lamp_on", seg=True, freeze=DARLING_T)
 shot("drop", "p8", th(144), th(152), 0, 0, tmap=[(0, 109.95), (1, 109.96)], z=[(0, 1.12), (1, 1.22)], seg=True, dropfall=True)
 # ---- act 4: the drop — "I / don't / wish / you / well" — one cut per syllable, then into the mirror (loop)
 shot("blood_face", "p8", th(152), HK[0], 103.00, 104.06, z=[(0, 1.10), (1, 1.18)], tin="bloom")
 shot("knife", "p1", HK[0], HK[1], 158.05, 158.30, z=[(0, 1.00), (1, 1.04)], tin="slam")
-shot("slide", "p1", HK[1], HK[2], 109.80, 110.10, z=[(0, 1.00), (1, 1.05)], tin="slam", interp="flow")
+shot("table", "p8", HK[1], HK[2], 100.90, 101.20, z=[(0, 1.00), (1, 1.05)], tin="slam")
 shot("walk", "p1", HK[2], HK[3], 186.40, 186.62, z=[(0, 1.00), (1, 1.04)], tin="slam")
 shot("smirk", "p8", HK[3], HK[4], 346.60, 346.84, z=[(0, 1.00), (1, 1.05)], tin="slam")
 shot("well", "p8", HK[4], th(164), 313.40, 313.97, z=[(0, 1.00), (1, 1.04)], tin="slam", tout="mirror_out", rain=True)
@@ -90,7 +90,7 @@ for s in SHOTS:
 TEXT = [
     dict(style="behind", words=[(w, s2e(t), 0) for w, t in W_PICK], end=th(97) - 0.03, emph=["UP"], band=(560, 1300)),
     dict(style="lyric", words=[(w, s2e(t), 0 if i < 4 else 1) for i, (w, t) in enumerate(W_NEED)], end=s2e(22.42) + 0.26, emph=["NEED"], quick_out=True),
-    dict(style="lyric", words=[(w, s2e(t), 0) for w, t in W_WANT[:4]], end=th(111) - 0.03, emph=[]),
+    dict(style="lyric", words=[(w, s2e(t), 0) for w, t in W_WANT[:4]], end=th(111) - 0.08, emph=[], quick_out=True),
     dict(style="behind", words=[("WANT", s2e(23.76), 0)], end=th(111) - 0.03, emph=["WANT"], band=(560, 1300)),
     dict(style="lyric", words=[(w, s2e(t), 0 if i < 1 else 1) for i, (w, t) in enumerate(W_GOD)], end=th(118) - 0.06, emph=["GOD,"]),
     dict(style="script", words=[("Tonight's the night.", VO[0][2] + 0.0, 0)], end=th(136) - 0.10, emph=[], band=(1300, 1560)),

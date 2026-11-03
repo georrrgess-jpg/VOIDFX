@@ -4337,15 +4337,14 @@ def light_sweep(A, B, j, f, sa, sb, n=7):
 _WP = {}
 def wiper(A, B, j, f, sa, sb, pre=8, post=10):
     u = clamp((j + pre + 0.5) / (pre + post), 0, 1); piv = (W * 0.10, H * 1.02); L = 2300
-    ang = math.radians(-178 + 132 * ein(u, 1.6) + 30 * eout(u, 2) * 0)
+    ang = math.radians(-178 + 176 * ein(u, 1.5))
     a = np.degrees(np.arctan2(_GY - piv[1], _GX - piv[0]))
     swept = (a <= math.degrees(ang)).astype(np.float32)
     Ar = rain_glass(A, f, 1.0, 0.25)
-    o = Ar * swept[..., None] + B * (1 - swept[..., None])
-    o = o * 1.0
+    o = B * swept[..., None] + Ar * (1 - swept[..., None])                              # behind the blade: cleared, next shot
     d = np.abs(np.radians(a) - ang) * np.sqrt((_GX - piv[0]) ** 2 + (_GY - piv[1]) ** 2)
     blade = (np.exp(-(d / 9) ** 2) * (np.sqrt((_GX - piv[0]) ** 2 + (_GY - piv[1]) ** 2) < L))[..., None]
-    spray = np.exp(-((d - 22) / 12) ** 2)[..., None] * swept[..., None] * 0.5
+    spray = np.exp(-((d - 22) / 12) ** 2)[..., None] * (1 - swept[..., None]) * 0.5
     o = o * (1 - blade * 0.95) + blade * np.array([0.03, 0.03, 0.035], np.float32)
     o = o + np.exp(-((d - 8) / 2.5) ** 2)[..., None] * 0.25 + spray * WARMW * 0.25
     return np.clip(o, 0, 1)
@@ -4363,7 +4362,7 @@ def headlights(A, B, j, f, sa, sb, pre=12, post=14):
     streak = cv2.GaussianBlur(cv2.resize(lay, (W // 8, H // 8)), (0, 0), sigmaX=40, sigmaY=0.6); streak = cv2.resize(streak, (W, H)) * 2.2
     k_ = (ein((j + pre) / pre, 2) if j < 0 else (1 - eout((j + 1) / post, 1.6)))
     o = base + (core[..., None] * WARMW + glow[..., None] * WARMW * 0.6 + streak[..., None] * np.array([1.0, 0.85, 0.55], np.float32)) * (0.4 + 0.6 * k_)
-    wash = 0.85 * math.exp(-((j + 0.5) / 1.3) ** 2)
+    wash = 0.60 * math.exp(-((j + 0.5) / 1.3) ** 2)
     return np.clip(o * (1 - wash) + WARMW * wash, 0, 1)
 
 def whip(A, B, j, f, sa, sb, pre=5, post=6, vertical=False):
@@ -4497,6 +4496,17 @@ TR2.update({"light_sweep": (light_sweep, 7, 7), "wiper": (wiper, 8, 10), "headli
             "whip_up": (whip_up, 5, 7), "light_leak": (light_leak, 8, 10), "wrap": (wrap, 6, 10), "impact": (impact, 3, 7),
             "rainfocus": (rainfocus, 8, 16), "slam": (slam, 0, 5), "bloom": (bloom, 0, 26)})
 
+def lamp_on(A, B, j, f, sa, sb, pre=6, post=16):
+    """a warm lamp clicks on: the frame drops to black, then a pool of light (with a filament flicker) blooms around his face."""
+    if j < 0: return np.clip(A * (1 - ein((j + pre + 1) / pre, 1.5)), 0, 1)
+    v = (j + 1) / post; fs = face_scr(sb, f); cx, cy = (fs[0], fs[1]) if fs else (W / 2, H * 0.37)
+    flick = [0.0, 0.55, 0.15, 0.7, 0.45, 0.9][j] if j < 6 else 1.0
+    R = 300 + 1500 * eout(v, 2.2)
+    pool = np.exp(-(((_GX - cx) ** 2 + (_GY - cy) ** 2) / (R * R)))[..., None]
+    o = B * np.clip(pool * 1.25, 0, 1) * flick + B * smooth((v - 0.55) / 0.45) * (1 - pool)
+    return np.clip(o + pool * SODIUM * 0.10 * flick * (1 - v), 0, 1)
+TR2["lamp_on"] = (lamp_on, 6, 16)
+
 # ---- the "Darling," freeze composition: the world drains to indigo, Dexter stays lit (cutout + warm rim light)
 def freeze_comp(out, person, f, s):
     t = f / FPS; t0 = s.get("freeze")
@@ -4569,7 +4579,7 @@ def script_text(out, f, tx):
     """serif-italic write-on: a warm pen nib draws the words left to right."""
     t = f / FPS; (w, wt, _) = tx["words"][0]; t_out = tx["end"]
     if not (wt - 0.05 <= t < t_out + 0.25): return out
-    big = w.startswith("Darling"); size = 150 if big else 92; col = (BLOODR * 0.85 + WARMW * 0.15) if big else WARMW * 0.96
+    big = w.startswith("Darling"); size = 150 if big else 108; col = (BLOODR * 0.85 + WARMW * 0.15) if big else WARMW * 0.96
     key = ("scr", w);
     if key not in _TY:
         m = text_mask(w, F_SERIF_I if not big else F_SERIF_BI, size, tracking=2); pad = 34; mm = np.pad(m, pad)
@@ -4585,6 +4595,8 @@ def script_text(out, f, tx):
         g = cv2.GaussianBlur(vis, (0, 0), 16) * 0.6; L[..., :3] += BLOODR * g[..., None] * (1 - vis[..., None]); L[..., 3] = np.maximum(L[..., 3], g)
     y = (tx.get("band", (1300, 1560))[0] + tx.get("band", (1300, 1560))[1]) / 2
     x0 = int(W / 2 - ww / 2); y0 = int(y - hh / 2 + 10 * (1 - eout(p, 2)))
+    band = np.exp(-((_GY - y) / (hh * 0.9)) ** 2)[..., None] * 0.55 * fade * eout(clamp((t - wt) / 0.25, 0, 1), 2)
+    out = out * (1 - band)                                                              # soft dark band keeps the script readable
     out = paste(out, L, x0, y0, fade)
     if p < 1:                                                                           # the pen nib
         cols = np.nonzero(mm[:, int(min(ww - 1, px))] > 0.3)[0]

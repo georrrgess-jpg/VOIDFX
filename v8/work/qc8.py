@@ -66,7 +66,7 @@ for sn in [s["n"] for s in E.SHOTS]:
 
 # ---- 3. text over face: caption lockups (1320-1600 incl. JP line), MIAMI title (1380-1610), neon sign (1270-1620)
 print("\n== 3. text bands vs faces")
-clash = []
+clash = []; lowfp = []
 def text_bands(t):
     b = []
     for tx in getattr(E, "TEXT", []):
@@ -81,9 +81,11 @@ for f, fl in faces.items():
     bands = text_bands(f / E.FPS)
     for x, y, w, h, c in fl:
         if w < 120: continue
+        if y + h / 2 > 0.60 * 1920: lowfp.append((f, int(y), int(y + h))); continue   # faces are framed at ~37% H: a "face" centred below 60% H is a detector false positive (still listed)
         for a_, b_, lab in bands:
             if y + h * 0.85 > a_ and y < b_: clash.append((f, lab, int(y), int(y + h)))
 print(f"  {len(clash)} frames where a face box reaches into a text band", clash[:6])
+print(f"  ({len(lowfp)} low-placed detections skipped as false positives: {lowfp[:6]} — check these frames visually)")
 import collections as _co; _byshot = _co.defaultdict(list)
 for c_ in clash: _byshot[shot_of(c_[0])].append(c_)
 for sn_, cl_ in _byshot.items(): print(f"    {sn_:12s} {len(cl_):3d} frames  {cl_[0][1]}  face y {min(c[2] for c in cl_)}-{max(c[3] for c in cl_)}  frames {cl_[0][0]}-{cl_[-1][0]}")

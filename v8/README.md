@@ -43,11 +43,46 @@ Dexter's night drive to the kill, scored like a toxic love song: the R&B hook be
 | 12.60 | Plastic sheeting | **kill-room plastic wraps the lens** |
 | 13.26 | Face shield over blood spatter | **impact frame** (1 frame of negative cut-out, then punch-in) |
 | 13.91 | The pilot drive silhouette. ***"Tonight's the night."*** (his line, written on with a pen nib) | **rain-glass focus pull** |
-| 15.65 | The orange room; **freeze** on ***"Darling,"***. The world drains to indigo while he stays lit with a warm rim light; the word is written in blood-red script | **shadow pass**; shutter click |
+| 15.65 | The orange room; **freeze** on ***"Darling,"***. The world drains to indigo while he stays lit with a warm rim light; the word is written in blood-red script | **a lamp clicks on**: a flickering pool of warm light blooms around his face (switch click, filament hum); shutter click on the freeze |
 | 17.38 | **A single drop of blood falls** through the dark in slow motion, **refracting Dexter's face upside-down inside it** | heartbeat, slow fall |
 | **19.12** | **The drop hits the water**: crown splash, rings, blood blooming in water that clears onto the kill-room close-up | **blood in water** (sub boom, bloop, splash) |
-| 20.20–21.16 | **I / DON'T / WISH / YOU / *WELL***: one cut per syllable (knife, blood slide, dark walk, red smirk, the stare). The line builds word by word across the cuts | **syllable slams** (a hit per word) |
+| 20.20–21.16 | **I / DON'T / WISH / YOU / *WELL***: one cut per syllable (knife, kill-room table, dark walk, red smirk, the stare). The line builds word by word across the cuts | **syllable slams** (a hit per word) |
 | 21.30–21.73 | Pull back into the rear-view mirror, the light leaves it | **loop**: the edit reopens on the same mirror |
+
+## Built-in review
+
+The first review used every-cut sheets and targeted stills on rendered frames:
+1. **Opening car interior:** read as confetti. The bokeh is now fewer, larger and softer, with A-pillars, and the mirror is larger.
+2. **Night-garden shot:** played like daylight. Exposure brought down (ev −0.55).
+3. **Rear-view-mirror push-in:** didn't finish before the next transition. Shortened.
+4. **Headlights:** a white bar flare. Toned down, and the white wash cut to one frame at 60%.
+5. **Light leak:** washed out the frame. Gentler.
+6. **Lyric words:** ran together ("DON'TKNOWIF"). Spacing and size fixed.
+7. **Hook line:** ran off the right edge. Re-laid as I DON'T WISH YOU / big serif *WELL*.
+8. **Blood drop:** rendered as a long "pipe" (a shape bug). It is now a real teardrop, larger, with Dexter refracted inside it.
+9. **Blood-in-water cloud:** looked like orange smoke. It is now dark, translucent ink.
+10. **"Darling" shot:** too dark to read his face. Replaced with the warm orange-room shot.
+11. **Daylight jungle "shh" shot:** clashed with the night look. Replaced with the red smirk.
+12. **Behind-the-subject PICK ME UP:** in a close-up, his head covered every word. Moved to a streetlight shot framed off-centre, with the words stacked on the open side and tucked behind his head.
+13. **Loop seam:** the bokeh and running rain jumped between the last and first frame. Their motion now wraps exactly once per loop.
+14. **Audio click at the loop seam:** found and removed (a 15 ms song fade-in at the wrap).
+
+### Checkpoint run 1: **NOT READY** (not shipped)
+
+Automated results: 9 of 10 criteria passed.
+- −13.4 LUFS / −3.2 dBTP after AAC.
+- 0 clicks at cuts and at the loop seam.
+- No frozen runs, and every shot centred.
+
+The text-over-face criterion failed (22 frames), and frame review found real problems behind part of it:
+- **BUT IT'S WHAT I overlapped GOD,** for a few frames. That line now exits quickly.
+- **The blood-slide close-up was so tight** that *I DON'T* sat on his chin. It was swapped for the kill-room table.
+- **Wiper transition:** it revealed the next shot on the wrong side of the blade. Fixed.
+- **Shadow pass into "Darling":** left posterized outlines on his face. Replaced with a **lamp clicking on**.
+- **"Tonight's the night.":** hard to read over the bright window. It now has a soft dark band behind it, at a larger size.
+- **Remaining text flags were false detections** low in the frame (on his shirt). These were checked on frames. QC now lists such low-placed detections separately rather than counting them silently.
+
+The edit was re-rendered and the checkpoint run again.
 
 ## Sound
 

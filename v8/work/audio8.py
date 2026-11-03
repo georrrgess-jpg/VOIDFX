@@ -280,6 +280,10 @@ def main():
         elif tin == "rainfocus":                                     # the rain swells as the glass comes into focus
             n_ = I(0.6); q = np.arange(n_) / SR; sw_ = rain_bed(n_, 317) * np.sin(np.pi * q / 0.6) ** 1.5
             place(fx, stereo(norm(sw_, -24)), t0 - 0.25)
+        elif tin == "lamp_on":                                       # a lamp switch clicks, the filament hums up
+            place(fx, stereo(A2.tick(-22, 390)), t0 - 0.02)
+            n_ = I(0.5); q = np.arange(n_) / SR; hm = (np.sin(2 * np.pi * 120 * q) + 0.4 * np.sin(2 * np.pi * 240 * q)) * np.minimum(1, q / 0.05) * np.exp(-q / 0.3)
+            place(fx, stereo(norm(hm, -33)), t0)
         elif tin == "shadow":
             place(fx, stereo(rev(A2.impact(-20, (55, 28), 0.5, 0.2, 318))[-I(0.25):]), t0 - 0.25); place(fx, A2.whoosh(0.4, -27, 319, False), t0 - 0.2)
         elif tin == "bloom":                                         # the drop hits the water: sub boom, bloop, splash, underwater swell
