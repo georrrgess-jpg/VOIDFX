@@ -126,3 +126,24 @@ python3 -m demucs -n htdemucs --two-stems=vocals -o v8/audio/sep v8/audio/p8_ope
 ```
 
 `p8_open.wav` is pack8 from 0 to 6 s at 44.1 kHz.
+
+### Checkpoint run 2 (final): **SHIP**
+
+| Criterion | Result |
+|---|---|
+| Format | PASS: 1080×1920, 60 fps, 1,304 frames, 21.733 s |
+| Decode | PASS: clean |
+| Loudness | PASS: −13.4 LUFS, true peak −3.2 dBTP (after AAC) |
+| Frozen runs | PASS: none |
+| Face centering | PASS: every shot |
+| Text over faces | PASS: 1 frame, inside the vertical whip's motion blur. 19 low-placed detections (a building, his shirt) were checked on frames and are false positives |
+| Audio clicks | PASS: 0 at 19 cuts and at the loop seam |
+| Loop seam | PASS: mirror in the dark car → the same mirror (blurred diff 2.0); bokeh and rain wrap exactly |
+| A/V length | PASS: 21.7333 s video vs 21.7330 s audio stream |
+| Source ranges | PASS: every shot sits inside its own source shot |
+| Near-black | 2 frames, by design: the lamp switching on |
+| Visual sign-off | PASS: 36 key frames across the whole edit, plus every transition, pulled from the encoded MP4 |
+
+**Limitations:**
+- **I can't watch or listen.** Everything was verified by frames and measurement. Watch once with sound before posting.
+- **Song quality:** the song comes from a phone screen recording of a YouTube upload, so its quality is whatever that recording captured. A clean copy of the track would raise it. Swap it in as `src/wish_you_well_rec.wav` (same timing from 0:00) and re-run `build.sh 8 audio video qc`.
