@@ -34,6 +34,12 @@ CAPS = []
 CAP_Y = (1370, 1472)                       # caption line centres (text band 1280-1640, clear of faces + TikTok UI)
 END_CAP = []                               # neon words [(WORD, edit t)] for the ending, [] = none
 
+# ---- text moments (v7 engine): dict(style="case"|"doors"|"luminol"|"casestamp"|<your own>, words=[(WORD, edit t, line)], end=t, emph=[...])
+TEXT = []
+CLOSE_T = None                             # edit time the slide-box lid slams (tin="slidebox_close")
+SONG_VOX, SONG_VOX_T0, VOX_MUTE = None, 0.0, None   # song stems dir (Demucs), its start (song s), and the edit window to swap in the instrumental
+VO_STEM_T0 = 0.0                           # start (source s) of the dialogue stem file
+
 # ---- engine knobs
 DROP_TITLE = None                          # chrome title word at the drop (e.g. "MIAMI"), None = none
 MONTAGE = (HDROP, H1 - 12)                 # half-beats with beat bounce, glints, light leaks, hits

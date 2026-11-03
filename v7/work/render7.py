@@ -3792,7 +3792,7 @@ def lay_words(out, f, words, y, style, emph, t_out, gap=None):
 
 def text7(out, f):
     t = f / FPS
-    for tx in E.TEXT:
+    for tx in getattr(E, "TEXT", []):
         st_ = tx["style"]; ws = tx["words"]; t0, t1 = ws[0][1] - 0.05, tx["end"]
         if st_ == "luminol" or not (t0 <= t < t1 + 0.2): continue
         if st_ == "case":
@@ -4122,7 +4122,7 @@ def evidence_markers(out, f, s):
             t[y0:y0 + nh, x0:x0 + nw, :3] *= (1 - nm[..., None] * 0.95)
             tiles.append(t)
         _EM["t"] = tiles
-    pos = [(250, 1540), (560, 1610), (850, 1525)]; hbs = [s["f0"] + 4, E.fe(E.th(546)), E.fe(E.th(548))]
+    pos = [(250, 1540), (560, 1610), (850, 1525)]; hbs = [s["f0"] + 4, E.fe(s["t0"] + 2 * E.HB), E.fe(s["t0"] + 4 * E.HB)]   # beats 0, +2, +4 half-beats
     for t_img, (x, y), fh_ in zip(_EM["t"], pos, hbs):
         k = f - fh_
         if k < 0: continue
@@ -4170,8 +4170,8 @@ def init_hits():
     HITS.clear()
     for i, h in enumerate(range(E.MONTAGE[0], E.MONTAGE[1], 8)):
         a = (26, 10, 14, 10, 12)[min(i, 4)]; HITS.append((E.fh(h), a, 4.5))
-    HITS.append((E.fe(E.CLOSE_T), 16, 3.5))                                              # lid slam
-    st_ = [t for t in E.TEXT if t["style"] == "casestamp"]
+    if getattr(E, "CLOSE_T", None) is not None: HITS.append((E.fe(E.CLOSE_T), 16, 3.5))   # lid slam
+    st_ = [t for t in getattr(E, "TEXT", []) if t["style"] == "casestamp"]
     if st_: HITS.append((E.fe(st_[0]["words"][0][1]) + 6, 12, 3.0))                      # stamp lands
 
 def main():

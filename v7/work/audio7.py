@@ -187,6 +187,12 @@ def music_track(song):
     p = np.cumsum(r) / SR; k1 = I(1.0) + PRE; p += (E.SONG_IN + 1.0) - p[k1]
     x = p * SR; i = np.clip(np.floor(x).astype(np.int64), 0, len(song) - 2); fr = (x - i)[:, None].astype(np.float32)
     out = song[i] * (1 - fr) + song[i + 1] * fr
+    if not (getattr(E, "SONG_VOX", None) and getattr(E, "VOX_MUTE", None)): out_ = out
+    else: out_ = None
+    if out_ is not None:                                               # no vocal swap in this edit
+        amp = np.ones_like(t); amp[t >= Te] = 0; m = (t >= Ts) & (t < Te); amp[m] = 0.35 + 0.65 * r[m]
+        lp = bq(out, "low", 1800, 2); ww = np.clip((t - Ts) / (Te - Ts), 0, 1)[:, None]; out = out * (1 - ww) + lp * ww
+        return (out * np.convolve(amp, np.ones(240) / 240, "same")[:, None]).astype(np.float32)
     # instrumental stem for the vocal-swap window
     sr_, nv = wf.read(f"{E.SONG_VOX}/no_vocals.wav"); nv = nv.astype(np.float32)
     if np.abs(nv).max() > 2: nv /= 32768
@@ -342,13 +348,13 @@ def main():
     # ---- graphics sounds: evidence markers clack down, plastic sheet rustles in, luminol hiss, blood hits splat, stamp thunk
     for s_ in E.SHOTS:
         if s_.get("markers"):
-            for k_, tm in enumerate((s_["f0"] / E.FPS + 4 / E.FPS, E.th(546), E.th(548))):
+            for k_, tm in enumerate((s_["f0"] / E.FPS + 4 / E.FPS, s_["t0"] + 2 * E.HB, s_["t0"] + 4 * E.HB)):
                 place(fx, stereo(A2.tick(-22, 120 + k_), -0.5 + 0.5 * k_), tm + 7 / E.FPS); place(fx, stereo(A2.impact(-29, (160, 90), 0.04, 0.6, 123 + k_)), tm + 7 / E.FPS)
         if s_.get("plastic"):
             n_ = I(0.5); q = np.arange(n_) / SR
             rus = bq(noise(n_, 126), "band", np.array([800, 6000]), 2) * (np.random.default_rng(127).random(n_) > 0.7) * np.sin(np.pi * q / 0.5)
             place(fx, stereo(norm(rus, -27), 0.2), s_["t0"] + 0.38)
-    for tx in E.TEXT:
+    for tx in getattr(E, "TEXT", []):
         if tx["style"] == "luminol":
             for k_, (w, wt, ln) in enumerate(tx["words"]):
                 n_ = I(0.18); q = np.arange(n_) / SR
@@ -365,7 +371,7 @@ def main():
         sp = bq(noise(n_, 140 + h), "band", np.array([400, 3000]), 2) * np.exp(-q / 0.035)
         place(fx, stereo(norm(sp, -31), 0.6 if (h // 4) % 2 else -0.6), E.th(h))
     # ---- typewriter keys on the case-note words, stamp hits on the single words, luminol shimmer, confession hit
-    for tx in E.TEXT:
+    for tx in getattr(E, "TEXT", []):
         for k_, (w, wt, ln) in enumerate(tx["words"]):
             if tx["style"] == "case" or (tx["style"] == "doors" and k_ == 0): place(fx, stereo(A2.tick(-30, 110 + k_), -0.3 + 0.12 * k_), wt)
             elif tx["style"] == "luminol": place(fx, stereo(A2.shimmer(0.7, -29)), wt)

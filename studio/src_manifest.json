@@ -1,0 +1,138 @@
+{
+ "note": "voidfx source library: put these in src/ with exactly these names (tools/setup_studio.sh verifies them)",
+ "files": [
+  {
+   "file": "blood_theme.mp3",
+   "bytes": 3491559,
+   "sha256": "ad47866bab962799ba2eedd54ee0db20334350fcbe68ecab438fd1c0befd2774",
+   "duration": "145.449796",
+   "uploaded_as": "Blood_Theme_Instrumental.mp3"
+  },
+  {
+   "file": "doakes.mp4",
+   "bytes": 15049684,
+   "sha256": "5cbb6b973037ec62d3a8ed9cc1d453363bc18170c1528dca9448a70fdddb519c",
+   "duration": "99.892245",
+   "uploaded_as": "Doakes_Catches_Dexter (scene)"
+  },
+  {
+   "file": "duvet.mp3",
+   "bytes": 3122940,
+   "sha256": "de5b8721137fa90be325f2cfd7e5bb921b52dc5b813a5c1a1d5727543ee37390",
+   "duration": "203.807347",
+   "uploaded_as": "B_a_-_Duvet_Lyrics.mp3"
+  },
+  {
+   "file": "flash_a.mp4",
+   "bytes": 24482173,
+   "sha256": "431e91e38d847e07e7d9ba5231190ede9ed462464e08cabe9d3e98f67e8672bf",
+   "duration": "102.167800",
+   "uploaded_as": "The Flash scene pack (one of two)"
+  },
+  {
+   "file": "flash_b.mp4",
+   "bytes": 24706752,
+   "sha256": "ade1fc472681e85b8c3032916b06a8ca0469a5a8e547c9ee5cba2a379eac6177",
+   "duration": "150.813605",
+   "uploaded_as": "The Flash scene pack (one of two)"
+  },
+  {
+   "file": "him_all_along.mp3",
+   "bytes": 3811297,
+   "sha256": "171bb83480cbb801a779b7932ff3cc40051edb5052bdc807066d55d87ad52409",
+   "duration": "158.772245",
+   "uploaded_as": "Gunna_-_Him_All_Along_Official_Visualizer.mp3"
+  },
+  {
+   "file": "matrix_funk_slowed.mp3",
+   "bytes": 1710078,
+   "sha256": "7d97e883f0867813ecf95699370779b2fc2bd4e08f6dae37711d73e505dd0838",
+   "duration": "102.400000",
+   "uploaded_as": "MATRIX_FUNK_SLOWED.mp3"
+  },
+  {
+   "file": "need_it.mp3",
+   "bytes": 4706566,
+   "sha256": "029a3b47e230a348d317d44048c1c60c4fdc1b05a44b1ab83391625bfe94bc1d",
+   "duration": "196.075102",
+   "uploaded_as": "Migos_-_Need_It (song)"
+  },
+  {
+   "file": "pack4_aesthetic.mp4",
+   "bytes": 18088314,
+   "sha256": "7712f0544d9dd60ea4b0586e7ca5c0d77cddb202a13a910c8b9946f64d0242fd",
+   "duration": "78.715646",
+   "uploaded_as": "Aesthetic_Dexter_Scenepack.mp4"
+  },
+  {
+   "file": "pack5_mixtape120.mp4",
+   "bytes": 17887483,
+   "sha256": "a3fb79e183c8c0d6292ba7de695faedbfe76ab2866fe73b37e4521c9668505bf",
+   "duration": "61.440000",
+   "uploaded_as": "Mixtape_Scenepack_4K_120FPS.mp4"
+  },
+  {
+   "file": "pack6_s5.mp4",
+   "bytes": 10486003,
+   "sha256": "e35a94b02af17ff72463c9e07ad5954b6e2f16dd776c60a9b9ceaef4be561e5c",
+   "duration": "99.358186",
+   "uploaded_as": "Dexter_morgan_scenepack_S5E1_2_1080p (S5 E1-2 pack)"
+  },
+  {
+   "file": "pack7_4k.mp4",
+   "bytes": 9903037,
+   "sha256": "1f87b2a81f9c8ae4ee27132bbd16cc2bc84373b2bbe3755a78a37020ba61fb1c",
+   "duration": "35.387211",
+   "uploaded_as": "DEXTER_MORGAN_SCENE_PACK_4K_60_FPS_4k_scenepackforedit.mp4"
+  },
+  {
+   "file": "pack8_s1.mp4",
+   "bytes": 29347191,
+   "sha256": "90c76ec07805f2d2bd52af0640ffa34f465009763a2c9035dba2b95603d13bb3",
+   "duration": "407.463764",
+   "uploaded_as": "Dexter_4k_60fps_All_Scenes_Dexter_Morgan_S1_Best__Most_Popular_Scenes_for_Edit_-_Scenepack_1.mp4"
+  },
+  {
+   "file": "reference_tiktok.mp4",
+   "bytes": 3491270,
+   "sha256": "175636e1329f0d9073edeb7c111258b31d5413c642bd14495a65620724974531",
+   "duration": "23.533333",
+   "uploaded_as": "v12044gd0000d9vh707og65vbajocleg.mp4 (reference TikTok)"
+  },
+  {
+   "file": "scenepack.mp4",
+   "bytes": 25326792,
+   "sha256": "92a212b8b5235b6242d48d2dc455994c3044f17f05c32dbf8b0feb65e7742849",
+   "duration": "191.959365",
+   "uploaded_as": "135_Scenes_Dexter_Morgan_Scenepack_1.mp4"
+  },
+  {
+   "file": "scenepack2_60fps.mp4",
+   "bytes": 17787951,
+   "sha256": "1abc9bbf9d79c821092150398fceeae7d9837b0d7baa03475dbee53c1bda400b",
+   "duration": "66.130431",
+   "uploaded_as": "4K_PACK.mp4 or topaz_Dexter_S1-S8.mp4 (v2 uploads)"
+  },
+  {
+   "file": "scenepack3_24fps.mp4",
+   "bytes": 7833789,
+   "sha256": "cd383f77b6df0f4fdd62744a59d529079bfc374ada0c4ce44fd001ea75ae9700",
+   "duration": "30.093061",
+   "uploaded_as": "4K_PACK.mp4 or topaz_Dexter_S1-S8.mp4 (v2 uploads)"
+  },
+  {
+   "file": "voidfx_logo.webp",
+   "bytes": 82230,
+   "sha256": "7ba47920bcb32ccdc679acc8782699502e126ec0ef63d091edb89cfae4651c2e",
+   "duration": null,
+   "uploaded_as": "voidfx logo (image)"
+  },
+  {
+   "file": "warmpop.mp3",
+   "bytes": 4154233,
+   "sha256": "faad874a760b46a0977c80925a7ff01658b16ba75d5f672525d89a7a96c812ab",
+   "duration": "173.061224",
+   "uploaded_as": "ESPRIT____George_Clanton_-_Warmpop.mp3"
+  }
+ ]
+}

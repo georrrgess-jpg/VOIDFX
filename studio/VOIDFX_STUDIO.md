@@ -1,0 +1,259 @@
+# voidfx studio handbook
+
+This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers the standard, every preference learned over seven edits and fourteen revision rounds, what works and what doesn't, and how to work twice as fast.
+
+Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (the engine) and `/CLAUDE.md` (the binding rules).
+
+---
+
+## 1. The benchmarks: watch these before you start
+
+| Edit | Folder | Why it is a benchmark |
+|---|---|---|
+| **HIM ALL ALONG** (Dexter × Gunna, rev 2) | `v7/` | Approved as a standard: *"The transitions were creative and well animated."* Physical, themed, Dexter-specific transitions (blood-slide box, plastic burst, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop), and a hero transition on the song's drop. |
+| **WARMPOP** (Dexter × George Clanton, rev 3) | `v6/` | Approved as a standard: *"wonderful transitions, animations, graphics, while maintaining the style that I like … I like how the music correlates to the edit. I like the text."* The amount of designed motion per second, the music-led structure, the eased two-line captions and the depth graphics. |
+| **SURPRISE** (Doakes × Need It, v4) | `v4/` | The first approved standard. A dialogue-led cold open that plays as **one continuous take**, the barrel → scope fly-through, and the pupil → iris loop. |
+
+Every new edit must **match or exceed** these. It must **not copy their look**: each edit gets its own grade, type and transition mix.
+
+---
+
+## 2. Non-negotiables
+
+1. **Format:**
+   - 9:16, 1080×1920, 60 fps.
+   - H.264 + AAC with fast-start (TikTok upload), plus a high-quality master (CRF 11 + PCM).
+   - **20–26 s**; don't run long.
+2. **Framing:**
+   - Faces centred (face at about 37% of frame height) and never cut off. YuNet tracks every shot.
+   - **Leave out shots whose face is wider than the 9:16 window**, or so tight the face fills the frame. Text has nowhere to go on those.
+3. **Loop:** seamless in picture and sound. Use a black → black wrap, or the same motif both ends: pupil dive → iris or glass opening, tape rewind → tape load, static → static.
+   - The audio is built **circularly**, room tone and drone run across the wrap, and mastering runs on a wrapped copy.
+   - Audio and video are **exactly** the same length.
+   - **Never use an outro card.**
+4. **Logo:**
+   - The voidfx logo appears **once**, as a transition: slam in, then fly through the "o".
+   - **Never recolour, retheme or restyle it.** Use `src/voidfx_logo.webp` exactly as supplied (`tin="logo_orig"`).
+   - No constant watermark.
+5. **Text:**
+   - Every word **eases in**: fade + rise + blur-to-sharp. Nothing pops on.
+   - Readable size and contrast, inside the 1240–1640 px band, clear of faces and TikTok's UI.
+   - Each text moment gets its own designed animation.
+6. **No labels:** no name tags, speaker chips, "who is who", counters or timecodes. No stamps sitting on top of captions.
+7. **Transitions:**
+   - Pronounced, designed and **going through something**.
+   - **Every transition has its own sound.**
+   - No plain hard cuts in quiet or dialogue sections.
+8. **Sound:**
+   - Smooth and clean; the song is edited on its beat grid.
+   - Dialogue is cleaned (Demucs stem), levelled, with equal-power fades.
+   - **−13 LUFS, true peak ≤ −2.5 dBTP, measured after AAC.** Keep margin; aim for −3.0 or lower.
+9. **Review before delivery:** run the ship checkpoint (section 7), then a visual sign-off on frames pulled from the **encoded** file. If anything fails, fix it and re-render. Never ship on the automated pass alone.
+10. **Honesty:** you can't watch or listen. Say what was verified by frames and measurement, and ask the owner to watch once with sound.
+
+---
+
+## 3. What the owner likes (with evidence)
+
+- **Transitions as the star.**
+  - *"crazy transitions that are visually appealing"* and *"the kind where the viewer wonders 'how did they do that'"*.
+  - Approved: the barrel → scope (v4); the fly-through-the-"o" logo (v4, with the original colours); the pupil dive; the CRT fly-through (v6); the cube, the sun stripes and the film strip (v6); and in v7 the blood-slide box, the plastic burst, the zipper, blood on the lens, the M99 blink and the magnifier.
+- **Themed, physical transitions.** Things from the character's world that the camera passes through, not abstract overlays.
+  - For Dexter that means blood slides, kill-room plastic, the knife, body bags, luminol, M99 and Harry's code.
+  - For The Flash it meant lightning, the speed force and the emblem.
+- **Lots of designed motion.** He repeatedly asks for **"more transitions, animations and graphics"** and **"more sound effects"**. Density is welcome when every move is clean.
+- **Graphics that add depth:**
+  - v6: the vapor-world tune-in behind the person matte, palm shadows, bokeh motes, neon light spill and the VHS pause;
+  - v7: evidence markers and the CASE CLOSED stamp.
+- **Music that drives the structure.** The cold open sits on the song's build; the **biggest transition lands on the song's biggest moment** (the full mix returning); cuts sit on the half-beat grid. *"I like how the music correlates to the edit."*
+- **Meaningful text:**
+  - the character's own words as two-line eased captions (v6);
+  - the song's hook as a designed title (HIM ALL ALONG in luminol);
+  - lyric keywords whose animation acts out the meaning (v5: FALLING drops, FADING dissolves, DROWNING ripples).
+- **Detailed, themed text treatments:**
+  - footage-in-letters knockout type;
+  - blood-fill and drip, then shattering with the glass;
+  - light-sweep reveals;
+  - fly-in from the camera;
+  - chrome titles;
+  - neon tubes that flicker on per word;
+  - engraved brass (CLOSE on the slide box).
+- **A strong opening**, either dialogue-led as one continuous take (v4) or a striking visual hook (the magnifier on his eye, the VHS tape load).
+- **Polish:** halation and bloom, grain, anamorphic streaks, colour grades with a clear identity, and smooth sound.
+- **Built-in review passes.** He wants the studio to catch problems itself rather than rely on rounds of feedback, and to judge whether the edit is ready to ship before it is sent.
+
+## 4. What the owner rejected: never do these
+
+| Rejected | Edit | Lesson |
+|---|---|---|
+| A sloppy, choppy opening; dialogue clips "stuck together with Elmer's glue" | v3 | Dialogue must play as **one continuous take** (J-cuts, dissolves, a matched-angle morph, equal-power audio fades). |
+| Name labels ("who is Doakes / who is Dexter"), a stamp under the captions | v3 | No labels. Text never sits under or over other text. |
+| Text that just appears; the TARGET ACQUIRED / I NEED IT moment "off" and not pronounced | v3 | Every word eases in. Big moments get big, designed, continuous moves. |
+| A constant watermark; an outro card that broke the loop | v3 | Logo once, as a transition. No outro. |
+| The BLEED IT animation was invisible or weak; a sloppy cut before "What can I say" | v4 rev | Check every text moment on stills. Never cut mid-dialogue without a designed join. |
+| An explosion or starburst transition | v5 | Avoid generic bursts. Bursts only when they are physical and themed (the v7 plastic burst was liked). |
+| A title card ("THE FLASH: FASTEST MAN ALIVE") | v5 | No title cards. Open on a striking move instead. |
+| Slow-motion run-at-camera and floating shots | v5 | Cut weak or odd footage even if it is "on theme". |
+| Generic lyric words; wrong lyric ("think a thing" for "feel a thing") | v5 | Use meaningful phrases. Verify lyrics on the isolated vocal and the official lyrics. |
+| Falling letters that weren't cool enough | v5 rev | Detailed, multi-stage text animation: plunge → slam → tumble. |
+| Japanese subtitle lines | v6 | No foreign-language subtitle lines. |
+| The VHS "SP 0:00:10" timer | v6 | No counters or timecodes. |
+| Rapid dialogue run "Dramatic. Cryptic. Playful." with quick cuts | v7 | Dialogue: one or two short lines at most. No single-word stamp runs. |
+| A talking "jar of blood" shot: *"pointless, especially with him talking"* | v7 | Every shot must earn its place. Don't hold on dialogue that doesn't set up the song. |
+| The ending where Dexter "just says he's a serial killer" | v7 | Let the visuals carry the ending (stamp, glass, pupil dive). Don't end on exposition. |
+| STAY STRONG plus red strings converging on his face with a target ring | v7 | No gimmick overlays on the face. |
+| The voidfx logo turned blue (UV recolour) | v7 | **Never restyle the logo.** |
+| Plain steel doors for CLOSE | v7 | Make the big text moments **character-themed and detailed** (the rosewood blood-slide box with an engraved brass plate was the fix). |
+
+## 5. What works: craft lessons
+
+**Concept:**
+- One sentence ties picture, sound and text together:
+  - v6: *"a VHS Miami daydream: he disappears, the tape rewinds"*;
+  - v7: *"the evidence points back at him"*.
+- Pick it before choosing shots.
+
+**Song:**
+- Use the **good part**: the drop or hook where the full mix or bass returns.
+- `tools/song_map.py` finds it in 3 s (biggest section change, whole-bar windows of 20–27 s with the drop at 33–47%).
+- A breakdown or filtered build before the drop gives a natural cold open for dialogue or titles.
+
+**Structure:**
+- **Cold open (35–45%):** a hook shot, a line or lyric, two or three investigation or build shots, the title or hook text.
+- **Hero transition on the drop.**
+- **Montage on the beat** (one designed transition every 2–4 half-beats).
+- **Ending motif** that loops into the opening.
+
+**Dialogue:**
+- One short line that sets up the hook works best: *"Could it be him?"* → **HIM ALL ALONG**.
+- Lip-sync it on its own shot, and swap the singer's vocal to the song's instrumental stem underneath so the beat never stops.
+
+**Transitions:**
+- Vary them. Never repeat one within an edit except as a deliberate motif.
+- Physical metaphors from the character's world rate highest.
+- Each needs:
+  - a pre-roll (the outgoing shot starts reacting 6–15 frames before the cut);
+  - a post-roll (the incoming shot settles over 8–18 frames);
+  - its own sound.
+
+**Text:**
+- Two-line lockups, word-timed to speech or lyrics with Whisper word times.
+- Emphasis words get colour or a material (chrome, blood, brass, neon).
+- Exit with a fade or a designed disintegration.
+
+**Graphics:**
+- Depth layers that react to the person matte (MODNet), plus beat-synced accents (glints, blood hits, markers).
+- The finish pass (halation, grain, vignette) gives every edit its signature.
+
+**Sound design:**
+- A drone or room tone bed across the whole loop.
+- Every transition has a layered sound: whoosh + impact + a material sound (glass, wood, plastic, zipper, paper).
+- Text ticks (typewriter for case notes).
+- A sub drop and riser into the drop.
+- The ending: a tape-stop, rewind or heartbeat into the loop.
+
+## 6. What doesn't work: technical pitfalls
+
+The full list is in `/docs/TOOLKIT.md` §4. The most expensive ones:
+- **Packs hide cuts.** Jump cuts the shot detector misses cause ghost frames, and source ranges running past a cut put another actor on screen. `tools/check_sources.py` (run by `build.sh prep`) catches both. The sampler never interpolates across hard cuts.
+- **Text over very tight close-ups:** swap the shot; don't shrink the type.
+- **Distortion transitions** (bulges, barrels) must not warp titles. Weight the distortion to the centre.
+- **Particles** (blood spray, dust) must move fast and fade, or they read as blobs.
+- **The last `render()` in the file wins.** Insert routing in the active one.
+- **Optical flow breaks on lighting flashes:** blend those pairs instead.
+- **Lyrics:** Whisper mishears rap. Transcribe the **Demucs vocal stem** in short windows, with the song title as the initial prompt, and verify.
+- **True peak after AAC** is about 0.3–0.8 dB hotter than the WAV. Limit at −4 dB if the check is within 0.5 dB of −2.5.
+
+---
+
+## 7. The ship checkpoint (run on the encoded MP4)
+
+`bash tools/build.sh N video qc` runs `qcN.py`, which checks:
+- format and frame count;
+- clean decode;
+- loudness and true peak after AAC;
+- frozen runs;
+- face centering per shot (subject-less `face=None` shots are skipped);
+- text over faces (per-shot summary; check every flag on frames);
+- clicks at every cut and at the loop seam;
+- the loop-seam picture;
+- audio and video length.
+
+Then the **visual sign-off**:
+- pull frames from the **encoded** file around every transition, title, the drop and the loop;
+- look at them;
+- fix and re-render anything weak.
+
+Only then deliver.
+
+## 8. Working at twice the speed
+
+**One brief per edit.** Use `START_PROMPT.md`: song, packs, theme ideas and must-haves in one message, so the studio never needs to ask.
+
+**Front-load the rules.** This handbook plus the rejected list in §4 removes most revision rounds. v7 needed one round of notes; aim for zero.
+
+**The fast loop** (wall-clock on the 4-core cloud box):
+
+| Step | Command | Time |
+|---|---|---|
+| Scaffold | `python3 tools/new_edit.py N SLUG "TITLE"` | 1 s |
+| Map the song | `python3 tools/song_map.py src/SONG.mp3 vN/work` | 3 s |
+| Shot list and contact sheets (new packs only; cached JSON for known packs) | `python3 vN/work/analyze.py src/PACK.mp4 TAG` | ~1 min/pack |
+| Dialogue or lyrics on a vocal stem | `python3 tools/transcribe.py vN NAME MEDIA --start S --dur D` | 1–3 min |
+| Write the EDL from `SCENE_PACKS.md` proven shots | | 10–20 min |
+| Audit, tracks, sheets of every cut | `bash tools/build.sh N prep auto` | ~1 min |
+| Motion check | `bash tools/build.sh N clip:A:B` | ~20 s |
+| Sound | `bash tools/build.sh N audio` | ~7 s |
+| **One** final render + checkpoint | `bash tools/build.sh N video qc` | ~10 min |
+
+**Two studios in parallel:**
+- Each studio works on its **own git branch** and its **own version range** (Studio 1: v8, v9, …; Studio 2: v101, v102, …), so folders never collide.
+- Shared engine changes go into the newest benchmark's files and the `tools/`. Merge them through a PR.
+
+**Give feedback in one message,** listing every change. The studio applies them all in one revision and runs one checkpoint.
+
+**Don't re-analyse known packs.** `vN/work/shots_*.json` and the transcripts are committed; copy them into the new edit.
+
+## 9. Style bank: looks already used (don't repeat them)
+
+| Edit | Look |
+|---|---|
+| v1 THE MASK SLIPS | warm cinematic, blood red |
+| v2 THE DARK PASSENGER | comic-ink / halftone, 16:9 + 9:16 |
+| v3/v4 SURPRISE | night thriller, scope / barrel, glass shatter, chrome-red type |
+| v5 FASTEST | amber/gold lightning over deep teal (The Flash) |
+| v6 WARMPOP | pastel vapor + VHS (chroma bleed, scanlines, CRT, neon) |
+| v7 HIM ALL ALONG | forensic noir (drained cold colour, blood red only, UV luminol, case-file type) |
+
+Fresh directions for future edits:
+- 16 mm film burn / home movie (Harry flashbacks);
+- red-and-black ink wash with Japanese-print restraint (no CJK text);
+- surveillance / CCTV night-vision;
+- chalk outline / crime-scene diagram;
+- blueprint / technical drawing;
+- cold winter teal (Trinity season);
+- Sunshine State postcard;
+- a black-and-white newspaper "BAY HARBOR BUTCHER" press look;
+- an X-ray or MRI medical look.
+
+## 10. Songs used so far
+
+| Edit | Song | Tempo | Window used | Drop / hero moment |
+|---|---|---|---|---|
+| v1 | Blood Theme (instrumental) | pulse grid 0.333 s | 22 s | hard stop as the "shh" |
+| v2 | Matrix Funk (slowed ×1.126) | 102.8 BPM | 4 bars + drop | drop after the bass-less intro |
+| v3/v4 | Migos "Need It" | 74 BPM | 25 s | 11.06 s, the gunshot |
+| v5 | bôa "Duvet" | 93 BPM | half-beats 208–288 (10 bars) | "I am falling" |
+| v6 | George Clanton "Warmpop" | 90 BPM | half-beats 416–496 (2:18.9–2:45.5) | 2:29.5, full mix returns → CRT dive |
+| v7 | Gunna "Him All Along" | 130 BPM | half-beats 528–640 (2:01.9–2:27.8, 14 bars) | 2:13.0, +17 dB return → plastic burst |
+
+## 11. Communication
+
+- Short progress lines while working. No long code in chat.
+- **Final message:**
+  1. what the edit is (one paragraph);
+  2. what changed or what's new;
+  3. what the review passes caught and fixed;
+  4. the measured checkpoint numbers;
+  5. a request to watch once with sound.
+- Name every file path in full. Commit and push to the session's branch.

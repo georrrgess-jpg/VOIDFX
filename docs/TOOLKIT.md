@@ -1,6 +1,6 @@
 # voidfx toolkit: how an edit gets made (fast)
 
-The engine lives in the benchmark edit `v6/work/` (WARMPOP). New edits copy it with `tools/new_edit.py` and change only their EDL. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix.
+The engine lives in the newest benchmark edit, `v7/work/` (HIM ALL ALONG). It contains every v4–v7 transition and graphic. New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
 
 ## 1. Pipeline and timings
 

@@ -1,4 +1,4 @@
-"""Scaffold a new voidfx edit from the current benchmark engine (v6 WARMPOP).
+"""Scaffold a new voidfx edit from the newest benchmark engine (v7 HIM ALL ALONG: every v4-v7 transition + graphics).
 
 Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song"
         e.g. python3 tools/new_edit.py 7 night_drive_dexter "NIGHT DRIVE — Dexter × Song"
@@ -9,23 +9,24 @@ output file name from the EDL (VER, SLUG), so nothing else needs renaming.
 import os, sys, re, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE = "v6"                                                     # benchmark engine to copy from
+BASE = "v7"                                                     # newest benchmark engine (superset of v6)
 n, slug, title = sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
 V = f"v{n}"; D = f"{ROOT}/{V}"
 if os.path.exists(f"{D}/work/edl{n}.py"): sys.exit(f"{V} already exists — refusing to overwrite")
 for sub in ("work", "frames", "audio", "out"): os.makedirs(f"{D}/{sub}", exist_ok=True)
 
+BN = BASE[1:]
 def port(src, dst, extra=()):
     s = open(f"{ROOT}/{BASE}/work/{src}").read()
-    s = s.replace("import edl6 as E", f"import edl{n} as E")
+    s = s.replace(f"import edl{BN} as E", f"import edl{n} as E")
     for a, b in extra: s = s.replace(a, b)
     open(f"{D}/work/{dst}", "w").write(s)
 
-port("render6.py", f"render{n}.py")
-port("audio6.py", f"audio{n}.py", [('"""Soundtrack for WARMPOP (voidfx v6)', f'"""Soundtrack for {title} (voidfx {V}) — ported from the v6 engine.\nv6 notes:')])
-port("qc6.py", f"qc{n}.py", [("Usage: python3 v6/work/qc6.py v6/out/warmpop_dexter_voidfx_9x16.mp4", f"Usage: python3 {V}/work/qc{n}.py {V}/out/{slug}_voidfx_9x16.mp4")])
+port(f"render{BN}.py", f"render{n}.py")
+port(f"audio{BN}.py", f"audio{n}.py", [('"""Soundtrack for', f'"""[{title} (voidfx {V}) — ported from the {BASE} engine; rewrite the sound design below]\nBenchmark notes: Soundtrack for')])
+port(f"qc{BN}.py", f"qc{n}.py")
 shutil.copy(f"{ROOT}/{BASE}/work/facetrack.py", f"{D}/work/facetrack.py")
-port("analyze.py", "analyze.py", [('f"v6/work/', f'f"{V}/work/'), ('f"v6/frames/', f'f"{V}/frames/')])
+port("analyze.py", "analyze.py", [(f'f"{BASE}/work/', f'f"{V}/work/'), (f'f"{BASE}/frames/', f'f"{V}/frames/'), ('f"v6/work/', f'f"{V}/work/'), ('f"v6/frames/', f'f"{V}/frames/')])
 
 t = open(f"{ROOT}/tools/edl_template.py").read()
 t = t.replace("{{TITLE}}", title).replace("{{VER}}", V).replace("{{SLUG}}", slug).replace("{{N}}", n)
