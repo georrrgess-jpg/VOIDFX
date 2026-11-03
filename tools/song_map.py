@@ -48,7 +48,7 @@ drops = sorted([b_ for b_ in bars if b_["jump"] >= 5], key=lambda q: -q["jump"])
 # ---- candidate windows: whole bars, 20-27 s, drop at 35-45 % of the edit
 wins = []
 for d in drops:
-    for nb in (8, 9, 10):
+    for nb in range(int(np.ceil(20 / (8 * P))), int(27.5 // (8 * P)) + 1):      # every whole-bar length that gives 20-27.5 s
         L = nb * 8 * P
         if not 20 <= L <= 27.5: continue
         for pre in range(2, nb):

@@ -1,0 +1,118 @@
+# HIM ALL ALONG — Dexter × Gunna "Him All Along" (voidfx v7, 9:16)
+
+This is a 25.84 s, 1080×1920, 60 fps TikTok edit built to `/CLAUDE.md`, with benchmarks v6 (WARMPOP) and v4 (SURPRISE). It uses the two new packs: the S1 4K pack (`src/pack8_s1.mp4`) and the 4K 60 fps pack (`src/pack7_4k.mp4`).
+
+## Concept: the evidence points back at him
+
+The friendly blood-spatter analyst investigates, and the evidence keeps pointing at Dexter himself. The look is **forensic noir**, new for this edit and unlike v6's pastel VHS:
+- drained cold colour and teal-black shadows;
+- blood red is the only warm colour;
+- UV-luminol blue-white for the "evidence";
+- red halation and a monospaced case-note type.
+
+**Act 1, investigation.** This plays over the song's vocal breakdown.
+- The edit opens through a magnifying glass on his eye. Gunna: *"on the way to reaching my goals … open … close"*, and steel doors slam on "close".
+- Dexter's own lines, lip-synced, take over the beat (Gunna's vocal steps aside): *"A jar of blood. Dramatic. Cryptic. Playful. Could it be him?"*
+- Gunna answers *"stay strong"*: blood-spatter strings run to the point of origin, which is Dexter's face.
+- *"HIM ALL ALONG"* glows in luminol on hanging kill-room plastic.
+
+**Act 2, the drop.** The plastic **rips open** on the song's biggest return: 2:13, +17 dB, found by `tools/song_map.py`. A kill-room montage follows on the beat.
+
+**Act 3, confession.** *"I'm a serial killer."* (lip-synced). The camera dives into his pupil and goes to black, and the loop re-opens through the magnifying glass on his eye.
+
+## Song window
+
+130 BPM, half-beats 528 → 640: **14 whole bars**, 2:01.9 → 2:27.8, so the loop jumps bar 80 → bar 66 in tempo. The drop is at 11.08 s, h576, bar 72.
+
+## Timeline
+
+| Time | Picture | Transition in (each has its own sound) |
+|---|---|---|
+| 0.00 | His eye through a **magnifying glass** (the lens stays on screen as a frame). Gunna: *on the way to reaching my goals* | **Lens opens from black** (glass ring) |
+| 1.85 | Blood slide held up to the light | **Microscope**: dive into his eye → red blood cells under a reticle → out of the drop on the slide (servo, focus clicks) |
+| 3.69 | *"A jar of blood."* (lip-synced) | **Steel doors** slam shut on "CLOSE", then swing open (slam, creak) |
+| 5.08 | Crime-scene tape. *"Dramatic."* | **Redaction bars** slam across and wipe off (marker strokes) |
+| 5.54 | Lit red at the desk. *"Cryptic."* | **UV luminol sweep**: a blacklight beam crosses the frame and hidden spatter fluoresces (lamp buzz) |
+| 6.00 | Lollipop. *"Playful."* | **Fingerprint**: ridges ripple outward with the next shot between them (scanner) |
+| 6.46 | Studying the slide. *"Could it be him?"* | **Crime-scene tape snaps** as the camera pushes through (stretch → snap) |
+| 9.23 | His smirk. *"stay strong"*, then **HIM ALL ALONG** in luminol on the plastic sheet | **String method**: stains shoot red strings to the point of origin, his face, with a target ring (string twangs) |
+| 11.08 | **Drop:** red kill room | **Plastic rips open** (riser, rip, sub impact) |
+| 12.00 | Over the table | **Knife slash** (swish, steel ring) |
+| 12.92 | Plastic-wrapped room | **Evidence board**: pinned photos, red string to the next photo (pins, string pull) |
+| 13.84 | Overhead on the table | **Shadow pass** |
+| 14.77 | Night drive, lit red | **Headlight streaks** (passing cars) |
+| 16.61 | South Beach at night | **voidfx logo revealed by UV light**, fly through the "o" (the only logo appearance) |
+| 17.54 | Sweat, syringe | **Crime-scene polaroid** (flash, shutter) |
+| 19.38 | Green-lit stare | **Forensic scanner** line (scan sweep) |
+| 20.31 | Looking up, lit red | **Luminol negative strobe** on the beat (flash bulbs) |
+| 22.15 | *"I'm a serial killer."* (lip-synced) | **Blood-slide box**: the frame shrinks into a drop on a glass slide, glides to the next slide, dives in (glass clinks) |
+| 25.4 → 25.84 | Into his pupil → black → loop | **Pupil dive**, a tape-stop of the song, heartbeat |
+
+**Graphics:**
+- a **forensic viewfinder** through act 1: corner brackets and a moving measuring ruler;
+- **blood spatter** hits the edge of frame on the montage beats;
+- red **halation** on highlights;
+- the magnifying-glass lens frame;
+- hanging kill-room plastic with luminol type.
+
+## Text
+
+Every word eases in on its sung or spoken time (fade + rise + blur-to-sharp), inside the 1240–1600 px band. Each moment has its own design:
+- **Case-note lockups** in monospaced type (ON THE WAY TO / REACHING MY **GOALS**, A JAR OF **BLOOD.**, COULD IT BE / **HIM?**, STAY **STRONG**), with a blinking case-file caret and typewriter clicks.
+- **Stamp words** (DRAMATIC. CRYPTIC. PLAYFUL.) punch in with a blood-red offset echo.
+- **OPEN / CLOSE** on the steel doors.
+- **HIM ALL ALONG** in luminol: a UV sweep reveals each word, smeared and dripping.
+- **I'M A / SERIAL KILLER.** with dripping blood-red type.
+
+## Sound
+
+- **Dialogue:** Dexter's lines come from a Demucs vocal stem of the pack audio, levelled to a speech-RMS target, with equal-power fades and a little room.
+- **Vocal swap:** Gunna's vocal is swapped for the song's own **instrumental stem** under Dexter's lines (equal-power swap), so the beat never stops. It returns on *"stay strong"*.
+- **Bed:** a dark room-tone drone runs through everything, including across the wrap, with a heartbeat under act 1.
+- **Every transition and text moment has its own synthesised sound.**
+- **Ending:** a tape-stop into the pupil dive.
+- **Build:** circular timeline, mastered on a wrapped copy to −13 LUFS with the true-peak limiter at −3.4 dB, measured after AAC.
+
+## Built-in review (while building)
+
+The every-cut review sheets (`build.sh 7 auto`) and targeted stills caught these before the final render:
+1. **Magnifier opening:** the 9:16 crop centred on his nose and the magnifying glass was lost. It was reframed onto the eye, with the glass kept on screen as a lens frame.
+2. **Plastic sheet:** it read as zebra stripes. It was rebuilt as a few soft swaying folds and creases.
+3. **Confession shot:** zoomed 1.75×, it was too soft. It was reduced to 1.12–1.36×.
+4. **SERIAL KILLER.:** it ran off both edges, so it was resized.
+5. **Headlight streaks:** they washed out to white; the flash was reduced.
+6. **Logo:** moved below the face.
+7. **Blood-slide box:** the drop showed the next shot's background instead of his face, so the inner framing was fixed.
+8. **Blood hits:** they were round blobs; now they are directional spatter with spines and mist.
+9. **True peak:** the AAC check read −2.5 dBTP, right at the limit, so the limiter was tightened.
+
+## Files
+
+- `out/him_all_along_dexter_voidfx_9x16.mp4`: upload version.
+- `out/him_all_along_dexter_voidfx_9x16_master.mov`: master.
+- `work/edl7.py`: every decision, including the dialogue placements and the word-timed text.
+- `work/render7.py`: the v6 engine plus the v7 forensic-noir toolkit (14 new transitions, graphics and type).
+- `work/audio7.py`: sound.
+- `work/qc7.py`: the review and ship checkpoint.
+- `work/song_map.json`, `tr_*.json`: song grid and transcripts.
+
+### Re-render
+
+```bash
+bash tools/build.sh 7 prep audio auto
+bash tools/build.sh 7 video qc
+```
+
+The stems need to exist first:
+
+```bash
+python3 -m demucs -n htdemucs --two-stems=vocals -o v7/audio/sep v7/audio/song_110_150.wav
+python3 -m demucs -n htdemucs --two-stems=vocals -o v7/audio/sep v7/audio/p8_dialogue.wav
+```
+
+`song_110_150.wav` is the song from 110 s to 150 s, and `p8_dialogue.wav` is pack8 from 318 s to 338 s, both at 44.1 kHz.
+
+## Limitations
+
+- **I can't watch or listen.** Everything was verified by frames and measurement. Watch once with sound before posting.
+- **Sources are 720p.** The magnifier shot is very soft in the source; the lens frame and grain make that read as intentional.

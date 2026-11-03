@@ -35,3 +35,9 @@ v6/audio/
 v6/frames/
 v6/out/
 v6/work/*.npz
+v7/work/*.log
+v7/audio/
+v7/frames/
+v7/out/
+v7/work/*.npz
+v7/work/*.npy
