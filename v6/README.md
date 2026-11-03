@@ -109,6 +109,21 @@ Frames from the encoded file still showed three defects:
 
 The edit was re-rendered and the checkpoint run again.
 
+### Checkpoint run 2 (final): **SHIP**
+
+| Criterion | Result |
+|---|---|
+| Format | PASS: 1080×1920, 60 fps, 1,600 frames, 26.667 s |
+| Decode | PASS: clean |
+| Loudness | PASS: −13.0 LUFS, true peak −2.9 dBTP (after AAC) |
+| Frozen runs | PASS: none |
+| Face centering | PASS: 0 flags across all 18 shots |
+| Text over faces | PASS: 0 frames |
+| Audio clicks | PASS: 0 at 17 cuts and at the loop seam |
+| Loop seam | PASS: static → static (blurred diff 4.3), −37.6 / −36.6 dBFS either side |
+| A/V length | PASS: identical (0.0 ms) |
+| Visual sign-off | PASS: every transition, the dissolve, the CRT drop, MIAMI, the neon logo, the neon words, the rewind and the static seam were checked on frames from the encoded MP4. All three run-1 defects are fixed. |
+
 ## Files
 
 - `out/warmpop_dexter_voidfx_9x16.mp4`: upload version (H.264 + AAC, fast-start).
