@@ -1,0 +1,307 @@
+"""Soundtrack for WARMPOP (voidfx v6): George Clanton "Warmpop" h416->h496 + Dexter's voice-over + VHS sound design.
+
+Circular build: the tape starts (VCR clunk, motor spin-up, the song winds up to speed from static), Dexter's S5
+voice-over (Demucs-isolated, cleaned, levelled, equal-power fades) rides the filtered build, the song's full mix
+returns at the drop through the CRT, every transition has its own sound, "It... was me." is lip-synced, then the
+tape rewinds (the song scrubs backwards), drops into static, and the static runs straight across the loop seam into
+the next tape start. A tape-hiss bed runs through everything, including the wrap. Mastered on a wrapped copy.
+"""
+import os, sys, math, subprocess
+import numpy as np, scipy.io.wavfile as wf, scipy.signal as ss
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, "/home/user/VOIDFX/v2/work")
+import edl6 as E
+import audio2 as A2
+
+SR = 48000; AD = f"{E.ROOT}/v6/audio"
+N = int(round(E.DUR_F / E.FPS * SR))
+PRE = 4800
+def I(t): return int(round(t * SR))
+db, bq, noise, env_exp = A2.db, A2.bq, A2.noise, A2.env_exp
+def place(out, sig, t):
+    A2.place(out, sig if sig.ndim == 2 else np.stack([sig, sig], 1), I(t) + PRE)
+def stereo(x, pan=0.0): return np.stack([x * (1 - 0.5 * pan), x * (1 + 0.5 * pan)], 1).astype(np.float32)
+def norm(y, level): return (y / (np.abs(y).max() + 1e-9) * db(level)).astype(np.float32)
+T = {s["n"]: s for s in E.SHOTS}
+
+# ------------------------------------------------------------------ VHS / transition sounds
+def static_hiss(dur, level=-22, seed=1):
+    n = I(dur); x = noise(n, seed)
+    x = bq(x, "band", np.array([900, 12000]), 2) + 0.35 * bq(noise(n, seed + 1), "low", 400, 2)
+    x = x * (1 + 0.25 * np.sign(np.sin(2 * np.pi * 59.94 * np.arange(n) / SR)))      # field-rate buzz in the snow
+    return stereo(norm(x, level), 0.0) * np.array([[1.0, 0.97]], np.float32)
+
+def vcr_clunk(level=-17, seed=3):
+    n = I(0.35); t = np.arange(n) / SR
+    thump = np.sin(2 * np.pi * np.cumsum(90 * np.exp(-t / 0.05) + 45) / SR) * env_exp(n, 0.06, 0.001)
+    click = bq(noise(n, seed), "band", np.array([1500, 6000]), 2) * env_exp(n, 0.008, 0.0002)
+    click2 = np.roll(click, I(0.045)) * 0.6
+    return norm(thump + 0.7 * click + click2, level)
+
+def motor(dur=0.45, level=-28, seed=4):
+    n = I(dur); t = np.arange(n) / SR; u = t / dur
+    f = 40 + 140 * u ** 0.7
+    y = np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.4 * np.sin(2 * np.pi * np.cumsum(2 * f) / SR)
+    y = y + 0.3 * bq(noise(n, seed), "band", np.array([800, 3000]), 2)
+    return norm(y * np.sin(np.pi * np.minimum(u * 1.6, 1)) ** 1.2 * (1 - u ** 4), level)
+
+def scrub(dur=0.14, level=-21, seed=5, top=5000):
+    """tape rewind squeal: noise through a rapidly wobbling band-pass + chirps."""
+    n = I(dur); t = np.arange(n) / SR; x = noise(n, seed); out = np.zeros(n, np.float32); blk = 256
+    for i in range(0, n, blk):
+        fc = 1400 + (top - 1400) * (0.5 + 0.5 * math.sin(2 * math.pi * 22 * t[i])) * (0.6 + 0.4 * t[i] / dur)
+        sos = ss.butter(2, [fc / 1.3 / (SR / 2), min(0.95, fc * 1.3 / (SR / 2))], "band", output="sos")
+        seg = x[max(0, i - 1024):i + blk]; y = ss.sosfilt(sos, seg)[-min(blk, n - i):]; out[i:i + len(y)] = y
+    chirp = np.sin(2 * np.pi * np.cumsum(2200 + 1800 * np.sin(2 * np.pi * 15 * t)) / SR) * 0.25
+    e = np.minimum(1, t / 0.01) * np.minimum(1, (dur - t) / 0.01)
+    return norm((out + chirp) * e, level)
+
+def flash_pop(level=-19, seed=6):
+    n = I(0.32); t = np.arange(n) / SR
+    whine = np.sin(2 * np.pi * np.cumsum(3000 + 5000 * (t / 0.16)) / SR) * (t < 0.16) * (t / 0.16) ** 2 * 0.25
+    pop = bq(noise(n, seed), "high", 1200, 2) * env_exp(n, 0.03, 0.0003) * (t >= 0.16)
+    thud = np.sin(2 * np.pi * 70 * t) * env_exp(n, 0.07, 0.001) * (t >= 0.16) * 0.8
+    return norm(whine + pop + thud, level)                        # pop lands 0.16 s in
+
+def crumble(dur=0.85, level=-22, seed=7):
+    """digital disintegration: bit-crushed grains sweeping left -> right (the blocks blow off to the right)."""
+    n = I(dur); out = np.zeros((n, 2), np.float32); rng = np.random.default_rng(seed)
+    for g in range(260):
+        u = rng.uniform(0, 1) ** 0.8; i = int(u * (n - I(0.03))); m = I(rng.uniform(0.006, 0.02))
+        f = rng.uniform(1200, 6500) * (1 - 0.4 * u); tt = np.arange(m) / SR
+        y = np.sign(np.sin(2 * np.pi * f * tt)) * np.exp(-tt / (m / SR / 3)) * rng.uniform(0.3, 1.0)
+        pan = -0.8 + 1.6 * u + rng.uniform(-0.2, 0.2)
+        out[i:i + m, 0] += y * (1 - 0.5 * pan); out[i:i + m, 1] += y * (1 + 0.5 * pan)
+    sweep = np.sin(2 * np.pi * np.cumsum(1800 * np.exp(-np.arange(n) / SR / 0.35) + 200) / SR) * np.sin(np.pi * np.arange(n) / n) * 0.25
+    out += stereo(sweep.astype(np.float32))
+    out = bq(out, "high", 300, 2)
+    return out / (np.abs(out).max() + 1e-9) * db(level)
+
+def drip(level=-17, seed=8):
+    """blood drop: falling whistle -> plip -> splash -> low thud (impact at 0.13 s)."""
+    n = I(0.7); t = np.arange(n) / SR; ti = 0.13
+    fall = np.sin(2 * np.pi * np.cumsum(900 - 500 * np.clip(t / ti, 0, 1)) / SR) * (t < ti) * (t / ti) ** 3 * 0.12
+    tp = np.clip(t - ti, 0, None)
+    plip = np.sin(2 * np.pi * np.cumsum(np.where(t >= ti, 1500 * np.exp(-tp / 0.012) + 350, 0)) / SR) * np.exp(-tp / 0.03) * (t >= ti)
+    splash = bq(noise(n, seed), "band", np.array([400, 4000]), 2) * np.exp(-tp / 0.08) * (t >= ti) * 0.5
+    thud = np.sin(2 * np.pi * 55 * tp) * np.exp(-tp / 0.18) * (t >= ti) * 0.9
+    return norm(fall + plip + splash + thud, level)
+
+def bloop(level=-20, seed=9):
+    n = I(0.5); t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * np.cumsum(220 + 700 * (1 - np.exp(-t / 0.05))) / SR) * env_exp(n, 0.09, 0.002)
+    rng = np.random.default_rng(seed)
+    for j in range(6):
+        i = I(0.08 + 0.05 * j + rng.uniform(0, 0.02)); m = I(0.03); tt = np.arange(m) / SR
+        y[i:i + m] += np.sin(2 * np.pi * np.cumsum(600 + 1400 * tt / 0.03 + 200 * j) / SR) * np.exp(-tt / 0.01) * 0.35
+    return norm(y, level)
+
+def melt_sweep(dur=0.32, level=-21, seed=10):
+    n = I(dur); u = np.arange(n) / n; x = noise(n, seed); out = np.zeros(n, np.float32); blk = 512
+    for i in range(0, n, blk):
+        fc = 6000 * (300 / 6000) ** u[i]
+        sos = ss.butter(2, [fc / 1.5 / (SR / 2), min(0.95, fc * 1.5 / (SR / 2))], "band", output="sos")
+        seg = x[max(0, i - 2048):i + blk]; y = ss.sosfilt(sos, seg)[-min(blk, n - i):]; out[i:i + len(y)] = y
+    out = np.repeat(out[::12], 12)[:n]                             # sample-and-hold crunch
+    return stereo(norm(out * np.sin(np.pi * u) ** 1.2, level), -0.2)
+
+def degauss(level=-18):
+    n = I(1.0); t = np.arange(n) / SR
+    y = np.sin(2 * np.pi * np.cumsum(62 - 18 * t) / SR) * (0.6 + 0.4 * np.sin(2 * np.pi * 7 * t)) * env_exp(n, 0.35, 0.004)
+    y = y + 0.4 * bq(noise(n, 11), "band", np.array([150, 900]), 2) * env_exp(n, 0.08, 0.001)
+    return norm(y, level)
+
+def neon_buzz(dur=0.4, level=-27, pattern=(1, 0, 1, 1, 0, 1, 1, 1)):
+    n = I(dur); t = np.arange(n) / SR
+    s = sum(np.sin(2 * np.pi * 120 * k * t) / k for k in range(1, 10)) + 0.4 * bq(noise(n, 12), "band", np.array([2500, 8000]), 2)
+    g = np.zeros(n, np.float32); fpf = SR / E.FPS
+    for i, v in enumerate(pattern): g[int(i * fpf):int((i + 1) * fpf)] = v
+    g[int(len(pattern) * fpf):] = 1.0
+    g = np.convolve(g, np.ones(96) / 96, "same") * np.minimum(1, (dur - t) / 0.08)
+    return norm(s * g, level)
+
+def ting(level=-34, seed=0):
+    n = I(0.35); t = np.arange(n) / SR; f = 3500 + 900 * (seed % 3)
+    return norm((np.sin(2 * np.pi * f * t) + 0.5 * np.sin(2 * np.pi * f * 1.5 * t)) * env_exp(n, 0.08, 0.001), level)
+
+def soft_tick(level=-38, seed=0):
+    n = I(0.03); y = bq(noise(n, 300 + seed), "band", np.array([3000, 9000]), 2) * env_exp(n, 0.006, 0.0005)
+    return norm(y, level)
+
+def measure(p):
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", p, "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, text=True).stderr
+    return float(r.split("Integrated loudness:")[1].split("I:")[1].split("LUFS")[0]), float(r.split("True peak:")[1].split("Peak:")[1].split("dBFS")[0])
+
+# ------------------------------------------------------------------ music: tape spin-up ... tape rewind
+def music_track(song):
+    t = (np.arange(N + PRE) - PRE) / SR
+    Ta, Tb = 0.12, 0.46                                            # spin-up (picture: static ends at frame 8)
+    Ts = E.DUR - 40 / E.FPS; Tbrk = Ts + 0.06; Te = E.DUR - 8 / E.FPS   # rewind starts with the picture's REW
+    r = np.ones_like(t)
+    r[t < Ta] = 0
+    m = (t >= Ta) & (t < Tb); r[m] = ((t[m] - Ta) / (Tb - Ta)) ** 1.4
+    m = (t >= Ts) & (t < Tbrk); r[m] = 1 - (t[m] - Ts) / (Tbrk - Ts)
+    m = (t >= Tbrk) & (t < Te); r[m] = -7.0 * ((t[m] - Tbrk) / (Te - Tbrk)) ** 1.3
+    r[t >= Te] = 0
+    p = np.cumsum(r) / SR; k1 = I(1.0) + PRE; p += (E.SONG_IN + 1.0) - p[k1]
+    amp = np.ones_like(t)
+    m = t < Tb; amp[m] = np.clip(np.abs(r[m]), 0, 1) ** 0.6
+    m = (t >= Tbrk) & (t < Te); amp[m] = 0.55
+    amp[t >= Te] = 0
+    amp = np.convolve(amp, np.ones(240) / 240, "same").astype(np.float32)
+    x = p * SR; i = np.clip(np.floor(x).astype(np.int64), 0, len(song) - 2); fr = (x - i)[:, None].astype(np.float32)
+    song_lp = bq(song, "low", 2600, 4)
+    out = song[i] * (1 - fr) + song[i + 1] * fr
+    rw = (t >= Ts) & (t < Te + 0.01)
+    rev = song_lp[i] * (1 - fr) + song_lp[i + 1] * fr
+    out[rw] = bq(rev, "band", np.array([500, 7000]), 2)[rw] * 1.4
+    return (out * amp[:, None]).astype(np.float32)
+
+# ------------------------------------------------------------------ dialogue
+def vo_track():
+    sr, v = wf.read(f"{AD}/sep/htdemucs/pack6_clip/vocals.wav"); v = v.astype(np.float32)
+    if np.abs(v).max() > 2: v /= 32768
+    v = ss.resample_poly(v, 160, 147, axis=0).astype(np.float32)
+    v = bq(v, "high", 85, 2); v = bq(v, "low", 11000, 2)
+    vo = np.zeros((N + PRE, 2), np.float32); duck = np.zeros(N + PRE, np.float32)
+    for k, (a, b, at) in enumerate(E.VO):
+        seg = v[I(a):I(b)].mean(1)
+        # levelling: slow RMS envelope -> gentle upward/downward correction (about 2:1 around the target)
+        env = np.sqrt(np.convolve(seg ** 2, np.ones(I(0.08)) / I(0.08), "same")) + 1e-4
+        g = np.clip((db(-20) / env) ** 0.5, db(-6), db(9)); g = np.convolve(g, np.ones(I(0.05)) / I(0.05), "same")
+        seg = seg * g
+        nf = I(0.035); seg[:nf] *= np.sin(np.linspace(0, np.pi / 2, nf)) ** 2; seg[-nf:] *= np.cos(np.linspace(0, np.pi / 2, nf)) ** 2
+        env2 = np.sqrt(np.convolve(seg ** 2, np.ones(I(0.05)) / I(0.05), "same")); act = env2 > env2.max() * db(-24)
+        seg = seg / (np.sqrt((seg[act] ** 2).mean()) + 1e-9) * db(-17.5 if k < 2 else -16.0)   # speech RMS target
+        pk = np.abs(seg).max(); seg = np.tanh(seg / max(pk, 1e-9) * 1.4) / np.tanh(1.4) * pk if pk > db(-2) else seg
+        place(vo, stereo(seg), at)
+        d0, d1 = I(at) + PRE, I(at + (b - a)) + PRE
+        duck[d0:d1] = 1.0 if k < 2 else 1.25
+    wet = A2.conv(vo, A2.ir(0.45, seed=31)) * db(-17)            # small dreamy plate on the voice-over
+    vo = vo + wet
+    # smooth duck envelope (120 ms attack / 300 ms release)
+    sm = np.convolve(duck, np.hanning(I(0.25)) / np.hanning(I(0.25)).sum(), "same")
+    return vo, sm
+
+def main():
+    sr, song = wf.read(f"{AD}/song48.wav"); song = song.astype(np.float32)
+    mus = music_track(song) * db(-1.5)
+    vo, duck = vo_track()
+    mus = mus * db(-6.5 * np.clip(duck, 0, 1.3))[:, None]
+    fx = np.zeros((N + PRE, 2), np.float32)
+    # tape-hiss bed through everything (continues across the wrap), a little hum before the drop
+    hiss = bq(noise(N + PRE, 90), "band", np.array([2500, 11000]), 2)
+    hiss = np.stack([hiss, bq(noise(N + PRE, 91), "band", np.array([2500, 11000]), 2)], 1)
+    fx += hiss / np.abs(hiss).max() * db(-44)
+    n = I(E.th(E.HDROP)); tt = np.arange(n) / SR
+    hum = (np.sin(2 * np.pi * 60 * tt) + 0.3 * np.sin(2 * np.pi * 180 * tt)) * np.minimum(1, (E.th(E.HDROP) - tt) / 0.3)
+    place(fx, stereo(norm(hum, -42)), 0.0)
+    # ---- loop seam + tape start: static (end -> start), clunk, motor spin-up
+    t_static = E.DUR - 8 / E.FPS
+    st_end = static_hiss(E.DUR - t_static + 0.01, -21, 1); nf = I(0.008)
+    st_end[:nf] *= np.sin(np.linspace(0, np.pi / 2, nf))[:, None] ** 2
+    place(fx, st_end, t_static)
+    d0 = PRE / SR; st0 = static_hiss(d0 + 0.36, -21, 2); tt = np.arange(len(st0)) / SR - d0
+    st0 *= np.where(tt < 0.18, 1.0, np.cos(np.clip((tt - 0.18) / 0.18, 0, 1) * np.pi / 2) ** 2)[:, None]   # tails off as the picture rolls in
+    place(fx, st0, -d0)
+    place(fx, stereo(vcr_clunk(-17)), 0.07)
+    place(fx, stereo(motor(0.45, -29), 0.2), 0.10)
+    # ---- every transition gets its own sound
+    for s in E.SHOTS:
+        tin, t0 = s.get("tin"), s["t0"]
+        if tin == "vhs_roll":
+            place(fx, stereo(scrub(0.22, -24, 20, 3500), -0.3), t0 - 5 / E.FPS)
+            place(fx, A2.whoosh(0.30, -24, 21, False), t0 - 0.12)
+        elif tin == "kaleido":
+            place(fx, A2.whoosh(0.36, -20, 22 + int(t0), True), t0 - 0.16)
+            place(fx, stereo(A2.shimmer(0.7, -30)), t0 - 0.05)
+        elif tin == "rewind":
+            place(fx, stereo(scrub(8 / E.FPS + 0.02, -20, 23 + int(t0)), 0.3), t0 - 8 / E.FPS)
+            place(fx, stereo(vcr_clunk(-24, 24)), t0)
+        elif tin == "flash":
+            place(fx, stereo(flash_pop(-19, 25 + int(t0))), t0 - 0.16)
+        elif tin == "tear":
+            place(fx, stereo(A2.glitch_burst(0.16, -20, 26)), t0 - 0.02)
+        elif tin == "crt":
+            k0 = t0 - 54 / E.FPS
+            place(fx, A2.whoosh(0.32, -23, 27, False), k0 - 0.02)                    # frame shrinks into the TV
+            n = I(t0 - k0); tt = np.arange(n) / SR                                    # CRT hum + flyback whine
+            crt = np.sin(2 * np.pi * 60 * tt) * 0.6 + 0.25 * np.sin(2 * np.pi * 120 * tt) + 0.05 * np.sin(2 * np.pi * 7800 * tt)
+            crt = crt * np.minimum(1, tt / 0.1) * np.minimum(1, (t0 - k0 - tt) / 0.05)
+            place(fx, stereo(norm(crt, -30)), k0)
+            place(fx, A2.riser(t0 - k0 - 0.05, -20), k0)
+            place(fx, A2.whoosh(0.22, -19, 28, True), t0 - 0.20)                      # dive into the screen
+            place(fx, stereo(A2.impact(-13, (66, 34), 0.55, 0.3, 29)), t0)            # drop
+            place(fx, stereo(degauss(-21)), t0 + 0.01)
+            place(fx, stereo(A2.shimmer(1.2, -29)), t0 + 0.03)
+        elif tin == "tiles":
+            for d in range(13):
+                place(fx, stereo(A2.tick(-31, d + int(t0)), -0.8 + 1.6 * d / 12), t0 + (d * 0.9 + 3) / E.FPS)
+            place(fx, A2.whoosh(0.25, -27, 30, True), t0 - 0.02)
+        elif tin == "neon_trace":
+            place(fx, stereo(neon_buzz(0.38, -26)), t0)
+            place(fx, stereo(A2.glitch_burst(0.08, -27, 31)), t0 + 0.02)
+        elif tin == "ink":
+            place(fx, stereo(drip(-16, 32)), t0 - 0.13)
+            place(fx, A2.whoosh(0.35, -27, 33, False), t0 + 0.05)
+        elif tin == "ripple":
+            place(fx, stereo(bloop(-19, 34)), t0 - 4 / E.FPS)
+            place(fx, A2.whoosh(0.28, -26, 35, True), t0 - 0.10)
+        elif tin == "logo":                                            # neon sign buzzes on, fly through the 'o'
+            place(fx, stereo(neon_buzz(12 / E.FPS + 0.1, -24, (0, 1, 0, 0, 1, 0, 1))), t0 - 12 / E.FPS)
+            place(fx, A2.whoosh(0.36, -19, 42, True), t0 - 0.22)
+            place(fx, stereo(A2.impact(-17, (74, 38), 0.35, 0.4, 43)), t0 + 0.02)
+            place(fx, stereo(A2.shimmer(1.0, -28)), t0 + 0.05)
+        elif tin == "pixel_sort":
+            place(fx, melt_sweep(0.34, -20, 36), t0 - 8 / E.FPS)
+            place(fx, stereo(A2.impact(-23, (80, 42), 0.22, 0.3, 37)), t0)
+    # ---- vanish ("disappear myself"): crumble that follows the dissolve
+    a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05; tv1 = T["blue_vanish"]["t1"] - 0.08
+    place(fx, crumble(tv1 - tv0 + 0.25, -21, 38), tv0)
+    place(fx, A2.riser(0.5, -30), tv0 - 0.5)
+    # ---- captions: a soft tick as each word eases in; MIAMI sweep; neon words; glints on the montage downbeats
+    for vi, words, s_end, emph, style in E.CAPS:
+        a, b_, at = E.VO[vi]
+        for j, (w, ws, ln) in enumerate(words): place(fx, stereo(soft_tick(-38, j), -0.3 + 0.12 * j), at + (ws - a))
+        if style == "vanish":
+            place(fx, crumble(0.5, -30, 39), at + (s_end - a) + 0.25 - 0.2)
+    place(fx, stereo(A2.shimmer(0.9, -29)), E.th(E.HDROP) + 12 / E.FPS)
+    for word, tw in E.END_CAP:
+        place(fx, stereo(neon_buzz(0.32, -29 if word != "ME." else -26, (1, 0, 1, 0, 1, 1, 0, 1, 1, 1))), tw)
+    for h in range(448, 484, 8):
+        if h != 448: place(fx, stereo(ting(-35, h), 0.5 if h % 16 else -0.5), E.th(h))
+    # ---- ending: the tape rewinds (the song scrubs backwards) -> static -> loop
+    Ts = E.DUR - 40 / E.FPS
+    place(fx, stereo(vcr_clunk(-22, 40)), Ts - 0.02)
+    place(fx, stereo(scrub(32 / E.FPS, -22, 41, 6000), 0.0), Ts + 0.03)
+    fx = np.tanh(fx * 1.3) / 1.3
+    full = mus + vo + fx
+    lead, mix = full[:PRE].copy(), full[PRE:].copy()
+    th_ = np.linspace(0, np.pi / 2, PRE)[:, None]                    # circular join (static -> static, hiss -> hiss)
+    mix[-PRE:] = mix[-PRE:] * np.cos(th_) + lead * np.sin(th_)
+    raw = f"{AD}/mix_raw.wav"; wf.write(raw, SR, mix.astype(np.float32))
+    Iraw, _ = measure(raw); gain = -13.0 - Iraw
+    P2 = SR; wrapped = np.vstack([mix[-P2:], mix, mix[:P2]])
+    wf.write(f"{AD}/mix_raw_wrapped.wav", SR, wrapped.astype(np.float32))
+    tmp = f"{AD}/mix_wrapped_master.wav"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f"{AD}/mix_raw_wrapped.wav", "-af", f"volume={gain:.2f}dB,aresample=192000,"
+                    f"alimiter=limit={db(-3.0):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr", "-c:a", "pcm_f32le", tmp], check=True)
+    _, mw = wf.read(tmp); mw = mw.astype(np.float32)
+    ref = wrapped[P2:P2 + SR, 0]; seg_ = mw[P2 - 2000:P2 + SR + 2000, 0]
+    lag = int(np.argmax(np.correlate(seg_, ref, mode="valid"))) - 2000
+    m = mw[P2 + lag:P2 + lag + N]
+    out = f"{AD}/mix.wav"; wf.write(out, SR, (np.clip(m, -1, 1) * (2 ** 31 - 1)).astype(np.int32))
+    wf.write(f"{AD}/mix_preroll.wav", SR, np.vstack([m[-1024:], m]).astype(np.float32))
+    test = f"{AD}/aac_test.m4a"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-itsoffset", str(-1024 / SR), "-i", f"{AD}/mix_preroll.wav", "-c:a", "aac", "-b:a", "256k", test], check=True)
+    I2, TP2 = measure(out); I3, TP3 = measure(test)
+    print(f"lag {lag}; raw {Iraw:.1f} -> {gain:+.1f} dB -> wav {I2:.1f} LUFS/{TP2:.1f} dBTP; AAC {I3:.1f} LUFS/{TP3:.1f} dBTP")
+    mm = m.mean(1); loop = np.concatenate([mm[-24000:], mm[:24000]]); d = np.abs(np.diff(loop))
+    print(f"loop seam step {d[23997:24003].max():.4f} vs local median {np.median(d[21600:26400]):.4f}")
+    # levels per section for a sanity check
+    def lv(a, b): x = m[I(a):I(b)]; return 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-9)
+    print("rms: intro", round(lv(0.2, 0.9), 1), "VO", round(lv(1.0, 6.5), 1), "build", round(lv(7, 10.5), 1), "drop", round(lv(10.7, 22.5), 1),
+          "it-was-me", round(lv(22.8, 25.4), 1), "rewind", round(lv(26.0, 26.5), 1), "static", round(lv(26.55, 26.66), 1))
+
+if __name__ == "__main__":
+    main()

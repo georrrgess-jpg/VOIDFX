@@ -30,3 +30,8 @@ v5/audio/
 v5/frames/
 v5/out/
 v5/work/*.npz
+v6/work/*.log
+v6/audio/
+v6/frames/
+v6/out/
+v6/work/*.npz
