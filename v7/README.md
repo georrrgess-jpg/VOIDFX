@@ -220,3 +220,17 @@ The only dialogue left is *"Could it be him?"*, answered by Gunna's "HIM ALL ALO
 - The stamp ink was too faint and was darkened.
 - A zipper shading bug was fixed.
 - True peak after AAC was −2.5 dBTP, so the limiter was tightened.
+
+### Revision 2 checkpoint: **SHIP**
+
+- **Automated criteria:** all PASS.
+  - 1,551 frames, clean decode.
+  - −13.6 LUFS / −3.6 dBTP after AAC.
+  - No frozen runs; every shot centred.
+  - 0 clicks at 17 cuts and at the loop seam.
+  - Audio and video identical in length.
+  - Every source range sits inside its own shot.
+- **Text flags (4 frames), all checked:**
+  - two known false positives: the slide's blood drops read as eyes, and the magnifier lens is entirely face;
+  - 2 frames where the magnifying glass, carrying his face, sweeps across the fading stamp.
+- **Visual sign-off:** 32 key frames pulled from the encoded MP4, covering the slide-box lid and engraving, the dive into the drop, the evidence markers, the blood on the lens, the bulge and burst, the zipper, the original logo, the M99 blink, the CASE CLOSED stamp and the magnifier-to-pupil ending.
