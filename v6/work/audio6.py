@@ -345,9 +345,39 @@ def main():
             place(fx, stereo(rev(A2.impact(-17, (55, 28), 0.5, 0.2, 83))[-I(0.25):]), t0 - 0.25)
             place(fx, A2.whoosh(0.4, -24, 84, False), t0 - 0.2)
             place(fx, stereo(A2.shimmer(0.9, -28)), t0 + 0.04)
+        elif tin == "filmstrip":                                       # projector rattle as the strip whips
+            for i in range(9): place(fx, stereo(A2.tick(-29, 90 + i), -0.4 + 0.1 * i), t0 - 0.15 + 0.038 * i)
+            place(fx, A2.whoosh(0.30, -21, 91, True), t0 - 0.15)
+            place(fx, stereo(A2.impact(-24, (90, 48), 0.15, 0.5, 92)), t0 + 9 / E.FPS)
+        elif tin == "peel":                                            # sticker peel: sticky crackle + paper flap
+            n = I(0.30); tt = np.arange(n) / SR
+            pl = bq(noise(n, 93), "band", np.array([1500, 7000]), 2) * (np.random.default_rng(94).random(n) > 0.93) * 3 + bq(noise(n, 95), "band", np.array([400, 2500]), 2) * 0.4
+            place(fx, stereo(norm(pl * np.sin(np.pi * tt / 0.30), -23), 0.4), t0 - 8 / E.FPS)
+            place(fx, A2.whoosh(0.26, -24, 96, True), t0 - 0.02)
+        elif tin == "tv_off":                                          # finger-gun bang -> CRT power-off -> power-on
+            tb = t0 - 14 / E.FPS
+            n = I(0.4); tt = np.arange(n) / SR                         # stylised gunshot: snap + body + tail
+            shot = bq(noise(n, 97), "high", 1200, 2) * env_exp(n, 0.02, 0.0002) + 0.6 * bq(noise(n, 104), "band", np.array([150, 1500]), 2) * env_exp(n, 0.09, 0.001)
+            place(fx, np.stack([norm(shot, -13), np.roll(norm(shot, -13), 31)], 1), tb)
+            place(fx, stereo(A2.impact(-15, (85, 40), 0.35, 0.7, 98)), tb)
+            n = I(0.17); tt = np.arange(n) / SR
+            off = np.sin(2 * np.pi * np.cumsum(9000 * np.exp(-tt / 0.05) + 120) / SR) * np.exp(-tt / 0.09)
+            place(fx, stereo(norm(off, -24)), t0 - 10 / E.FPS)
+            place(fx, stereo(A2.impact(-22, (60, 30), 0.2, 0.2, 99)), t0 - 2 / E.FPS)
+            n = I(0.22); tt = np.arange(n) / SR
+            on = np.sin(2 * np.pi * np.cumsum(80 + 900 * (tt / 0.22) ** 2) / SR) * np.sin(np.pi * tt / 0.22) + 0.3 * bq(noise(n, 100), "band", np.array([2000, 8000]), 2) * np.exp(-tt / 0.05)
+            place(fx, stereo(norm(on, -25)), t0 + 0.01)
         elif tin == "pixel_sort":
             place(fx, melt_sweep(0.34, -20, 36), t0 - 8 / E.FPS)
             place(fx, stereo(A2.impact(-23, (80, 42), 0.22, 0.3, 37)), t0)
+    # ---- VHS pause on the kill grin: clunk in, hum while held, clunk out
+    for s_ in E.SHOTS:
+        if s_.get("pause"):
+            tp = s_["pause"] / E.FPS; tq = tp + 14 / E.FPS
+            place(fx, stereo(vcr_clunk(-21, 101)), tp - 0.01); place(fx, stereo(vcr_clunk(-23, 102)), tq - 0.01)
+            n = I(tq - tp); tt = np.arange(n) / SR
+            hm = (np.sin(2 * np.pi * 60 * tt) + 0.4 * bq(noise(n, 103), "band", np.array([3000, 9000]), 2)) * np.minimum(1, np.minimum(tt, tq - tp - tt) / 0.02)
+            place(fx, stereo(norm(hm, -32)), tp)
     # ---- vapor world -> reality tunes in behind Dexter after the drop (signal-lock chirps)
     td = E.th(E.HDROP)
     for i, (dt, fq) in enumerate(((14, 1800), (22, 2600), (30, 3400), (40, 5200))):

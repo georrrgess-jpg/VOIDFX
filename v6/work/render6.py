@@ -2284,6 +2284,25 @@ def melt(A, B, u):
 # ---- CRT in a neon vapor world, fly through the screen
 SCR = (220, 650, 640, 480)
 _WORLD = {}
+def palms_sil(img):
+    """two palm-tree silhouettes standing on the horizon either side of the sun."""
+    col = (0.10, 0.015, 0.075); rng = np.random.default_rng(31)
+    for bx, hgt, lean in ((150, 520, 70), (930, 610, -90)):
+        pts = [(bx + lean * (t_ ** 1.6), 1282 - hgt * t_) for t_ in np.linspace(0, 1, 40)]
+        for i, (x, y) in enumerate(pts): cv2.circle(img, (int(x), int(y)), int(17 - 8 * i / 39), col, -1, cv2.LINE_AA)
+        cx, cy = pts[-1]
+        for fr in range(9):
+            ang = math.radians(-170 + fr * 42 + rng.uniform(-8, 8)); Lf = rng.uniform(170, 250); dr = rng.uniform(0.5, 0.9)
+            fp = [(cx + math.cos(ang) * Lf * t_, cy + math.sin(ang) * Lf * t_ + dr * Lf * t_ * t_ * 0.8) for t_ in np.linspace(0, 1, 18)]
+            cv2.polylines(img, [np.int32(fp)], False, col, 9, cv2.LINE_AA)
+            for i in range(2, 17):
+                (px, py), (qx, qy) = fp[i], fp[i + 1]; dx, dy = qx - px, qy - py; nn = math.hypot(dx, dy) + 1e-6
+                ll = 46 * (1 - i / 18) + 10
+                for sg in (1, -1):
+                    lx, ly = (dx * 0.5 - dy * 0.86 * sg) / nn, (dy * 0.5 + dx * 0.86 * sg) / nn
+                    cv2.line(img, (int(px), int(py)), (int(px + lx * ll), int(py + ly * ll + 14)), col, 4, cv2.LINE_AA)
+    return img
+
 def vapor_world(f):
     if "sky" not in _WORLD:
         y = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
@@ -2295,6 +2314,7 @@ def vapor_world(f):
         suncol = np.clip((1 - (sg * 1920 - 790) / 660), 0, 1) * np.array([0.35, 0.90, 1.0], np.float32) + np.clip((sg * 1920 - 790) / 660, 0, 1) * PINK
         img = sky * (1 - sun[..., None]) + suncol * sun[..., None]
         img = img + cv2.GaussianBlur(sun, (0, 0), 60)[..., None] * PINK * 0.35
+        img = palms_sil(img)
         rng = np.random.default_rng(2)
         for _ in range(120):
             cv2.circle(img, (int(rng.uniform(0, W)), int(rng.uniform(0, 1000))), int(rng.integers(1, 3)), (0.9, 0.9, 1.0), -1, cv2.LINE_AA)
@@ -2611,11 +2631,14 @@ def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999; t = f / FPS
     P = prev_shot(s); tin = s.get("tin"); tout = s.get("tout")
     person = None
-    if s.get("seg"): out, person = render_shot(s, f, want_mask=True)
-    else: out = render_shot(s, f)
+    fr_ = pause_frame(s, f)
+    if s.get("seg"): out, person = render_shot(s, fr_, want_mask=True)
+    else: out = render_shot(s, fr_)
     if s.get("vapor_bg"): out = vapor_tune(out, person, k, f)
     if s.get("echo"): out = echo(out, s, f)
     if s.get("palms"): out = palm_shadow(out, f)
+    if s.get("motes"): out = motes(out, f)
+    out = pause_fx(out, s, f)
     if s.get("vanish"):
         a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05
         out = vanish(out, person, f, t, tv0, s["t1"] - 0.08)
@@ -2653,7 +2676,7 @@ def render(f):
     # ---- graphics + type
     in_static = (f < 8) or (s.get("tout") == "rewind_end" and s["f1"] - f <= 8)
     if not in_static:
-        out = vo_captions(out, f); out = miami_title(out, f); out = neon_sign(out, f)
+        out = vo_captions(out, f); out = miami_title(out, f); out = neon_spill(out, f); out = neon_sign(out, f)
         h = t / E.HB + E.H0
         if h >= E.HDROP and h < 484:
             kb = int(((h - E.H0) % 8) * E.HB * FPS)
@@ -3028,7 +3051,157 @@ def last_visible(P):
         f = P["f1"] - 1; img, person = render_shot(P, f, want_mask=True)
         a, b_, at = E.VO[1]; tv0 = at + (22.71 - a) + 0.05
         return vanish(img, person, f, f / FPS, tv0, P["t1"] - 0.08)
+    if P.get("pause"): return render_shot(P, pause_frame(P, P["f1"] - 1))
     return last_frame_of(P)
+
+# ============================================================================ v6 rev 3 — polish: transitions + graphics
+# ---- film strip whip: the frame shrinks into a strip of film on a light table, whips to the next frame, zooms back in
+_LBOX = {}
+def lightbox():
+    if "img" not in _LBOX:
+        yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+        d = np.sqrt(((xx - W / 2) / W) ** 2 + ((yy - H / 2) / H) ** 2)
+        base = np.clip(1.0 - d * 0.9, 0, 1)[..., None]
+        _LBOX["img"] = np.clip(base * (WHITE * 0.75 + PINK * 0.25) + (1 - base) * VIOLET * 0.6, 0, 1).astype(np.float32)
+    return _LBOX["img"]
+
+def filmstrip(A, B, j, f, sa, sb, n=9):
+    u = clamp((j + n + 0.5) / (2 * n), 0, 1)
+    z = 1 - 0.42 * (smooth(clamp(u / 0.3, 0, 1)) - smooth(clamp((u - 0.7) / 0.3, 0, 1)))
+    gap = 70.0; P = H + gap                                           # pitch in unzoomed px
+    sc_u = smooth(clamp((u - 0.25) / 0.5, 0, 1)); scroll = P * sc_u
+    vel = P * z * 3.0 / (2 * n) * clamp(1 - abs(u - 0.5) / 0.25, 0, 1) # strip speed in px per frame (peak)
+    i_prev = SHOTS.index(sa) - 1; i_next = SHOTS.index(sb) + 1
+    neigh = {-1: (last_frame_of(SHOTS[i_prev]) if i_prev >= 0 else A * 0.5), 0: A, 1: B,
+             2: (render_shot(SHOTS[i_next], SHOTS[i_next]["f0"], False) if i_next < len(SHOTS) else B * 0.5)}
+    o = lightbox().copy(); fw, fh = int(W * z), int(H * z); bw = int(95 * z)
+    x0 = W // 2 - fw // 2; xs0, xs1 = max(0, x0 - bw), min(W, x0 + fw + bw)
+    o[:, xs0:xs1] = np.array([0.05, 0.04, 0.06], np.float32)
+    # sprocket holes (scroll with the strip)
+    hp = 110 * z; off = (-scroll * z) % hp
+    for y in np.arange(-hp + off, H + hp, hp):
+        for xh in (x0 - bw + int(22 * z), x0 + fw + int(22 * z)):
+            cv2.rectangle(o, (int(xh), int(y)), (int(xh + 50 * z), int(y + 62 * z)), tuple(float(c) for c in (WHITE * 0.85 + PINK * 0.15)), -1, cv2.LINE_AA)
+    for i, img in neigh.items():
+        cy = H / 2 + z * (i * P - scroll); y0 = int(cy - fh / 2)
+        if y0 > H or y0 + fh < 0: continue
+        fr = cv2.resize(img, (fw, fh), interpolation=cv2.INTER_AREA)
+        ya, yb = max(0, y0), min(H, y0 + fh)
+        o[ya:yb, x0:x0 + fw] = fr[ya - y0:yb - y0]
+        ty = int(cy + fh / 2 + gap * z * 0.6)
+        if 0 < ty < H:                                                # orange edge-code dashes between frames
+            for q in range(4): cv2.rectangle(o, (int(x0 + 14 * z + q * 34 * z), ty - int(8 * z)), (int(x0 + 36 * z + q * 34 * z), ty), (0.25, 0.55, 1.0), -1)
+    L = int(min(110, vel * 0.55))
+    if L > 2: o = cv2.blur(o, (1, L))
+    return np.clip(o, 0, 1)
+
+# ---- sticker peel: the frame peels off from the bottom-right corner like a glossy pastel sticker
+def peel(A, B, j, f, sa, sb, n=8):
+    u = clamp((j + n + 0.5) / (2 * n), 0, 1)
+    dv = np.array([-0.62, -0.785]); C = np.array([W + 40.0, H + 40.0])
+    t = (_GX - C[0]) * dv[0] + (_GY - C[1]) * dv[1]
+    diag = (W + 80) * 0.62 + (H + 80) * 0.785
+    s = diag * 1.08 * ein(u, 1.35)
+    qx = (_GX - 2 * (t - s) * dv[0]).astype(np.float32); qy = (_GY - 2 * (t - s) * dv[1]).astype(np.float32)
+    flap_ok = ((t > s) & (t < 2 * s) & (qx >= 0) & (qx < W - 1) & (qy >= 0) & (qy < H - 1)).astype(np.float32)
+    flap_ok = cv2.GaussianBlur(flap_ok, (0, 0), 1.0)[..., None]
+    back = cv2.remap(A, qx, qy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    g = np.clip((t - s) / (s + 1e-3), 0, 1)[..., None]
+    backside = np.clip(back * 0.22 + (PINK * (1 - g) + CYAN * g) * 0.55 + 0.18, 0, 1)
+    spec = np.exp(-((t - s - 18) / 26) ** 2)[..., None] * 0.6         # glossy roll highlight at the fold
+    revealed = np.clip((s - t) / 2.0, 0, 1)[..., None]
+    shade_b = 1 - 0.45 * np.exp(-np.clip(s - t, 0, None) / 60)[..., None] * revealed
+    shade_a = 1 - 0.35 * np.exp(-np.clip(t - 2 * s, 0, None) / 40)[..., None] * (t > 2 * s)[..., None] * (s > 5)
+    o = B * shade_b * revealed + A * shade_a * (1 - revealed)
+    o = o * (1 - flap_ok) + (backside + spec) * flap_ok
+    return np.clip(o, 0, 1)
+
+# ---- finger-gun bang -> CRT power-off; the next shot powers on
+def muzzle_flash(o, k, x, y):
+    if not (0 <= k < 5): return o
+    a = [1.0, 0.75, 0.45, 0.2, 0.08][k]; lay = np.zeros((H, W), np.float32)
+    for i in range(10):
+        ang = i * math.pi / 5 + 0.3; L = (140 + 90 * (i % 2)) * (1 + 0.6 * k / 4)
+        cv2.line(lay, (int(x), int(y)), (int(x + L * math.cos(ang)), int(y + L * math.sin(ang))), 1.0, 6 - (i % 2) * 3, cv2.LINE_AA)
+    cv2.circle(lay, (int(x), int(y)), int(46 + 20 * k), 1.0, -1, cv2.LINE_AA)
+    glow = cv2.GaussianBlur(lay, (0, 0), 22)
+    o = o + (lay[..., None] * WHITE + glow[..., None] * (PINK * 0.7 + PEACH * 0.3) * 2.2) * a
+    return np.clip(o + 0.25 * a, 0, 1)
+
+def tv_off(A, B, j, f, sa, sb):
+    if j < 0:
+        mx, my = sa.get("muzzle", (W / 2, H * 0.45)); kb = j + 14
+        if kb < 4:                                                    # bang: flash + kick
+            o = zoom_about(A, mx, my, 1.0 + 0.05 * (1 - kb / 4)); o = rgb_split(o, 16 * (1 - kb / 4))
+            return muzzle_flash(o, kb, mx, my)
+        u = (kb - 4) / 10.0                                           # CRT power-off
+        sy = max(0.004, 1 - ein(clamp(u / 0.6, 0, 1), 2.4)); sx = 1 - 0.995 * ein(clamp((u - 0.6) / 0.4, 0, 1), 2)
+        img = np.clip(A * (1 + 2.5 * u) + 0.3 * u, 0, 1)
+        M = np.float32([[sx, 0, W / 2 * (1 - sx)], [0, sy, H / 2 * (1 - sy)]])
+        o = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_AREA, borderValue=(0, 0, 0))
+        dot = np.exp(-(((_GX - W / 2) / (W * sx * 0.5 + 6)) ** 2 + ((_GY - H / 2) / (H * sy * 0.5 + 3)) ** 2))[..., None]
+        return np.clip(o + dot * (WHITE * 0.6 + CYAN * 0.3) * u, 0, 1)
+    u = (j + 1) / 12.0                                                # power on: dot -> line -> frame
+    sx = 0.01 + 0.99 * eout(clamp(u / 0.35, 0, 1), 2)
+    sy = 0.004 + 1.0 * eout(clamp((u - 0.3) / 0.55, 0, 1), 2.5); sy = sy + 0.04 * math.sin(math.pi * clamp((u - 0.75) / 0.25, 0, 1))
+    img = np.clip(B * (1 + 1.5 * (1 - u)) + 0.15 * (1 - u), 0, 1)
+    M = np.float32([[sx, 0, W / 2 * (1 - sx)], [0, sy, H / 2 * (1 - sy)]])
+    o = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
+    scan = (1 - 0.35 * (1 - u) * ((np.arange(H) % 4) < 2)[:, None, None])
+    return np.clip(o * scan, 0, 1)
+
+TR2.update({"filmstrip": (filmstrip, 9, 9), "peel": (peel, 8, 8), "tv_off": (tv_off, 14, 12)})
+
+# ---- graphics
+_MOTE = {}
+def motes(out, f, amt=1.0):
+    """pastel bokeh light specks drifting up through the sunny shots."""
+    if "p" not in _MOTE:
+        rng = np.random.default_rng(14)
+        _MOTE["p"] = [(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(4, 13), rng.uniform(0.3, 1.0), rng.uniform(0, 6.28), int(rng.integers(0, 3))) for _ in range(46)]
+    lays = [np.zeros((H // 4, W // 4), np.float32) for _ in range(3)]
+    for x, y, r, b, ph, c in _MOTE["p"]:
+        yy = (y - f * (0.8 + r * 0.12)) % (H + 80) - 40; xx = x + 26 * math.sin(f * 0.03 + ph)
+        tw = 0.65 + 0.35 * math.sin(f * 0.21 + ph * 3)
+        cv2.circle(lays[c], (int(xx / 4), int(yy / 4)), max(1, int(r / 4)), b * tw, -1, cv2.LINE_AA)
+    o = out
+    for lay, col in zip(lays, (PINK, PEACH, CYAN)):
+        g = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 1.6), (W, H), interpolation=cv2.INTER_LINEAR)
+        o = o + g[..., None] * col * 0.55 * amt
+    return np.clip(o, 0, 1)
+
+def pause_frame(s, f):
+    """VHS pause: returns the frame index to render for shot s (holds PAUSE_N frames at s['pause'])."""
+    p0 = s.get("pause")
+    if p0 is None: return f
+    if p0 <= f < p0 + PAUSE_N: return p0
+    return f - PAUSE_N if f >= p0 + PAUSE_N else f
+PAUSE_N = 14
+
+def pause_fx(out, s, f):
+    p0 = s.get("pause")
+    if p0 is None or not (p0 <= f < p0 + PAUSE_N): return out
+    k = f - p0; o = np.roll(out, 2 if k % 2 else -1, axis=0)
+    rng = np.random.default_rng(900 + k); yb = int((H * 0.78 + k * 37) % H); hb = 46
+    band = static_noise(f, 0.9)[yb:yb + hb] if yb + hb <= H else None
+    if band is not None: o[yb:yb + hb] = o[yb:yb + hb] * 0.3 + band * 0.7
+    o = o * 0.92 + 0.03
+    return osd(o, f, "|| PAUSE", y=235, a=1.0 if (k // 6) % 2 == 0 else 0.55, size=52)
+
+def neon_spill(out, f):
+    """the neon words throw coloured light onto his face and shirt."""
+    t = f / FPS; t_end = E.DUR - 40 / FPS
+    if not (E.END_CAP[0][1] <= t < t_end): return out
+    lay_c = np.zeros((H // 8, W // 8), np.float32); lay_p = np.zeros_like(lay_c)
+    for word, tw in E.END_CAP:
+        k = (t - tw) * FPS
+        if k < 0: continue
+        a = eout(k / 14, 3) * clamp((t_end - t) * FPS / 8, 0, 1)
+        if word == "ME.": cv2.rectangle(lay_p, (W // 8 // 2 - 22, 1420 // 8), (W // 8 // 2 + 22, 1610 // 8), a, -1)
+        else:
+            xc = W // 8 // 2 + (-14 if word == "IT" else 12); cv2.rectangle(lay_c, (xc - 12, 1270 // 8), (xc + 12, 1400 // 8), a, -1)
+    gc = cv2.resize(cv2.GaussianBlur(lay_c, (0, 0), 22), (W, H)); gp = cv2.resize(cv2.GaussianBlur(lay_p, (0, 0), 22), (W, H))
+    return np.clip(out + (gc[..., None] * CYAN + gp[..., None] * PINK) * 0.55 * out.mean(2, keepdims=True) * 2.2 + (gc[..., None] * CYAN + gp[..., None] * PINK) * 0.06, 0, 1)
 
 def main():
     mode = sys.argv[1]

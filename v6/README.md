@@ -41,15 +41,15 @@ The song's half-beat grid is fitted at 90 BPM. The edit plays half-beats **416�
 | 10.67 | boat: Dexter stands in the **vapor world** (sunset + neon grid), then reality **tunes in** behind him scanline by scanline. Chrome **MIAMI** title | out of the screen |
 | 12.00 | grin by the pink wall, palm shadows | **3D cube** turning over the vapor sunset world |
 | 13.33 | running through the grass (VHS colour echo) | **through the sun**: a striped retro sun rises and the camera flies through its stripes |
-| 14.00 | laughing, palm shadows | card-flip tiles |
-| 14.67 | crime-scene crowd | neon trace |
-| 16.00 | grinning mid-kill | blood drop splat |
+| 14.00 | laughing, palm shadows, bokeh motes | **film strip whip**: the frame shrinks into a strip of film on a glowing light table, whips up to the next frame, zooms back in (projector rattle) |
+| 14.67 | crime-scene crowd | **sticker peel**: the frame peels off from the corner like a glossy pastel sticker |
+| 16.00 | grinning mid-kill, then a **VHS ‖ PAUSE** freeze with tape jitter on the grin | blood drop splat |
 | 17.33 | ice cream in the club (VHS colour echo) | **knife slash**: a blade cuts the frame and the halves fly apart with blood flecks (swish, steel ring) |
 | 18.67 | night garden | **voidfx logo as a neon sign**, fly through the "o" (the only logo appearance) |
 | 20.00 | cap and sunglasses | **film burn**: pastel burn holes eat through the frame |
 | 20.67 | hood | **through the sunglasses**: the next shot appears reflected in his lenses, the camera dives into one |
 | 21.33 | finger gun | **shadow pass**: darkness swallows the frame, the next shot emerges brightest-first |
-| 22.67 | red-shirt close-up, *"It… was me."* → neon **IT** · **WAS** · **ME.** | pixel-sort melt |
+| 22.67 | red-shirt close-up, *"It… was me."* → neon **IT** · **WAS** · **ME.**, which throws coloured light onto his face | **finger-gun bang → CRT power-off**: muzzle flash on his fingertip, the picture collapses to a line and a dot, then powers back on |
 | 26.00 | the shot rewinds at 8× (◀◀ REW), the song scrubs backwards | → static → loops into the tape load |
 
 ## Text
@@ -204,3 +204,25 @@ Review while building:
   - *Text over face (1 frame, 150):* during the eye dive his face fills the screen.
   - *Near-black frames (1278–1279):* the bottom of the shadow pass.
 - **Visual sign-off:** every new transition, the vapor tune-in and the hyperspace streaks were checked on frames from the encoded MP4.
+
+
+## Revision 3 (final polish)
+
+- **New transitions**, replacing the last older-style effects:
+  - **film strip whip** (instead of the card tiles): the strip shows real neighbouring frames of the edit, with sprocket holes and edge-code dashes;
+  - **sticker peel** (instead of the second neon trace): a flat-fold page peel with a glossy pink-to-cyan back, a roll highlight and a cast shadow;
+  - **finger-gun bang → CRT power-off / power-on** (instead of the pixel melt): it ties the finger gun to the confession.
+- **New graphics and animation:**
+  - a **VHS ‖ PAUSE** freeze-frame on the kill grin, with tape jitter, a noise bar and the OSD; the shot resumes from where it paused;
+  - **pastel bokeh motes** drifting through the sunny montage shots;
+  - **palm-tree silhouettes** in the vapor world, around the CRT and behind Dexter during the tune-in;
+  - **neon light spill**: IT / WAS / ME. throw cyan and pink light onto his face and shirt.
+- **New sounds:**
+  - projector rattle;
+  - sticker crackle and paper flap;
+  - a stylised gunshot, a CRT power-off whine and thunk, and a power-on sweep;
+  - a VCR pause clunk in and out, with hum while it's held.
+- **Review while building:**
+  - The film strip's motion blur was about 30× the strip's real per-frame speed, so it smeared into streaks; it now matches the movement.
+  - `putText` can't draw on float frames, so the edge codes are drawn as dashes.
+  - The fingertip position for the muzzle flash was measured from the shot.
