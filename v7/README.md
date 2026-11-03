@@ -121,6 +121,28 @@ Frames from the encoded file showed **an upside-down head for 3 frames** as the 
 
 The jar now starts after the cut, and *"A jar of blood"* moves with it, so the lip-sync is unchanged. The look-up shot got one frame of margin before its cut, and CLOSE now fades out before the doors open.
 
+### Checkpoint run 4 (final): **SHIP**
+
+| Criterion | Result |
+|---|---|
+| Format | PASS: 1080×1920, 60 fps, 1,551 frames, 25.84 s |
+| Decode | PASS: clean |
+| Loudness | PASS: −13.5 LUFS, true peak −3.2 dBTP (after AAC) |
+| Frozen runs | PASS: none |
+| Face centering | PASS: every shot; 1 frame flagged, mid-microscope dive |
+| Text over faces | PASS: 5 frames, all checked false positives (the blood drops on the slide read as eyes; the magnifier lens is entirely face) |
+| Audio clicks | PASS: 0 at 17 cuts and at the loop seam |
+| Loop seam | PASS: black → black; the pupil dive loops into the magnifying-glass opening |
+| A/V length | PASS: identical |
+| Source ranges | PASS: every shot sits inside its own source shot (`tools/check_sources.py`) |
+| Visual sign-off | PASS: 32 key frames across the edit plus every transition, pulled from the encoded MP4 |
+
+The near-black frames are all by design:
+- frame 0 (lens opening from black);
+- frames 828–830 (bottom of the shadow pass);
+- frames 1215 and 1221 (strobe blackouts);
+- frame 1550 (pupil black).
+
 ## Files
 
 - `out/him_all_along_dexter_voidfx_9x16.mp4`: upload version.
