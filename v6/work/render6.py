@@ -110,6 +110,9 @@ def sample(pk, ts, mode="hold"):
     if a < 0.05: return FR[(pk, i0)]
     if a > 0.95: return FR[(pk, i1)]
     if mode == "blend": return cv2.addWeighted(FR[(pk, i0)], 1 - a, FR[(pk, i1)], a, 0)
+    # flow breaks on sudden lighting changes (police-light flashes): blend those pairs instead
+    m0, m1 = FR[(pk, i0)][::8, ::8].mean(axis=(0, 1)), FR[(pk, i1)][::8, ::8].mean(axis=(0, 1))
+    if np.abs(m0.astype(np.float32) - m1).max() > 6: return cv2.addWeighted(FR[(pk, i0)], 1 - a, FR[(pk, i1)], a, 0)
     return flow_interp(pk, i0, i1, a)
 
 def source_img(s, f):
@@ -2257,8 +2260,11 @@ def kaleido(img, a, rot, N=6, c=(W / 2, H * 0.42)):
         dx, dy = _GX - c[0], _GY - c[1]; _KAL["g"] = (np.sqrt(dx * dx + dy * dy), np.arctan2(dy, dx))
     r, th_ = _KAL["g"]; seg = 2 * math.pi / N
     t2 = np.abs(np.mod(th_ + rot, seg) - seg / 2)
-    tm = th_ * (1 - a) + t2 * a
-    return cv2.remap(img, (c[0] + r * np.cos(tm)).astype(np.float32), (c[1] + r * np.sin(tm)).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    # full fold, then dissolve into it (an angle morph from unfolded to folded cannot be seamless)
+    rr = r * (1 - 0.18 * a)                                          # slight pull-in as the mirrors close
+    kal = cv2.remap(img, (c[0] + rr * np.cos(t2)).astype(np.float32), (c[1] + rr * np.sin(t2)).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    w = smooth(clamp(a * 1.25, 0, 1))
+    return img * (1 - w) + kal * w
 
 # ---- pixel-sort melt
 _MELT = {}
@@ -2440,13 +2446,19 @@ def ink(A, B, k, f):
 def ripple(A, B, k, n=14, c=(W / 2, H * 0.45)):
     if k >= n: return B
     r = np.sqrt((_GX - c[0]) ** 2 + (_GY - c[1]) ** 2); u = k / n
-    amp = 26 * (1 - u); wav = np.sin(r / 38 - k * 0.9) * amp
+    amp = 12 * (1 - u) ** 1.5; wav = np.sin(r / 38 - k * 0.9) * amp
     dx = (_GX - c[0]) / (r + 1) * wav; dy = (_GY - c[1]) / (r + 1) * wav
     Aw = cv2.remap(A, (_GX + dx).astype(np.float32), (_GY + dy).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     Bw = cv2.remap(B, (_GX + dx).astype(np.float32), (_GY + dy).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     R = 1700 * eout(u, 2); m = np.clip((R - r) / 80, 0, 1)[..., None]
     ring = np.exp(-((r - R) / 20) ** 2)[..., None]
     return np.clip(Aw * (1 - m) + Bw * m + ring * CYAN * 0.4, 0, 1)
+
+def ripple_pre(A, kn):
+    """gentle surface tremble before the drop hits the water (kn -4..-1)."""
+    r = np.sqrt((_GX - W / 2) ** 2 + (_GY - H * 0.45) ** 2); amp = 3 + 2 * (kn + 4)
+    wav = np.sin(r / 30 - kn * 1.3) * amp; dx = (_GX - W / 2) / (r + 1) * wav; dy = (_GY - H * 0.45) / (r + 1) * wav
+    return cv2.remap(A, (_GX + dx).astype(np.float32), (_GY + dy).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
 def glints(out, f, k):
     """vaporwave sparkle glints on the brightest points (on montage downbeats)."""
@@ -2631,7 +2643,7 @@ def render(f):
             out = crt_through(lambda: render_shot(s, f), lambda: render_shot(n_, n_["f0"], False), f, kn)
         if nt == "rewind" and kn >= -8: out = rewind_tr(s, f, kn)
         if nt == "ink" and kn >= -8: out = ink(out, None, kn, f)
-        if nt == "ripple" and kn >= -4: out = ripple(out, out, 0, 14)
+        if nt == "ripple" and kn >= -4: out = ripple_pre(out, kn)
         if nt == "logo" and kn >= -12: out = logo_neon(out, render_shot(n_, n_["f0"], False), kn, f)
     if tout == "rewind_end": out = rewind_end(out, f, s)
     # ---- graphics + type

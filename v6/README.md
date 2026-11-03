@@ -93,6 +93,22 @@ The **ship / no-ship checkpoint** is `work/qc6.py`, run on the encoded MP4. It c
 
 After that comes a visual sign-off on contact sheets of every transition, the drop, the dissolve and the ending, pulled from the encoded file.
 
+### Checkpoint run 1: automated 9/9 PASS, **visual sign-off FAIL** (not shipped)
+
+Automated results:
+- −13.0 LUFS / −2.9 dBTP after AAC.
+- 1,600 frames, clean decode, no frozen runs.
+- 0 face-centering flags and 0 text-over-face frames.
+- 0 clicks at 17 cuts and at the loop seam.
+- The loop seam matched static to static, and audio and video are exactly the same length.
+
+Frames from the encoded file still showed three defects:
+- **Kaleidoscope (both uses):** a hard wedge-shaped seam on the left. The angle morph from the normal frame to the folded one can't be continuous, so it is now a spin-dissolve into the full mirror fold.
+- **Ripple:** its first frames pinched Dexter's face. The distortion is now about a third as strong, with a gentle tremble before the cut.
+- **"It… was me.":** a dark blocky blotch beside his face. Police lights flip the source frame from red to dark, and optical-flow interpolation fails on that. The interpolator now falls back to a blend whenever consecutive source frames change brightness sharply.
+
+The edit was re-rendered and the checkpoint run again.
+
 ## Files
 
 - `out/warmpop_dexter_voidfx_9x16.mp4`: upload version (H.264 + AAC, fast-start).
