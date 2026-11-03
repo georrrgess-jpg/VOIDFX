@@ -27,6 +27,19 @@ This revision of the v3 edit is built from your notes. It is 25.0 s at 1080×192
 | 22.31 | Freeze on *"…can't get caught up"*, then tape-stop. |
 | 22.62–25.00 | Doakes: *"I always knew there was something with you."* Then into the pupil, then black, then the loop. |
 
+## Review passes (on the encoded upload file)
+
+| Pass | Result |
+|---|---|
+| Format | 1080×1920, 60 fps CFR, 1,500 frames, 25.000 s; full decode with no errors |
+| Loudness | −13.2 LUFS, true peak −2.8 dBTP |
+| Face centering | all 25 shots pass. The 5 flagged frames are deliberate (the pan to the photo wall, the split slam) or a false detection on Doakes's gun hand. |
+| Text over faces | 1 frame, a false detection on Doakes's hand during the iris |
+| Cuts | 18 of 25 re-detected; the 7 hidden ones are inside the dissolves and fly-through transitions on purpose |
+| Frozen / black | no frozen runs; black only at the loop seam (iris start, pupil end) and inside the barrel fly-through |
+| Audio | no clicks at any dialogue join, the song entry, the stop or the loop seam |
+| Loop seam | last frame vs first frame differ by 1.8 luma levels (both black); audio is −45.4 / −44.9 dBFS on either side |
+
 ## Files
 
 - `out/surprise_v4_voidfx_9x16.mp4`: upload version.
