@@ -82,6 +82,19 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 - **Polish:** halation and bloom, grain, anamorphic streaks, colour grades with a clear identity, and smooth sound.
 - **Built-in review passes.** He wants the studio to catch problems itself rather than rely on rounds of feedback, and to judge whether the edit is ready to ship before it is sent.
 
+- **v8 WISH YOU WELL** (owner: *"I like this edit, I think it did most things well"*):
+  - **The "Darling," sequence (liked):** a freeze-frame where the room drains to indigo, the word written on in red script with a swash, the comma swelling into a drop of blood that falls in slow motion with Dexter refracted inside it, then blooms in water on the drop.
+  - **The rear-view-mirror open and loop (liked):** a mirror in a dark rainy car, push into it, and pull back into it at the end.
+  - **The "basic" transitions were good:**
+    - streetlight sweep;
+    - windshield wiper;
+    - whip pans, horizontal and vertical;
+    - plastic sheet wrapping the lens;
+    - one-frame impact negative;
+    - rain-on-glass focus pull;
+    - lamp switching on;
+    - one cut per syllable on the hook.
+
 ## 4. What the owner rejected: never do these
 
 | Rejected | Edit | Lesson |
@@ -104,6 +117,7 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | STAY STRONG plus red strings converging on his face with a target ring | v7 | No gimmick overlays on the face. |
 | The voidfx logo turned blue (UV recolour) | v7 | **Never restyle the logo.** |
 | Plain steel doors for CLOSE | v7 | Make the big text moments **character-themed and detailed** (the rosewood blood-slide box with an engraved brass plate was the fix). |
+| The **text appearance in v8**: thin, wide-tracked sans lyric lines with sodium serif-italic emphasis words, letter-by-letter fades, underlines; big extruded words behind his head; elegant serif-italic script | v8 | That "elegant / editorial" type look didn't land. Go back toward what was praised in v6: bold, high-contrast, two-line captions with a clear designed treatment per moment. Keep script handwriting for at most one hero word. |
 
 ## 5. What works: craft lessons
 
@@ -224,6 +238,7 @@ Only then deliver.
 | v5 FASTEST | amber/gold lightning over deep teal (The Flash) |
 | v6 WARMPOP | pastel vapor + VHS (chroma bleed, scanlines, CRT, neon) |
 | v7 HIM ALL ALONG | forensic noir (drained cold colour, blood red only, UV luminol, case-file type) |
+| v8 WISH YOU WELL | sodium nocturne (indigo shadows, sodium-vapour highlights, rain on glass, streetlight sweeps, warm halation) |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);

@@ -181,3 +181,11 @@ python3 -m demucs -n htdemucs --two-stems=vocals -o v8/audio/sep v8/audio/p8_ope
   - 2 near-black frames: the lamp switching on.
 - **Visual sign-off:** 32 key frames pulled from the encoded MP4. They cover the knife-roll unroll and glints, the draw and swing of the knife pass with its edge glint, PICK ME UP sliding out from behind his head, the letter-by-letter lyrics, the *Darling,* swash, the comma swelling into the blood drop and its fall into the bloom, the build of I DON'T WISH YOU, *WELL* filling with blood, and the mirror loop.
 - **Note:** a container restart interrupted the first render of this revision. It was re-run from the committed state.
+
+
+## Owner feedback on revision 2
+
+- **Liked:** *"I like this edit, I think it did most things well."* Specifically the **"Darling," transition** (freeze, then the comma drop, then blood in water), the **rear-view-mirror transition** (open and loop), and the basic transitions.
+- **Disliked:** the **text appearance**.
+
+This is recorded in `studio/VOIDFX_STUDIO.md` and `CLAUDE.md` for future edits.
