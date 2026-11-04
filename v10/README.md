@@ -141,7 +141,24 @@ Skin is protected from the slate push, and blacks keep a floor.
 - **Wrong subject:** both freeze shots framed the wrong person (the frozen man, then Joe). Both are now framed on Barry.
 - **Blocky title exit:** the LET IT / HAPPEN exit stretched letters into blocks. It's now a motion-blurred streak.
 
-CHECKPOINT_RESULTS
+**Pass 3** (frames pulled from the first encoded MP4):
+- **Loop tint:** the rewind's last frame kept a faint gold tunnel tint that frame 0 doesn't have (picture seam diff 6.2). The tunnel now fades out before the landing; the seam diff is 0.39.
+- **Bolts over the chin:** the bolts striking the first letters of LET IT passed over his chin. They're now short strikes from under his jaw.
+- **Unreadable hook:** RUNNING AROUND was swallowed by the light streak before AROUND could be read. The streak now starts half a bar later (e98), so the line reads in full before it smears into light.
+
+**Checkpoint on the final encoded MP4: SHIP.**
+- **Format:** 1080×1920, 60 fps, 1498 frames, clean decode.
+- **Loudness:** −12.7 LUFS, true peak −3.5 dBTP after AAC.
+- **Face centring:** 0 flagged frames on every tracked shot. The freeze, run and rewind shots are framed manually on Barry.
+- **Text vs. faces:** 0 frames where a face reaches into a text band. The 4 low-placed detections were checked on frames and are title letters and lightning, not faces.
+- **Cuts:** 0 clicks at 15 cuts; no frozen runs.
+- **Near-black frames:** one, frame 229, the deliberate blackout inside the ignite.
+- **Loop seam:** picture matched (luma 38.8 → 38.9, diff 0.39). Audio is continuous: the rewind lands at −18 dB and the opening plays at −18 dB.
+- **A/V length:** within one frame.
+
+**Visual sign-off:** frames pulled from the encoded file around every transition, every text moment, the emblem dive, the freeze, the run, the rewind and the loop seam.
+
+**Not verifiable here:** I can't watch or listen. Everything above was checked on frames and by measurement, but the edit has not been seen in motion or heard. Please watch it once with sound.
 
 ## Files
 

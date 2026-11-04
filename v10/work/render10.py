@@ -6502,7 +6502,8 @@ def rewind_frame(f, s):
     o = hblur(img, 2 + 300 * st_)
     o = np.clip(rgb_split(o, 40 * st_), 0, 1)
     tun = np.clip(np.sqrt(((_GX - W / 2) / (W * 0.6)) ** 2 + ((_GY - H * 0.47) / (H * 0.5)) ** 2), 0, 1)[..., None]
-    o = o * (1 - 0.5 * tun * st_) + tun * st_ * 0.25 * GOLD2
+    tw = st_ * (1 - smooth((u - 0.55) / 0.40))                       # the tunnel is gone by the landing (frame 0 has none)
+    o = o * (1 - 0.5 * tun * tw) + tun * tw * 0.25 * GOLD2
     if u < 0.12:                                                    # the line of light opens back into a picture
         sy = max(0.01, smooth(u / 0.12))
         M = np.float32([[1, 0, 0], [0, sy, H * 0.47 * (1 - sy)]])
@@ -6592,7 +6593,7 @@ def text_hero10(out, f, tx):
             if v <= 0: continue
             ve = eout(v, 3.0); x = W / 2 + xoff
             if v < 0.6:                                                               # the bolt that strikes the letter
-                put_bolt(cv, (x + 30, yc - 420), (x, yc - size * 0.35), 1600 + i * 7 + len(text) + int(v * 6), 3, 0.3, 6, 1)
+                put_bolt(cv, (x + 24, yc - size * 0.35 - 150), (x, yc - size * 0.35), 1600 + i * 7 + len(text) + int(v * 6), 3, 0.3, 5, 0)
             hot = clamp(1 - (t - starts[i]) / 0.30, 0, 1)
             if text == "HAPPEN":
                 fill = eout(clamp((t - starts[i] - 0.10) / 0.35, 0, 1), 2.0); hh = lm.shape[0]; yy = np.linspace(1, 0, hh)[:, None]

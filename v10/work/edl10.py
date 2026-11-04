@@ -88,7 +88,7 @@ shot("freeze_b", "fb", 82, 88, 0, 0, tmap=[(0, 28.10), (2 / 6, 28.10), (4 / 6, 2
      lin=True, z=[(0, 1.06), (1, 1.20)], tin="jolt", seg=True, frozen=True, face=None, cx=(1000, 960))
 # ---- "All this running around": afterimages, then he outruns time
 shot("run", "fb", 88, 100, 0, 0, tmap=[(0, 80.86), (8 / 12, 81.95), (1, 82.24)], z=[(0, 1.00), (1, 1.10)], tin="restart", face=None, cx=(560, 520),
-     interp="blend", seg=True, trails=1.0, arcs=0.6, streak_e=96)
+     interp="blend", seg=True, trails=1.0, arcs=0.6, streak_e=98)
 shot("rewind", "fb", 100, 104, 82.10, 82.24, tin="streak", graphic="rewind", face=None, cx=(640, 640))
 SHOTS = S
 for s in SHOTS:
@@ -102,7 +102,7 @@ TEXT = [
     dict(style="echo", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_HAP2)], end=th(46) - 0.07, emph=["HAPPENS"]),
     dict(style="hero", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_LET)], end=th(68) - 0.05, emph=["HAPPEN"],
          pulses=[s2e(t) for _, t in W_LET2]),
-    dict(style="speed", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_RUN)], end=th(E_REW) - 0.06, emph=["RUNNING", "AROUND"], rides=True),
+    dict(style="speed", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_RUN)], end=th(99) + 0.02, emph=["RUNNING", "AROUND"], rides=True),
 ]
 for _t in TEXT:
     assert _t["end"] > _t["words"][-1][1] + 0.25, (_t["words"], _t["end"])
