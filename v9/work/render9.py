@@ -6006,9 +6006,9 @@ _BP = {}
 def bloom_cells():
     if "lab" in _BP: return _BP
     rng = np.random.default_rng(5); cx, cy = BLOOM_C; pts = []
-    for yy in np.arange(-40, H + 80, 118):
-        for xx in np.arange(-40, W + 80, 92):
-            pts.append((xx + rng.uniform(-30, 30) + (46 if int(yy / 118) % 2 else 0), yy + rng.uniform(-30, 30)))
+    for yy in np.arange(-60, H + 120, 168):
+        for xx in np.arange(-60, W + 120, 132):
+            pts.append((xx + rng.uniform(-40, 40) + (66 if int(yy / 168) % 2 else 0), yy + rng.uniform(-40, 40)))
     pts = np.array(pts, np.float32); n = len(pts)
     ang = np.arctan2(pts[:, 1] - cy, pts[:, 0] - cx) + rng.uniform(-0.5, 0.5, n)          # petals point away from the heart
     hs = 2; gy, gx = np.mgrid[0:H // hs, 0:W // hs].astype(np.float32); gy *= hs; gx *= hs
@@ -6027,7 +6027,7 @@ def bloom_cells():
     dist = np.sqrt((pts[:, 0] - cx) ** 2 + (pts[:, 1] - cy) ** 2)
     _BP.update(lab=lab, pts=pts, ang=ang, boxes=boxes, edges=cv2.GaussianBlur(edges.astype(np.float32), (0, 0), 1.2),
                delay=dist / dist.max() * 0.42 + rng.uniform(0, 0.08, n), spd=rng.uniform(0.6, 1.4, n), spin=rng.uniform(-260, 260, n),
-               flip=rng.uniform(1.0, 2.6, n), sz=rng.uniform(1.15, 1.45, n))
+               flip=rng.uniform(2.6, 4.2, n), sz=rng.uniform(1.55, 1.95, n))
     return _BP
 
 def bloom9(A, B, j, f, sa, sb, pre=14, post=26):
@@ -6044,7 +6044,9 @@ def bloom9(A, B, j, f, sa, sb, pre=14, post=26):
     if v < 0.45: Bz = radial_blur(Bz, cx, cy, 1.0, 1.0 + 0.09 * (1 - v / 0.45), 5)
     q = np.clip((v - BP["delay"]) / 0.50, 0, 1)
     still = cv2.GaussianBlur((q <= 0)[BP["lab"]].astype(np.float32), (0, 0), 3.0)[..., None]
-    out = Bz * (1 - still) + zoom_about(A, cx, cy, 1.025) * still
+    rr0 = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2)
+    glow = (np.exp(-(rr0 / (350 + 1300 * v)) ** 2) * (1 - smooth(v / 0.55)))[..., None]          # light pours through the gaps
+    out = (Bz + glow * JASMINE * 0.85) * (1 - still) + zoom_about(A, cx, cy, 1.025) * still
     lay = np.zeros((H, W, 4), np.float32); A2 = zoom_about(A, cx, cy, 1.025)
     for i in np.argsort(q):
         if q[i] <= 0 or BP["boxes"][i] is None: continue
@@ -6054,7 +6056,8 @@ def bloom9(A, B, j, f, sa, sb, pre=14, post=26):
         ang = math.degrees(BP["ang"][i]); px, py = BP["pts"][i]
         cv2.ellipse(m, (int(px - x0), int(py - y0)), (int(76 * BP["sz"][i]), int(44 * BP["sz"][i])), ang, 0, 360, 1.0, -1, cv2.LINE_AA)
         m = cv2.GaussianBlur(m, (0, 0), 1.6)
-        tex = A2[y0:y1, x0:x1]; fl = math.cos(math.pi * qi * BP["flip"][i])
+        tex = np.clip(A2[y0:y1, x0:x1] * (1 + 1.4 * qi) + JASMINE * 0.35 * min(1, qi * 4), 0, 1)
+        fl = math.cos(math.pi * min(1, qi * 1.6) * BP["flip"][i] / 2.6)
         if fl < 0:                                                                     # the white back of the petal
             gx_ = (np.arange(bw, dtype=np.float32)[None, :] - (px - x0)); gy_ = (np.arange(bh, dtype=np.float32)[:, None] - (py - y0))
             sh = 0.80 + 0.20 * np.exp(-(gx_ ** 2 + gy_ ** 2) / (2 * 50.0 ** 2))

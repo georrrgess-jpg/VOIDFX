@@ -131,6 +131,10 @@ Two shots are slowed slightly: the glove at 0.78×, held frames only, and the M9
 - The hero title's exit overlapped the smear: it ends first.
 - The freeze had no visible petals: framing petals hang around (never over) his face.
 
+**Pass 3** (visual sign-off on frames pulled from the first encoded MP4):
+- The automated checkpoint passed, but at full size the first frames of the bloom read as skin flaking off his chin in small ellipses (body-horror, not a flower).
+- Rebuilt with half as many, larger petals that flip to their white backs almost at once and brighten as they lift, with light pouring through the gaps from the flower's heart. Re-rendered and re-checked.
+
 **Audio:**
 - The loop seam stepped (0.024 vs a local 0.001) because the breakdown started from zero. The pad now pre-rolls across the wrap: 0.0014 vs 0.0013.
 
@@ -149,4 +153,19 @@ Re-render: `bash tools/build.sh 9 prep audio video qc`
 
 ## Checkpoint (encoded MP4)
 
-CHECKPOINT_RESULTS
+Run on the encoded upload file (`bash tools/build.sh 9 qc`), after the pass-3 re-render. **VERDICT: SHIP.**
+
+**Automated checks:**
+- **Format:** 1080×1920, 60 fps, 1296 frames, H.264 + AAC, clean decode.
+- **Loudness:** −13.0 LUFS, true peak −3.4 dBTP, measured after AAC.
+- **Face centring:** every face-tracked shot had 0 flagged frames. The moon, the light table and the upside-down floor shot are subject-less by design.
+- **Text vs. faces:** one flag, at frame 1222. It's the smear ghost during the title's exit, and no face is under the text.
+  - 43 low-placed detections (the apron, gloved hands, his bowed head in the blinds shot) were checked on frames and are false positives.
+- **Cuts and picture:** no frozen runs, no black frames, and no clicks at any of the 13 cuts.
+- **Song splice:** sample step 0.0021 against a local median of 0.0018.
+- **Loop seam:** matched in picture (luma 48.3 → 48.7) and in sound (−31.7 / −31.8 dBFS over 20 ms).
+- **A/V length:** 21.600 s vs 21.611 s (under one frame).
+
+**Visual sign-off:** frames pulled from the encoded MP4 around every transition, every caption, the freeze, the drop, the hook title and the loop.
+
+**Not verifiable here:** I can't watch or listen. The structure, timing and loudness are measured, and every moment was checked on stills, but the edit has not been seen in motion or heard. Please watch it once with sound.
