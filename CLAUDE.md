@@ -67,15 +67,12 @@
     - A soft, low-quality shot was swapped out. Check every shot at full resolution.
     - Captions on parts where the song wasn't singing were rejected. **Text only on clearly sung or spoken words**, each on its time.
     - The owner asked for more transitions, animations and graphics, with very little dead space.
-  - **Rev 3 to 5, rejected; don't use these again:**
-    - blood slides drifting around the frame;
-    - random blood drips from the top edge and blood-spatter hits;
-    - a big knife slicing across the lens;
-    - the scalpel-cut / blood-bead / slide-smear drop;
-    - the drawn corridor of blood slides;
-    - a glass shatter;
-    - duct-tape strips.
-    Blood and slide **graphics** read as clutter or as cheap next to the footage. Keep blood to what is in the footage and the grade.
+  - **Rev 3 to 5, replaced because of how they looked in FOREVER.** These ideas are **not banned**. The owner: *"I didn't necessarily hate the blood slide or the knife across the screen, I just don't like how it looked in this specific edit"* (v7's blood-slide box and blood on the lens were liked). What went wrong was the execution:
+    - **Lingering:** blood slides drifted around the cold open as a constant overlay ("stick around").
+    - **Random:** blood drips and spatter hits fell on beats with no reason in the shot, and the knife pass swept across the lens mid-montage, unmotivated.
+    - **Looked drawn, not real:** the slide smear on the drop and the corridor of slides were flat red discs on grey glass, cheap next to the footage and outside the edit's water look.
+    - **Didn't land:** the glass shatter (a shard web over his face) and the duct-tape strips.
+    - **The lesson:** blood, slides and knives are welcome when they are **motivated** (by the shot, the lyric or the story), **brief** (in and out, never parked on screen), **photographic or physically lit** (real refraction, gloss and shadow; or real footage, like the S1 slide shot), **part of the edit's own look**, and off his face. Judge them on stills next to the footage; if one reads as a drawn graphic, rebuild it or cut it.
   - **What replaced them and stayed:**
     - the plastic rip on the drop;
     - the evidence-camera flash and photo toss on the lyric;

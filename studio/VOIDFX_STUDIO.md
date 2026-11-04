@@ -37,15 +37,12 @@ The owner, after rev 5: *"I like this edit. I would like for you to make it a st
    - The **picture recognises the lyric too:** at least three moments where a transition, animation or title lands on a sung word and acts it out. FOREVER's: the flash fires on "IF"; FEEL THIS **REAL** turns red as its photo is tossed; **FOREVER** builds as the bag goes over and sinks.
    - Never caption a part the song isn't singing (the rev 2 note), and never show narration as spoken unless his lips match.
 
-**FOREVER's revision lessons (don't repeat them):**
-- **Blood and slide graphics were rejected across three revisions:**
-  - slides drifting around the cold open;
-  - random drips from the top edge and spatter hits;
-  - the scalpel-cut / blood-bead / slide-smear drop;
-  - the drawn corridor of slides;
-  - a blood drop.
-  Blood belongs to the footage and the grade, not to overlays.
-- **Also rejected:** a knife slicing across the lens, a glass shatter and duct-tape strips.
+**FOREVER's revision lessons: what was replaced, and why.** The ideas themselves aren't banned. The owner: *"I didn't necessarily hate the blood slide or the knife across the screen, I just don't like how it looked in this specific edit."* (v7's blood-slide box and blood on the lens were liked.) The execution was the problem:
+- **Lingering:** blood slides drifted around the cold open as a constant overlay.
+- **Random:** drips from the top edge and spatter hits fell on beats with no reason in the shot; a big knife swept across the lens mid-montage, unmotivated.
+- **Looked drawn, not real:** the scalpel-cut / blood-bead / slide-smear drop and the corridor of slides were flat red discs on grey glass, cheap next to the footage and outside the edit's water look.
+- **Didn't land:** the glass shatter (a shard web over his face) and the duct-tape strips.
+- **So:** use blood, slides, knives, glass and tape when they are **motivated** (by the shot, the lyric or the story), **brief**, **photographic or physically lit** (or real footage), **in the edit's own look**, and off his face. Judge each on stills next to the footage; if it reads as a drawn graphic, rebuild it or cut it.
 - **What stayed:** transitions **motivated by the shot or the lyric** (the flashlight in his hand blinds the lens; his camera's flash takes the photo; the dive goes into his own eye; the plastic of the kill room he's standing in tears).
 
 ---
@@ -182,8 +179,8 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | v102 LET GO (Studio 2, The Flash) overall: *"I like this edit and I honestly think it's good. It's complete"*, but **lacklustre** next to the other builds and the Dexter edits | v102 | **Go above and beyond** (the §5a gate). The remaining gaps were the **concept** (built around the lyric "let go" rather than a moment from his world), the **number of standout set pieces** (the strike on the drop was the only one; the rest were quick reworked v5 moves), and the **graphics** (subtle sparks and arcs that don't read at phone size). |
 
 | v103 rev 1: the last word of the VO line "gets cut off"; a low-quality early shot; captions where *"the song didn't sing the lyrics at those parts"* | v103 | Narration lines must end on a full stop or question with silence after them. Check every shot at full resolution. **Text only on clearly sung or spoken words**, each on its time (`tools/lyrics.py` marks what isn't clearly sung). |
-| v103 rev 2 → 4: blood slides that *"stick around"* in the cold open; *"random blood dripping"*; the knife slicing across the lens; *"the blood and slide animation"* (the scalpel/beads/slide-smear drop and the drawn slide corridor) | v103 | No blood or slide **graphics**: overlays of blood, drips, spatter, slides or a blood drop read as clutter, or as cheap next to the footage. No knife across the lens. |
-| v103 rev 4: the glass shatter and the duct-tape strips | v103 | Replaced by the eye dive and the flashlight blind-out (approved in rev 5). Prefer transitions motivated by something in the shot. |
+| v103 rev 2 → 4: blood slides that *"stick around"* in the cold open; *"random blood dripping"*; the knife slicing across the lens; *"the blood and slide animation"* (the scalpel/beads/slide-smear drop and the drawn slide corridor) | v103 | **The ideas are fine; the execution wasn't** (*"I didn't necessarily hate the blood slide or the knife across the screen, I just don't like how it looked in this specific edit"*). They lingered (slides parked on screen), were random (drips, spatter and the knife pass with no reason in the shot), or looked drawn next to the footage (flat red discs on grey glass). Use them motivated, brief, physically lit or as real footage, in the edit's look, and off the face (§0). |
+| v103 rev 4: the glass shatter and the duct-tape strips, as built in that edit | v103 | Replaced by the eye dive and the flashlight blind-out (approved in rev 5). Prefer transitions motivated by something in the shot; if you bring glass or tape back, it has to look physically real and stay off the face. |
 
 ## 5a. Raising the bar (after v9): the pre-build gate
 
@@ -196,7 +193,7 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
    - one on the loop.
    They're on the level of v7's slide box, plastic burst and zipper, and v8's "Darling," freeze into the falling drop. Quick moves (whips, strobes, flashes) only connect the set pieces; they don't count toward the three.
 3. **Text in the approved v9 style** (§3: "it was perfect"): keyline captions for dialogue and lyrics, plus at least two designed title moments in the hero-title style that act out their meaning.
-4. **Graphics in every section**, not only the cold open: depth layers, themed overlays (evidence, plastic, light, water; **not** blood or slide overlays, §0), beat-synced camera animation through every section with drums.
+4. **Graphics in every section**, not only the cold open: depth layers, themed overlays (evidence, plastic, light, water, blood, slides), each motivated, brief and physically lit, never parked on screen (§0), beat-synced camera animation through every section with drums.
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
 6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
 7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
