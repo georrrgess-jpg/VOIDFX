@@ -283,5 +283,33 @@ Kept from rev 2: speed slices, ignite, the emblem dive, the speed ramps, the sho
 - **The whirlwind** (cold open): gold debris and pale wind streaks orbit him in depth. The far side passes behind him through the matte, the near side in front, never across his face. It builds through the breakdown and swells on the bar lines.
 - **Lightning ribbons in 3-D** (ignition, LET IT HAPPEN): two ribbons spiral round him, behind his head and shoulders and across his chest, with a bright pulse running along them.
 
-REV3_RESULTS
+### Review passes
+- **Lightning branches** first glowed into a white mass: now a sharp core with a modest glow, seeded at the emblem.
+- **Perimeter** first split the frame with a straight clock-wipe edge through his face. It's now a spiral wake that closes on his chest, with a feathered edge.
+- **Lightning ribbons** were mostly off-frame on the close-up. They now wrap behind his head and across the shoulders. They never cross a face: masked faces with no face track use a head box from the matte. The same rule applies to the wind.
+- **AROUND** letters first jumped to the top of the ring through his body. They now step onto the bottom of the ring and run counter-clockwise, facing inward.
+- **Loop seam:** the first render had a picture seam diff of 3.80, because the tunnel's rings and bolts were still over the landing panel. They now clear before the landing, the panel lands at exactly full frame, and the diff is 0.91.
+- **ALL THAT / ISN'T BOUND** touched his chin early in the ignition shot (QC flagged 8 frames). The caption now sits 50 px lower.
+- **The rewind** was gritty (about 30× playback with no filtering). It's now box-filtered over each output sample's span, and it starts after "around" finishes, with an equal-power crossfade.
+
+### Ship checkpoint (rev 3, measured on the encoded MP4)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1498 frames, decodes clean |
+| Loudness | −12.7 LUFS, −3.4 dBTP after AAC |
+| Faces | every shot centred; one flag is the slices transition frame (checked) |
+| Text vs faces | clear; frame 1464 flags a face inside a tunnel panel (checked) |
+| Cuts | 17 cuts, 0 audio clicks; loop seam audio continuous |
+| Black frames | none |
+| Loop seam | picture luma 41.3 → 42.3, blurred diff 0.91 |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Visual sign-off** (frames from the encoded file):
+- the loop seam (1494 → 3);
+- every new transition;
+- each caption at its sung word;
+- the ring and the tunnel;
+- the frozen shatter.
 
