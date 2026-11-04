@@ -65,3 +65,9 @@ v102/frames/
 v102/out/
 v102/work/*.npz
 v102/work/*.npy
+v103/work/*.log
+v103/audio/
+v103/frames/
+v103/out/
+v103/work/*.npz
+v103/work/*.npy
