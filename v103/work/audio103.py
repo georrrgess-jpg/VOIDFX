@@ -421,18 +421,14 @@ def main():
             place(fx, stereo(shutter_ticks(-21, 3, 0.025, 813)), t0 - 5 / E.FPS); place(fx, stereo(click(-19, 814)), t0 - 0.01)
         elif tin == "impact":
             place(fx, stereo(A2.impact(-17, (80, 40), 0.3, 1.0, 751)), t0)
-        elif tin == "glass_shatter":                                                  # the hit, cracks racing, the glass gives way on the beat
-            place(fx, stereo(glass_clack(-17, 753), -0.4), t0 - 10 / E.FPS)
-            n_ = I(10 / E.FPS); q = np.arange(n_) / SR
-            crk = bq(noise(n_, 754), "band", np.array([2500, 9000]), 2) * (np.random.default_rng(755).random(n_) > 0.93) * (q / q[-1]) ** 0.5
-            place(fx, stereo(norm(crk, -22)), t0 - 10 / E.FPS)
-            place(fx, stereo(A2.impact(-15, (70, 36), 0.35, 1.0, 756)), t0); place(fx, glass_tinkles(0.7, -21, 757, 30), t0)
-            place(fx, A2.whoosh(0.35, -24, 758, True), t0 + 0.02)
+        elif tin == "pupil_dive":                                                     # rev 5: a rushing dive into his eye; a low boom as the pupil closes
+            place(fx, rev_swell(0.30, -21, 753), t0 - 0.30); place(fx, A2.whoosh(0.30, -21, 754, True), t0 - 14 / E.FPS)
+            place(fx, stereo(A2.impact(-16, (50, 26), 0.45, 0.6, 755)), t0 - 0.02); place(fx, A2.whoosh(0.28, -25, 756, False), t0 + 0.03)
         elif tin == "whip":
             place(fx, A2.whoosh(0.22, -21, 753, True), t0 - 5 / E.FPS)
-        elif tin == "tape":
-            place(fx, stereo(tape_slap(-18, 761), -0.3), t0 - 6 / E.FPS + 0.03); place(fx, stereo(tape_slap(-19, 762), 0.3), t0 - 3 / E.FPS + 0.03)
-            place(fx, stereo(tape_rip(0.32, -17, 763)), t0 + 0.04)
+        elif tin == "torch_blind":                                                    # rev 5: the flashlight clicks, swells into the lens, a bright hit
+            place(fx, stereo(lamp_click(-21, 761)), t0 - 9 / E.FPS); place(fx, rev_swell(0.16, -22, 762), t0 - 0.16)
+            place(fx, np.stack([A2.shimmer(0.6, -27)] * 2, 1), t0 - 0.02); place(fx, stereo(A2.impact(-18, (90, 45), 0.25, 0.9, 763)), t0)
         elif tin == "logo_orig":
             place(fx, stereo(A2.impact(-21, (110, 60), 0.12, 0.7, 771)), t0 - 0.20)
             place(fx, np.stack([A2.shimmer(0.9, -29)] * 2, 1), t0 - 0.15); place(fx, A2.whoosh(0.32, -22, 772, True), t0 - 0.10)

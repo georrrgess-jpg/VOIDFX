@@ -6213,6 +6213,8 @@ def main():
 
 
 
+
+
 # >>> v103 section (generated from fx103.py by splice.py)
 # ============================================================================ v103 — FOREVER: undertow toolkit (Dexter × Everlong)
 # spliced into render103.py before main() by splice.py; the last definitions win, so this section owns the frame.
@@ -6508,7 +6510,7 @@ def beat_fx(out, f):
     if ch > 0.05: o = rgb_split(o, 9 * ch)
     return np.clip(o * (1 + 0.10 * z), 0, 1)
 
-# ---------------------------------------------------------------------------- new transitions: sea spray, duct tape
+# ---------------------------------------------------------------------------- new transitions: sea spray
 def wave_tr(A, B, j, f, sa, sb, pre=8, post=12):
     """a wave of sea spray washes across the lens (refraction, foam), leaving the next shot."""
     u = clamp((j + pre) / (pre + post), 0, 1); front = -300 + (W + 700) * eout(u, 1.6)
@@ -6524,44 +6526,7 @@ def wave_tr(A, B, j, f, sa, sb, pre=8, post=12):
     o = o * (1 - foam[..., None] * 0.5) + FOAM * 0.80 * foam[..., None] * 0.5
     return np.clip(lens_drops(o, f + 900, 0.8 * math.sin(math.pi * u)), 0, 1)        # spray left on the lens, sliding down
 
-_TP = {}
-def tape_strip(w=1500, h=300, seed=1):
-    key = (w, h, seed)
-    if key in _TP: return _TP[key]
-    rng = np.random.default_rng(seed); a = np.ones((h, w), np.float32)
-    for side in (0, 1):                                                               # torn ends
-        x0 = 0 if side == 0 else w - 40; prof = (np.cumsum(rng.normal(0, 4, h)) % 30)
-        for y in range(h):
-            if side == 0: a[y, :int(prof[y]) + 4] = 0
-            else: a[y, w - int(prof[y]) - 4:] = 0
-    yy = np.linspace(0, 1, h)[:, None]
-    sheen = 0.30 + 0.28 * np.exp(-((yy - 0.28) / 0.10) ** 2) + 0.10 * np.exp(-((yy - 0.75) / 0.18) ** 2)        # silver, curved across the width
-    weave = (np.sin(np.arange(w)[None, :] / 1.6) * 0.5 + 0.5) * 0.035 + (np.sin(np.arange(h)[:, None] / 1.8) * 0.5 + 0.5) * 0.03
-    nz = _lowfreq((h, w), (6, 40), seed + 5) * 0.10
-    crease = np.zeros((h, w), np.float32)
-    for _ in range(9):                                                                # wrinkles where it was slapped on
-        x0 = rng.uniform(80, w - 80); cv2.line(crease, (int(x0), 0), (int(x0 + rng.uniform(-60, 60)), h), float(rng.uniform(0.5, 1.0)), int(rng.integers(2, 5)), cv2.LINE_AA)
-    crease = cv2.GaussianBlur(crease, (0, 0), 2.5)
-    col = np.dstack([sheen + weave + nz + crease * 0.18 - np.roll(crease, 4, 1) * 0.12] * 3).astype(np.float32) * np.array([1.0, 1.0, 0.97], np.float32)
-    col[:8] *= 0.7; col[-8:] *= 0.6
-    _TP[key] = np.dstack([np.clip(col, 0, 1), cv2.GaussianBlur(a, (0, 0), 0.8)]).astype(np.float32); return _TP[key]
-
-def tape_tr(A, B, j, f, sa, sb, pre=6, post=10):
-    """two strips of duct tape slap across the lens (an X); ripped off, the next shot is underneath."""
-    base = A if j < 0 else B
-    lay = np.zeros((H, W, 4), np.float32)
-    for i, (ang, y0, k0) in enumerate(((-18, H * 0.42, -6), (16, H * 0.56, -3))):
-        k = j - k0
-        if k < 0: continue
-        if j < 0 or k < 3: x = W / 2 + (W * 1.2) * (1 - eout(clamp((k + 1) / 3, 0, 1), 2.5)); a = 1.0
-        else: u = (j + 1) / post; x = W / 2 - (W * 1.6) * ein(u, 1.6) * (1 if i == 0 else -1); a = 1.0
-        draw_sprite(lay, tape_strip(seed=i + 1), x, y0, 1.0, ang, 1.0, 0.0, a)
-    sh = cv2.GaussianBlur(lay[..., 3], (0, 0), 10)[..., None] * 0.5
-    o = base * (1 - np.roll(sh, 18, 0))
-    return np.clip(o * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4], 0, 1)
-
-TR2.update({"surface": (lambda A, B, j, f, sa, sb: surface_in(B, f, j), 0, int(E.T_SURFACE * FPS) + 20), "wave": (wave_tr, 8, 12),
-            "tape": (tape_tr, 6, 10)})
+TR2.update({"surface": (lambda A, B, j, f, sa, sb: surface_in(B, f, j), 0, int(E.T_SURFACE * FPS) + 20), "wave": (wave_tr, 8, 12)})
 
 # ---------------------------------------------------------------------------- text: v9 standard (captions) + a generic per-letter hero title
 def drop_sprite(r=14):
@@ -6757,87 +6722,52 @@ def moon_glow(out, f):
 
 TR2.update({"ripple": (ripple_tr, 9, 16), "bubbles_up": (bubbles_tr, 7, 12)})
 
-# ---- rev 3: the glass shatters (replaces the knife pass). The lens is glass: a hit low and to the side (never on
-#      the face) cracks it, the cracks race across the glass, and on the beat the shards tumble toward the lens and fall away.
-_GS = {}
-def gshards(cx, cy, seed=73):
-    key = (int(cx), int(cy), seed)
-    if key in _GS: return _GS[key]
-    rng = np.random.default_rng(seed); pts = [(cx, cy)]
-    for i in range(120):
-        r = (rng.random() ** 1.6) * 1500; a = rng.uniform(0, 2 * math.pi)
-        x, y = cx + r * math.cos(a), cy + r * math.sin(a) * 1.3
-        if 0 <= x < W and 0 <= y < H: pts.append((x, y))
-    for x in (0, W - 1):
-        for y in np.linspace(0, H - 1, 8): pts.append((x, y))
-    for y in (0, H - 1):
-        for x in np.linspace(0, W - 1, 6): pts.append((x, y))
-    sd = cv2.Subdiv2D((0, 0, W, H))
-    for p_ in pts: sd.insert((float(min(W - 1, max(0, p_[0]))), float(min(H - 1, max(0, p_[1])))))
-    facets, centers = sd.getVoronoiFacetList([])
-    L = []; cr = np.zeros((H, W), np.uint8)
-    for poly, c in zip(facets, centers):
-        poly = np.array(poly, np.float32); poly[:, 0] = np.clip(poly[:, 0], 0, W - 1); poly[:, 1] = np.clip(poly[:, 1], 0, H - 1)
-        x0, y0 = poly.min(0).astype(int); x1, y1 = poly.max(0).astype(int) + 1
-        if x1 - x0 < 3 or y1 - y0 < 3: continue
-        m = np.zeros((y1 - y0, x1 - x0), np.uint8); cv2.fillPoly(m, [(poly - [x0, y0]).astype(np.int32)], 255, cv2.LINE_AA)
-        d = math.hypot(c[0] - cx, c[1] - cy) + 1
-        L.append(dict(box=(x0, y0, x1, y1), mask=m.astype(np.float32) / 255, c=(float(c[0]), float(c[1])), v=((c[0] - cx) / d, (c[1] - cy) / d),
-                      sp=rng.uniform(0.7, 1.3) * (1.5 - min(1.0, d / 1600)), w=rng.uniform(-16, 16), dz=rng.uniform(0.01, 0.04), delay=d / 1600 * 3.0))
-        if d < 520: cv2.polylines(cr, [poly.astype(np.int32)], True, int(255 * (1 - d / 520) ** 0.7), 1, cv2.LINE_AA)   # shard edges only near the hit
-    for i in range(14):                                                                # thin radial cracks from the hit
-        a = i / 14 * 2 * math.pi + rng.uniform(-0.15, 0.15); r = rng.uniform(600, 2000); q = [(cx, cy)]
-        for j in range(1, 12): rr = r * j / 11; aa = a + rng.uniform(-0.05, 0.05); q.append((cx + rr * math.cos(aa), cy + rr * math.sin(aa)))
-        for j in range(len(q) - 1):
-            cv2.line(cr, tuple(int(v) for v in q[j]), tuple(int(v) for v in q[j + 1]), int(255 * (1 - j / 11) ** 0.6), 2 if j < 3 else 1, cv2.LINE_AA)
-    for R in (40, 85):
-        cv2.circle(cr, (int(cx), int(cy)), R, 200, 1, cv2.LINE_AA)
-    crf = cr.astype(np.float32) / 255
-    dist = np.sqrt((_GX - cx) ** 2 + ((_GY - cy) / 1.3) ** 2)
-    _GS[key] = (L, np.clip(crf * 0.85 + cv2.GaussianBlur(crf, (0, 0), 3) * 0.35, 0, 1), dist); return _GS[key]
+# ---- rev 5: two transitions for the riff (replace the glass shatter and the duct tape)
+def pupil_dive(A, B, j, f, sa, sb, pre=14, post=14):
+    """into his eye: the camera dives at his eye, the pupil swallows the frame, and a round iris opens on the next shot."""
+    rr = np.sqrt((_GX - W / 2) ** 2 + (_GY - H / 2) ** 2)
+    if j < 0:
+        u = (j + pre + 1) / (pre + 1); fs = face_scr(sa, f)
+        if fs is None: ex, ey, fw = W / 2, H * 0.37, 320.0
+        else:
+            e = min((fs[3], fs[4]), key=lambda q: abs(q[0] - W / 2)); ex, ey, fw = e[0], e[1], fs[2]
+        Z = max(10.0, W / (0.16 * fw)); sc = math.exp(math.log(Z) * ein(u, 2.4)); v = eout(clamp(u / 0.7, 0, 1), 2)
+        M = cv2.getRotationMatrix2D((ex, ey), 4 * u, sc); M[0, 2] += (W / 2 - ex) * v; M[1, 2] += (H / 2 - ey) * v
+        o = cv2.warpAffine(A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        if sc > 1.4: o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + 0.07 * min(1.0, sc / 8), 6)
+        pr = 1250 * ein(clamp((u - 0.58) / 0.42, 0, 1), 1.8)
+        if pr > 1:                                                                     # the pupil swallows the frame
+            pm = np.clip((pr - rr) / 14, 0, 1)[..., None]; ring = np.exp(-((rr - pr) / (10 + 0.05 * pr)) ** 2)[..., None]
+            o = o * (1 - pm) + DEEP * 0.12 * pm + ring * (TEAL * 0.9 + BONE * 0.35)
+        return np.clip(rgb_split(o, 12 * u), 0, 1)
+    u = (j + 1) / post; R = 1250 * eout(u, 2.4)                                       # a round iris opens on the next shot
+    m = np.clip((R - rr) / 3.0, 0, 1)[..., None]
+    Bz = zoom_about(B, W / 2, H / 2, 1.3 - 0.3 * eout(u, 2))
+    Bz = cv2.remap(Bz, (W / 2 + (_GX - W / 2) * (1 - 0.10 * (1 - u) * (rr / max(R, 1)) ** 2)).astype(np.float32),
+                   (H / 2 + (_GY - H / 2) * (1 - 0.10 * (1 - u) * (rr / max(R, 1)) ** 2)).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    edge = np.exp(-((rr - R) / 7) ** 2)[..., None]
+    o = Bz * m + (1 - m) * DEEP * 0.12 + edge * (TEAL * 0.8 + BONE * 0.5) * (1 - u) * 1.2
+    return np.clip(rgb_split(o, 10 * (1 - u)), 0, 1)
 
-def glass_shatter(A, B, j, f, sa, sb, pre=10, post=18):
-    cx, cy = W * 0.26, H * 0.74
-    L, crack, dist = gshards(cx, cy)
-    if j < 0:                                                                          # the hit, and the cracks racing out across the glass
-        u = (j + pre) / pre; R = 1900 * eout(u, 1.6)
-        reveal = np.clip((R - dist) / 60, 0, 1) * crack
-        o = cv2.remap(A, (_GX + reveal * 4).astype(np.float32), (_GY + reveal * 3).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-        o = o * (1 - reveal[..., None] * 0.6) + reveal[..., None] * BONE * 0.85
-        hit = np.exp(-dist / (22 + 14 * u))[..., None] * (1 - u * 0.7) * 0.8
-        return np.clip(o + hit * BONE * 0.9, 0, 1)
-    k = j + 1; out = B * (0.6 + 0.4 * clamp(k / 10, 0, 1))
-    for s_ in L:
-        kk = k - s_["delay"]; x0, y0, x1, y1 = s_["box"]
-        if kk <= 0:
-            m = s_["mask"][..., None]; sub = A[y0:y1, x0:x1] * (1 - 0.6 * crack[y0:y1, x0:x1, None]) + BONE * 0.85 * crack[y0:y1, x0:x1, None]
-            out[y0:y1, x0:x1] = out[y0:y1, x0:x1] * (1 - m) + sub * m
-            continue
-        mv = 30 * s_["sp"] * kk ** 1.35; tx, ty = s_["v"][0] * mv, s_["v"][1] * mv + 1.6 * kk * kk
-        sc = 1 + s_["dz"] * kk * 2.5; ang = s_["w"] * kk * 0.4; a = clamp(1 - (kk - 7) / 8, 0, 1)
-        if a <= 0: continue
-        pcx, pcy = s_["c"]; M = cv2.getRotationMatrix2D((pcx, pcy), ang, sc); M[0, 2] += tx; M[1, 2] += ty
-        pad = int(60 + mv * 1.6 + 60 * sc)
-        X0, Y0 = max(0, int(pcx + tx) - (x1 - x0) // 2 - pad), max(0, int(pcy + ty) - (y1 - y0) // 2 - pad)
-        X1, Y1 = min(W, int(pcx + tx) + (x1 - x0) // 2 + pad), min(H, int(pcy + ty) + (y1 - y0) // 2 + pad)
-        if X1 <= X0 or Y1 <= Y0: continue
-        Ms = M.copy(); Ms[0, 2] -= X0; Ms[1, 2] -= Y0; Ms[0, 2] += Ms[0, 0] * x0 + Ms[0, 1] * y0; Ms[1, 2] += Ms[1, 0] * x0 + Ms[1, 1] * y0
-        wi = cv2.warpAffine(A[y0:y1, x0:x1], Ms, (X1 - X0, Y1 - Y0), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
-        wm = cv2.warpAffine(s_["mask"], Ms, (X1 - X0, Y1 - Y0), flags=cv2.INTER_LINEAR, borderValue=0)[..., None] * a
-        edge = cv2.morphologyEx(wm[..., 0], cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8))[..., None]
-        shade = 0.85 + 0.3 * math.sin(math.radians(ang) * 3 + s_["w"])                  # each shard catches the light differently
-        out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - wm) + np.clip(wi * shade * 0.9 + TEAL * 0.06 + edge * BONE * 0.9, 0, 1) * wm
-    if k < 12:                                                                         # rev 4: fine glass dust glints from the hit (no red mist)
-        rng = np.random.default_rng(17); lay = np.zeros((H // 2, W // 2), np.float32)
-        for i in range(90):
-            a_ = rng.uniform(-math.pi * 0.95, 0.15); sp = rng.uniform(300, 1300); r_ = rng.uniform(1, 3)
-            x = cx + math.cos(a_) * sp * k / 60; y = cy + math.sin(a_) * sp * k / 60 + 500 * (k / 60) ** 2
-            cv2.circle(lay, (int(x / 2), int(y / 2)), int(r_), 1.0, -1, cv2.LINE_AA)
-        lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 0.8), (W, H))[..., None] * (1 - k / 12)
-        out = out + BONE * lay * 0.8
-    return np.clip(out, 0, 1)
+def torch_blind(A, B, j, f, sa, sb, pre=9, post=12):
+    """the flashlight swings into the lens: its flare streaks out and whites out the frame; the next shot burns back in out
+    of the glare, brightest parts first."""
+    if j < 0:
+        u = (j + pre + 1) / (pre + 1); px, py = torch_point(A)
+        rr = np.sqrt((_GX - px) ** 2 + (_GY - py) ** 2); R = 60 + 2600 * ein(u, 2.0)
+        cone = np.exp(-(rr / R) ** 2)[..., None] * ein(u, 1.2)
+        streak = np.exp(-((_GY - py) / (6 + 30 * u)) ** 2) * np.exp(-((_GX - px) / (500 + 900 * u)) ** 2)
+        o = A + cone * (BONE * 1.5 + TEAL * 0.2) + streak[..., None] * (TEAL * 0.9 + BONE * 0.6) * (0.5 + u)
+        return np.clip(o, 0, 1)
+    v = (j + 1) / post; L = lum(B)[..., None]
+    reveal = np.clip((L - (1 - eout(v, 1.5)) * 0.85) * 5 + v * 2.4, 0, 1)
+    white = 1 - eout(v, 1.8)
+    sy = H * 0.5; streak = np.exp(-((_GY - sy) / (4 + 30 * (1 - v))) ** 2)[..., None] * (1 - v) ** 1.5
+    g = np.clip(white * 1.6, 0, 1) * (1 - reveal) + white * 0.25 * reveal                  # glare: highlights burn through first, then it clears
+    o = B * (1 - g) + (BONE * 1.1 + TEAL * 0.1) * g + streak * (TEAL * 0.8 + BONE * 0.5)
+    return np.clip(o, 0, 1)
 
-TR2["glass_shatter"] = (glass_shatter, 10, 18)
+TR2.update({"pupil_dive": (pupil_dive, 14, 14), "torch_blind": (torch_blind, 9, 12)})
 
 # ---------------------------------------------------------------------------- frame
 def base103(s, f):

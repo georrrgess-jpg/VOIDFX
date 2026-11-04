@@ -219,3 +219,31 @@ Unchanged: the VO line and its caption, the lyric captions and FOREVER, the loop
 | Length | audio and video within 10.7 ms |
 
 **Visual sign-off** was done on frames pulled from the encoded MP4: the whole edit every half-second, the plastic build and rip frame by frame, every step of the evidence-photo hook (roll, flash, photo toss, shutter, the last toss onto the boat), and the frames QC flagged (178: the caption sits below his chin; 826: the logo transition). There is no blood or slide graphic left anywhere in the edit. **Not verified:** watching and listening in real time.
+
+## Revision 5 (owner notes)
+
+**"I don't like the glass shatter animation and the tape animation that follows shortly after."** Both are replaced, and their code is deleted. The new transitions are motivated by what's in the shots:
+
+1. **11.0 s, menace → knife: the eye dive** (replaces the glass shatter).
+   - The camera dives at his eye; YuNet's eye position keeps it on the eye.
+   - The pupil grows with a teal rim and swallows the frame, then a round iris opens on the next shot with a slight lens bulge and a chromatic edge.
+   - Sound: a reverse swell, a rushing whoosh, a low boom as the pupil closes, and a whoosh out.
+   - The iris is round, not six-bladed, so it doesn't repeat the camera shutter in the hook.
+2. **12.5 s, flashlight → "looks up": the flashlight blind-out** (replaces the duct tape).
+   - The flashlight in the shot swings into the lens. Its anamorphic flare stretches out and the light blooms until the frame is white.
+   - The red "looks up" shot burns back in out of the glare, brightest parts first, while the flare collapses to a thin line.
+   - The first version passed through a muddy grey midway, so the glare now clears straight to the picture.
+   - Sound: a flashlight click, a swell into the lens, a shimmer and a bright hit.
+
+### Revision 5 checkpoint: 10/10 PASS on the first run
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1456 frames (24.27 s), H.264 + AAC, fast-start, 16 Mb/s cap |
+| Loudness after AAC | −13.2 LUFS, true peak −4.1 dBTP |
+| Clicks | 0 at the 20 cuts and the splice; loop seam clean by the QC rule |
+| Loop seam picture | under water at both ends: blurred difference 1.42 |
+| Faces | centred in every shot; 0 text-over-face frames. The flags at 550/554 are the plastic-rip flaps mid-transition; 570/574 are low detections in the drill shot, which has no text |
+| Length | audio and video within 10.7 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4: the eye dive and the flashlight blind-out frame by frame, the shots either side, and the flagged frames. **Not verified:** watching and listening in real time.
