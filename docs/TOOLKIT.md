@@ -86,6 +86,9 @@ Each transition goes through something and has its own sound in `audioN.py` (`if
 | `time_particles` (v10 r4, replaces `frozen_shatter`) | The frozen moment comes apart into fragments of its own pixels (edges first, people last), they burst and hang in the stopped air, then swirl back together as the next moment from `pfocus` outward, landing on the hit | `pfocus=(x, y)` output px on the incoming shot | Disintegration grains, shimmer, reversed grains into an impact |
 | bullet time (v10 r4, automatic on `frozen=True` holds) | In each frozen hold the camera glides through the moment in 3-D: depth from the MODNet matte + a floor gradient drives a parallax remap, plus a dolly push | — | Soft panned air |
 | `carry` text (v10 r4) | A lightning runner streaks along the line and drops each word off on its onset; at the end it snatches the letters away (stretch + blur + gold trail) | — | Zips + crackle |
+| velocity (v10 r5) | `tmap=vel(e0, e1, a, b, lo, hi, tau), lin=True, interp="flow"`: a speed burst on every beat, slow motion between; flow in-betweens run on the restored 2× bands (`sr_flow_part`) | EDL helper `vel()` | The music; optional swish per punch |
+| beat camera (v10 r5) | `beat_bounce` 6 % zoom punch + `shake` rotation kick per beat in the hook; `beat_fx` zoom blur + colour split on the hit frames | — | Quiet swish |
+| `rays=` (v10 r5) | Screen-space god rays from the brightest warm light (quarter res, 20 samples); scaled down when the frame is already bright | per shot | — |
 | `wave=True` (v10 r3) | After the drop: a refracting dark-matter ring rings out of the frame centre | on the drop shot | Sub drop |
 | `tunnel_in` + `graphic="tunnel"` (v10 r3 loop) | The letters of a lyric run a ring that opens into the Speed Force; panels of the edit's own moments fly past newest to oldest and frame 0 lands | `T_OPEN`, `TUN_PANELS` | Ring crackle, swirl, panel whooshes, the song rewinding (box-filtered) |
 

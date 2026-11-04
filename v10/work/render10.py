@@ -7993,6 +7993,190 @@ def text10(out, f, s, rides):
 
 
 
+# ============================================================================ v10 rev 5 — the motion pass
+# Owner notes: "lacklustre… could use more animations and overall professionalism."
+#   VELOCITY   every hook shot is time-remapped to the beat: a speed burst on each beat (with real shutter blur from
+#              the source frames), smooth slow motion between (optical-flow in-betweens on the restored 2x source,
+#              so 24p footage plays at a true 60 fps instead of stepping)
+#   CAMERA     the camera moves with the music: a zoom punch and an alternating rotation kick on every beat of the
+#              hook, zoom motion blur and a colour split on the hit frames (the type stays clean on top)
+#   LIGHT      volumetric light rays pour out of the lightning (screen-space god rays from the brightest source)
+
+# ---- velocity: optical-flow in-betweens on the restored bands ---------------------------------------------------
+_FL = {}
+_DIS5 = [None]
+def flow_pair(pk, i0, i1):
+    key = (pk, i0, i1)
+    if key not in _FL:
+        if len(_FL) > 8: _FL.pop(next(iter(_FL)))
+        if _DIS5[0] is None: _DIS5[0] = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+        g0 = cv2.cvtColor(FR[(pk, i0)], cv2.COLOR_BGR2GRAY); g1 = cv2.cvtColor(FR[(pk, i1)], cv2.COLOR_BGR2GRAY)
+        _FL[key] = (_DIS5[0].calc(g0, g1, None), _DIS5[0].calc(g1, g0, None))
+    return _FL[key]
+
+_GRD = {}
+def sr_flow_part(pk, i0, i1, a, x0, x1, y0, y1):
+    """the in-between frame at fraction a, built on the 2x bands with the low-res flow scaled up."""
+    b0, b1 = sr_band(pk, i0), sr_band(pk, i1)
+    for b in (b0, b1):
+        if b is None or b[0] > x0 or b[0] + b[1].shape[1] // 2 < x1: return None
+    F01, F10 = flow_pair(pk, i0, i1)
+    f01, f10 = F01[y0:y1, x0:x1], F10[y0:y1, x0:x1]
+    Ft0 = -(1 - a) * a * f01 + a * a * f10; Ft1 = (1 - a) * (1 - a) * f01 - a * (1 - a) * f10
+    h2, w2 = 2 * (y1 - y0), 2 * (x1 - x0)
+    if (w2, h2) not in _GRD:
+        if len(_GRD) > 6: _GRD.clear()
+        gx, gy = np.meshgrid(np.arange(w2, dtype=np.float32), np.arange(h2, dtype=np.float32)); _GRD[(w2, h2)] = (gx, gy)
+    gx, gy = _GRD[(w2, h2)]; parts = []
+    for (xo, im), Ft in ((b0, Ft0), (b1, Ft1)):
+        F2 = cv2.resize(Ft, (w2, h2), interpolation=cv2.INTER_LINEAR) * 2
+        parts.append(cv2.remap(im, gx + 2 * (x0 - xo) + F2[..., 0], gy + 2 * y0 + F2[..., 1], cv2.INTER_LINEAR,
+                               borderMode=cv2.BORDER_REFLECT).astype(np.float32))
+    return parts[0] * (1 - a) + parts[1] * a
+
+def src_weights(s, f):
+    """the source frames render_shot samples: [(frame, weight)] or [("flow", i0, i1, a)] (mirrors source_img/sample)."""
+    pk = s["src"]; fps = E.SRC[pk][1]; U = UNIQ[pk]
+    t, u, sp = src_time(s, f)
+    def idx(tt, mode):
+        kf = tt * fps; i = clamp(bisect.bisect_right(U, kf + 0.3) - 1, 0, len(U) - 1)
+        if mode == "hold" or i >= len(U) - 1: return [(U[i], 1.0)]
+        i0, i1 = U[i], U[i + 1]; a = clamp((kf - i0) / (i1 - i0), 0.0, 1.0)
+        if a < 0.05: return [(i0, 1.0)]
+        if a > 0.95: return [(i1, 1.0)]
+        if mode == "blend": return [(i0, 1 - a), (i1, a)]
+        A0, A1 = FR[(pk, i0)], FR[(pk, i1)]
+        if np.abs(A0[::8, ::8].astype(np.float32) - A1[::8, ::8]).mean() > 14: return [(i0 if a < 0.5 else i1, 1.0)]
+        m0, m1 = A0[::8, ::8].mean(axis=(0, 1)), A1[::8, ::8].mean(axis=(0, 1))
+        if np.abs(m0.astype(np.float32) - m1).max() > 6: return [(i0, 1 - a), (i1, a)]
+        return [("flow", i0, i1, a)]
+    if sp > 1.7:
+        K = int(min(7, max(3, round(sp * 2)))); span = 0.5 / FPS * sp; out_ = []
+        for j in range(K):
+            out_ += [(k, w / K) for k, w in idx(t + (j / (K - 1) - 0.5) * span, "hold")]
+        return out_, t, u
+    return idx(t, s.get("interp", "hold")), t, u
+
+def render_shot(s, f, with_shake=True, want_mask=False):
+    SR_USED[0] = False
+    if s.get("fit") or "src" not in s: return _render_shot_v(s, f, with_shake, want_mask)
+    ws, t, u = src_weights(s, f)
+    if not ws: return _render_shot_v(s, f, with_shake, want_mask)
+    sw, sh_ = E.SRC[s["src"]][2], E.SRC[s["src"]][3]
+    cx, cy, ch = frame_geom(s, f, t, u)
+    cw = ch * 9 / 16; sc = W / cw
+    dx, dy, rot = shake(f) if with_shake else (0, 0, 0)
+    m = 16
+    x0 = int(max(0, cx - cw / 2 - m)); x1 = int(min(sw, cx + cw / 2 + m))
+    y0 = int(max(0, cy - ch / 2 - m)); y1 = int(min(sh_, cy + ch / 2 + m))
+    roi = None
+    for ent in ws:
+        if ent[0] == "flow":
+            part = sr_flow_part(s["src"], ent[1], ent[2], ent[3], x0, x1, y0, y1); w = 1.0
+            if part is None: return _render_shot_v(s, f, with_shake, want_mask)
+        else:
+            k, w = ent; b = sr_band(s["src"], k)
+            if b is None or b[0] > x0 or b[0] + b[1].shape[1] // 2 < x1: return _render_shot_v(s, f, with_shake, want_mask)
+            part = b[1][2 * y0:2 * y1, 2 * (x0 - b[0]):2 * (x1 - b[0])].astype(np.float32)
+        roi = part * w if roi is None else roi + part * w
+    roi = grade(roi / 255, s, f)
+    th_ = math.radians(rot); co, si = math.cos(th_) / sc, math.sin(th_) / sc
+    lx, ly = cx - x0, cy - y0
+    M = np.float32([[co, -si, lx - co * (W / 2 + dx) + si * (H / 2 + dy)], [si, co, ly - si * (W / 2 + dx) - co * (H / 2 + dy)]])
+    M2 = M * 2; M2[0, 2] += 0.5; M2[1, 2] += 0.5
+    out = cv2.warpAffine(roi, M2, (W, H), flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REFLECT)
+    SR_USED[0] = True
+    if want_mask:
+        msk = seg_mask(s, t)
+        mr = cv2.resize(msk, (sw, sh_), interpolation=cv2.INTER_LINEAR)[y0:y1, x0:x1]
+        mw = cv2.warpAffine(mr, M, (W, H), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REPLICATE)
+        return np.clip(out, 0, 1), np.clip(mw, 0, 1)
+    return np.clip(out, 0, 1)
+
+# ---- the camera moves with the music ----------------------------------------------------------------------------
+def beat_phase(f):
+    """(seconds since the last beat, beat index) and whether this is the hook / run (where the camera punches)."""
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    hook = E.HDROP + 1 <= e < E.E_STUT or E.E_RUN <= e < E.E_REW - 1
+    return ph, bi, hook
+
+def beat_bounce(f):
+    """zoom punches: soft on every beat of the cold open, a hard punch on every beat of the hook and the run."""
+    ph, bi, hook = beat_phase(f); e = f / FPS / E.HB
+    if hook: return 1 + 0.060 * math.exp(-ph / 0.10)
+    if 0 <= e < E.HDROP: return 1 + 0.010 * math.exp(-ph / 0.08)
+    return 1.0
+
+_shake_r4 = shake
+def shake(f):
+    dx, dy, rot = _shake_r4(f)
+    ph, bi, hook = beat_phase(f)
+    if hook: rot += (1.1 if bi % 2 else -1.1) * math.exp(-ph / 0.13)                       # a rotation kick per beat
+    return dx, dy, rot
+
+def beat_fx(out, f):
+    """the hit frames: zoom motion blur and a colour split on the first frames after each beat of the hook."""
+    ph, bi, hook = beat_phase(f)
+    if not hook or ph > 0.06: return out
+    k = math.exp(-ph / 0.025)
+    o = radial_blur(out, W / 2, H * 0.46, 1.0, 1.0 + 0.045 * k, 4)
+    return np.clip(rgb_split(o, 9 * k), 0, 1)
+
+# ---- light rays from the lightning ------------------------------------------------------------------------------
+def light_rays(out, f, amt):
+    """screen-space god rays: the brightest warm light streams outward in shafts (quarter res, 20 samples)."""
+    if amt <= 0.01: return out
+    w4, h4 = W // 4, H // 4
+    sm = cv2.resize(out, (w4, h4), interpolation=cv2.INTER_AREA)
+    L = sm[..., 0] * 0.114 + sm[..., 1] * 0.587 + sm[..., 2] * 0.299
+    m = np.clip((L - 0.60) * 3.0, 0, 1) * np.clip(0.4 + (sm[..., 2] - sm[..., 0]) * 2.0, 0, 1)
+    tot = float(m.sum())
+    if tot < 15: return out
+    gy, gx = np.mgrid[0:h4, 0:w4].astype(np.float32)
+    cx, cy = float((m * gx).sum() / tot), float((m * gy).sum() / tot)
+    acc = np.zeros_like(m); wsum = 0.0
+    for i in range(20):
+        s_ = 1.0 + 0.045 * i; d = 0.90 ** i
+        M = cv2.getRotationMatrix2D((cx, cy), 0, s_)
+        acc += cv2.warpAffine(m, M, (w4, h4), flags=cv2.INTER_LINEAR, borderValue=0) * d; wsum += d
+    acc = cv2.GaussianBlur(acc / wsum, (0, 0), 1.5)
+    rays = cv2.resize(acc, (W, H), interpolation=cv2.INTER_LINEAR)[..., None]
+    fl = 0.85 + 0.15 * math.sin(f * 0.9)
+    cover = tot / (w4 * h4)                                                                 # already bright frames get less
+    amt = amt * float(np.clip(1.25 - cover * 5.0, 0.25, 1.0))
+    return np.clip(out + rays * (GOLD2 * 0.75 + GOLDW * 0.25) * amt * 0.9 * fl, 0, 1)
+
+_base10_r4 = base10
+def base10(s, f):
+    img, person = _base10_r4(s, f)
+    if s.get("rays"): img = light_rays(img, f, s["rays"])
+    return img, person
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    if s.get("graphic") == "tunnel": out = tunnel_frame(f); person = None
+    else: out, person = base10(s, f)
+    out = text10(out, f, s, True)
+    if s.get("streak_e") is not None: out = light_streak3(out, f, s)
+    if tin == "tunnel_in": out = tunnel_in(out, f, k)
+    elif tin in TR2 and k < TR2[tin][2] and P is not None: out = TR2[tin][0](edge10(P, "last"), out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge10(n_, "first"), kn, f, s, n_)
+    out = portal(out, f)
+    if s.get("wave"): out = drop_wave(out, f, s)
+    out = beat_fx(out, f)
+    out = edge_bolts(out, f)
+    out = bar_sweep(out, f)
+    out = hit_ripple(out, f)
+    out = accents10(out, f)
+    out = text10(out, f, s, False)
+    out = finish10(out, f)
+    return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+
+
 def main():
     mode = sys.argv[1]
     load(); init_hits()

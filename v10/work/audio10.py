@@ -493,6 +493,10 @@ def main():
             place(fx, stereo(A2.impact(-12, (55, 28), 0.7, 0.5, 910)), t0); place(fx, A2.whoosh(0.4, -21, 911, True), t0 - 0.05)
             place(fx, stereo(crackle(0.5, -23, 912, 0.7)), t0 + 0.03)
     for e_ in E.STUT_GAPS: place(fx, stereo(tick(-25, 920 + e_)), th(e_) + 0.01)      # the clock in frozen time
+    cut_e = {s_["e0"] for s_ in E.SHOTS}
+    for e_ in list(range(34, 74, 2)) + list(range(90, 99, 2)):                            # rev 5: a swish on each camera punch
+        if e_ in cut_e or e_ in (56, 58): continue
+        place(fx, A2.whoosh(0.12, -33, 1500 + e_, e_ % 4 == 0), th(e_) - 0.06)
     for e0_ in (74, 78, 86):                                                              # bullet time: the camera glides
         n_ = I(0.46); q_ = np.arange(n_) / SR
         air = bq(noise(n_, 1440 + e0_), "band", np.array([250, 1800]), 2) * np.sin(np.pi * q_ / 0.46) ** 2

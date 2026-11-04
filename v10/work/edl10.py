@@ -63,6 +63,17 @@ W_LET = [("LET", 107.97), ("IT", 108.24), ("HAPPEN", 108.33)]
 W_LET2 = [("LET", 109.08), ("IT", 110.10), ("HAPPEN", 110.25)]
 W_RUN = [("ALL", 116.36), ("THIS", 116.92), ("RUNNING", 117.36), ("AROUND", 117.93)]
 
+def vel(e0, e1, a, b, lo=0.30, hi=3.2, tau=0.07, n=96):
+    """rev 5 velocity: a speed burst on every beat of the shot (the cut included), smooth slow motion between beats;
+    the same source range a..b as before, so the speeds scale to fit (burst ~3-4.5x, slow-mo ~0.3-0.6x)."""
+    import numpy as _np
+    T = th(e1) - th(e0); ts = _np.linspace(0, T, 800); sp = _np.full_like(ts, lo)
+    for e in range(e0, e1):
+        if e % 2 == 0:
+            tb = th(e) - th(e0); sp = sp + (hi - lo) * _np.exp(-_np.clip(ts - tb, 0, None) / tau) * (ts >= tb)
+    src = _np.concatenate([[0.0], _np.cumsum((sp[1:] + sp[:-1]) / 2 * _np.diff(ts))]); src /= src[-1]
+    return [(float(u), float(a + (b - a) * _np.interp(u * T, ts, src))) for u in _np.linspace(0, 1, n)]
+
 S = []
 def shot(n, src, e0, e1, a, b, **kw):
     """n name, src pack key, e0/e1 edit half-beats, a/b source seconds. tin = transition INTO this shot."""
@@ -75,18 +86,21 @@ shot("lab", "fb", 0, 4, 38.62, 39.58, z=[(0, 1.12), (1, 1.18)], tin="tunnel_in",
 shot("look", "fb", 4, 8, 37.16, 38.12, z=[(0, 1.02), (1, 1.10)], tin="phase", seg=True, arcs=0.3, wind=0.7)
 shot("smile", "fb", 8, 12, 34.60, 35.56, z=[(0, 1.00), (1, 1.07)], tin="slices", seg=True, arcs=0.5, wind=0.8)
 shot("profile", "fb", 12, 16, 136.50, 137.46, z=[(0, 1.00), (1, 1.08)], tin="whirlwind", seg=True, arcs=0.35, wind=1.0)
-shot("ignition", "fb", 16, 24, 52.85, 54.30, z=[(0, 1.00), (1, 1.12)], tin="ignite", interp="blend", seg=True, arcs=0.45, wind=0.8, orbit=1.0)
-shot("charge", "fb", 24, 32, 83.85, 85.05, z=[(0, 1.02), (1, 1.16)], tin="lichtenberg", interp="blend", seg=True, arcs=1.0, wind=0.6,
+shot("ignition", "fb", 16, 24, 52.85, 54.30, z=[(0, 1.00), (1, 1.12)], tin="ignite", interp="blend", seg=True, arcs=0.45, wind=0.8, orbit=1.0, rays=0.7)
+shot("charge", "fb", 24, 32, 83.85, 85.05, z=[(0, 1.02), (1, 1.16)], tin="lichtenberg", interp="blend", seg=True, arcs=1.0, wind=0.6, rays=0.6,
      emblem=[(83.95, 731, 462), (84.45, 744, 581), (84.95, 744, 625), (85.05, 745, 632)], emblem_r=42)
 # ---- the drop: through the bolt of his emblem; the hunt of light
-shot("takeoff", "fb", 32, 38, 4.62, 6.12, z=[(0, 1.14), (1, 1.04)], tin="emblem_gate", seg=True, trails=0.8, sparks=0.7, wave=True)
-shot("throw", "fb", 38, 40, 124.40, 124.77, z=[(0, 1.00), (1, 1.06)], tin="ramp")
-shot("garage", "fb", 40, 46, 113.55, 114.99, z=[(0, 1.04), (1, 1.12)], tin="lens_shatter", seg=True, trails=0.7, sparks=0.6)
-shot("scream", "fb", 46, 50, 127.70, 128.66, z=[(0, 1.00), (1, 1.08)], tin="shock")
-shot("grin", "fb", 50, 54, 56.30, 57.26, z=[(0, 1.00), (1, 1.05)], tin="perimeter")
-shot("turn", "fb", 54, 56, 102.86, 103.34, z=[(0, 1.00), (1, 1.06)], tin="ramp")
-shot("hero", "fb", 56, 68, 109.76, 112.42, z=[(0, 1.00), (1, 1.10)], tin="logo_orig", seg=True, arcs=0.45, sparks=0.8, orbit=1.0)
-shot("strike", "fb", 68, 74, 10.36, 11.80, z=[(0, 1.00), (1, 1.08)], tin="bolt_strike")
+shot("takeoff", "fb", 32, 38, 4.62, 6.12, z=[(0, 1.14), (1, 1.04)], tin="emblem_gate", seg=True, trails=0.8, sparks=0.7, wave=True,
+     tmap=vel(32, 38, 4.62, 6.12), lin=True, interp="flow", rays=0.8)
+shot("throw", "fb", 38, 40, 124.40, 124.77, z=[(0, 1.00), (1, 1.06)], tin="ramp", tmap=vel(38, 40, 124.40, 124.77), lin=True, interp="flow", rays=1.0)
+shot("garage", "fb", 40, 46, 113.55, 114.99, z=[(0, 1.04), (1, 1.12)], tin="lens_shatter", seg=True, trails=0.7, sparks=0.6,
+     tmap=vel(40, 46, 113.55, 114.99), lin=True, interp="flow", rays=0.8)
+shot("scream", "fb", 46, 50, 127.70, 128.66, z=[(0, 1.00), (1, 1.08)], tin="shock", tmap=vel(46, 50, 127.70, 128.66), lin=True, interp="flow", rays=0.9)
+shot("grin", "fb", 50, 54, 56.30, 57.26, z=[(0, 1.00), (1, 1.05)], tin="perimeter", tmap=vel(50, 54, 56.30, 57.26), lin=True, interp="flow")
+shot("turn", "fb", 54, 56, 102.86, 103.34, z=[(0, 1.00), (1, 1.06)], tin="ramp", tmap=vel(54, 56, 102.86, 103.34), lin=True, interp="flow")
+shot("hero", "fb", 56, 68, 109.76, 112.42, z=[(0, 1.00), (1, 1.10)], tin="logo_orig", seg=True, arcs=0.45, sparks=0.8, orbit=1.0,
+     tmap=vel(56, 68, 109.76, 112.42, lo=0.45, hi=2.4), lin=True, interp="flow")
+shot("strike", "fb", 68, 74, 10.36, 11.80, z=[(0, 1.00), (1, 1.08)], tin="bolt_strike", tmap=vel(68, 74, 10.36, 11.80), lin=True, interp="flow", rays=0.6)
 # ---- the gated stutter: time stops between the beats (source time only advances on the hits)
 #      (the music: e74 low, e75 gap, e76-77 hit, e78 low, e79 gap, e80-81 hit, e82 low, e83 gap, e84-85 hit, e86 low, e87 gap)
 shot("freeze_a", "fb", 74, 82, 0, 0, tmap=[(0, 13.00), (2 / 8, 13.00), (4 / 8, 14.60), (6 / 8, 14.60), (1, 16.20)],

@@ -343,3 +343,15 @@ The props rule from Studio 2 (after FOREVER) also applies: glass, blood, slides,
 
 **Visual sign-off** (frames from the encoded file): the runner dropping off each word and snatching them; the particle break-up, hang and rebuild (frames 1176–1208); the bullet-time glides (1068 → 1094, 1240 → 1266); the speed-slice gaps.
 
+## Revision 5 (owner feedback)
+
+> "I like this edit and the text but I still think it's lacklustre and has room for improvement. It could use more animations and overall professionalism."
+
+Diagnosis against professional Flash edits: the shots played at plain 1× speed with gentle zooms. The 24p footage stepped (each frame held 2–3 times at 60 fps), and the camera didn't move with the music. This revision is a motion pass:
+- **Velocity (speed ramps):** every hook shot (takeoff, throw, garage, scream, grin, turn, the LET IT HAPPEN close-up, the strike) is time-remapped to the beat. Each beat gets a speed burst (up to ~4.5×, with real shutter blur from the source frames), with smooth slow motion between beats (~0.3–0.6×). The slow motion uses optical-flow in-between frames built on the restored 2× source, so the footage plays at a true 60 fps instead of stepping. Each shot still uses exactly its old source range.
+- **Camera animation:** the camera now moves with the music. On every beat of the hook and the run there's a 6 % zoom punch and an alternating rotation kick (±1.1°), plus zoom motion blur and a colour split on the hit frames. The type stays clean on top. The cold open keeps its soft 1 % breath.
+- **Light rays:** volumetric god rays now pour out of the lightning (ignition, the charge, takeoff, throw, garage, scream, strike). They're softer where the frame is already bright.
+- **Sound:** a quiet swish on each camera punch that isn't already a cut.
+
+REV5_RESULTS
+
