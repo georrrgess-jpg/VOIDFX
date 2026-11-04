@@ -7044,11 +7044,21 @@ def wind_env(f):
     e = t / E.HB; k = (e % 8) * E.HB
     return (0.55 + 0.45 * smooth(t / th(E.HDROP))) * (1 + 0.25 * math.exp(-k / 0.25))
 
+def head_box(s, f, person):
+    """(x0, x1, y_floor) of his head: the face track, else the top of the MODNet matte (masked / unlit faces)."""
+    bx = face_box(s, f)
+    if bx is not None: return bx
+    if person is None: return None
+    pm = person[::8, ::8] > 0.5; rows = np.nonzero(pm.sum(1) >= 5)[0]
+    if not len(rows): return None
+    xs = np.nonzero(pm[rows[0]:rows[0] + 40].any(0))[0]; cx = xs.mean() * 8 if len(xs) else W / 2
+    return (cx - 290, cx + 290, rows[0] * 8 + 620)
+
 def wind_layer(out, s, f, person, amt):
     a = amt * wind_env(f)
     if a <= 0.01: return out
     t = f / FPS; p = subject_point(s, f, person); cx, cy = p[0], p[1] - 150
-    bx = face_box(s, f)
+    bx = head_box(s, f, person)
     if bx is not None: bx = (bx[0] - 60, bx[1] + 60, bx[2] + 40)
     back = np.zeros((H, W), np.float32); front = np.zeros((H, W), np.float32); pale = np.zeros((H, W), np.float32)
     for q in wind_params():
@@ -7078,11 +7088,11 @@ def orbit_ribbons(out, s, f, person, amt):
     """two lightning ribbons spiral round him: behind his head and shoulders (hidden where the matte covers him) and
     across his chest in front; in front of him only below the chin."""
     if amt <= 0.01: return out
-    t = f / FPS; bx = face_box(s, f); p = subject_point(s, f, person)
+    t = f / FPS; bx = head_box(s, f, person); p = subject_point(s, f, person)
     if bx is not None:
-        fw = (bx[1] - bx[0]) / 1.5; cx = (bx[0] + bx[1]) / 2; chin = bx[2] - 0.35 * fw; y_top = chin - 1.4 * fw
+        fw = (bx[1] - bx[0]) / 1.5; cx = (bx[0] + bx[1]) / 2; chin = bx[2]; y_top = chin - 1.6 * fw
     else:
-        fw = 300.0; cx = p[0]; chin = p[1] - 260; y_top = chin                                 # no face track: below the chin only
+        fw = 300.0; cx = p[0]; chin = p[1] - 260; y_top = chin
     R0 = clamp(0.95 * fw, 340, 600); y_bot = H + 120
     back = bolt_canvas(); front = bolt_canvas(); rng = np.random.default_rng(f // 2 * 17 + 3)
     for r_ in range(2):
@@ -7092,6 +7102,7 @@ def orbit_ribbons(out, s, f, person, amt):
         xs = cx + R * np.cos(ang) + rng.normal(0, 6, ns); ys = y_top + (y_bot - y_top) * ss_ + R * 0.14 * np.sin(ang) + rng.normal(0, 6, ns)
         d = np.sin(ang); head = (t * 1.6 + r_ * 0.5) % 1.0
         for i in range(ns - 1):
+            if bx is not None and bx[0] - 40 < xs[i] < bx[1] + 40 and ys[i] < bx[2]: continue    # never across his face
             fr_ = d[i] > 0 and ys[i] > chin
             hb = math.exp(-((ss_[i] - head) / 0.06) ** 2)
             v = int(min(255, 150 + 60 * (d[i] + 1) / 2 + 110 * hb))
@@ -7358,12 +7369,13 @@ def perim_maps():
     """per pixel: the lap position of its edge point (radial projection) and its depth in from the edge (0 edge, 1 centre)."""
     if "pm" in _GS: return _GS["pm"]
     pp = perim_path()
-    phi_p = (np.degrees(np.arctan2(pp[:, 1] - H / 2, pp[:, 0] - W / 2)) - 90) % 360; phi_p[0] = 0.0; phi_p[-1] = 360.0
+    CY = H * 0.64                                                                          # his chest: the wake closes there
+    phi_p = (np.degrees(np.arctan2(pp[:, 1] - CY, pp[:, 0] - W / 2)) - 90) % 360; phi_p[0] = 0.0; phi_p[-1] = 360.0
     phi_p = np.maximum.accumulate(phi_p)
-    phi = (np.degrees(np.arctan2(_GY - H / 2, _GX - W / 2)) - 90) % 360
+    phi = (np.degrees(np.arctan2(_GY - CY, _GX - W / 2)) - 90) % 360
     s_pix = np.interp(phi, phi_p, pp[:, 2]).astype(np.float32)
-    rb = np.interp(phi, phi_p, np.hypot(pp[:, 0] - W / 2, pp[:, 1] - H / 2))
-    din = np.clip(1 - np.hypot(_GX - W / 2, _GY - H / 2) / rb, 0, 1).astype(np.float32)
+    rb = np.interp(phi, phi_p, np.hypot(pp[:, 0] - W / 2, pp[:, 1] - CY))
+    din = np.clip(1 - np.hypot(_GX - W / 2, _GY - CY) / rb, 0, 1).astype(np.float32)
     _GS["pm"] = (s_pix, din); return _GS["pm"]
 
 def perimeter(A, B, j, f, sa, sb, pre=8, post=14):
@@ -7374,7 +7386,7 @@ def perimeter(A, B, j, f, sa, sb, pre=8, post=14):
     p = (j + pre + 1) / (pre + post); sh_ = (1 + kap) * Ltot * 1.04 * (0.5 - 0.5 * math.cos(math.pi * p))
     front = s_pix + din * kap * Ltot
     soft = 60 + 260 * din
-    m = np.clip((sh_ - front) / soft, 0, 1)[..., None]
+    m = cv2.GaussianBlur(np.clip((sh_ - front) / soft, 0, 1), (0, 0), 16)[..., None]
     o = B * m + A * (1 - m)
     edge = np.exp(-((sh_ - front) / (18 + 120 * din)) ** 2) * (1 - din) ** 0.7
     hs = sh_ % Ltot; i = int(np.searchsorted(pp[:, 2], hs)); i = min(i, len(pp) - 1); hx, hy = pp[i, 0], pp[i, 1]
@@ -7449,7 +7461,7 @@ def speedforce_bg(z, t):
 Z_STEP, S_P = 0.62, 0.46
 Z_F = 1.0 + Z_STEP * len(TUN_PANELS) + 0.9
 def tun_u(f): return clamp((f - F_OPEN + 1) / (E.DUR_F - F_OPEN), 0, 1)
-def tun_z(u): return (Z_F - 1.012) * (1 - (1 - u) ** 2.3)
+def tun_z(u): return (Z_F - 1.0) * (1 - (1 - u) ** 2.3)
 
 def place_panel(o, img, d, X, Y, S, roll, a, border, glint):
     """a camera-facing panel at distance d (screen-centre units), alpha a; its border drawn into `border`."""
@@ -7471,7 +7483,7 @@ def place_panel(o, img, d, X, Y, S, roll, a, border, glint):
 def tunnel_frame(f):
     """from F_OPEN to the end: the Speed Force tunnel, the edit's moments flying past (newest first), frame 0 ahead."""
     u = tun_u(f); z = tun_z(u); t = (f - F_OPEN) / FPS
-    spd = (tun_z(min(1, u + 0.02)) - z) / 0.02 / (Z_F - 1.012) / 2.3
+    spd = (tun_z(min(1, u + 0.02)) - z) / 0.02 / (Z_F - 1.0) / 2.3
     P, full = tunnel_panels()
     o = speedforce_bg(z, t).astype(np.float32)
     rings = bolt_canvas()
@@ -7479,7 +7491,7 @@ def tunnel_frame(f):
         d = 0.6 + 0.95 * k - z % 0.95
         if 0.25 < d < 12:
             cv2.ellipse(rings, (W // 2, H // 2), (int(560 / d), int(990 / d)), 0, 0, 360, int(200 * clamp((12 - d) / 4, 0, 1)), 2, cv2.LINE_AA)
-    o = o + light_from(rings, 0.45)
+    o = o + light_from(rings, 0.45 * (1 - smooth((u - 0.70) / 0.25)))
     border = bolt_canvas()
     df = Z_F - z
     gf = 1.0 if u < 0.8 else 1 - 0.65 * smooth((u - 0.8) / 0.2)
@@ -7494,7 +7506,8 @@ def tunnel_frame(f):
     for q in range(3 if u < 0.85 else 0):
         a0 = rng.uniform(0, 2 * math.pi); r0, r1 = rng.uniform(200, 380), rng.uniform(700, 1100)
         put_bolt(cv, (W / 2 + r0 * math.cos(a0), H / 2 + r0 * math.sin(a0) * 1.4), (W / 2 + r1 * math.cos(a0 + 0.25), H / 2 + r1 * math.sin(a0 + 0.25) * 1.4), 2700 + f + q, 2, 0.3, 6, 1)
-    o = o + light_from(cv, 0.7 * (1 - u)) + light_from(border, 0.9)
+    o = np.clip(o, 0, 1); dfin = Z_F - z                                                  # nothing in front of the landing panel
+    o = o + light_from(cv, 0.7 * (1 - u) * (1 - smooth((u - 0.6) / 0.25))) + light_from(border, 0.9)
     if spd > 0.05: o = radial_blur(np.clip(o, 0, 1), W / 2, H / 2, 1.0, 1.0 + 0.05 * min(1.5, spd), 4)
     return np.clip(o, 0, 1)
 
