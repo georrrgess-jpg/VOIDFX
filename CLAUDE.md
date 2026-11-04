@@ -48,6 +48,10 @@
     - Too many quick, generic transitions (strobe, beam, blinds, roll, smear, whip) and too few signature set pieces. **Every edit needs at least three multi-stage, character-themed set pieces** on the level of v7's slide box, plastic burst and zipper, or v8's "Darling," freeze into the falling blood drop. Generic moves are filler between them, not the substance.
     - Thin on graphics compared with v6 and v7: almost no depth graphics or themed overlays in the montage. (The text itself was right; add more designed text moments in that same style.)
     - Reviews fixed defects but didn't raise the ceiling. **Before rendering, compare the plan shot by shot with v6, v7 and v8 and with the best Dexter edits.** If it doesn't clearly beat them, redesign it, then build.
+- **Studio 2 feedback (v101, v102):**
+  - **v101 THE LESS YOU KNOW:** the style was largely disliked (16 mm psychedelic look, 70s serif type). Some transitions were good.
+  - **Lip-sync must be real.** v101 put Dexter's *narrated* line over a shot where he isn't speaking, and the owner rejected it. Present a line as spoken only when his lips match it. Check with `tools/lipcheck.py` and on frames; otherwise play it as voice-over.
+  - **v102 LET GO (The Flash):** good and complete, but **lacklustre** next to the other builds. The gaps were the same as v9's: the concept, the number of standout set pieces, and graphics that read at phone size. Clear the §5a gate.
 - **No "gimmick on the face" effects** (e.g. lines converging on his face with a target ring). Transitions should be physical and themed (slide box, plastic burst, zipper, blood on the lens), not overlays on his face.
 - **Efficiency:** the user asks for quality *and* efficiency. Use the fast loop in `docs/TOOLKIT.md`:
   1. song map;

@@ -76,6 +76,9 @@ Each transition goes through something and has its own sound in `audioN.py` (`if
 | `blinds` (v9) | Backlit venetian slats rotate shut, then open on the next shot (staggered top to bottom) | — | Slat rattle ×2 |
 | `roll` (v9) | The world rolls 90° with rotational blur (lands on an upside-down shot) | — | Doppler whoosh, floor thud |
 | `smear` (v9) | Step-printed long-exposure echoes drag the frame, then settle | — | Tape-warble whoosh |
+| `projector_on`, `latex`, `frameslip`, `filmmelt`, `whip`, `hooddark`, `lavalamp`, `slidewipe`, `newsspin`, `papertear`, `oilwheel`, `tout="reel_end"` (v101, in `v101/work/fx101.py`) | 16 mm psych reel: projector strike-up and run-out (loop), a glove-stretch tear, a frame slip in the gate, a film burn-through (hero), a hood over the lens, lava-lamp blood blobs, a blood-slide glass wipe, a newspaper spin and tear, an oil-wheel light show. **v101's look was rejected; reuse transitions only if reworked** | — | Each has its own in `audio101.py` |
+| `rewind_in` + `tout="rewind_end"` (v102, in `v102/work/fx102.py`) | The loop as time travel: the last bar plays the whole edit backwards (35× at its peak, picture and sound together via `rew_pos`) and lands on frame 0, whose flash and smear settle into the first shot | — | The song runs backwards (band-limited), tape scrub, crackle |
+| `bolt_link`, `overcharge`, `strike`, `emblem`, `passby`, `smear` (light streaks), `impact`, `remnant` (soft) (v102) | A bolt out of the outgoing face's eye splits the frame; his own lightning floods the frame and the next shot burns in through gold; HERO strike (a frozen frame, a leader bolt, two impact frames, a shockwave); the emblem drawn in lightning, fly through the bolt; he passes the lens as a motion wipe; horizontal light streaks; a two-frame impact frame; converging time-remnants | Face track (`bolt_link`, `strike`); previous shot `freeze=True` (`strike`) | Zap / swell / thunder + time-stop / hum + whoosh / doppler / whoosh / hit / shimmer |
 
 The older v4/v5 transitions are still in the file and work as `tin` values: `kaleido`, `rewind`, `flash`, `tiles`, `neon_trace`, `ripple`, `pixel_sort`, `vhs_roll`. Add new transitions to `TR2` as `fn(A, B, j, f, sa, sb)` with `(fn, frames_before, frames_after)`:
 - `j < 0`: A is the live outgoing shot and B is the incoming shot's first frame.
@@ -111,6 +114,18 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
   - `vanish`: pixel-dust dissolve, timed by `VANISH_T0`.
 - **Montage** (`MONTAGE` half-beat range): beat bounce, glints, light leaks and hits on the downbeats.
 - **Finish:** bloom, anamorphic streak, VHS chroma bleed and scanlines, vignette, grain. The OSD is limited to PLAY ▶ at the start, ◀◀ REW at the end and ‖ PAUSE. **No SP counter or timecode.**
+
+- **v101 / v102 graphics (Studio 2).** These are built on the v7 engine, not v9: port a piece into the v9 engine before reusing it.
+  - v101 (look rejected): a liquid-light projection behind the person matte; prism silhouette echoes on bass accents; a 16 mm film finish.
+  - v102 (The Flash):
+    - `sarcs` lightning that hugs the silhouette (person-matte contour);
+    - `echoes` matte afterimages;
+    - `motes` frozen-time sparks in depth;
+    - `eyespark` arcs off the YuNet eye landmarks;
+    - `freeze` (a colour drain on a held frame);
+    - `rot` (a sideways source rotated to fill 9:16);
+    - an electrified slammed title.
+- **Is he really saying it?** Run `python3 tools/lipcheck.py SRC t0 t1 OUT.jpg --vocals STEM.wav [--stem-t0 S]`. It draws face and lip crops every 0.1 s with the speech level under them. The lips must move with the bars before a line is used as lip-synced. (An automatic mouth-motion score disagreed with known cases, so judge it by eye.)
 
 ## 4. Pitfalls that cost time in v6 (check these first)
 

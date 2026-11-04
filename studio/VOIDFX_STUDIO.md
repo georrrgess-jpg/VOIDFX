@@ -132,6 +132,9 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | Plain steel doors for CLOSE | v7 | Make the big text moments **character-themed and detailed** (the rosewood blood-slide box with an engraved brass plate was the fix). |
 | The **text appearance in v8**: thin, wide-tracked sans lyric lines with sodium serif-italic emphasis words, letter-by-letter fades, underlines; big extruded words behind his head; elegant serif-italic script | v8 | That "elegant / editorial" type look didn't land. Go back toward what was praised in v6: bold, high-contrast, two-line captions with a clear designed treatment per moment. Keep script handwriting for at most one hero word. |
 | v9 NIGHT BLOOM overall: *"good… complete"*, but **lacklustre** next to the other builds and Dexter edits in general | v9 | **Go above and beyond.** The petal/moon concept came from the song title, not from Dexter's world, and read soft instead of dark and intense. The montage leaned on quick generic moves (strobe, beam, blinds, roll, smear) with one real set piece (the bloom). Root every concept in Dexter, build at least three signature set pieces, and add more graphics (the v9 text itself was "perfect"; keep it). See §5a. |
+| v101 THE LESS YOU KNOW (Studio 2) overall: *"I do not like this edit … I largely disliked the style"*; some transitions were good | v101 | The 16 mm psychedelic look (oxblood / amber / plum liquid light, 70s soft-serif type) didn't land. Don't reuse it. |
+| v101: Dexter's narrated line shown as if he were saying it (*"the scene with Dexter speaking where he wasn't actually speaking"*) | v101 | **Only present a line as spoken when his lips match it.** Many of his lines are inner-monologue narration. Check with `tools/lipcheck.py` and on frames, or play the line as voice-over over a shot where he isn't talking. |
+| v102 LET GO (Studio 2, The Flash) overall: *"I like this edit and I honestly think it's good. It's complete"*, but **lacklustre** next to the other builds and the Dexter edits | v102 | **Go above and beyond** (the §5a gate). The remaining gaps were the **concept** (built around the lyric "let go" rather than a moment from his world), the **number of standout set pieces** (the strike on the drop was the only one; the rest were quick reworked v5 moves), and the **graphics** (subtle sparks and arcs that don't read at phone size). |
 
 ## 5a. Raising the bar (after v9): the pre-build gate
 
@@ -275,6 +278,8 @@ Only then deliver.
 | v7 HIM ALL ALONG | forensic noir (drained cold colour, blood red only, UV luminol, case-file type) |
 | v8 WISH YOU WELL | sodium nocturne (indigo shadows, sodium-vapour highlights, rain on glass, streetlight sweeps, warm halation) |
 | v9 NIGHT BLOOM | moonbloom (violet-black night, moon-silver highlights, white Pro-Mist bloom, jasmine petals in depth, a blood moon; bold keyline captions) |
+| v101 THE LESS YOU KNOW | 16 mm psychedelic reel (oxblood / amber / plum liquid light, film burn, 70s soft-serif type). **Rejected: don't reuse** |
+| v102 LET GO (The Flash) | storm (crimson suit, gold lightning with white-hot cores, steel-blue shadows, gold halation, anamorphic flares) |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);
@@ -299,6 +304,8 @@ Fresh directions for future edits:
 | v7 | Gunna "Him All Along" | 130 BPM | half-beats 528–640 (2:01.9–2:27.8, 14 bars) | 2:13.0, +17 dB return → plastic burst |
 | v8 | Brent Faiyaz "Wish You Well" (screen recording) | 138 BPM | half-beats 64–164 (13.96–35.69 s) | 33.08 drop → blood blooms in water |
 | v9 | fakemink "Night, Blooming Jasmine" | 102.8 BPM | h448–h506 + h634–h650, spliced on the 4-bar cycle (2:10.9–2:27.8 + 3:05.2–3:09.9) | 2:19.38 dead silence → freeze; 2:20.84 drop → petal bloom |
+| v101 | Tame Impala "The Less I Know The Better" | 117 BPM | half-beats 7–95 (0:01.9–0:24.4, 11 bars); the last half bar is the song's own intro pickup, so the loop wraps onto the first downbeat | 0:10.08, the bassline enters after the 4-bar drum intro → film burn-through |
+| v102 | Ark Patrol "Let Go" | 164 BPM | half-beats 720–848 (2:11.8–2:35.2, 16 bars); the last 6 half-beats rewind the whole edit back to the start | 2:20.56, drop 2 (+31 dB) → the strike |
 
 ## 11. Communication
 
