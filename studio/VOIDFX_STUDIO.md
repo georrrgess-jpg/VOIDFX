@@ -131,6 +131,9 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 - Use the **good part**: the drop or hook where the full mix or bass returns.
 - `tools/song_map.py` finds it in 3 s (biggest section change, whole-bar windows of 20–27 s with the drop at 33–47%).
 - A breakdown or filtered build before the drop gives a natural cold open for dialogue or titles.
+- **A dead-silence gap before a drop** is the strongest place for one short line and a freeze-frame (v9: *"Hello, Arthur Mitchell."* alone in the 1.45 s silence, then the petal bloom on the drop).
+- **When the hook is far from the drop, splice the song on its beat grid** (v9). Find a bar in the later section whose instrumental matches the bar you leave (spectral correlation of whole bars; house and trap loops repeat on 4-bar cycles). End the outgoing vocal on a breath, fill to the splice with the Demucs instrumental stem, crossfade 12 ms on the downbeat, and hide the join under a designed transition with its own sound. Check the sample step at the splice.
+- **Check the grid on both sides of a silence.** A gap that is not a whole number of beats shifts the grid; fit the half-beat phase locally (v9: HB_OFF puts the drop exactly on h482).
 
 **Structure:**
 - **Cold open (35–45%):** a hook shot, a line or lyric, two or three investigation or build shots, the title or hook text.
@@ -171,6 +174,8 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 The full list is in `/docs/TOOLKIT.md` §4. The most expensive ones:
 - **Packs hide cuts.** Jump cuts the shot detector misses cause ghost frames, and source ranges running past a cut put another actor on screen. `tools/check_sources.py` (run by `build.sh prep`) catches both. The sampler never interpolates across hard cuts.
 - **Text over very tight close-ups:** swap the shot; don't shrink the type.
+- **Particles over a big close-up:** a person matte that fills the frame hides every "behind" particle, and "front" particles land on the face. Give close-ups a few placed hero particles that frame the face instead (v9 freeze).
+- **9:16 kills two-subject shots:** a reflection or two-shot whose subjects are more than about 400 source px apart can't keep both in the crop. Check before building a transition around it.
 - **Distortion transitions** (bulges, barrels) must not warp titles. Weight the distortion to the centre.
 - **Particles** (blood spray, dust) must move fast and fade, or they read as blobs.
 - **The last `render()` in the file wins.** Insert routing in the active one.
@@ -239,6 +244,7 @@ Only then deliver.
 | v6 WARMPOP | pastel vapor + VHS (chroma bleed, scanlines, CRT, neon) |
 | v7 HIM ALL ALONG | forensic noir (drained cold colour, blood red only, UV luminol, case-file type) |
 | v8 WISH YOU WELL | sodium nocturne (indigo shadows, sodium-vapour highlights, rain on glass, streetlight sweeps, warm halation) |
+| v9 NIGHT BLOOM | moonbloom (violet-black night, moon-silver highlights, white Pro-Mist bloom, jasmine petals in depth, a blood moon; bold keyline captions) |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);
@@ -261,6 +267,8 @@ Fresh directions for future edits:
 | v5 | bôa "Duvet" | 93 BPM | half-beats 208–288 (10 bars) | "I am falling" |
 | v6 | George Clanton "Warmpop" | 90 BPM | half-beats 416–496 (2:18.9–2:45.5) | 2:29.5, full mix returns → CRT dive |
 | v7 | Gunna "Him All Along" | 130 BPM | half-beats 528–640 (2:01.9–2:27.8, 14 bars) | 2:13.0, +17 dB return → plastic burst |
+| v8 | Brent Faiyaz "Wish You Well" (screen recording) | 138 BPM | half-beats 64–164 (13.96–35.69 s) | 33.08 drop → blood blooms in water |
+| v9 | fakemink "Night, Blooming Jasmine" | 102.8 BPM | h448–h506 + h634–h650, spliced on the 4-bar cycle (2:10.9–2:27.8 + 3:05.2–3:09.9) | 2:19.38 dead silence → freeze; 2:20.84 drop → petal bloom |
 
 ## 11. Communication
 

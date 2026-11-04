@@ -277,6 +277,8 @@ Proven shots (fb):
 
 | File | Uploaded as | Notes |
 |---|---|---|
+| `night_blooming_jasmine.mp3` | `fakemink_-_Night__Blooming_Jasmine_._official_music_video.mp3` | 102.8 BPM, P=0.29185. The second half is on its own grid (HB_OFF 0.1673: h482 = the drop at 140.839). Filtered breakdown 112–137.8 s, build 137.78, **dead silence 139.38–140.83, drop 140.84 (+26 dB)**. The instrumental repeats on a 4-bar cycle (bar h506 = bar h634). Hook *"night bloom jasmine, second name Yasmin"* at 74.8 and 187.12 (v9) |
+| `paint_it_black.mp3` | `The_Rolling_Stones_-_Paint_It_Black_Official_Lyric_Video.mp3` | 160 BPM, P=0.18748, offset 0.0469. Sitar intro; **drums enter at 7.55 s (+22 dB)**; "I see a red door…" 14.0; bridge dip 87–96.5 → return 97.54; climax "painted, painted black" 157.4–175.7. Map and lyrics in `studio/songs/paint_it_black/` (not used yet) |
 | `wish_you_well_rec.wav` | extracted from the screen recording `wish_you_well_screenrec.mov` | Brent Faiyaz "Wish You Well", 36 s. 138.05 BPM, P=0.21731, offset 0.0489. Beat returns at 19.17 s; break 27.86; "Darling," 30.04; **drop 33.08**; hook "I don't wish you well" 34.16–35.12 (v8) |
 | `him_all_along.mp3` | `Gunna_-_Him_All_Along_Official_Visualizer.mp3` | 130 BPM, half-beat P=0.23075 s, offset 0.0808. Good part: 2:01.9 breakdown → **2:13.0 return (+17 dB)**. Hook "HIM ALL ALONG" at 131.92–132.30 |
 | `warmpop.mp3` | `ESPRIT____George_Clanton_-_Warmpop.mp3` | 90 BPM, P=0.33335, offset 0.1883. Filtered build 117–148.5 s; **full mix returns at 149.54 s** |

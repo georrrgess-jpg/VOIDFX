@@ -1,4 +1,4 @@
-"""Scaffold a new voidfx edit from the newest benchmark engine (v7 HIM ALL ALONG: every v4-v7 transition + graphics).
+"""Scaffold a new voidfx edit from the newest engine (v9: every v4-v9 transition + graphics; v7 and v6 remain the benchmarks).
 
 Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song"
         e.g. python3 tools/new_edit.py 7 night_drive_dexter "NIGHT DRIVE — Dexter × Song"
@@ -9,7 +9,7 @@ output file name from the EDL (VER, SLUG), so nothing else needs renaming.
 import os, sys, re, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE = "v7"                                                     # newest benchmark engine (superset of v6)
+BASE = "v9"                                                     # newest engine (superset of v6-v9: v7 transitions, v8 mirror/freeze/knife/lamp/rain, v9 bloom/petals/moon/blinds/beam/smear)
 n, slug, title = sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
 V = f"v{n}"; D = f"{ROOT}/{V}"
 if os.path.exists(f"{D}/work/edl{n}.py"): sys.exit(f"{V} already exists — refusing to overwrite")
@@ -19,11 +19,11 @@ BN = BASE[1:]
 def port(src, dst, extra=()):
     s = open(f"{ROOT}/{BASE}/work/{src}").read()
     s = s.replace(f"import edl{BN} as E", f"import edl{n} as E")
-    for a, b in extra: s = s.replace(a, b)
+    for a, b, *c in extra: s = s.replace(a, b, *c)
     open(f"{D}/work/{dst}", "w").write(s)
 
 port(f"render{BN}.py", f"render{n}.py")
-port(f"audio{BN}.py", f"audio{n}.py", [('"""Soundtrack for', f'"""[{title} (voidfx {V}) — ported from the {BASE} engine; rewrite the sound design below]\nBenchmark notes: Soundtrack for')])
+port(f"audio{BN}.py", f"audio{n}.py", [('"""', f'"""[{title} (voidfx {V}) — ported from the {BASE} engine; rewrite the sound design below]\nPrevious edit: ', 1)])
 port(f"qc{BN}.py", f"qc{n}.py")
 shutil.copy(f"{ROOT}/{BASE}/work/facetrack.py", f"{D}/work/facetrack.py")
 port("analyze.py", "analyze.py", [(f'f"{BASE}/work/', f'f"{V}/work/'), (f'f"{BASE}/frames/', f'f"{V}/frames/'), ('f"v6/work/', f'f"{V}/work/'), ('f"v6/frames/', f'f"{V}/frames/')])
