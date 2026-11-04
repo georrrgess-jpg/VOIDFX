@@ -53,3 +53,15 @@ v9/frames/
 v9/out/
 v9/work/*.npz
 v9/work/*.npy
+v101/work/*.log
+v101/audio/
+v101/frames/
+v101/out/
+v101/work/*.npz
+v101/work/*.npy
+v102/work/*.log
+v102/audio/
+v102/frames/
+v102/out/
+v102/work/*.npz
+v102/work/*.npy

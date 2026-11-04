@@ -28,9 +28,11 @@ done
 echo "== models"
 YN=v3/models/face_detection_yunet_2023mar.onnx; MN=v3/models/modnet/onnx/model.onnx
 mkdir -p v3/models/modnet/onnx
-[ -s $YN ] || { [ $CHECK = 0 ] && curl -sSL -o $YN https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx; }
+# the opencv_zoo model is stored in Git LFS: the /raw/ URL returns a ~400-byte pointer, so fetch the LFS media URL and size-check it
+[ -s $YN ] && [ $(stat -c %s $YN) -lt 100000 ] && rm -f $YN
+[ -s $YN ] || { [ $CHECK = 0 ] && curl -sSL -o $YN https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx; }
 [ -s $MN ] || { [ $CHECK = 0 ] && curl -sSL -o $MN https://huggingface.co/Xenova/modnet/resolve/main/onnx/model.onnx; }
-[ -s $YN ] && ok "YuNet" || bad "YuNet ($YN)"; [ -s $MN ] && ok "MODNet" || bad "MODNet ($MN)"
+[ -s $YN ] && [ $(stat -c %s $YN) -gt 100000 ] && ok "YuNet" || bad "YuNet ($YN)"; [ -s $MN ] && ok "MODNet" || bad "MODNet ($MN)"
 echo "  (faster-whisper large-v3 and Demucs htdemucs download themselves on first use)"
 
 echo "== source library (src/ vs studio/src_manifest.json)"
