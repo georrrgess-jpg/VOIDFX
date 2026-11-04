@@ -1,10 +1,10 @@
 """NIGHT BLOOM — Dexter × fakemink "Night, Blooming Jasmine" (voidfx v9, 9:16). Single source of truth: the renderer,
 audio builder and QC read only this file.
 
-Concept: "Some things only bloom at night." The Trinity season (S4 packs p9/p10). A blood moon over Miami; Dexter
+Concept: "Some things only bloom at night." The Trinity season (S4 packs p9/p10 + the owner's "Trinity Finds Out" clip). A blood moon over Miami; Dexter
 looks up at it: "I had to evolve. It was the only way to survive." He walks through a night garden of white jasmine and
-stops, staring into the lens. The song cuts to dead silence; the frame freezes, the petals hang in the air:
-"Hello, Arthur Mitchell." On the drop the frozen frame BLOOMS open like a flower and the kill begins: a montage of the
+stops, staring into the lens. The song cuts to dead silence: a camera shutter snaps and Arthur Mitchell himself is frozen in
+the frame, the petals hanging in the air: "Hello, Arthur Mitchell." On the drop the frozen frame BLOOMS open like a flower and the kill begins: a montage of the
 hunt cut on the 808s and claps -> "I swear I'm on a mission" -> NIGHT BLOOM / JASMINE -> he raises Trinity's blood slide;
 the drop of blood on it swells into the blood moon, and the edit loops.
 Look: MOONBLOOM (new): violet-black night, moon-silver highlights with a soft white Pro-Mist bloom, jasmine-white petals,
@@ -23,7 +23,8 @@ VER, SLUG = "v9", "night_bloom_dexter"
 SONG = f"{ROOT}/src/night_blooming_jasmine.mp3"
 SONG_STEMS = f"{ROOT}/{VER}/audio/sep/htdemucs/night_blooming_jasmine"
 FPS, W, H = 60, 1080, 1920
-SRC = {"p9": (f"{ROOT}/src/pack9_s4_best.mp4", 60.0, 1280, 720), "p10": (f"{ROOT}/src/pack10_s4_24p.mp4", 24.0, 1280, 720)}
+SRC = {"p9": (f"{ROOT}/src/pack9_s4_best.mp4", 60.0, 1280, 720), "p10": (f"{ROOT}/src/pack10_s4_24p.mp4", 24.0, 1280, 720),
+       "tg": (f"{ROOT}/src/trinity_goodbye.mp4", 60.0, 1280, 720)}                        # "Trinity Finds Out Who Dexter Is" (owner upload)
 
 HB, HB_OFF = 0.29185, 0.1673                 # half-beat 482 = the drop onset 140.839 s (local grid fit, 140.8-222 s)
 H0, H1 = 448, 650
@@ -76,8 +77,9 @@ def shot(n, src, e0, e1, a, b, **kw):
 shot("moon", "p9", 0, 3, 230.00, 230.50, face=None, cx=(640, 640), tin="loop_in", graphic="moon")
 shot("look_up", "p9", 3, 14, 230.75, 233.95, z=[(0, 1.02), (1, 1.12)], tin="tilt", petals=0.6, seg=True)
 shot("garden", "p9", 14, 20, 82.25, 84.00, z=[(0, 1.04), (1, 1.10)], tin="foliage", petals=0.8, seg=True)
-shot("stare", "p9", 20, 34, 0, 0, tmap=[(0, 117.60), (9 / 14, 120.20), (1, 120.20)], lin=True, z=[(0, 1.00), (9 / 14, 1.10), (1, 1.16)],
-     tin="petals", seg=True, freeze_e=E_SIL, petals=1.0)
+shot("stare", "p9", 20, E_SIL, 117.60, 120.20, z=[(0, 1.00), (1, 1.10)], tin="petals", seg=True, petals=1.0, frame_petals=True)
+# ---- the silence: a camera shutter snaps on the dead stop -> ARTHUR MITCHELL himself, frozen: "Hello, Arthur Mitchell."
+shot("arthur", "tg", E_SIL, 34, 103.40, 103.40, z=[(0, 1.10), (1, 1.18)], tin="shutter", seg=True, freeze_e=E_SIL, petals=1.0, frame_petals=True)
 # ---- the drop: the frozen frame blooms open; the hunt, cut on the 808s and claps
 shot("table", "p9", 34, 38, 103.25, 104.45, z=[(0, 1.14), (1, 1.04)], tin="bloom")
 shot("swing", "p9", 38, 42, 180.15, 181.10, z=[(0, 1.00), (1, 1.07)], tin="strobe")

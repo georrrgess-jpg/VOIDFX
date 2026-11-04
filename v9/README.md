@@ -21,7 +21,7 @@ So the edit uses two pieces of the song, spliced on the beat grid:
 |---|---|---|
 | 2:10.92 | Filtered breakdown (lead-in; the dialogue sits on it) | **0.00** |
 | 2:17.78 | Build | 6.86 |
-| **2:19.38** | **The beat cuts to dead silence** | **8.46: freeze-frame + "Hello, Arthur Mitchell."** |
+| **2:19.38** | **The beat cuts to dead silence** | **8.46: a shutter snaps; Arthur Mitchell, frozen: "Hello, Arthur Mitchell."** |
 | **2:20.84** | **The drop** (full beat + vocal, +26 dB) | **9.92: hero transition** |
 | 2:20.84–2:27.84 | Verse over the 808s | montage, cut on beats and claps |
 | 2:27.84 → **3:05.20** | **Splice.** The instrumental repeats on a 4-bar cycle, and the bar at 2:27.84 matches the bar at 3:05.20 (spectral correlation 0.98). The last word before the splice ends on a breath at 2:27.42; from there to the splice is the instrumental stem, so no word is cut off. | 16.93 (masked by the M99 blink and a short low-pass dip) |
@@ -41,7 +41,7 @@ The cold open:
 - He walks through a night garden of white jasmine and stops, staring into the lens.
 
 The silence:
-- The song cuts to dead silence and the frame freezes. Jasmine petals hang in the air, and the world drains to violet while he stays lit.
+- The song cuts to dead silence. A camera shutter snaps shut on Dexter's stare and opens on **Arthur Mitchell himself**, frozen in a doorway. Jasmine petals hang in the air, and the world drains to violet while he stays lit.
 - Alone in the silence: *"Hello, Arthur Mitchell."*
 
 The drop:
@@ -73,7 +73,7 @@ The ending:
 | 0.88 | Looks up at the moon (p9 230.8). VO: I HAD TO / **EVOLVE.**, then IT WAS THE ONLY / WAY TO **SURVIVE.** | **tilt**: one eased vertical camera move from the moon down to him (low air move) |
 | 4.09 | Night garden walk (p9 82.3) | **foliage**: the lens passes behind a jasmine bush, with moonlit leaves and white blossoms (leaf rustle) |
 | 5.84 | Stares into the lens (p9 117.6), petals framing him in depth | **petal gust** across the lens (wind, petal flutter, chimes) |
-| **8.46** | **Freeze** on the silence: 2.5-D parallax (cutout vs. background), violet drain, moonlight rim, suspended petals. HELLO, / ARTHUR MITCHELL. | shutter click, a faint high ring, nothing else |
+| **8.46** | **Arthur Mitchell, frozen** (the owner's "Trinity Finds Out" clip, 103.4), on the silence: 2.5-D parallax (cutout vs. background), violet drain, moonlight rim, suspended petals. HELLO, / ARTHUR MITCHELL. | **shutter**: six gunmetal blades snap shut on the dead stop and open on him (shutter clicks, a faint high ring, nothing else) |
 | **9.92** | **The drop**: the kill table, Trinity's victim under plastic (p9 103.3) | **BLOOM** (hero): the frame bursts into image-carrying jasmine petals (breath-in swell, sub boom, a burst of petal flutter) |
 | 11.09 | Kill room, face shield, power tool (p9 180.2) | **strobe**: two soft strobe hits on the hi-hats (zaps, sub) |
 | 12.26 | Flashlight in the dark (p9 186.6) | **whip** |
@@ -86,7 +86,7 @@ The ending:
 | 20.43 | Blood slide held up to the lens (p10 164.0) | **smear**: step-printed long-exposure echoes, for a song described as "smeared, strobing" (tape-warble whoosh) |
 | 21.13–21.60 | Push through the drop of blood until the frame is red | **into the blood → loops into the blood moon** (plunge, bloop, heartbeat, low-pass "night closes") |
 
-**Count:** 15 designed transitions and no plain cuts. Graphics:
+**Count:** 16 designed transitions and no plain cuts. Graphics:
 - moon and wisps;
 - a jasmine-petal depth field (behind him via the MODNet matte, soft bokeh petals in front that keep off his face);
 - the freeze composition;
@@ -141,7 +141,7 @@ Two shots are slowed slightly: the glove at 0.78×, held frames only, and the M9
 ## Files
 
 - `work/edl9.py`: every decision (song grid, two-segment splice, shots, dialogue, text).
-- `work/render9.py`: the engine (v4–v8) plus the v9 section at the end. It holds the moonbloom grade, moon, petals, freeze, the nine new transitions (tilt, foliage, petals, bloom, strobe, beam, blinds, roll, smear), the loop, type and finish.
+- `work/render9.py`: the engine (v4–v8) plus the v9 section at the end. It holds the moonbloom grade, moon, petals, freeze, the ten new transitions (tilt, foliage, petals, shutter, bloom, strobe, beam, blinds, roll, smear), the loop, type and finish.
 - `work/audio9.py`: the soundtrack.
 - `work/qc9.py`: the ship checkpoint.
 - `work/tracks9.json`: face tracks.
@@ -169,3 +169,31 @@ Run on the encoded upload file (`bash tools/build.sh 9 qc`), after the pass-3 re
 **Visual sign-off:** frames pulled from the encoded MP4 around every transition, every caption, the freeze, the drop, the hook title and the loop.
 
 **Not verifiable here:** I can't watch or listen. The structure, timing and loudness are measured, and every moment was checked on stills, but the edit has not been seen in motion or heard. Please watch it once with sound.
+
+
+## Revision 2 (owner feedback)
+
+> "I like the edit but can you make the clip where he says hello arthur mitchell actually arthur mitchell?"
+
+Before, the caption HELLO, / ARTHUR MITCHELL. sat under Dexter's own frozen face, which read as if Dexter were Arthur Mitchell.
+
+**What changed:**
+- **Footage:** Dexter's stare now plays up to the silence. On the song's dead stop, a new **shutter** transition closes over him and opens on **Arthur Mitchell (Trinity)**, frozen. The source is the owner's clip `src/trinity_goodbye.mp4` at 103.4 s: the doorway stare, chin up, the one Trinity close-up that fits 9:16 cleanly.
+- **Freeze:** the freeze composition (parallax, violet drain, moonlight rim, petals framing him) and the caption now sit on him.
+- **Drop:** the drop's petal bloom bursts his frozen frame open into the kill table.
+- **Sound:** the shutter has its own blade clicks. The dialogue, song and every other shot are unchanged.
+
+### Revision 2 checkpoint: **SHIP**
+
+Run on the encoded MP4.
+
+**Automated checks:**
+- **Format:** 1080×1920, 60 fps, 1296 frames, clean decode.
+- **Loudness:** −13.0 LUFS, true peak −3.3 dBTP after AAC.
+- **Face centring:** 0 flagged frames, including the new Arthur shot (43 face frames).
+- **Text vs. faces:** the only flag is the same smear-ghost frame (1222) as before.
+- **Cuts and picture:** no clicks at any of the 14 cuts, no frozen runs, no black frames.
+- **Loop seam:** matched in picture and sound.
+- **A/V length:** within one frame.
+
+**Visual sign-off:** frames pulled from the encoded file through the stare, the shutter, the Arthur freeze with its caption, and the bloom into the kill table.

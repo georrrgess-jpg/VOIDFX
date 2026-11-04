@@ -5,12 +5,25 @@ Every file lives in `src/` under the name in the first column. That folder is no
 All times are **seconds in that file**. "w" is the YuNet face width in source pixels on a 1280×720 frame. Above roughly 400 the face is too wide for a 9:16 crop, and text has nowhere to go.
 
 **Cached analysis** (copy it into a new edit instead of re-running):
-- shot lists: `studio/packs/shots_p9.json`, `shots_p10.json`; `v2/work/shots_p2.json`, `shots_p3.json`; `v3/work/shots_p4.json`, `shots_p5.json`, `shots_dk.json`; `v6/work/shots_p6.json`; `v7/work/shots_p7.json`, `shots_p8.json`; `v5/work/shots_fa.json`, `shots_fb.json`;
+- shot lists: `studio/packs/shots_p9.json`, `shots_p10.json`, `v9/work/shots_tg.json`; `v2/work/shots_p2.json`, `shots_p3.json`; `v3/work/shots_p4.json`, `shots_p5.json`, `shots_dk.json`; `v6/work/shots_p6.json`; `v7/work/shots_p7.json`, `shots_p8.json`; `v5/work/shots_fa.json`, `shots_fb.json`;
 - transcripts: `studio/packs/tr_p9.json` (p10 has no audio); `v3/work/doakes_transcript.json`, `v6/work/tr_pack6.json`, `v7/work/tr_p8.json`, `v5/work/tr_pack_*.json`.
 
 ---
 
 ## Dexter scene packs
+
+### `trinity_goodbye.mp4` (key `tg`): "Trinity Finds Out Who Dexter Is (Goodbye Dexter Morgan)", 1280×720, 60 fps, 1:49, 36 shots
+
+Uploaded as `Trinity_Finds_Out_Who_Dexter_Is_Goodbye_Dexter_Morgan_.mp4` (S4E11, Miami Metro). Shot list: `v9/work/shots_tg.json`. Most of the close-ups are too wide for 9:16 (w400–580); the ones that fit:
+
+| Time | Shot | Notes |
+|---|---|---|
+| **99.75–105.15** | **Arthur Mitchell in a doorway, chin up, a cold stare at Dexter** | w153, fits 9:16 with room for text. **103.4 is clean** (a passer-by blurs the foreground before 102; a door frame enters the right edge after 103.8). v9 "Hello, Arthur Mitchell." freeze |
+| 53.5–55.5 | Trinity, medium close-up, looking off right | w322–335 |
+| 81.7–85.3 | Trinity, close, side light, a slight smile | w455, too wide |
+| 29.4–34.5 | Trinity talking to camera | w465, too wide |
+| 85.3–89.7, 63.0–68.4 | Dexter's reaction close-ups | w394–404, borderline |
+| 106.9–108.9 | CapCut end card | Don't use |
 
 ### `pack9_s4_best.mp4` (key `p9`): S4 "all best and most popular clips" (Trinity season), 1280×720, 60 fps container, 4:03, 102 shots
 

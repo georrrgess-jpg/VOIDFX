@@ -361,6 +361,8 @@ def main():
         elif tin == "strobe":
             for d_ in (-2 / 60, 0.0): place(fx, stereo(strobe_zap(-23, 713 + int(d_ * 60)), 0.3 if d_ else -0.3), t0 + d_)
             place(fx, stereo(A2.impact(-19, (80, 45), 0.12, 0.6, 715)), t0)
+        elif tin == "shutter":                              # blades shut on the dead stop, open on Arthur Mitchell
+            place(fx, stereo(shutter_ticks(-20, 3, 0.022, 760)), t0 - 5 / 60); place(fx, stereo(shutter_ticks(-22, 3, 0.03, 764)), t0 + 2 / 60)
         elif tin == "whip": place(fx, A2.whoosh(0.22, -21, 716, True), t0 - 0.10)
         elif tin == "beam":                                 # torch click + the beam flooding the lens
             place(fx, stereo(click(-21, 717)), t0 - 8 / 60)

@@ -5358,8 +5358,9 @@ def petals9(out, f, person=None):
 def freeze9(img, person, f, s):
     k = f - fh(E.E_SIL); e = eout(clamp((k + 1) / 7, 0, 1), 2)
     if person is not None:
-        bg_s = dict(s); z_f = keys_at(s["z"], 9 / 14)
-        bg_s["z"] = [(q[0], z_f + (q[1] - z_f) * 0.30) if q[0] > 9 / 14 else q for q in s["z"]]
+        u0 = clamp((fh(s["freeze_e"]) - s["f0"]) / max(1, s["f1"] - s["f0"]), 0, 1)
+        bg_s = dict(s); z_f = keys_at(s["z"], u0)
+        bg_s["z"] = [(u0, z_f)] + [(q[0], z_f + (q[1] - z_f) * 0.30) for q in s["z"] if q[0] > u0]
         bg = render_shot(bg_s, f, with_shake=False)
         pm = cv2.GaussianBlur(np.clip(person * 1.2, 0, 1), (0, 0), 1.5)[..., None]
         img = bg * (1 - pm) + img * pm
@@ -5900,13 +5901,14 @@ def petals9(out, f, person=None):
         if al <= 0.02: continue
         rot = p["rot0"] + p["spin"] * t; flip = math.cos(p["fl"] * t + p["ph"])
         draw_sprite(front if near else back, spr[p["k"]], x, y, sc, rot, flip, 0.0 if not near else 3 + (z - 0.58) * 22, al)
-    if s["n"] == "stare":                                                         # hero petals that frame (never cover) his face
-        tl = t - th(20) if t < th(E.E_SIL) else th(E.E_SIL) - th(20)
+    if s.get("frame_petals"):                                                     # hero petals that frame (never cover) the face
+        tl = max(0.0, min(t, th(E.E_SIL)) - s["t0"]); mir = s["n"] == "arthur"
         for i, (px, py, z) in enumerate(((110, 420, 0.7), (975, 330, 0.85), (70, 1250, 0.95), (1010, 1120, 0.75), (240, 1760, 1.0),
                                           (880, 1720, 0.8), (520, 90, 0.65), (40, 820, 0.6))):
+            if mir: px, py = W - px, py + 60
             x = px + 14 * math.sin(0.6 * tl + i); y = py + (22 + 16 * z) * tl
             if frozen: x = W / 2 + (x - W / 2) * (1 + 0.05 * z * drift); y = H * 0.45 + (y - H * 0.45) * (1 + 0.05 * z * drift)
-            draw_sprite(front, spr[i % 6], x, y, 0.35 + 0.75 * z, 40 * i + 18 * tl, math.cos(0.9 * tl + i), 1.0 + 7 * (z - 0.6), 0.75 * clamp((f - fh(20)) / 12, 0, 1))
+            draw_sprite(front, spr[i % 6], x, y, 0.35 + 0.75 * z, 40 * i + 18 * tl, math.cos(0.9 * tl + i), 1.0 + 7 * (z - 0.6), 0.75 * clamp((f - s["f0"]) / 12, 0, 1))
     if person is not None:
         back *= (1 - np.clip(person * 1.15, 0, 1))[..., None]
     for lay in (back, front):
@@ -6085,6 +6087,21 @@ def beam(A, B, j, f, sa, sb, pre=8, post=11):
     return np.clip(B * reveal + MOONW * 1.15 * white * (1 - reveal * 0.7), 0, 1)
 
 TR2.update({"bloom": (bloom9, 14, 26), "beam": (beam, 8, 8)})
+
+def shutter(A, B, j, f, sa, sb, pre=5, post=10):
+    """the music stops dead: a camera shutter (six gunmetal blades) snaps shut over the outgoing shot and opens on the
+    frozen one, like the photograph of a moment."""
+    if j < 0: u = (j + pre + 1) / pre; img = A; r = 1200 * (1 - ein(u, 1.7)); rot = 0.55 * u
+    else: v = (j + 1) / post; img = B; r = 1200 * eout(v, 2.3); rot = 0.55 + 0.5 * v
+    sd = aperture(max(r, 0.0), rot); m = np.clip(sd / 2.0, 0, 1)[..., None]
+    rr, aa = polar(); seg = 2 * math.pi / 6; a = np.mod(aa - rot, seg) / seg
+    metal = (0.045 + 0.075 * a + 0.03 * np.clip(1 - rr / 1100, 0, 1))[..., None] * np.array([1.05, 1.0, 0.95], np.float32)
+    seam = np.exp(-((a - 0.0) * seg * np.maximum(rr, 1) / 2.0) ** 2)[..., None] * 0.10
+    edge = np.exp(-(sd / 3.0) ** 2)[..., None] * MOONW * 0.55
+    o = img * m + (metal + seam) * (1 - m) + edge * (1 - m * 0.5)
+    return np.clip(o, 0, 1)
+
+TR2["shutter"] = (shutter, 5, 10)
 LOOPIN_N = 26
 def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
