@@ -14,6 +14,7 @@ Timings were measured on this 4-core box for a 26 s edit.
 | Dialogue / lyrics | `python3 tools/transcribe.py vN NAME MEDIA [--vad] [--start S --dur D]` | 1–3 min |
 | Voice under score | `python3 -m demucs -n htdemucs --two-stems=vocals -o vN/audio/sep CLIP.wav` | 15 s per 30 s clip |
 | Tracks and mattes | `bash tools/build.sh N prep` | ~35 s |
+| **Source restoration** (v10 rev 3) | `nohup python3 tools/sr_prep.py N &` right after `prep`: Real-ESRGAN compact restores and 2× upscales only the band each frame is cropped from; the renderer uses it automatically | ~3 s per source frame (45 min for 900 frames, in the background while you build) |
 | **Every-cut review sheets** | `bash tools/build.sh N auto` → `vN/frames/cuts_*.jpg` | ~35 s |
 | Soundtrack | `bash tools/build.sh N audio` (circular, wrapped master, AAC-checked) | ~7 s |
 | **Motion check** | `bash tools/build.sh N clip:A:B` → small MP4 with sound | ~20 s |
@@ -76,6 +77,14 @@ Each transition goes through something and has its own sound in `audioN.py` (`if
 | `blinds` (v9) | Backlit venetian slats rotate shut, then open on the next shot (staggered top to bottom) | — | Slat rattle ×2 |
 | `roll` (v9) | The world rolls 90° with rotational blur (lands on an upside-down shot) | — | Doppler whoosh, floor thud |
 | `smear` (v9) | Step-printed long-exposure echoes drag the frame, then settle | — | Tape-warble whoosh |
+| `phase` (v10 r3) | He vibrates through the frame: jittered chromatic copies, row shimmer, every edge lit gold; the next shot shows through for a few frames, then settles | — | Rising saw buzz, whoom |
+| `whirlwind` (v10 r3) | The frame twists into a spiral round the eye of a storm (angular blur, wind and debris torn round); the next shot unwinds out of it | — | Wind swirl circling the stereo field |
+| `lichtenberg` (v10 r3) | A branching lightning figure grows from his chest (stopping short of his face); the next shot opens inside the branches | — | Growing crackle, snap |
+| `lens_shatter` (v10 r3) | A bolt flies at the camera and hits the lens; electric cracks, then the glass bursts toward us in Voronoi shards | — | Whine, glass break, impact |
+| `perimeter` (v10 r3) | A lightning streak runs laps round the frame edge; the next shot fills in as a spiral wake closing on the centre | — | Swirl pass, crackle |
+| `frozen_shatter` (v10 r3) | In frozen time the frame cracks and the shards hang apart; the beat that restarts time blows them away | `frozen=True` shots | Dull crack, then a glass burst on the hit |
+| `wave=True` (v10 r3) | After the drop: a refracting dark-matter ring rings out of the frame centre | on the drop shot | Sub drop |
+| `tunnel_in` + `graphic="tunnel"` (v10 r3 loop) | The letters of a lyric run a ring that opens into the Speed Force; panels of the edit's own moments fly past newest to oldest and frame 0 lands | `T_OPEN`, `TUN_PANELS` | Ring crackle, swirl, panel whooshes, the song rewinding (box-filtered) |
 
 The older v4/v5 transitions are still in the file and work as `tin` values: `kaleido`, `rewind`, `flash`, `tiles`, `neon_trace`, `ripple`, `pixel_sort`, `vhs_roll`. Add new transitions to `TR2` as `fn(A, B, j, f, sa, sb)` with `(fn, frames_before, frames_after)`:
 - `j < 0`: A is the live outgoing shot and B is the incoming shot's first frame.
@@ -127,6 +136,8 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 12. **Packs hide cuts the shot detector misses** (a jump to a closer angle, the next scene starting a few frames early). Interpolating across them makes a ghost frame, and running a source range past the shot's end puts another actor on screen. The sampler now holds frames across hard cuts; `tools/check_sources.py N` (run automatically by `build.sh N prep`) now fails any shot whose source range leaks past a source cut (found twice on v7).
 13. **Text vs very tight close-ups:** a face box that fills the 9:16 frame leaves no text-safe band. Swap the shot (v7: the "Could it be him?" close-up → kill-room floor) rather than shrinking the type.
 11. **CJK subtitles and VHS counters read as clutter** to the user. Don't add them.
+14. **Whisper word times drift on sung, held notes** (v10: up to 1.1 s early on "All this running around", ~0.2 s late on others). Before captions go in, check every word against the Demucs vocal stem: a 30 ms RMS + pitch track shows where each syllable starts, and the line's parallel phrase (verse 1 vs verse 2) confirms it.
+15. **A 720p pack cropped to 9:16 is a 2.7× blow-up.** Run `tools/sr_prep.py` (restoration + 2× from the network) instead of cubic + unsharp mask; the renderer drops the unsharp mask to 0.16 on restored frames.
 
 ## 5. What made v6 the benchmark (carry the principles, not the look)
 

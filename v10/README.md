@@ -1,6 +1,6 @@
 # LET IT HAPPEN — The Flash × Tame Impala "Let It Happen" (voidfx v10, 9:16)
 
-A 24.96 s, 1080×1920, 60 fps TikTok edit. It loops: the last second rewinds the whole edit back to its first frame.
+A 24.96 s, 1080×1920, 60 fps TikTok edit. It loops: on "running AROUND" the letters run a ring that opens into the Speed Force, and he flies back through the edit's own moments to its first frame (rev 3).
 
 **Deliverables:**
 - `v10/out/let_it_happen_flash_voidfx_9x16.mp4`: H.264 + AAC, fast-start (upload this one).
@@ -239,3 +239,49 @@ Re-render: `bash tools/build.sh 10 prep audio video qc`
 - the ignite blackout into the ignition shot;
 - the emblem dive and every hook caption;
 - the logo pass, LET IT HAPPEN, the freeze, the run and the rewind.
+
+## Revision 3 (owner feedback)
+
+> "Implement cooler transitions… more animations and graphics… unique and visually appealing… ensure the text timing and animations are visually appealing and smooth… change the loop transition/animation to be more unique, creative and visually appealing with better quality… drastically improve the edit to be the best flash edit you have created and with the best quality."
+
+### Picture quality
+The 720p pack used to be blown up 2.7× (cubic + unsharp mask), so faces were soft and showed compression blocks. Now `tools/sr_prep.py` runs Real-ESRGAN compact (general-x4v3 blended 50/50 with its denoising twin) on exactly the band each frame is cropped from, at 2×, and the renderer samples the restored band: cleaner edges, real hair and stubble detail, no blocking. The unsharp mask drops from 0.40 to 0.16 on restored frames.
+
+### Text: re-timed and redesigned
+Every word was re-timed to its sung onset on the vocal stem (pitch track + onsets, checked against Whisper and the verse's parallel phrasing). The old times were off by up to a second:
+
+| Line | Was | Now |
+|---|---|---|
+| ALL THIS RUNNING AROUND | 20.96 s (the vocal is silent until 22.08) | **22.08 / 22.64 / 23.08 / 23.65** |
+| IT HAPPENS | HAPPENS 0.2 s late | IT 8.21, HAPPENS 8.33 |
+| WHEN IT HAPPENS | HAPPENS 0.2 s early | WHEN 9.05, IT 10.10, HAPPENS 10.22 |
+| AND (WHEN) | 0.2 s late | 5.78 / 7.25 |
+| ALL THAT ISN'T BOUND | not shown | 3.36 / 3.87 / 4.59 / 5.34 |
+
+Text moments, in the approved caption construction (keyline, soft shadow, gold emphasis, every word easing in):
+- **IT'S GONNA / CARRY OFF**: the whirlwind lifts the letters off in reading order and spirals them away, each with a short gold trail.
+- **ALL THAT / ISN'T BOUND** (new, completes the sentence): a gust takes every word except BOUND, which locks in place with a flash. Then BOUND is struck and bursts, clearing the way for AND.
+- **AND**: gold charge rises inside the letters through the long held note, crackling at the top; WHEN lands white-hot. Both ride the emblem dive.
+- **ALL THIS / RUNNING AROUND**: the words run in on their sung onsets. Then the letters of AROUND leap onto a ring and run round it, and the ring becomes the loop.
+
+### New transitions (each with its own sound)
+
+| Edit | Into | Transition |
+|---|---|---|
+| 0.96 | look | **Phase**: he vibrates his molecules and passes through the frame (chromatic copies, row shimmer, every edge lit gold) |
+| 2.88 | garage close-up | **Whirlwind** on "carry OFF": the frame twists into a spiral storm and the next shot unwinds out of it |
+| 5.76 | lightning over the suit | **Lichtenberg**: a branching lightning figure grows from his chest (stopping short of his face); the next shot opens inside the branches |
+| 7.68 | the drop | the emblem dive, now followed by a **particle-accelerator wave** (a refracting dark-matter ring) |
+| 9.60 | garage | **Lens shatter**: the lightning he throws hits the camera lens; electric cracks, then the glass bursts toward us |
+| 12.00 | grin | **Perimeter**: he runs laps round the frame edge as a streak; the next shot fills in as a spiral wake closing on the centre |
+| 19.68 | frozen moment 2 | **Frozen shatter**: frozen time cracks like glass; the shards hang apart, and the beat that restarts time blows them away |
+| 23.85 → 0.00 | **the loop** | **The Speed Force**: AROUND's letters run a ring of lightning that opens in the middle of the run. Inside, the edit's own moments fly past as glowing panels, newest to oldest, through a turning tunnel of light; the first shot comes up ahead and lands as frame 0. The song rewinds underneath (now anti-aliased: smooth, not gritty) and starts after "around" finishes |
+
+Kept from rev 2: speed slices, ignite, the emblem dive, the speed ramps, the shock ring, the logo pass, the lightning strike, the time-stop wave, and the restart.
+
+### New graphics
+- **The whirlwind** (cold open): gold debris and pale wind streaks orbit him in depth. The far side passes behind him through the matte, the near side in front, never across his face. It builds through the breakdown and swells on the bar lines.
+- **Lightning ribbons in 3-D** (ignition, LET IT HAPPEN): two ribbons spiral round him, behind his head and shoulders and across his chest, with a bright pulse running along them.
+
+REV3_RESULTS
+

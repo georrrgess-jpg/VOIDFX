@@ -148,6 +148,8 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
 6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
 7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
+8. **(v10 rev 3) Picture quality and timing are part of the bar.** The owner asked for "the best quality": restore the 720p packs (`tools/sr_prep.py`) on every edit, and check every caption word against the vocal stem (pitch + onsets) before the first render. In v10 the first two deliveries showed "ALL THIS RUNNING AROUND" a full second before it was sung.
+9. **(v10 rev 3) The loop is a set piece, not a rewind blur.** A plain motion-blurred rewind read as low quality. Build the loop from the character's world and the edit itself (v10: the lyric's letters run a ring that opens into the Speed Force; panels of the edit's own moments fly past back to frame 0), and keep every frame of it sharp.
 
 ## 5. What works: craft lessons
 

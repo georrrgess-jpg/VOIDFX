@@ -50,15 +50,18 @@ LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []                                       # the packs carry no usable dialogue; music-driven
 VO_STEM = None; VO_STEM_T0 = 0.0
 
-# ---- lyric word times (Demucs vocal stem + Whisper, re-checked in short windows; song seconds). Only unambiguous
-#      words go on screen ("isn't bound/found" and "won't/will be holding on" are left off).
-W_CARRY = [("IT'S", 95.52), ("GONNA", 96.60), ("CARRY", 96.84), ("OFF", 97.34)]
-W_AND = [("AND", 100.26), ("WHEN", 101.56)]
-W_HAP1 = [("IT", 102.48), ("HAPPENS", 102.82)]
-W_HAP2 = [("WHEN", 103.92), ("IT", 104.42), ("HAPPENS", 104.70)]
-W_LET = [("LET", 108.02), ("IT", 108.38), ("HAPPEN", 108.54)]
-W_LET2 = [("LET", 109.34), ("IT", 110.26), ("HAPPEN", 110.44)]
-W_RUN = [("ALL", 115.24), ("THIS", 116.12), ("RUNNING", 117.00), ("AROUND", 117.58)]
+# ---- lyric word times (song seconds). rev 3: every word re-timed to its sung onset on the Demucs vocal stem (pitch
+#      track + spectral-flux onsets, cross-checked with Whisper in short windows and the line's parallel phrasing):
+#      Whisper ran ~0.1-0.2 s late on held notes, and "All this running around" starts at 116.36 (the vocal is silent
+#      from 114.9), not 115.24. Backing "(I won't be holding on)" stays off screen.
+W_CARRY = [("IT'S", 95.45), ("GONNA", 96.47), ("CARRY", 96.74), ("OFF", 97.15)]
+W_BOUND = [("ALL", 97.64), ("THAT", 98.15), ("ISN'T", 98.87), ("BOUND", 99.62)]
+W_AND = [("AND", 100.06), ("WHEN", 101.53)]
+W_HAP1 = [("IT", 102.49), ("HAPPENS", 102.61)]
+W_HAP2 = [("WHEN", 103.33), ("IT", 104.38), ("HAPPENS", 104.50)]
+W_LET = [("LET", 107.97), ("IT", 108.24), ("HAPPEN", 108.33)]
+W_LET2 = [("LET", 109.08), ("IT", 110.10), ("HAPPEN", 110.25)]
+W_RUN = [("ALL", 116.36), ("THIS", 116.92), ("RUNNING", 117.36), ("AROUND", 117.93)]
 
 S = []
 def shot(n, src, e0, e1, a, b, **kw):
@@ -68,32 +71,33 @@ def shot(n, src, e0, e1, a, b, **kw):
     d.update(kw); S.append(d)
 
 # ---- cold open: the calm before the whirlwind (bass-less build)
-shot("lab", "fb", 0, 4, 38.62, 39.58, z=[(0, 1.12), (1, 1.18)], tin="rewind_in", seg=True, arcs=0.35, sparks=0.7)
-shot("look", "fb", 4, 8, 37.16, 38.12, z=[(0, 1.02), (1, 1.10)], tin="slices", seg=True, arcs=0.3, sparks=0.7)
-shot("smile", "fb", 8, 12, 34.60, 35.56, z=[(0, 1.00), (1, 1.07)], tin="arc_link", seg=True, arcs=0.5, sparks=0.7)
-shot("profile", "fb", 12, 16, 136.50, 137.46, z=[(0, 1.00), (1, 1.08)], tin="bolt_tear", seg=True, arcs=0.35, sparks=0.8)
-shot("ignition", "fb", 16, 24, 52.85, 54.30, z=[(0, 1.00), (1, 1.12)], tin="ignite", interp="blend", seg=True, arcs=0.45, sparks=1.0)
-shot("charge", "fb", 24, 32, 83.85, 85.05, z=[(0, 1.02), (1, 1.16)], tin="arc_link", interp="blend", seg=True, arcs=1.0, sparks=0.8,
+shot("lab", "fb", 0, 4, 38.62, 39.58, z=[(0, 1.12), (1, 1.18)], tin="tunnel_in", seg=True, arcs=0.35, wind=0.55)
+shot("look", "fb", 4, 8, 37.16, 38.12, z=[(0, 1.02), (1, 1.10)], tin="phase", seg=True, arcs=0.3, wind=0.7)
+shot("smile", "fb", 8, 12, 34.60, 35.56, z=[(0, 1.00), (1, 1.07)], tin="slices", seg=True, arcs=0.5, wind=0.8)
+shot("profile", "fb", 12, 16, 136.50, 137.46, z=[(0, 1.00), (1, 1.08)], tin="whirlwind", seg=True, arcs=0.35, wind=1.0)
+shot("ignition", "fb", 16, 24, 52.85, 54.30, z=[(0, 1.00), (1, 1.12)], tin="ignite", interp="blend", seg=True, arcs=0.45, wind=0.8, orbit=1.0)
+shot("charge", "fb", 24, 32, 83.85, 85.05, z=[(0, 1.02), (1, 1.16)], tin="lichtenberg", interp="blend", seg=True, arcs=1.0, wind=0.6,
      emblem=[(83.95, 731, 462), (84.45, 744, 581), (84.95, 744, 625), (85.05, 745, 632)], emblem_r=42)
 # ---- the drop: through the bolt of his emblem; the hunt of light
-shot("takeoff", "fb", 32, 38, 4.62, 6.12, z=[(0, 1.14), (1, 1.04)], tin="emblem_gate", seg=True, trails=0.8, sparks=0.7)
+shot("takeoff", "fb", 32, 38, 4.62, 6.12, z=[(0, 1.14), (1, 1.04)], tin="emblem_gate", seg=True, trails=0.8, sparks=0.7, wave=True)
 shot("throw", "fb", 38, 40, 124.40, 124.77, z=[(0, 1.00), (1, 1.06)], tin="ramp")
-shot("garage", "fb", 40, 46, 113.55, 114.99, z=[(0, 1.04), (1, 1.12)], tin="bolt_link", seg=True, trails=0.7, sparks=0.6)
+shot("garage", "fb", 40, 46, 113.55, 114.99, z=[(0, 1.04), (1, 1.12)], tin="lens_shatter", seg=True, trails=0.7, sparks=0.6)
 shot("scream", "fb", 46, 50, 127.70, 128.66, z=[(0, 1.00), (1, 1.08)], tin="shock")
-shot("grin", "fb", 50, 54, 56.30, 57.26, z=[(0, 1.00), (1, 1.05)], tin="prism_cut")
+shot("grin", "fb", 50, 54, 56.30, 57.26, z=[(0, 1.00), (1, 1.05)], tin="perimeter")
 shot("turn", "fb", 54, 56, 102.86, 103.34, z=[(0, 1.00), (1, 1.06)], tin="ramp")
-shot("hero", "fb", 56, 68, 109.76, 112.42, z=[(0, 1.00), (1, 1.10)], tin="logo_orig", seg=True, arcs=0.45, sparks=0.8)
+shot("hero", "fb", 56, 68, 109.76, 112.42, z=[(0, 1.00), (1, 1.10)], tin="logo_orig", seg=True, arcs=0.45, sparks=0.8, orbit=1.0)
 shot("strike", "fb", 68, 74, 10.36, 11.80, z=[(0, 1.00), (1, 1.08)], tin="bolt_strike")
 # ---- the gated stutter: time stops between the beats (source time only advances on the hits)
 #      (the music: e74 low, e75 gap, e76-77 hit, e78 low, e79 gap, e80-81 hit, e82 low, e83 gap, e84-85 hit, e86 low, e87 gap)
 shot("freeze_a", "fb", 74, 82, 0, 0, tmap=[(0, 13.00), (2 / 8, 13.00), (4 / 8, 14.60), (6 / 8, 14.60), (1, 16.20)],
      lin=True, z=[(0, 1.00), (1, 1.16)], tin="freeze_in", seg=True, frozen=True, face=None, cx=(870, 880))
 shot("freeze_b", "fb", 82, 88, 0, 0, tmap=[(0, 28.10), (2 / 6, 28.10), (4 / 6, 29.40), (1, 29.40)],
-     lin=True, z=[(0, 1.06), (1, 1.20)], tin="jolt", seg=True, frozen=True, face=None, cx=(1000, 960))
+     lin=True, z=[(0, 1.06), (1, 1.20)], tin="frozen_shatter", seg=True, frozen=True, face=None, cx=(1000, 960))
 # ---- "All this running around": afterimages, then he outruns time
 shot("run", "fb", 88, 100, 0, 0, tmap=[(0, 80.86), (8 / 12, 81.95), (1, 82.24)], z=[(0, 1.00), (1, 1.10)], tin="restart", face=None, cx=(560, 520),
      interp="blend", seg=True, trails=1.0, arcs=0.6, streak_e=98)
-shot("rewind", "fb", 100, 104, 82.10, 82.24, tin="streak", graphic="rewind", face=None, cx=(640, 640))
+# ---- the loop: the ring of AROUND opens into the Speed Force; he runs back through the edit's own moments to frame 0
+shot("tunnel", "fb", 100, 104, 82.10, 82.24, tin="portal", graphic="tunnel", face=None, cx=(640, 640))
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
@@ -101,13 +105,14 @@ for s in SHOTS:
 # ---- text: the approved v9 system. cap = keyline captions, slam = one hard-hitting word pair, echo = speed-echo
 #      caption, hero = per-letter title struck by lightning, speed = words that arrive with afterimage streaks
 TEXT = [
-    dict(style="carry", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_CARRY)], end=th(15) + 0.05, emph=["CARRY", "OFF"]),
-    dict(style="cap", words=[(w, s2e(t), 0) for w, t in W_AND], end=th(32) - 0.02, emph=["WHEN"], rides=True),
-    dict(style="slam", words=[(w, s2e(t), 0 if i == 0 else 1) for i, (w, t) in enumerate(W_HAP1)], end=th(38) - 0.06, emph=["HAPPENS"]),
+    dict(style="carry", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_CARRY)], end=s2e(97.15) + 0.75, emph=["CARRY", "OFF"]),
+    dict(style="bound", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_BOUND)], end=s2e(100.06) - 0.03, emph=["BOUND"]),
+    dict(style="charge", words=[(w, s2e(t), i) for i, (w, t) in enumerate(W_AND)], end=th(32) + 0.02, emph=["WHEN"], rides=True),
+    dict(style="slam", words=[(w, s2e(t), 0 if i == 0 else 1) for i, (w, t) in enumerate(W_HAP1)], end=s2e(103.33) - 0.06, emph=["HAPPENS"]),
     dict(style="echo", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_HAP2)], end=th(46) - 0.07, emph=["HAPPENS"]),
     dict(style="hero", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_LET)], end=th(68) - 0.05, emph=["HAPPEN"],
          pulses=[s2e(t) for _, t in W_LET2]),
-    dict(style="speed", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_RUN)], end=th(99) + 0.02, emph=["RUNNING", "AROUND"], rides=True),
+    dict(style="speed", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_RUN)], end=th(101) + 0.05, emph=["RUNNING", "AROUND"]),
 ]
 for _t in TEXT:
     assert _t["end"] > _t["words"][-1][1] + 0.25, (_t["words"], _t["end"])

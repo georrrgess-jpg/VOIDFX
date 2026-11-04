@@ -6933,6 +6933,834 @@ def render(f):
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
 
 
+# ============================================================================ v10 rev 3 — the best Flash edit
+# Owner notes: cooler transitions; more animations and graphics, each presented in its own way; smooth text that lands
+# on the sung words; a more creative, higher-quality loop; best quality.
+# New here:
+#   picture   restored 2x source (Real-ESRGAN compact, tools/sr_prep.py) instead of a 2.7x cubic blow-up of 720p
+#   transitions  PHASE (he vibrates through the frame), WHIRLWIND (the frame is carried off on "...carry OFF"),
+#             LICHTENBERG (a branching lightning figure grows out of him; the next shot opens inside it),
+#             the particle-accelerator WAVE after the emblem dive, LENS SHATTER (his thrown bolt hits the lens),
+#             PERIMETER (he runs a lap of the frame and the picture changes behind him), FROZEN SHATTER (frozen time
+#             cracks like glass and hangs in the air until the beat blows it away)
+#   loop      the letters of AROUND run a ring that opens into the Speed Force; we fly back through the edit's own
+#             moments (newest to oldest) and land on frame 0
+#   graphics  the whirlwind (gold debris and pale wind orbiting him in depth, behind/in front via the matte),
+#             lightning ribbons spiralling around him in 3-D
+#   type      re-timed to the sung onsets; the whirlwind sentence complete (IT'S GONNA / CARRY OFF, then ALL THAT /
+#             ISN'T BOUND: the wind takes every word but BOUND); AND charges up through its long note; AROUND runs the ring
+
+T_OPEN = 23.85                                     # the ring of AROUND opens (edit s)
+F_OPEN = E.fe(T_OPEN)
+
+# ---- restored source: 2x bands from tools/sr_prep.py ------------------------------------------------------------
+_SRI = {}
+_SRC = {}
+SR_USED = [False]
+def sr_index():
+    if "i" not in _SRI:
+        p = f"{ROOT}/{E.VER}/sr/index.json"
+        _SRI["i"] = json.load(open(p)) if os.path.exists(p) else {}
+    return _SRI["i"]
+
+def sr_band(pk, k):
+    key = f"{pk}:{k}"; b = sr_index().get(key)
+    if b is None: return None
+    if key not in _SRC:
+        if len(_SRC) > 40: _SRC.pop(next(iter(_SRC)))
+        im = cv2.imread(f"{ROOT}/{E.VER}/sr/{pk}_{k:06d}.jpg")
+        if im is None or im.shape[1] != 2 * (b[1] - b[0]): return None
+        _SRC[key] = (b[0], im)
+    return _SRC[key]
+
+def src_weights(s, f):
+    """the source frames (and weights) render_shot samples for frame f (mirrors source_img / sample)."""
+    pk = s["src"]; fps = E.SRC[pk][1]; U = UNIQ[pk]
+    t, u, sp = src_time(s, f)
+    def idx(tt, mode):
+        kf = tt * fps; i = clamp(bisect.bisect_right(U, kf + 0.3) - 1, 0, len(U) - 1)
+        if mode == "hold" or i >= len(U) - 1: return [(U[i], 1.0)]
+        i0, i1 = U[i], U[i + 1]; a = clamp((kf - i0) / (i1 - i0), 0.0, 1.0)
+        if a < 0.05: return [(i0, 1.0)]
+        if a > 0.95: return [(i1, 1.0)]
+        if mode == "blend": return [(i0, 1 - a), (i1, a)]
+        return None
+    if sp > 1.7:
+        K = int(min(7, max(3, round(sp * 2)))); span = 0.5 / FPS * sp; out_ = []
+        for j in range(K):
+            out_ += [(k, w / K) for k, w in idx(t + (j / (K - 1) - 0.5) * span, "hold")]
+        return out_, t, u
+    return idx(t, s.get("interp", "hold")), t, u
+
+_render_shot_v = render_shot
+def render_shot(s, f, with_shake=True, want_mask=False):
+    SR_USED[0] = False
+    if s.get("fit") or "src" not in s: return _render_shot_v(s, f, with_shake, want_mask)
+    ws, t, u = src_weights(s, f)
+    if not ws: return _render_shot_v(s, f, with_shake, want_mask)
+    sw, sh_ = E.SRC[s["src"]][2], E.SRC[s["src"]][3]
+    cx, cy, ch = frame_geom(s, f, t, u)
+    cw = ch * 9 / 16; sc = W / cw
+    dx, dy, rot = shake(f) if with_shake else (0, 0, 0)
+    m = 16
+    x0 = int(max(0, cx - cw / 2 - m)); x1 = int(min(sw, cx + cw / 2 + m))
+    y0 = int(max(0, cy - ch / 2 - m)); y1 = int(min(sh_, cy + ch / 2 + m))
+    roi = None
+    for k, w in ws:
+        b = sr_band(s["src"], k)
+        if b is None or b[0] > x0 or b[0] + b[1].shape[1] // 2 < x1: return _render_shot_v(s, f, with_shake, want_mask)
+        part = b[1][2 * y0:2 * y1, 2 * (x0 - b[0]):2 * (x1 - b[0])].astype(np.float32)
+        roi = part * w if roi is None else roi + part * w
+    roi = grade(roi / 255, s, f)
+    th_ = math.radians(rot); co, si = math.cos(th_) / sc, math.sin(th_) / sc
+    lx, ly = cx - x0, cy - y0
+    M = np.float32([[co, -si, lx - co * (W / 2 + dx) + si * (H / 2 + dy)], [si, co, ly - si * (W / 2 + dx) - co * (H / 2 + dy)]])
+    M2 = M * 2; M2[0, 2] += 0.5; M2[1, 2] += 0.5                                         # 2x band: sr = 2 * src + 0.5
+    out = cv2.warpAffine(roi, M2, (W, H), flags=cv2.INTER_CUBIC | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REFLECT)
+    SR_USED[0] = True
+    if want_mask:
+        msk = seg_mask(s, t)
+        mr = cv2.resize(msk, (sw, sh_), interpolation=cv2.INTER_LINEAR)[y0:y1, x0:x1]
+        mw = cv2.warpAffine(mr, M, (W, H), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REPLICATE)
+        return np.clip(out, 0, 1), np.clip(mw, 0, 1)
+    return np.clip(out, 0, 1)
+
+# ---- graphics: the whirlwind (cold open) ------------------------------------------------------------------------
+_WP = {}
+def wind_params():
+    if "p" in _WP: return _WP["p"]
+    rng = np.random.default_rng(91); P = []
+    for i in range(120):
+        kind = 0 if i < 88 else 1                                   # 0 = gold debris / sparks, 1 = pale wind
+        P.append(dict(R=rng.uniform(240, 860), yo=rng.uniform(-0.55, 0.55), ph=rng.uniform(0, 6.283), w=rng.uniform(1.4, 3.0),
+                      kind=kind, on=rng.uniform(0, 1), lift=rng.uniform(-40, 40),
+                      L=rng.uniform(0.10, 0.32) if kind == 0 else rng.uniform(0.55, 1.10), sz=rng.uniform(0.6, 1.4)))
+    _WP["p"] = P; return P
+
+def wind_env(f):
+    """the whirlwind builds through the cold open, swells on the bar lines, and is gone at the drop."""
+    t = f / FPS
+    if t >= th(E.HDROP): return 0.0
+    e = t / E.HB; k = (e % 8) * E.HB
+    return (0.55 + 0.45 * smooth(t / th(E.HDROP))) * (1 + 0.25 * math.exp(-k / 0.25))
+
+def wind_layer(out, s, f, person, amt):
+    a = amt * wind_env(f)
+    if a <= 0.01: return out
+    t = f / FPS; p = subject_point(s, f, person); cx, cy = p[0], p[1] - 150
+    bx = face_box(s, f)
+    if bx is not None: bx = (bx[0] - 60, bx[1] + 60, bx[2] + 40)
+    back = np.zeros((H, W), np.float32); front = np.zeros((H, W), np.float32); pale = np.zeros((H, W), np.float32)
+    for q in wind_params():
+        if q["on"] > min(1.0, a * 1.15): continue
+        th0 = q["ph"] + q["w"] * t; n = 6 if q["kind"] == 0 else 16
+        angs = th0 - np.linspace(q["L"], 0, n)
+        yb = cy + q["yo"] * 980 + q["lift"] * math.sin(t * 0.7 + q["ph"])
+        xs = cx + q["R"] * np.cos(angs); ys = yb + q["R"] * 0.17 * np.sin(angs)
+        d = math.sin(th0); dd = (d + 1) / 2                                             # 1 = nearest, in front of him
+        if bx is not None and d > -0.2 and bx[0] < xs[-1] < bx[1] and ys[-1] < bx[2]: continue   # never across his face
+        pts = np.stack([xs, ys], 1).astype(np.int32)
+        if q["kind"] == 1:
+            cv2.polylines(pale, [pts], False, 0.30 + 0.25 * dd, 2 if d > 0 else 1, cv2.LINE_AA)
+        else:
+            tgt = front if d > 0.15 else back
+            cv2.polylines(tgt, [pts], False, 0.50 + 0.50 * dd, max(1, int(round((1.4 + 2.6 * dd) * q["sz"]))), cv2.LINE_AA)
+    if person is not None:
+        pm = np.clip(person * 1.3, 0, 1); back *= (1 - pm); pale *= (1 - 0.75 * pm)
+    lay = back * 0.75 + cv2.GaussianBlur(front, (0, 0), 1.4) * 1.3
+    glow = cv2.resize(cv2.GaussianBlur(cv2.resize(lay, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 3), (W, H))
+    paleb = cv2.GaussianBlur(pale, (0, 0), 2.2)
+    return np.clip(out + (lay[..., None] * GOLDW * 0.85 + glow[..., None] * GOLD2 * 1.3) * min(1.0, a * 1.15)
+                   + paleb[..., None] * np.array([0.80, 0.84, 0.86], np.float32) * a * 0.45, 0, 1)
+
+# ---- graphics: lightning ribbons spiralling around him in 3-D (behind him through the matte, in front over him) ---
+def orbit_ribbons(out, s, f, person, amt):
+    """two lightning ribbons spiral round him: behind his head and shoulders (hidden where the matte covers him) and
+    across his chest in front; in front of him only below the chin."""
+    if amt <= 0.01: return out
+    t = f / FPS; bx = face_box(s, f); p = subject_point(s, f, person)
+    if bx is not None:
+        fw = (bx[1] - bx[0]) / 1.5; cx = (bx[0] + bx[1]) / 2; chin = bx[2] - 0.35 * fw; y_top = chin - 1.4 * fw
+    else:
+        fw = 300.0; cx = p[0]; chin = p[1] - 260; y_top = chin                                 # no face track: below the chin only
+    R0 = clamp(0.95 * fw, 340, 600); y_bot = H + 120
+    back = bolt_canvas(); front = bolt_canvas(); rng = np.random.default_rng(f // 2 * 17 + 3)
+    for r_ in range(2):
+        ns = 90; ss_ = np.linspace(0, 1, ns)
+        ang = r_ * math.pi + t * 3.2 + ss_ * 2 * math.pi * 1.6
+        R = R0 + 50 * np.sin(ss_ * 4.5 + t * 2.0 + r_)
+        xs = cx + R * np.cos(ang) + rng.normal(0, 6, ns); ys = y_top + (y_bot - y_top) * ss_ + R * 0.14 * np.sin(ang) + rng.normal(0, 6, ns)
+        d = np.sin(ang); head = (t * 1.6 + r_ * 0.5) % 1.0
+        for i in range(ns - 1):
+            fr_ = d[i] > 0 and ys[i] > chin
+            hb = math.exp(-((ss_[i] - head) / 0.06) ** 2)
+            v = int(min(255, 150 + 60 * (d[i] + 1) / 2 + 110 * hb))
+            cv2.line(front if fr_ else back, (int(xs[i]), int(ys[i])), (int(xs[i + 1]), int(ys[i + 1])), v, 3 if (fr_ or hb > 0.5) else 2, cv2.LINE_AA)
+    if person is not None: back = (back.astype(np.float32) * (1 - np.clip(person * 1.4, 0, 1))).astype(np.uint8)
+    fl = 0.8 + 0.2 * math.sin(f * 1.3)
+    return np.clip(out + light_from(back, 0.75 * amt * fl) + light_from(front, 0.95 * amt * fl), 0, 1)
+
+# ---- transitions ------------------------------------------------------------------------------------------------
+def vib(img, amt, f, seed, n=4):
+    """molecular vibration: n jittered copies, a row-wise shimmer, the colour channels pulled apart."""
+    if amt < 0.6: return img
+    rng = np.random.default_rng(f * 31 + seed); acc = np.zeros_like(img)
+    for i in range(n):
+        ddx, ddy = rng.normal(0, amt, 2)
+        acc += cv2.warpAffine(img, np.float32([[1, 0, ddx], [0, 1, ddy * 0.5]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+    acc /= n
+    mx = (_GX + amt * 0.45 * np.sin(_GY * 0.11 + f * 2.3)).astype(np.float32)
+    acc = cv2.remap(acc, mx, _GY, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o = acc.copy(); d = int(amt * 0.7)
+    o[..., 2] = np.roll(acc[..., 2], d, 1); o[..., 0] = np.roll(acc[..., 0], -d, 1)
+    return o
+
+def edge_glow(img, amt):
+    """every edge in the picture lights up gold (the molecules excited)."""
+    if amt <= 0.01: return img
+    L = lum8(cv2.resize(img, (W // 2, H // 2), interpolation=cv2.INTER_AREA))
+    g = np.clip(np.abs(cv2.Laplacian(cv2.GaussianBlur(L, (0, 0), 1.2), cv2.CV_32F, ksize=3)) * 7, 0, 1)
+    g = cv2.resize(cv2.GaussianBlur(g, (0, 0), 1.2), (W, H))
+    return img + g[..., None] * (GOLDW * 0.6 + GOLD2 * 0.5) * amt
+
+def phase_through(A, B, j, f, sa, sb, pre=10, post=12):
+    """PHASE: he vibrates his molecules and passes through the frame: the picture shakes apart into chromatic copies,
+    every edge lights up, the next shot shows through it for a few frames, then settles out of the vibration."""
+    if j < 0:
+        u = (j + pre + 1) / pre; amt = 1 + 30 * ein(u, 2.2)
+        o = vib(zoom_about(A, W / 2, H * 0.45, 1 + 0.10 * ein(u, 2)), amt, f, 1)
+        a = clamp((j + 4) / 4, 0, 1) * 0.5
+        if a > 0: o = o * (1 - a) + vib(zoom_about(B, W / 2, H * 0.45, 1.14), amt, f, 2) * a
+        return np.clip(edge_glow(o, 0.55 * u) * (1 + 0.25 * u), 0, 1)
+    v = (j + 1) / post; amt = 31 * (1 - eout(v, 2.0))
+    o = vib(zoom_about(B, W / 2, H * 0.45, 1 + 0.14 * (1 - eout(v, 2.2))), amt, f, 2)
+    a = clamp(0.5 - j / 4 * 0.5, 0, 0.5)
+    if a > 0: o = o * (1 - a) + vib(zoom_about(A, W / 2, H * 0.45, 1.12 + 0.05 * j), amt, f, 1) * a
+    return np.clip(edge_glow(o, 0.55 * (1 - v)) * (1 + 0.25 * (1 - v)), 0, 1)
+
+_TW = {}
+def twist(img, cx, cy, T, zoom=1.0, n=1, spread=0.0):
+    key = (int(cx), int(cy))
+    if key not in _TW:
+        dx, dy = _GX - cx, _GY - cy
+        r = np.sqrt(dx * dx + dy * dy); _TW[key] = (r, np.arctan2(dy, dx), np.exp(-(r / 860.0) ** 1.5))
+    r, th0, wgt = _TW[key]; acc = None; rr = r / zoom
+    for i in range(n):
+        a = th0 + (T - spread * i / max(1, n - 1)) * wgt
+        w = cv2.remap(img, (cx + rr * np.cos(a)).astype(np.float32), (cy + rr * np.sin(a)).astype(np.float32), cv2.INTER_LINEAR,
+                      borderMode=cv2.BORDER_REFLECT)
+        acc = w if acc is None else acc + w
+    return acc / n
+
+def vortex_streaks(cx, cy, f, amt, seed=5):
+    """wind and debris torn round the eye of the whirlwind."""
+    cv = np.zeros((H, W), np.float32); rng = np.random.default_rng(seed); t = f / FPS
+    for i in range(70):
+        R = rng.uniform(90, 1000); ph = rng.uniform(0, 6.283); w = 9 + 10 * (300 / (R + 150))
+        a0 = ph + w * t * (0.6 + amt); L_ = 0.25 + 0.9 * amt
+        angs = a0 - np.linspace(L_, 0, 14)
+        pts = np.stack([cx + R * np.cos(angs), cy + R * 0.82 * np.sin(angs)], 1).astype(np.int32)
+        cv2.polylines(cv, [pts], False, rng.uniform(0.3, 1.0), 2 if R > 400 else 1, cv2.LINE_AA)
+    return cv
+
+def whirlwind(A, B, j, f, sa, sb, pre=12, post=14):
+    """WHIRLWIND (on "...carry OFF"): the whirlwind carries the frame off. The picture twists into a spiral round the
+    eye of the storm (angular blur, wind and gold debris torn round it); the next shot unwinds out of the same spin."""
+    cx, cy = W / 2, H * 0.46
+    if j < 0:
+        u = (j + pre + 1) / pre; T = 4.4 * ein(u, 2.3)
+        o = twist(A, cx, cy, T, 1 + 0.16 * ein(u, 2), n=1 + int(4 * u), spread=0.7 * u); amt = u
+    else:
+        v = (j + 1) / post; T = -4.4 * (1 - eout(v, 2.1))
+        o = twist(B, cx, cy, T, 1 + 0.16 * (1 - eout(v, 2)), n=1 + int(4 * (1 - v)), spread=0.7 * (1 - v)); amt = 1 - v
+    cv = vortex_streaks(cx, cy, f, amt)
+    sl = cv2.GaussianBlur(cv, (0, 0), 1.3) * amt
+    glow = cv2.resize(cv2.GaussianBlur(cv2.resize(sl, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 4), (W, H))
+    eye = np.exp(-(((_GX - cx) / 260) ** 2 + ((_GY - cy) / 300) ** 2))[..., None] * 0.18 * amt
+    return np.clip(o * (1 + 0.15 * amt) + sl[..., None] * np.array([0.85, 0.88, 0.90], np.float32) * 0.55 + glow[..., None] * GOLD2 * 0.9
+                   + eye * GOLDW, 0, 1)
+
+_LT = {}
+def lich_tree(px, py, box, seed=5):
+    """a Lichtenberg figure: branching discharge paths from (px, py); segments carry the time they are reached."""
+    key = (int(px) // 8, int(py) // 8, seed)
+    if key in _LT: return _LT[key]
+    rng = np.random.default_rng(seed); segs = []; stack = []
+    for k in range(7):
+        stack.append((px, py, k / 7 * 2 * math.pi + rng.uniform(-0.25, 0.25), 0.0, 0, 4.0))
+    while stack and len(segs) < 3500:
+        x, y, a, t, gen, wd = stack.pop(); L = 0.0; lim = rng.uniform(650, 1400) / (1 + 0.55 * gen)
+        while True:
+            step = rng.uniform(12, 24); a += rng.normal(0, 0.30)
+            nx, ny = x + math.cos(a) * step, y + math.sin(a) * step
+            if not (-60 < nx < W + 60 and -60 < ny < H + 60): break
+            if box is not None and box[0] < nx < box[1] and ny < box[2]: break          # the discharge stops at his face
+            t2 = t + step * (1 + 0.25 * gen); segs.append((x, y, nx, ny, t2, wd)); x, y, t = nx, ny, t2; L += step
+            if gen < 4 and rng.random() < 0.06: stack.append((x, y, a + rng.choice([-1, 1]) * rng.uniform(0.35, 1.0), t, gen + 1, max(1.0, wd * 0.62)))
+            if L > lim: break
+    arr = np.array(segs, np.float32); arr[:, 4] /= max(1.0, float(np.percentile(arr[:, 4], 97)))
+    _LT[key] = arr; return arr
+
+def lichtenberg(A, B, j, f, sa, sb, pre=10, post=14):
+    """LICHTENBERG: a branching lightning figure grows out of his chest across the whole frame (stopping short of his
+    face); the next shot opens inside the branches, the newest tips white-hot."""
+    p = subject_point(sa, sa["f1"] - 1); box = face_box(sa, sa["f1"] - 1)
+    if box is not None: box = (box[0] - 30, box[1] + 30, box[2] + 20)
+    else: box = (p[0] - 230, p[0] + 230, p[1] - 340)
+    p = (p[0], p[1] - 200)                                                              # from the emblem, not the belt                                    # masked: no face track, keep his head clear
+    segs = lich_tree(p[0], p[1], box)
+    n = pre + post; tau = (j + pre + 1) / n * 1.15
+    cv = np.zeros((H, W), np.uint8); tips = np.zeros((H, W), np.uint8)
+    vis = segs[segs[:, 4] <= tau]
+    for wd in (4, 3, 2, 1):
+        sel = vis[np.abs(vis[:, 5] - wd) < 0.75] if wd > 1 else vis[vis[:, 5] < 1.75]
+        if len(sel):
+            lines = sel[:, :4].reshape(-1, 2, 2).astype(np.int32)
+            cv2.polylines(cv, list(lines), False, 255, max(1, int(wd * 0.75)), cv2.LINE_AA)
+    new = vis[vis[:, 4] > tau - 0.08]
+    if len(new): cv2.polylines(tips, list(new[:, :4].reshape(-1, 2, 2).astype(np.int32)), False, 255, 3, cv2.LINE_AA)
+    def crisp(c, a):                                                                       # a sharp core, a modest glow
+        c = c.astype(np.float32) / 255; sm = cv2.resize(c, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+        g = cv2.resize(cv2.GaussianBlur(sm, (0, 0), 2.5), (W, H)) * 1.6 + cv2.resize(cv2.GaussianBlur(sm, (0, 0), 9), (W, H)) * 1.2
+        return (np.clip(g, 0, 1)[..., None] * GOLD2 * 0.55 + c[..., None] * GOLDW * 1.05) * a
+    if j < 0:
+        u = (j + pre + 1) / pre
+        return np.clip(A * (1 - 0.30 * u) + crisp(cv, 0.8 + 0.3 * u) + crisp(tips, 0.8), 0, 1)
+    v = (j + 1) / post
+    dist = cv2.distanceTransform(255 - cv, cv2.DIST_L2, 3)
+    R = 6 + 1100 * ein(v, 1.7)
+    m = np.clip((R - dist) / 30.0, 0, 1)[..., None]
+    o = B * m + A * (1 - m) * (1 - 0.3 * (1 - v))
+    rim = np.exp(-((dist - R) / 10.0) ** 2)[..., None] * (1 - v)
+    return np.clip(o + rim * GOLD2 * 0.7 + crisp(cv, 1.1 * (1 - v) ** 1.3) + crisp(tips, 0.8 * (1 - v)), 0, 1)
+
+def drop_wave(out, f, s):
+    """the particle-accelerator wave: as he bursts out of the emblem a refracting dome of dark matter rings out."""
+    k = f - s["f0"] - 2
+    if k < 0 or k > 30: return out
+    v = k / 30; cx, cy = W / 2, H * 0.47
+    R = 160 + 2000 * eout(v, 1.45)
+    dx, dy = _GX - cx, _GY - cy; r = np.sqrt(dx * dx + dy * dy) + 1e-3
+    band = np.exp(-((r - R) / 95.0) ** 2); disp = band * 70 * (1 - v)
+    o = cv2.remap(out, (_GX - dx / r * disp).astype(np.float32), (_GY - dy / r * disp).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o = rgb_split(o, 10 * (1 - v)) * band[..., None] + o * (1 - band[..., None])
+    ins = (np.clip((R - r) / 220, 0, 1) * 0.18 * (1 - v))[..., None]
+    o = o * (1 - ins) + ins * (lum8(o)[..., None] * np.array([0.95, 0.80, 0.66], np.float32) * 1.1)
+    rim = np.exp(-((r - R) / 7.0) ** 2) * 0.9 + np.exp(-((r - R) / 40.0) ** 2) * 0.3
+    return np.clip(o + rim[..., None] * GOLDW * (1 - v) ** 1.2, 0, 1)
+
+# ---- glass: shards around an impact point (Voronoi, denser at the impact), electric cracks -------------------------
+_GS = {}
+def glass_shards(key, cx, cy, n=130, seed=7):
+    if key in _GS: return _GS[key]
+    rng = np.random.default_rng(seed); pts = [(cx, cy)]
+    for i in range(n):
+        r = (rng.random() ** 1.9) * 1700; a = rng.uniform(0, 2 * math.pi)
+        x, y = cx + r * math.cos(a), cy + r * math.sin(a) * 1.25
+        if 0 <= x < W and 0 <= y < H: pts.append((x, y))
+    for x in (0, W - 1):
+        for y in np.linspace(0, H - 1, 8): pts.append((x, y))
+    for y in (0, H - 1):
+        for x in np.linspace(0, W - 1, 5): pts.append((x, y))
+    sd = cv2.Subdiv2D((0, 0, W, H))
+    for q in pts: sd.insert((float(min(W - 1, max(0, q[0]))), float(min(H - 1, max(0, q[1])))))
+    facets, centers = sd.getVoronoiFacetList([]); L = []
+    for poly, c in zip(facets, centers):
+        poly = np.array(poly, np.float32); poly[:, 0] = np.clip(poly[:, 0], 0, W - 1); poly[:, 1] = np.clip(poly[:, 1], 0, H - 1)
+        x0, y0 = poly.min(0).astype(int); x1, y1 = poly.max(0).astype(int) + 1
+        if x1 - x0 < 3 or y1 - y0 < 3: continue
+        m = np.zeros((y1 - y0, x1 - x0), np.uint8); cv2.fillPoly(m, [(poly - [x0, y0]).astype(np.int32)], 255, cv2.LINE_AA)
+        d = math.hypot(c[0] - cx, c[1] - cy) + 1
+        L.append(dict(poly=poly, box=(x0, y0, x1, y1), mask=m.astype(np.float32) / 255, c=(float(c[0]), float(c[1])), d=d,
+                      v=((c[0] - cx) / d, (c[1] - cy) / d), sp=rng.uniform(0.7, 1.3), w=rng.uniform(-1, 1), dz=rng.uniform(0.5, 1.5)))
+    L.sort(key=lambda s_: s_["dz"])
+    cr = np.zeros((H, W), np.uint8)
+    for s_ in L:
+        if s_["d"] < 1200: cv2.polylines(cr, [s_["poly"].astype(np.int32)], True, int(255 * (1 - s_["d"] / 1300) ** 0.6), 2, cv2.LINE_AA)
+    for i in range(18):
+        a = i / 18 * 2 * math.pi + rng.uniform(-0.12, 0.12); qs = [(cx, cy)]; rr = 0
+        for k in range(10):
+            rr += rng.uniform(60, 150); a += rng.uniform(-0.08, 0.08); qs.append((cx + rr * math.cos(a), cy + rr * math.sin(a)))
+        cv2.polylines(cr, [np.array(qs, np.int32)], False, 255, 2, cv2.LINE_AA)
+    cv2.circle(cr, (int(cx), int(cy)), 18, 255, -1, cv2.LINE_AA)
+    _GS[key] = dict(L=L, crack=cr, c=(cx, cy)); return _GS[key]
+
+def crack_reveal(G, u):
+    """the cracks spread out from the impact (u 0..1)."""
+    cx, cy = G["c"]; R = 40 + 1500 * u
+    m = (np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2) < R).astype(np.uint8)
+    return (G["crack"] * m).astype(np.uint8)
+
+def draw_shards(A, base, G, prog, mode="fly"):
+    """composite the shards of A over base. mode fly: they burst toward the lens; drift: they hang in frozen time."""
+    out = base.copy(); cx, cy = G["c"]; glint = np.zeros((H, W), np.uint8)
+    for s_ in G["L"]:
+        x0, y0, x1, y1 = s_["box"]; pcx, pcy = s_["c"]
+        if mode == "fly":
+            q = clamp((prog - s_["d"] / 1700 * 0.30) / 0.70, 0, 1)
+            mv = (60 + 1300 * ein(q, 1.7)) * s_["sp"] * q; sc = 1 + 2.4 * ein(q, 2.0) * s_["dz"]; ang = s_["w"] * 70 * q
+            a = 1 - smooth((q - 0.55) / 0.45)
+            tx, ty = s_["v"][0] * mv, s_["v"][1] * mv + 250 * q * q
+        else:
+            q = prog; mv = (14 + 110 * q) * s_["sp"] * min(1.0, 400 / s_["d"] + 0.35); sc = 1 + 0.10 * q * s_["dz"]; ang = s_["w"] * 9 * q
+            a = 1.0; tx, ty = s_["v"][0] * mv, s_["v"][1] * mv
+        if a <= 0.01: continue
+        Mr = cv2.getRotationMatrix2D((pcx, pcy), ang, sc); Mr[0, 2] += tx; Mr[1, 2] += ty
+        corners = np.array([[x0, y0, 1], [x1, y0, 1], [x0, y1, 1], [x1, y1, 1]], np.float32) @ Mr.T
+        X0, Y0 = max(0, int(corners[:, 0].min()) - 2), max(0, int(corners[:, 1].min()) - 2)
+        X1, Y1 = min(W, int(corners[:, 0].max()) + 3), min(H, int(corners[:, 1].max()) + 3)
+        if X1 <= X0 or Y1 <= Y0: continue
+        Mp = Mr.copy(); Mp[:, 2] += Mr[:, 0] * x0 + Mr[:, 1] * y0; Mp[0, 2] -= X0; Mp[1, 2] -= Y0
+        patch = cv2.warpAffine(np.ascontiguousarray(A[y0:y1, x0:x1]), Mp, (X1 - X0, Y1 - Y0), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        mk = cv2.warpAffine(s_["mask"], Mp, (X1 - X0, Y1 - Y0), flags=cv2.INTER_LINEAR, borderValue=0)[..., None] * a
+        sub = out[Y0:Y1, X0:X1]
+        out[Y0:Y1, X0:X1] = sub * (1 - mk) + patch * (1 + 0.12 * (1 - q)) * mk
+        pp = (np.hstack([s_["poly"], np.ones((len(s_["poly"]), 1), np.float32)]) @ Mr.T).astype(np.int32)
+        cv2.polylines(glint, [pp], True, int(255 * a * (0.5 + 0.5 * s_["dz"] / 1.5)), 1, cv2.LINE_AA)
+    return out, glint
+
+def lens_shatter(A, B, j, f, sa, sb, pre=8, post=18):
+    """LENS SHATTER: the lightning he throws comes at the camera, hits the lens; the glass cracks with electricity
+    running through the cracks, then bursts toward us in shards and the next shot is behind it."""
+    P = (330.0, 1180.0); G = glass_shards("lens", P[0], P[1], 130, 11)
+    if j < 0:
+        u = (j + pre + 1) / pre; cv = bolt_canvas()
+        p0 = (-60.0, 1420.0); tip = (p0[0] + (P[0] - p0[0]) * ein(u, 1.5), p0[1] + (P[1] - p0[1]) * ein(u, 1.5))
+        put_bolt(cv, p0, tip, 2400 + f, int(3 + 9 * u), 0.20, 7, 2)
+        o = A * (1 - 0.2 * u) + light_from(cv, 1.0 + 0.8 * u)
+        return np.clip(add_glow(o, tip[0], tip[1], 60 + 220 * u, 0.5 + 0.8 * u, GOLDW), 0, 1)
+    v = (j + 1) / post
+    if j < 4:                                                                             # the hit: flash, the cracks run out
+        cr = crack_reveal(G, eout((j + 1) / 4, 1.5))
+        fl = 1 - j / 4
+        o = A * (1 - 0.15 * fl) + light_from(cr, 1.3) + cv2.GaussianBlur(cr.astype(np.float32) / 255, (0, 0), 1)[..., None] * GOLDW * 0.8
+        o = add_glow(o, P[0], P[1], 380, 1.1 * fl, GOLDW)
+        return np.clip(o, 0, 1)
+    prog = (j - 3) / (post - 3)
+    Bz = zoom_about(B, W / 2, H * 0.47, 1.10 - 0.10 * eout(prog, 2))
+    Ac = np.clip(A + cv2.GaussianBlur(G["crack"].astype(np.float32) / 255, (0, 0), 1)[..., None] * GOLDW * 0.5, 0, 1)
+    o, gl = draw_shards(Ac, Bz, G, prog, "fly")
+    return np.clip(o + light_from(gl, 0.7 * (1 - prog)), 0, 1)
+
+def perim_path():
+    """the frame's perimeter (inset), clockwise from bottom centre: [(x, y, cumulative length)]."""
+    if "pp" in _GS: return _GS["pp"]
+    m = 46; pts = [(W / 2, H - m), (m, H - m), (m, m), (W - m, m), (W - m, H - m), (W / 2, H - m)]
+    out_ = []; acc = 0.0
+    for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+        L = math.hypot(xb - xa, yb - ya); n = max(2, int(L / 8))
+        for i in range(n):
+            u = i / n; out_.append((xa + (xb - xa) * u, ya + (yb - ya) * u, acc + L * u))
+        acc += L
+    out_.append((W / 2, H - m, acc)); arr = np.array(out_, np.float32); _GS["pp"] = arr; return arr
+
+def perim_maps():
+    """per pixel: the lap position of its edge point (radial projection) and its depth in from the edge (0 edge, 1 centre)."""
+    if "pm" in _GS: return _GS["pm"]
+    pp = perim_path()
+    phi_p = (np.degrees(np.arctan2(pp[:, 1] - H / 2, pp[:, 0] - W / 2)) - 90) % 360; phi_p[0] = 0.0; phi_p[-1] = 360.0
+    phi_p = np.maximum.accumulate(phi_p)
+    phi = (np.degrees(np.arctan2(_GY - H / 2, _GX - W / 2)) - 90) % 360
+    s_pix = np.interp(phi, phi_p, pp[:, 2]).astype(np.float32)
+    rb = np.interp(phi, phi_p, np.hypot(pp[:, 0] - W / 2, pp[:, 1] - H / 2))
+    din = np.clip(1 - np.hypot(_GX - W / 2, _GY - H / 2) / rb, 0, 1).astype(np.float32)
+    _GS["pm"] = (s_pix, din); return _GS["pm"]
+
+def perimeter(A, B, j, f, sa, sb, pre=8, post=14):
+    """PERIMETER: he runs laps round the edge of the frame as a streak of lightning; the new picture fills in behind
+    him as a spiral wake that closes on the centre (his own face arrives last, softly)."""
+    pp = perim_path(); Ltot = float(pp[-1, 2]); kap = 0.45
+    s_pix, din = perim_maps()
+    p = (j + pre + 1) / (pre + post); sh_ = (1 + kap) * Ltot * 1.04 * (0.5 - 0.5 * math.cos(math.pi * p))
+    front = s_pix + din * kap * Ltot
+    soft = 60 + 260 * din
+    m = np.clip((sh_ - front) / soft, 0, 1)[..., None]
+    o = B * m + A * (1 - m)
+    edge = np.exp(-((sh_ - front) / (18 + 120 * din)) ** 2) * (1 - din) ** 0.7
+    hs = sh_ % Ltot; i = int(np.searchsorted(pp[:, 2], hs)); i = min(i, len(pp) - 1); hx, hy = pp[i, 0], pp[i, 1]
+    run = sh_ < (1 + kap) * Ltot                                                          # still running
+    cv = bolt_canvas(); tail = 1100
+    if run:
+        ts = np.linspace(sh_ - tail, sh_, 90); ts = ts[ts > 0]
+        if len(ts) > 1:
+            xs = np.interp(ts % Ltot, pp[:, 2], pp[:, 0]); ys = np.interp(ts % Ltot, pp[:, 2], pp[:, 1])
+            a_ = (ts - (sh_ - tail)) / tail
+            for k in range(len(ts) - 1):
+                if abs(xs[k + 1] - xs[k]) + abs(ys[k + 1] - ys[k]) > 200: continue
+                cv2.line(cv, (int(xs[k]), int(ys[k])), (int(xs[k + 1]), int(ys[k + 1])), int(255 * a_[k] ** 1.3), int(3 + 22 * a_[k] ** 1.5), cv2.LINE_AA)
+        for q in range(2):
+            put_bolt(cv, (hx, hy), (hx + (W / 2 - hx) * (0.15 + 0.1 * q), hy + (H / 2 - hy) * (0.08 + 0.06 * q)), 2600 + f * 3 + q, 2, 0.35, 5, 1)
+    a_env = math.sin(math.pi * clamp(p, 0, 1)) ** 0.6
+    o = o + edge[..., None] * (GOLD2 * 0.55 + GOLDW * 0.25) * a_env + light_from(cv, 1.35)
+    if run: o = add_glow(o, hx, hy, 90, 1.2, GOLDW)
+    return np.clip(o, 0, 1)
+
+def frozen_shatter(A, B, j, f, sa, sb, pre=6, post=41):
+    """FROZEN SHATTER: in stopped time the frozen frame cracks like glass; the shards separate and hang in the air
+    (the next frozen moment visible between them) and the beat that restarts time blows them away."""
+    P = (330.0, 1240.0); G = glass_shards("frozen", P[0], P[1], 110, 23)
+    if j < 0:
+        u = (j + pre + 1) / pre; cr = crack_reveal(G, ein(u, 1.3) * 0.9)
+        return np.clip(A + light_from(cr, 0.8) + cv2.GaussianBlur(cr.astype(np.float32) / 255, (0, 0), 1)[..., None] * GOLDW * 0.6, 0, 1)
+    hit = fh(E.STUT_HITS[2]) - sb["f0"]                                                   # e84: time restarts
+    Ac = np.clip(A + cv2.GaussianBlur(G["crack"].astype(np.float32) / 255, (0, 0), 1)[..., None] * GOLDW * 0.45, 0, 1)
+    if j < hit - 1:
+        o, gl = draw_shards(Ac, B, G, ein((j + 1) / (hit - 1), 0.8), "drift")
+        return np.clip(o + light_from(gl, 0.95), 0, 1)
+    q = (j - hit + 1) / (post - hit + 1)
+    o, gl = draw_shards(Ac, B, G, 0.25 + 0.75 * q, "fly")
+    return np.clip(o + light_from(gl, 0.6 * (1 - q)), 0, 1)
+
+TR2.update({"phase": (phase_through, 10, 12), "whirlwind": (whirlwind, 12, 14), "lichtenberg": (lichtenberg, 10, 14),
+            "lens_shatter": (lens_shatter, 8, 18), "perimeter": (perimeter, 8, 14), "frozen_shatter": (frozen_shatter, 6, 41)})
+
+# ---- the loop: the ring opens into the Speed Force; we fly back through the edit's own moments to frame 0 --------
+TUN_PANELS = [1330, 1215, 1120, 1010, 905, 790, 740, 700, 640, 520, 440, 300, 200, 130, 75]      # newest -> oldest
+_TP = {}
+def tunnel_panels():
+    if "p" in _TP: return _TP["p"]
+    P = []
+    for fr in TUN_PANELS:
+        s_ = shot_at(fr); img, _ = base10(s_, fr)
+        P.append(cv2.resize(img, (432, 768), interpolation=cv2.INTER_AREA))
+    full, _ = base10(SHOTS[0], 0)
+    _TP["p"] = (P, full); return _TP["p"]
+
+_SF = {}
+def sf_grid():
+    if "g" in _SF: return _SF["g"]
+    dx, dy = _GX - W / 2, _GY - H / 2
+    r = np.sqrt(dx * dx + dy * dy); rng = np.random.default_rng(13); nb = 900
+    s1 = rng.random(nb) ** 7; s1 = np.convolve(np.concatenate([s1[-4:], s1, s1[:4]]), np.hanning(5) / 2.5, "same")[4:-4]
+    _SF["g"] = (r, np.arctan2(dy, dx), np.log(r + 40), s1.astype(np.float32), rng.uniform(0, 1, nb).astype(np.float32), rng.random(nb).astype(np.float32))
+    return _SF["g"]
+
+def speedforce_bg(z, t):
+    """the Speed Force: streaks of lightning rushing past along a turning tunnel; a bright far end."""
+    r, th0, lr, s1, ph, col = sf_grid(); nb = len(s1)
+    bi = ((((th0 + t * 0.9) % (2 * math.pi)) / (2 * math.pi)) * nb).astype(np.int32) % nb
+    S = s1[bi]; m = (lr * 1.5 - z * 1.25 + ph[bi]) % 1.0
+    I_ = S * (m ** 9) * 2.6 * np.clip(r / 240, 0, 1)
+    C = col[bi][..., None]
+    core = np.exp(-(r / 430) ** 2)[..., None]
+    o = SLATE * 0.55 + core * (GOLDW * 0.55 + 0.25) + I_[..., None] * (GOLD2 * (C > 0.3) + np.array([1.0, 0.86, 0.62], np.float32) * (C <= 0.3) * 0.9)
+    return o
+
+Z_STEP, S_P = 0.62, 0.46
+Z_F = 1.0 + Z_STEP * len(TUN_PANELS) + 0.9
+def tun_u(f): return clamp((f - F_OPEN + 1) / (E.DUR_F - F_OPEN), 0, 1)
+def tun_z(u): return (Z_F - 1.012) * (1 - (1 - u) ** 2.3)
+
+def place_panel(o, img, d, X, Y, S, roll, a, border, glint):
+    """a camera-facing panel at distance d (screen-centre units), alpha a; its border drawn into `border`."""
+    pw = S * W / d; ph_ = pw * 16 / 9; cxp = W / 2 + X * (W / 2) / d; cyp = H / 2 + Y * (H / 2) / d
+    if pw < 6 or cxp + pw < -50 or cxp - pw > W + 50 or cyp + ph_ < -50 or cyp - ph_ > H + 50: return o
+    sc = pw / img.shape[1]
+    M = cv2.getRotationMatrix2D((img.shape[1] / 2, img.shape[0] / 2), roll, sc); M[0, 2] += cxp - img.shape[1] / 2; M[1, 2] += cyp - img.shape[0] / 2
+    R_ = int(math.hypot(pw, ph_) / 2) + 4
+    X0, Y0, X1, Y1 = max(0, int(cxp) - R_), max(0, int(cyp) - R_), min(W, int(cxp) + R_), min(H, int(cyp) + R_)
+    if X1 <= X0 or Y1 <= Y0: return o
+    M2 = M.copy(); M2[0, 2] -= X0; M2[1, 2] -= Y0
+    rgba_ = cv2.warpAffine(np.dstack([img, np.ones(img.shape[:2], np.float32)]), M2, (X1 - X0, Y1 - Y0), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
+    al = rgba_[..., 3:4] * a
+    o[Y0:Y1, X0:X1] = o[Y0:Y1, X0:X1] * (1 - al) + rgba_[..., :3] * al
+    cs = np.array([[0, 0, 1], [img.shape[1], 0, 1], [img.shape[1], img.shape[0], 1], [0, img.shape[0], 1]], np.float32) @ M.T
+    cv2.polylines(border, [cs.astype(np.int32)], True, int(255 * glint * a), 3, cv2.LINE_AA)
+    return o
+
+def tunnel_frame(f):
+    """from F_OPEN to the end: the Speed Force tunnel, the edit's moments flying past (newest first), frame 0 ahead."""
+    u = tun_u(f); z = tun_z(u); t = (f - F_OPEN) / FPS
+    spd = (tun_z(min(1, u + 0.02)) - z) / 0.02 / (Z_F - 1.012) / 2.3
+    P, full = tunnel_panels()
+    o = speedforce_bg(z, t).astype(np.float32)
+    rings = bolt_canvas()
+    for k in range(14):                                                                  # rings of light passing
+        d = 0.6 + 0.95 * k - z % 0.95
+        if 0.25 < d < 12:
+            cv2.ellipse(rings, (W // 2, H // 2), (int(560 / d), int(990 / d)), 0, 0, 360, int(200 * clamp((12 - d) / 4, 0, 1)), 2, cv2.LINE_AA)
+    o = o + light_from(rings, 0.45)
+    border = bolt_canvas()
+    df = Z_F - z
+    gf = 1.0 if u < 0.8 else 1 - 0.65 * smooth((u - 0.8) / 0.2)
+    o = place_panel(o, full if df < 3.0 else cv2.resize(full, (432, 768), interpolation=cv2.INTER_AREA), df, 0, 0, 1.0, 0, clamp((14 - df) / 3, 0, 1), border, gf)
+    for i in range(len(P) - 1, -1, -1):                                                   # far (old) first, near (new) last
+        d = 1.0 + Z_STEP * (i + 1) - z
+        if d < 0.22 or d > 11: continue
+        a = clamp((10 - d) / 2.5, 0, 1) * clamp((d - 0.22) / 0.25, 0, 1)
+        ang = i * 2.39996 + 0.7; rho = 0.98 + 0.12 * (i % 3)
+        o = place_panel(o, P[i], d, math.cos(ang) * rho, math.sin(ang) * rho * 0.8, S_P, 6 if i % 2 else -6, a, border, 1.0)
+    cv = bolt_canvas(); rng = np.random.default_rng(f // 2 * 7 + 1)
+    for q in range(3 if u < 0.85 else 0):
+        a0 = rng.uniform(0, 2 * math.pi); r0, r1 = rng.uniform(200, 380), rng.uniform(700, 1100)
+        put_bolt(cv, (W / 2 + r0 * math.cos(a0), H / 2 + r0 * math.sin(a0) * 1.4), (W / 2 + r1 * math.cos(a0 + 0.25), H / 2 + r1 * math.sin(a0 + 0.25) * 1.4), 2700 + f + q, 2, 0.3, 6, 1)
+    o = o + light_from(cv, 0.7 * (1 - u)) + light_from(border, 0.9)
+    if spd > 0.05: o = radial_blur(np.clip(o, 0, 1), W / 2, H / 2, 1.0, 1.0 + 0.05 * min(1.5, spd), 4)
+    return np.clip(o, 0, 1)
+
+def light_streak3(img, f, s):
+    """the run becomes light: the picture smears into speed and brightens (no collapse: the ring opens in it)."""
+    k = f - fh(s["streak_e"])
+    if k < 0: return img
+    u = clamp((k + 1) / (s["f1"] - fh(s["streak_e"])), 0, 1)
+    return np.clip(hblur(img, 4 + 160 * ein(u, 1.6)) * (1 + 0.5 * u), 0, 1)
+
+_RL = {}
+def portal_R(t): return 40 + 1300 * ein(clamp((t - T_OPEN) / 0.50, 0, 1), 1.9)
+def portal(out, f):
+    """the ring of AROUND: a ring of lightning opens in the middle of the run and the Speed Force is inside it."""
+    t = f / FPS
+    if t < T_OPEN or t > T_OPEN + 0.52: return out
+    R = portal_R(t); cx, cy = W / 2, H / 2
+    if f >= fh(E.E_REW):
+        if "run" not in _RL:
+            rs = by_name("run"); _RL["run"] = light_streak3(edge10(rs, "last"), rs["f1"] - 1, rs)
+        outside, inside = _RL["run"], out
+    else:
+        outside, inside = out, tunnel_frame(f)
+    rr = np.sqrt((_GX - cx) ** 2 + ((_GY - cy) / 1.35) ** 2)
+    band = np.exp(-((rr - R - 40) / 45.0) ** 2) * 36                                     # the space round the ring bends
+    outside = cv2.remap(outside, (_GX - (_GX - cx) / (rr + 1) * band).astype(np.float32), (_GY - (_GY - cy) / (rr + 1) * band).astype(np.float32),
+                        cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    m = np.clip((R - rr) / 8, 0, 1)[..., None]
+    o = inside * m + outside * (1 - m)
+    ring = np.exp(-((rr - R) / 5.0) ** 2) + 0.35 * np.exp(-((rr - R) / 26.0) ** 2)
+    cv = bolt_canvas(); rng = np.random.default_rng(f * 3 + 5)
+    for q in range(6):
+        a0 = rng.uniform(0, 2 * math.pi); a1 = a0 + rng.uniform(0.3, 0.8)
+        put_bolt(cv, (cx + R * math.cos(a0), cy + R * 1.35 * math.sin(a0)), (cx + R * math.cos(a1), cy + R * 1.35 * math.sin(a1)), 2800 + f + q, 2, 0.25, 5, 0)
+    fade = 1 - smooth((t - T_OPEN - 0.40) / 0.12)
+    return np.clip(o + (ring[..., None] * GOLDW * 1.1 + light_from(cv, 0.9)) * fade, 0, 1)
+
+def tunnel_in(out, f, k, n=10):
+    """frame 0: we have landed in the first shot; the panel's border glow and the speed settle."""
+    if k >= n: return out
+    v = k / n; g = 0.35 * (1 - smooth(v))
+    border = bolt_canvas(); cv2.rectangle(border, (1, 1), (W - 2, H - 2), int(255 * g / 0.35), 3, cv2.LINE_AA)
+    return np.clip(out + light_from(border, 0.9 * g / 0.35 * 0.35), 0, 1)
+
+# ---- type -------------------------------------------------------------------------------------------------------
+_LS = {}
+def letter_sprite(lm, size, emph):
+    """one letter in the approved caption construction: face colour, dark keyline, soft drop shadow, gold glow (emph)."""
+    key = (id(lm), size, emph)
+    if key in _LS: return _LS[key]
+    pad = 36; mm = np.pad(lm, pad); k_ = max(3, int(size * 0.07)) | 1
+    st_ = cv2.dilate(mm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_, k_)))
+    sh = np.roll(cv2.GaussianBlur(mm, (0, 0), size * 0.13), int(size * 0.05), 0) * 0.85
+    a = np.maximum(np.maximum(mm, st_ * 0.92), sh)
+    col = np.zeros(mm.shape + (3,), np.float32) + np.array([0.025, 0.018, 0.03], np.float32)
+    col = col * (1 - mm[..., None]) + (EMPH if emph else WHITE) * mm[..., None]
+    if emph:
+        g = cv2.GaussianBlur(mm, (0, 0), size * 0.18) * 0.55
+        col = col + EMPH * g[..., None] * (1 - st_[..., None]) * 1.2; a = np.maximum(a, g)
+    spr = np.dstack([col, a]).astype(np.float32); _LS[key] = spr; return spr
+
+def fit_line(text, size, maxw=940, track=2):
+    for _ in range(6):
+        lets, wd = hero_letters(text, size, track)
+        if wd <= maxw: return lets, wd, size
+        size = int(size * maxw / wd) - 1
+    return lets, wd, size
+
+def caption_letters(tx, sizes, ys):
+    """[(letter sprite, x, y, word time, word, line, index)] for a two-line caption, laid out per letter."""
+    words = tx["words"]; out_ = []
+    for ln in (0, 1):
+        ws = [(w, wt) for w, wt, l in words if l == ln]
+        if not ws: continue
+        lets, wd, sz = fit_line(" ".join(w for w, _ in ws), sizes[ln])
+        bounds = []; acc = 0
+        for w, wt in ws: bounds.append((acc, acc + len(w), wt, w)); acc += len(w)
+        for i, (c, lm, xoff) in enumerate(lets):
+            b = [b_ for b_ in bounds if b_[0] <= i < b_[1]][0]
+            out_.append((letter_sprite(lm, sz, b[3] in tx.get("emph", [])), W / 2 + xoff, ys[ln], b[2], b[3], ln, i - b[0], sz))
+    return out_
+
+def text_carry3(out, f, tx):
+    """IT'S GONNA / CARRY OFF: built word by word (fade, rise, blur to sharp); then the whirlwind lifts the letters off
+    in reading order and spirals them away up and to the right, each with a short gold trail."""
+    t = f / FPS; words = tx["words"]
+    if t < words[0][1] - 0.02 or t > tx["end"] + 0.02: return out
+    L = caption_letters(tx, (96, 140), (1368, 1500)); ex0 = tx["end"] - 0.55
+    out = out * cap_scrim(1250, 1620, 0.32 * (1 - smooth((t - ex0 - 0.30) / 0.25)) * smooth((t - words[0][1] + 0.05) / 0.25))
+    lay = np.zeros((H, W, 4), np.float32); vx0, vy0 = W * 0.70, 1180
+    for n_, (spr, x0, y0, wt, w, ln, ci, sz) in enumerate(L):
+        v = eout(clamp((t - wt - 0.012 * ci) / 0.18, 0, 1), 2.4)
+        if v <= 0: continue
+        w_ = clamp((t - (ex0 + 0.014 * n_)) / 0.30, 0, 1)
+        if w_ <= 0:
+            draw_sprite(lay, spr, x0, y0 + 28 * (1 - v), 1.0, 0.0, 1.0, (0.1 + 5 * (1 - v)) if v < 1 else 0.0, v); continue
+        vx, vy = vx0 + 260 * w_, vy0 - 420 * w_
+        ang0 = math.atan2(y0 - vy, x0 - vx); r0 = math.hypot(x0 - vx, y0 - vy)
+        for g_, (dt, al) in enumerate(((0.0, 1.0), (0.05, 0.35), (0.10, 0.18))):          # the letter and its trail
+            ww = max(0.0, w_ - dt)
+            ang = ang0 - 5.2 * ein(ww, 1.7); r = r0 * (1 - 0.82 * ein(ww, 1.4))
+            x, y = vx + math.cos(ang) * r, vy + math.sin(ang) * r
+            a = (1 - smooth((ww - 0.55) / 0.45)) * al
+            if a <= 0.01: continue
+            sp = spr if g_ == 0 else np.dstack([spr[..., :3] * 0.2 + GOLD2 * 0.8, spr[..., 3:4]])
+            draw_sprite(lay, sp, x, y, 1 - 0.55 * ww, 500 * ein(ww, 1.5), 1.0, 0.3 + 7 * ww + 3 * g_, a)
+    out = out * (1 - lay[..., 3:4]) + lay[..., :3]
+    return np.clip(out, 0, 1)
+
+def text_bound(out, f, tx):
+    """ALL THAT / ISN'T BOUND: the gust takes every word but BOUND (which locks in place with a flash), then BOUND is
+    struck and bursts into sparks, clearing the way for AND."""
+    t = f / FPS; words = tx["words"]
+    if t < words[0][1] - 0.02 or t > tx["end"] + 0.02: return out
+    L = caption_letters(tx, (96, 140), (1368, 1500)); t_end = tx["end"]; t_b = [wt for w, wt, _ in words if w == "BOUND"][0]
+    out = out * cap_scrim(1250, 1620, 0.32 * (1 - smooth((t - t_end + 0.10) / 0.10)) * smooth((t - words[0][1] + 0.05) / 0.25))
+    lay = np.zeros((H, W, 4), np.float32); gust0 = t_b + 0.10; cv = bolt_canvas()
+    for n_, (spr, x0, y0, wt, w, ln, ci, sz) in enumerate(L):
+        v = eout(clamp((t - wt - 0.012 * ci) / 0.18, 0, 1), 2.4)
+        if v <= 0: continue
+        if w != "BOUND":
+            g = clamp((t - (gust0 + 0.012 * n_)) / 0.26, 0, 1)                          # blown off to the right
+            if g > 0:
+                x = x0 + 900 * ein(g, 2.0); y = y0 - 120 * ein(g, 1.5) + 30 * math.sin(n_ * 1.7) * g
+                draw_sprite(lay, spr, x, y, 1 - 0.3 * g, (200 if n_ % 2 else -160) * ein(g, 1.6), 1.0, 0.3 + 9 * g, 1 - smooth((g - 0.4) / 0.6), stretch=1 + 1.2 * g)
+                continue
+            draw_sprite(lay, spr, x0, y0 + 28 * (1 - v), 1.0, 0.0, 1.0, (0.1 + 5 * (1 - v)) if v < 1 else 0.0, v)
+        else:
+            k = clamp((t - (t_end - 0.11)) / 0.11, 0, 1)                                   # struck: white-hot, bursts
+            lock = math.exp(-max(0.0, t - (t_b + 0.18)) / 0.10) if t > t_b + 0.18 else 0.0
+            sp = spr if k <= 0 else np.dstack([spr[..., :3] * (1 - k) + GOLDW * k, spr[..., 3:4]])
+            draw_sprite(lay, sp, x0, y0 + 28 * (1 - v), (1 + 0.04 * lock) * (1 + 0.6 * k), 0.0, 1.0, (0.1 + 5 * (1 - v)) if v < 1 else 6 * k, v * (1 - k ** 1.5))
+            if lock > 0.05 and ci == 2: out = add_glow(out, x0, y0, 260, 0.35 * lock, GOLD2)
+            if 0 < k < 0.7 and ci in (0, 4): put_bolt(cv, (x0 + 40, y0 - 260), (x0, y0 - 40), 3000 + ci + f, 3, 0.3, 5, 0)
+    out = out + light_from(cv, 1.2)
+    out = out * (1 - lay[..., 3:4]) + lay[..., :3]
+    return np.clip(out, 0, 1)
+
+def text_charge(out, f, tx):
+    """AND (the long held note): gold charge rises inside the letters as the build climbs, crackling at the top; WHEN
+    lands bigger and white-hot. Both ride the emblem dive (drawn before the transition)."""
+    t = f / FPS; words = tx["words"]
+    if t < words[0][1] - 0.02 or t > tx["end"] + 0.02: return out
+    (w0, t0, _), (w1, t1, _) = words[0], words[1]
+    out = out * cap_scrim(1250, 1640, 0.32 * smooth((t - t0 + 0.05) / 0.25))
+    lay = np.zeros((H, W, 4), np.float32); cv = bolt_canvas()
+    lets, wd = hero_letters(w0, 124, 4); fill = smooth((t - t0 - 0.15) / (t1 - t0 - 0.10))
+    for i, (c, lm, xoff) in enumerate(lets):
+        v = eout(clamp((t - t0 - 0.03 * i) / 0.20, 0, 1), 2.4)
+        if v <= 0: continue
+        spr = letter_sprite(lm, 124, False).copy(); hh = spr.shape[0]
+        yy = np.linspace(1, 0, hh)[:, None]; lvl = fill * 1.04
+        mix = cv2.GaussianBlur((yy < lvl).astype(np.float32), (0, 0), 2)[..., None]
+        face = np.pad(lm, 36)[..., None]
+        line = np.exp(-((yy - lvl) / 0.02) ** 2)[..., None] * (0 < fill < 1)
+        spr[..., :3] = spr[..., :3] * (1 - face * mix) + face * mix * EMPH * 1.05 + face * line * GOLDW * 0.9
+        x = W / 2 + xoff
+        draw_sprite(lay, spr, x, 1372 + 28 * (1 - v), 1.0, 0.0, 1.0, (0.1 + 5 * (1 - v)) if v < 1 else 0.0, v)
+        if fill > 0.6 and (f // 2 + i) % 3 == 0:
+            put_bolt(cv, (x - 20, 1372 - 52), (x + 30, 1372 - 52 - 40 - 50 * fill), 3100 + i + f // 2, 2, 0.35, 4, 0)
+    out = out + light_from(cv, 0.7 * fill)
+    if t >= t1 - 0.02:
+        b = cap_word(w1, 168, True); v = clamp((t - t1) / 0.16, 0, 1); sc = 1.4 - 0.4 * eout(v, 3.0)
+        bb = cv2.resize(b, (int(b.shape[1] * sc), int(b.shape[0] * sc)))
+        if v < 1: bb = cv2.GaussianBlur(bb, (0, 0), 0.1 + 6 * (1 - v))
+        hot = clamp(1 - (t - t1) / 0.25, 0, 1)
+        bb[..., :3] = bb[..., :3] * (1 - 0.6 * hot) + GOLDW * 0.6 * hot * (bb[..., 3:4] > 0.5)
+        out = paste(out, bb, int(W / 2 - bb.shape[1] / 2), int(1512 - bb.shape[0] / 2), min(1, v * 1.5))
+    out = out * (1 - lay[..., 3:4]) + lay[..., :3]
+    return np.clip(out, 0, 1)
+
+def text_run3(out, f, tx):
+    """ALL THIS / RUNNING AROUND: each word runs in from the right with a gold afterimage and settles (on its sung
+    onset); then the letters of AROUND leap onto the ring and run round it as it opens into the Speed Force; the other
+    words are pulled into the portal."""
+    t = f / FPS; words = tx["words"]
+    if t < words[0][1] - 0.02 or t > tx["end"] + 0.02: return out
+    L = caption_letters(tx, (96, 132), (1360, 1486))
+    t_suck, t_jump = T_OPEN + 0.08, T_OPEN + 0.08
+    out = out * cap_scrim(1240, 1600, 0.34 * (1 - smooth((t - t_suck) / 0.12)) * smooth((t - words[0][1] + 0.05) / 0.25))
+    lay = np.zeros((H, W, 4), np.float32)
+    ar = [q for q in L if q[4] == "AROUND"]; nA = len(ar)
+    for (spr, x0, y0, wt, w, ln, ci, sz) in L:
+        v = clamp((t - wt - 0.010 * ci) / 0.20, 0, 1)
+        if v <= 0: continue
+        off = (1 - eout(v, 3.0)) * 700; x, y = x0 + off, y0
+        if w == "AROUND" and t > t_jump:
+            g = clamp((t - t_jump) / 0.13, 0, 1); ge = smooth(g)
+            R = max(330.0, portal_R(t)); om = (t - t_jump) * 11.0
+            a_ = math.pi / 2 - (ci - (nA - 1) / 2) * 0.40 - om                              # from the bottom of the ring
+            rx, ry = W / 2 + R * math.cos(a_), H / 2 + R * 1.35 * math.sin(a_)
+            x, y = x + (rx - x) * ge, y + (ry - y) * ge
+            fade = 1 - smooth((t - (T_OPEN + 0.34)) / 0.12)
+            for g_, dt in enumerate((0.0, 0.025, 0.05)):
+                a2 = a_ + dt * 11.0 * ge
+                xx = x if g_ == 0 else x0 + (W / 2 + R * math.cos(a2) - x0) * ge
+                yy = y if g_ == 0 else y0 + (H / 2 + R * 1.35 * math.sin(a2) - y0) * ge
+                sp = spr if g_ == 0 else np.dstack([spr[..., :3] * 0.2 + GOLD2 * 0.8, spr[..., 3:4]])
+                draw_sprite(lay, sp, xx, yy, 1.0 - 0.15 * ge, math.degrees(a_ - math.pi / 2) * ge, 1.0, 0.2 + 2.5 * ge * g_ + 1.0 * ge, fade * (1.0, 0.4, 0.2)[g_])
+            continue
+        if t > t_suck:                                                                    # pulled into the portal
+            s_ = clamp((t - t_suck) / 0.16, 0, 1)
+            x, y = x + (W / 2 - x) * ein(s_, 1.8), y + (H / 2 - y) * ein(s_, 1.8)
+            draw_sprite(lay, spr, x, y, 1 - 0.8 * s_, 0.0, 1.0, 0.3 + 8 * s_, 1 - s_); continue
+        if v < 1:
+            tr = np.dstack([spr[..., :3] * 0.2 + GOLD2 * 0.8, spr[..., 3:4]])
+            draw_sprite(lay, tr, x + 90 * (1 - v), y, 1.0, 0.0, 1.0, 2 + 8 * (1 - v), 0.35 * (1 - v), stretch=1 + 2.0 * (1 - v))
+        draw_sprite(lay, spr, x, y, 1.0, 0.0, 1.0, (0.1 + 5 * (1 - v)) if v < 1 else 0.0, min(1, v * 1.6))
+    out = out * (1 - lay[..., 3:4]) + lay[..., :3]
+    return np.clip(out, 0, 1)
+
+def text10(out, f, s, rides):
+    for tx in E.TEXT:
+        if bool(tx.get("rides")) != rides: continue
+        st_ = tx["style"]
+        if st_ == "carry": out = text_carry3(out, f, tx)
+        elif st_ == "bound": out = text_bound(out, f, tx)
+        elif st_ == "charge": out = text_charge(out, f, tx)
+        elif st_ == "slam": out = text_slam(out, f, tx)
+        elif st_ == "echo": out = text_echo(out, f, tx)
+        elif st_ == "hero": out = text_hero10(out, f, tx)
+        elif st_ == "speed": out = text_run3(out, f, tx)
+    return out
+
+# ---- the frame (rev 3) ----------------------------------------------------------------------------------------
+def base10(s, f):
+    person = None
+    if s.get("seg"): img, person = render_shot(s, f, want_mask=True)
+    else: img = render_shot(s, f)
+    k_usm = 0.16 if SR_USED[0] else 0.40                                                  # the restored source needs little
+    img = np.clip(img + k_usm * (img - cv2.GaussianBlur(img, (0, 0), 1.5)), 0, 1)
+    if s.get("frozen"):
+        fz = is_frozen(s, f)
+        if fz > 0: img = frozen_world(img, person, f, s, fz)
+        else: img = np.clip(hblur(img, 30) * 0.5 + img * 0.5 + 0.06 * GOLD2, 0, 1)
+    if s.get("trails"): img = afterimages(img, s, f, person, s["trails"])
+    if s.get("arcs"): img = edge_arcs(img, f, person, s["arcs"])
+    if s.get("wind"): img = wind_layer(img, s, f, person, s["wind"])
+    if s.get("sparks"): img = spark_motes(img, f, person, s["sparks"])
+    if s.get("orbit"): img = orbit_ribbons(img, s, f, person, s["orbit"])
+    return img, person
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    if s.get("graphic") == "tunnel": out = tunnel_frame(f); person = None
+    else: out, person = base10(s, f)
+    out = text10(out, f, s, True)                                                      # type that rides the transitions
+    if s.get("streak_e") is not None: out = light_streak3(out, f, s)
+    if tin == "tunnel_in": out = tunnel_in(out, f, k)
+    elif tin in TR2 and k < TR2[tin][2] and P is not None: out = TR2[tin][0](edge10(P, "last"), out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge10(n_, "first"), kn, f, s, n_)
+    out = portal(out, f)
+    if s.get("wave"): out = drop_wave(out, f, s)
+    out = edge_bolts(out, f)
+    out = bar_sweep(out, f)
+    out = hit_ripple(out, f)
+    out = accents10(out, f)
+    out = text10(out, f, s, False)
+    out = finish10(out, f)
+    return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+
+
 def main():
     mode = sys.argv[1]
     load(); init_hits()

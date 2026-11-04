@@ -354,32 +354,74 @@ def tick(level=-26, seed=830):
     y = y + np.sin(2 * np.pi * 1900 * np.arange(n) / SR) * env_exp(n, 0.012) * 0.6
     return norm(y, level)
 
+# ------------------------------------------------------------------ rev 3 sounds
+def buzz(dur=0.3, level=-24, f0=60, f1=220, seed=1300):
+    """molecular vibration: a rising saw buzz with a fast tremolo."""
+    n = I(dur); t = np.arange(n) / SR; u = t / dur; f = f0 * (f1 / f0) ** u
+    ph = np.cumsum(f) / SR; y = 2 * (ph % 1) - 1
+    y = y * (0.6 + 0.4 * np.sin(2 * np.pi * (18 + 40 * u) * t)) + 0.3 * bq(noise(n, seed), "band", np.array([2000, 7000]), 2)
+    return norm(bq(y, "low", 4000, 2) * u ** 1.6, level)
+
+def swirl(dur=0.6, level=-21, seed=1310, laps=1.0):
+    """wind torn round in a circle: band noise whose pan circles L -> R -> L."""
+    n = I(dur); u = np.arange(n) / n; x = noise(n, seed); out = np.zeros(n, np.float32); blk = 1024
+    for i in range(0, n, blk):
+        fc = 600 + 2600 * math.sin(math.pi * u[i]) ** 1.2
+        sos = ss.butter(2, [fc / 2.0 / (SR / 2), min(0.95, fc * 2.0 / (SR / 2))], "band", output="sos")
+        seg = x[max(0, i - 2048):i + blk]; y = ss.sosfilt(sos, seg)[-min(blk, n - i):]; out[i:i + len(y)] = y
+    out = norm(out * np.sin(np.pi * u) ** 1.2, level); pn = np.sin(2 * np.pi * laps * u) * 0.85
+    return np.stack([out * (1 - pn) / 1.4, out * (1 + pn) / 1.4], 1).astype(np.float32)
+
+def glass(level=-19, seed=1320, dur=0.9, dull=False):
+    """a pane breaking: the crack, the burst, then falling tinkles."""
+    n = I(dur); t = np.arange(n) / SR; rng = np.random.default_rng(seed)
+    crack = bq(noise(n, seed), "high", 2500, 2) * env_exp(n, 0.012, 0.0002)
+    body = bq(noise(n, seed + 1), "band", np.array([1500, 9000]), 2) * env_exp(n, 0.12, 0.002) * 0.6
+    tk = np.zeros(n, np.float32)
+    for _ in range(40):
+        i = int(rng.uniform(0.02, 0.85) ** 1.5 * n); m = I(0.08); tt_ = np.arange(min(m, n - i)) / SR; fq = rng.uniform(3000, 9000)
+        tk[i:i + len(tt_)] += np.sin(2 * np.pi * fq * tt_) * np.exp(-tt_ / 0.02) * rng.uniform(0.2, 0.7)
+    y = crack * 1.2 + body + tk * 0.5
+    if dull: y = bq(y, "low", 2500, 2)
+    return norm(y, level)
+
+def sub_drop(level=-14, dur=0.7, f0=70, f1=28):
+    n = I(dur); t = np.arange(n) / SR; f = f0 * (f1 / f0) ** (t / dur)
+    return norm(np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / (dur * 0.45)) * np.minimum(1, t / 0.004), level)
+
+def hum_rise(dur=1.2, level=-28, f0=110, f1=440):
+    """the charge: a rising electrical hum with harmonics."""
+    n = I(dur); t = np.arange(n) / SR; u = t / dur; f = f0 * (f1 / f0) ** (u ** 1.3)
+    ph = np.cumsum(f) / SR
+    y = sum(np.sin(2 * np.pi * k * ph) / k for k in range(1, 7)) * (0.8 + 0.2 * np.sin(2 * np.pi * 60 * t))
+    return norm(y * u ** 1.5 * np.minimum(1, (dur - t) / 0.02), level)
+
 def song_read10():
     if not os.path.exists(f"{AD}/song48.wav"):
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", E.SONG, "-ar", "48000", "-ac", "2", "-c:a", "pcm_f32le", f"{AD}/song48.wav"], check=True)
     _, song = wf.read(f"{AD}/song48.wav"); return song.astype(np.float32)
 
 def music10(song):
-    """the window straight; the pre-roll carries the breakdown across the wrap; from e100 the song rewinds at speed
-    from 118.32 s back to 94.32 s (decelerating as it lands, matching the picture's rewind), then the loop."""
-    n = N + PRE; tt = (np.arange(n) - PRE) / SR; t_rew = E.th(E.E_REW)
-    pos = E.SONG_IN + tt
-    m = tt >= t_rew
-    if m.any():
-        u = np.clip((tt[m] - t_rew) / (E.DUR - t_rew), 0, 1)
-        eo = 1 - (1 - u) ** 1.25
-        pos = pos.copy(); pos[m] = (E.SONG_IN + t_rew) - t_rew * eo
-    x = pos * SR; i = np.clip(np.floor(x).astype(np.int64), 0, len(song) - 2); fr = (x - i)[:, None].astype(np.float32)
-    out = song[i] * (1 - fr) + song[i + 1] * fr
-    if m.any():                                                    # the rewind: band-limited, ducked, with a doppler-ish tilt
-        k0 = int(np.argmax(m)); rw = out[k0:].copy()
-        rw = bq(rw, "low", 5000, 2) * 0.55
-        env = np.ones(len(rw), np.float32); fade = I(0.03); env[:fade] = np.linspace(1, 0.55, fade) ** 0.5
-        out[k0:] = rw * env[:, None] * 1.0 + out[k0:] * 0
-        xf = I(0.012); th_ = np.linspace(0, np.pi / 2, xf)[:, None]
-        fwd = song[np.clip(((E.SONG_IN + tt[k0 - xf:k0 + 0]) * SR).astype(np.int64), 0, len(song) - 1)]
-        out[k0 - xf:k0] = fwd * np.cos(th_) + out[k0 - xf:k0] * 0 + out[k0:k0 + xf] * np.sin(th_)
-    return out.astype(np.float32)
+    """the window straight; the pre-roll carries the breakdown across the wrap; after "around" (e101) the song rewinds
+    at speed back to 94.32 s (decelerating as it lands, like the picture's flight back to frame 0), then the loop.
+    rev 3: an equal-power 12 ms crossfade from the forward song into the rewind (no repeated samples at the join)."""
+    n = N + PRE; tt = (np.arange(n) - PRE) / SR; t_rew = E.th(E.E_REW + 1); xf = 0.012; t0r = t_rew - xf
+    def take(pos):
+        x = pos * SR; i = np.clip(np.floor(x).astype(np.int64), 0, len(song) - 2); fr = (x - i)[:, None].astype(np.float32)
+        return song[i] * (1 - fr) + song[i + 1] * fr
+    fwd = take(E.SONG_IN + tt)
+    u = np.clip((tt - t0r) / (E.DUR - t0r), 0, 1); eo = 1 - (1 - u) ** 1.25
+    xr = ((E.SONG_IN + t0r) - t0r * eo) * SR                                            # the rewind, box-filtered over
+    Pc = np.vstack([np.zeros((1, 2)), np.cumsum(song.astype(np.float64), 0)])           # each output sample's span (no aliasing)
+    def integ(x):
+        i = np.clip(np.floor(x).astype(np.int64), 0, len(song) - 1); return Pc[i] + song[i].astype(np.float64) * (x - i)[:, None]
+    xa = np.concatenate([[xr[0]], xr[:-1]]); d = xr - xa; big = np.abs(d) > 1.0
+    rew = take(xr / SR)
+    rew[big] = ((integ(xr[big]) - integ(xa[big])) / d[big][:, None]).astype(np.float32)
+    rew = bq(rew, "low", 6000, 2)
+    g = 0.55 + 0.45 * np.clip(1 - (tt - t_rew) / 0.04, 0, 1)                         # down to 0.55 over 40 ms
+    w = np.clip((tt - t0r) / xf, 0, 1)[:, None]
+    return (fwd * np.cos(w * np.pi / 2) + rew * g[:, None] * np.sin(w * np.pi / 2)).astype(np.float32)
 
 def main():
     os.makedirs(AD, exist_ok=True)
@@ -411,6 +453,7 @@ def main():
             place(fx, stereo(whine(0.36, -24, 500, 5200)), t0 - 0.36); place(fx, stereo(crackle(0.36, -25, 861, 0.7)), t0 - 0.36)
             place(fx, stereo(A2.impact(-9, (50, 26), 0.9, 0.5, 862)), t0)
             place(fx, stereo(thunder(-17, 863, 1.0)), t0); place(fx, A2.whoosh(0.45, -20, 864, True), t0 - 0.03)
+            place(fx, stereo(sub_drop(-15, 0.8)), t0 + 0.04)                                  # the particle-accelerator wave
         elif tin == "ramp": place(fx, A2.whoosh(0.22, -24, 870 + int(t0), True), t0 - 0.10)
         elif tin == "bolt_link":                                 # the thrown bolt tears across the stereo field
             n_ = I(0.32); y = crackle(0.32, -20, 875, 0.9); p_ = np.linspace(0.9, -0.9, n_)
@@ -425,6 +468,21 @@ def main():
         elif tin == "freeze_in":                                 # time stops: a reverse swell into a dead tick
             sw = A2.whoosh(0.35, -27, 900, False)[::-1].copy(); place(fx, sw, t0 - 0.35); place(fx, stereo(tick(-22, 901)), t0)
         elif tin == "jolt": place(fx, stereo(zap(-26, 905, 2200, 700, 0.08)), t0)
+        elif tin == "phase":                                     # he vibrates through: a rising buzz, a phased whoom
+            place(fx, stereo(buzz(0.18, -23)), t0 - 0.17); place(fx, A2.whoosh(0.30, -24, 1330, True), t0 - 0.04)
+        elif tin == "whirlwind":                                 # the frame is carried off: wind torn round once
+            place(fx, swirl(0.62, -20, 1331, 1.0), t0 - 0.24); place(fx, A2.whoosh(0.25, -25, 1332, False), t0 - 0.08)
+        elif tin == "lichtenberg":                               # the figure branches out with a sizzle, then a snap
+            cr = crackle(0.40, -23, 1333, 0.9) * np.linspace(0.3, 1.0, I(0.40)) ** 1.5
+            place(fx, stereo(cr.astype(np.float32)), t0 - 0.17); place(fx, stereo(zap(-24, 1334, 3600, 700, 0.12)), t0)
+        elif tin == "lens_shatter":                              # the bolt comes at us, hits the glass, the glass bursts
+            place(fx, stereo(whine(0.14, -24, 900, 5200)), t0 - 0.14); place(fx, stereo(glass(-17, 1335, 1.0)), t0)
+            place(fx, stereo(A2.impact(-17, (90, 45), 0.20, 0.6, 1336)), t0); place(fx, A2.whoosh(0.30, -23, 1337, True), t0 + 0.06)
+        elif tin == "perimeter":                                 # a lap of the frame: the pass circles the stereo field
+            place(fx, swirl(0.40, -21, 1338, 1.3), t0 - 0.14); place(fx, stereo(crackle(0.35, -27, 1339, 0.8)), t0 - 0.12)
+        elif tin == "frozen_shatter":                            # in stopped time a dull crack; the beat blows the shards away
+            place(fx, stereo(glass(-22, 1340, 0.6, dull=True)), t0 - 0.02)
+            th_hit = th(E.STUT_HITS[2]); place(fx, stereo(glass(-19, 1341, 0.8)), th_hit); place(fx, A2.whoosh(0.3, -24, 1342, True), th_hit - 0.05)
         elif tin == "restart":                                   # time restarts on the second impact
             place(fx, stereo(A2.impact(-12, (55, 28), 0.7, 0.5, 910)), t0); place(fx, A2.whoosh(0.4, -21, 911, True), t0 - 0.05)
             place(fx, stereo(crackle(0.5, -23, 912, 0.7)), t0 + 0.03)
@@ -443,6 +501,12 @@ def main():
             n_ = I(0.6); q_ = np.arange(n_) / SR; gx = wind_gust(0.6, -25, 1200, (-0.3, 0.9))
             place(fx, gx, tx["end"] - 0.58)
             for q in range(6): place(fx, stereo(A2.tick(-36, 1210 + q), -0.2 + 0.2 * q), tx["end"] - 0.5 + q * 0.06)
+        if tx["style"] == "bound":                                # the gust takes the words; BOUND is struck
+            tb = [wt for w, wt, _ in tx["words"] if w == "BOUND"][0]
+            place(fx, wind_gust(0.45, -26, 1350, (-0.4, 0.9)), tb + 0.08); place(fx, stereo(zap(-27, 1351, 3800, 900, 0.10)), tx["end"] - 0.11)
+        if tx["style"] == "charge":                               # AND charges up through its long note
+            (w0, t0_, _), (w1, t1_, _) = tx["words"]
+            place(fx, stereo(hum_rise(t1_ - t0_ - 0.1, -29)), t0_ + 0.1); place(fx, stereo(zap(-25, 1352, 4200, 1200, 0.10)), t1_)
         if tx["style"] == "hero":
             for k_, (w, wt, ln) in enumerate(tx["words"]):
                 for q in range(len(w)): place(fx, stereo(zap(-31, 930 + k_ * 10 + q, 3800, 1500, 0.05), -0.5 + 0.2 * q), wt + 0.04 * q)
@@ -455,6 +519,11 @@ def main():
             for k_, (w, wt, ln) in enumerate(tx["words"]): place(fx, A2.whoosh(0.16, -30, 970 + k_, False), wt - 0.08)
     # the run becomes light: a rising whine into the line; the rewind: a tunnel rush + a landing thump at the wrap
     place(fx, stereo(whine(0.95, -24, 600, 6000)), th(E.E_REW) - 0.95); place(fx, A2.whoosh(0.6, -22, 980, True), th(E.E_REW) - 0.5)
+    T_OPEN = 23.85
+    place(fx, stereo(crackle(0.30, -24, 1360, 0.9)), T_OPEN - 0.02); place(fx, stereo(zap(-25, 1361, 1500, 5200, 0.14)), T_OPEN)
+    place(fx, swirl(0.42, -22, 1362, 1.5), T_OPEN + 0.06)                                 # the letters run the ring
+    for q in range(9):                                                                     # the edit's moments rush past
+        place(fx, A2.whoosh(0.10, -31 + q * 0.4, 1370 + q, q % 2 == 0), th(E.E_REW) + 0.03 + q * 0.085)
     rw = bq(noise(I(0.96), 981), "band", np.array([400, 5000]), 2) * np.linspace(1, 0.2, I(0.96)) ** 1.2
     place(fx, stereo(norm(rw, -28)), th(E.E_REW))
     place(fx, stereo(A2.impact(-24, (60, 34), 0.25, 0.2, 982)), E.DUR - 0.01)
@@ -485,7 +554,7 @@ def main():
     def lv(a, b):
         x = m[I(a):I(min(b, E.DUR))]; return 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-9) if len(x) else float("nan")
     print("rms: breakdown", round(lv(0.2, 7.5), 1), "drop", round(lv(7.8, 17.5), 1), "stutter", round(lv(17.8, 21.0), 1), "run", round(lv(21.2, 23.9), 1), "rewind", round(lv(24.05, 24.9), 1))
-    k0 = I(th(E.E_REW)); dd = np.abs(np.diff(mm[k0 - 2400:k0 + 2400]))
+    k0 = I(th(E.E_REW + 1)); dd = np.abs(np.diff(mm[k0 - 2400:k0 + 2400]))
     print(f"rewind join step {dd[2395:2405].max():.4f} vs local median {np.median(dd):.4f}")
 
 if __name__ == "__main__":

@@ -59,3 +59,5 @@ v10/frames/
 v10/out/
 v10/work/*.npz
 v10/work/*.npy
+v10/sr/
+*/sr/
