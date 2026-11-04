@@ -83,6 +83,9 @@ Each transition goes through something and has its own sound in `audioN.py` (`if
 | `lens_shatter` (v10 r3) | A bolt flies at the camera and hits the lens; electric cracks, then the glass bursts toward us in Voronoi shards | — | Whine, glass break, impact |
 | `perimeter` (v10 r3) | A lightning streak runs laps round the frame edge; the next shot fills in as a spiral wake closing on the centre | — | Swirl pass, crackle |
 | `frozen_shatter` (v10 r3) | In frozen time the frame cracks and the shards hang apart; the beat that restarts time blows them away | `frozen=True` shots | Dull crack, then a glass burst on the hit |
+| `time_particles` (v10 r4, replaces `frozen_shatter`) | The frozen moment comes apart into fragments of its own pixels (edges first, people last), they burst and hang in the stopped air, then swirl back together as the next moment from `pfocus` outward, landing on the hit | `pfocus=(x, y)` output px on the incoming shot | Disintegration grains, shimmer, reversed grains into an impact |
+| bullet time (v10 r4, automatic on `frozen=True` holds) | In each frozen hold the camera glides through the moment in 3-D: depth from the MODNet matte + a floor gradient drives a parallax remap, plus a dolly push | — | Soft panned air |
+| `carry` text (v10 r4) | A lightning runner streaks along the line and drops each word off on its onset; at the end it snatches the letters away (stretch + blur + gold trail) | — | Zips + crackle |
 | `wave=True` (v10 r3) | After the drop: a refracting dark-matter ring rings out of the frame centre | on the drop shot | Sub drop |
 | `tunnel_in` + `graphic="tunnel"` (v10 r3 loop) | The letters of a lyric run a ring that opens into the Speed Force; panels of the edit's own moments fly past newest to oldest and frame 0 lands | `T_OPEN`, `TUN_PANELS` | Ring crackle, swirl, panel whooshes, the song rewinding (box-filtered) |
 

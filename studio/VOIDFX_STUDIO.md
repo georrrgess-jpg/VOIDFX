@@ -133,6 +133,26 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | The **text appearance in v8**: thin, wide-tracked sans lyric lines with sodium serif-italic emphasis words, letter-by-letter fades, underlines; big extruded words behind his head; elegant serif-italic script | v8 | That "elegant / editorial" type look didn't land. Go back toward what was praised in v6: bold, high-contrast, two-line captions with a clear designed treatment per moment. Keep script handwriting for at most one hero word. |
 | v9 NIGHT BLOOM overall: *"good… complete"*, but **lacklustre** next to the other builds and Dexter edits in general | v9 | **Go above and beyond.** The petal/moon concept came from the song title, not from Dexter's world, and read soft instead of dark and intense. The montage leaned on quick generic moves (strobe, beam, blinds, roll, smear) with one real set piece (the bloom). Root every concept in Dexter, build at least three signature set pieces, and add more graphics (the v9 text itself was "perfect"; keep it). See §5a. |
 
+| v10 rev 3: the glass shatter in the frozen bullet scene (a crack web and hanging shards over the frame) | v10 | Replaced in rev 4 by TIME PARTICLES: the frozen moment comes apart into fragments of its own pixels and rebuilds as the next moment, from his hand outward. Glass has to land (see the props rule below). |
+| v10 rev 3: the CARRY OFF whirlwind exit | v10 | Replaced in rev 4 by a lightning runner that drops each word off on its sung onset and later snatches the letters away. |
+
+### Props and effects from the character's world: when they work (Studio 2, after FOREVER)
+
+The owner no longer bans the blood slides or the knife across the screen. In FOREVER they failed for four reasons:
+- **They lingered.** The blood slides drifted around the opening as a constant overlay.
+- **They were random.** The drips, the spatter and the knife pass came in on beats with no reason in the shot.
+- **They looked drawn, not real.** The slide smear and the corridor of slides were flat red circles on grey glass, cheap next to the real footage.
+- **They didn't land.** The glass shatter put a web of shards over his face, and the duct-tape strips fell flat.
+
+Use blood, slides, knives, glass or tape (or any prop-style effect) only when it is:
+- motivated by the shot, the lyric or the story;
+- brief, not left on screen;
+- lit like a real object, or taken from real footage (e.g. the S1 shot of him holding up a slide);
+- in that edit's own look;
+- off his face.
+
+Check each one on still frames next to the footage, and rebuild or cut anything that looks drawn. Examples that worked: the v7 blood-slide box and the v7 blood on the lens.
+
 ## 5a. Raising the bar (after v9): the pre-build gate
 
 The owner's standard after v9: *"go above and beyond with these edits."* "Technically clean and on time" is not enough; every edit has to **visibly exceed** v6, v7 and v8. Clear this gate **before** the first render:

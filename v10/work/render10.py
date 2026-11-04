@@ -6753,7 +6753,7 @@ def slices(A, B, j, f, sa, sb, pre=6, post=9):
         a = np.roll(A[y0:y1], offA, 1); b = np.roll(B[y0:y1], offB, 1)
         xs = np.arange(W)[None, :, None]
         ma = (xs < W + offA).astype(np.float32); mb = (xs >= offB).astype(np.float32)
-        band = a * ma * (1 - mb) + b * mb
+        band = a * ma * (1 - mb) + b * mb + (1 - ma) * (1 - mb) * hblur(B[y0:y1], 120)
         blur = int(4 + 90 * math.sin(math.pi * q))
         band = hblur(band, blur)
         edge = np.exp(-((xs - offB) / 6.0) ** 2) * math.sin(math.pi * q)
@@ -7771,6 +7771,225 @@ def render(f):
     out = text10(out, f, s, False)
     out = finish10(out, f)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+
+
+# ============================================================================ v10 rev 4
+# Owner notes: replace the glass shatter in the frozen bullet scene with something unconventional and well thought;
+# a new animation for IT'S GONNA / CARRY OFF; one brand-new animation somewhere in the edit.
+#   TIME PARTICLES (replaces frozen_shatter): the frozen world comes apart into its own pixels from the edges in (he is
+#       the last thing to go), the particles hang in the stopped air like the bullets do, then swirl back together as the
+#       next frozen moment, rebuilding outward from his reaching hand and landing on the beat that restarts time.
+#       Every particle is a pixel of the real footage (nothing drawn), and the rebuild order keeps faces whole longest.
+#   CARRY OFF: a lightning runner streaks along each line and drops each word off in its wake on its sung onset; on
+#       "carry off" the runner comes back and snatches the letters away with it.
+#   BULLET TIME (new animation): in every frozen hold the camera glides through the frozen moment in 3-D: the people
+#       move against the room with real parallax (depth from the MODNet matte and the floor), plus a slow dolly push.
+
+# ---- TIME PARTICLES --------------------------------------------------------------------------------------------
+PG = 6
+_PT = {}
+def part_grid():
+    if "g" in _PT: return _PT["g"]
+    ys, xs = np.mgrid[PG // 2:H:PG, PG // 2:W:PG]
+    xs = xs.ravel().astype(np.float32); ys = ys.ravel().astype(np.float32); n = len(xs); rng = np.random.default_rng(77)
+    ed = np.minimum(np.minimum(xs, W - xs) / (W / 2), np.minimum(ys, H - ys) / (H / 2))          # 0 at the frame edge
+    _PT["g"] = dict(x=xs, y=ys, xi=xs.astype(np.int32), yi=ys.astype(np.int32), n=n, gw=W // PG, gh=H // PG,
+                    z=rng.uniform(0.5, 1.6, n).astype(np.float32), ph=rng.uniform(0, 6.283, n).astype(np.float32),
+                    jit=rng.random(n).astype(np.float32), ed=np.clip(ed, 0, 1).astype(np.float32),
+                    V=(30 + 150 * rng.random(n) ** 1.5).astype(np.float32))
+    return _PT["g"]
+
+def part_plan(sa, sb):
+    key = ("plan", sa["n"], sb["n"])
+    if key in _PT: return _PT[key]
+    G = part_grid(); x0, y0 = G["x"], G["y"]
+    _, pa = base10(sa, sa["f1"] - 1)
+    pam = pa[G["yi"], G["xi"]] if pa is not None else np.zeros(G["n"], np.float32)
+    fx, fy = sb.get("pfocus", (W / 2, H * 0.6))
+    rb = np.hypot(x0 - fx, y0 - fy); rb = rb / rb.max()
+    td = -12 + 12 * G["ed"] ** 0.7 + 2.5 * G["jit"] + 5 * (pam > 0.5)                       # edges first, people last
+    tr = 10.5 + 9.0 * rb ** 0.85 + 1.2 * G["jit"]                                            # the rebuild starts at his hand
+    rx, ry = x0 - W / 2, y0 - H * 0.52; rr = np.hypot(rx, ry) + 1
+    _PT[key] = dict(td=td.astype(np.float32), tr=tr.astype(np.float32), ux=(rx / rr).astype(np.float32), uy=(ry / rr).astype(np.float32),
+                    rr=rr.astype(np.float32))
+    return _PT[key]
+
+def part_drift(G, P, k):
+    """k frames after detaching: a burst outward that the frozen air slows to a hang, turning slowly round the frame
+    centre, rising a little; near (large z) fragments travel further."""
+    k = np.maximum(k, 0)
+    dr = G["V"] * G["z"] * (1 - np.exp(-k / 6.0)) + 0.6 * k * G["z"]
+    a = dr / (P["rr"] + 260) * 0.9                                                             # the slow vortex
+    ca, sa_ = np.cos(a), np.sin(a)
+    ox, oy = P["ux"] * (P["rr"] + dr), P["uy"] * (P["rr"] + dr)
+    nx, ny = ox * ca - oy * sa_, ox * sa_ + oy * ca
+    return nx - P["ux"] * P["rr"], ny - P["uy"] * P["rr"] - 0.8 * k * G["z"] + 4 * np.sin(G["ph"] + 0.15 * k) * (k > 0)
+
+_VOID = {}
+def part_void(f):
+    if "v" not in _VOID:
+        r = np.sqrt(((_GX - W / 2) / W) ** 2 + ((_GY - H * 0.55) / H) ** 2)
+        _VOID["v"] = (SLATE * 0.40 + np.exp(-(r / 0.35) ** 2)[..., None] * (GOLD2 * 0.10 + STEEL * 0.06)).astype(np.float32)
+    return _VOID["v"]
+
+def part_pos(G, P, jj):
+    td, tr = P["td"], P["tr"]
+    q = np.clip((jj - tr) / 8.0, 0, 1); e = 1 - (1 - q) ** 2.4
+    dx, dy = part_drift(G, P, jj - td)
+    ret = q > 0
+    if ret.any():
+        rdx, rdy = part_drift(G, P, tr - td)
+        th_ = 2.0 * (1 - e); c_, s_ = np.cos(th_), np.sin(th_)
+        dx = np.where(ret, (rdx * c_ - rdy * s_) * (1 - e), dx); dy = np.where(ret, (rdx * s_ + rdy * c_) * (1 - e), dy)
+    return G["x"] + dx, G["y"] + dy, q
+
+def time_particles(A, B, j, f, sa, sb, pre=12, post=31):
+    """TIME PARTICLES: the frozen moment breaks into fragments of its own pixels that burst apart and hang in the
+    stopped air, then swirl back together as the next frozen moment (from his hand outward), landing on the beat
+    that restarts time."""
+    G = part_grid(); P = part_plan(sa, sb); jj = float(j)
+    td, tr = P["td"], P["tr"]; tl = tr + 8.0
+    att = jj < td; lan = jj >= tl; free = ~att & ~lan
+    gw, gh = G["gw"], G["gh"]
+    up = lambda m: cv2.resize(m.reshape(gh, gw).astype(np.float32), (W, H), interpolation=cv2.INTER_NEAREST)[..., None]
+    attF, lanF = up(att), up(lan)
+    out = A * attF + B * lanF + part_void(f) * (1 - attF - lanF)
+    idx_f = np.nonzero(free)[0]
+    if len(idx_f):
+        px, py, q = part_pos(G, P, jj); px2, py2, _ = part_pos(G, P, jj - 0.5)
+        xi, yi = G["xi"][idx_f], G["yi"][idx_f]; qf = q[idx_f]
+        w = np.clip((qf - 0.15) / 0.6, 0, 1)[:, None]; w = w * w * (3 - 2 * w)
+        col = A[yi, xi] * (1 - w) + B[yi, xi] * w
+        tw = (np.sin(G["ph"][idx_f] * 7 + jj * 0.9) > 0.94) * (1 - qf) * 0.6                   # a few catch the light as they hang
+        gl = (np.sin(np.pi * qf) * 0.35 + tw)[:, None]
+        col = col + gl * (GOLD2 * 0.55 + GOLDW * 0.2)
+        X = px[idx_f] / PG; Y = py[idx_f] / PG; X2 = px2[idx_f] / PG; Y2 = py2[idx_f] / PG
+        fast = np.hypot(X - X2, Y - Y2) > 0.7
+        big = G["z"][idx_f] > 1.3
+        xs_ = [X, (X + X2)[fast] / 2, X2[fast], X[big] + 1, X[big], X[big] + 1]
+        ys_ = [Y, (Y + Y2)[fast] / 2, Y2[fast], Y[big], Y[big] + 1, Y[big] + 1]
+        cs_ = [col, col[fast] * 0.8, col[fast] * 0.6, col[big], col[big], col[big]]
+        ix = np.concatenate(xs_).astype(np.int32); iy = np.concatenate(ys_).astype(np.int32); cc = np.concatenate(cs_)
+        ok = (ix >= 0) & (ix < gw) & (iy >= 0) & (iy < gh)
+        lin = iy[ok] * gw + ix[ok]; cc = cc[ok]
+        cnt = np.bincount(lin, minlength=gw * gh).astype(np.float32)
+        can = np.stack([np.bincount(lin, weights=cc[:, ch], minlength=gw * gh) for ch in range(3)], 1).astype(np.float32)
+        can = can / np.maximum(cnt, 1)[:, None]
+        cmask = (cnt > 0).reshape(gh, gw).astype(np.float32)
+        cm = cv2.resize(cmask, (W, H), interpolation=cv2.INTER_NEAREST)[..., None]
+        cu = cv2.resize(can.reshape(gh, gw, 3), (W, H), interpolation=cv2.INTER_NEAREST)
+        cu = cu * (0.80 + 0.20 * cv2.resize(cv2.GaussianBlur(cmask, (0, 0), 0.6), (W, H))[..., None])        # a soft edge to each fragment
+        out = out * (1 - cm) + cu * cm
+        sp = cv2.resize(cmask * float(np.clip(0.55 - abs(jj - 8) / 30, 0.15, 0.55)), (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+        out = out + cv2.resize(cv2.GaussianBlur(sp, (0, 0), 3), (W, H))[..., None] * GOLD2 * 0.30
+    if jj >= post - 5: a = smooth((jj - (post - 5)) / 4); out = out * (1 - a) + B * a
+    return np.clip(out, 0, 1)
+
+TR2["time_particles"] = (time_particles, 12, 31)
+
+# ---- BULLET TIME: the camera glides through each frozen hold in 3-D ---------------------------------------------
+def holds_of(s):
+    ks = s["tmap"]; return [(u0, u1) for (u0, t0), (u1, t1) in zip(ks, ks[1:]) if abs(t1 - t0) < 1e-6 and u1 > u0]
+
+def bullet_cam(s, f):
+    """the camera's lateral offset (-0.5..0.5 of the swing) and dolly push, accumulated over the shot's frozen holds."""
+    hs = holds_of(s)
+    if not hs: return 0.0, 0.0
+    u = (f - s["f0"]) / max(1, s["f1"] - s["f0"]); acc = 0.0; push = 0.0
+    for (u0, u1) in hs:
+        v = smooth((u - u0) / (u1 - u0)); acc += v / len(hs); push += 0.03 * math.sin(math.pi * clamp((u - u0) / (u1 - u0), 0, 1))
+    return acc - 0.5, push
+
+_DP = {}
+def bullet_time(img, person, s, f):
+    if not (s.get("frozen") and holds_of(s)): return img
+    off, push = bullet_cam(s, f); d = 1 if SHOTS.index(s) % 2 == 0 else -1
+    cam = d * 220 * off
+    if "floor" not in _DP: _DP["floor"] = (0.30 + 0.32 * (_GY / H) ** 1.4).astype(np.float32)
+    dep = _DP["floor"] if person is None else _DP["floor"] + 0.55 * cv2.GaussianBlur(person, (0, 0), 16)
+    zs = 1.07 + push * dep                                                                     # a margin, and the dolly
+    mx = W / 2 + (_GX - W / 2) / zs - cam * (dep - 0.6)
+    my = H * 0.55 + (_GY - H * 0.55) / zs
+    return cv2.remap(img, mx.astype(np.float32), my.astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+
+_base10_r3 = base10
+def base10(s, f):
+    img, person = _base10_r3(s, f)
+    if s.get("frozen"): img = bullet_time(img, person, s, f)
+    return img, person
+
+# ---- CARRY OFF: the runner drops the words off, then carries them off ----------------------------------------------
+def runner_streak(cv, x_h, y, x_from, length=320, width=7):
+    """a horizontal lightning streak whose head is at x_h, its tail fading back toward x_from."""
+    x_t = max(x_from, x_h - length)
+    if x_h - x_t < 4: return
+    n = 24
+    for i in range(n):
+        a = (i + 1) / n; xa = x_t + (x_h - x_t) * i / n; xb = x_t + (x_h - x_t) * (i + 1) / n
+        cv2.line(cv, (int(xa), int(y)), (int(xb), int(y)), int(255 * a ** 1.6), max(1, int(width * a)), cv2.LINE_AA)
+
+def text_carry4(out, f, tx):
+    """IT'S GONNA / CARRY OFF: a lightning runner streaks along the line and each word is left behind in its wake on its
+    sung onset (stretched, blurred, then sharp); on "carry off" the runner comes back along both lines and snatches
+    the letters away to the right."""
+    t = f / FPS; words = tx["words"]
+    if t < words[0][1] - 0.15 or t > tx["end"] + 0.02: return out
+    L = caption_letters(tx, (96, 140), (1368, 1500))
+    t_ex = tx["end"] - 0.44
+    out = out * cap_scrim(1250, 1620, 0.32 * (1 - smooth((t - t_ex - 0.18) / 0.22)) * smooth((t - words[0][1] + 0.10) / 0.25))
+    lay = np.zeros((H, W, 4), np.float32); cv = bolt_canvas()
+    spans = {}
+    for (spr, x0, y0, wt, w, ln, ci, sz) in L:
+        a, b = spans.get((w, wt), (1e9, -1e9)); spans[(w, wt)] = (min(a, x0 - spr.shape[1] / 2 + 36), max(b, x0 + spr.shape[1] / 2 - 36))
+    heads = {}
+    for (w, wt), (a, b) in spans.items():                                                    # entry runs, one per word
+        dur = 0.09 + 0.012 * len(w); u = (t - (wt - 0.07)) / dur
+        heads[(w, wt)] = a - 70 + (b - a + 140) * ein(clamp(u, 0, 1), 1.2) if u > 0 else -1e9
+        if 0 < u < 1.5:
+            ln = [q[5] for q in L if q[4] == w and q[3] == wt][0]; y = (1368, 1500)[ln]
+            fade = 1 - smooth((u - 1.0) / 0.5)
+            cv_ = bolt_canvas(); runner_streak(cv_, heads[(w, wt)], y, a - 200, 340, 8)
+            cv = np.maximum(cv, (cv_.astype(np.float32) * fade).astype(np.uint8))
+            if u < 1.0: out = add_glow(out, heads[(w, wt)], y, 46, 0.9 * fade, GOLDW)
+    ex_head = []
+    for ln, (y, d0) in enumerate(((1368, 0.0), (1500, 0.08))):                              # the exit runs
+        u = (t - (t_ex + d0)) / 0.18
+        hx = -120 + (W + 360) * ein(clamp(u, 0, 1), 1.3) if u > 0 else -1e9; ex_head.append(hx)
+        if 0 < u < 1.3:
+            runner_streak(cv, hx, y, -200, 420, 9)
+            if u < 1.0: out = add_glow(out, hx, y, 52, 0.9, GOLDW)
+    for (spr, x0, y0, wt, w, ln, ci, sz) in L:
+        hx = heads[(w, wt)]
+        v = clamp((hx - x0) / 140.0, 0, 1)
+        if v <= 0: continue
+        ve = eout(v, 2.2)
+        g = clamp((ex_head[ln] - x0) / 220.0, 0, 1)                                           # snatched by the runner
+        if g > 0:
+            ge = ein(g, 1.8)
+            x = x0 + 1300 * ge; st_ = 1 + 3.2 * math.sin(math.pi * min(1.0, g * 1.2)) ** 0.8 + 2.0 * ge
+            tr = np.dstack([spr[..., :3] * 0.2 + GOLD2 * 0.8, spr[..., 3:4]])
+            draw_sprite(lay, tr, x - 70 * st_, y0, 1.0, 0.0, 1.0, 3 + 9 * g, 0.35 * (1 - g), stretch=st_ * 1.4)
+            draw_sprite(lay, spr, x, y0, 1.0, 0.0, 1.0, 0.5 + 9 * g, 1 - smooth((g - 0.35) / 0.65), stretch=st_)
+            continue
+        draw_sprite(lay, spr, x0 + 34 * (1 - ve), y0, 1.0, 0.0, 1.0, (0.2 + 6 * (1 - ve)) if v < 1 else 0.0, min(1, v * 1.8), stretch=1 + 1.8 * (1 - ve))
+    out = out + light_from(cv, 1.1)
+    out = out * (1 - lay[..., 3:4]) + lay[..., :3]
+    return np.clip(out, 0, 1)
+
+_text10_r3 = text10
+def text10(out, f, s, rides):
+    if rides: return _text10_r3(out, f, s, rides)
+    for tx in E.TEXT:
+        if tx.get("rides"): continue
+        st_ = tx["style"]
+        if st_ == "carry": out = text_carry4(out, f, tx)
+        elif st_ == "bound": out = text_bound(out, f, tx)
+        elif st_ == "slam": out = text_slam(out, f, tx)
+        elif st_ == "echo": out = text_echo(out, f, tx)
+        elif st_ == "hero": out = text_hero10(out, f, tx)
+        elif st_ == "speed": out = text_run3(out, f, tx)
+    return out
 
 
 

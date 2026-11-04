@@ -92,7 +92,7 @@ shot("strike", "fb", 68, 74, 10.36, 11.80, z=[(0, 1.00), (1, 1.08)], tin="bolt_s
 shot("freeze_a", "fb", 74, 82, 0, 0, tmap=[(0, 13.00), (2 / 8, 13.00), (4 / 8, 14.60), (6 / 8, 14.60), (1, 16.20)],
      lin=True, z=[(0, 1.00), (1, 1.16)], tin="freeze_in", seg=True, frozen=True, face=None, cx=(870, 880))
 shot("freeze_b", "fb", 82, 88, 0, 0, tmap=[(0, 28.10), (2 / 6, 28.10), (4 / 6, 29.40), (1, 29.40)],
-     lin=True, z=[(0, 1.06), (1, 1.20)], tin="frozen_shatter", seg=True, frozen=True, face=None, cx=(1000, 960))
+     lin=True, z=[(0, 1.06), (1, 1.20)], tin="time_particles", seg=True, frozen=True, face=None, cx=(1000, 960), pfocus=(300, 1250))
 # ---- "All this running around": afterimages, then he outruns time
 shot("run", "fb", 88, 100, 0, 0, tmap=[(0, 80.86), (8 / 12, 81.95), (1, 82.24)], z=[(0, 1.00), (1, 1.10)], tin="restart", face=None, cx=(560, 520),
      interp="blend", seg=True, trails=1.0, arcs=0.6, streak_e=98)

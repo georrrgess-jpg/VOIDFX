@@ -480,6 +480,12 @@ def main():
             place(fx, stereo(A2.impact(-17, (90, 45), 0.20, 0.6, 1336)), t0); place(fx, A2.whoosh(0.30, -23, 1337, True), t0 + 0.06)
         elif tin == "perimeter":                                 # a lap of the frame: the pass circles the stereo field
             place(fx, swirl(0.40, -21, 1338, 1.3), t0 - 0.14); place(fx, stereo(crackle(0.35, -27, 1339, 0.8)), t0 - 0.12)
+        elif tin == "time_particles":                            # the moment comes apart into grains, hangs, rebuilds on the hit
+            th_hit = th(E.STUT_HITS[2])
+            place(fx, crumble(0.55, -23, 1400), t0 - 0.20)
+            place(fx, np.stack([A2.shimmer(0.45, -31)] * 2, 1), t0 + 0.02)
+            rb = crumble(0.42, -22, 1401)[::-1].copy() * np.linspace(0.4, 1.0, I(0.42))[:, None] ** 1.5
+            place(fx, rb.astype(np.float32), th_hit - 0.42); place(fx, stereo(A2.impact(-19, (75, 40), 0.25, 0.5, 1402)), th_hit)
         elif tin == "frozen_shatter":                            # in stopped time a dull crack; the beat blows the shards away
             place(fx, stereo(glass(-22, 1340, 0.6, dull=True)), t0 - 0.02)
             th_hit = th(E.STUT_HITS[2]); place(fx, stereo(glass(-19, 1341, 0.8)), th_hit); place(fx, A2.whoosh(0.3, -24, 1342, True), th_hit - 0.05)
@@ -487,6 +493,11 @@ def main():
             place(fx, stereo(A2.impact(-12, (55, 28), 0.7, 0.5, 910)), t0); place(fx, A2.whoosh(0.4, -21, 911, True), t0 - 0.05)
             place(fx, stereo(crackle(0.5, -23, 912, 0.7)), t0 + 0.03)
     for e_ in E.STUT_GAPS: place(fx, stereo(tick(-25, 920 + e_)), th(e_) + 0.01)      # the clock in frozen time
+    for e0_ in (74, 78, 86):                                                              # bullet time: the camera glides
+        n_ = I(0.46); q_ = np.arange(n_) / SR
+        air = bq(noise(n_, 1440 + e0_), "band", np.array([250, 1800]), 2) * np.sin(np.pi * q_ / 0.46) ** 2
+        pn = np.linspace(-0.6, 0.6, n_) * (1 if e0_ != 78 else -1)
+        a_ = norm(air, -33); place(fx, np.stack([a_ * (1 - pn) / 1.3, a_ * (1 + pn) / 1.3], 1).astype(np.float32), th(e0_) + 0.01)
     for e_ in E.STUT_HITS: place(fx, stereo(zap(-31, 925 + e_, 2400, 900, 0.08), 0.4), th(e_))   # the time-line ripple
     # edge bolts on the bar lines (cold open, the hook, the run) and the gold sweeps of the cold open: soft, under the song
     for e_ in list(range(8, 32, 8)) + [56, 64, 88, 96]:
@@ -497,10 +508,14 @@ def main():
         place(fx, stereo(norm(sh, -36), -0.5), th(e_) + 0.02)
     # type: the bolts striking LET IT / HAPPEN, the HAPPENS slam, the echo, the run-in words
     for tx in E.TEXT:
-        if tx["style"] == "carry":                                # the whirlwind takes CARRY OFF
-            n_ = I(0.6); q_ = np.arange(n_) / SR; gx = wind_gust(0.6, -25, 1200, (-0.3, 0.9))
-            place(fx, gx, tx["end"] - 0.58)
-            for q in range(6): place(fx, stereo(A2.tick(-36, 1210 + q), -0.2 + 0.2 * q), tx["end"] - 0.5 + q * 0.06)
+        if tx["style"] == "carry":                                # the runner drops each word off, then carries them off
+            def zip_(dur, lv, seed):
+                y = swirl(dur, lv, seed, 0.25); return y
+            for k_, (w, wt, ln) in enumerate(tx["words"]):
+                place(fx, zip_(0.16, -27, 1410 + k_), wt - 0.10); place(fx, stereo(crackle(0.08, -33, 1420 + k_, 0.9), 0.3), wt - 0.02)
+            for k_, d0 in enumerate((0.0, 0.08)):
+                place(fx, zip_(0.22, -24, 1430 + k_), tx["end"] - 0.44 + d0 - 0.04)
+            place(fx, stereo(crackle(0.25, -29, 1432, 0.9)), tx["end"] - 0.42)
         if tx["style"] == "bound":                                # the gust takes the words; BOUND is struck
             tb = [wt for w, wt, _ in tx["words"] if w == "BOUND"][0]
             place(fx, wind_gust(0.45, -26, 1350, (-0.4, 0.9)), tb + 0.08); place(fx, stereo(zap(-27, 1351, 3800, 900, 0.10)), tx["end"] - 0.11)

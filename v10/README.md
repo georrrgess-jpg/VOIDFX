@@ -313,3 +313,33 @@ Kept from rev 2: speed slices, ignite, the emblem dive, the speed ramps, the sho
 - the ring and the tunnel;
 - the frozen shatter.
 
+## Revision 4 (owner feedback)
+
+> "Remove the glass shatter scene when Barry's picking up bullets and replace it with another unique or really cool animation or transition… change the animation for the words IT'S GONNA CARRY OFF… implement a brand new animation or graphic somewhere throughout the edit… really well thought, cool, and executed in a manner that's usually unconventional for simple TikTok edits."
+
+The props rule from Studio 2 (after FOREVER) also applies: glass, blood, slides, knives and tape must be motivated, brief, real-looking, in the edit's look, and off his face. The frozen-scene glass shatter broke that rule: a crack web and hanging shards over the frame.
+
+- **TIME PARTICLES** (replaces the glass, 19.68 → 20.16 s, the frozen bullet scene):
+  - The frozen moment comes apart into fragments of its own pixels: the edges first, the people last.
+  - The fragments burst outward, then the frozen air slows them to a hang, like the bullets hanging around him. They turn slowly round a dark eye that opens in the middle of the frame.
+  - Then they swirl back together as the next frozen moment. The rebuild starts at his reaching hand and the bullet, spreads outward, and lands exactly on the beat that restarts time.
+  - Nothing is drawn: every fragment is a pixel of the real footage. Sound: disintegration grains, a shimmer while they hang, the grains reversed into an impact on the hit.
+- **CARRY OFF**: a lightning runner streaks along the caption line and drops each word off in its wake on its sung onset (stretched and blurred, then sharp). On "carry off" the runner comes back along both lines and snatches the letters away: they stretch into gold speed smears and leave the frame with him. Sound: a zip per word, then the snatch.
+- **BULLET TIME** (new animation): in every frozen hold (17.76, 18.72 and 20.64 s) the camera now glides through the frozen moment in 3-D. The people move against the room with real parallax (depth from the MODNet matte plus the floor), with a slow dolly push. The swing continues across the holds and resets inside the transitions. Sound: a soft panned air move.
+- **Also fixed:** the speed slices left black gaps between bands for a frame or two. The gaps now show the incoming shot, smeared.
+
+### Ship checkpoint (rev 4, measured on the encoded MP4)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1498 frames, decodes clean |
+| Loudness | −12.7 LUFS, −3.5 dBTP after AAC |
+| Faces | every shot centred |
+| Text vs faces | clear. Frame 182 flags the masked close-up's neck under CARRY OFF (checked: the caption sits below his mouth). Frame 1464 is a face inside a tunnel panel. |
+| Cuts | 17 cuts, 0 audio clicks |
+| Loop seam | blurred diff 0.91; audio continuous |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Visual sign-off** (frames from the encoded file): the runner dropping off each word and snatching them; the particle break-up, hang and rebuild (frames 1176–1208); the bullet-time glides (1068 → 1094, 1240 → 1266); the speed-slice gaps.
+
