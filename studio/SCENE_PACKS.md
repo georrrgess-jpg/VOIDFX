@@ -284,12 +284,34 @@ Proven shots (fb):
 
 **Avoid:** the slow-mo run at the camera, and the floating shot.
 
+More fb shots, verified in v10 (fb is 24p in a 60 fps container: use `interp="hold"`; `blend` only under afterimages):
+
+| Time | Shot | Notes |
+|---|---|---|
+| 38.57–42.32 | Barry, suited with the hood down, standing in the dark lab, emblem glowing | Calm opener (v10) |
+| 31.9–37.1 | Unmasked smile in the dark | v10 |
+| 116.5–119.38 | **Eyes full of lightning** | w353; the charge before a drop (v10) |
+| 83.8–85.08 | Lightning crawling over the suit; **chest emblem tracked at (731,462) → (745,632) source px** | v10 emblem dive |
+| 4.28–6.22 | Crouched take-off, lightning erupting behind | v10 drop shot |
+| 124.38–124.78 | The lightning throw (bolt from his hand, bottom-left) | v10 |
+| 112.48–116.48 | Garage: lightning run, then lightning arm | Magnus Labs sign in frame (v10) |
+| 127.63–129.15 | The scream with lightning | v10 |
+| 56.05–58.32 | Masked grin (S1 suit) | v10 |
+| 109.68–112.47 | Masked, walking toward camera at night, centred | Hero-title plate (v10) |
+| 10.30–12.08 | Barry (civilian) struck by lightning in the office | v10 |
+| **12.10–22.55** | **Frozen time in the office:** the falling man frozen, Barry crouched with lightning at **x≈870** (w43: lock framing with `cx`) | v10 time freeze |
+| 27.77–31.88 | Frozen Joe in the foreground; Barry at **x≈960–1000** reaching through lightning | v10 |
+| 80.82–82.27 | **Sideways run, massive lightning trails** (dutch angle) | Face not detected: frame with `cx` (v10 finale) |
+| 124.8–127.48 | Reverse-Flash (yellow suit) by a "FAST TRACK LABS" sign | Different speedster: avoid unless the concept needs him |
+| 139.0–147.3, 129.2–130.6 | Purple/blue/green lightning; another speedster | Off-colour for Barry's gold: avoid or regrade |
+
 ---
 
 ## Songs (`src/`)
 
 | File | Uploaded as | Notes |
 |---|---|---|
+| `let_it_happen.mp3` | `Tame_Impala_-_Let_It_Happen_Official_Video.mp3` | Radio edit, 4:16. 125.0 BPM, P=0.24003, offset 0.1920. Whirlwind breakdown 90.4–101.9 (no bass); **drop 101.94 (+26.5 dB)** "...when it happens"; "So let it happen" 107.7; **gated stutter 112.04–115.41** (silence every 4th half-beat); "All this running around" 115.24 (+15 dB) (v10) |
 | `night_blooming_jasmine.mp3` | `fakemink_-_Night__Blooming_Jasmine_._official_music_video.mp3` | 102.8 BPM, P=0.29185. The second half is on its own grid (HB_OFF 0.1673: h482 = the drop at 140.839). Filtered breakdown 112–137.8 s, build 137.78, **dead silence 139.38–140.83, drop 140.84 (+26 dB)**. The instrumental repeats on a 4-bar cycle (bar h506 = bar h634). Hook *"night bloom jasmine, second name Yasmin"* at 74.8 and 187.12 (v9) |
 | `paint_it_black.mp3` | `The_Rolling_Stones_-_Paint_It_Black_Official_Lyric_Video.mp3` | 160 BPM, P=0.18748, offset 0.0469. Sitar intro; **drums enter at 7.55 s (+22 dB)**; "I see a red door…" 14.0; bridge dip 87–96.5 → return 97.54; climax "painted, painted black" 157.4–175.7. Map and lyrics in `studio/songs/paint_it_black/` (not used yet) |
 | `wish_you_well_rec.wav` | extracted from the screen recording `wish_you_well_screenrec.mov` | Brent Faiyaz "Wish You Well", 36 s. 138.05 BPM, P=0.21731, offset 0.0489. Beat returns at 19.17 s; break 27.86; "Darling," 30.04; **drop 33.08**; hook "I don't wish you well" 34.16–35.12 (v8) |
