@@ -100,3 +100,48 @@ Each pass asked "what would make this unforgettable?", not just "what's broken?"
 **Visual sign-off** was done on frames pulled from the encoded MP4 across the whole edit, the three showpieces, every caption and title, and the seam.
 
 **Not verified:** watching and listening in real time. The sound was checked by measurement only.
+
+## Revision 2 (owner notes)
+
+The owner's notes, all addressed in one pass:
+
+1. **"The last word Dexter says … gets cut off."**
+   - The audio wasn't truncated: "anything" ends at 53.86 and "but" starts at 53.94. The problem is that he says it mid-sentence with a rising comma inflection, so it sounds cut off however it's faded.
+   - **Replaced the line** with *"How is it I can kill people and feel no regret?"* (S4 pack p9, 212.84–215.30). It ends on a natural question fall with 2.6 s of silence after it, and it's played as voice-over, since on its own shot he isn't speaking.
+   - The concept stays the same, and the new line ties into the song's *"feel this real"*.
+2. **"One of the scenes in the beginning … was really low quality."**
+   - Measured and checked at full resolution: the p7 gloving shot was muddy, noisy and soft, and the p8 kill-table shot was also soft.
+   - Both were **replaced with sharp shots**: the green-lit stare (p8 152.15, desaturated into the steel palette), the overhead kill table under the lamp (p8 31.70) and the kitchen stare (p8 111.25).
+3. **"The subtitles went along with the song but the song didn't sing the lyrics at those parts."**
+   - Two text moments had no audible singing:
+     - *EXCEPT THIS.* (a designed title on the instrumental drop);
+     - the *BREATHE OUT* captions (a whisper that's barely audible; Whisper can't even verify the words on the isolated vocal).
+   - Both are **removed**. Text now appears **only on clearly spoken or sung words**, each word on its time: Dexter's line; *"And I wonder"*; *"If everything could ever feel this real"*; **FOREVER**.
+4. **"More transitions, animations and graphics … very little dead space."**
+   - **Shots:** 19 instead of 15. The edit starts one bar later in the song (1.5 s less quiet lead-in), and every hold is 1.9 s or shorter.
+   - **Transitions:** 20 designed transitions. The new ones:
+     - **ripple**: a drop of blood falls into the frame and the rings open the next shot;
+     - **bubble surge**: bubbles sweep up the frame;
+     - the v7 **body-bag zipper**;
+     - the v8 **vertical whip** up to the moon.
+   - **Graphics:**
+     - glass blood slides drifting in soft focus along the edges through the cold open, foreshadowing the archive;
+     - a red **heartbeat pulse** on every beat of the build, with a heartbeat underneath;
+     - **blood runs down from the top edge** on the riff's off-beats, between the spatter hits;
+     - a glow on the moon.
+   - All of these are kept off the face.
+
+### Revision 2 checkpoints
+- **Run 1: 9/10, not shipped.** Text over faces failed: *AND I WONDER* touched his chin on the red desk shot, whose face is big and near the top of the source, so the crop can't lift it. That caption moved down inside the safe band (y 1452/1568, on the laptop lid). Captions now take a per-caption position.
+- **Run 2: 10/10 PASS** after giving QC each text block's real band; it had been assuming every caption fills 1240–1640. The 38 remaining flags were YuNet boxes extending about 200 px below the chin. Checked on frames: the chin is at y≈1220 and the captions start at ≈1400.
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1456 frames (24.27 s), H.264 + AAC, fast-start, 16 Mb/s cap |
+| Loudness after AAC | −13.2 LUFS, true peak −4.1 dBTP |
+| Clicks | 0 at the 18 cuts, the splice and the loop seam |
+| Loop seam picture | under water at both ends: blurred difference 1.30 |
+| Faces | centred in every shot; 0 text-over-face frames |
+| Length | audio and video within 10.7 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4 across the whole edit, the flagged frames and the seam. **Not verified:** watching and listening in real time.

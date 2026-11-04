@@ -21,7 +21,8 @@ def correction(s):
     else:
         face = float(np.percentile(L, 70))
     g = clamp(math.log(s.get("target", 0.40)) / math.log(clamp(face, 0.02, 0.97)), 0.75, 1.30)
-    m = img.reshape(-1, 3).mean(0); gains = np.clip((m.mean() / (m + 1e-6)) ** 0.10, 0.92, 1.08)
+    m = img.reshape(-1, 3).mean(0); wb = s.get("wb", 0.10)
+    gains = np.clip((m.mean() / (m + 1e-6)) ** wb, 1 - 0.8 * wb, 1 + 0.8 * wb)
     CORR[s["n"]] = (g, gains.astype(np.float32)); return CORR[s["n"]]
 
 def grade(img, s, f):
@@ -34,7 +35,7 @@ def grade(img, s, f):
     B_, G_, R_ = x[..., 0], x[..., 1], x[..., 2]
     red = np.clip((R_ - np.maximum(G_, B_)) * 3.2, 0, 1)[..., None]
     L = (x[..., 0] * 0.114 + x[..., 1] * 0.587 + x[..., 2] * 0.299)[..., None]
-    x = L + (x - L) * (0.78 + 0.45 * red)                                             # drained, but blood stays red
+    x = L + (x - L) * (0.78 + 0.45 * red) * (1 - s.get("desat", 0.0))              # drained, but blood stays red
     x = x + (1 - L) ** 2.4 * np.array([0.050, 0.032, -0.012], np.float32)            # deep teal-blue shadows
     x = x + L ** 1.8 * np.array([0.006, 0.010, 0.006], np.float32)                   # bone highlights
     x = x * 0.82 + (x * x * (3 - 2 * x)) * 0.18
@@ -491,8 +492,8 @@ def spatter_hits(out, f):
     if kk > 14 or kb == E.HDROP: return out
     if kb not in _HT:
         rng = np.random.default_rng(kb); m = np.zeros((H, W), np.float32); side = (kb // 4) % 3
-        cx = [rng.uniform(40, 240), rng.uniform(W - 240, W - 40), rng.uniform(200, W - 200)][side]
-        cy = rng.uniform(300, 1250) if side < 2 else rng.uniform(220, 380)
+        cx = [rng.uniform(40, 240), rng.uniform(W - 240, W - 40), (rng.uniform(60, 280) if rng.random() < 0.5 else rng.uniform(W - 280, W - 60))][side]
+        cy = rng.uniform(300, 1250) if side < 2 else rng.uniform(180, 320)
         ang = math.atan2(H * 0.4 - cy, W / 2 - cx) + rng.normal(0, 0.4); r = rng.uniform(16, 26)
         cv2.ellipse(m, (int(cx), int(cy)), (int(r * 1.5), int(r)), math.degrees(ang), 0, 360, 1.0, -1, cv2.LINE_AA)
         for _ in range(int(rng.integers(5, 9))):
@@ -573,9 +574,36 @@ def hero103(out, f, tx):
     out = out * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4]
     return np.clip(out, 0, 1)
 
+def text_cap103(out, f, tx):
+    """the v9 standard caption (keyline, red emphasis, eased words, auto-fit), with a per-caption line position (ys)."""
+    t = f / FPS; words = tx["words"]; t_in = max(words[0][1], tx.get("from", -1))
+    if t < t_in - 0.02 or t > tx["end"] + 0.01: return out
+    big = tx.get("big"); sizes = [92, 120] if big else [88, 114]
+    ys = tx.get("ys") or ((1368, 1492) if big else (1380, 1496))
+    emph = tx.get("emph", []); fr = tx.get("from", -1)
+    a_out = 1 - smooth((t - (tx["end"] - 0.16)) / 0.16)
+    out = out * cap_scrim(ys[0] - 70, ys[1] + 70, 0.34 * a_out * smooth((t - t_in + 0.05) / 0.25))
+    for ln in (0, 1):
+        ws = [(w, max(wt, fr)) for w, wt, l in words if l == ln]
+        if not ws: continue
+        sz = sizes[ln]
+        for _ in range(6):
+            ims = [cap_word(w, sz, w in emph) for w, _ in ws]
+            gap = int(sz * 0.26); widths = [im.shape[1] - 72 for im in ims]
+            tot = sum(widths) + gap * (len(ims) - 1)
+            if tot <= 940: break
+            sz = int(sz * 940 / tot) - 1
+        x = W / 2 - tot / 2
+        for (w, wt), im, wd in zip(ws, ims, widths):
+            v = eout(clamp((t - wt) / 0.17, 0, 1), 2.4)
+            o_im = im if a_out > 0.98 else cv2.GaussianBlur(im, (0, 0), 0.1 + 5 * (1 - a_out))
+            out = ease_word(out, o_im, x + wd / 2, ys[ln] - 14 * (1 - a_out), v, a_out, rise=30)
+            x += wd + gap
+    return out
+
 def text103(out, f):
     for tx in E.TEXT:
-        if tx["style"] == "cap": out = text_cap(out, f, tx)
+        if tx["style"] == "cap": out = text_cap103(out, f, tx)
         elif tx["style"] == "hero": out = hero103(out, f, tx)
     return out
 
@@ -591,6 +619,123 @@ def finish103(out, f):
     out = out + grain(f, 1.0) * (0.012 + 0.020 * L * (1 - L) * 2.5)
     return np.clip(out * VIG, 0, 1)
 
+# ---------------------------------------------------------------------------- rev 2: more graphics + transitions
+_FS = {}
+def slide_sprite(w=300, seed=0):
+    """a glass blood slide as an RGBA sprite: faint glass body, bright edges, frosted label end, a red drop with a highlight."""
+    key = (w, seed)
+    if key in _FS: return _FS[key]
+    h = int(w / 2.8); rng = np.random.default_rng(seed)
+    a = np.full((h, w), 0.30, np.float32); col = np.zeros((h, w, 3), np.float32) + TEAL * 0.45 + BONE * 0.30
+    cv2.rectangle(a, (1, 1), (w - 2, h - 2), 0.95, 3, cv2.LINE_AA); cv2.rectangle(col, (1, 1), (w - 2, h - 2), tuple(float(v) for v in BONE * 0.95), 3, cv2.LINE_AA)
+    fx0 = int(w * 0.78); a[:, fx0:] = np.maximum(a[:, fx0:], 0.55); col[:, fx0:] = BONE * 0.75
+    cx = int(w * rng.uniform(0.25, 0.55)); r = int(h * 0.26)
+    cv2.circle(a, (cx, h // 2), r, 1.0, -1, cv2.LINE_AA); cv2.circle(col, (cx, h // 2), r, tuple(float(v) for v in BLOODC), -1, cv2.LINE_AA)
+    cv2.circle(col, (cx - r // 3, h // 2 - r // 3), max(1, r // 4), tuple(float(v) for v in BONE * 0.8), -1, cv2.LINE_AA)
+    sheen = np.exp(-((np.arange(w)[None, :] - np.arange(h)[:, None] * 1.4 - w * 0.3) / (w * 0.05)) ** 2) * 0.35
+    col = col + sheen[..., None] * BONE; a = np.maximum(a, sheen * 0.6)
+    _FS[key] = np.dstack([np.clip(col, 0, 1), cv2.GaussianBlur(a, (0, 0), 0.8)]).astype(np.float32); return _FS[key]
+
+FLOAT = [  # (side, y0 frac, rise px/s, rot0, spin deg/s, width px, blur)  side -1 = left edge, +1 = right edge
+    (-1, 0.18, 70, 24, 10, 470, 3.0), (1, 0.30, 55, -30, -8, 420, 2.0), (-1, 0.74, 90, -14, 14, 520, 4.0), (1, 0.82, 60, 34, -12, 380, 1.5)]
+def float_slides(out, f):
+    """big glass blood slides drift up past the frame edges in soft focus (near = bigger, blurrier), never over the face;
+    they foreshadow THE ARCHIVE."""
+    t = f / FPS; a0, a1 = E.SLIDES
+    if not (a0 - 0.3 <= t <= a1 + 0.3): return out
+    fade = smooth((t - a0 + 0.3) / 0.6) * (1 - smooth((t - a1) / 0.3))
+    lay = np.zeros((H, W, 4), np.float32)
+    for i, (side, y0, rise, rot0, spin, w, blur) in enumerate(FLOAT):
+        tt = t - a0
+        x = (W * 0.08 if side < 0 else W * 0.92) + side * -18 * math.sin(tt * 0.7 + i)
+        y = y0 * H - rise * tt
+        draw_sprite(lay, slide_sprite(w, i), x, y, 1.0, rot0 + spin * tt, 1.0, blur, fade * 0.85)
+    sh = cv2.GaussianBlur(lay[..., 3], (0, 0), 14)[..., None] * 0.30
+    o = out * (1 - np.roll(sh, 20, 0))
+    return np.clip(o * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4], 0, 1)
+
+_PV = {}
+def pulse_fx(out, f):
+    """a heartbeat: the edges of the frame pulse blood-red on every beat of the build."""
+    t = f / FPS; e = 0.0
+    for kb in E.PULSE_K:
+        k = f - E.fh(kb)
+        if 0 <= k < 16: e = max(e, math.exp(-k / 4.5) * (1.0 if (kb // 2) % 2 == 0 else 0.6))
+    if e < 0.02: return out
+    if "m" not in _PV:
+        r = np.sqrt(((_GX - W / 2) / (W * 0.62)) ** 2 + ((_GY - H * 0.45) / (H * 0.58)) ** 2)
+        _PV["m"] = np.clip((r - 0.55) / 0.6, 0, 1)[..., None] ** 1.6
+    m = _PV["m"] * 0.55 * e
+    return np.clip(out * (1 - m) + (out * 0.3 + BLOODC * 0.9) * m, 0, 1)
+
+_DR = {}
+def drips(out, f):
+    """blood runs down from the top edge on the riff's off-beats (between the spatter hits)."""
+    t = f / FPS; k_ = t / E.HB
+    if not (E.HDROP + 2 <= k_ < E.K_SPL): return out
+    kb = int((k_ - E.HDROP - 2) // 4) * 4 + E.HDROP + 2; kk = f - E.fh(kb)
+    if kk < 0 or kk > 26: return out
+    if kb not in _DR:
+        rng = np.random.default_rng(kb * 3); _DR[kb] = [((rng.uniform(40, 230) if rng.random() < 0.5 else rng.uniform(W - 230, W - 40)), rng.uniform(320, 760), rng.uniform(16, 26)) for _ in range(int(rng.integers(2, 4)))]
+    m = np.zeros((H // 2, W // 2), np.float32)
+    for x, L, w in _DR[kb]:
+        ln = L * eout(kk / 14, 2.0); X = x / 2
+        cv2.line(m, (int(X), 0), (int(X), int(ln / 2)), 1.0, max(1, int(w / 2.6)), cv2.LINE_AA)
+        cv2.circle(m, (int(X), int(ln / 2)), max(2, int(w / 2)), 1.0, -1, cv2.LINE_AA)
+    m = cv2.resize(cv2.GaussianBlur(m, (0, 0), 0.8), (W, H)); a = (1 - smooth((kk - 18) / 8)) * 0.92
+    gx_ = cv2.Sobel(m, cv2.CV_32F, 1, 0, ksize=5); spec = np.clip(-gx_ * 0.6, 0, 1) ** 2 * m
+    mm = m[..., None] * a
+    return np.clip(out * (1 - mm) + BLOODC * 0.95 * mm + spec[..., None] * BONE * 0.5 * a, 0, 1)
+
+_DROPS = {}
+def ripple_tr(A, B, j, f, sa, sb, pre=9, post=16):
+    """a drop of blood falls into the frame as if it were water: it hits, rings run outward refracting the picture, and
+    the next shot opens behind the rings, a red bloom fading in the middle."""
+    cx, cy = W * 0.20, H * 0.76                                                        # off to the side, by his shoulder: never on the face
+    if j < 0:
+        u = (j + pre) / pre; y = -120 + (cy + 120) * ein(u, 1.8)
+        lay = np.zeros((H, W, 4), np.float32); spr = drop_sprite(30)
+        draw_sprite(lay, spr, cx, y, 1.6, 0, 1.0, 0.0, 1.0, 1.0 / (1 + 0.6 * u))
+        o = A * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4]
+        return np.clip(o, 0, 1)
+    v = (j + 1) / post; R = 2100 * eout(v, 1.7)
+    rr = np.sqrt((_GX - cx) ** 2 + ((_GY - cy) * 1.0) ** 2) + 1e-3
+    wav = np.sin((rr - R) / 16.0) * np.exp(-((rr - R) / 110.0) ** 2) * 26 * (1 - v) + np.sin((rr - R * 0.6) / 22.0) * np.exp(-((rr - R * 0.6) / 90.0) ** 2) * 12 * (1 - v)
+    src = B * np.clip((R - rr) / 40, 0, 1)[..., None] + A * (1 - np.clip((R - rr) / 40, 0, 1)[..., None])
+    o = cv2.remap(src, (_GX + (_GX - cx) / rr * wav).astype(np.float32), (_GY + (_GY - cy) / rr * wav).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    hl = np.exp(-((rr - R) / 7.0) ** 2) * (1 - v) + 0.5 * np.exp(-((rr - R * 0.6) / 6.0) ** 2) * (1 - v)
+    bloom = np.exp(-(rr / (120 + 600 * v)) ** 2)[..., None] * (1 - v) ** 1.5
+    o = o * (1 - bloom * 0.7) + BLOODC * bloom * 0.8 + hl[..., None] * BONE * 0.45
+    return np.clip(o, 0, 1)
+
+_BUB = {}
+def bubbles_tr(A, B, j, f, sa, sb, pre=7, post=12):
+    """a surge of rising bubbles sweeps up the frame; the next shot is behind them."""
+    u = clamp((j + pre) / (pre + post), 0, 1); front = H + 260 - (H + 700) * eout(u, 1.5)
+    wob = 40 * np.sin(_GX / 110 + f * 0.3)
+    m = np.clip((_GY - (front + wob)) / 80 + 0.5, 0, 1)[..., None]
+    o = B * m + A * (1 - m)
+    if "p" not in _BUB:
+        rng = np.random.default_rng(91); _BUB["p"] = np.stack([rng.uniform(0, W, 420), rng.uniform(-200, 420, 420), rng.uniform(5, 34, 420), rng.uniform(0, 6.28, 420)], 1)
+    lay = np.zeros((H // 2, W // 2), np.float32); fill = np.zeros((H // 2, W // 2), np.float32)
+    for x, dy, r, ph in _BUB["p"]:
+        y = front + dy - 120 * u; X = x + 10 * math.sin(f * 0.4 + ph)
+        if -40 < y < H + 40:
+            R = max(1, int(r / 2)); cv2.circle(lay, (int(X / 2), int(y / 2)), R, 1.0, max(1, R // 4), cv2.LINE_AA)
+            cv2.circle(fill, (int(X / 2), int(y / 2)), R, 1.0, -1, cv2.LINE_AA)
+            cv2.circle(lay, (int(X / 2 - R * 0.35), int(y / 2 - R * 0.35)), max(1, R // 4), 1.0, -1, cv2.LINE_AA)
+    lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 0.6), (W, H))[..., None]; fill = cv2.resize(fill, (W, H))[..., None]
+    ref = cv2.remap(o, (_GX + 18 * fill[..., 0]).astype(np.float32), (_GY - 22 * fill[..., 0]).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o = o * (1 - fill * 0.6) + ref * fill * 0.6 + fill * TEAL * 0.12 + lay * BONE * 0.75
+    return np.clip(o, 0, 1)
+
+def moon_glow(out, f):
+    L = lum(out); hi = np.clip(L - 0.55, 0, 1)
+    halo = cv2.resize(cv2.GaussianBlur(cv2.resize(hi, (W // 4, H // 4)), (0, 0), 14), (W, H))[..., None]
+    return np.clip(out + halo * (BONE * 0.9 + TEAL * 0.3) * 1.2, 0, 1)
+
+TR2.update({"ripple": (ripple_tr, 9, 16), "bubbles_up": (bubbles_tr, 7, 12)})
+
 # ---------------------------------------------------------------------------- frame
 def base103(s, f):
     if s.get("graphic") == "archive": return archive_frame(f)
@@ -600,7 +745,8 @@ def base103(s, f):
     if s.get("rain"): out = rain_glass(out, f, 0.8, 0.0)
     if s.get("scalpel"): out = scalpel_fx(out, f, s)
     if s.get("pushin"): out = pushin_fx(out, f, s)
-    if s.get("spatter"): out = spatter_hits(out, f)
+    if s.get("moonglow"): out = moon_glow(out, f)
+    if s.get("spatter"): out = drips(spatter_hits(out, f), f)
     return out
 
 _E3 = {}
@@ -622,6 +768,8 @@ def render(f):
     if n_ is not None:
         nt = n_.get("tin")
         if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge103(n_, "first"), kn, f, s, n_)
+    out = float_slides(out, f)
+    out = pulse_fx(out, f)
     out = text103(out, f)
     if s.get("sink"): out = sink_end(out, f, s)
     out = finish103(out, f)

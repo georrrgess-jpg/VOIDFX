@@ -427,8 +427,30 @@ def main():
             place(fx, stereo(heart(-18)), E.ARCH_IN + 0.05); place(fx, stereo(heart(-17)), E.ARCH_IN + 0.55)
             place(fx, stereo(bloop(-20, 785)), t0 - 0.05); place(fx, A2.whoosh(0.5, -22, 786, True), t0)
             place(fx, glass_tinkles(E.ARCH_END - t0, -33, 787), t0 + 0.1)
+        elif tin == "ripple":                                                          # a drop falls into the water
+            place(fx, stereo(drip(-16, 791), -0.4), t0 - 0.13); place(fx, stereo(bloop(-21, 792), -0.3), t0 + 0.01)
+            place(fx, stereo(bubble_burst(0.5, -28, 793, 6), -0.2), t0 + 0.05); place(fx, A2.whoosh(0.45, -27, 794, True), t0 + 0.02)
+        elif tin == "bubbles_up":
+            place(fx, stereo(bubble_burst(0.6, -21, 795, 18)), t0 - 7 / E.FPS); place(fx, A2.whoosh(0.40, -23, 796, True), t0 - 0.10)
+        elif tin == "zipper":                                                          # body bag: zip shut, unzip
+            for k0, dur in ((t0 - 10 / E.FPS, 10 / E.FPS), (t0, 12 / E.FPS)):
+                n_ = I(dur); q = np.arange(n_) / SR; rate = 90 + 160 * q / dur
+                teeth = (np.sin(2 * np.pi * np.cumsum(rate) / SR) > 0.85).astype(np.float32)
+                zz = bq(noise(n_, int(k0 * 100) + 7), "band", np.array([1500, 7000]), 2) * (0.3 + teeth) * np.sin(np.pi * q / dur) ** 0.5
+                place(fx, stereo(norm(zz, -22), 0.2), k0)
+        elif tin == "whip_up":
+            place(fx, A2.whoosh(0.24, -21, 797, True), t0 - 5 / E.FPS)
         elif tin == "through_slide":
             place(fx, stereo(glass_clack(-24, 788)), t0 - 0.02); place(fx, A2.whoosh(0.35, -23, 789, False), t0 - 18 / E.FPS)
+    # rev 2 graphics: a heartbeat under the red pulse, glass ticking on the drifting slides, splats and drips on the riff
+    for kb in E.PULSE_K:
+        if (kb // 2) % 2 == 0: place(fx, stereo(heart(-24 if kb < 40 else -21)), E.th(kb) - 0.01)
+    place(fx, glass_tinkles(E.SLIDES[1] - E.SLIDES[0], -38, 821, 14), E.SLIDES[0])
+    for kb in range(E.HDROP + 4, E.K_SPL, 4):
+        n_ = I(0.14); q = np.arange(n_) / SR
+        sp = bq(noise(n_, 830 + kb), "band", np.array([400, 3000]), 2) * np.exp(-q / 0.035)
+        place(fx, stereo(norm(sp, -30), 0.6 if (kb // 4) % 2 else -0.6), E.th(kb))
+        place(fx, stereo(drip(-31, 840 + kb), -0.5 if (kb // 4) % 2 else 0.5), E.th(kb + 2) + 0.05)
     # the scalpel draws the cut; beads well up
     place(fx, stereo(blade_draw(0.30, -20)), E.T_CUT - 0.10); place(fx, stereo(squelch(0.4, -27, 790)), E.T_CUT + 0.15)
     # text: soft hits on the hero titles' lines
@@ -466,8 +488,8 @@ def main():
     sp = I(E.T_SPLICE); print(f"splice step {np.abs(np.diff(mm[sp - 50:sp + 50])).max():.4f} vs local median {np.median(np.abs(np.diff(mm[sp - 4800:sp + 4800]))):.4f}")
     def lv(a, b):
         x = m[I(a):I(min(b, E.DUR))]; return 20 * np.log10(np.sqrt((x ** 2).mean()) + 1e-9)
-    print("rms: underwater", round(lv(0.0, 1.0), 1), "VO", round(lv(2.0, 3.8), 1), "build", round(lv(5, 10.5), 1), "drop", round(lv(10.7, 15), 1),
-          "hook", round(lv(17, 24.5), 1), "sink", round(lv(25.0, 25.8), 1))
+    print("rms: underwater", round(lv(0.0, 1.0), 1), "VO", round(lv(1.3, 4.0), 1), "build", round(lv(4.2, 9.0), 1), "drop", round(lv(9.2, 13.5), 1),
+          "hook", round(lv(15.6, 23.0), 1), "sink", round(lv(23.5, E.DUR), 1))
 
 if __name__ == "__main__":
     main()
