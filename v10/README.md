@@ -216,4 +216,26 @@ Re-render: `bash tools/build.sh 10 prep audio video qc`
 - The tear was moved off the caption.
 - Every-cut sheets were checked.
 
-REV2_RESULTS
+**Loop seam:** the first rev 2 render showed a picture seam diff of 2.79, because the new edge bolts and sweep fired on frame 0, the rewind's landing. They now start at bar 2, which brings the diff back to 0.39.
+
+**Ship checkpoint (rev 2, measured on the encoded MP4):**
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1498 frames, decodes clean |
+| Loudness | −12.7 LUFS, −3.5 dBTP after AAC |
+| Faces | every shot centred, no failures |
+| Text vs faces | clear; frame 182 flags the tear's glow, not a caption (checked) |
+| Cuts | 17 cuts, 0 audio clicks |
+| Black frames | frame 229 only (the ignite blackout, by design) |
+| Loop seam | picture luma 39.4 → 39.5, diff 0.39; audio −18 dB on both sides of the wrap |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Visual sign-off** (frames from the encoded file):
+- the loop seam (1494 → 3);
+- the slices, arc link and tear;
+- CARRY OFF and its whirlwind;
+- the ignite blackout into the ignition shot;
+- the emblem dive and every hook caption;
+- the logo pass, LET IT HAPPEN, the freeze, the run and the rewind.
