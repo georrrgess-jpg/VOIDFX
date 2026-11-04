@@ -118,6 +118,23 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | The voidfx logo turned blue (UV recolour) | v7 | **Never restyle the logo.** |
 | Plain steel doors for CLOSE | v7 | Make the big text moments **character-themed and detailed** (the rosewood blood-slide box with an engraved brass plate was the fix). |
 | The **text appearance in v8**: thin, wide-tracked sans lyric lines with sodium serif-italic emphasis words, letter-by-letter fades, underlines; big extruded words behind his head; elegant serif-italic script | v8 | That "elegant / editorial" type look didn't land. Go back toward what was praised in v6: bold, high-contrast, two-line captions with a clear designed treatment per moment. Keep script handwriting for at most one hero word. |
+| v9 NIGHT BLOOM overall: *"good… complete"*, but **lacklustre** next to the other builds and Dexter edits in general | v9 | **Go above and beyond.** The petal/moon concept came from the song title, not from Dexter's world, and read soft instead of dark and intense. The montage leaned on quick generic moves (strobe, beam, blinds, roll, smear) with one real set piece (the bloom). Root every concept in Dexter, build at least three signature set pieces, and add more designed text and graphics. See §5a. |
+
+## 5a. Raising the bar (after v9): the pre-build gate
+
+The owner's standard after v9: *"go above and beyond with these edits."* "Technically clean and on time" is not enough; every edit has to **visibly exceed** v6, v7 and v8. Clear this gate **before** the first render:
+
+1. **Concept from Dexter's world.** One sentence, rooted in the character (kill room, plastic, blood slides, tools, the Code, Harry, the Dark Passenger, the victims, the season's villain). The song shapes the rhythm and mood; it doesn't supply the imagery.
+2. **Three or more signature set pieces**, each multi-stage (anticipation, action, payoff), physical, character-themed and with its own layered sound:
+   - one on the drop;
+   - one on the hook;
+   - one on the loop.
+   They're on the level of v7's slide box, plastic burst and zipper, and v8's "Darling," freeze into the falling drop. Quick moves (whips, strobes, flashes) only connect the set pieces; they don't count toward the three.
+3. **Text density and design** on par with v6/v7: dialogue captions, at least two designed title moments that act out their meaning, and type that interacts with the footage (tracked, behind or in front of the matte, physical materials).
+4. **Graphics in every section**, not only the cold open: depth layers, themed overlays (evidence, slides, plastic, blood), beat-synced accents in the montage.
+5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
+6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
+7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
 
 ## 5. What works: craft lessons
 

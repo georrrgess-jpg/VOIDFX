@@ -197,3 +197,20 @@ Run on the encoded MP4.
 - **A/V length:** within one frame.
 
 **Visual sign-off:** frames pulled from the encoded file through the stare, the shutter, the Arthur freeze with its caption, and the bloom into the kill table.
+
+
+## Owner feedback on revision 2
+
+> "I like this edit and I honestly think it's good. It's complete. However, I want you to note that in comparison to your other builds and dexter edits in general this one was lack luster, I want you to go above and beyond with these edits."
+
+**My assessment of why it fell short:**
+- **Concept:** the jasmine-petal and moon idea came from the song title, not from Dexter's world. It looks soft where a Dexter edit should hit dark and hard.
+- **Set pieces:** only one real one (the bloom). The montage relied on quick, generic moves (strobe, beam, blinds, roll, smear, whip).
+- **Text and graphics:** thinner than in v6/v7.
+- **Shots:** three planned shots were lost to the 9:16 crop and replaced with weaker ones.
+
+**What I've recorded:**
+- the binding note in `/CLAUDE.md` ("v9 feedback");
+- a row in the handbook's rejected table;
+- a new **pre-build gate** (`studio/VOIDFX_STUDIO.md` §5a): a concept from Dexter's world, three or more signature set pieces, text and graphics density, a written comparison with v6/v7/v8 before the first render, and ambition in the review passes;
+- the gate in `studio/START_PROMPT.md`.
