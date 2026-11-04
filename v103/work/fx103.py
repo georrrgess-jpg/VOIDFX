@@ -483,30 +483,6 @@ def tape_tr(A, B, j, f, sa, sb, pre=6, post=10):
 TR2.update({"surface": (lambda A, B, j, f, sa, sb: surface_in(B, f, j), 0, int(E.T_SURFACE * FPS) + 20), "wave": (wave_tr, 8, 12),
             "sample": (sample_tr, 8, 24), "tape": (tape_tr, 6, 10), "drop_out": (drop_out, 0, 16), "through_slide": (through_slide, 18, 12)})
 
-# ---------------------------------------------------------------------------- graphics: blood spatter on the riff's downbeats
-_HT = {}
-def spatter_hits(out, f):
-    t = f / FPS; k = kt(t)
-    if not (E.HDROP + 4 <= k < E.K_SPL): return out
-    kb = int((k - E.HDROP) // 4) * 4 + E.HDROP; kk = f - E.fh(kb)
-    if kk > 14 or kb == E.HDROP: return out
-    if kb not in _HT:
-        rng = np.random.default_rng(kb); m = np.zeros((H, W), np.float32); side = (kb // 4) % 3
-        cx = [rng.uniform(40, 240), rng.uniform(W - 240, W - 40), (rng.uniform(60, 280) if rng.random() < 0.5 else rng.uniform(W - 280, W - 60))][side]
-        cy = rng.uniform(300, 1250) if side < 2 else rng.uniform(180, 320)
-        ang = math.atan2(H * 0.4 - cy, W / 2 - cx) + rng.normal(0, 0.4); r = rng.uniform(16, 26)
-        cv2.ellipse(m, (int(cx), int(cy)), (int(r * 1.5), int(r)), math.degrees(ang), 0, 360, 1.0, -1, cv2.LINE_AA)
-        for _ in range(int(rng.integers(5, 9))):
-            a2 = ang + rng.normal(0, 0.35); L = rng.uniform(40, 160)
-            cv2.line(m, (int(cx), int(cy)), (int(cx + L * math.cos(a2)), int(cy + L * math.sin(a2))), 1.0, int(rng.integers(2, 6)), cv2.LINE_AA)
-            cv2.circle(m, (int(cx + (L + 10) * math.cos(a2)), int(cy + (L + 10) * math.sin(a2))), int(rng.integers(3, 8)), 1.0, -1, cv2.LINE_AA)
-        for _ in range(40):
-            a2 = ang + rng.normal(0, 0.9); d = rng.uniform(r, 230)
-            cv2.circle(m, (int(cx + d * math.cos(a2)), int(cy + d * math.sin(a2))), int(max(1, rng.uniform(1, 5) * (1 - d / 260))), 1.0, -1, cv2.LINE_AA)
-        _HT[kb] = cv2.GaussianBlur(m, (0, 0), 0.8)
-    a = (1 if kk < 3 else math.exp(-(kk - 3) / 5)) * 0.92; m = _HT[kb][..., None] * a
-    return np.clip(out * (1 - m) + m * BLOODC * 0.95 + m * (np.roll(_HT[kb], -4, 0) - _HT[kb] > 0.3)[..., None] * 0.25, 0, 1)
-
 # ---------------------------------------------------------------------------- text: v9 standard (captions) + a generic per-letter hero title
 def drop_sprite(r=14):
     h, w = int(r * 3.2), int(r * 2.2); m = np.zeros((h, w), np.float32)
@@ -620,40 +596,6 @@ def finish103(out, f):
     return np.clip(out * VIG, 0, 1)
 
 # ---------------------------------------------------------------------------- rev 2: more graphics + transitions
-_FS = {}
-def slide_sprite(w=300, seed=0):
-    """a glass blood slide as an RGBA sprite: faint glass body, bright edges, frosted label end, a red drop with a highlight."""
-    key = (w, seed)
-    if key in _FS: return _FS[key]
-    h = int(w / 2.8); rng = np.random.default_rng(seed)
-    a = np.full((h, w), 0.30, np.float32); col = np.zeros((h, w, 3), np.float32) + TEAL * 0.45 + BONE * 0.30
-    cv2.rectangle(a, (1, 1), (w - 2, h - 2), 0.95, 3, cv2.LINE_AA); cv2.rectangle(col, (1, 1), (w - 2, h - 2), tuple(float(v) for v in BONE * 0.95), 3, cv2.LINE_AA)
-    fx0 = int(w * 0.78); a[:, fx0:] = np.maximum(a[:, fx0:], 0.55); col[:, fx0:] = BONE * 0.75
-    cx = int(w * rng.uniform(0.25, 0.55)); r = int(h * 0.26)
-    cv2.circle(a, (cx, h // 2), r, 1.0, -1, cv2.LINE_AA); cv2.circle(col, (cx, h // 2), r, tuple(float(v) for v in BLOODC), -1, cv2.LINE_AA)
-    cv2.circle(col, (cx - r // 3, h // 2 - r // 3), max(1, r // 4), tuple(float(v) for v in BONE * 0.8), -1, cv2.LINE_AA)
-    sheen = np.exp(-((np.arange(w)[None, :] - np.arange(h)[:, None] * 1.4 - w * 0.3) / (w * 0.05)) ** 2) * 0.35
-    col = col + sheen[..., None] * BONE; a = np.maximum(a, sheen * 0.6)
-    _FS[key] = np.dstack([np.clip(col, 0, 1), cv2.GaussianBlur(a, (0, 0), 0.8)]).astype(np.float32); return _FS[key]
-
-FLOAT = [  # (side, y0 frac, rise px/s, rot0, spin deg/s, width px, blur)  side -1 = left edge, +1 = right edge
-    (-1, 0.18, 70, 24, 10, 470, 3.0), (1, 0.30, 55, -30, -8, 420, 2.0), (-1, 0.74, 90, -14, 14, 520, 4.0), (1, 0.82, 60, 34, -12, 380, 1.5)]
-def float_slides(out, f):
-    """big glass blood slides drift up past the frame edges in soft focus (near = bigger, blurrier), never over the face;
-    they foreshadow THE ARCHIVE."""
-    t = f / FPS; a0, a1 = E.SLIDES
-    if not (a0 - 0.3 <= t <= a1 + 0.3): return out
-    fade = smooth((t - a0 + 0.3) / 0.6) * (1 - smooth((t - a1) / 0.3))
-    lay = np.zeros((H, W, 4), np.float32)
-    for i, (side, y0, rise, rot0, spin, w, blur) in enumerate(FLOAT):
-        tt = t - a0
-        x = (W * 0.08 if side < 0 else W * 0.92) + side * -18 * math.sin(tt * 0.7 + i)
-        y = y0 * H - rise * tt
-        draw_sprite(lay, slide_sprite(w, i), x, y, 1.0, rot0 + spin * tt, 1.0, blur, fade * 0.85)
-    sh = cv2.GaussianBlur(lay[..., 3], (0, 0), 14)[..., None] * 0.30
-    o = out * (1 - np.roll(sh, 20, 0))
-    return np.clip(o * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4], 0, 1)
-
 _PV = {}
 def pulse_fx(out, f):
     """a heartbeat: the edges of the frame pulse blood-red on every beat of the build."""
@@ -667,25 +609,6 @@ def pulse_fx(out, f):
         _PV["m"] = np.clip((r - 0.55) / 0.6, 0, 1)[..., None] ** 1.6
     m = _PV["m"] * 0.55 * e
     return np.clip(out * (1 - m) + (out * 0.3 + BLOODC * 0.9) * m, 0, 1)
-
-_DR = {}
-def drips(out, f):
-    """blood runs down from the top edge on the riff's off-beats (between the spatter hits)."""
-    t = f / FPS; k_ = t / E.HB
-    if not (E.HDROP + 2 <= k_ < E.K_SPL): return out
-    kb = int((k_ - E.HDROP - 2) // 4) * 4 + E.HDROP + 2; kk = f - E.fh(kb)
-    if kk < 0 or kk > 26: return out
-    if kb not in _DR:
-        rng = np.random.default_rng(kb * 3); _DR[kb] = [((rng.uniform(40, 230) if rng.random() < 0.5 else rng.uniform(W - 230, W - 40)), rng.uniform(320, 760), rng.uniform(16, 26)) for _ in range(int(rng.integers(2, 4)))]
-    m = np.zeros((H // 2, W // 2), np.float32)
-    for x, L, w in _DR[kb]:
-        ln = L * eout(kk / 14, 2.0); X = x / 2
-        cv2.line(m, (int(X), 0), (int(X), int(ln / 2)), 1.0, max(1, int(w / 2.6)), cv2.LINE_AA)
-        cv2.circle(m, (int(X), int(ln / 2)), max(2, int(w / 2)), 1.0, -1, cv2.LINE_AA)
-    m = cv2.resize(cv2.GaussianBlur(m, (0, 0), 0.8), (W, H)); a = (1 - smooth((kk - 18) / 8)) * 0.92
-    gx_ = cv2.Sobel(m, cv2.CV_32F, 1, 0, ksize=5); spec = np.clip(-gx_ * 0.6, 0, 1) ** 2 * m
-    mm = m[..., None] * a
-    return np.clip(out * (1 - mm) + BLOODC * 0.95 * mm + spec[..., None] * BONE * 0.5 * a, 0, 1)
 
 _DROPS = {}
 def ripple_tr(A, B, j, f, sa, sb, pre=9, post=16):
@@ -736,6 +659,88 @@ def moon_glow(out, f):
 
 TR2.update({"ripple": (ripple_tr, 9, 16), "bubbles_up": (bubbles_tr, 7, 12)})
 
+# ---- rev 3: the glass shatters (replaces the knife pass). The frame is a glass slide: a hit low and to the side (never on
+#      the face) cracks it, the cracks race across the glass, and on the beat the shards tumble toward the lens and fall away.
+_GS = {}
+def gshards(cx, cy, seed=73):
+    key = (int(cx), int(cy), seed)
+    if key in _GS: return _GS[key]
+    rng = np.random.default_rng(seed); pts = [(cx, cy)]
+    for i in range(120):
+        r = (rng.random() ** 1.6) * 1500; a = rng.uniform(0, 2 * math.pi)
+        x, y = cx + r * math.cos(a), cy + r * math.sin(a) * 1.3
+        if 0 <= x < W and 0 <= y < H: pts.append((x, y))
+    for x in (0, W - 1):
+        for y in np.linspace(0, H - 1, 8): pts.append((x, y))
+    for y in (0, H - 1):
+        for x in np.linspace(0, W - 1, 6): pts.append((x, y))
+    sd = cv2.Subdiv2D((0, 0, W, H))
+    for p_ in pts: sd.insert((float(min(W - 1, max(0, p_[0]))), float(min(H - 1, max(0, p_[1])))))
+    facets, centers = sd.getVoronoiFacetList([])
+    L = []; cr = np.zeros((H, W), np.uint8)
+    for poly, c in zip(facets, centers):
+        poly = np.array(poly, np.float32); poly[:, 0] = np.clip(poly[:, 0], 0, W - 1); poly[:, 1] = np.clip(poly[:, 1], 0, H - 1)
+        x0, y0 = poly.min(0).astype(int); x1, y1 = poly.max(0).astype(int) + 1
+        if x1 - x0 < 3 or y1 - y0 < 3: continue
+        m = np.zeros((y1 - y0, x1 - x0), np.uint8); cv2.fillPoly(m, [(poly - [x0, y0]).astype(np.int32)], 255, cv2.LINE_AA)
+        d = math.hypot(c[0] - cx, c[1] - cy) + 1
+        L.append(dict(box=(x0, y0, x1, y1), mask=m.astype(np.float32) / 255, c=(float(c[0]), float(c[1])), v=((c[0] - cx) / d, (c[1] - cy) / d),
+                      sp=rng.uniform(0.7, 1.3) * (1.5 - min(1.0, d / 1600)), w=rng.uniform(-16, 16), dz=rng.uniform(0.01, 0.04), delay=d / 1600 * 3.0))
+        if d < 520: cv2.polylines(cr, [poly.astype(np.int32)], True, int(255 * (1 - d / 520) ** 0.7), 1, cv2.LINE_AA)   # shard edges only near the hit
+    for i in range(14):                                                                # thin radial cracks from the hit
+        a = i / 14 * 2 * math.pi + rng.uniform(-0.15, 0.15); r = rng.uniform(600, 2000); q = [(cx, cy)]
+        for j in range(1, 12): rr = r * j / 11; aa = a + rng.uniform(-0.05, 0.05); q.append((cx + rr * math.cos(aa), cy + rr * math.sin(aa)))
+        for j in range(len(q) - 1):
+            cv2.line(cr, tuple(int(v) for v in q[j]), tuple(int(v) for v in q[j + 1]), int(255 * (1 - j / 11) ** 0.6), 2 if j < 3 else 1, cv2.LINE_AA)
+    for R in (40, 85):
+        cv2.circle(cr, (int(cx), int(cy)), R, 200, 1, cv2.LINE_AA)
+    crf = cr.astype(np.float32) / 255
+    dist = np.sqrt((_GX - cx) ** 2 + ((_GY - cy) / 1.3) ** 2)
+    _GS[key] = (L, np.clip(crf * 0.85 + cv2.GaussianBlur(crf, (0, 0), 3) * 0.35, 0, 1), dist); return _GS[key]
+
+def glass_shatter(A, B, j, f, sa, sb, pre=10, post=18):
+    cx, cy = W * 0.26, H * 0.74
+    L, crack, dist = gshards(cx, cy)
+    if j < 0:                                                                          # the hit, and the cracks racing out across the glass
+        u = (j + pre) / pre; R = 1900 * eout(u, 1.6)
+        reveal = np.clip((R - dist) / 60, 0, 1) * crack
+        o = cv2.remap(A, (_GX + reveal * 4).astype(np.float32), (_GY + reveal * 3).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        o = o * (1 - reveal[..., None] * 0.6) + reveal[..., None] * BONE * 0.85
+        hit = np.exp(-dist / (22 + 14 * u))[..., None] * (1 - u * 0.7) * 0.8
+        return np.clip(o + hit * BONE * 0.9, 0, 1)
+    k = j + 1; out = B * (0.6 + 0.4 * clamp(k / 10, 0, 1))
+    for s_ in L:
+        kk = k - s_["delay"]; x0, y0, x1, y1 = s_["box"]
+        if kk <= 0:
+            m = s_["mask"][..., None]; sub = A[y0:y1, x0:x1] * (1 - 0.6 * crack[y0:y1, x0:x1, None]) + BONE * 0.85 * crack[y0:y1, x0:x1, None]
+            out[y0:y1, x0:x1] = out[y0:y1, x0:x1] * (1 - m) + sub * m
+            continue
+        mv = 30 * s_["sp"] * kk ** 1.35; tx, ty = s_["v"][0] * mv, s_["v"][1] * mv + 1.6 * kk * kk
+        sc = 1 + s_["dz"] * kk * 2.5; ang = s_["w"] * kk * 0.4; a = clamp(1 - (kk - 7) / 8, 0, 1)
+        if a <= 0: continue
+        pcx, pcy = s_["c"]; M = cv2.getRotationMatrix2D((pcx, pcy), ang, sc); M[0, 2] += tx; M[1, 2] += ty
+        pad = int(60 + mv * 1.6 + 60 * sc)
+        X0, Y0 = max(0, int(pcx + tx) - (x1 - x0) // 2 - pad), max(0, int(pcy + ty) - (y1 - y0) // 2 - pad)
+        X1, Y1 = min(W, int(pcx + tx) + (x1 - x0) // 2 + pad), min(H, int(pcy + ty) + (y1 - y0) // 2 + pad)
+        if X1 <= X0 or Y1 <= Y0: continue
+        Ms = M.copy(); Ms[0, 2] -= X0; Ms[1, 2] -= Y0; Ms[0, 2] += Ms[0, 0] * x0 + Ms[0, 1] * y0; Ms[1, 2] += Ms[1, 0] * x0 + Ms[1, 1] * y0
+        wi = cv2.warpAffine(A[y0:y1, x0:x1], Ms, (X1 - X0, Y1 - Y0), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
+        wm = cv2.warpAffine(s_["mask"], Ms, (X1 - X0, Y1 - Y0), flags=cv2.INTER_LINEAR, borderValue=0)[..., None] * a
+        edge = cv2.morphologyEx(wm[..., 0], cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8))[..., None]
+        shade = 0.85 + 0.3 * math.sin(math.radians(ang) * 3 + s_["w"])                  # each shard catches the light differently
+        out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - wm) + np.clip(wi * shade * 0.9 + TEAL * 0.06 + edge * BONE * 0.9, 0, 1) * wm
+    if k < 12:                                                                         # a fine red mist bursts from the hit
+        rng = np.random.default_rng(17); lay = np.zeros((H // 2, W // 2), np.float32)
+        for i in range(90):
+            a_ = rng.uniform(-math.pi * 0.95, 0.15); sp = rng.uniform(300, 1300); r_ = rng.uniform(1, 4)
+            x = cx + math.cos(a_) * sp * k / 60; y = cy + math.sin(a_) * sp * k / 60 + 500 * (k / 60) ** 2
+            cv2.circle(lay, (int(x / 2), int(y / 2)), int(r_), 1.0, -1, cv2.LINE_AA)
+        lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 0.8), (W, H))[..., None] * (1 - k / 12)
+        out = out * (1 - lay * 0.9) + BLOODC * lay * 0.9
+    return np.clip(out, 0, 1)
+
+TR2["glass_shatter"] = (glass_shatter, 10, 18)
+
 # ---------------------------------------------------------------------------- frame
 def base103(s, f):
     if s.get("graphic") == "archive": return archive_frame(f)
@@ -746,7 +751,7 @@ def base103(s, f):
     if s.get("scalpel"): out = scalpel_fx(out, f, s)
     if s.get("pushin"): out = pushin_fx(out, f, s)
     if s.get("moonglow"): out = moon_glow(out, f)
-    if s.get("spatter"): out = drips(spatter_hits(out, f), f)
+    # rev 3: no blood drips or spatter overlays (random blood read as clutter)
     return out
 
 _E3 = {}
@@ -768,8 +773,7 @@ def render(f):
     if n_ is not None:
         nt = n_.get("tin")
         if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge103(n_, "first"), kn, f, s, n_)
-    out = float_slides(out, f)
-    out = pulse_fx(out, f)
+    out = pulse_fx(out, f)                                                            # (rev 3: the drifting slides are gone)
     out = text103(out, f)
     if s.get("sink"): out = sink_end(out, f, s)
     out = finish103(out, f)

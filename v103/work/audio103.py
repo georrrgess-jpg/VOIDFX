@@ -409,8 +409,13 @@ def main():
             place(fx, stereo(squelch(0.30, -19, 744)), t0 + 0.02); place(fx, A2.whoosh(0.35, -22, 745, True), t0 + 9 / E.FPS)
         elif tin == "impact":
             place(fx, stereo(A2.impact(-17, (80, 40), 0.3, 1.0, 751)), t0)
-        elif tin == "knife_pass":
-            place(fx, stereo(swish(-18, 0.14, 752), 0.4), t0 - 0.10); place(fx, stereo(metal_shing(-22)), t0)
+        elif tin == "glass_shatter":                                                  # the hit, cracks racing, the glass gives way on the beat
+            place(fx, stereo(glass_clack(-17, 753), -0.4), t0 - 10 / E.FPS)
+            n_ = I(10 / E.FPS); q = np.arange(n_) / SR
+            crk = bq(noise(n_, 754), "band", np.array([2500, 9000]), 2) * (np.random.default_rng(755).random(n_) > 0.93) * (q / q[-1]) ** 0.5
+            place(fx, stereo(norm(crk, -22)), t0 - 10 / E.FPS)
+            place(fx, stereo(A2.impact(-15, (70, 36), 0.35, 1.0, 756)), t0); place(fx, glass_tinkles(0.7, -21, 757, 30), t0)
+            place(fx, A2.whoosh(0.35, -24, 758, True), t0 + 0.02)
         elif tin == "whip":
             place(fx, A2.whoosh(0.22, -21, 753, True), t0 - 5 / E.FPS)
         elif tin == "tape":
@@ -442,15 +447,9 @@ def main():
             place(fx, A2.whoosh(0.24, -21, 797, True), t0 - 5 / E.FPS)
         elif tin == "through_slide":
             place(fx, stereo(glass_clack(-24, 788)), t0 - 0.02); place(fx, A2.whoosh(0.35, -23, 789, False), t0 - 18 / E.FPS)
-    # rev 2 graphics: a heartbeat under the red pulse, glass ticking on the drifting slides, splats and drips on the riff
+    # a heartbeat under the red pulse (rev 3: the slide ticks, splats and drips are gone)
     for kb in E.PULSE_K:
         if (kb // 2) % 2 == 0: place(fx, stereo(heart(-24 if kb < 40 else -21)), E.th(kb) - 0.01)
-    place(fx, glass_tinkles(E.SLIDES[1] - E.SLIDES[0], -38, 821, 14), E.SLIDES[0])
-    for kb in range(E.HDROP + 4, E.K_SPL, 4):
-        n_ = I(0.14); q = np.arange(n_) / SR
-        sp = bq(noise(n_, 830 + kb), "band", np.array([400, 3000]), 2) * np.exp(-q / 0.035)
-        place(fx, stereo(norm(sp, -30), 0.6 if (kb // 4) % 2 else -0.6), E.th(kb))
-        place(fx, stereo(drip(-31, 840 + kb), -0.5 if (kb // 4) % 2 else 0.5), E.th(kb + 2) + 0.05)
     # the scalpel draws the cut; beads well up
     place(fx, stereo(blade_draw(0.30, -20)), E.T_CUT - 0.10); place(fx, stereo(squelch(0.4, -27, 790)), E.T_CUT + 0.15)
     # text: soft hits on the hero titles' lines

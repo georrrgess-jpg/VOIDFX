@@ -145,3 +145,29 @@ The owner's notes, all addressed in one pass:
 | Length | audio and video within 10.7 ms |
 
 **Visual sign-off** was done on frames pulled from the encoded MP4 across the whole edit, the flagged frames and the seam. **Not verified:** watching and listening in real time.
+
+## Revision 3 (owner notes)
+
+1. **"The blood slides stick around in the beginning."** The drifting glass slides along the edges of the cold open are gone, along with their glass-ticking sounds. The slides now appear only where they belong to the story: the slide he holds up and THE ARCHIVE.
+2. **"The random slice and cut with the knife towards the middle … replace that animation."** The knife pass at 11.0 s (a giant blade sweeping across the lens) is replaced by a **glass shatter**, which ties back to the slides:
+   - a crack star hits low on the left, by his shoulder, and thin cracks race out across the frame with a slight refraction;
+   - on the downbeat the picture breaks into shards that blow outward (nearer shards first), spin, fall and fade, revealing the next shot with a faint red mist;
+   - sound: a glass clack, a crackle, the impact and falling tinkles.
+   - The first version drew a heavy white web over his face, so the edges are now thin and fade out within about 500 px of the impact.
+3. **"Get rid of the random blood dripping animations."** The blood runs from the top edge on the riff's off-beats are gone, with their drip sounds.
+4. **Other change:** the blood-spatter hits on the riff's downbeats are also gone. They were random blood too, and one landed on his jaw. The montage keeps its designed transitions (THE SAMPLE, impact, glass shatter, whip, duct tape, logo, zipper) and the beat-cut shots.
+
+Unchanged: the shots, timing, captions, FOREVER title, the three showpieces and the loop.
+
+### Revision 3 checkpoint: 10/10 PASS on the first run
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1456 frames (24.27 s), H.264 + AAC, fast-start, 16 Mb/s cap |
+| Loudness after AAC | −13.2 LUFS, true peak −4.1 dBTP |
+| Clicks | 0 at the 18 cuts and the splice; loop seam clean by the QC rule |
+| Loop seam picture | under water at both ends: blurred difference 1.30 |
+| Faces | centred in every shot; 0 text-over-face frames (4 low-placed detections checked on frames: the captions sit below the chin) |
+| Length | audio and video within 10.7 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4: the whole cold open (no slides), the drop and montage (no drips or spatter), the glass shatter frame by frame, the near-black frames 295–296 (the intended blackout before the lamp switches on), the rest of the edit and the seam. The dead code for the removed effects was deleted afterwards, and the output was checked pixel-identical. **Not verified:** watching and listening in real time.

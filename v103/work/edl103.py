@@ -63,11 +63,11 @@ shot("overhead", "p8", 26, 34, 31.70, tin="lamp_on", face=None, cx=(640, 640), z
 shot("kitchen", "p8", 34, 40, 111.25, tin="light_sweep", z=[(0, 1.02), (1, 1.10)], target=0.40)
 shot("lean", "p9", 40, 48, 104.45, tin="wrap", z=[(0, 1.02), (1, 1.12)], scalpel=True)
 # ---- the drop: THE SAMPLE -> the montage on the riff (a move every 4 half-beats)
-shot("drill", "p9", 48, 54, 180.25, tin="sample", z=[(0, 1.10), (1, 1.02)], spatter=True)
-shot("menace", "p8", 54, 58, 347.30, tin="impact", z=[(0, 1.00), (1, 1.06)], spatter=True)
-shot("knife", "p9", 58, 62, 178.30, tin="knife_pass", z=[(0, 1.02), (1, 1.08)], spatter=True)
-shot("torch", "p9", 62, 66, 185.40, tin="whip", z=[(0, 1.00), (1, 1.06)], spatter=True)
-shot("lookup", "p8", 66, 72, 355.40, tin="tape", z=[(0, 1.00), (1, 1.08)], spatter=True)
+shot("drill", "p9", 48, 54, 180.25, tin="sample", z=[(0, 1.10), (1, 1.02)])
+shot("menace", "p8", 54, 58, 347.30, tin="impact", z=[(0, 1.00), (1, 1.06)])
+shot("knife", "p9", 58, 62, 178.30, tin="glass_shatter", z=[(0, 1.02), (1, 1.08)])
+shot("torch", "p9", 62, 66, 185.40, tin="whip", z=[(0, 1.00), (1, 1.06)])
+shot("lookup", "p8", 66, 72, 355.40, tin="tape", z=[(0, 1.00), (1, 1.08)])
 # ---- over the splice (under the logo) -> "And I wonder" -> THE ARCHIVE -> THE GULF STREAM (loop)
 shot("drive", "p8", 72, 77, 316.10, tin="logo_orig", z=[(0, 1.00), (1, 1.06)])
 shot("smirk", "p8", 77, 82, 283.32, tin="zipper", z=[(0, 1.00), (1, 1.08)])
@@ -94,7 +94,6 @@ T_SPLASH = s2e(218.36) - 0.55                       # the bag hits the water (as
 ARCH_IN = th(101)                                   # the push into the slide's drop
 ARCH_FLY = th(104)                                  # out of the red into the corridor (on "If")
 ARCH_END = th(116)                                  # a slide rushes the lens; through it, the boat
-SLIDES = (th(10), th(48))                           # glass slides drift through the cold open (foreground depth layer)
 PULSE_K = list(range(18, 48, 2))                    # a heartbeat pulse on every beat of the build
 CHOPS = []
 
@@ -118,7 +117,7 @@ CAP_Y = (1380, 1496)
 # ---- engine knobs (older-engine compatibility)
 CAPS = []; END_CAP = []; DROP_TITLE = None; VANISH_T0 = None; CLOSE_T = None
 MONTAGE = (HDROP, K_SPL)
-ACCENTS = [th(k) for k in range(HDROP, K_SPL, 4)]   # the riff's downbeats (spatter hits); drips on the off-beats
+ACCENTS = [th(k) for k in range(HDROP, K_SPL, 4)]   # the riff's downbeats
 
 if __name__ == "__main__":
     prev = 0
