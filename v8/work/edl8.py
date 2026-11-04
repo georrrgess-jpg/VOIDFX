@@ -58,9 +58,9 @@ def shot(n, src, t0, t1, a, b, **kw):
 # ---- act 1: the lead-in ("ooh, ooh, yeah") — the rear-view mirror, the drive, the walk
 shot("mirror", "p8", th(64), th(70), 311.00, 312.30, z=[(0, 1.00), (1, 1.06)], tin="mirror_in", rain=True)
 shot("street", "p8", th(70), th(80), 2.10, 4.30, z=[(0, 1.04), (1, 1.12)], tin="light_sweep", face=None, cx=(600, 760), rain=True)
-shot("garden", "p5", th(80), th(88), 0, 0, tmap=[(0, 30.95), (0.62, 31.52), (1, 33.10)], z=[(0, 1.00), (1, 1.10)], tin="wiper", interp="flow", ev=-0.55)
+shot("kit", "p8", th(80), th(88), 2.20, 2.21, z=[(0, 1.0), (1, 1.0)], tin="wiper", graphic="knife_roll", face=None, cx=(640, 640))   # the kill kit on the passenger seat (graphic)
 # ---- act 2: the beat returns — "pick me up, don't know if it's what I need, but it's what I want, God, look out for me"
-shot("lights", "p8", th(88), th(97), 230.75, 232.70, z=[(0, 1.00), (1, 1.08)], tin="headlights", seg=True, face_x=0.33)
+shot("lights", "p8", th(88), th(97), 230.75, 232.70, z=[(0, 1.00), (1, 1.08)], tin="knife_pass", seg=True, face_x=0.33)
 shot("glove", "p1", th(97), th(100), 101.78, 102.44, z=[(0, 1.00), (1, 1.06)], tin="whip")
 shot("fence", "p5", th(100), th(104), 49.10, 49.98, z=[(0, 1.02), (1, 1.08)], tin="facematch", interp="flow")
 shot("rapture", "p1", th(104), th(111), 133.96, 135.12, z=[(0, 1.00), (1, 1.10)], tin="light_leak", interp="flow", seg=True, ev=-0.35)

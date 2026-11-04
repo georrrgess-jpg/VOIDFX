@@ -33,8 +33,8 @@ Dexter's night drive to the kill, scored like a toxic love song: the R&B hook be
 |---|---|---|
 | 0.00 | **Rear-view mirror** in a dark car: rain on the windshield, night-city bokeh, a streetlight comes up on his eyes | **push into the mirror** |
 | 1.30 | South Beach at night | **streetlight sweep**: the cut hides in a passing light band (car pass-by) |
-| 3.48 | Walking through the night garden. **Speed ramp**: 0.5× flow slow-mo on true-60 fps footage, then 2.4× into the beat | **windshield wiper** clears the rain off the next shot (thunk, squeak) |
-| 5.22 | **Beat returns.** Under a streetlight: **PICK / ME / UP** stacked behind him (MODNet cutout, tracked to his head, off-centre framing) | **headlights** rush the lens and flare (pass-by, riser, hit) |
+| 3.48 | **The kill kit on the passenger seat** (an animated graphic): a leather knife roll unrolls, and streetlight glints run up a blade on each *"ooh" / "ooh" / "yeah"* | **windshield wiper** clears the rain to reveal it (thunk, squeak; leather, knives settling, steel rings) |
+| 5.22 | **Beat returns.** Under a streetlight: **PICK / ME / UP** slides out from behind his head (MODNet cutout, tracked, extruded, light sweep) | **the knife pass**: he draws the chef's knife from the roll, it whips out of frame and swings back across the lens as a giant mirror blade. Its polished steel reflects the next shot, and the cut happens behind its edge with a glint down the blade on the beat (steel scrape, whooshes, a long steel ring and sub hit) |
 | 7.17 | Gloving up at night. DON'T KNOW IF IT'S / WHAT I *NEED* | **whip pan** |
 | 7.82 | Behind the chain-link | **face-match** |
 | 8.69 | The kill-room rapture, head back. BUT IT'S WHAT I + a huge serif ***WANT*** behind his head | **sodium light leak** |
@@ -147,3 +147,21 @@ python3 -m demucs -n htdemucs --two-stems=vocals -o v8/audio/sep v8/audio/p8_ope
 **Limitations:**
 - **I can't watch or listen.** Everything was verified by frames and measurement. Watch once with sound before posting.
 - **Song quality:** the song comes from a phone screen recording of a YouTube upload, so its quality is whatever that recording captured. A clean copy of the track would raise it. Swap it in as `src/wish_you_well_rec.wav` (same timing from 0:00) and re-run `build.sh 8 audio video qc`.
+
+
+## Revision 2 (user feedback)
+
+- **Removed:** the headlights (two bright dots) and the night-garden shot whose speed ramp made Dexter look like he stumbled.
+- **New animated sequence in that slot: the kill kit and the knife pass.** It is built entirely in code:
+  - **The knife roll:** rosewood-brown leather with stitching and straps, five different knives (boning, slicer, chef's, paring, cleaver) with brushed steel, bevels and riveted handles.
+  - **The reveal:** the windshield wiper uncovers the roll on the passenger seat, and it unrolls with a rolled-up cylinder and its shadow.
+  - **The glints:** passing streetlights glint up a blade on each *ooh / ooh / yeah*.
+  - **The pass:** the chef's knife is drawn and swings across the lens as a giant mirror blade (9-sample motion blur), hiding the cut on the beat drop.
+- **Text, redesigned:**
+  - **Lyrics:** every letter eases in with a stagger (fade, rise, blur-to-sharp) and drifts out letter by letter. Emphasis words (*NEED*, *GOD,*) are sodium-gradient serif italic, with a light sweep and an underline that draws itself.
+  - **PICK / ME / UP:** each word slides out from behind his head, extruded, with a soft cast shadow and a light sweep.
+  - ***WANT*:** a red gradient fill, extrusion and a light sweep.
+  - ***Darling,*:** written on with ink that settles from soft to sharp and a wet highlight. A calligraphic swash draws beneath it, and **the comma swells into a drop of blood, lets go, and becomes the falling drop** (now larger), which hits the water on the drop.
+  - **I DON'T WISH YOU / WELL:** each word slams in white-hot and cools, with a shock ring, while a thin rule grows as the line builds. ***WELL* fills with blood** from the bottom with a moving meniscus, then drips run from the letters.
+- **Per-letter type** is set on a shared baseline, so apostrophes and commas sit correctly. The first attempt centred each glyph and broke the apostrophes; review caught it.
+- **Knife-pass review:** the first passes showed the next shot on the wrong side of the blade, stepped motion blur, a ghostly translucent blade, and a glint that outlined the whole knife. They were fixed by sweeping in from off-frame, using 9 blur samples, a steel-tinted inverted reflection with polish streaks, and a glint along the cutting edge only.

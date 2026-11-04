@@ -261,9 +261,17 @@ def main():
             n_ = I(0.30); q = np.arange(n_) / SR
             sq = np.sin(2 * np.pi * np.cumsum(900 + 500 * np.sin(np.pi * q / 0.3)) / SR) * 0.25 + bq(noise(n_, 303), "band", np.array([1500, 5000]), 2) * 0.6
             place(fx, stereo(norm(sq * np.sin(np.pi * q / 0.30) ** 0.6, -27), 0.3), t0 - 6 / E.FPS)
-        elif tin == "headlights":                                    # the beat returns: a car roars past, headlight flare hit
-            place(fx, pass_by(1.0, -18, 304), t0 - 0.62)
-            place(fx, A2.riser(0.35, -24), t0 - 0.35); place(fx, stereo(A2.impact(-15, (70, 35), 0.35, 0.5, 305)), t0)
+        elif tin == "knife_pass":                                    # the beat returns: the knife is drawn, whips out, swings across
+            n_ = I(0.32); q = np.arange(n_) / SR                                       # draw: steel scraping out of leather
+            scr = bq(noise(n_, 400), "band", np.array([2500, 9000]), 2) * np.sin(np.pi * q / 0.32) ** 0.7
+            ring = sum(np.sin(2 * np.pi * fq * q) * np.exp(-q / d) for fq, d in ((2350, 0.25), (3720, 0.18), (5900, 0.12)))
+            place(fx, stereo(norm(scr + 0.35 * ring, -24), 0.3), t0 - 28 / E.FPS)
+            place(fx, A2.whoosh(0.16, -24, 401, True), t0 - 16 / E.FPS)                 # whips out of frame
+            place(fx, A2.whoosh(0.22, -18, 402, False), t0 - 9 / E.FPS)                 # the swing
+            n_ = I(1.3); q = np.arange(n_) / SR                                        # the hit: a long steel ring + sub
+            hit = sum(a_ * np.sin(2 * np.pi * fq * q) * np.exp(-q / d) for fq, a_, d in ((1830, 1.0, 0.55), (2911, 0.7, 0.40), (4420, 0.5, 0.28), (6890, 0.3, 0.15)))
+            place(fx, stereo(norm(hit * np.minimum(1, q / 0.002), -20), -0.2), t0)
+            place(fx, stereo(A2.impact(-14, (68, 34), 0.40, 0.5, 403)), t0)
         elif tin == "whip": place(fx, A2.whoosh(0.22, -21, 306, True), t0 - 0.10)
         elif tin == "facematch": place(fx, A2.whoosh(0.30, -24, 307, False), t0 - 0.14); place(fx, stereo(A2.impact(-25, (85, 45), 0.18, 0.4, 308)), t0)
         elif tin == "light_leak": place(fx, stereo(chord_swell(-30, 0.8, (440, 554.37, 659.25))), t0 - 0.12); place(fx, A2.whoosh(0.35, -27, 309, True), t0 - 0.15)
@@ -297,6 +305,17 @@ def main():
         elif tin == "slam":                                          # one hit per syllable of "I don't wish you well"
             i_ = E.SHOTS.index(s_); pan = 0.5 if i_ % 2 else -0.5
             place(fx, stereo(A2.impact(-21 if s_["n"] != "well" else -16, (90, 48), 0.12, 0.6, 330 + i_), pan * 0.4), t0)
+    # ---- the kill kit: leather unrolls, knives settle, a steel ring as the streetlight glints up each blade
+    for s_ in E.SHOTS:
+        if s_.get("graphic") == "knife_roll":
+            t0 = s_["t0"]; n_ = I(0.6); q = np.arange(n_) / SR
+            lea = bq(noise(n_, 410), "band", np.array([300, 3000]), 2) * (0.6 + 0.4 * (np.random.default_rng(411).random(n_) > 0.8)) * np.sin(np.pi * q / 0.6) ** 0.8
+            place(fx, stereo(norm(lea, -25), -0.3), t0 + 0.04)
+            for k_ in range(5): place(fx, stereo(A2.tick(-31, 412 + k_), -0.6 + 0.3 * k_), t0 + 0.12 + 0.09 * k_)
+            for k_, tg in enumerate((17.52, 18.04, 18.56)):
+                n_ = I(0.9); q = np.arange(n_) / SR; fq0 = (3150, 2650, 3550)[k_]
+                tg_ = sum(a_ * np.sin(2 * np.pi * fq0 * r_ * q) * np.exp(-q / d) for r_, a_, d in ((1.0, 1.0, 0.35), (1.51, 0.5, 0.22), (2.33, 0.3, 0.12)))
+                place(fx, stereo(norm(tg_ * np.minimum(1, q / 0.002), -31), (-0.5, 0.5, 0.0)[k_]), E.s2e(tg))
     # ---- graphics / text: the freeze click on "Darling," + pen scratch; the drop's slow fall + heartbeat; the end
     dt = E.DARLING_T
     place(fx, stereo(shutter_ticks(-22, 2, 0.05, 340)), dt - 0.02); place(fx, stereo(glass_chime(-30)), dt + 0.02)
@@ -306,6 +325,10 @@ def main():
     for k_ in range(10):
         n_ = I(0.05); place(fx, stereo(norm(bq(noise(n_, 351 + k_), "band", np.array([2500, 8000]), 2) * np.sin(np.pi * np.arange(n_) / n_), -38), -0.4 + 0.08 * k_), tv + 0.02 + k_ * 0.075)
     d0 = T["drop"]["t0"]; d1 = T["drop"]["t1"]
+    n_ = I(0.45); q = np.arange(n_) / SR                                               # the drop swells on the comma ... and lets go
+    visc = np.sin(2 * np.pi * np.cumsum(180 + 120 * q / 0.45) / SR) * 0.3 * np.sin(np.pi * q / 0.45)
+    place(fx, stereo(norm(visc, -36)), d0)
+    place(fx, stereo(drip(-24, 415)[I(0.13):]), d0 + 26 / E.FPS)
     n_ = I(d1 - d0); q = np.arange(n_) / SR; u = q / (d1 - d0)
     fall = np.sin(2 * np.pi * np.cumsum(420 - 300 * u ** 1.5) / SR) * 0.2 * u ** 2 + bq(noise(n_, 360), "band", np.array([200, 1200]), 2) * u ** 3 * 0.5
     place(fx, stereo(norm(fall, -28)), d0)

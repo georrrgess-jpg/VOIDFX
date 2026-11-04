@@ -4634,7 +4634,9 @@ def text8(out, f, s, person):
             lines = sorted({l for _, _, l in ws}); ys = (1385, 1490) if len(lines) > 1 else (1440,)
             for ln, y in zip(lines, ys):
                 out = lyric_line(out, f, [(w, wt) for w, wt, l in ws if l == ln], y, tx["emph"], tx["end"], tx.get("quick_out", False))
-        elif st_ == "script": out = script_text(out, f, tx)
+        elif st_ == "script":
+            if s.get("dropfall") and tx["words"][0][0].startswith("Darling"): continue
+            out = script_text(out, f, tx)
         elif st_ == "hook": out = hook_text(out, f, tx)
     return out
 
@@ -4648,18 +4650,448 @@ def finish8(out, f):
     out = np.maximum(out, 0.018 + out * 0.0)                                            # keep a floor in the blacks
     return np.clip(out * (0.82 + 0.18 * VIG) + grain(f, 0.016), 0, 1)
 
+def shot_first(S_):
+    if S_.get("graphic") == "knife_roll": return knife_roll_scene(S_["f0"], S_)
+    return render_shot(S_, S_["f0"], False)
+
 def last_visible(P):
     fr = P["f1"] - 1
+    if P.get("graphic") == "knife_roll": return knife_roll_scene(fr, P)
     if P.get("dropfall"):
         img = render_shot(P, fr); return drop_fall(img, fr, P)
     return last_frame_of(P)
+
+
+# ============================================================================ v8 rev 2 — the kill kit, the knife pass, richer type
+STEEL = np.array([0.62, 0.60, 0.58], np.float32)
+LEATHER = np.array([0.06, 0.11, 0.21], np.float32)
+_KS = {}
+def knife_sprite(kind):
+    """RGBA + blade mask of one knife, vertical, tip up (canvas 200 x 1000; blade y 40..620, handle 620..980)."""
+    if kind in _KS: return _KS[kind]
+    Wk, Hk = 200, 1000; cx = 100
+    spec = {"chef": (124, 40, 1.6), "boning": (62, 120, 1.25), "cleaver": (156, 150, 6.0), "slicer": (84, 30, 2.2), "paring": (74, 300, 1.4)}[kind]
+    bw, y_tip, sh = spec
+    yb = 620; ts = np.linspace(0, 1, 160)
+    ys = y_tip + (yb - y_tip) * ts
+    xl = cx - bw / 2 + 0.15 * bw * (1 - ts) ** 2.0
+    xr = cx + bw / 2 - 0.85 * bw * (1 - ts) ** sh
+    if kind == "cleaver": xl = np.full_like(ts, cx - bw / 2); xr = np.full_like(ts, cx + bw / 2); ys[0] = y_tip
+    poly = np.int32(np.vstack([np.stack([xl, ys], 1), np.stack([xr[::-1], ys[::-1]], 1)]))
+    bm = np.zeros((Hk, Wk), np.float32); cv2.fillPoly(bm, [poly], 1.0, cv2.LINE_AA)
+    yy, xx = np.mgrid[0:Hk, 0:Wk].astype(np.float32)
+    rng = np.random.default_rng(len(kind) * 31)
+    brushed = cv2.GaussianBlur(rng.random((Hk, Wk)).astype(np.float32), (0, 0), sigmaX=0.6, sigmaY=14)
+    xr_y = np.interp(yy[:, 0], ys, xr)[:, None]; xl_y = np.interp(yy[:, 0], ys, xl)[:, None]
+    rel = np.clip((xx - xl_y) / np.maximum(xr_y - xl_y, 1), 0, 1)                    # 0 spine .. 1 edge
+    shade = 0.55 + 0.35 * np.exp(-((rel - 0.38) / 0.28) ** 2) + 0.10 * (brushed - 0.5)
+    bevel = np.clip((rel - 0.80) / 0.20, 0, 1)
+    env = 0.75 + 0.35 * np.exp(-((yy - 260) / 120) ** 2) - 0.25 * np.exp(-((yy - 470) / 70) ** 2)   # sky/street reflection bands
+    col = STEEL[None, None, :] * (shade * env)[..., None] + bevel[..., None] * 0.22 + np.array([0.06, 0.03, -0.01], np.float32) * (1 - rel)[..., None]
+    edge = np.exp(-((xx - xr_y) / 1.6) ** 2) * (yy > y_tip) * (yy < yb)
+    col = col + edge[..., None] * 0.45
+    rgba = np.zeros((Hk, Wk, 4), np.float32)
+    rgba[..., :3] = col * bm[..., None]; rgba[..., 3] = bm
+    hw = int(bw * 0.38 + 10) if kind != "cleaver" else 30
+    hm = np.zeros((Hk, Wk), np.float32); cv2.rectangle(hm, (cx - hw, 650), (cx + hw, 975), 1.0, -1); hm = cv2.GaussianBlur(hm, (0, 0), 2)
+    hsh = 0.04 + 0.10 * np.exp(-((xx - (cx - hw * 0.3)) / (hw * 0.5)) ** 2)
+    rgba[..., :3] = rgba[..., :3] * (1 - hm[..., None]) + np.dstack([hsh, hsh, hsh * 1.1]) * hm[..., None]
+    rgba[..., 3] = np.maximum(rgba[..., 3], hm)
+    bol = np.zeros((Hk, Wk), np.float32); cv2.rectangle(bol, (cx - hw - 4, 618), (cx + hw + 4, 652), 1.0, -1)
+    rgba[..., :3] = rgba[..., :3] * (1 - bol[..., None]) + (STEEL * 0.95)[None, None, :] * bol[..., None]; rgba[..., 3] = np.maximum(rgba[..., 3], bol)
+    for ry in (720, 820, 920):
+        cv2.circle(rgba, (cx, ry), 8, (0.75, 0.74, 0.72, 1.0), -1, cv2.LINE_AA)
+    _KS[kind] = (rgba, bm, (edge * bm).astype(np.float32)); return _KS[kind]
+
+KIT = ["boning", "slicer", "chef", "paring", "cleaver"]
+ROLL = (70, 430, 1010, 1470)
+def _slot_x(i): return ROLL[0] + (ROLL[2] - ROLL[0]) * (i + 0.5) / 5
+
+_KR = {}
+def roll_textures():
+    if "seat" not in _KR:
+        rng = np.random.default_rng(5)
+        weave = cv2.GaussianBlur(rng.random((H, W)).astype(np.float32), (0, 0), 0.8)
+        seat = np.array([0.07, 0.055, 0.05], np.float32) * (0.75 + 0.45 * weave[..., None])
+        for y in (300, 1650): cv2.line(seat, (0, y), (W, y + 40), (0.03, 0.025, 0.025), 6, cv2.LINE_AA)
+        x0, y0, x1, y1 = ROLL
+        lea = LEATHER * (0.80 + 0.35 * cv2.resize(rng.random((60, 34)).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC)[..., None])
+        lea = lea * (0.92 + 0.12 * cv2.GaussianBlur(rng.random((H, W)).astype(np.float32), (0, 0), 1.2)[..., None])
+        m = np.zeros((H, W), np.float32); cv2.rectangle(m, (x0, y0), (x1, y1), 1.0, -1)
+        dash = np.zeros((H, W), np.float32)
+        for k in range(x0 + 26, x1 - 26, 22): cv2.line(dash, (k, y0 + 24), (k + 12, y0 + 24), 1.0, 2, cv2.LINE_AA); cv2.line(dash, (k, y1 - 24), (k + 12, y1 - 24), 1.0, 2, cv2.LINE_AA)
+        for i in range(1, 5):
+            xs = int(x0 + (x1 - x0) * i / 5)
+            for k in range(y0 + 40, y1 - 40, 22): cv2.line(dash, (xs, k), (xs, k + 12), 1.0, 2, cv2.LINE_AA)
+        lea = lea + dash[..., None] * np.array([0.35, 0.45, 0.55], np.float32) * 0.55
+        _KR.update(seat=seat.astype(np.float32), lea=lea.astype(np.float32), m=m)
+    return _KR["seat"], _KR["lea"], _KR["m"]
+
+def knife_roll_scene(f, s):
+    """the kill kit on the passenger seat: the roll unrolls, streetlights glint up the blades on each 'ooh'."""
+    k = f - s["f0"]; seat, lea, m = roll_textures(); x0, y0, x1, y1 = ROLL
+    X = x0 + (x1 - x0 + 120) * eout(clamp((k - 2) / 34, 0, 1), 2.2)                  # unroll front
+    rev = np.clip((X - _GX) / 3, 0, 1) * m
+    o = seat * (1 - rev[..., None]) + lea * rev[..., None]
+    cut_f = s["f1"]; lift0 = cut_f - 28
+    for i, kind in enumerate(KIT):
+        if i == 2 and f >= lift0: continue                                              # the chef's knife is in his hand now
+        sp = knife_sprite(kind)[0]; cx = _slot_x(i); top = y0 + 50
+        M = np.float32([[1, 0, cx - 100], [0, 1, top - 40]])
+        lay = cv2.warpAffine(sp, M, (W, H), borderValue=(0, 0, 0, 0)); a = lay[..., 3:4] * rev[..., None]
+        sh = cv2.GaussianBlur(lay[..., 3], (0, 0), 7)[..., None] * rev[..., None] * 0.55
+        o = o * (1 - np.roll(np.roll(sh, 12, 0), 10, 1)) * (1 - a) + lay[..., :3] * a
+        strap = np.zeros((H, W), np.float32); cv2.rectangle(strap, (int(cx - 70), 1120), (int(cx + 70), 1175), 1.0, -1)
+        strap = strap * rev
+        o = o * (1 - strap[..., None]) + strap[..., None] * LEATHER * 1.25
+    gt = [E.s2e(17.52), E.s2e(18.04), E.s2e(18.56)]                                     # "ooh" "ooh" "yeah"
+    for gi, (tg, ki) in enumerate(zip(gt, (0, 4, 2))):
+        kk = (f / FPS - tg) * FPS
+        if not (0 <= kk < 16) or (ki == 2 and f >= lift0): continue
+        bm0 = knife_sprite(KIT[ki])[1]; M = np.float32([[1, 0, _slot_x(ki) - 100], [0, 1, y0 + 10]])
+        bm = cv2.warpAffine(bm0, M, (W, H), borderValue=0) * rev
+        pos = 1450 - 1100 * eout(kk / 14, 2)
+        band = np.exp(-(((_GY - pos) + (_GX - _slot_x(ki)) * 0.6) / 40) ** 2) * bm
+        o = o + band[..., None] * WARMW * 0.85
+        if kk < 10:
+            ty = int(y0 + 50 + 30); tx_ = int(_slot_x(ki) - 30)
+            star = np.zeros((H, W), np.float32); a_ = 1 - kk / 10
+            cv2.line(star, (tx_ - 60, ty), (tx_ + 60, ty), 1.0, 2, cv2.LINE_AA); cv2.line(star, (tx_, ty - 60), (tx_, ty + 60), 1.0, 2, cv2.LINE_AA)
+            o = o + cv2.GaussianBlur(star, (0, 0), 2)[..., None] * WARMW * a_ * 1.4
+    if X < x1 + 100:                                                                    # the rolled-up leather, still unrolling
+        cyl = np.exp(-((_GX - X) / 48) ** 2) * ((_GY > y0 - 10) & (_GY < y1 + 10))
+        shade = 0.45 + 0.75 * np.clip(1 - np.abs(_GX - X + 14) / 48, 0, 1)
+        o = o * (1 - cyl[..., None]) + LEATHER[None, None, :] * (shade * cyl)[..., None] * 1.3
+        shadow = np.clip(1 - (_GX - X - 30) / 90, 0, 1) * (_GX > X + 20) * ((_GY > y0) & (_GY < y1))
+        o = o * (1 - shadow[..., None] * 0.5)
+    o = sweeps(o, f, 0.9, phase=0.05)
+    if f >= lift0:                                                                      # depth of field as the knife comes up
+        dv = smooth((f - lift0) / 20)
+        o = o * (1 - 0.45 * dv) + cv2.GaussianBlur(o, (0, 0), 1 + 8 * dv) * 0.45 * dv
+    return np.clip(o, 0, 1)
+
+def knife_pose(j, pre=28, post=14):
+    """the chef's knife: lifts out of the roll (j -28..-16), whips out of frame right (-16..-9), then swings back across the
+    lens as a giant mirror blade, crossing centre on the beat (j = 0)."""
+    if j < -16:
+        u = smooth((j + 28) / 12); return _slot_x(2), 760 - 140 * u, 1.0 + 0.5 * u, -15 * u
+    if j < -9:
+        u = ein((j + 16) / 7, 2.2); return _slot_x(2) + (W * 1.55 - _slot_x(2)) * u, 620 + 120 * u, 1.5 + 1.2 * u, -15 - 27 * u
+    u = clamp((j + 9) / (9 + post), 0, 1)
+    x = np.interp(u, [0, 0.25, 0.40, 0.55, 1.0], [W * 1.55, W * 0.95, W * 0.50, W * 0.05, -W * 1.2])
+    return x, 740 + 260 * u, 2.7 + 0.5 * u, -42 - 6 * u
+
+def knife_pass(A, B, j, f, sa, sb, pre=28, post=14):
+    sp, spb, spe = knife_sprite("chef"); samples = []
+    for d in np.linspace(-0.45, 0.45, 9):                                               # motion blur: 9 sub-frame samples
+        cx, cy, sc, ang = knife_pose(j + d, pre, post)
+        M = cv2.getRotationMatrix2D((100, 330), ang, sc); M[0, 2] += cx - 100; M[1, 2] += cy - 330
+        samples.append((M, np.dstack([cv2.warpAffine(sp, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0)),
+                                      cv2.warpAffine(spb, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)])))
+    lay = sum(s_[1] for s_ in samples) / len(samples); M = samples[4][0]
+    cx, cy, sc, ang = knife_pose(j, pre, post)
+    ax = M[:, :2] @ np.array([0.0, 1.0]); ax = ax / (np.linalg.norm(ax) + 1e-9); nrm = np.array([-ax[1], ax[0]])
+    if nrm[0] < 0: nrm = -nrm                                                            # normal pointing right: the swept side
+    pc = M @ np.array([100.0, 330.0, 1.0])
+    d = (_GX - pc[0]) * nrm[0] + (_GY - pc[1]) * nrm[1]
+    passed = np.clip((d - 60) / 20, 0, 1) * (1.0 if j >= -9 else 0.0)                 # behind the swinging blade
+    o = A * (1 - passed[..., None]) + B * passed[..., None]
+    bm = lay[..., 4:5]; al = lay[..., 3:4]
+    refl = zoom_about(cv2.flip(B, -1), W / 2, H / 2, 1.5)                                # a polished blade: inverted, magnified reflection
+    refl = cv2.GaussianBlur(refl, (0, 0), 1.8); Lr = lum8(refl)[..., None]
+    refl = (Lr * 0.75 + refl * 0.25) * np.array([1.05, 1.0, 0.92], np.float32)          # steel-tinted
+    bands = 0.5 + 0.5 * np.cos((_GX * 0.6 + _GY * 0.8) / 55.0 + j * 0.9)                # anisotropic polish streaks
+    blade = lay[..., :3] * 0.55 + refl * 0.45 * bm + (bands[..., None] * 0.18 - 0.05) * bm
+    knife_rgb = lay[..., :3] * (1 - bm) + blade * bm / np.maximum(al, 1e-3) * al
+    shadow = cv2.GaussianBlur(al[..., 0], (0, 0), 30)[..., None] * 0.45
+    o = o * (1 - np.roll(np.roll(shadow, 40, 0), 30, 1)) * (1 - al) + knife_rgb
+    hit = math.exp(-((j + 0.3) / 2.2) ** 2)                                             # the beat: a glint runs down the edge
+    if hit > 0.02:
+        edge = np.clip(cv2.GaussianBlur(cv2.warpAffine(spe, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=0), (0, 0), 1.2) * 3, 0, 1)   # the cutting edge only
+        st = cv2.GaussianBlur(cv2.resize(edge, (W // 8, H // 8), interpolation=cv2.INTER_AREA), (0, 0), sigmaX=30, sigmaY=1.2); st = cv2.resize(st, (W, H)) * 9
+        o = o + (edge[..., None] * WARMW + st[..., None] * (SODIUM * 0.6 + WARMW * 0.4)) * hit
+    return np.clip(o, 0, 1)
+
+TR2["knife_pass"] = (knife_pass, 28, 14)
+
+# ---- richer type --------------------------------------------------------------------------------------
+_LT = {}
+def letter_set(word, fp, size, track):
+    """per-letter masks on a shared baseline: (pen origins, masks, mask x-offsets of the origin, total advance)."""
+    key = (word, fp, size, track)
+    if key in _LT: return _LT[key]
+    fnt = font(fp, size); asc, desc = fnt.getmetrics(); Hc = asc + desc + 24
+    xs, ims, offs = [], [], []; x = 0.0
+    for c in word:
+        adv = fnt.getlength(c)
+        if c == " ": x += adv + track; continue
+        bx0, by0, bx1, by1 = fnt.getbbox(c); ox = 12 - min(0, bx0)
+        im = Image.new("L", (int(max(bx1, adv) - min(0, bx0) + 24), Hc), 0); ImageDraw.Draw(im).text((ox, 12), c, font=fnt, fill=255)
+        xs.append(x); ims.append(np.asarray(im).astype(np.float32) / 255); offs.append(ox); x += adv + track
+    _LT[key] = (xs, ims, offs, x - track); return _LT[key]
+
+def letters_paste(out, word, fp, size, track, col, cx, cy, k, t_from_end=None, stagger=1.3, glow=None, fill=None, rise=22, a_all=1.0):
+    """draw a word letter by letter (shared baseline): each letter fades + rises + sharpens with a stagger; optional exit."""
+    xs, ims, offs, wd = letter_set(word, fp, size, track); x0 = cx - wd / 2
+    for i, (xo, m, ox) in enumerate(zip(xs, ims, offs)):
+        v = eout((k - i * stagger + 1) / 10, 3)
+        if v <= 0.001: continue
+        ex = 1.0; dy = 0.0
+        if t_from_end is not None and t_from_end > 0:
+            e_ = clamp((t_from_end - i * 0.8) / 7, 0, 1); ex = 1 - e_; dy = -14 * e_
+        if ex <= 0.001: continue
+        mm = m if v >= 1 else cv2.GaussianBlur(m, (0, 0), 0.1 + 4.5 * (1 - v))
+        pad = 24; mp = np.pad(mm, pad); hh, ww = mp.shape
+        L = np.zeros((hh, ww, 4), np.float32)
+        c = col if fill is None else fill(hh, ww)
+        L[..., :3] = c * mp[..., None]
+        sh = cv2.GaussianBlur(mp, (0, 0), 7) * 0.75; L[..., 3] = np.maximum(mp, sh)
+        L[..., :3] = L[..., :3] * (mp[..., None] / np.maximum(L[..., 3:4], 1e-4))
+        if glow is not None:
+            g = cv2.GaussianBlur(mp, (0, 0), 12) * 0.5; L[..., :3] += glow * g[..., None] * (1 - mp[..., None]); L[..., 3] = np.maximum(L[..., 3], g)
+        out = paste(out, L, int(x0 + xo - ox - pad), int(cy - hh / 2 + rise * (1 - v) + dy), v * ex * a_all)
+    return out
+
+def sodium_fill(hh, ww):
+    y = np.linspace(0, 1, hh, dtype=np.float32)[:, None, None]
+    return np.clip(SODIUM * (1.15 - 0.45 * y) + WARMW * 0.15 * (1 - y), 0, 1) * np.ones((1, ww, 1), np.float32)
+
+def lyric_line(out, f, words, y, emph, t_out, quick=False):
+    """each word letter by letter; emphasis words in sodium serif italic with a light sweep and an underline that draws."""
+    t = f / FPS; sp = 34; specs = []
+    for w, wt in words:
+        if w in emph: specs.append((w, wt, F_SERIF_BI, 104, 1, True))
+        else: specs.append((w, wt, F_WIDE, 66, 9, False))
+    widths = [letter_set(w, fp, sz, tr)[3] for w, _, fp, sz, tr, _ in specs]
+    vs = [eout(((t - wt) * FPS + 1) / 11, 3) for _, wt, _, _, _, _ in specs]
+    total = sum((wd + sp) * v for wd, v in zip(widths, vs)) - sp * (vs[-1] if vs else 0)
+    x = W / 2 - total / 2; tend = (t - t_out) * FPS
+    for (w, wt, fp, sz, tr, em), wd, v in zip(specs, widths, vs):
+        k = (t - wt) * FPS
+        if k >= -1:
+            te_ = tend * (2.5 if quick else 1.0) if tend > 0 else None
+            if em:
+                out = letters_paste(out, w, fp, sz, tr, None, x + wd / 2, y, k, te_, 1.6, SODIUM, sodium_fill)
+                if 4 < k < 20:                                                          # light sweep across the word
+                    sx = x - 40 + (wd + 80) * (k - 4) / 16; band = np.exp(-(((_GX - sx) + (_GY - y) * 0.3) / 18) ** 2) * (np.abs(_GY - y) < 55)
+                    out = np.clip(out + band[..., None] * WARMW * 0.55, 0, 1)
+                ul = wd * eout(clamp((k - 6) / 12, 0, 1), 3) * (1 if te_ is None else clamp(1 - te_ / 6, 0, 1))
+                if ul > 2: cv2.line(out, (int(x), int(y + 50)), (int(x + ul), int(y + 50)), tuple(float(c) for c in SODIUM), 3, cv2.LINE_AA)
+            else:
+                out = letters_paste(out, w, fp, sz, tr, WARMW * 0.97, x + wd / 2, y, k, te_, 1.2)
+        x += (wd + sp) * v
+    return out
+
+def behind_text(out, f, s, tx, person):
+    """big words set behind Dexter's cutout: each slides out from behind his head to its place, extruded, with a light
+    sweep when it lands; a single word (WANT) grows behind him with a red gradient."""
+    t = f / FPS; ws = tx["words"]; t_out = tx["end"]
+    if not (ws[0][1] - 0.05 <= t < t_out + 0.2) or person is None: return out
+    fs = face_scr(s, f); fx, fy = (fs[0], fs[1]) if fs else (W / 2, H * 0.37)
+    lay = out.copy(); fade = 1.0 if t < t_out else clamp(1 - (t - t_out) * FPS / 8, 0, 1)
+    def extruded(L, depth=8, col=None):
+        base = np.zeros_like(L); acc = np.zeros_like(L)
+        for dd in range(depth, 0, -2):
+            sh = np.roll(np.roll(L, dd, 0), dd, 1).copy(); sh[..., :3] = (col if col is not None else np.array([0.05, 0.03, 0.10], np.float32)) * (0.5 + 0.5 * (1 - dd / depth))
+            acc = acc * (1 - sh[..., 3:4]) + sh * sh[..., 3:4]; acc[..., 3:4] = np.maximum(acc[..., 3:4], sh[..., 3:4])
+        acc[..., :3] = acc[..., :3] * (1 - L[..., 3:4]) + L[..., :3] * L[..., 3:4]; acc[..., 3:4] = np.maximum(acc[..., 3:4], L[..., 3:4])
+        return acc
+    if len(ws) == 1:
+        w, wt, _ = ws[0]; k = (t - wt) * FPS
+        m = text_mask(w, F_SERIF_BI, 330); pad = 30; mm = np.pad(m, pad); hh, ww = mm.shape
+        g = np.linspace(0, 1, hh, dtype=np.float32)[:, None, None]
+        L = np.zeros((hh, ww, 4), np.float32); L[..., :3] = (BLOODR * (0.65 + 0.7 * (1 - g)) + WARMW * 0.08 * (1 - g)) * mm[..., None]; L[..., 3] = mm
+        if 6 < k < 26:
+            sx = (k - 6) / 20 * (ww + 200) - 100; L[..., :3] += np.exp(-((np.arange(ww)[None, :] - sx + np.arange(hh)[:, None] * 0.4) / 30) ** 2)[..., None] * mm[..., None] * 0.5
+        L = extruded(L, 10, np.array([0.02, 0.01, 0.18], np.float32))
+        v = eout((k + 1) / 14, 3); sc = 1 + 0.25 * (1 - v)
+        Ls = cv2.resize(L, (int(L.shape[1] * sc), int(L.shape[0] * sc)))
+        if v < 1: Ls = cv2.GaussianBlur(Ls, (0, 0), 0.1 + 5 * (1 - v))
+        lay = paste(lay, Ls, int(W / 2 + (fx - W / 2) * 0.25 - Ls.shape[1] / 2), int(fy - 40 - Ls.shape[0] / 2 + 60 * (1 - v)), v * fade)
+    else:
+        side = 1 if fx < W / 2 else -1; ys = [fy - 200 + 205 * i for i in range(len(ws))]
+        for (w, wt, _), yy in zip(ws, ys):
+            k = (t - wt) * FPS
+            if k < -1: continue
+            em = w in tx["emph"]
+            m = text_mask(w, F_HEAVY, 250 if em else 210, tracking=4); pad = 30; mm = np.pad(m, pad); hh, ww = mm.shape
+            L = np.zeros((hh, ww, 4), np.float32); L[..., :3] = ((BLOODR * 0.95 + WARMW * 0.05) if em else WARMW * 0.95) * mm[..., None]; L[..., 3] = mm
+            if 8 < k < 26:
+                sx = (k - 8) / 18 * (ww + 200) - 100
+                L[..., :3] += np.exp(-((np.arange(ww)[None, :] - sx + np.arange(hh)[:, None] * 0.4) / 26) ** 2)[..., None] * mm[..., None] * 0.6
+            L = extruded(L, 9)
+            v = eout((k + 1) / 13, 3); hw = (ww - 60) / 2
+            xt = clamp(W / 2 + side * W * 0.21, hw + 40, W - hw - 40); xc = fx + (xt - fx) * v          # slides out from behind his head
+            if v < 1: L = hblur(L, 2 + 50 * (1 - v))
+            sh = np.zeros_like(L); sh[..., 3] = cv2.GaussianBlur(L[..., 3], (0, 0), 14) * 0.55
+            lay = paste(lay, sh, int(xc - ww / 2 + 18), int(yy - hh / 2 + 26), fade * clamp(v * 2, 0, 1))
+            lay = paste(lay, L, int(xc - ww / 2), int(yy - hh / 2), fade * clamp(v * 2, 0, 1))
+    p = np.clip(person * 1.15, 0, 1)[..., None]
+    return lay * (1 - p) + out * p
+
+def comma_geom():
+    """where the comma of 'Darling,' ends on screen (the blood drop forms there)."""
+    if "comma" in _TY: return _TY["comma"]
+    m = text_mask("Darling,", F_SERIF_BI, 150, tracking=2); pad = 34; mm = np.pad(m, pad); hh, ww = mm.shape
+    cols = np.nonzero(mm.sum(0) > 0.5)[0]; right = cols[cols > ww * 0.85]
+    sub = mm[:, right.min():right.max() + 1]; ys_, xs_ = np.nonzero(sub > 0.5)
+    tip = (right.min() + xs_[ys_.argmax()], ys_.max())
+    tx = [t for t in E.TEXT if t["style"] == "script" and t["words"][0][0].startswith("Darling")][0]
+    yc = (tx["band"][0] + tx["band"][1]) / 2
+    _TY["comma"] = (W / 2 - ww / 2 + tip[0], yc - hh / 2 + tip[1]); return _TY["comma"]
+
+def flourish(out, f, x0, x1, y, p, col, a=1.0):
+    """a calligraphic swash drawn under a word (p 0..1)."""
+    if p <= 0: return out
+    ts = np.linspace(0, p, max(2, int(120 * p)))
+    xs = x0 + (x1 - x0) * ts; ys = y + 18 * np.sin(ts * math.pi * 1.0) - 26 * ts ** 3 + 10 * np.sin(ts * 9) * (1 - ts)
+    lay = np.zeros((H, W), np.float32)
+    for i in range(len(ts) - 1):
+        th_ = 1 + 4.5 * math.sin(math.pi * ts[i] / max(p, 1e-3) * 0.999) if p > 0 else 1
+        cv2.line(lay, (int(xs[i]), int(ys[i])), (int(xs[i + 1]), int(ys[i + 1])), 1.0, max(1, int(th_)), cv2.LINE_AA)
+    lay = cv2.GaussianBlur(lay, (0, 0), 0.8)
+    return np.clip(out * (1 - lay[..., None] * a) + lay[..., None] * col * a, 0, 1)
+
+def script_text(out, f, tx):
+    """serif-italic write-on: a warm pen nib draws the words; ink settles from soft to sharp; 'Darling,' gets a swash."""
+    t = f / FPS; (w, wt, _) = tx["words"][0]; t_out = tx["end"]
+    if not (wt - 0.05 <= t < t_out + 0.25): return out
+    big = w.startswith("Darling"); size = 150 if big else 108; col = (BLOODR * 0.85 + WARMW * 0.15) if big else WARMW * 0.96
+    key = ("scr", w)
+    if key not in _TY:
+        m = text_mask(w, F_SERIF_I if not big else F_SERIF_BI, size, tracking=2); pad = 34; _TY[key] = np.pad(m, pad)
+    mm = _TY[key]; hh, ww = mm.shape
+    dur = 0.55 if big else 0.75; p = clamp((t - wt) / dur, 0, 1); px = ww * (0.06 + 0.94 * eout(p, 1.4))
+    dist = px - np.arange(ww)[None, :]
+    rev = np.clip(dist / 26, 0, 1); fresh = np.clip(1 - dist / 140, 0, 1) * (dist > 0)   # freshly written ink is soft
+    vis_sharp = mm * rev; vis_soft = cv2.GaussianBlur(mm, (0, 0), 3.5) * rev
+    vis = vis_sharp * (1 - fresh) + np.maximum(vis_sharp, vis_soft * 1.1) * fresh
+    fade = 1.0 if t < t_out else clamp(1 - (t - t_out) * FPS / 12, 0, 1)
+    L = np.zeros((hh, ww, 4), np.float32); sh = cv2.GaussianBlur(vis, (0, 0), 9) * 0.8
+    L[..., :3] = col * vis[..., None]; L[..., 3] = np.maximum(vis, sh)
+    L[..., :3] = L[..., :3] * (vis[..., None] / np.maximum(L[..., 3:4], 1e-4))
+    if big:
+        g = cv2.GaussianBlur(vis, (0, 0), 16) * 0.6; L[..., :3] += BLOODR * g[..., None] * (1 - vis[..., None]); L[..., 3] = np.maximum(L[..., 3], g)
+        gy = np.linspace(0, 1, hh, dtype=np.float32)[:, None, None]                   # wet highlight on the top of the letters
+        L[..., :3] += WARMW * 0.25 * np.clip(0.35 - gy, 0, 1) * vis[..., None]
+    y = (tx.get("band", (1300, 1560))[0] + tx.get("band", (1300, 1560))[1]) / 2
+    x0 = int(W / 2 - ww / 2); y0 = int(y - hh / 2 + 10 * (1 - eout(p, 2)))
+    band = np.exp(-((_GY - y) / (hh * 0.9)) ** 2)[..., None] * 0.55 * fade * eout(clamp((t - wt) / 0.25, 0, 1), 2)
+    out = out * (1 - band)
+    out = paste(out, L, x0, y0, fade)
+    if big:                                                                              # the swash under "Darling,"
+        q = clamp((t - wt - dur * 0.85) / 0.45, 0, 1)
+        out = flourish(out, f, x0 + ww * 0.12, x0 + ww * 0.80, y0 + hh * 0.86, eout(q, 2), BLOODR * 0.85 + WARMW * 0.1, fade)
+    if p < 1:                                                                           # the pen nib
+        cols = np.nonzero(mm[:, int(min(ww - 1, px))] > 0.3)[0]
+        if len(cols):
+            ny = y0 + int(cols.mean()); nx = x0 + int(px)
+            nib = np.exp(-(((_GX - nx) / 10) ** 2 + ((_GY - ny) / 10) ** 2))[..., None]
+            out = np.clip(out + nib * WARMW * 0.9 + cv2.GaussianBlur(nib[..., 0], (0, 0), 14)[..., None] * SODIUM * 0.6, 0, 1)
+    return out
+
+def blood_fill_word(out, word, size, cx, cy, k, a=1.0):
+    """WELL fills with blood from the bottom (wavy meniscus), then drips run from the letters."""
+    key = ("bw", word, size)
+    if key not in _TY:
+        m = text_mask(word, F_SERIF_BI, size); pad = 40; mm = np.pad(m, ((pad, 160), (pad, pad))); _TY[key] = mm
+    mm = _TY[key]; hh, ww = mm.shape; xs = np.arange(ww)[None, :]; ys = np.arange(hh)[:, None]
+    lvl = hh - 160 - (hh - 160) * eout(clamp(k / 12, 0, 1), 2) + 8 * np.sin(xs / 22 + k * 0.6)
+    filled = mm * np.clip((ys - lvl) / 3, 0, 1)
+    outline = np.clip(mm - cv2.erode(mm, np.ones((5, 5), np.uint8)), 0, 1)
+    L = np.zeros((hh, ww, 4), np.float32)
+    gy = np.clip((ys - (hh - 160) * 0.2) / ((hh - 160) * 0.8), 0, 1)[..., None]
+    blood = np.array([0.03, 0.02, 0.48], np.float32) * (1 - gy) * 0.4 + np.array([0.06, 0.05, 0.78], np.float32) * (0.6 + 0.4 * gy)
+    L[..., :3] = blood * filled[..., None] + WARMW * 0.9 * outline[..., None] * (1 - filled[..., None])
+    L[..., 3] = np.maximum(filled, outline * 0.95)
+    if k > 10:                                                                          # drips
+        rng = np.random.default_rng(3); cols = np.nonzero(mm[:hh - 160].sum(0) > 2)[0]
+        for xd in rng.choice(cols, 5, replace=False):
+            yb = np.nonzero(mm[:hh - 160, xd] > 0.5)[0]
+            if not len(yb): continue
+            y0 = yb.max(); Ld = min(150, (k - 10) * rng.uniform(4, 9)); wdt = int(rng.integers(5, 10))
+            cv2.line(L, (int(xd), int(y0)), (int(xd), int(y0 + Ld)), (0.05, 0.04, 0.62, 1.0), wdt, cv2.LINE_AA)
+            cv2.circle(L, (int(xd), int(y0 + Ld)), wdt, (0.05, 0.04, 0.70, 1.0), -1, cv2.LINE_AA)
+    hl = np.exp(-((ys - lvl - 6) / 4) ** 2) * filled * (k < 14)
+    L[..., :3] += WARMW * 0.5 * hl[..., None]
+    g = cv2.GaussianBlur(L[..., 3], (0, 0), 14) * 0.45; G = np.zeros_like(L); G[..., :3] = BLOODR; G[..., 3] = g
+    out = paste(out, G, int(cx - ww / 2), int(cy - (hh - 160) / 2), a)
+    v = eout((k + 1) / 5, 3); sc = 1 + 0.35 * (1 - v)
+    Ls = L if sc <= 1.001 else cv2.resize(L, (int(ww * sc), int(hh * sc)))
+    return paste(out, Ls, int(cx - Ls.shape[1] / 2), int(cy - (hh - 160) * sc / 2), a)
+
+def hook_text(out, f, tx):
+    """I DON'T WISH YOU — each word slams in on its syllable (white-hot then cooling, a shock ring); WELL fills with blood."""
+    t = f / FPS; t_out = tx["end"]
+    if not (tx["words"][0][1] - 0.03 <= t < t_out + 0.1): return out
+    fade = 1.0 if t < t_out else clamp(1 - (t - t_out) * FPS / 5, 0, 1)
+    row = [(w, wt) for w, wt, l in tx["words"] if l == 0]
+    sets = [letter_set(w, F_HEAVY, 92, 5) for w, _ in row]; gap = 30
+    total = sum(s_[3] for s_ in sets) + gap * (len(sets) - 1); x = W / 2 - total / 2; y = 1320
+    for (w, wt), st_ in zip(row, sets):
+        wd = st_[3]; k = (t - wt) * FPS
+        if k >= -1:
+            heat = math.exp(-max(k, 0) / 4); col = WARMW * (1 - heat) + np.array([1.0, 1.0, 1.0], np.float32) * heat
+            out = letters_paste(out, w, F_HEAVY, 92, 5, col, x + wd / 2, y, k * 2.2, None, 0.6, SODIUM if heat > 0.2 else None, None, 30, fade)
+            if 0 <= k < 10:
+                r = 40 + 26 * k; ring = np.exp(-((np.sqrt((_GX - (x + wd / 2)) ** 2 + ((_GY - y) * 1.8) ** 2) - r) / 3) ** 2)
+                out = np.clip(out + ring[..., None] * SODIUM * 0.5 * (1 - k / 10) * fade, 0, 1)
+        x += wd + gap
+    rule = clamp(sum(1 for _, wt in row if t >= wt) / max(1, len(row)), 0, 1)        # a thin rule grows as the line builds
+    rw = total * eout(rule, 2);
+    if rw > 2: cv2.line(out, (int(W / 2 - rw / 2), 1378), (int(W / 2 + rw / 2), 1378), tuple(float(c) * fade for c in SODIUM * 0.8), 2, cv2.LINE_AA)
+    wl = [(w, wt) for w, wt, l in tx["words"] if l == 1]
+    if wl and t >= wl[0][1] - 0.02:
+        out = blood_fill_word(out, wl[0][0], 230, W / 2, 1480, (t - wl[0][1]) * FPS, fade)
+    return out
+
+def drop_fall(out, f, s):
+    """the comma of 'Darling,' swells into a drop of blood, lets go, and falls in slow motion with Dexter refracted inside;
+    the camera pushes toward it."""
+    k = f - s["f0"]; n = s["f1"] - s["f0"]
+    tx = [t for t in E.TEXT if t["style"] == "script" and t["words"][0][0].startswith("Darling")][0]
+    out = script_text(out, f, tx)                                                       # the word lives in this layer here
+    cx, cy0 = comma_geom(); yS = DROP_Y
+    det = 26; u = clamp((k - det) / max(1, n - det), 0, 1)
+    fade = clamp(k / 30, 0, 1)
+    base = out * (1 - 0.72 * fade)
+    if k < det:                                                                         # swelling at the comma, stretching
+        g = eout(k / det, 2); r = 8 + 34 * g; y = cy0 + 10 + 38 * g; st = 1 + 0.9 * g
+    else:
+        r = 42 + 14 * u; y = cy0 + 48 + (yS - cy0 - 48) * ein(u, 2.3); st = 1.6 - 0.5 * u
+    o = base.copy(); xx = _GX - cx; yy = _GY - y
+    dn = np.sqrt((xx / r) ** 2 + (yy / (r * 1.06)) ** 2)
+    tl = r * 1.6 * st
+    tail = (yy < 0) & (yy > -tl) & (np.abs(xx) < r * np.clip((yy + tl) / tl, 0, 1) ** 1.4)
+    if k < det:                                                                         # still attached: a neck back to the comma
+        neck = (_GY > cy0 - 4) & (_GY < y) & (np.abs(xx) < 3 + 4 * (1 - k / det))
+        tail = tail | neck
+    inside = cv2.GaussianBlur(((dn < 1) | tail).astype(np.float32), (0, 0), 0.9)
+    nxm = np.clip(xx / r, -1, 1); nym = np.clip(yy / r, -1, 1)
+    mx = (W / 2 - nxm * 520).astype(np.float32); my = (H * 0.38 - nym * 640).astype(np.float32)
+    ref = cv2.remap(out, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    body = ref * np.array([0.45, 0.42, 1.05], np.float32) * 0.95 + np.array([0.10, 0.08, 0.80], np.float32) * 0.12
+    edge = np.clip(dn - 0.75, 0, 1)[..., None] * 0.6
+    o = o * (1 - inside[..., None]) + (body * (1 - edge) + BLOODR * 0.3 * edge) * inside[..., None]
+    hi = np.exp(-(((xx + r * 0.35) / (r * 0.18)) ** 2 + ((yy + r * 0.40) / (r * 0.28)) ** 2))[..., None]
+    o = o + hi * WARMW * 0.85 * inside[..., None]
+    surf = np.exp(-((_GY - yS - r) / 5) ** 2)[..., None] * np.exp(-((_GX - cx) / 420) ** 2)[..., None]
+    o = o + surf * WARMW * 0.08 * u
+    z = 1 + 0.55 * ein(u, 1.8)                                                          # push in on the impact point
+    if z > 1.001:
+        o = zoom_about(o, cx, yS, z)
+        o = o * (1 - 0.0)
+    return np.clip(o, 0, 1)
+
+DROP_X, DROP_Y = comma_geom()[0], 1790.0                                           # the drop lands under the comma
 
 # ============================================================================ v8 frame
 def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999; t = f / FPS
     P = prev_shot(s); tin = s.get("tin"); tout = s.get("tout")
     person = None
-    if s.get("seg"): out, person = render_shot(s, f, want_mask=True)
+    if s.get("graphic") == "knife_roll": out = knife_roll_scene(f, s)
+    elif s.get("seg"): out, person = render_shot(s, f, want_mask=True)
     else: out = render_shot(s, f)
     if s.get("sweeps"): out = sweeps(out, f, 0.8)
     if s.get("rain"): out = rain_glass(out, f, 0.7, 0.0)
@@ -4671,7 +5103,7 @@ def render(f):
     elif tin in TR2 and k < TR2[tin][2] and P is not None: out = TR2[tin][0](last_visible(P), out, k, f, P, s)
     if n_ is not None:
         nt = n_.get("tin")
-        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, render_shot(n_, n_["f0"], False), kn, f, s, n_)
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, shot_first(n_), kn, f, s, n_)
     if tout == "mirror_out": out = mirror_out(out, f, s)
     out = text8(out, f, s, person)
     out = finish8(out, f)
