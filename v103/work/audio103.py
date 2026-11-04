@@ -403,10 +403,22 @@ def main():
             place(fx, stereo(plastic_crinkle(0.45, -21, 741), -0.2), t0 - 6 / E.FPS)
         elif tin == "light_sweep":
             place(fx, A2.whoosh(0.30, -25, 742, True), t0 - 7 / E.FPS)
-        elif tin == "sample":                                                          # HERO: the slide slams on the drop
-            place(fx, A2.riser(0.7, -23), t0 - 0.7)
-            place(fx, stereo(glass_clack(-13)), t0); place(fx, stereo(A2.impact(-12, (55, 28), 0.6, 0.3, 743)), t0)
-            place(fx, stereo(squelch(0.30, -19, 744)), t0 + 0.02); place(fx, A2.whoosh(0.35, -22, 745, True), t0 + 9 / E.FPS)
+        elif tin == "strobe":
+            place(fx, stereo(strobe_zap(-23, 801)), t0 - 3 / E.FPS); place(fx, stereo(strobe_zap(-26, 802)), t0 + 2 / E.FPS)
+        elif tin == "plastic_rip":                                                     # HERO (rev 4): the plastic is pulled taut, then tears open on the drop
+            a0, a1 = T[E.SHOTS[E.SHOTS.index(s_) - 1]["n"]]["plastic"]
+            place(fx, stereo(plastic_crinkle(a1 - a0, -24, 803), -0.2), a0); place(fx, A2.riser(0.8, -24), t0 - 0.8)
+            n_ = I(0.55); q = np.arange(n_) / SR; rng_ = np.random.default_rng(804)
+            tear = bq(noise(n_, 805), "band", np.array([400, 6000]), 2) * (rng_.random(n_) > 0.35) * np.exp(-q / 0.18) * np.minimum(1, q / 0.004)
+            place(fx, stereo(norm(tear, -14)), t0 - 0.01)
+            place(fx, stereo(A2.impact(-12, (55, 28), 0.6, 0.3, 806)), t0); place(fx, A2.whoosh(0.35, -22, 807, True), t0 + 4 / E.FPS)
+        elif tin == "roll":
+            place(fx, A2.whoosh(0.40, -21, 808, True), t0 - 8 / E.FPS); place(fx, stereo(A2.impact(-24, (90, 50), 0.15, 0.8, 809)), t0)
+        elif tin in ("photo", "photo_l"):                                               # the ring flash fires; the photo is tossed aside
+            place(fx, stereo(flash_pop(-17, 810 + int(t0))), t0 - 0.16); place(fx, stereo(click(-21, 811)), t0 - 0.01)
+            place(fx, A2.whoosh(0.30, -24, 812 + int(t0), True), t0 + 5 / E.FPS)
+        elif tin == "shutter":                                                          # a camera shutter snaps shut and open
+            place(fx, stereo(shutter_ticks(-21, 3, 0.025, 813)), t0 - 5 / E.FPS); place(fx, stereo(click(-19, 814)), t0 - 0.01)
         elif tin == "impact":
             place(fx, stereo(A2.impact(-17, (80, 40), 0.3, 1.0, 751)), t0)
         elif tin == "glass_shatter":                                                  # the hit, cracks racing, the glass gives way on the beat
@@ -426,12 +438,6 @@ def main():
             place(fx, np.stack([A2.shimmer(0.9, -29)] * 2, 1), t0 - 0.15); place(fx, A2.whoosh(0.32, -22, 772, True), t0 - 0.10)
         elif tin == "rainfocus":
             place(fx, stereo(norm(bq(noise(I(1.2), 781), "band", np.array([2000, 8000]), 2) * (np.random.default_rng(782).random(I(1.2)) > 0.9), -34)), t0 - 0.15)
-        elif tin == "blood_lens":
-            place(fx, stereo(drip(-17, 783)), t0 - 0.13); place(fx, stereo(squelch(0.25, -24, 784)), t0 + 0.02)
-        elif tin == "drop_out":
-            place(fx, stereo(heart(-18)), E.ARCH_IN + 0.05); place(fx, stereo(heart(-17)), E.ARCH_IN + 0.55)
-            place(fx, stereo(bloop(-20, 785)), t0 - 0.05); place(fx, A2.whoosh(0.5, -22, 786, True), t0)
-            place(fx, glass_tinkles(E.ARCH_END - t0, -33, 787), t0 + 0.1)
         elif tin == "ripple":                                                          # a drop falls into the water
             place(fx, stereo(drip(-16, 791), -0.4), t0 - 0.13); place(fx, stereo(bloop(-21, 792), -0.3), t0 + 0.01)
             place(fx, stereo(bubble_burst(0.5, -28, 793, 6), -0.2), t0 + 0.05); place(fx, A2.whoosh(0.45, -27, 794, True), t0 + 0.02)
@@ -445,13 +451,9 @@ def main():
                 place(fx, stereo(norm(zz, -22), 0.2), k0)
         elif tin == "whip_up":
             place(fx, A2.whoosh(0.24, -21, 797, True), t0 - 5 / E.FPS)
-        elif tin == "through_slide":
-            place(fx, stereo(glass_clack(-24, 788)), t0 - 0.02); place(fx, A2.whoosh(0.35, -23, 789, False), t0 - 18 / E.FPS)
     # a heartbeat under the red pulse (rev 3: the slide ticks, splats and drips are gone)
     for kb in E.PULSE_K:
         if (kb // 2) % 2 == 0: place(fx, stereo(heart(-24 if kb < 40 else -21)), E.th(kb) - 0.01)
-    # the scalpel draws the cut; beads well up
-    place(fx, stereo(blade_draw(0.30, -20)), E.T_CUT - 0.10); place(fx, stereo(squelch(0.4, -27, 790)), E.T_CUT + 0.15)
     # text: soft hits on the hero titles' lines
     for tx in E.TEXT:
         if tx["style"] == "hero":

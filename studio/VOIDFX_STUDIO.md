@@ -307,7 +307,7 @@ Fresh directions for future edits:
 | v9 | fakemink "Night, Blooming Jasmine" | 102.8 BPM | h448–h506 + h634–h650, spliced on the 4-bar cycle (2:10.9–2:27.8 + 3:05.2–3:09.9) | 2:19.38 dead silence → freeze; 2:20.84 drop → petal bloom |
 | v101 | Tame Impala "The Less I Know The Better" | 117 BPM | half-beats 7–95 (0:01.9–0:24.4, 11 bars); the last half bar is the song's own intro pickup, so the loop wraps onto the first downbeat | 0:10.08, the bassline enters after the 4-bar drum intro → film burn-through |
 | v102 | Ark Patrol "Let Go" | 164 BPM | half-beats 720–848 (2:11.8–2:35.2, 16 bars); the last 6 half-beats rewind the whole edit back to the start | 2:20.56, drop 2 (+31 dB) → the strike |
-| v103 | Foo Fighters "Everlong" | 158 BPM | h1000–h1080 + h1096–h1152 (3:09.9–3:38.7; two riff bars spliced out) | 3:20.51, the full band returns → THE SAMPLE |
+| v103 | Foo Fighters "Everlong" | 158 BPM | h1000–h1080 + h1096–h1152 (3:09.9–3:38.7; two riff bars spliced out) | 3:20.51, the full band returns → THE RIP (rev 4; was THE SAMPLE) |
 
 ## 11. Communication
 

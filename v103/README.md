@@ -171,3 +171,51 @@ Unchanged: the shots, timing, captions, FOREVER title, the three showpieces and 
 | Length | audio and video within 10.7 ms |
 
 **Visual sign-off** was done on frames pulled from the encoded MP4: the whole cold open (no slides), the drop and montage (no drips or spatter), the glass shatter frame by frame, the near-black frames 295–296 (the intended blackout before the lamp switches on), the rest of the edit and the seam. The dead code for the removed effects was deleted afterwards, and the output was checked pixel-identical. **Not verified:** watching and listening in real time.
+
+## Revision 4 (owner notes)
+
+**"Remove or change the blood and slide animation to befit better with the edit."** Every blood and slide graphic is gone. Each set piece is rebuilt from things in Dexter's world that match the edit's footage, palette and pacing:
+
+1. **The drop: THE RIP** (replaces THE SAMPLE: the scalpel cut, the blood beads and the slide smear).
+   - The build gains a shot in the plastic kill room (S4 pack p10 167.60). Kill-room sheeting is pulled over the lens as the build peaks: milky, with folds that sway and catch the light.
+   - On the drop the plastic **tears open down the middle** and the riff bursts through, with a hard shake.
+   - Sound: crinkling plastic under the build, a riser, then the tear, an impact and a whoosh.
+2. **The hook: THE EVIDENCE PHOTOS** (replaces THE ARCHIVE: the slide he holds up, the push into its drop, and the drawn corridor of slides). He keeps every kill forever, so he photographs it:
+   - a spin into the S4 shot of him raising the forensic camera with its ring flash (p9 120.75);
+   - on **"IF"** the flash fires, and the frame freezes into a crime-scene photo that is tossed aside onto the mirror shot (p9 158.30);
+   - a camera **shutter** (six blades) snaps shut and opens on him in front of his wall of photos (p10 178.90);
+   - the last flash tosses that photo away (the other direction) onto the boat, as **FOREVER** builds.
+   - Sound: a flash whine and pop and a shutter click for each photo, and shutter ticks for the iris.
+3. **No blood or slides anywhere else:**
+   - the drop that ripples into the third shot is now a clear drop of water (it shows the frame flipped inside it);
+   - the glass shatter at 11 s throws white glass dust instead of a red mist.
+
+**"More cool transitions, animations and graphics anywhere that doesn't have anything going on."**
+- **Transitions:** 20 cuts instead of 18. The new ones:
+  - strobe (into the plastic room);
+  - the plastic rip;
+  - roll (a spin-blur);
+  - two flash-photo tosses;
+  - the camera shutter.
+- **Animations:**
+  - The camera now **punches on the beat** through the riff, the verse and the hook: a zoom kick on every beat, and a stronger kick with a chromatic split on each half-bar.
+  - In the build, the frame **thumps with the heartbeat** under the red pulse.
+- **Graphics:**
+  - The kill-room lamp in the overhead shot **swings**, so its pool of light sways across the table.
+  - The flashlight shot throws a long **anamorphic teal flare**.
+  - The flare was tried on the night-drive shot too. It streaked across his eye, so it's off there (nothing over faces).
+
+Unchanged: the VO line and its caption, the lyric captions and FOREVER, the loop in the water, the montage transitions (impact, glass shatter, whip, duct tape, logo, zipper, rain, whip up, bubbles).
+
+### Revision 4 checkpoint: 10/10 PASS on the first run
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1456 frames (24.27 s), H.264 + AAC, fast-start, 16 Mb/s cap |
+| Loudness after AAC | −13.2 LUFS, true peak −4.1 dBTP |
+| Clicks | 0 at the 20 cuts and the splice; loop seam clean by the QC rule |
+| Loop seam picture | under water at both ends: blurred difference 1.44 |
+| Faces | centred in every shot (the new plastic-room, mirror and photo-wall shots included); 0 text-over-face frames |
+| Length | audio and video within 10.7 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4: the whole edit every half-second, the plastic build and rip frame by frame, every step of the evidence-photo hook (roll, flash, photo toss, shutter, the last toss onto the boat), and the frames QC flagged (178: the caption sits below his chin; 826: the logo transition). There is no blood or slide graphic left anywhere in the edit. **Not verified:** watching and listening in real time.

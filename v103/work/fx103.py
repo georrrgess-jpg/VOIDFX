@@ -211,222 +211,86 @@ def sink_end(out, f, s):
     o = o + b[..., None] * BONE * 0.55 * (1 - 0.6 * end_d)
     return np.clip(o, 0, 1)
 
-# ---------------------------------------------------------------------------- THE SAMPLE (drop): scalpel cut, beads, slide press
-CUT_P0 = np.array([W * 0.08, H * 0.60], np.float32); CUT_P1 = np.array([W * 0.92, H * 0.47], np.float32)
-_SC = {}
-def blade_sprite():
-    if "b" in _SC: return _SC["b"]
-    h, w = 120, 560; m = np.zeros((h, w), np.float32)
-    blade = np.array([[0, 60], [60, 42], [230, 30], [330, 34], [372, 50], [372, 78], [300, 84], [150, 82], [40, 72]], np.int32)
-    cv2.fillPoly(m, [blade], 1.0, cv2.LINE_AA)
-    handle = np.zeros((h, w), np.float32); cv2.rectangle(handle, (372, 46), (556, 82), 1.0, -1, cv2.LINE_AA)
-    a = np.maximum(m, handle); a = cv2.GaussianBlur(a, (0, 0), 0.8)
-    yy = np.linspace(0, 1, h)[:, None]
-    col = (STEELC * (0.55 + 0.45 * (1 - yy) ** 0.8)[..., None]) * m[..., None] + np.array([0.20, 0.20, 0.21], np.float32) * handle[..., None]
-    spec = np.exp(-((np.arange(h)[:, None] - 46) / 3.5) ** 2) * m * 0.9
-    col = col + spec[..., None]
-    for x in range(390, 540, 18): cv2.line(col, (x, 50), (x, 78), (0.30, 0.30, 0.31), 2, cv2.LINE_AA)
-    _SC["b"] = np.dstack([np.clip(col, 0, 1), a]).astype(np.float32); return _SC["b"]
+# ---------------------------------------------------------------------------- rev 4: THE RIP (drop). Kill-room plastic is pulled
+#      over the lens as the build peaks; on the drop it tears open down the middle (plastic_rip) and the riff bursts through.
+_PS = {}
+def plastic_sheet(img, f, amt):
+    """kill-room sheeting over the lens: milky diffusion, folds that sway with speculars, a slight refraction along the folds."""
+    if amt <= 0.005: return img
+    spec, fold = plastic_tex()
+    sw = int(round(26 * math.sin(f * 0.045)))
+    if sw not in _PS:
+        if len(_PS) > 8: _PS.clear()
+        sp = np.roll(spec, sw, 1); _PS[sw] = (sp, cv2.Sobel(sp, cv2.CV_32F, 1, 0, ksize=5) * 0.25)
+    sp, gx = _PS[sw]
+    o = cv2.remap(img, (_GX + gx * 16 * amt).astype(np.float32), _GY, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    milky = cv2.GaussianBlur(o, (0, 0), 1.5 + 5 * amt) * (1 - 0.22 * amt) + (BONE * 0.07 + TEAL * 0.03) * amt
+    o = o * (1 - 0.85 * amt) + milky * 0.85 * amt
+    return np.clip(o + (sp ** 2)[..., None] * BONE * 0.42 * amt, 0, 1)
 
-def cut_progress(t):
-    return clamp((t - (E.T_CUT - 0.10)) / 0.26, 0, 1)
-
-def beads(img, f, grow, line_open=1.0, smear_u=0.0):
-    """the cut opens, blood beads well up along it (glossy)."""
-    t = f / FPS; pr = cut_progress(t); P0, P1 = CUT_P0, CUT_P1
-    if pr <= 0: return img
-    d = P1 - P0; L = np.linalg.norm(d); dn = d / L; nn = np.array([-dn[1], dn[0]], np.float32)
-    s_ = (_GX - P0[0]) * dn[0] + (_GY - P0[1]) * dn[1]; q = (_GX - P0[0]) * nn[0] + (_GY - P0[1]) * nn[1]
-    along = np.clip(s_ / L, -1, 2)
-    on = ((along >= 0) & (along <= pr)).astype(np.float32)
-    gap = np.exp(-(q / (1.5 + 2.5 * line_open)) ** 2) * on
-    disp = np.sign(q) * 3 * line_open * np.exp(-np.abs(q) / 14) * on
-    o = cv2.remap(img, (_GX + disp * nn[0]).astype(np.float32), (_GY + disp * nn[1]).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-    o = o * (1 - gap[..., None] * 0.85) + BLOODC * 0.6 * gap[..., None]
-    if grow > 0:
-        rng = np.random.default_rng(14); fld = np.zeros((H // 2, W // 2), np.float32)
-        for i in range(30):
-            a = rng.uniform(0.02, 0.98)
-            if a > pr: continue
-            c = P0 + d * a + nn * rng.normal(0, 3)
-            r = (12 + 24 * rng.random()) * grow * (1 + 0.5 * smear_u)
-            cv2.circle(fld, (int(c[0] / 2), int(c[1] / 2)), max(1, int(r / 2)), 1.0, -1, cv2.LINE_AA)
-            if rng.random() < 0.35 * grow:                                             # a bead that runs
-                cv2.line(fld, (int(c[0] / 2), int(c[1] / 2)), (int(c[0] / 2), int((c[1] + 90 * grow * rng.random()) / 2)), 1.0, max(1, int(r / 5)), cv2.LINE_AA)
-        fld = cv2.GaussianBlur(fld, (0, 0), 2.2); fld = cv2.resize(fld, (W, H)); m = np.clip((fld - 0.40) * 5, 0, 1)
-        gx_ = cv2.Sobel(fld, cv2.CV_32F, 1, 0, ksize=7); gy_ = cv2.Sobel(fld, cv2.CV_32F, 0, 1, ksize=7)
-        nrm = np.sqrt(gx_ ** 2 + gy_ ** 2) + 1e-6; light = np.clip((-gx_ * 0.5 - gy_ * 0.85) / nrm, 0, 1)
-        spec = (light ** 12) * m * np.clip(fld * 2, 0, 1)
-        body = BLOODC * (0.55 + 0.55 * np.clip(fld, 0, 1))[..., None]
-        o = o * (1 - m[..., None]) + body * m[..., None] + spec[..., None] * 0.85 * BONE
-        o = o * (1 - 0.35 * np.clip(np.roll(m, 6, 0) - m, 0, 1))[..., None]          # a thin shadow under each bead
-    return np.clip(o, 0, 1)
-
-def scalpel_fx(out, f, s):
-    t = f / FPS; pr = cut_progress(t)
-    if t < E.T_CUT - 0.40: return out
-    grow = smooth((t - E.T_CUT - 0.10) / 0.35)
-    out = beads(out, f, grow)
-    if t < E.T_CUT + 0.30:                                                            # the blade: enters, draws the cut, leaves
-        d = CUT_P1 - CUT_P0; ang = math.degrees(math.atan2(d[1], d[0]))
-        if t < E.T_CUT - 0.10: u = (t - (E.T_CUT - 0.40)) / 0.30; pos = CUT_P0 - d * 0.35 * (1 - eout(u, 2)); a = eout(u, 2)
-        elif pr < 1: pos = CUT_P0 + d * pr; a = 1.0
-        else: u = (t - (E.T_CUT + 0.16)) / 0.14; pos = CUT_P1 + d * 0.5 * ein(clamp(u, 0, 1), 2); a = 1 - clamp(u, 0, 1)
-        lay = np.zeros((H, W, 4), np.float32); spr = blade_sprite()
-        draw_sprite(lay, spr, pos[0] + math.cos(math.radians(ang)) * 330, pos[1] + math.sin(math.radians(ang)) * 330 - 55, 1.45, ang + 4, 1.0, 0.0, a)
-        sh = cv2.GaussianBlur(lay[..., 3], (0, 0), 14)[..., None] * 0.45
-        out = out * (1 - np.roll(sh, 30, 0)) * 1.0
-        out = out * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4]
-        gx = pos[0]; gyy = pos[1]                                                     # glint where the blade meets skin
-        if 0 < pr < 1: out = add_glow(out, gx, gyy, 40, 0.8, BONE)
-    return np.clip(out, 0, 1)
-
-_SL = {}
-def slide_glass(w, h):
-    key = (w, h)
-    if key in _SL: return _SL[key]
-    a = np.zeros((h, w), np.float32); cv2.rectangle(a, (0, 0), (w - 1, h - 1), 1.0, -1)
-    edge = np.zeros((h, w), np.float32); cv2.rectangle(edge, (2, 2), (w - 3, h - 3), 1.0, 6, cv2.LINE_AA)
-    frost = np.zeros((h, w), np.float32); frost[:, int(w * 0.80):] = 1.0
-    nz = _lowfreq((h, w), (8, 20), 77) * 0.3 + 0.7
-    _SL[key] = (a, cv2.GaussianBlur(edge, (0, 0), 1.2), frost * nz); return _SL[key]
-
-def sample_tr(A, B, j, f, sa, sb, pre=8, post=24):
-    """HERO (drop): the slide slams onto the lens and squashes the blood into a smear; then it lifts away into the riff."""
-    ang = 8.5
-    if j < 0:                                                                         # the slide descends (its shadow over the beads)
-        u = (j + pre) / pre; sc = 1.9 - 0.9 * eout(u, 2.2)
-        o = A * (1 - 0.35 * u)
-        return np.clip(slide_draw(o, f, sc, ang, 0.0, None, u * 0.9), 0, 1)
-    if j < 9:                                                                         # contact: the blood spreads under the glass
-        v = eout((j + 1) / 9, 2.2)
-        A2_ = beads(A, f, 1.0, 1.0, v)
-        return np.clip(slide_draw(A2_, f, 1.0, ang, v, None, 1.0), 0, 1)
-    u = (j - 8) / (post - 8)                                                          # lift away: up and out, the smear goes with it
-    sc = 1.0 + 0.5 * ein(u, 1.6); dy = -H * 0.85 * ein(u, 1.8); dx = W * 0.35 * ein(u, 1.8); rot = ang + 22 * ein(u, 1.5)
-    o = B
-    return np.clip(slide_draw(o, f, sc, rot, 1.0, (dx, dy), 1 - ein(clamp((u - 0.7) / 0.3, 0, 1), 1)), 0, 1)
-
-_SM = {}
-def slide_draw(img, f, sc, ang, smear, off=None, alpha=1.0):
-    """a microscope slide, fully on screen: thick glass edges, a sheen, the frosted label end; smear = squashed blood under it."""
-    gw, gh = int(W * 0.98 * sc), int(W * 0.98 * sc / 2.8)
-    a, edge, frost = slide_glass(gw, gh)
-    cx, cy = W * 0.50 + (off[0] if off else 0), H * 0.535 + (off[1] if off else 0)
-    M = cv2.getRotationMatrix2D((gw / 2, gh / 2), ang, 1.0); M[0, 2] += cx - gw / 2; M[1, 2] += cy - gh / 2
-    def wp(m): return cv2.warpAffine(m, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
-    A_ = wp(a)[..., None] * alpha; E_ = wp(edge)[..., None] * alpha; F_ = wp(frost)[..., None] * alpha
-    sh = cv2.GaussianBlur(np.roll(np.roll(A_[..., 0], 24, 0), 16, 1), (0, 0), 18)[..., None] * 0.45 * (1 - A_)
-    o = img * (1 - sh)
-    Mi = cv2.invertAffineTransform(M)
-    lx = Mi[0, 0] * _GX + Mi[0, 1] * _GY + Mi[0, 2]; ly = Mi[1, 0] * _GX + Mi[1, 1] * _GY + Mi[1, 2]
-    sheen = np.exp(-(((lx - ly * 1.4) - gw * 0.30) / (gw * 0.05)) ** 2)[..., None] * A_ * 0.22
-    o = o * (1 - A_ * 0.10) + A_ * 0.06 * TEAL + sheen * BONE
-    if smear > 0:                                                                     # the squashed blood: a glossy liquid film with viscous fingers
-        if "n" not in _SM: _SM["n"] = _lowfreq((H // 2, W // 2), (30, 18), 81) * 0.7 + _lowfreq((H // 2, W // 2), (90, 50), 82) * 0.3
-        nz = cv2.resize(_SM["n"], (W, H))
-        ang_ = np.arctan2((ly - gh * 0.5) / gh, (lx - gw * 0.40) / gw)
-        r = np.sqrt(((lx - gw * 0.40) / (gw * 0.34)) ** 2 + ((ly - gh * 0.5) / (gh * 0.40)) ** 2)
-        fing = 0.10 * np.sin(ang_ * 11 + nz * 4) + 0.14 * (nz - 0.5)
-        R = smear * (1.0 + fing)
-        m = np.clip((R - r) * 30, 0, 1)[..., None] * A_
-        thick = np.clip((R - r) * 3, 0, 1)[..., None]
-        ref = cv2.remap(img, (_GX + (nz - 0.5) * 24).astype(np.float32), (_GY + (nz - 0.5) * 18).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-        blood = ref * 0.12 * (1 - thick) + BLOODC * (0.55 + 0.45 * thick)
-        o = o * (1 - m) + blood * m
-        o = o + np.exp(-((R - r) * 14) ** 2)[..., None] * A_ * BLOODH * 0.30            # the bright meniscus edge
-        o = o + sheen * m * 1.6
-    o = o * (1 - F_ * 0.6) + BONE * 0.78 * F_ * 0.6                                    # frosted label end
-    o = o + E_ * BONE * 0.85
-    return o
-
-# ---------------------------------------------------------------------------- THE ARCHIVE (hook): into the drop, a corridor of slides
-def pushin_fx(out, f, s):
-    t = f / FPS
-    if t < E.ARCH_IN: return out
-    if "spot" not in _AR:
-        sx, sy, sr = spot_screen(s, E.fe(E.ARCH_IN)); _AR["spot"] = (sx, sy, max(30.0, sr))
-    sx, sy, sr = _AR["spot"]; u = clamp((t - E.ARCH_IN) / (E.ARCH_FLY - E.ARCH_IN), 0, 1)
-    z = math.exp(3.3 * ein(u, 2.2))
-    o = zoom_about(out, sx, sy, z, 0)
-    o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + 0.10 * u, 5) if u > 0.2 else o
-    red = smooth((u - 0.55) / 0.45)
-    return np.clip(o * (1 - red) + (o * 0.25 + BLOODC * 0.9) * red, 0, 1)
-
-_AR = {}
-def archive_slides():
-    if "p" in _AR: return _AR["p"]
-    rng = np.random.default_rng(66); P = []
-    for i in range(160):
-        z = rng.uniform(2.0, 60.0); ang = rng.uniform(0, 2 * math.pi); rad = rng.uniform(1.6, 3.4)
-        P.append((math.cos(ang) * rad, math.sin(ang) * rad * 1.5, z, rng.uniform(-20, 20), rng.uniform(0.7, 1.0), rng.uniform(0.15, 0.9)))
-    _AR["p"] = P; return P
-
-def archive_frame(f):
-    """fly down an endless corridor of his blood slides (perspective quads in a ring), fog into teal-black."""
-    t = f / FPS; u = clamp((t - E.ARCH_FLY) / (E.ARCH_END - E.ARCH_FLY), 0, 1)
-    camz = 26.0 * (u ** 0.85); foc = W * 0.9
-    o = np.broadcast_to(DEEP * 1.1, (H, W, 3)).copy()
-    o = o + np.exp(-(((_GX - W / 2) / (W * 0.6)) ** 2 + ((_GY - H * 0.45) / (H * 0.45)) ** 2))[..., None] * TEAL * 0.25
-    lay = np.zeros((H, W, 3), np.float32); al = np.zeros((H, W), np.float32)
-    items = []
-    for x, y, z, rot, br, dpos in archive_slides():
-        zz = (z - camz) % 60.0
-        if zz < 0.8: continue
-        items.append((zz, x, y, rot, br, dpos))
-    items.sort(key=lambda r: -r[0])
-    for zz, x, y, rot, br, dpos in items:
-        sx, sy = W / 2 + foc * x / zz, H * 0.45 + foc * y / zz
-        hw, hh = foc * 0.75 / zz, foc * 0.27 / zz
-        if hw < 2 or sx < -hw * 2 or sx > W + hw * 2 or sy < -hw * 2 or sy > H + hw * 2: continue
-        fog = math.exp(-zz / 18.0)
-        c, s_ = math.cos(math.radians(rot)), math.sin(math.radians(rot))
-        pts = np.array([[sx + (-hw) * c - (-hh) * s_, sy + (-hw) * s_ + (-hh) * c], [sx + hw * c - (-hh) * s_, sy + hw * s_ + (-hh) * c],
-                        [sx + hw * c - hh * s_, sy + hw * s_ + hh * c], [sx + (-hw) * c - hh * s_, sy + (-hw) * s_ + hh * c]], np.int32)
-        cv2.fillConvexPoly(lay, pts, tuple(float(v) for v in (BONE * 0.10 + TEAL * 0.10) * fog * br), cv2.LINE_AA)
-        cv2.fillConvexPoly(al, pts, 0.55 * fog, cv2.LINE_AA)
-        cv2.polylines(lay, [pts], True, tuple(float(v) for v in BONE * 0.85 * fog * br), max(1, int(3 * fog + 1)), cv2.LINE_AA)
-        cv2.polylines(al, [pts], True, 1.0 * fog, max(1, int(3 * fog + 1)), cv2.LINE_AA)
-        dx_ = (dpos - 0.5) * hw * 1.2                                                 # the drop of blood, with its highlight
-        dc = (int(sx + dx_ * c), int(sy + dx_ * s_)); R = max(1, int(hh * 0.62))
-        cv2.circle(lay, dc, R, tuple(float(v) for v in BLOODC * 1.1 * fog), -1, cv2.LINE_AA); cv2.circle(al, dc, R, 1.0 * fog, -1, cv2.LINE_AA)
-        cv2.circle(lay, (dc[0] - R // 3, dc[1] - R // 3), max(1, R // 4), tuple(float(v) for v in BONE * 0.6 * fog), -1, cv2.LINE_AA)
-        fx0 = int(sx + hw * 0.62 * c); fy0 = int(sy + hw * 0.62 * s_)                 # frosted label end
-        cv2.circle(lay, (fx0, fy0), max(1, int(hh * 0.5)), tuple(float(v) for v in BONE * 0.25 * fog), -1, cv2.LINE_AA)
-    lay = cv2.GaussianBlur(lay, (0, 0), 0.7); al = np.clip(cv2.GaussianBlur(al, (0, 0), 0.7), 0, 1)
-    o = o * (1 - al[..., None] * 0.6) + lay
-    o = o + cv2.GaussianBlur(lay, (0, 0), 12) * 0.8                                    # glow of the glass edges
-    return np.clip(snow(o, f, 0.6), 0, 1)
-
-def drop_out(A, B, j, f, sa, sb, post=16):
-    """out of the red drop into the corridor: a drop-shaped aperture opens."""
-    v = eout((j + 1) / post, 2.0); R = 1400 * v
-    rr = np.sqrt((_GX - W / 2) ** 2 + ((_GY - H * 0.45) * 0.8) ** 2)
-    m = np.clip((R - rr) / 30, 0, 1)[..., None]
-    red = (BLOODC * 0.9 + A * 0.1) * (1 - v * 0.3)
-    rim = np.exp(-((rr - R) / 22) ** 2)[..., None] * BLOODH * 0.6
-    return np.clip(B * m + red * (1 - m) + rim, 0, 1)
-
-def through_slide(A, B, j, f, sa, sb, pre=18, post=12):
-    """one slide flies up to the lens; through its drop, the boat."""
+# ---------------------------------------------------------------------------- rev 4: THE EVIDENCE PHOTOS (hook). The ring flash fires,
+#      the frame freezes into a crime-scene photograph and is tossed aside (left or right) onto the next shot.
+_PH = {}
+def photo103(A, B, j, f, sa, sb, side=1, pre=6, post=16):
     if j < 0:
-        u = (j + pre) / pre; zz = 6.0 - 5.3 * ein(u, 1.7); foc = W * 0.9
-        hw, hh = foc * 0.75 / zz, foc * 0.27 / zz
-        o = A.copy(); lay = np.zeros((H, W, 3), np.float32); al = np.zeros((H, W), np.float32)
-        cx, cy = W / 2, H * 0.45
-        pts = np.array([[cx - hw, cy - hh], [cx + hw, cy - hh], [cx + hw, cy + hh], [cx - hw, cy + hh]], np.int32)
-        cv2.fillConvexPoly(al, pts, 0.5, cv2.LINE_AA); cv2.polylines(lay, [pts], True, tuple(float(v) for v in BONE * 0.9), 4, cv2.LINE_AA)
-        R = hh * 0.62 * (1 + 2.5 * ein(u, 3)); dm = np.clip((R - np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2)) / 3, 0, 1)[..., None]
-        Bz = zoom_about(B, W / 2, H * 0.45, 0.6 + 0.4 * ein(u, 2))
-        o = o * (1 - al[..., None] * 0.5) + lay
-        drop = Bz * np.array([0.55, 0.55, 0.95], np.float32)                           # the boat, seen through blood-tinted glass
-        o = o * (1 - dm) + drop * dm + np.exp(-((np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2) - R) / 6) ** 2)[..., None] * BLOODH * 0.5
-        return np.clip(o, 0, 1)
-    v = eout((j + 1) / post, 2.0)
-    return np.clip(B * (1 - 0.35 * (1 - v)) + (1 - v) * BLOODC * 0.35, 0, 1)
+        fl = ein((j + pre + 1) / (pre + 1), 3)
+        return np.clip(A * (1 + 1.2 * fl) + (BONE * 0.30) * fl, 0, 1)
+    key = sa["n"]
+    if key not in _PH:
+        b = 44; card = np.ones((H + 5 * b, W + 2 * b, 4), np.float32)
+        card[..., :3] = np.array([0.90, 0.93, 0.94], np.float32)
+        card[b:b + H, b:b + W, :3] = np.clip(A * 1.04 + 0.025, 0, 1)
+        _PH[key] = (card, b)
+    card, b = _PH[key]; ch, cw = card.shape[:2]
+    u1 = eout(clamp(j / 5.0, 0, 1), 3); u2 = ein(clamp((j - 5) / 10.0, 0, 1), 2.2)
+    sc = 1.0 - 0.34 * u1 - 0.1 * u2; rot = side * (-6 * u1 - 26 * u2)
+    cx, cy = W / 2 + side * 1300 * u2, H / 2 + 30 * u1 + 560 * u2
+    M = cv2.getRotationMatrix2D((cw / 2, ch / 2 - 2 * b), rot, sc)
+    M[0, 2] += cx - cw / 2; M[1, 2] += cy - (ch / 2 - 2 * b)
+    cd = cv2.warpAffine(card, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
+    al = cd[..., 3:4]
+    shd = cv2.GaussianBlur(np.roll(np.roll(cd[..., 3], 34, 0), side * 26, 1), (0, 0), 22)[..., None] * 0.55
+    Bz = zoom_about(B, W / 2, H / 2, 1.08 - 0.08 * eout(j / float(post), 2))
+    o = Bz * (1 - shd) * (1 - al) + cd[..., :3] * al
+    fl = clamp(1 - j / 4.0, 0, 1)
+    return np.clip(o + 0.45 * fl * al + 0.22 * fl, 0, 1)
 
-def archive_shot(f, s):
-    return archive_frame(f)
+TR2.update({"photo": (lambda A, B, j, f, sa, sb: photo103(A, B, j, f, sa, sb, 1), 6, 16),
+            "photo_l": (lambda A, B, j, f, sa, sb: photo103(A, B, j, f, sa, sb, -1), 6, 16)})
+
+# ---------------------------------------------------------------------------- rev 4: graphics for the holds
+def anam_flare(out, amt, f):
+    """anamorphic lens flare: every hot light (lamp, flashlight, headlights) throws a long horizontal teal streak."""
+    L = lum(out); hi = np.clip((L - 0.78) / 0.22, 0, 1) ** 2
+    sm = cv2.resize(hi, (W // 8, H // 8), interpolation=cv2.INTER_AREA)
+    streak = cv2.resize(cv2.GaussianBlur(sm, (0, 0), sigmaX=34, sigmaY=0.7), (W, H))
+    glow = cv2.resize(cv2.GaussianBlur(sm, (0, 0), 4), (W, H))
+    fl = (0.92 + 0.08 * math.sin(f * 0.9)) * amt
+    return np.clip(out + (np.clip(streak * 22, 0, 1.2)[..., None] * (TEAL * 0.9 + BONE * 0.35) + np.clip(glow * 3, 0, 1)[..., None] * BONE * 0.25) * fl, 0, 1)
+
+def lamp_swing(out, f, s):
+    """the kill-room lamp swings: its pool of light sways across the table."""
+    t = f / FPS - s["t0"]
+    cx = W / 2 + 190 * math.sin(2 * math.pi * t / 1.35); cy = H * 0.46 + 30 * math.cos(4 * math.pi * t / 1.35)
+    m = 0.70 + 0.34 * np.exp(-(((_GX - cx) / 560) ** 2 + ((_GY - cy) / 760) ** 2))
+    return np.clip(out * m[..., None], 0, 1)
+
+def beat_fx(out, f):
+    """the camera punches on the beat: a zoom kick (stronger on the downbeats, with a chromatic split), and in the build a
+    softer heartbeat thump under the red pulse."""
+    z = 0.0; ch = 0.0
+    for k, a in E.BEAT_PUNCH:
+        kk = f - E.fh(k)
+        if a > 0 and 0 <= kk < 14:
+            e = a * math.exp(-kk / 3.5); z = max(z, e)
+            if a >= 0.9: ch = max(ch, e)
+    for kb in E.PULSE_K:
+        kk = f - E.fh(kb)
+        if 0 <= kk < 12: z = max(z, 0.30 * math.exp(-kk / 3.0) * (1.0 if (kb // 2) % 2 == 0 else 0.6))
+    if z < 0.01: return out
+    o = zoom_about(out, W / 2, H * 0.42, 1 + 0.045 * z)
+    if ch > 0.05: o = rgb_split(o, 9 * ch)
+    return np.clip(o * (1 + 0.10 * z), 0, 1)
 
 # ---------------------------------------------------------------------------- new transitions: sea spray, duct tape
 def wave_tr(A, B, j, f, sa, sb, pre=8, post=12):
@@ -481,7 +345,7 @@ def tape_tr(A, B, j, f, sa, sb, pre=6, post=10):
     return np.clip(o * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4], 0, 1)
 
 TR2.update({"surface": (lambda A, B, j, f, sa, sb: surface_in(B, f, j), 0, int(E.T_SURFACE * FPS) + 20), "wave": (wave_tr, 8, 12),
-            "sample": (sample_tr, 8, 24), "tape": (tape_tr, 6, 10), "drop_out": (drop_out, 0, 16), "through_slide": (through_slide, 18, 12)})
+            "tape": (tape_tr, 6, 10)})
 
 # ---------------------------------------------------------------------------- text: v9 standard (captions) + a generic per-letter hero title
 def drop_sprite(r=14):
@@ -611,24 +475,42 @@ def pulse_fx(out, f):
     return np.clip(out * (1 - m) + (out * 0.3 + BLOODC * 0.9) * m, 0, 1)
 
 _DROPS = {}
+def water_drop(img, cx, y, r):
+    """a clear drop of water: it shows the frame flipped and magnified inside it, a bright rim and a highlight."""
+    hh, ww = int(r * 3.2), int(r * 2.2); x0, y0 = int(cx - ww / 2), int(y - hh + r + 2)
+    if y0 + hh < 0 or y0 > H: return img
+    if "m" not in _DROPS or _DROPS["r"] != r:
+        m = np.zeros((hh, ww), np.float32); cv2.circle(m, (ww // 2, hh - r - 2), r, 1.0, -1, cv2.LINE_AA)
+        cv2.fillConvexPoly(m, np.array([[ww // 2, 2], [ww // 2 - r + 2, hh - r - 2], [ww // 2 + r - 2, hh - r - 2]], np.int32), 1.0, cv2.LINE_AA)
+        m = cv2.GaussianBlur(m, (0, 0), 0.8); rim = np.clip(cv2.morphologyEx(m, cv2.MORPH_GRADIENT, np.ones((5, 5), np.uint8)), 0, 1)
+        hl = np.zeros_like(m); cv2.circle(hl, (ww // 2 - r // 3, hh - r - r // 3), max(2, r // 4), 1.0, -1, cv2.LINE_AA)
+        _DROPS.update(m=m, rim=rim, hl=cv2.GaussianBlur(hl, (0, 0), 1.2), r=r)
+    m, rim, hl = _DROPS["m"], _DROPS["rim"], _DROPS["hl"]
+    ya, yb, xa, xb = max(0, y0), min(H, y0 + hh), max(0, x0), min(W, x0 + ww)
+    if yb <= ya or xb <= xa: return img
+    sl = (slice(ya - y0, yb - y0), slice(xa - x0, xb - x0))
+    gx, gy = np.meshgrid(np.arange(xa, xb, dtype=np.float32), np.arange(ya, yb, dtype=np.float32))
+    ccy = y0 + hh - r - 2
+    lens = cv2.remap(img, (cx - (gx - cx) * 3.0).astype(np.float32), (ccy - (gy - ccy) * 3.0).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o = img.copy(); mm = m[sl][..., None]
+    o[ya:yb, xa:xb] = img[ya:yb, xa:xb] * (1 - mm) + (lens * 0.85 + TEAL * 0.06) * mm + rim[sl][..., None] * BONE * 0.55 + hl[sl][..., None] * BONE * 0.9
+    return o
+
 def ripple_tr(A, B, j, f, sa, sb, pre=9, post=16):
-    """a drop of blood falls into the frame as if it were water: it hits, rings run outward refracting the picture, and
-    the next shot opens behind the rings, a red bloom fading in the middle."""
+    """rev 4: a clear drop of water falls into the frame: it hits, rings run outward refracting the picture, and the next
+    shot opens behind the rings (no blood)."""
     cx, cy = W * 0.20, H * 0.76                                                        # off to the side, by his shoulder: never on the face
     if j < 0:
         u = (j + pre) / pre; y = -120 + (cy + 120) * ein(u, 1.8)
-        lay = np.zeros((H, W, 4), np.float32); spr = drop_sprite(30)
-        draw_sprite(lay, spr, cx, y, 1.6, 0, 1.0, 0.0, 1.0, 1.0 / (1 + 0.6 * u))
-        o = A * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4]
-        return np.clip(o, 0, 1)
+        return np.clip(water_drop(A, cx, y, 44), 0, 1)
     v = (j + 1) / post; R = 2100 * eout(v, 1.7)
     rr = np.sqrt((_GX - cx) ** 2 + ((_GY - cy) * 1.0) ** 2) + 1e-3
     wav = np.sin((rr - R) / 16.0) * np.exp(-((rr - R) / 110.0) ** 2) * 26 * (1 - v) + np.sin((rr - R * 0.6) / 22.0) * np.exp(-((rr - R * 0.6) / 90.0) ** 2) * 12 * (1 - v)
     src = B * np.clip((R - rr) / 40, 0, 1)[..., None] + A * (1 - np.clip((R - rr) / 40, 0, 1)[..., None])
     o = cv2.remap(src, (_GX + (_GX - cx) / rr * wav).astype(np.float32), (_GY + (_GY - cy) / rr * wav).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     hl = np.exp(-((rr - R) / 7.0) ** 2) * (1 - v) + 0.5 * np.exp(-((rr - R * 0.6) / 6.0) ** 2) * (1 - v)
-    bloom = np.exp(-(rr / (120 + 600 * v)) ** 2)[..., None] * (1 - v) ** 1.5
-    o = o * (1 - bloom * 0.7) + BLOODC * bloom * 0.8 + hl[..., None] * BONE * 0.45
+    splash_ = np.exp(-(rr / (60 + 260 * v)) ** 2)[..., None] * (1 - v) ** 2
+    o = o + splash_ * BONE * 0.35 + hl[..., None] * BONE * 0.45
     return np.clip(o, 0, 1)
 
 _BUB = {}
@@ -659,7 +541,7 @@ def moon_glow(out, f):
 
 TR2.update({"ripple": (ripple_tr, 9, 16), "bubbles_up": (bubbles_tr, 7, 12)})
 
-# ---- rev 3: the glass shatters (replaces the knife pass). The frame is a glass slide: a hit low and to the side (never on
+# ---- rev 3: the glass shatters (replaces the knife pass). The lens is glass: a hit low and to the side (never on
 #      the face) cracks it, the cracks race across the glass, and on the beat the shards tumble toward the lens and fall away.
 _GS = {}
 def gshards(cx, cy, seed=73):
@@ -729,29 +611,30 @@ def glass_shatter(A, B, j, f, sa, sb, pre=10, post=18):
         edge = cv2.morphologyEx(wm[..., 0], cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8))[..., None]
         shade = 0.85 + 0.3 * math.sin(math.radians(ang) * 3 + s_["w"])                  # each shard catches the light differently
         out[Y0:Y1, X0:X1] = out[Y0:Y1, X0:X1] * (1 - wm) + np.clip(wi * shade * 0.9 + TEAL * 0.06 + edge * BONE * 0.9, 0, 1) * wm
-    if k < 12:                                                                         # a fine red mist bursts from the hit
+    if k < 12:                                                                         # rev 4: fine glass dust glints from the hit (no red mist)
         rng = np.random.default_rng(17); lay = np.zeros((H // 2, W // 2), np.float32)
         for i in range(90):
-            a_ = rng.uniform(-math.pi * 0.95, 0.15); sp = rng.uniform(300, 1300); r_ = rng.uniform(1, 4)
+            a_ = rng.uniform(-math.pi * 0.95, 0.15); sp = rng.uniform(300, 1300); r_ = rng.uniform(1, 3)
             x = cx + math.cos(a_) * sp * k / 60; y = cy + math.sin(a_) * sp * k / 60 + 500 * (k / 60) ** 2
             cv2.circle(lay, (int(x / 2), int(y / 2)), int(r_), 1.0, -1, cv2.LINE_AA)
         lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 0.8), (W, H))[..., None] * (1 - k / 12)
-        out = out * (1 - lay * 0.9) + BLOODC * lay * 0.9
+        out = out + BONE * lay * 0.8
     return np.clip(out, 0, 1)
 
 TR2["glass_shatter"] = (glass_shatter, 10, 18)
 
 # ---------------------------------------------------------------------------- frame
 def base103(s, f):
-    if s.get("graphic") == "archive": return archive_frame(f)
     out = render_shot(s, f)
     if s.get("caustics"): out = caustics(out, f, s["caustics"])
     if s.get("snow"): out = snow(out, f, 0.6)
     if s.get("rain"): out = rain_glass(out, f, 0.8, 0.0)
-    if s.get("scalpel"): out = scalpel_fx(out, f, s)
-    if s.get("pushin"): out = pushin_fx(out, f, s)
+    if s.get("swing"): out = lamp_swing(out, f, s)
+    if s.get("flare"): out = anam_flare(out, s["flare"], f)
+    if s.get("plastic"):
+        a0, a1 = s["plastic"]; out = plastic_sheet(out, f, 0.9 * smooth((f / FPS - a0) / (a1 - a0)))
     if s.get("moonglow"): out = moon_glow(out, f)
-    # rev 3: no blood drips or spatter overlays (random blood read as clutter)
+    # rev 3: no blood drips or spatter overlays; rev 4: no scalpel cut, blood beads, slides or slide archive
     return out
 
 _E3 = {}
@@ -760,7 +643,7 @@ def edge103(S_, which):
     if key not in _E3:
         if len(_E3) > 6: _E3.clear()
         fr = S_["f0"] if which == "first" else S_["f1"] - 1
-        _E3[key] = base103(S_, fr) if S_.get("graphic") or which == "last" else render_shot(S_, fr, False)
+        _E3[key] = base103(S_, fr) if which == "last" else render_shot(S_, fr, False)
     return _E3[key]
 
 def render(f):
@@ -774,6 +657,7 @@ def render(f):
         nt = n_.get("tin")
         if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge103(n_, "first"), kn, f, s, n_)
     out = pulse_fx(out, f)                                                            # (rev 3: the drifting slides are gone)
+    out = beat_fx(out, f)                                                             # rev 4: the camera punches on the beat
     out = text103(out, f)
     if s.get("sink"): out = sink_end(out, f, s)
     out = finish103(out, f)
@@ -781,6 +665,6 @@ def render(f):
 
 def init_hits():
     HITS.clear()
-    HITS.append((E.fh(E.HDROP), 18, 4.0))                                             # the slide slams
+    HITS.append((E.fh(E.HDROP), 20, 4.0))                                             # the plastic rips open on the drop
     for kb in range(E.HDROP + 8, E.K_SPL, 8): HITS.append((E.fh(kb), 8, 3.0))
     HITS.append((E.fe(E.T_SPLASH), 10, 3.0))
