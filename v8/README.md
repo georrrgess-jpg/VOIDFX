@@ -165,3 +165,19 @@ python3 -m demucs -n htdemucs --two-stems=vocals -o v8/audio/sep v8/audio/p8_ope
   - **I DON'T WISH YOU / WELL:** each word slams in white-hot and cools, with a shock ring, while a thin rule grows as the line builds. ***WELL* fills with blood** from the bottom with a moving meniscus, then drips run from the letters.
 - **Per-letter type** is set on a shared baseline, so apostrophes and commas sit correctly. The first attempt centred each glyph and broke the apostrophes; review caught it.
 - **Knife-pass review:** the first passes showed the next shot on the wrong side of the blade, stepped motion blur, a ghostly translucent blade, and a glint that outlined the whole knife. They were fixed by sweeping in from off-frame, using 9 blur samples, a steel-tinted inverted reflection with polish streaks, and a glint along the cutting edge only.
+
+### Revision 2 checkpoint: **SHIP**
+
+- **Automated criteria:** all PASS.
+  - 1,304 frames, clean decode.
+  - −13.4 LUFS / −3.2 dBTP after AAC.
+  - No frozen runs; every shot centred.
+  - 0 clicks at the cuts and at the loop seam.
+  - Video 21.733 s and audio 21.733 s at the stream level.
+  - Every source range sits inside its shot.
+- **Flags that are by design or checked on frames:**
+  - text over a face: 1 frame, inside the vertical whip's motion blur;
+  - 20 low-placed false detections (a building, his shirt);
+  - 2 near-black frames: the lamp switching on.
+- **Visual sign-off:** 32 key frames pulled from the encoded MP4. They cover the knife-roll unroll and glints, the draw and swing of the knife pass with its edge glint, PICK ME UP sliding out from behind his head, the letter-by-letter lyrics, the *Darling,* swash, the comma swelling into the blood drop and its fall into the bloom, the build of I DON'T WISH YOU, *WELL* filling with blood, and the mirror loop.
+- **Note:** a container restart interrupted the first render of this revision. It was re-run from the committed state.
