@@ -95,6 +95,19 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
     - lamp switching on;
     - one cut per syllable on the hook.
 
+- **v9 NIGHT BLOOM: the text was "perfect"** (owner, after calling the edit good but lacklustre overall). **This is the standard text style for every edit.** The code is in `v9/work/render9.py` and new edits inherit it:
+  - **Captions** (`text_cap` + `cap_word`, TEXT style `cap`):
+    - Inter Display Black, all caps, two lines (line 1 about 88 px, line 2 about 114 px, a little larger), centred in the 1240–1640 band.
+    - White face; a dark keyline about 7 % of the size; a soft drop shadow; a light dark scrim behind the band.
+    - **Emphasis words in bright red** (BGR 0.20, 0.17, 1.00) with a soft red glow, so they hold on any background, even a red sky.
+    - Each word eases in on its spoken time (fade, 30 px rise, blur to sharp, 0.17 s). The exit is a fade, a slight blur and a 14 px drift up.
+    - Lines auto-fit to 940 px. A second lockup can wait (`from`) so the first stays readable.
+  - **Hero title** (`text_hero`, TEXT style `hero`):
+    - Per-letter build on a shared baseline. Each letter blooms open from a point (scale 0.3 → 1 with a small overshoot, a ±24° twist, blur to sharp, a soft white flare behind it), staggered about 35 ms and timed to the sung words.
+    - Line 2 lands bigger, white-hot, then floods crimson from the bottom like blood.
+    - On the exit, the letters loosen and blow away as particles (petals in v9; use the edit's own motif: blood droplets, ash, glass).
+  - Keep the construction and motion; change only the palette, the emphasis colour and the exit particles to fit each edit.
+
 ## 4. What the owner rejected: never do these
 
 | Rejected | Edit | Lesson |
@@ -118,7 +131,7 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | The voidfx logo turned blue (UV recolour) | v7 | **Never restyle the logo.** |
 | Plain steel doors for CLOSE | v7 | Make the big text moments **character-themed and detailed** (the rosewood blood-slide box with an engraved brass plate was the fix). |
 | The **text appearance in v8**: thin, wide-tracked sans lyric lines with sodium serif-italic emphasis words, letter-by-letter fades, underlines; big extruded words behind his head; elegant serif-italic script | v8 | That "elegant / editorial" type look didn't land. Go back toward what was praised in v6: bold, high-contrast, two-line captions with a clear designed treatment per moment. Keep script handwriting for at most one hero word. |
-| v9 NIGHT BLOOM overall: *"good… complete"*, but **lacklustre** next to the other builds and Dexter edits in general | v9 | **Go above and beyond.** The petal/moon concept came from the song title, not from Dexter's world, and read soft instead of dark and intense. The montage leaned on quick generic moves (strobe, beam, blinds, roll, smear) with one real set piece (the bloom). Root every concept in Dexter, build at least three signature set pieces, and add more designed text and graphics. See §5a. |
+| v9 NIGHT BLOOM overall: *"good… complete"*, but **lacklustre** next to the other builds and Dexter edits in general | v9 | **Go above and beyond.** The petal/moon concept came from the song title, not from Dexter's world, and read soft instead of dark and intense. The montage leaned on quick generic moves (strobe, beam, blinds, roll, smear) with one real set piece (the bloom). Root every concept in Dexter, build at least three signature set pieces, and add more graphics (the v9 text itself was "perfect"; keep it). See §5a. |
 
 ## 5a. Raising the bar (after v9): the pre-build gate
 
@@ -130,7 +143,7 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
    - one on the hook;
    - one on the loop.
    They're on the level of v7's slide box, plastic burst and zipper, and v8's "Darling," freeze into the falling drop. Quick moves (whips, strobes, flashes) only connect the set pieces; they don't count toward the three.
-3. **Text density and design** on par with v6/v7: dialogue captions, at least two designed title moments that act out their meaning, and type that interacts with the footage (tracked, behind or in front of the matte, physical materials).
+3. **Text in the approved v9 style** (§3: "it was perfect"): keyline captions for dialogue and lyrics, plus at least two designed title moments in the hero-title style that act out their meaning.
 4. **Graphics in every section**, not only the cold open: depth layers, themed overlays (evidence, slides, plastic, blood), beat-synced accents in the montage.
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
 6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.

@@ -87,7 +87,7 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
   - `freeze_e=E` on a shot: a dead freeze on the song's silence with 2.5-D parallax (matte vs. background), violet drain and a moonlight rim;
   - `petals=density`: a jasmine-petal depth field (behind the person matte, soft bokeh in front that keeps off the face; it freezes with the picture);
   - `graphic="moon"`: a still blood moon on a generated night sky with moonlit wisps;
-  - TEXT style `cap`: bold two-line captions with a dark keyline and soft shadow, auto-fit to 940 px, red emphasis (`emph`), optional `from` and `big`;
+  - TEXT style `cap` (**the approved standard text, "it was perfect"**): bold two-line captions with a dark keyline and soft shadow, auto-fit to 940 px, red emphasis (`emph`), optional `from` and `big`;
   - TEXT style `hero`: per-letter bloom-in on a shared baseline; line 2 floods crimson from the bottom; the exit blows the letters away as petals;
   - `accents9`: soft strobe lifts on every clap after the drop.
 

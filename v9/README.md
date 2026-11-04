@@ -212,5 +212,14 @@ Run on the encoded MP4.
 **What I've recorded:**
 - the binding note in `/CLAUDE.md` ("v9 feedback");
 - a row in the handbook's rejected table;
-- a new **pre-build gate** (`studio/VOIDFX_STUDIO.md` §5a): a concept from Dexter's world, three or more signature set pieces, text and graphics density, a written comparison with v6/v7/v8 before the first render, and ambition in the review passes;
+- a new **pre-build gate** (`studio/VOIDFX_STUDIO.md` §5a): a concept from Dexter's world, three or more signature set pieces, graphics density, a written comparison with v6/v7/v8 before the first render, and ambition in the review passes;
 - the gate in `studio/START_PROMPT.md`.
+
+**Later note from the owner:** *"Another thing I was really fond of from this edit was the text, it was perfect."*
+
+The v9 caption and hero-title system is now the standard text style:
+- `CLAUDE.md`;
+- `studio/VOIDFX_STUDIO.md` §3, with the full spec;
+- the toolkit catalog.
+
+It ships with the engine that new edits copy.
