@@ -58,6 +58,13 @@
    "uploaded_as": "Migos_-_Need_It (song)"
   },
   {
+   "file": "pack10_s4_24p.mp4",
+   "bytes": 17687825,
+   "sha256": "317d2a1dbef326e819d656d57048fbb53487771aed7c51d6eb829c89c5814fb2",
+   "duration": "183.925261",
+   "uploaded_as": "Dexter_Morgan_Dexter_S4_Scenepack_4K_1.mp4"
+  },
+  {
    "file": "pack4_aesthetic.mp4",
    "bytes": 18088314,
    "sha256": "7712f0544d9dd60ea4b0586e7ca5c0d77cddb202a13a910c8b9946f64d0242fd",
@@ -91,6 +98,13 @@
    "sha256": "90c76ec07805f2d2bd52af0640ffa34f465009763a2c9035dba2b95603d13bb3",
    "duration": "407.463764",
    "uploaded_as": "Dexter_4k_60fps_All_Scenes_Dexter_Morgan_S1_Best__Most_Popular_Scenes_for_Edit_-_Scenepack_1.mp4"
+  },
+  {
+   "file": "pack9_s4_best.mp4",
+   "bytes": 25304853,
+   "sha256": "2d24edf7e931ccbb2b2bf01f5b82181e5ba22da856b055b231d7abf93dc9de52",
+   "duration": "243.159365",
+   "uploaded_as": "Dexter_S4_4k_Scenepack_Dexter_Morgan_All_Best__Most_Popular_Clips_1.mp4"
   },
   {
    "file": "reference_tiktok.mp4",
@@ -133,6 +147,20 @@
    "sha256": "faad874a760b46a0977c80925a7ff01658b16ba75d5f672525d89a7a96c812ab",
    "duration": "173.061224",
    "uploaded_as": "ESPRIT____George_Clanton_-_Warmpop.mp3"
+  },
+  {
+   "file": "wish_you_well_rec.wav",
+   "bytes": 6340430,
+   "sha256": "fd2c188fd67075bbc766b41d9eff4f92c56638bd09c76a26825a656fb8b1b918",
+   "duration": "35.943039",
+   "uploaded_as": "extracted from wish_you_well_screenrec.mov (ffmpeg -vn, 44.1 kHz stereo PCM)"
+  },
+  {
+   "file": "wish_you_well_screenrec.mov",
+   "bytes": 25533742,
+   "sha256": "5141bfbd5fc85d9cd1726d599c709cd763c12c5925bf67b0e92b0691a49d2415",
+   "duration": "35.955034",
+   "uploaded_as": "the user's screen recording of Brent Faiyaz - Wish You Well (.mov)"
   }
  ]
 }

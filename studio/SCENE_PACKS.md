@@ -5,12 +5,94 @@ Every file lives in `src/` under the name in the first column. That folder is no
 All times are **seconds in that file**. "w" is the YuNet face width in source pixels on a 1280×720 frame. Above roughly 400 the face is too wide for a 9:16 crop, and text has nowhere to go.
 
 **Cached analysis** (copy it into a new edit instead of re-running):
-- shot lists: `v2/work/shots_p2.json`, `shots_p3.json`; `v3/work/shots_p4.json`, `shots_p5.json`, `shots_dk.json`; `v6/work/shots_p6.json`; `v7/work/shots_p7.json`, `shots_p8.json`; `v5/work/shots_fa.json`, `shots_fb.json`;
-- transcripts: `v3/work/doakes_transcript.json`, `v6/work/tr_pack6.json`, `v7/work/tr_p8.json`, `v5/work/tr_pack_*.json`.
+- shot lists: `studio/packs/shots_p9.json`, `shots_p10.json`; `v2/work/shots_p2.json`, `shots_p3.json`; `v3/work/shots_p4.json`, `shots_p5.json`, `shots_dk.json`; `v6/work/shots_p6.json`; `v7/work/shots_p7.json`, `shots_p8.json`; `v5/work/shots_fa.json`, `shots_fb.json`;
+- transcripts: `studio/packs/tr_p9.json` (p10 has no audio); `v3/work/doakes_transcript.json`, `v6/work/tr_pack6.json`, `v7/work/tr_p8.json`, `v5/work/tr_pack_*.json`.
 
 ---
 
 ## Dexter scene packs
+
+### `pack9_s4_best.mp4` (key `p9`): S4 "all best and most popular clips" (Trinity season), 1280×720, 60 fps container, 4:03, 102 shots
+
+Uploaded as `Dexter_S4_4k_Scenepack_Dexter_Morgan_All_Best__Most_Popular_Clips_1.mp4`. The footage is **24p inside 60 fps** (near-repeat ratio 0.68, like p8), so use `interp="hold"` and don't slow it with flow. It is dense in S4 kills, night exteriors and Trinity. Shot list: `studio/packs/shots_p9.json`. Very dark shots (index): 0, 10, 44, 47, 49, 52.
+
+| Time | Shot | Notes |
+|---|---|---|
+| 0.00–5.03 | Red-lit close-up, driving at night | w301, tight; little room for text. Under "Tonight's the night." |
+| 21.60–26.52 | Boxing ring | |
+| 26.53–31.12 | Blue night exterior | |
+| 40.97–42.02 | Grin | Short beat |
+| 46.85–50.90 | Grin beside a police car | |
+| 73.70–78.30 | Night dock | Moody plate |
+| 80.87–84.25 | Night garden | |
+| 88.07–93.03 | In the car at night | Drive plate (pairs with p8 night drives) |
+| 93.05–97.85 | Gun to the head | |
+| 98.52–102.87 | Through the blinds | Light-slat transition candidate |
+| **102.88–107.57** | **Plastic-wrapped table kill** | Kill-room centrepiece |
+| 117.43–120.58 | Night stare | |
+| 120.60–124.28 | Camera / photo beat | Shutter or flash transition candidate |
+| 124.30–129.20 | Upside-down face | Rotation or flip transition candidate |
+| 134.15–139.05 | Woods at night with a shovel | |
+| 139.07–145.77 | Run of 0.1–0.4 s micro-shots | Flash-cut montage only; `check_sources.py` will flag ranges that cross them |
+| 145.78–146.73 | Silhouette at the light table | Graphic silhouette |
+| 157.05–160.98 | Double face in a reflection | Mirror/reflection transition candidate |
+| 164.00–167.65 | Attack | Fast action |
+| 177.30–180.12 | Knife | |
+| 180.13–182.83 | Hammer | Trinity's weapon |
+| 182.85–184.55 | Trinity wrapped in plastic | |
+| 184.57–188.30 | Flashlight in the dark | Light-beam reveal candidate |
+| 189.83–196.55 | Trinity at Miami Metro: the office stare-down | Cuts at 191.17, 192.58 and 194.43. 189.83–191.15 is Trinity's own close-up |
+| 196.57–198.30 | Close-up | **w426, too wide for 9:16** |
+| 198.32–199.25 | Car | |
+| 203.23–211.72 | Parking-garage fight | Many short cuts |
+| 222.12–225.37 | Gloved at night, holding Trinity's hammer, low angle | Under "Hello, Arthur Mitchell." |
+| 226.57–229.95 | Kill | |
+| 229.97–230.55 | Moon | Short; good loop or transition plate |
+| 230.57–234.05 | Looks up | |
+| 238.20–239.80 | Baby in the blood (the S4 finale) | Heavy; use with care |
+
+**Dialogue lines** (Whisper on the pack audio, `studio/packs/tr_p9.json`). The pack has music under the voices, so these times are approximate, especially where Whisper spread one segment over many seconds. Before cutting a line, transcribe the Demucs vocal stem of that range (`tools/transcribe.py … --start S --dur D`).
+
+| Time | Line | Notes |
+|---|---|---|
+| 0.2–1.4 | "Tonight's the night." | |
+| 64.2–68.7 | "Loners are looked upon with suspicion. Those of us who prefer to work by ourselves…" | Whisper heard "Long are" |
+| 84.5–86.5 | "Monsters come in all shapes and sizes." | Strong hook-setter; over him at Miami Metro |
+| 118.6–120.2 | "…pieces of the puzzle were missing." | |
+| **129.7–133.4** | **"I had to evolve. It was the only way to survive."** | Clean, tight timing; over him hugging Rita |
+| ~138–144.5 | "Nothing lasts forever." | Words spread out; check the stem |
+| ~155.2–156.3 | "I really do need to stab something." | Check the stem |
+| 161.0–162.4 | "This is his solution to remorse: suicide." | |
+| ~189–193 | "Hello, Dexter Morgan." (Trinity) | Over the office stare-down; spread timing, check the stem |
+| **212.8–214.8** | **"How is it I can kill people and feel no regret…"** | |
+| **223.0–224.0** | **"Hello, Arthur Mitchell."** | Over the gloved night shot (222.12–225.37), before the Trinity kill |
+| **230.9–233.4** | **"I wonder if Rita's looking at this same moon."** | Over the moon (229.97) and looks-up (230.57) shots: a ready-made ending or loop line |
+
+### `pack10_s4_24p.mp4` (key `p10`): S4 scene pack, 1280×720, **native 24 fps**, 3:04, 59 shots
+
+Uploaded as `Dexter_Morgan_Dexter_S4_Scenepack_4K_1.mp4`. A true 24p file: play it at its own cadence (`interp="hold"`, the renderer repeats frames at 60) and never flow-interpolate it. Longer shots than p9, with more lab, boat and daylight Miami material. Shot list: `studio/packs/shots_p10.json`.
+
+| Time | Shot | Notes |
+|---|---|---|
+| 4.83–9.25 | Lab | |
+| 19.42–23.38 | Neck brace | **w355, too wide for text** |
+| 31.42–36.08 | Lab | |
+| 36.12–36.62 | Gloved hand | Short insert |
+| 62.04–67.96 | Night interiors | |
+| 87.83–91.21 | Drink | |
+| 91.25–93.00 | Kneeling | |
+| 93.04–94.38 | Boat, red shirt | |
+| 101.29–105.75 | Woods | Two shots (cut at 102.88) |
+| 111.00–112.38 | Dark shot | |
+| 113.75–115.88 | Boat | |
+| 130.33–132.67 | Pink shirt, palms | Miami daylight |
+| 160.29–163.58 | Flashlight | |
+| **163.62–165.79** | **Blood slide** | w267; slide-box transition plate (v7) |
+| 165.83–168.58 | Plastic room | Cut at 167.42 |
+| 178.54–180.92 | Photo wall | "Through a photo on the wall" transition |
+| 180.96–183.83 | Under a lamp | |
+
+**No dialogue: the audio track is digital silence** (−91 dB). Use it for picture only, and take sound from the song, room-tone beds or another pack.
 
 ### `pack8_s1.mp4` (key `p8`): S1 "best and most popular scenes", 1280×720, 60 fps, 6:47, 120 shots
 
@@ -195,6 +277,7 @@ Proven shots (fb):
 
 | File | Uploaded as | Notes |
 |---|---|---|
+| `wish_you_well_rec.wav` | extracted from the screen recording `wish_you_well_screenrec.mov` | Brent Faiyaz "Wish You Well", 36 s. 138.05 BPM, P=0.21731, offset 0.0489. Beat returns at 19.17 s; break 27.86; "Darling," 30.04; **drop 33.08**; hook "I don't wish you well" 34.16–35.12 (v8) |
 | `him_all_along.mp3` | `Gunna_-_Him_All_Along_Official_Visualizer.mp3` | 130 BPM, half-beat P=0.23075 s, offset 0.0808. Good part: 2:01.9 breakdown → **2:13.0 return (+17 dB)**. Hook "HIM ALL ALONG" at 131.92–132.30 |
 | `warmpop.mp3` | `ESPRIT____George_Clanton_-_Warmpop.mp3` | 90 BPM, P=0.33335, offset 0.1883. Filtered build 117–148.5 s; **full mix returns at 149.54 s** |
 | `need_it.mp3` | `Migos_-_Need_It…mp3` | 74 BPM (v3/v4) |
