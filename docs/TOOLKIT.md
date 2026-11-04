@@ -1,6 +1,6 @@
 # voidfx toolkit: how an edit gets made (fast)
 
-The engine lives in the newest edit, `v9/work/` (NIGHT BLOOM; `v7/` and `v6/` remain the benchmarks). It contains every v4–v9 transition and graphic. New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
+The engine is the standard, `v103/work/` (FOREVER; see the handbook §0). `render103.py` contains every v4–v9 transition and graphic, and the edit's own section is spliced in from `fx103.py` by `splice.py` (the last definitions win, so that section owns the grade, the frame function, the text and the finish). New edits copy all of it, plus FOREVER's EDL as the worked template, with `tools/new_edit.py`. Then they rewrite the EDL, restyle their `fxN.py` (grade, palette, set pieces, frame) and the sound design, and run `python3 vN/work/splice.py` after each `fxN.py` change. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
 
 ## 1. Pipeline and timings
 
@@ -11,7 +11,9 @@ Timings were measured on this 4-core box for a 26 s edit.
 | Scaffold | `python3 tools/new_edit.py N SLUG "TITLE"` | 1 s |
 | Map the song | `python3 tools/song_map.py src/SONG.mp3 vN/work` | 3 s |
 | Shot lists | `python3 vN/work/analyze.py src/PACK.mp4 TAG` (contact sheets, per-shot stats) | ~1 min per pack |
-| Dialogue / lyrics | `python3 tools/transcribe.py vN NAME MEDIA [--vad] [--start S --dur D]` | 1–3 min |
+| **Lyric recognition** | `python3 tools/lyrics.py vN src/SONG.mp3 START END "published lyrics \| line 2"`. Demucs vocals (cached), Whisper word times snapped to the real onsets, aligned to the published lyrics, unsung words left out, a ready `TEXT` caption block | ~1 min (+2 min Demucs the first time) |
+| Dialogue | `python3 tools/transcribe.py vN NAME MEDIA [--vad] [--start S --dur D]` | 1–3 min |
+| Edit-section change | edit `vN/work/fxN.py`, then `python3 vN/work/splice.py` | 1 s |
 | Voice under score | `python3 -m demucs -n htdemucs --two-stems=vocals -o vN/audio/sep CLIP.wav` | 15 s per 30 s clip |
 | Tracks and mattes | `bash tools/build.sh N prep` | ~35 s |
 | **Every-cut review sheets** | `bash tools/build.sh N auto` → `vN/frames/cuts_*.jpg` | ~35 s |
@@ -83,6 +85,33 @@ Each transition goes through something and has its own sound in `audioN.py` (`if
 The older v4/v5 transitions are still in the file and work as `tin` values: `kaleido`, `rewind`, `flash`, `tiles`, `neon_trace`, `ripple`, `pixel_sort`, `vhs_roll`. Add new transitions to `TR2` as `fn(A, B, j, f, sa, sb)` with `(fn, frames_before, frames_after)`:
 - `j < 0`: A is the live outgoing shot and B is the incoming shot's first frame.
 - `j >= 0`: A is the outgoing shot's last visible frame and B is the live incoming shot.
+
+### The v103 FOREVER transitions (the standard; in `fx103.py`, copied into every new edit's `fxN.py`)
+
+| tin | What it does | Extra EDL fields | Sound in `audio103.py` |
+|---|---|---|---|
+| `plastic_rip` | **THE RIP.** The kill-room plastic tears open down the middle on the drop and the flaps fly apart. Pair it with `plastic=(t0, t1)` on the outgoing shot (the sheet is pulled over the lens first). | `plastic=` on the previous shot | crinkle under the build, riser, tear, impact, whoosh |
+| `photo` / `photo_l` | The flash fires; the frame freezes into a crime-scene photo that is tossed right or left onto the next shot. Land it on a sung word. | none | flash whine and pop, shutter click, toss whoosh |
+| `shutter` | Six gunmetal camera blades snap shut over the shot and open on the next. | none | shutter ticks and a click |
+| `pupil_dive` | The camera dives into his eye (via YuNet's eye position); the pupil swallows the frame and a round iris opens on the next shot. | the outgoing shot needs a face track | reverse swell, rush, low boom, whoosh out |
+| `torch_blind` | A light in the outgoing shot (flashlight, lamp, headlights) flares into the lens and whites out the frame; the next shot burns in out of the glare, brightest parts first. | a hot light in the outgoing shot | flashlight click, swell, shimmer, bright hit |
+| `ripple` | A clear water drop falls, hits, and the rings refract open onto the next shot. | none | drip, bloop, bubbles |
+| `wave` | A rolling, refracting wall of sea spray washes across the lens. | none | wash and splash |
+| `bubbles_up` | A surge of rising bubbles sweeps up the frame. | none | bubble burst and whoosh |
+| `surface` (first shot) / `sink=True` (last shot) | The loop: it opens underwater rising to the surface (meniscus, droplets on the lens) and ends with the bag sinking into the same water. | `T_SURFACE`, `T_SPLASH` | surface break, splash, underwater low-pass across the wrap |
+| `strobe`, `roll`, `whip`, `whip_up`, `impact`, `lamp_on`, `light_sweep`, `wrap`, `zipper`, `rainfocus`, `logo_orig` | Engine moves used in FOREVER as connectors between the set pieces. | see the tables above | yes, each |
+
+### The v103 animation layers (EDL knobs and shot flags)
+
+| Knob / flag | What it does |
+|---|---|
+| `BEAT_PUNCH = [(k, strength), ...]` | `beat_fx`: the camera punches on the beat, a zoom kick with a stronger chromatic hit at strength ≥ 0.9. **Cover every section with drums** (the §0 target). |
+| `PULSE_K = [k, ...]` | `pulse_fx` and a heartbeat thump: the frame edges pulse red and the picture thumps on each beat of a quiet build (with a heartbeat sound). |
+| `flare=amt` | `anam_flare`: hot lights throw a long horizontal teal anamorphic streak. Keep it off faces (it was turned off on the night-drive shot because it crossed his eye). |
+| `swing=True` | `lamp_swing`: a kill-room lamp's pool of light sways across the shot. |
+| `plastic=(t0, t1)` | `plastic_sheet`: milky kill-room sheeting with swaying, light-catching folds is pulled over the lens between t0 and t1. |
+| `caustics=amt`, `snow=True`, `rain=True`, `moonglow=True` | water light, marine snow, rain on the glass, a glow on the moon. |
+| `TEXT` dicts | `style="cap"` (v9 keyline captions; `band=` for QC, optional `ys=`), `style="hero"` (per-letter title; `exit="bubbles"` or `"blood"`). Word times come from `tools/lyrics.py` (lyrics) or `transcribe.py` (dialogue), each on its sung or spoken time. |
 
 ## 3. Graphics and text
 

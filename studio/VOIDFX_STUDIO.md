@@ -1,8 +1,52 @@
 # voidfx studio handbook
 
-This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers the standard, every preference learned over seven edits and fourteen revision rounds, what works and what doesn't, and how to work twice as fast.
+This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers the standard (§0: v103 FOREVER), every preference learned over ten edits and more than twenty revision rounds, what works and what doesn't, and how to work twice as fast.
 
 Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (the engine) and `/CLAUDE.md` (the binding rules).
+
+---
+
+## 0. The standard: v103 FOREVER (watch it first)
+
+The owner, after rev 5: *"I like this edit. I would like for you to make it a standard. I just have one note. I would like for there to be more animations and transitions moving forward and that lyric kind of recognition to happen."*
+
+**Every new edit starts from FOREVER.** `python3 tools/new_edit.py N SLUG "TITLE"` copies its engine, its toolkit (`fxN.py`) and its EDL. Then **exceed it on the owner's two counts.**
+
+**What FOREVER does (the floor):**
+
+| Layer | FOREVER (v103 rev 5) |
+|---|---|
+| Concept | From Dexter's world: *"How is it I can kill people and feel no regret?"* He keeps every kill forever (he photographs it); the Gulf Stream keeps the rest. |
+| Set pieces (multi-stage, themed, own sound) | **THE RIP** (drop): kill-room plastic is pulled over the lens as the build peaks and tears open on the drop. **THE EVIDENCE PHOTOS** (hook): he raises the forensic camera, the ring flash fires on "IF" and the frame is tossed away as a photo, then a camera shutter, his wall of photos, and a last flash onto the boat. **THE GULF STREAM** (loop): the bag sinks; the edit opens in the same water, surfacing under his boat. |
+| Transitions | 20 designed transitions in 24.3 s, no plain cuts, each with its own sound: surfacing, sea spray, water-drop ripple, lamp on, light sweep, plastic wrap, strobe, plastic rip, impact frame, **eye dive**, whip, **flashlight blind-out**, logo, zipper, rain focus, whip up, bubbles, roll, flash-photo toss ×2, camera shutter. |
+| Animation | The camera **punches on every beat** (a zoom kick; the half-bars get a stronger kick with a chromatic split) through the riff, the verse and the hook. The frame **thumps with a heartbeat** in the build. Every shot has a slow push. |
+| Graphics | Caustics, marine snow and bubbles in the water; the red heartbeat pulse at the frame edges; a swinging kill-room lamp; an anamorphic flare on the flashlight; the plastic sheet; the photo cards; the hero title exits as bubbles. |
+| Text | The v9 standard (§3): his narrated line as a word-timed caption over voice-over; **every clearly sung lyric in the window captioned word by word on its sung time** (AND I **WONDER**; IF EVERYTHING COULD EVER / FEEL THIS **REAL**); the per-letter hero title **FOREVER** on the sung word. |
+| Sound | Narration as VO (his lips don't move, so it isn't shown as spoken). The song is spliced on a downbeat; a sound for every transition; −13.2 LUFS / −4.1 dBTP after AAC; a circular build so the loop is seamless. |
+
+**The owner's note, as targets for every new edit:**
+1. **More animations and transitions than FOREVER:**
+   - at least **24 designed transitions per ~24 s** (FOREVER had 20), each with its own sound, and no transition repeated except as a deliberate motif;
+   - **beat-synced camera animation** (`BEAT_PUNCH` in the EDL, `beat_fx` in the toolkit) through **every** section with drums, and a pulse or thump layer in quiet builds;
+   - **no dead holds:** any shot held longer than about a second gets a designed animation inside it (a light move, flare, speed ramp, push, text beat or themed graphic);
+   - graphics in every section.
+2. **Lyric recognition:**
+   - Choose the song window so its **lyrics** are on screen; an instrumental-only window isn't enough.
+   - Run `python3 tools/lyrics.py vN src/SONG.mp3 START END "published lyrics | line 2 | ..."`. It separates the vocals, times every sung word, corrects Whisper's mishears from the published lyrics, and leaves out anything not clearly sung.
+   - **Caption every clearly sung line, word by word, on its sung time**, in the v9 caption style, with the hook or title word as a per-letter hero title.
+   - The **picture recognises the lyric too:** at least three moments where a transition, animation or title lands on a sung word and acts it out. FOREVER's: the flash fires on "IF"; FEEL THIS **REAL** turns red as its photo is tossed; **FOREVER** builds as the bag goes over and sinks.
+   - Never caption a part the song isn't singing (the rev 2 note), and never show narration as spoken unless his lips match.
+
+**FOREVER's revision lessons (don't repeat them):**
+- **Blood and slide graphics were rejected across three revisions:**
+  - slides drifting around the cold open;
+  - random drips from the top edge and spatter hits;
+  - the scalpel-cut / blood-bead / slide-smear drop;
+  - the drawn corridor of slides;
+  - a blood drop.
+  Blood belongs to the footage and the grade, not to overlays.
+- **Also rejected:** a knife slicing across the lens, a glass shatter and duct-tape strips.
+- **What stayed:** transitions **motivated by the shot or the lyric** (the flashlight in his hand blinds the lens; his camera's flash takes the photo; the dive goes into his own eye; the plastic of the kill room he's standing in tears).
 
 ---
 
@@ -10,6 +54,7 @@ Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (t
 
 | Edit | Folder | Why it is a benchmark |
 |---|---|---|
+| **FOREVER** (Dexter × Foo Fighters "Everlong", rev 5, Studio 2) | `v103/` | **The standard (§0).** *"I like this edit. I would like for you to make it a standard."* New edits start from it and must add more animations and transitions and caption the sung lyrics. |
 | **HIM ALL ALONG** (Dexter × Gunna, rev 2) | `v7/` | Approved as a standard: *"The transitions were creative and well animated."* Physical, themed, Dexter-specific transitions (blood-slide box, plastic burst, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop), and a hero transition on the song's drop. |
 | **WARMPOP** (Dexter × George Clanton, rev 3) | `v6/` | Approved as a standard: *"wonderful transitions, animations, graphics, while maintaining the style that I like … I like how the music correlates to the edit. I like the text."* The amount of designed motion per second, the music-led structure, the eased two-line captions and the depth graphics. |
 | **SURPRISE** (Doakes × Need It, v4) | `v4/` | The first approved standard. A dialogue-led cold open that plays as **one continuous take**, the barrel → scope fly-through, and the pupil → iris loop. |
@@ -136,6 +181,10 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | v101: Dexter's narrated line shown as if he were saying it (*"the scene with Dexter speaking where he wasn't actually speaking"*) | v101 | **Only present a line as spoken when his lips match it.** Many of his lines are inner-monologue narration. Check with `tools/lipcheck.py` and on frames, or play the line as voice-over over a shot where he isn't talking. |
 | v102 LET GO (Studio 2, The Flash) overall: *"I like this edit and I honestly think it's good. It's complete"*, but **lacklustre** next to the other builds and the Dexter edits | v102 | **Go above and beyond** (the §5a gate). The remaining gaps were the **concept** (built around the lyric "let go" rather than a moment from his world), the **number of standout set pieces** (the strike on the drop was the only one; the rest were quick reworked v5 moves), and the **graphics** (subtle sparks and arcs that don't read at phone size). |
 
+| v103 rev 1: the last word of the VO line "gets cut off"; a low-quality early shot; captions where *"the song didn't sing the lyrics at those parts"* | v103 | Narration lines must end on a full stop or question with silence after them. Check every shot at full resolution. **Text only on clearly sung or spoken words**, each on its time (`tools/lyrics.py` marks what isn't clearly sung). |
+| v103 rev 2 → 4: blood slides that *"stick around"* in the cold open; *"random blood dripping"*; the knife slicing across the lens; *"the blood and slide animation"* (the scalpel/beads/slide-smear drop and the drawn slide corridor) | v103 | No blood or slide **graphics**: overlays of blood, drips, spatter, slides or a blood drop read as clutter, or as cheap next to the footage. No knife across the lens. |
+| v103 rev 4: the glass shatter and the duct-tape strips | v103 | Replaced by the eye dive and the flashlight blind-out (approved in rev 5). Prefer transitions motivated by something in the shot. |
+
 ## 5a. Raising the bar (after v9): the pre-build gate
 
 The owner's standard after v9: *"go above and beyond with these edits."* "Technically clean and on time" is not enough; every edit has to **visibly exceed** v6, v7 and v8. Clear this gate **before** the first render:
@@ -147,10 +196,12 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
    - one on the loop.
    They're on the level of v7's slide box, plastic burst and zipper, and v8's "Darling," freeze into the falling drop. Quick moves (whips, strobes, flashes) only connect the set pieces; they don't count toward the three.
 3. **Text in the approved v9 style** (§3: "it was perfect"): keyline captions for dialogue and lyrics, plus at least two designed title moments in the hero-title style that act out their meaning.
-4. **Graphics in every section**, not only the cold open: depth layers, themed overlays (evidence, slides, plastic, blood), beat-synced accents in the montage.
+4. **Graphics in every section**, not only the cold open: depth layers, themed overlays (evidence, plastic, light, water; **not** blood or slide overlays, §0), beat-synced camera animation through every section with drums.
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
 6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
 7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
+8. **More motion than FOREVER (§0):** count the plan's designed transitions (at least 24 per ~24 s), list the beat-punch sections, and name the animation inside every hold longer than about a second.
+9. **Lyric recognition (§0):** the window has sung lyrics; `tools/lyrics.py` has been run with the published lyrics; every clearly sung line is captioned on its words; at least three picture moments land on sung words.
 
 ## 5. What works: craft lessons
 

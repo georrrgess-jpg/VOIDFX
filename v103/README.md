@@ -1,5 +1,7 @@
 # FOREVER — Dexter × Foo Fighters "Everlong" (voidfx v103, 9:16)
 
+**Approved as the standard after rev 5.** The owner: *"I like this edit. I would like for you to make it a standard. I just have one note. I would like for there to be more animations and transitions moving forward and that lyric kind of recognition to happen."* New edits are scaffolded from this edit (`tools/new_edit.py`). The owner's note is written into the handbook §0 as targets (24+ designed transitions per ~24 s, beat punches through every drum section, no dead holds, every clearly sung line captioned through `tools/lyrics.py`).
+
 Studio 2. Built on the v9 engine (scaffolded by `tools/new_edit.py`), with the approved v9 text style (keyline captions and a per-letter hero title).
 
 ## Pre-render check (handbook §5a), written before the first render

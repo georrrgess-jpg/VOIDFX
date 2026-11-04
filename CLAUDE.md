@@ -1,11 +1,20 @@
 # voidfx edit standard
 
-**Benchmarks (all approved by the user as the standard for new edits; match or exceed them):**
+**THE STANDARD: `v103/`, *FOREVER* (Dexter × Foo Fighters "Everlong", rev 5, Studio 2).** The owner: *"I like this edit. I would like for you to make it a standard."* Every new edit starts from it (`tools/new_edit.py` copies its engine, toolkit and EDL) and must **exceed** it on two counts the owner named: **more animations and transitions**, and **lyric recognition**. See the handbook §0.
+- What it is: a concept from Dexter's world ("How is it I can kill people and feel no regret?"; he keeps every kill forever, the Gulf Stream keeps the rest); three multi-stage set pieces (THE RIP: kill-room plastic tears open on the drop; THE EVIDENCE PHOTOS: the ring flash fires on "IF" and the frame is tossed away as a photo; THE GULF STREAM: the loop sinks and surfaces in the same water); 20 designed transitions in 24 s, each with its own sound (eye dive, flashlight blind-out, camera shutter, flash-photo toss, water ripple, sea spray, rain focus, zipper, logo, bubbles); the camera punching on every beat; graphics in every hold (caustics, marine snow, heartbeat pulse, swinging lamp, anamorphic flare); the narrated line as voice-over; and **every clearly sung lyric captioned word by word on its sung time** in the v9 style.
+- **The owner's note for every edit from now on:** *"more animations and transitions moving forward, and that lyric kind of recognition."* In numbers:
+  - at least 24 designed transitions per ~24 s (FOREVER had 20);
+  - beat-synced camera animation through every section with drums;
+  - a designed animation inside any hold longer than about a second;
+  - the song window chosen so its lyrics are on screen;
+  - every clearly sung line captioned on its words (`tools/lyrics.py`), with key moments landing on sung words.
+
+**Earlier benchmarks (approved as standards; FOREVER builds on them):**
 - `v7/`, *HIM ALL ALONG* (Dexter × Gunna "Him All Along", rev 2): the newest engine, and the reference for **creative, well-animated, character-themed transitions** (blood-slide box, plastic burst on the drop, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop). The user: "The transitions were creative and well animated."
 - `v6/`, *WARMPOP* (Dexter × George Clanton "Warmpop", 9:16): the reference for the **amount and quality of designed transitions, animations and graphics**, how the music drives the structure, and the text. The user: "wonderful transitions, animations, graphics, while maintaining the style that I like… I like how the music correlates to the edit. I like the text."
 - `v4/`, *SURPRISE* (Doakes × Need It, 9:16): the reference for dialogue-led openings that play as one continuous take.
 
-**Start with `studio/VOIDFX_STUDIO.md`.** It holds every preference, like, dislike and lesson, the benchmarks, the style bank and the fast workflow. Then read `studio/SCENE_PACKS.md` (every source, the proven shots and dialogue timecodes) and **`docs/TOOLKIT.md`** (engine, transition catalog, pitfalls). Build every new edit on the newest benchmark engine with `python3 tools/new_edit.py N SLUG "TITLE"`, which copies `render7.py`, `audio7.py`, `qc7.py`, `facetrack.py` and `analyze.py`, wired to a new EDL; it carries every v4–v7 transition. Rewrite the edit's own `render()` frame function, grade, text and finish. Don't start from scratch, and **don't reuse a benchmark's look**: each edit needs its own style. For a second studio session, see `studio/NEW_STUDIO_SETUP.md`.
+**Start with `studio/VOIDFX_STUDIO.md`.** It holds every preference, like, dislike and lesson, the benchmarks, the style bank and the fast workflow. Then read `studio/SCENE_PACKS.md` (every source, the proven shots and dialogue timecodes) and **`docs/TOOLKIT.md`** (engine, transition catalog, pitfalls). Build every new edit on the standard with `python3 tools/new_edit.py N SLUG "TITLE"`. It copies the v103 engine (`render103.py` with every v4–v9 transition, `audio103.py`, `qc103.py`, `facetrack.py`, `analyze.py`), plus `fx103.py` as the edit's own `fxN.py` section (spliced in by `splice.py`) and FOREVER's EDL as the worked template. The scaffold renders FOREVER pixel-for-pixel until you change it. Restyle the edit's own grade, palette, set pieces, text colours and finish in `fxN.py`. Don't start from scratch, and **don't reuse a benchmark's look**: each edit needs its own style. For a second studio session, see `studio/NEW_STUDIO_SETUP.md`.
 
 ## User preferences (learned over several revisions)
 
@@ -52,6 +61,30 @@
   - **v101 THE LESS YOU KNOW:** the style was largely disliked (16 mm psychedelic look, 70s serif type). Some transitions were good.
   - **Lip-sync must be real.** v101 put Dexter's *narrated* line over a shot where he isn't speaking, and the owner rejected it. Present a line as spoken only when his lips match it. Check with `tools/lipcheck.py` and on frames; otherwise play it as voice-over.
   - **v102 LET GO (The Flash):** good and complete, but **lacklustre** next to the other builds. The gaps were the same as v9's: the concept, the number of standout set pieces, and graphics that read at phone size. Clear the §5a gate.
+- **v103 FOREVER feedback (Studio 2, five revisions, then approved as the standard):**
+  - **Rev 1 → 2:**
+    - A narrated line that ended mid-sentence sounded "cut off". Pick lines that end on a full stop or question with silence after them.
+    - A soft, low-quality shot was swapped out. Check every shot at full resolution.
+    - Captions on parts where the song wasn't singing were rejected. **Text only on clearly sung or spoken words**, each on its time.
+    - The owner asked for more transitions, animations and graphics, with very little dead space.
+  - **Rev 3 to 5, rejected; don't use these again:**
+    - blood slides drifting around the frame;
+    - random blood drips from the top edge and blood-spatter hits;
+    - a big knife slicing across the lens;
+    - the scalpel-cut / blood-bead / slide-smear drop;
+    - the drawn corridor of blood slides;
+    - a glass shatter;
+    - duct-tape strips.
+    Blood and slide **graphics** read as clutter or as cheap next to the footage. Keep blood to what is in the footage and the grade.
+  - **What replaced them and stayed:**
+    - the plastic rip on the drop;
+    - the evidence-camera flash and photo toss on the lyric;
+    - the camera shutter;
+    - the eye dive (into the pupil, a round iris opens);
+    - the flashlight blind-out (a light in the shot flares into the lens and the next shot burns in);
+    - a clear water-drop ripple;
+    - beat punches.
+    Transitions motivated by something in the shot or the lyric are the ones that land.
 - **No "gimmick on the face" effects** (e.g. lines converging on his face with a target ring). Transitions should be physical and themed (slide box, plastic burst, zipper, blood on the lens), not overlays on his face.
 - **Efficiency:** the user asks for quality *and* efficiency. Use the fast loop in `docs/TOOLKIT.md`:
   1. song map;
@@ -68,7 +101,7 @@
 
 - Sources go in `src/` (read-only copies). Each edit gets its own folder (`vN/work`, `vN/out`, ...).
 - One EDL file per edit holds every decision, and the renderer reads only that file. The EDL also sets `VER`, `SLUG` and `SONG`, plus the engine knobs (`DROP_TITLE`, `MONTAGE`, `VANISH_T0`, `VO_STEM`, `CAPS`, `END_CAP`); the template is `tools/edl_template.py`.
-- Tools: `tools/new_edit.py` (scaffold), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/transcribe.py` (word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc), `tools/setup_studio.sh` (deps, models, source-library check).
+- Tools: `tools/new_edit.py` (scaffold from the v103 standard), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/lyrics.py` (lyric recognition: Demucs vocals + Whisper word times aligned to the published lyrics, with a ready caption block), `tools/transcribe.py` (dialogue word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc), `tools/setup_studio.sh` (deps, models, source-library check).
 - Two studios: each works on its own branch with its own version range (Studio 1 `v8+`, Studio 2 `v101+`); see `studio/NEW_STUDIO_SETUP.md`.
 - Media (`src/`, audio, frames, outputs, models) stays out of git. Commit the code, EDL, transcripts, tracks and README, then push to the session's branch.
 - Models are downloaded at runtime: YuNet (`v3/models/face_detection_yunet_2023mar.onnx`), MODNet (`Xenova/modnet`), and faster-whisper large-v3 for dialogue and lyric timing.

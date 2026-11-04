@@ -6,7 +6,7 @@ Fill in the brackets, attach the files, and send it all in **one message**. The 
 New voidfx edit: [SHOW] × [ARTIST – SONG]. Studio [1|2], edit number v[N].
 
 Read studio/VOIDFX_STUDIO.md, studio/SCENE_PACKS.md, docs/TOOLKIT.md and CLAUDE.md first,
-then build it on the newest benchmark engine (python3 tools/new_edit.py [N] [slug] "[TITLE]").
+then build it on the standard, v103 FOREVER (python3 tools/new_edit.py [N] [slug] "[TITLE]").
 
 Sources: [new packs attached: …] + any of the library packs in studio/SCENE_PACKS.md.
 Song: [attached / src/…]. Use the good part (song_map). Length 20–26 s, 9:16, loops.
@@ -14,7 +14,11 @@ Theme / concept ideas (optional): [e.g. "Trinity winter", "the code of Harry", �
 Must-haves (optional): [a line of dialogue, a lyric, a shot, a transition idea]
 Avoid (optional): [anything beyond the handbook's rejected list]
 
-Exceed the benchmarks (v7 HIM ALL ALONG, v6 WARMPOP, v4 SURPRISE): many creative, themed transitions
+Exceed the standard, v103 FOREVER (handbook §0), and the benchmarks (v7 HIM ALL ALONG, v6 WARMPOP, v4 SURPRISE).
+More animations and transitions than FOREVER: 24+ designed transitions per ~24 s, the camera punching on the beat through
+every section with drums, and no dead holds. Lyric recognition: a window with sung lyrics, every clearly sung line captioned
+word by word on its sung time (tools/lyrics.py with the published lyrics), and key moments landing on sung words.
+Many creative, themed transitions
 that go through something (each with its own sound), new graphics, eased text, and a hero transition on the drop.
 Go above and beyond: clear the handbook's pre-build gate (§5a) before the first render. That means a concept rooted in
 Dexter's world, three or more signature multi-stage set pieces (drop, hook, loop), the approved v9 text style
