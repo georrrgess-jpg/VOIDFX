@@ -293,6 +293,10 @@ More fb shots, verified in v10 (fb is 24p in a 60 fps container: use `interp="ho
 | 116.5–119.38 | **Eyes full of lightning** | w353; the charge before a drop (v10) |
 | 83.8–85.08 | Lightning crawling over the suit; **chest emblem tracked at (731,462) → (745,632) source px** | v10 emblem dive |
 | 4.28–6.22 | Crouched take-off, lightning erupting behind | v10 drop shot |
+| **52.82–54.35** | **Masked Flash in the dark: his own gold lightning ignites along the suit, arcs across the shoulders** | w172; a real charge-up (v10 rev 2). The shot cuts at 54.35 to another speedster: stop at 54.30 |
+| 37.12–38.55 | Unmasked (hood), a hard look, blue bokeh | v10 rev 2 |
+| 136.43–138.97 | Masked close-up in the garage, calm, blue bokeh | w230 (v10 rev 2). 133.77–136.42 before it has purple/green lightning |
+| 147.32–150.72 | Masked profile in deep red light | Grades magenta, suit lenses glow green: off-palette for the gold look |
 | 124.38–124.78 | The lightning throw (bolt from his hand, bottom-left) | v10 |
 | 112.48–116.48 | Garage: lightning run, then lightning arm | Magnus Labs sign in frame (v10) |
 | 127.63–129.15 | The scream with lightning | v10 |

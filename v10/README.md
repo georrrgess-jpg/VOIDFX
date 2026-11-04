@@ -177,3 +177,43 @@ Skin is protected from the slate push, and blacks keep a floor.
 - Media stays out of git.
 
 Re-render: `bash tools/build.sh 10 prep audio video qc`
+
+
+## Revision 2 (owner feedback)
+
+> "Implement more animations, graphics and transitions… relatively no breathing room or deadspace… remove the scene with Barry's eyes being lit up and replace it with another high quality scene."
+
+**The eyes shot is gone.** It's replaced by `flash_b` 52.85–54.30: the masked Flash in the dark as **his own gold lightning ignites along his suit** and builds into arcs across his shoulders. The lightning is real (from the footage), it builds toward the drop, and it comes in through the **ignite** transition (blackout, side strikes, brightest-first reveal).
+
+**The cold open no longer breathes.** It used to be 4 calm 1.9 s shots; it's now 6 shots cut on the beat:
+
+| Edit | Shot | Transition in |
+|---|---|---|
+| 0.00 | Calm in the dark lab | rewind landing |
+| 0.96 | **New:** unmasked, a hard look (37.16) | **new: speed slices** (the frame rips into horizontal bands at different speeds; gold leading edges) |
+| 1.92 | The smile | arc link |
+| 2.88 | **New:** masked close-up in the garage (136.50) | **new: lightning tear** (a bolt cracks straight across, below the caption and clear of his face; the halves fly apart) |
+| 3.84 | **New:** his lightning ignites (52.85) | ignite |
+| 5.76 | Lightning over the suit (the emblem) | arc link → emblem dive |
+
+**New graphics and animation everywhere:**
+- **IT'S GONNA / CARRY OFF**: a new lyric in the opening (verified words only). It builds in the approved caption style; then a whirlwind lifts the letters off one by one and spirals them away, trailing gold.
+- **Speed Force sparks in depth:** far sparks drift behind him through the matte, near ones streak past soft in front. Used in the cold open, take-off, garage and hook.
+- **Edge lightning on the bar lines** of the cold open (from bar 2, so the loop seam stays clean), the hook and the run: bolts flicker down both frame edges, never the centre.
+- **Gold light sweeps** across the frame on the cold open's bar lines (from bar 2).
+- **Time-line ripples:** a gold time-line sweeps across on each beat that jolts frozen time forward.
+- **Beat pulses:** soft zoom pulses on every beat of the cold open; stronger ones after the drop and in the run.
+
+**Transitions:** 18 designed cut transitions plus the light streak and the rewind, all with their own sound. New sounds:
+- band whooshes for the slices;
+- a crack and rip for the tear;
+- a gust for the whirlwind;
+- quiet crackles for the edge bolts and the freeze ripples;
+- a shimmer for the sweeps.
+
+**Review:**
+- The garage close-up replaced a red-lit profile that graded magenta and showed green suit lenses (off-palette).
+- The tear was moved off the caption.
+- Every-cut sheets were checked.
+
+REV2_RESULTS

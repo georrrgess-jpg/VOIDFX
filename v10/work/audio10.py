@@ -396,7 +396,14 @@ def main():
     fx += stereo(bed * cw, 0.0) * np.array([[1.0, 0.9]], np.float32)
     for s_ in E.SHOTS:
         tin, t0 = s_.get("tin"), s_["t0"]
-        if tin == "arc_link":
+        if tin == "slices":                                       # bands rip past: a rippled run of short whooshes
+            for q in range(5): place(fx, A2.whoosh(0.12, -27 - q, 990 + q, q % 2 == 0), t0 - 0.10 + q * 0.035)
+        elif tin == "bolt_tear":                                  # a crack across his chest, then the frame rips open
+            place(fx, stereo(crackle(0.12, -23, 995, 0.9)), t0 - 5 / 60); place(fx, stereo(zap(-22, 996, 2800, 400, 0.14)), t0)
+            n_ = I(0.35); q_ = np.arange(n_) / SR
+            rip = bq(noise(n_, 997), "band", np.array([600, 5000]), 2) * np.exp(-q_ / 0.10) * (np.random.default_rng(998).random(n_) > 0.5)
+            place(fx, stereo(norm(rip, -24)), t0 + 0.01)
+        elif tin == "arc_link":
             place(fx, stereo(crackle(0.30, -24, 850 + int(t0 * 10)), 0.2), t0 - 0.10); place(fx, stereo(zap(-27, 851, 2600, 900, 0.10)), t0)
         elif tin == "ignite":
             place(fx, stereo(whine(0.30, -30, 300, 1800)), t0 - 0.05); place(fx, stereo(crackle(0.45, -23, 860, 0.5)), t0 + 0.02)
@@ -422,8 +429,20 @@ def main():
             place(fx, stereo(A2.impact(-12, (55, 28), 0.7, 0.5, 910)), t0); place(fx, A2.whoosh(0.4, -21, 911, True), t0 - 0.05)
             place(fx, stereo(crackle(0.5, -23, 912, 0.7)), t0 + 0.03)
     for e_ in E.STUT_GAPS: place(fx, stereo(tick(-25, 920 + e_)), th(e_) + 0.01)      # the clock in frozen time
+    for e_ in E.STUT_HITS: place(fx, stereo(zap(-31, 925 + e_, 2400, 900, 0.08), 0.4), th(e_))   # the time-line ripple
+    # edge bolts on the bar lines (cold open, the hook, the run) and the gold sweeps of the cold open: soft, under the song
+    for e_ in list(range(8, 32, 8)) + [56, 64, 88, 96]:
+        place(fx, np.stack([crackle(0.16, -31, 1000 + e_, 0.9), crackle(0.16, -32, 1100 + e_, 0.9)], 1), th(e_))
+    for e_ in range(8, 30, 8):
+        n_ = I(0.24); q_ = np.arange(n_) / SR
+        sh = sum(np.sin(2 * np.pi * fq * q_) for fq in (3136, 4186, 5274)) * np.sin(np.pi * q_ / 0.24) ** 2
+        place(fx, stereo(norm(sh, -36), -0.5), th(e_) + 0.02)
     # type: the bolts striking LET IT / HAPPEN, the HAPPENS slam, the echo, the run-in words
     for tx in E.TEXT:
+        if tx["style"] == "carry":                                # the whirlwind takes CARRY OFF
+            n_ = I(0.6); q_ = np.arange(n_) / SR; gx = wind_gust(0.6, -25, 1200, (-0.3, 0.9))
+            place(fx, gx, tx["end"] - 0.58)
+            for q in range(6): place(fx, stereo(A2.tick(-36, 1210 + q), -0.2 + 0.2 * q), tx["end"] - 0.5 + q * 0.06)
         if tx["style"] == "hero":
             for k_, (w, wt, ln) in enumerate(tx["words"]):
                 for q in range(len(w)): place(fx, stereo(zap(-31, 930 + k_ * 10 + q, 3800, 1500, 0.05), -0.5 + 0.2 * q), wt + 0.04 * q)

@@ -2,7 +2,8 @@
 audio builder and QC read only this file.
 
 Concept: "Let it happen." Barry Allen stops holding on. In the quiet before the storm he stands calm in the dark lab,
-smiles, his eyes catch lightning, the Speed Force crawls over his suit; on the drop the camera dives through the bolt of
+looks up, smiles, turns in red light, his own lightning ignites along his suit (rev 2: replaces the lit-up eyes),
+the Speed Force crawls over him; on the drop the camera dives through the bolt of
 his emblem and he is gone. The hunt of light (throw, run, scream), then LET IT / HAPPEN struck letter by letter by
 lightning. A bolt hits him, and on the song's own gated stutter TIME STOPS: the world freezes between beats while he
 moves through it. "All this running around": he runs so fast he leaves afterimages, becomes a streak of light and
@@ -51,6 +52,7 @@ VO_STEM = None; VO_STEM_T0 = 0.0
 
 # ---- lyric word times (Demucs vocal stem + Whisper, re-checked in short windows; song seconds). Only unambiguous
 #      words go on screen ("isn't bound/found" and "won't/will be holding on" are left off).
+W_CARRY = [("IT'S", 95.52), ("GONNA", 96.60), ("CARRY", 96.84), ("OFF", 97.34)]
 W_AND = [("AND", 100.26), ("WHEN", 101.56)]
 W_HAP1 = [("IT", 102.48), ("HAPPENS", 102.82)]
 W_HAP2 = [("WHEN", 103.92), ("IT", 104.42), ("HAPPENS", 104.70)]
@@ -66,19 +68,21 @@ def shot(n, src, e0, e1, a, b, **kw):
     d.update(kw); S.append(d)
 
 # ---- cold open: the calm before the whirlwind (bass-less build)
-shot("lab", "fb", 0, 8, 38.62, 40.54, z=[(0, 1.12), (1, 1.22)], tin="rewind_in", seg=True, arcs=0.35)
-shot("smile", "fb", 8, 16, 34.40, 36.32, z=[(0, 1.00), (1, 1.08)], tin="arc_link", seg=True, arcs=0.5)
-shot("eyes", "fb", 16, 24, 116.62, 118.54, z=[(0, 1.00), (1, 1.10)], tin="ignite", seg=True, arcs=0.7)
-shot("charge", "fb", 24, 32, 83.85, 85.05, z=[(0, 1.02), (1, 1.16)], tin="arc_link", interp="blend", seg=True, arcs=1.0,
+shot("lab", "fb", 0, 4, 38.62, 39.58, z=[(0, 1.12), (1, 1.18)], tin="rewind_in", seg=True, arcs=0.35, sparks=0.7)
+shot("look", "fb", 4, 8, 37.16, 38.12, z=[(0, 1.02), (1, 1.10)], tin="slices", seg=True, arcs=0.3, sparks=0.7)
+shot("smile", "fb", 8, 12, 34.60, 35.56, z=[(0, 1.00), (1, 1.07)], tin="arc_link", seg=True, arcs=0.5, sparks=0.7)
+shot("profile", "fb", 12, 16, 136.50, 137.46, z=[(0, 1.00), (1, 1.08)], tin="bolt_tear", seg=True, arcs=0.35, sparks=0.8)
+shot("ignition", "fb", 16, 24, 52.85, 54.30, z=[(0, 1.00), (1, 1.12)], tin="ignite", interp="blend", seg=True, arcs=0.45, sparks=1.0)
+shot("charge", "fb", 24, 32, 83.85, 85.05, z=[(0, 1.02), (1, 1.16)], tin="arc_link", interp="blend", seg=True, arcs=1.0, sparks=0.8,
      emblem=[(83.95, 731, 462), (84.45, 744, 581), (84.95, 744, 625), (85.05, 745, 632)], emblem_r=42)
 # ---- the drop: through the bolt of his emblem; the hunt of light
-shot("takeoff", "fb", 32, 38, 4.62, 6.12, z=[(0, 1.14), (1, 1.04)], tin="emblem_gate", seg=True, trails=0.8)
+shot("takeoff", "fb", 32, 38, 4.62, 6.12, z=[(0, 1.14), (1, 1.04)], tin="emblem_gate", seg=True, trails=0.8, sparks=0.7)
 shot("throw", "fb", 38, 40, 124.40, 124.77, z=[(0, 1.00), (1, 1.06)], tin="ramp")
-shot("garage", "fb", 40, 46, 113.55, 114.99, z=[(0, 1.04), (1, 1.12)], tin="bolt_link", seg=True, trails=0.7)
+shot("garage", "fb", 40, 46, 113.55, 114.99, z=[(0, 1.04), (1, 1.12)], tin="bolt_link", seg=True, trails=0.7, sparks=0.6)
 shot("scream", "fb", 46, 50, 127.70, 128.66, z=[(0, 1.00), (1, 1.08)], tin="shock")
 shot("grin", "fb", 50, 54, 56.30, 57.26, z=[(0, 1.00), (1, 1.05)], tin="prism_cut")
 shot("turn", "fb", 54, 56, 102.86, 103.34, z=[(0, 1.00), (1, 1.06)], tin="ramp")
-shot("hero", "fb", 56, 68, 109.76, 112.42, z=[(0, 1.00), (1, 1.10)], tin="logo_orig", seg=True, arcs=0.45)
+shot("hero", "fb", 56, 68, 109.76, 112.42, z=[(0, 1.00), (1, 1.10)], tin="logo_orig", seg=True, arcs=0.45, sparks=0.8)
 shot("strike", "fb", 68, 74, 10.36, 11.80, z=[(0, 1.00), (1, 1.08)], tin="bolt_strike")
 # ---- the gated stutter: time stops between the beats (source time only advances on the hits)
 #      (the music: e74 low, e75 gap, e76-77 hit, e78 low, e79 gap, e80-81 hit, e82 low, e83 gap, e84-85 hit, e86 low, e87 gap)
@@ -97,6 +101,7 @@ for s in SHOTS:
 # ---- text: the approved v9 system. cap = keyline captions, slam = one hard-hitting word pair, echo = speed-echo
 #      caption, hero = per-letter title struck by lightning, speed = words that arrive with afterimage streaks
 TEXT = [
+    dict(style="carry", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_CARRY)], end=th(15) + 0.05, emph=["CARRY", "OFF"]),
     dict(style="cap", words=[(w, s2e(t), 0) for w, t in W_AND], end=th(32) - 0.02, emph=["WHEN"], rides=True),
     dict(style="slam", words=[(w, s2e(t), 0 if i == 0 else 1) for i, (w, t) in enumerate(W_HAP1)], end=th(38) - 0.06, emph=["HAPPENS"]),
     dict(style="echo", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_HAP2)], end=th(46) - 0.07, emph=["HAPPENS"]),
