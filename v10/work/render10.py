@@ -7622,8 +7622,8 @@ def text_bound(out, f, tx):
     struck and bursts into sparks, clearing the way for AND."""
     t = f / FPS; words = tx["words"]
     if t < words[0][1] - 0.02 or t > tx["end"] + 0.02: return out
-    L = caption_letters(tx, (96, 140), (1368, 1500)); t_end = tx["end"]; t_b = [wt for w, wt, _ in words if w == "BOUND"][0]
-    out = out * cap_scrim(1250, 1620, 0.32 * (1 - smooth((t - t_end + 0.10) / 0.10)) * smooth((t - words[0][1] + 0.05) / 0.25))
+    L = caption_letters(tx, (96, 140), (1418, 1550)); t_end = tx["end"]; t_b = [wt for w, wt, _ in words if w == "BOUND"][0]
+    out = out * cap_scrim(1300, 1670, 0.32 * (1 - smooth((t - t_end + 0.10) / 0.10)) * smooth((t - words[0][1] + 0.05) / 0.25))
     lay = np.zeros((H, W, 4), np.float32); gust0 = t_b + 0.10; cv = bolt_canvas()
     for n_, (spr, x0, y0, wt, w, ln, ci, sz) in enumerate(L):
         v = eout(clamp((t - wt - 0.012 * ci) / 0.18, 0, 1), 2.4)

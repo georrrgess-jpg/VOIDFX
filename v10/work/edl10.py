@@ -106,7 +106,8 @@ for s in SHOTS:
 #      caption, hero = per-letter title struck by lightning, speed = words that arrive with afterimage streaks
 TEXT = [
     dict(style="carry", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_CARRY)], end=s2e(97.15) + 0.75, emph=["CARRY", "OFF"]),
-    dict(style="bound", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_BOUND)], end=s2e(100.06) - 0.03, emph=["BOUND"]),
+    dict(style="bound", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_BOUND)], end=s2e(100.06) - 0.03, emph=["BOUND"],
+         band=(1330, 1660)),                     # set 50 px lower: the masked face sits low early in the ignition shot
     dict(style="charge", words=[(w, s2e(t), i) for i, (w, t) in enumerate(W_AND)], end=th(32) + 0.02, emph=["WHEN"], rides=True),
     dict(style="slam", words=[(w, s2e(t), 0 if i == 0 else 1) for i, (w, t) in enumerate(W_HAP1)], end=s2e(103.33) - 0.06, emph=["HAPPENS"]),
     dict(style="echo", words=[(w, s2e(t), 0 if i < 2 else 1) for i, (w, t) in enumerate(W_HAP2)], end=th(46) - 0.07, emph=["HAPPENS"]),
