@@ -353,5 +353,25 @@ Diagnosis against professional Flash edits: the shots played at plain 1× speed 
 - **Light rays:** volumetric god rays now pour out of the lightning (ignition, the charge, takeoff, throw, garage, scream, strike). They're softer where the frame is already bright.
 - **Sound:** a quiet swish on each camera punch that isn't already a cut.
 
-REV5_RESULTS
+### Ship checkpoint (rev 5, measured on the encoded MP4)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1498 frames, decodes clean |
+| Loudness | −12.7 LUFS, −3.5 dBTP after AAC |
+| Faces | every shot centred, 0 flagged |
+| Text vs faces | clear (frame 1464 is a face inside a tunnel panel) |
+| Cuts | 17 cuts, 0 audio clicks |
+| Loop seam | blurred diff 0.93; audio continuous |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Visual sign-off** (frames from the encoded file):
+- the beat punches with zoom blur and colour split (490/491);
+- the rotation kicks (720, 780, 1300);
+- a velocity burst (548) followed by crisp flow slow motion (557);
+- the light rays on the strike, now moderate (1000/1010);
+- the loop seam (1497 → 0).
+
+Consecutive slow-motion frames in the garage and the grin were checked at full resolution for flow artifacts: they are clean.
 
