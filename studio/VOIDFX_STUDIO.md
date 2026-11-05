@@ -370,6 +370,7 @@ Only then deliver.
 | v102 LET GO (The Flash) | storm (crimson suit, gold lightning with white-hot cores, steel-blue shadows, gold halation, anamorphic flares) |
 | v103 FOREVER | undertow (deep teal-black water, bone highlights, blood the only warm colour, caustics, marine snow, cyan halation) |
 | v104 THE PASSENGER | SUMI ink wash (ivory paper highlights with fibres, ink-blue lifted blacks, only strong reds kept as red ink; ink drop, ink blooms, brush strokes, ink-bled vignette) |
+| v105 DRACULA | SUNDOWN: two looks split on the drop. Day: a bleached warm "Sunshine State postcard" (teal shadows, a sun with rays and lens ghosts). Night: cold moonlit silver, deep blacks, only crimson kept and pushed (a blood moon, bats, a crimson bloom). |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);
@@ -378,7 +379,7 @@ Fresh directions for future edits:
 - chalk outline / crime-scene diagram;
 - blueprint / technical drawing;
 - cold winter teal (Trinity season);
-- Sunshine State postcard;
+- Sunshine State postcard (used for v105's day half; a whole edit in it is still open);
 - a black-and-white newspaper "BAY HARBOR BUTCHER" press look;
 - an X-ray or MRI medical look.
 
@@ -398,6 +399,7 @@ Fresh directions for future edits:
 | v102 | Ark Patrol "Let Go" | 164 BPM | half-beats 720–848 (2:11.8–2:35.2, 16 bars); the last 6 half-beats rewind the whole edit back to the start | 2:20.56, drop 2 (+31 dB) → the strike |
 | v103 | Foo Fighters "Everlong" | 158 BPM | h1000–h1080 + h1096–h1152 (3:09.9–3:38.7; two riff bars spliced out) | 3:20.51, the full band returns → THE RIP (rev 4; was THE SAMPLE) |
 | v104 | GLM-RST "still love you (super slowed + reverb)" (TikTok sound, screen-recorded) | 112.19 BPM (fitted to the sub-bass hits; k = sixteenth 0.13370 s, k0 = 0.042 s) | the whole 23 s clip: synth pickup + five two-bar phrases, ends on a loop boundary | 1.65 s, the sub-bass enters → THE INK DROP lands |
+| v105 | Tame Impala "Dracula" | 114.99 BPM | half-beats 592–680 (2:34.6–2:57.5, 11 bars, one pass); the pre-roll is the song's own lead-in, so the loop plays through | 2:40.8 one-bar drop-out → SUNDOWN; 2:42.9 drop (+29.8 dB) → THE BAT BURST |
 
 ## 11. Communication
 

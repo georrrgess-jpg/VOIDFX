@@ -306,6 +306,22 @@ For a consistent Barry, avoid the other speedsters and suits: the yellow suit (1
 
 ---
 
+### `flash_s4.mp4` (key `fs4`): "FLASH SEASON 4 SCENE PACK 4K 60FPS" (theflash_scenepacks), 1280×720, 60 fps, 3:06, 97 shots
+
+Uploaded with the v105 brief, stored for future Flash edits. Shot list: `studio/packs/shots_fs4.json`. It's a clean pack: no watermark seen, and no audio track (picture only). Highlights from the overview sheet (times are approximate; check the shot list):
+- **Suited Barry:** close-ups and three-quarter shots (about 29, 34, 61, 66, 71, 94, 127, 145, 164 s).
+- **Lightning:** lightning runs and speed trails (about 6, 75, 89, 154, 173–182 s); the burning finale at about 173–182 s.
+- **The office fight:** with speed lightning, about 38–57 s.
+- **Unmasked Barry:** about 52, 122, 136, 150, 159 s.
+- **The Thinker (DeVoe) in his chair:** about 113 and 168 s. Iris: about 117 s.
+
+### `reverse_flash.mp4` (key `rf`): "Reverse Flash CW Flash Scenepack, Head Tracked, Topazed 4k 60fps, With Intro Clips", 1280×720, 60 fps, 1:34, 56 shots
+
+Uploaded with the v105 brief, stored for future Flash edits. Shot list: `studio/packs/shots_rf.json`. It has no audio track.
+- **Contents:** Eobard Thawne / Harrison Wells, with the Reverse-Flash suit and red eyes at about 6, 10, 15, 31, 76, 81 and 83 s. It's head-tracked and framed in a centre window with blurred sides.
+- **Watermark:** "SCENEPACK LINK IN DESC" is burned into the bottom of every frame, so crop above it.
+- **Text cards to avoid:** about 39 s and 67 s ("Intro …"), and 85–94 s ("Likes … second scenepack", "Hope you enjoyed", "Music by").
+
 ## Songs (`src/`)
 
 | File | Uploaded as | Notes |

@@ -141,6 +141,23 @@ These live on Studio 1's branch (`claude/gallant-planck-pqpczp`); this copy only
 | `motes=a`, `swash=dict(k0, k1, y)`, `flare=a` | Ink motes drifting in depth; an ivory brush swash painted behind a hero word; ivory anamorphic flares. | bristle swish for the swash |
 | always on | `cam_float` (a breathing camera on every hold), `beat_fx` (punches with radial motion blur on strong hits), the breathing vignette on `PHR`, `ink_drift` in the shadows. | — |
 
+### The v105 DRACULA toolkit (in `fx105.py`)
+
+| tin / flag | What it does | Sound in `audio105.py` |
+|---|---|---|
+| `look="day"/"dusk"/"night"` | Per-shot grade: `day_grade` (bleached warm, teal shadows), `night_grade` (cold silver, crimson kept above `redthr`); `dusk_u` slides day → night across `SUN_K` (and back for `daybreak`). | sea air by day, wind and a B-flat drone by night |
+| `sun=(x, y)` on a day shot | A sun with light rays (the bright parts streaked away from it, quarter-res), a glow and lens ghosts (`sun_fx`). Dusk shots set it down the right edge, off the face. | — |
+| `sun_flare` | A flare crosses the frame at the sun's height and whites it out for a moment. | bright whoosh + glint |
+| `bat_burst` | The drop: a 3D cloud of bats pours out of the sky toward the lens, blacks out the frame against a crimson flash, and flies past (depth blur on the near ones). | reverse swell, sub impact, a burst of wings, chirps |
+| `bat_swarm` | A river of bats crosses in depth (parallax, size and blur by distance); a band of moonlight travels behind the column so they read; the cut rides its middle. | wings panned left to right |
+| `bloodmoon=dict(k0, k1)` on a `seg=True` shot | A procedural blood moon (maria, craters, limb darkening, the Earth's-shadow edge) rises behind his matte, with cloud, bats, a pulse and a red rim on him. | church-bell toll on B-flat |
+| `moon_iris` | A circular iris opens from the dark with a crimson rim. | reverse swell, toll, sub |
+| `coffin` | A height-map-lit lacquered coffin lid with a brass cross falls to the lens, slams (jolt, dust) and lifts away on the next shot. | hinge creak, wood thud, dust |
+| `daybreak=True` on the last shot + `seam_out` | Dawn light rises, the sun comes up low right, the frame burns white, then crossfades into frame 0 (which opens at `SEAM_W` white). | B-flat-minor chord swell, tail wrapped into frame 0 |
+| hero `exit="bats"` | The per-letter hero title (red flood) breaks into crimson bats that scatter sideways, away from the face. | a small flutter |
+| `fog=a` | Night fog drifting through the shot. | — |
+| always on | `render_shot` upscale: Lanczos + a noise-gated luma detail boost (not AI super-resolution). `finish105`: warm or moonlit halation and a crimson bloom (skipped on logo frames). | — |
+
 ## 3. Graphics and text
 
 - **v9 graphics and type** (`render9.py`, end of file):
