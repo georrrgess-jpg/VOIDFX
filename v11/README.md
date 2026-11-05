@@ -37,4 +37,54 @@ The cold open is Harrison Wells / the Reverse-Flash, in red: Wells' face on "Har
 
 **Look: VOLTAGE / RIVAL** (new): deep clean blacks, the crimson suit, warm gold lightning with bloom, and cool teal in the shadows for Barry. The rival's shots go red (red-shifted highlights, dark red shadows, red halation).
 
-V11_SHOTLIST
+## The edit, shot by shot
+
+| Edit | Music | Shot | Transition in (each with its own sound) |
+|---|---|---|---|
+| 0.00 | Intro talk | Harrison Wells, side-lit (rf 13.05) | **Red loop landing:** the Reverse-Flash shudder settles (continues the last frame) |
+| 1.89 | **Beat in** | The Reverse-Flash mask (rf 15.02) | **Red phase:** the frame vibrates into red ghost copies (his signature face blur) and resolves into the mask. Red arcs crawl on his silhouette |
+| 3.31 | | Thawne smirks, cowl down (s4 95.50) | **Red link:** a red arc leaps out of the mask, off both faces |
+| 4.72 | | Eobard, red eyes (rf 34.00) | **Red slices:** the frame rips into bands with red edges |
+| 5.67 | The dip | Barry's answer, intense close-up (s4 93.90) | **Red streak:** the rival runs past below his chin, and Barry is behind him |
+| 6.61 | *"Let's go!"* | Barry, close (s4 100.12) | **Dolly / focus pull**, a quiet breath. **LET'S GO** (GO lands white-hot, struck by a bolt) |
+| **7.56** | **THE DROP** | Yellow lenses, gold lightning off him (s4 28.70) | **BOLT SPLIT:** a lightning-bolt seam cracks down beside his face as LET'S GO lands. The left side goes red, the right gold; on the drop the gold breaks through, the seam sweeps across like the emblem's bolt (tearing LET'S GO apart), and a refracting shockwave rings out |
+| 8.98 | | Grinning in the suit (s4 31.40) | Gold arc link |
+| 9.92 | *"…some **bop** in it"* | Running in the dark with lightning (s4 122.95) | **Whip pan** with a gold streak. **BOP** punches in letter by letter, the O is the Flash emblem |
+| 10.87 | | Low-angle lightning run (s4 137.20) | Speed slices |
+| 11.81 | | **Time freeze:** the same run, from below (s4 140.95–141.85) | **Freeze:** time stops on the beat, the colour half drains, gold sparks hang in the air and the camera glides through the moment in 3-D (bullet time) |
+| 13.23 | | Masked smirk (s4 62.90) | **Restart:** time snaps back on a ring |
+| 14.17 | | Masked close-up in the bar (s4 155.80) | **Ignite:** blackout, side strikes, brightest-first |
+| 15.12 | | **The flight through fire**, wide (s4 171.76) | **Into the Speed Force:** a radial tunnel pull, with light streaks rushing from the vanishing point through the shot |
+| 16.54 | | The flight, close (s4 173.40) | Speed ramp |
+| 18.43 | | The final stare, frontal (s4 146.40) | **Emblem reveal:** the Flash emblem draws itself in light (ring, then bolt) exactly where his chest emblem will be; the next shot opens through it, emblem on emblem. Lightning ribbons spiral round him |
+| 19.84 → 20.79 | Tape stop | The red lightning takes the frame back | **The loop:** a red streak runs along the bottom, the frame shudders in red and becomes Harrison, frame 0 |
+
+**Motion pass (the v10 standard):**
+- Every verse shot is speed-ramped: a burst on each beat, then optical-flow slow motion on the restored source.
+- On every beat from the drop to the loop, the camera punches in 5.5 % with an alternating ±1° kick, plus zoom blur and a colour split on the hit frames.
+- The cold open's beats get a softer 2.5 % punch.
+- Light rays and light warps sit on the lightning shots.
+
+**Sound:**
+- The song window plays straight, then tape-stops into the loop.
+- Every transition has its own sound: the red shudder (buzz, whoom, crackle), the bolt-split crackle building into the drop's impact, thunder and sub drop, swirl passes, the Speed Force rush, and a tick and shimmer for the freeze.
+- A quiet swish on each camera punch that isn't a cut.
+- Room tone runs continuously across the wrap.
+- Built circularly, mastered on a wrapped copy, measured after AAC.
+
+## Review passes (before the final render)
+
+- **Cut sheets of every transition**, plus stills of every set piece at full size.
+- **Shots swapped:**
+  - A tux-wedding shot blew out in orange and was replaced by the low-angle lightning run.
+  - The first time-freeze plate showed only the back of Barry's head. The freeze moved to the dutch-angle lightning run, with a partial colour drain, because MODNet couldn't hold a matte on that angle.
+  - The bar shot was re-picked so his face isn't hidden.
+- **Moved off faces:**
+  - The bolt seam moved beside his face (it ran through his nose).
+  - The red streak moved below the chin.
+  - The emblem reveal moved onto his chest emblem.
+  - The loop streak moved to the bottom of the frame.
+- **Exposure:** brought down on the fire shots, the dark lightning run and the drop (white skies and fire clipped). The speed ramp no longer brightens. The drop's impact frame was halved, so there's no full-screen white flash.
+
+V11_RESULTS
+
