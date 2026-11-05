@@ -1,6 +1,7 @@
 // User commands shared by keyboard shortcuts, toolbars and the inspector.
 import { player } from '../engine/player';
-import { addMediaToTimeline, deleteClips, duplicateClip, freeTrack, mainTrack, newClipId, normalize, patchClip, splitClipAt } from '../state/ops';
+import { addMediaToTimeline, deleteClips, duplicateClip, freeTrack, mainTrack, newClipId, normalize, patchClip, splitClipAt, velocityRamp } from '../state/ops';
+import { timelineBeats } from '../engine/evaluate';
 import { store } from '../state/store';
 import { AnimProp, Clip, DEFAULT_TEXT_STYLE, Project, TextStyle, TransitionType } from '../state/types';
 import { clipEnd, EPS, propValue, round, trackClips } from '../state/util';
@@ -53,13 +54,15 @@ export function addMediaClip(mediaId: string, opts: { at?: number; trackId?: str
   store.set({ selection: [id], rightTab: 'inspector' });
 }
 
-export function addText(preset: Partial<TextStyle> = {}, text = 'Your text', anim?: Clip['anim']) {
+export function addText(preset: Partial<TextStyle> = {}, text = 'Your text', anim?: Clip['anim'], transform?: Clip['transform']) {
   let id = '';
   const t = store.state.time;
   commitNorm(p => {
     const dur = 3;
     const tr = freeTrack(p, 'text', t, dur);
     const c: Clip = { id: newClipId(p, 'text'), track: tr.id, kind: 'text', start: round(t, 4), dur, text, style: { ...preset }, anim: anim || { in: 'fade', out: 'fade', inDur: 0.3, outDur: 0.25 } };
+    if (transform) c.transform = transform;
+    else if (preset.font === 'Inter' && preset.weight === 900) c.transform = { y: 0.25 };
     p.clips.push(c);
     id = c.id;
   });
@@ -68,13 +71,41 @@ export function addText(preset: Partial<TextStyle> = {}, text = 'Your text', ani
 
 /** Patch the selected clip(s) through the validated path. */
 export function updateClip(id: string, props: Record<string, any>, live = false) {
+  const issues: string[] = [];
   const apply = (p: Project) => {
     const c = p.clips.find(x => x.id === id);
     if (!c) return;
-    patchClip(c, props, [], p);
+    patchClip(c, props, issues, p);
     normalize(p, media());
   };
   if (live) store.live(apply); else store.commit(apply);
+  if (issues.length && !live) store.toast(issues[0].replace(/^clip \S+: /, ''), 'error');
+}
+
+/** Velocity ramp on the selected clip from the music's beats (burst on the beat, slow motion between). */
+export function rampSelected(clear = false) {
+  const c = selectedClips().find(x => x.kind === 'video');
+  if (!c) { store.toast('Select a video clip.'); return; }
+  let ok = true;
+  store.commit(p => {
+    const cc = p.clips.find(x => x.id === c.id)!;
+    if (clear) { if (cc.kf) delete cc.kf.speed; }
+    else ok = velocityRamp(p, media(), cc);
+    normalize(p, media());
+  });
+  if (!ok) store.toast('No music beats fall inside this clip. Put a song on an audio track first.', 'error');
+}
+
+/** Put each word of the selected text clip on the next beats (or every 0.2 s without music). */
+export function wordsOnBeats() {
+  const c = selectedClips().find(x => x.kind === 'text');
+  if (!c) return;
+  const n = (c.text || '').replace(/\*/g, '').split(/\s+/).filter(Boolean).length;
+  const beats = timelineBeats(store.state.project, media()).map(b => b.t - c.start).filter(t => t >= 0 && t < c.dur);
+  const half: number[] = [];
+  for (let i = 0; i < beats.length; i++) { half.push(beats[i]); if (i + 1 < beats.length) half.push((beats[i] + beats[i + 1]) / 2); }
+  const times = Array.from({ length: n }, (_, i) => round(half[i] ?? (half.length ? half[half.length - 1] + (i - half.length + 1) * 0.2 : i * 0.2), 3));
+  updateClip(c.id, { words: times, anim: { in: 'words' } });
 }
 
 /** Set an animatable property: writes a keyframe at the playhead when the property is keyframed. */

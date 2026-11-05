@@ -30,6 +30,8 @@ const cdp = await page.context().newCDPSession(page);
 await cdp.send('Performance.enable');
 const heap = async () => { const m = (await cdp.send('Performance.getMetrics')).metrics; return Math.round(m.find(x => x.name === 'JSHeapUsedSize').value / 1048576); };
 await page.goto('http://localhost:8778/');
+await page.waitForSelector('.home');
+await page.click('.home .cta-ice:has-text("New project")');
 await page.waitForSelector('.app');
 const r = { fileGB: +(statSync(BIG).size / 1073741824).toFixed(2), heapStartMB: await heap() };
 const t0 = Date.now();

@@ -1,16 +1,20 @@
 // Edit operations shared by the UI and the Opus Director. Every change is validated here so the
 // timeline can never hold out-of-range values, overlapping clips or dangling references.
 import {
-  ANIM_PROPS, AnimProp, Clip, ClipKind, Ease, FONTS, Keyframe, MediaInfo, Project, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
+  ANIM_PROPS, AnimProp, Clip, ClipKind, DEFAULT_CAMERA, Ease, FONTS, Keyframe, MediaInfo, Project, SFX, SfxType, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
   Track, TrackKind, TRANSITIONS, TransitionType,
 } from './types';
-import { clamp, clipEnd, clipIn, clipSpeed, deepClone, EPS, num, round, shortId, trackClips } from './util';
+import { clamp, clipEnd, clipIn, clipSpeed, deepClone, EPS, hasRamp, num, round, shortId, srcAt, trackClips } from './util';
+
+import { SFX_INFO, soundsForTransition } from '../engine/sfx';
+import { timelineBeats } from '../engine/evaluate';
+import { defaultTransitionDur } from '../engine/transitions';
 import { newProject } from './store';
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const EASES: Ease[] = ['linear', 'in', 'out', 'inOut', 'hold'];
 
-export const trackKindFor = (k: ClipKind): TrackKind => (k === 'image' ? 'video' : k);
+export const trackKindFor = (k: ClipKind): TrackKind => (k === 'image' ? 'video' : k === 'sfx' ? 'audio' : k);
 
 export function mainTrack(p: Project): Track | undefined {
   return p.tracks.find(t => t.main) || p.tracks.find(t => t.kind === 'video');
@@ -59,11 +63,16 @@ export function freeTrack(p: Project, kind: TrackKind, start: number, dur: numbe
 }
 
 export function mediaLimit(c: Clip, media: Record<string, MediaInfo>): number {
-  // Longest timeline duration this clip may have given its in-point and speed.
+  // Longest timeline duration this clip may have given its in-point and speed (ramps included).
   if (c.kind === 'text' || c.kind === 'image') return Infinity;
+  if (c.kind === 'sfx') return c.sfx ? Math.max(0.02, SFX_INFO[c.sfx].dur - (c.in ?? 0)) : Infinity;
   const m = c.media ? media[c.media] : undefined;
   if (!m || !m.duration) return Infinity;
-  return Math.max(0, (m.duration - clipIn(c)) / clipSpeed(c));
+  if (!hasRamp(c)) return Math.max(0, (m.duration - clipIn(c)) / clipSpeed(c));
+  if (srcAt(c, c.dur) <= m.duration) return Infinity;
+  let lo = 0, hi = c.dur;
+  for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (srcAt(c, mid) <= m.duration) lo = mid; else hi = mid; }
+  return lo;
 }
 
 /**
@@ -77,6 +86,7 @@ export function normalize(p: Project, media: Record<string, MediaInfo>, opts: { 
   const trackIds = new Set(p.tracks.map(t => t.id));
   p.clips = p.clips.filter(c => {
     if (!trackIds.has(c.track)) return false;
+    if (c.kind === 'sfx') return !!c.sfx;
     if (c.kind !== 'text' && (!c.media || !media[c.media])) return false;
     return true;
   });
@@ -181,7 +191,8 @@ export function splitClipAt(p: Project, id: string, at: number): Clip | null {
   b.id = newClipId(p, c.kind);
   b.start = at;
   b.dur = c.dur - lt;
-  if (c.kind !== 'text' && c.kind !== 'image') b.in = clipIn(c) + lt * clipSpeed(c);
+  if (c.kind === 'video' || c.kind === 'audio') b.in = round(srcAt(c, lt), 4);
+  else if (c.kind === 'sfx') b.in = round((c.in ?? 0) + lt, 4);
   else if (c.kind === 'image') b.in = 0;
   c.dur = lt;
   delete b.transition;
@@ -232,7 +243,7 @@ export function duplicateClip(p: Project, id: string): Clip | null {
 function sanitizeKeys(raw: unknown, prop: AnimProp, maxT: number): Keyframe[] | null {
   if (!Array.isArray(raw)) return null;
   const range: Record<AnimProp, [number, number]> = {
-    x: [-3, 3], y: [-3, 3], scale: [0.02, 20], rotation: [-1440, 1440], opacity: [0, 1], volume: [0, 4],
+    x: [-3, 3], y: [-3, 3], scale: [0.02, 20], rotation: [-1440, 1440], opacity: [0, 1], volume: [0, 4], speed: [0.05, 10],
   };
   const [lo, hi] = range[prop];
   const out: Keyframe[] = [];
@@ -300,7 +311,8 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         if (v === null || v === 'none' || v === false) { delete c.transition; break; }
         const type = typeof v === 'string' ? v : v?.type;
         if (!TRANSITIONS.includes(type)) { issues.push(`${where}: unknown transition "${type}"`); break; }
-        const dur = typeof v === 'object' ? num(v.dur, 0.05, 3, 0.4) : 0.4;
+        if (type === 'logo' && p.clips.some(x => x.id !== c.id && x.transition?.type === 'logo')) { issues.push(`${where}: the voidfx logo transition is already used once in this edit`); break; }
+        const dur = typeof v === 'object' && v.dur !== undefined ? num(v.dur, 0.05, 3, 0.4) : defaultTransitionDur(type);
         c.transition = { type: type as TransitionType, dur: round(dur, 3) };
         break;
       }
@@ -318,6 +330,18 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         break;
       }
       case 'text': if (c.kind === 'text') c.text = String(v ?? '').slice(0, 600); break;
+      case 'words': {
+        if (c.kind !== 'text') break;
+        if (v === null) { delete c.words; break; }
+        if (!Array.isArray(v)) { issues.push(`${where}: words must be an array of start times (seconds from the clip start)`); break; }
+        c.words = v.map((x: unknown) => round(num(x, 0, 3600, 0), 3)).slice(0, 200);
+        break;
+      }
+      case 'sfx': {
+        if (c.kind !== 'sfx') break;
+        if ((SFX as readonly string[]).includes(v)) c.sfx = v as SfxType; else issues.push(`${where}: unknown sound "${v}"`);
+        break;
+      }
       case 'style': {
         if (c.kind !== 'text' || !v || typeof v !== 'object') break;
         const s = { ...(c.style || {}) };
@@ -336,6 +360,13 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         if ('tracking' in v) s.tracking = round(num(v.tracking, -0.2, 1.5, 0), 3);
         if ('lineHeight' in v) s.lineHeight = round(num(v.lineHeight, 0.6, 2.5, 1.12), 3);
         if ('maxWidth' in v) s.maxWidth = round(num(v.maxWidth, 0.1, 1, 0.86), 3);
+        if ('emphColor' in v) { if (HEX.test(String(v.emphColor))) s.emphColor = String(v.emphColor); else issues.push(`${where}: emphColor must be a hex colour`); }
+        if ('emphGlow' in v) s.emphGlow = round(num(v.emphGlow, 0, 1, 0.6), 3);
+        if ('scrim' in v) s.scrim = round(num(v.scrim, 0, 1, 0), 3);
+        if ('lineScales' in v) {
+          if (Array.isArray(v.lineScales)) s.lineScales = v.lineScales.slice(0, 6).map((x: unknown) => round(num(x, 0.3, 3, 1), 3));
+          else if (v.lineScales === null) delete s.lineScales;
+        }
         c.style = s;
         break;
       }
@@ -355,6 +386,79 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
   }
 }
 
+// ---------- sound effects, beat camera, speed ramps ----------
+
+export function sanitizeCamera(v: any, issues: string[]): Project['camera'] {
+  if (v === null || v === false) return undefined;
+  if (v === true) return { ...DEFAULT_CAMERA };
+  if (!v || typeof v !== 'object') { issues.push('camera must be an object'); return undefined; }
+  const cam = { ...DEFAULT_CAMERA, on: v.on !== false };
+  if ('every' in v) { if (['beat', 'half', 'downbeat'].includes(v.every)) cam.every = v.every; else issues.push('camera.every must be beat, half or downbeat'); }
+  if ('punch' in v) cam.punch = round(num(v.punch, 0, 0.3, DEFAULT_CAMERA.punch), 4);
+  if ('kick' in v) cam.kick = round(num(v.kick, 0, 10, DEFAULT_CAMERA.kick), 3);
+  if ('decay' in v) cam.decay = round(num(v.decay, 0.03, 1, DEFAULT_CAMERA.decay), 3);
+  if ('from' in v && v.from !== null) cam.from = round(num(v.from, 0, 36000, 0), 3);
+  if ('to' in v && v.to !== null) cam.to = round(num(v.to, 0, 36000, 0), 3);
+  return cam;
+}
+
+/** Add a generated sound effect clip on a free audio track (an 'SFX' track is created if needed). */
+export function addSfx(p: Project, type: SfxType, start: number, opts: { volume?: number; id?: string; name?: string; track?: string } = {}): Clip {
+  const dur = SFX_INFO[type].dur;
+  let at = Math.max(0, start), inPt = 0;
+  if (start < 0) { inPt = -start; at = 0; }
+  const c: Clip = { id: opts.id || newClipId(p, 'audio'), track: '', kind: 'sfx', sfx: type, start: round(at, 4), dur: round(Math.max(0.02, dur - inPt), 4), in: round(inPt, 4), volume: opts.volume ?? 0.35 };
+  if (opts.name) c.name = opts.name;
+  let tr = opts.track ? p.tracks.find(t => t.id === opts.track && t.kind === 'audio') : undefined;
+  if (!tr || !isFree(p, tr.id, c.start, c.dur)) {
+    tr = p.tracks.find(t => t.kind === 'audio' && t.name.startsWith('SFX') && isFree(p, t.id, c.start, c.dur));
+    if (!tr) tr = addTrack(p, 'audio', undefined, `SFX ${p.tracks.filter(t => t.name.startsWith('SFX')).length + 1}`);
+  }
+  c.track = tr.id;
+  p.clips.push(c);
+  return c;
+}
+
+/** Give every transition its own layered sound. Earlier automatic sounds are replaced. */
+export function addTransitionSounds(p: Project, volume = 0.35): number {
+  p.clips = p.clips.filter(c => !(c.kind === 'sfx' && c.name?.startsWith('auto:')));
+  let n = 0;
+  for (const c of [...p.clips]) {
+    if (!c.transition) continue;
+    for (const [type, off] of soundsForTransition(c.transition.type, c.transition.dur)) {
+      addSfx(p, type, c.start + off, { volume: type === 'boom' || type === 'impact' || type === 'subdrop' ? volume * 1.15 : volume, name: `auto:${c.id}` });
+      n++;
+    }
+  }
+  return n;
+}
+
+/** Speed ramp synced to the music: a burst on every beat, slow motion between (the v10 motion pass). */
+export function velocityRamp(p: Project, media: Record<string, MediaInfo>, c: Clip, opts: { fast?: number; slow?: number; burst?: number } = {}): boolean {
+  if (c.kind !== 'video') return false;
+  const fast = opts.fast ?? 2.2, slow = opts.slow ?? 0.45, burst = opts.burst ?? 0.18;
+  const beats = timelineBeats(p, media).map(b => b.t - c.start).filter(lt => lt > 0.02 && lt < c.dur - 0.05);
+  if (!beats.length) return false;
+  const keys: { t: number; v: number; e?: 'out' | 'hold' }[] = [{ t: 0, v: slow, e: 'hold' }];
+  for (const lb of beats) {
+    keys.push({ t: round(lb, 4), v: fast, e: 'out' });
+    keys.push({ t: round(Math.min(c.dur, lb + burst), 4), v: slow, e: 'hold' });
+  }
+  const kf = { ...(c.kf || {}), speed: keys };
+  const probe: Clip = { ...c, kf };
+  const m = c.media ? media[c.media] : undefined;
+  if (m?.duration) {
+    const avail = m.duration - clipIn(c) - 0.05;
+    const used = srcAt(probe, c.dur) - clipIn(c);
+    if (used > avail && used > 0) {
+      const k = Math.max(0.05, avail / used);
+      for (const key of keys) key.v = round(Math.max(0.05, key.v * k), 3);
+    }
+  }
+  c.kf = kf;
+  return true;
+}
+
 // ---------- Opus operations ----------
 
 export interface OpsResult { project: Project; applied: number; issues: string[]; touched: string[] }
@@ -366,6 +470,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
   const touched: string[] = [];
   let applied = 0;
   const ops = Array.isArray(rawOps) ? rawOps : [];
+  const pendingRamps: [string, any][] = [];
   if (!Array.isArray(rawOps)) issues.push('ops must be an array');
   ops.slice(0, 2000).forEach((op: any, i: number) => {
     const tag = `op ${i + 1}`;
@@ -388,6 +493,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           }
           if ('fps' in op) p.fps = [24, 25, 30, 48, 50, 60].includes(+op.fps) ? +op.fps : p.fps;
           if ('background' in op && HEX.test(String(op.background))) p.background = String(op.background);
+          if ('camera' in op) p.camera = sanitizeCamera(op.camera, issues);
           applied++;
           break;
         }
@@ -426,8 +532,9 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           const sp = 'speed' in op ? num(op.speed, 0.1, 10, 1) : 1;
           const rest = m.kind === 'image' ? 3 : Math.max(1 / p.fps, (m.duration - c.in) / sp);
           c.dur = 'dur' in op ? num(op.dur, 1 / p.fps, 36000, rest) : rest;
-          const { op: _o, media: _m, track: _t, start: _s, in: _i, dur: _d, id: _id, ...rest2 } = op;
+          const { op: _o, media: _m, track: _t, start: _s, in: _i, dur: _d, id: _id, ramp: _r, ...rest2 } = op;
           patchClip(c, rest2, issues, p);
+          if (op.ramp) pendingRamps.push([c.id, op.ramp]);
           if (m.kind !== 'image' && c.dur > (m.duration - (c.in ?? 0)) / clipSpeed(c) + 0.05) {
             issues.push(`${tag}: ${m.id} is ${m.duration.toFixed(2)}s long, so clip ${c.id} was shortened to fit`);
           }
@@ -452,9 +559,28 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
         case 'set': {
           const c = p.clips.find(x => x.id === op.id);
           if (!c) { issues.push(`${tag}: no clip "${op.id}"`); return; }
-          const { op: _o, id: _id, ...rest } = op;
+          const { op: _o, id: _id, ramp: _r, ...rest } = op;
           patchClip(c, rest, issues, p);
+          if (op.ramp) pendingRamps.push([c.id, op.ramp]);
           touched.push(c.id);
+          applied++;
+          break;
+        }
+        case 'sfx': {
+          const type = op.sound ?? op.sfx;
+          if (!(SFX as readonly string[]).includes(type)) { issues.push(`${tag}: unknown sound "${type}" (use ${SFX.join(', ')})`); return; }
+          const c = addSfx(p, type, num(op.start, -10, 36000, 0), { volume: op.volume !== undefined ? num(op.volume, 0, 4, 0.35) : undefined, track: op.track });
+          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
+          if (op.dur !== undefined) c.dur = num(op.dur, 0.02, c.dur, c.dur);
+          touched.push(c.id);
+          applied++;
+          break;
+        }
+        case 'sounds': {
+          // pack the main track first so sounds land on the real cut times
+          normalize(p, media, { resolveOverlaps: false });
+          const n = addTransitionSounds(p, op.volume !== undefined ? num(op.volume, 0, 2, 0.35) : 0.35);
+          if (!n) issues.push(`${tag}: there are no transitions to give sounds to yet`);
           applied++;
           break;
         }
@@ -485,6 +611,16 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
     }
   });
   if (ops.length > 2000) issues.push('only the first 2000 operations were applied');
+  normalize(p, media, { pruneTracks: true, resolveOverlaps: false });
+  // velocity ramps need final positions and the music's beats
+  for (const [id, r] of pendingRamps) {
+    const c = p.clips.find(x => x.id === id);
+    if (!c) continue;
+    if (r === null || r === false) { if (c.kf) delete c.kf.speed; continue; }
+    const o = typeof r === 'object' ? r : {};
+    const ok = velocityRamp(p, media, c, { fast: o.fast !== undefined ? num(o.fast, 0.2, 8, 2.2) : undefined, slow: o.slow !== undefined ? num(o.slow, 0.05, 2, 0.45) : undefined, burst: o.burst !== undefined ? num(o.burst, 0.04, 1, 0.18) : undefined });
+    if (!ok) issues.push(`clip ${id}: no music beats fall inside it, so the velocity ramp was skipped (add a music clip on an audio track first)`);
+  }
   normalize(p, media, { pruneTracks: true });
   return { project: p, applied, issues, touched };
 }

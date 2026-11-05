@@ -19,6 +19,7 @@ export const Icon = {
   media: <svg viewBox="0 0 16 16" class="ic">{P('M2 3.5h12v9H2z')}{P('m6.5 6 3.5 2-3.5 2z')}</svg>,
   text: <svg viewBox="0 0 16 16" class="ic">{P('M3 4V2.5h10V4M8 2.5v11M6 13.5h4')}</svg>,
   transition: <svg viewBox="0 0 16 16" class="ic">{P('M2.5 3.5h5v9h-5zM8.5 3.5h5v9h-5z')}{P('m6 6 4 4M10 6 6 10')}</svg>,
+  home: <svg viewBox="0 0 16 16" class="ic">{P('M2.5 7.5 8 3l5.5 4.5M4 6.5v7h8v-7')}{P('M6.5 13.5v-4h3v4')}</svg>,
   spark: <svg viewBox="0 0 16 16" class="ic">{P('M8 1.5 9.4 6.6 14.5 8 9.4 9.4 8 14.5 6.6 9.4 1.5 8l5.1-1.4z')}</svg>,
   sliders: <svg viewBox="0 0 16 16" class="ic">{P('M2.5 4h7M12.5 4h1M2.5 12h1M6.5 12h7')}<circle cx="11" cy="4" r="1.5" /><circle cx="5" cy="12" r="1.5" /></svg>,
   eye: <svg viewBox="0 0 16 16" class="ic">{P('M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z')}<circle cx="8" cy="8" r="2" /></svg>,

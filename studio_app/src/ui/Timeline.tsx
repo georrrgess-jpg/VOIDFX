@@ -2,10 +2,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/ho
 import { runtime, PEAK_RATE } from '../media/library';
 import { player } from '../engine/player';
 import { TRANSITION_LABELS } from '../engine/transitions';
-import { addTrack, mainTrack, mediaLimit, normalize } from '../state/ops';
+import { addTrack, mainTrack, mediaLimit, normalize, trackKindFor } from '../state/ops';
 import { store, useStore } from '../state/store';
 import { Clip, MediaInfo, Project, Track, TrackKind } from '../state/types';
-import { clamp, clipEnd, clipIn, clipSpeed, EPS, fmtTime, projectDuration, round, trackClips } from '../state/util';
+import { clamp, clipEnd, clipIn, clipSpeed, EPS, fmtTime, hasRamp, projectDuration, round, srcAt as srcAtLocal, trackClips } from '../state/util';
+import { sfxPeaks } from '../engine/sfx';
+import { timelineBeats } from '../engine/evaluate';
 import { addMediaClip, deleteSelected, duplicateSelected, splitAtPlayhead } from './actions';
 import { Btn, Icon } from './controls';
 
@@ -20,19 +22,7 @@ type Gesture =
   | { kind: 'scrub'; started: boolean };
 
 function beatMarks(p: Project, media: Record<string, MediaInfo>): { t: number; down: boolean }[] {
-  const out: { t: number; down: boolean }[] = [];
-  for (const c of p.clips) {
-    if (c.kind !== 'audio' && c.kind !== 'video') continue;
-    const tr = p.tracks.find(t => t.id === c.track);
-    if (!tr || (tr.kind !== 'audio' && !c.media)) continue;
-    const a = c.media ? media[c.media]?.analysis : null;
-    if (!a?.bpm || !a.beats.length) continue;
-    if (c.kind === 'video' && tr.kind !== 'audio') continue; // beats come from music beds
-    const s0 = clipIn(c), sp = clipSpeed(c), s1 = s0 + c.dur * sp;
-    const down = new Set(a.downbeats.map(x => x.toFixed(3)));
-    for (const b of a.beats) if (b >= s0 && b <= s1) out.push({ t: c.start + (b - s0) / sp, down: down.has(b.toFixed(3)) });
-  }
-  return out;
+  return timelineBeats(p, media);
 }
 
 export function Timeline() {
@@ -189,7 +179,7 @@ export function Timeline() {
       dt = Math.max(dt, -minStart);
       const r = contentRef.current!.getBoundingClientRect();
       const row = g.ids.length === 1 ? rowAt(e.clientY - r.top) : null;
-      const kindOf = (c: Clip): TrackKind => (c.kind === 'image' ? 'video' : c.kind);
+      const kindOf = (c: Clip): TrackKind => trackKindFor(c.kind);
       let dest: Track | null = null;
       if (row && row.track.id !== orig.track) {
         const ok = row.track.kind === kindOf(orig);
@@ -434,7 +424,7 @@ function ClipView({ clip: c, row, zoom, sel, view, media, rev, fps }: { clip: Cl
   const left = c.start * zoom;
   const width = Math.max(3, c.dur * zoom);
   const m = c.media ? media[c.media] : undefined;
-  const label = c.kind === 'text' ? (c.text || '').replace(/\n/g, ' ') : c.name || m?.name || c.kind;
+  const label = c.kind === 'text' ? (c.text || '').replace(/\n/g, ' ').replace(/\*/g, '') : c.kind === 'sfx' ? `${c.sfx}` : c.name?.startsWith('auto:') ? (m?.name || c.kind) : c.name || m?.name || c.kind;
   const sp = clipSpeed(c);
   const offline = m && m.status === 'offline';
   const kfTimes = useMemo(() => {
@@ -445,10 +435,10 @@ function ClipView({ clip: c, row, zoom, sel, view, media, rev, fps }: { clip: Cl
   return (
     <div data-clip={c.id} class={`clip k-${c.kind}${sel ? ' is-sel' : ''}${offline ? ' is-off' : ''}`} style={{ left: `${left}px`, width: `${width}px`, top: `${row.y}px`, height: `${row.h}px` }}
       title={`${label} · ${c.dur.toFixed(2)}s${sp !== 1 ? ` · ${sp}x` : ''}`}>
-      {c.kind !== 'text' && <ClipArt clip={c} zoom={zoom} h={row.h} view={view} m={m} rev={rev} />}
+      {c.kind !== 'text' && (m || c.kind === 'sfx') && <ClipArt clip={c} zoom={zoom} h={row.h} view={view} m={m} rev={rev} />}
       <div class="clip-label">
         {offline && <b class="clip-badge bad">offline</b>}
-        {sp !== 1 && <b class="clip-badge">{sp}x</b>}
+        {hasRamp(c) ? <b class="clip-badge">ramp</b> : sp !== 1 && <b class="clip-badge">{sp}x</b>}
         {c.muted && <b class="clip-badge">muted</b>}
         <span>{label}</span>
       </div>
@@ -474,17 +464,28 @@ function ClipArt({ clip: c, zoom, h, view, m, rev }: { clip: Clip; zoom: number;
   const w = Math.max(0, visR - visL);
   useEffect(() => {
     const cv = ref.current;
-    if (!cv || w <= 0 || !m) return;
+    if (!cv || w <= 0 || (!m && c.kind !== 'sfx')) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     cv.width = Math.max(1, Math.round(w * dpr));
     cv.height = Math.max(1, Math.round(h * dpr));
     const g = cv.getContext('2d')!;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
-    const rt = runtime.get(m.id);
-    if (!rt) return;
-    const sp = clipSpeed(c), s0 = clipIn(c);
-    const srcAt = (x: number) => s0 + ((visL + x) / zoom) * sp;
+    if (c.kind === 'sfx' && c.sfx) {
+      const peaks = sfxPeaks(c.sfx);
+      g.fillStyle = getComputedStyle(cv).getPropertyValue('--wave').trim() || 'rgba(255,200,140,0.85)';
+      const base = h / 2 + 6, waveH = h - 18, off = c.in ?? 0;
+      for (let x = 0; x < w; x++) {
+        const t = off + (visL + x) / zoom;
+        const pk = peaks[Math.floor(t * 100)] ?? 0;
+        const amp = Math.min(1, pk * Math.min(2, (c.volume ?? 0.35) * 2.2)) * (waveH / 2);
+        g.fillRect(x, base - amp, 1, amp * 2 || 1);
+      }
+      return;
+    }
+    const rt = runtime.get(m!.id);
+    if (!rt || !m) return;
+    const srcAt = (x: number) => srcAtLocal(c, (visL + x) / zoom);
     const showThumbs = (c.kind === 'video' || c.kind === 'image') && rt.thumbs.length;
     const waveH = c.kind === 'audio' ? h - 18 : m.hasAudio && c.kind === 'video' ? Math.round(h * 0.32) : 0;
     if (showThumbs) {
@@ -524,7 +525,7 @@ function ClipArt({ clip: c, zoom, h, view, m, rev }: { clip: Clip; zoom: number;
         else g.fillRect(x, base - amp, 1, amp || 1);
       }
     }
-  }, [c.in, c.speed, c.dur, c.kind, c.volume, c.muted, zoom, h, visL, w, rev, m?.id]);
+  }, [c.in, c.speed, c.dur, c.kind, c.volume, c.muted, c.kf?.speed, c.sfx, zoom, h, visL, w, rev, m?.id]);
   if (w <= 0) return null;
   return <canvas ref={ref} class="clip-art" style={{ left: `${visL}px`, width: `${w}px`, height: `${h}px` }} />;
 }

@@ -96,7 +96,42 @@ export function sampleKeys(keys: Keyframe[] | undefined, t: number, fallback: nu
 export const clipSpeed = (c: Clip) => c.speed ?? 1;
 export const clipIn = (c: Clip) => c.in ?? 0;
 export const clipEnd = (c: Clip) => c.start + c.dur;
-export const srcOut = (c: Clip) => clipIn(c) + c.dur * clipSpeed(c);
+
+/** Playback speed at clip-local time lt (speed keyframes = speed ramps). */
+export function speedAt(c: Clip, lt: number): number {
+  const keys = c.kf?.speed;
+  if (!keys || !keys.length) return clipSpeed(c);
+  return Math.max(0.02, sampleKeys(keys, clamp(lt, 0, c.dur), clipSpeed(c)));
+}
+
+const RAMP_DT = 1 / 240;
+const rampCache = new WeakMap<object, { dur: number; cum: Float64Array }>();
+/** Source seconds consumed from the clip start to local time lt (integral of the speed curve). */
+export function srcOffset(c: Clip, lt: number): number {
+  const keys = c.kf?.speed;
+  if (!keys || !keys.length) return lt * clipSpeed(c);
+  let tab = rampCache.get(keys);
+  if (!tab || tab.dur !== c.dur || (tab as any).base !== clipSpeed(c)) {
+    const n = Math.max(2, Math.ceil(c.dur / RAMP_DT) + 1);
+    const cum = new Float64Array(n);
+    for (let i = 1; i < n; i++) {
+      const a = speedAt(c, (i - 1) * RAMP_DT), b = speedAt(c, i * RAMP_DT);
+      cum[i] = cum[i - 1] + ((a + b) / 2) * RAMP_DT;
+    }
+    tab = { dur: c.dur, cum };
+    (tab as any).base = clipSpeed(c);
+    rampCache.set(keys, tab);
+  }
+  if (lt <= 0) return lt * speedAt(c, 0);
+  const x = lt / RAMP_DT;
+  const i = Math.floor(x);
+  if (i >= tab.cum.length - 1) return tab.cum[tab.cum.length - 1] + (lt - (tab.cum.length - 1) * RAMP_DT) * speedAt(c, c.dur);
+  return tab.cum[i] + (tab.cum[i + 1] - tab.cum[i]) * (x - i);
+}
+/** Source time shown at clip-local time lt. */
+export const srcAt = (c: Clip, lt: number) => clipIn(c) + srcOffset(c, lt);
+export const srcOut = (c: Clip) => srcAt(c, c.dur);
+export const hasRamp = (c: Clip) => !!c.kf?.speed?.length;
 
 export function baseTransform(c: Clip): Transform {
   return { ...DEFAULT_TRANSFORM, ...(c.transform || {}) };
@@ -122,6 +157,7 @@ export function volumeAt(c: Clip, lt: number): number {
 
 export function propValue(c: Clip, prop: AnimProp, lt: number): number {
   if (prop === 'volume') return volumeAt(c, lt);
+  if (prop === 'speed') return speedAt(c, lt);
   return transformAt(c, lt)[prop];
 }
 

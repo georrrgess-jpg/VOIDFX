@@ -32,3 +32,8 @@ if [ ! -f big.mp4 ]; then
     -c:v libx264 -preset ultrafast -qp 0 -pix_fmt yuv420p -c:a aac -b:a 160k -shortest big.mp4
 fi
 ls -la
+# a small "scene pack": five different shots back to back (for shot detection)
+ffmpeg -v error -y -f lavfi -i "smptehdbars=s=1280x720:r=30:d=2" -f lavfi -i "testsrc=s=1280x720:r=30:d=2.5" -f lavfi -i "mandelbrot=s=1280x720:r=30,trim=duration=2" \
+  -f lavfi -i "color=c=0x8b0000:s=1280x720:r=30:d=1.5,drawbox=x=500:y=200:w=280:h=320:color=black:t=fill" -f lavfi -i "cellauto=s=1280x720:r=30,trim=duration=2" \
+  -f lavfi -i "sine=f=220:d=10:sample_rate=48000" \
+  -filter_complex "[0:v][1:v][2:v][3:v][4:v]concat=n=5:v=1:a=0,format=yuv420p[v]" -map "[v]" -map 5:a -c:v libx264 -preset veryfast -c:a aac -shortest pack.mp4

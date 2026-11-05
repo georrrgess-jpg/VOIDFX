@@ -8,14 +8,15 @@ It replaces the single-clip "TikTok Edit Studio" prototype with a multi-track ed
 - **Opus edits through the same operations as the user.** Every change (a drag on the timeline or
   an Opus plan) goes through one validated edit-operation layer (`src/state/ops.ts`), so anything
   Opus does can be inspected, changed by hand and undone in one step.
-- **No built-in editing style.** Opus gets the studio's capabilities, the media, the analysis and the
-  user's request. Presets, house style and editing knowledge are supplied by the user later
-  (stage 2) through the "Studio knowledge" slot, which ships empty.
+- **The owner's style is data, not code.** Stage 1 shipped with no editing style. Stage 2 adds the
+  owner's house rules (`src/ai/knowledge.ts`, distilled from the handbook, preferences, edit history
+  and studio specs), presets, standards and the database. Opus receives them as context with every
+  edit, and the user can edit or extend all of them in the studio.
 - **Large files stream.** Media is never read into memory whole: playback uses object URLs, and
   decoding, analysis and export read byte ranges through Mediabunny (`BlobSource`).
 - **Preview and export share one compositor** (WebGL2), so what plays is what renders.
 
-## Stage 1: core studio (this build)
+## Stage 1: core studio
 
 | Area | What ships |
 | --- | --- |
@@ -29,15 +30,27 @@ It replaces the single-clip "TikTok Edit Studio" prototype with a multi-track ed
 | Export | Offline, frame-accurate MP4 (H.264 + AAC, fast-start) via WebCodecs; saved through the `downloads` capability; MediaRecorder fallback |
 | Opus Director | One button builds the edit: local analysis, contact sheets of every clip, Opus plans the timeline as edit operations, the app applies and validates them, then renders frames of the result for an Opus review pass. Chat to refine. Effort: Low, Medium, High, Extra (High plus an extra review pass). Shows which model answered. |
 
-## Stage 2: the user's editing knowledge
+## Stage 2: main menu, AI edits and the owner's standard (this build)
 
-- Load the presets, style rules and editing information the user provides into the Studio knowledge
-  slot (and as named preset files Opus can pick from).
-- Tune the Director prompts and review checks to those rules.
+| Area | What ships |
+| --- | --- |
+| Main menu | Animated home (live WebGL void that reacts to the pointer and tints per section) with Home, AI Edit, Projects, Presets, Database, Standards and House rules |
+| Projects | Any number of projects in IndexedDB with thumbnails; new, open, rename, duplicate, delete; media files are stored with the project and reattach on reopen; stage-1 autosave migrates in |
+| AI Edit | Wizard: preset, notes for this edit, optional lyrics, material from your files, the database or both ("Let Opus choose" or pick items), standards to follow, effort, then Create edit |
+| Presets | Standing briefs: prompt, house rules on/off, effort, aspect, fps, length range, database tags, standards shown, colour. Six built in (Dexter, The Flash, dialogue cold open, lyric-led, quick draft, open brief); duplicate and edit your own |
+| Database | Scene packs, clips and music of any size stored in the browser; packs are split into shots, music is analysed for tempo, beats and drops; roles and tags; Opus casts from it |
+| Standards | Your approved benchmarks (v4 to v11, v103 to v105) plus reference edits you add, measured for cuts per second, shot length and on-beat cuts, for all edits or for chosen presets; Opus sees a contact sheet and the numbers |
+| House rules | Everything Opus is told about the voidfx style, readable in the studio, with your own additions |
+| Director v2 | Casting from the database, shot-based 9:16 contact sheets, the plan, validation, transition sounds, a measured checkpoint, review passes that see the checkpoint; refine by chat |
+| Checkpoint | Format, length, transition density, plain cuts, headspace, logo once, text ease and band, transition sounds, flash rate, music coverage, soft 720p blow-ups, loop seam; seek chips and "Fix with Opus" |
+| Engine | voidfx logo fly-through (through the "o", logo unaltered), blink, blood bloom, film burn, blade slash, impact frame, light leak, roll 90°, shadow, warp pull; speed ramps (velocity ramp: burst on each beat, slow between); beat camera (zoom punch, rotation kick); procedural transition sounds; v9 house caption type (emphasis, glow, scrim, word timing, letter build, scatter, fall) |
+| Sound | Export masters to -13 LUFS with a true-peak limiter (pre-encode ceiling -3.5 dBTP) and reports the measured result |
+| Editor | Picture previews of every transition and text animation (play on hover), Sounds panel, database picker in Media, ramp and beat-camera controls, Checks tab |
 
 ## Stage 3 candidates
 
-- Speed ramps as curves (not just per-clip speed); freeze frames; reverse.
+- Freeze frames and reverse; optical-flow slow motion.
+- Face tracking for framing checks (no face model runs in the artifact yet).
 - Proxy generation for 4K/HEVC sources; background export in a worker.
 - Lyric/dialogue timing (needs a transcription source the artifact can reach).
 - Tool-driven editing rounds (`sample` tools) once the operation format is stable.
@@ -47,10 +60,11 @@ It replaces the single-clip "TikTok Edit Studio" prototype with a multi-track ed
 ```
 studio_app/
   build.mjs            esbuild -> dist/voidfx-studio.html (single file, published as the artifact)
-  src/state/           project model, store + history, edit operations, timeline evaluation
+  assets/              voidfx logo (as supplied)
+  src/state/           project model, store + history, edit operations, storage, projects, catalog
   src/media/           import, thumbnails, waveforms, audio analysis
   src/engine/          WebGL compositor, text renderer, transitions, preview player, exporter
-  src/ai/              Opus Director: context, contact sheets, prompts, pipeline
-  src/ui/              Preact components
+  src/ai/              Opus Director: house rules, context, contact sheets, prompts, pipeline, checks
+  src/ui/              Preact components (src/ui/home/: the main menu sections)
   test/smoke.mjs       headless Chromium test with a stubbed claude runtime
 ```

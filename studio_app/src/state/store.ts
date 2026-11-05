@@ -2,8 +2,9 @@ import { useEffect, useReducer, useRef } from 'preact/hooks';
 import { MediaInfo, Project, ASPECTS } from './types';
 import { deepClone, uid } from './util';
 
-export type LeftTab = 'media' | 'text' | 'transitions';
-export type RightTab = 'director' | 'inspector';
+export type LeftTab = 'media' | 'text' | 'transitions' | 'sounds';
+export type RightTab = 'director' | 'inspector' | 'checks';
+export type HomeTab = 'home' | 'projects' | 'create' | 'presets' | 'library' | 'standards' | 'rules';
 
 export interface DirectorStep { id: string; label: string; state: 'wait' | 'run' | 'done' | 'error' | 'skip'; detail?: string; t0?: number; t1?: number }
 export interface DirectorMsg { id: string; role: 'user' | 'opus' | 'note'; text: string; applied?: number; issues?: string[]; model?: string; undoTo?: number }
@@ -20,6 +21,7 @@ export interface DirectorState {
   effort: Effort;
   brief: string;
   knowledge: string;
+  presetId: string;
   lastModel?: string;
   streamChars: number;
 }
@@ -27,6 +29,9 @@ export interface DirectorState {
 export interface Toast { id: string; text: string; kind: 'info' | 'error' | 'ok' }
 
 export interface AppState {
+  view: 'home' | 'editor';
+  homeTab: HomeTab;
+  projectId: string | null;
   project: Project;
   media: Record<string, MediaInfo>;
   mediaOrder: string[];
@@ -44,6 +49,12 @@ export interface AppState {
   director: DirectorState;
   histRev: number;
   previewScale: number;
+  /** Bumped when presets, standards or the database change. */
+  catalogRev: number;
+  /** Latest automated checkpoint for the open project. */
+  checks: import('../engine/qc').Check[];
+  /** Loop seam difference (0-255 scale), measured on rendered frames. */
+  seam: number | null;
 }
 
 export function newProject(): Project {
@@ -76,9 +87,14 @@ class Store {
   private future: Project[] = [];
   private gestureBase: Project | null = null;
   private saveTimer: number | undefined;
+  /** Called (debounced) when the open project changes; set by the projects module. */
+  persist: (() => void) | null = null;
 
   constructor() {
     this.state = {
+      view: 'home',
+      homeTab: 'home',
+      projectId: null,
       project: newProject(),
       media: {},
       mediaOrder: [],
@@ -86,7 +102,7 @@ class Store {
       selection: [],
       time: 0,
       playing: false,
-      zoom: 60,
+      zoom: 90,
       snap: true,
       leftTab: 'media',
       rightTab: 'director',
@@ -94,9 +110,12 @@ class Store {
       exportOpen: false,
       histRev: 0,
       previewScale: 0.5,
+      catalogRev: 0,
+      checks: [],
+      seam: null,
       director: {
         available: 'checking', images: false, maxImages: 0, running: false, steps: [], messages: [],
-        effort: 'extra', brief: '', knowledge: '', streamChars: 0,
+        effort: 'extra', brief: '', knowledge: '', presetId: 'voidfx-dexter', streamChars: 0,
       },
     };
   }
@@ -215,57 +234,24 @@ class Store {
     window.setTimeout(() => this.set(s => ({ toasts: s.toasts.filter(x => x.id !== t.id) })), ms);
   }
 
-  // ---- persistence (per-viewer convenience; media must be re-linked after reload) ----
+  // ---- persistence: the projects module saves the open project to browser storage ----
 
   private scheduleSave() {
+    if (!this.persist || !this.state.projectId) return;
     window.clearTimeout(this.saveTimer);
-    this.saveTimer = window.setTimeout(() => this.save(), 700);
+    this.saveTimer = window.setTimeout(() => this.persist?.(), 700);
   }
 
-  save() {
-    try {
-      const s = this.state;
-      const media = s.mediaOrder.map(id => s.media[id]).filter(Boolean).map(m => ({ ...m, status: m.status === 'ready' ? 'offline' : m.status }));
-      const data = {
-        v: 1,
-        project: s.project,
-        media,
-        director: { effort: s.director.effort, brief: s.director.brief, knowledge: s.director.knowledge, messages: s.director.messages.slice(-30) },
-      };
-      localStorage.setItem('voidfx.studio.v1', JSON.stringify(data));
-    } catch { /* storage unavailable or full */ }
+  flushSave() {
+    window.clearTimeout(this.saveTimer);
+    this.persist?.();
   }
 
-  load(): boolean {
-    try {
-      const raw = localStorage.getItem('voidfx.studio.v1');
-      if (!raw) return false;
-      const data = JSON.parse(raw);
-      if (!data || data.v !== 1 || !data.project || !Array.isArray(data.project.clips)) return false;
-      const media: Record<string, MediaInfo> = {};
-      const order: string[] = [];
-      for (const m of (data.media || []) as MediaInfo[]) {
-        if (!m || !m.id) continue;
-        media[m.id] = { ...m, status: 'offline' };
-        order.push(m.id);
-      }
-      this.state = {
-        ...this.state,
-        project: data.project,
-        media,
-        mediaOrder: order,
-        director: {
-          ...this.state.director,
-          effort: data.director?.effort || 'extra',
-          brief: data.director?.brief || '',
-          knowledge: data.director?.knowledge || '',
-          messages: Array.isArray(data.director?.messages) ? data.director.messages.map((m: any) => ({ ...m, undoTo: undefined })) : [],
-        },
-      };
-      return true;
-    } catch {
-      return false;
-    }
+  /** Forget undo history (switching projects). */
+  resetHistory() {
+    this.past = [];
+    this.future = [];
+    this.gestureBase = null;
   }
 
   resetAll() {

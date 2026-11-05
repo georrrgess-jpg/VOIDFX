@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { createEdit, EFFORTS, MODEL, refineEdit, resetConversation, stopDirector } from '../ai/director';
 import { Effort, store, useStore } from '../state/store';
 import { Btn, Icon } from './controls';
+import { listPresets, Preset } from '../state/catalog';
+import { useCatalog } from './home/common';
 
 export function DirectorPanel() {
   const d = useStore(s => s.director);
@@ -18,6 +20,8 @@ export function DirectorPanel() {
     return () => clearInterval(t);
   }, [d.running]);
 
+  const [presets] = useCatalog<Preset[]>(listPresets, []);
+  const preset = presets.find(p => p.id === d.presetId);
   const effortKeys = Object.keys(EFFORTS) as Effort[];
   const hasConversation = d.messages.some(m => m.role === 'opus');
   const disabled = d.available !== 'yes';
@@ -81,9 +85,16 @@ export function DirectorPanel() {
       </div>
 
       <div class="dir-form">
+        <div class="fld fld-wide">
+          <label class="fld-l" for="dir-preset">Preset</label>
+          <select id="dir-preset" value={d.presetId} disabled={d.running} onChange={e => { const id = (e.target as HTMLSelectElement).value; const pr = presets.find(x => x.id === id); store.setDirector({ presetId: id, ...(pr ? { effort: pr.effort } : {}) }); }}>
+            {presets.map(p => <option value={p.id}>{p.name}</option>)}
+          </select>
+          {preset && <p class="hint">{preset.description}</p>}
+        </div>
         {!hasConversation || d.running ? (
           <>
-            <label class="fld-l" for="brief">What should Opus make?</label>
+            <label class="fld-l" for="brief">What makes this edit unique</label>
             <textarea id="brief" class="ta" rows={4} value={d.brief} disabled={d.running}
               placeholder="Describe the edit: length, mood, story, the moments that matter. Leave empty and Opus decides."
               onInput={e => store.setDirector({ brief: (e.target as HTMLTextAreaElement).value })} />
@@ -121,13 +132,9 @@ export function DirectorPanel() {
           )}
         </div>
         <button type="button" class="linkbtn know-t" onClick={() => setShowKnow(!showKnow)} aria-expanded={showKnow}>
-          {showKnow ? '▾' : '▸'} Studio knowledge {d.knowledge.trim() ? `(${d.knowledge.trim().length} chars)` : '(empty)'}
+          {showKnow ? '▾' : '▸'} {preset?.houseRules ? 'House rules on' : 'House rules off'} · your additions {d.knowledge.trim() ? `(${d.knowledge.trim().length} chars)` : '(none)'}
         </button>
-        {showKnow && (
-          <textarea id="knowledge" class="ta ta-mono" rows={6} value={d.knowledge} disabled={d.running}
-            placeholder="Editing rules, presets and house style for Opus to follow on every request. Empty by default."
-            onInput={e => store.setDirector({ knowledge: (e.target as HTMLTextAreaElement).value })} />
-        )}
+        {showKnow && <p class="hint">Edit the house rules view, your additions, presets and standards from the main menu.</p>}
         <p class="dir-foot">Uses your Claude usage. Opus sees contact sheets and sound analysis of your media; it cannot hear audio.</p>
       </div>
     </div>

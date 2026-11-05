@@ -2,7 +2,10 @@ import { TRANSITION_LABELS } from '../engine/transitions';
 import { store, useStore } from '../state/store';
 import { AnimProp, ASPECTS, Clip, ColorAdjust, FONTS, MediaInfo, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TextAnimIn, TextAnimOut, TRANSITIONS, TransitionType } from '../state/types';
 import { clamp, clipEnd, colorOf, propValue, textAnimOf, textStyleOf, trackClips } from '../state/util';
-import { deleteSelected, jumpKeyframe, setAnimProp, toggleKeyframe, updateClip } from './actions';
+import { deleteSelected, jumpKeyframe, rampSelected, setAnimProp, toggleKeyframe, updateClip, wordsOnBeats } from './actions';
+import { SFX_INFO } from '../engine/sfx';
+import { DEFAULT_CAMERA, SFX, SfxType } from '../state/types';
+import { hasRamp } from '../state/util';
 import { Btn, ColorField, Icon, Section, Seg, Select, Slider, Toggle } from './controls';
 
 const begin = () => store.beginGesture();
@@ -51,6 +54,20 @@ function ProjectProps() {
         </div>
         <ColorField id="pbg" label="Background" value={p.background} onChange={v => store.commit(pp => { pp.background = v; })} />
       </Section>
+      <Section title="Beat camera">
+        <p class="hint">Zoom punch and rotation kick on the music's beats (video only; text stays clean). Needs a song on an audio track.</p>
+        <Toggle id="cam-on" label="Punch on the beat" checked={!!p.camera?.on} onChange={v => store.commit(pp => { pp.camera = { ...(pp.camera || DEFAULT_CAMERA), on: v }; })} />
+        {p.camera?.on && (
+          <>
+            <div class="fld fld-wide"><span class="fld-l">Hits on</span>
+              <Seg small value={p.camera.every} onChange={v => store.commit(pp => { pp.camera = { ...pp.camera!, every: v }; })} options={[{ value: 'beat', label: 'Every beat' }, { value: 'half', label: 'Every other' }, { value: 'downbeat', label: 'Bar starts' }]} />
+            </div>
+            <Slider id="cam-punch" label="Zoom punch" min={0} max={0.2} step={0.005} fmt={v => `${(v * 100).toFixed(1)}%`} parse={x => parseFloat(x) / 100} value={p.camera.punch} dflt={DEFAULT_CAMERA.punch} onStart={begin} onEnd={end} onInput={v => store.live(pp => { pp.camera = { ...pp.camera!, punch: v }; })} />
+            <Slider id="cam-kick" label="Rotation kick" min={0} max={5} step={0.1} fmt={v => `${v.toFixed(1)}°`} value={p.camera.kick} dflt={DEFAULT_CAMERA.kick} onStart={begin} onEnd={end} onInput={v => store.live(pp => { pp.camera = { ...pp.camera!, kick: v }; })} />
+            <Slider id="cam-decay" label="Settle" min={0.04} max={0.6} step={0.01} fmt={v => `${v.toFixed(2)}s`} value={p.camera.decay} dflt={DEFAULT_CAMERA.decay} onStart={begin} onEnd={end} onInput={v => store.live(pp => { pp.camera = { ...pp.camera!, decay: v }; })} />
+          </>
+        )}
+      </Section>
       <Section title="Shortcuts" open={false}>
         <dl class="keys">
           <dt>Space</dt><dd>Play / pause</dd>
@@ -85,10 +102,10 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
   const p = store.state.project;
   const prev = trackClips(p, c.track).find(x => Math.abs(clipEnd(x) - c.start) < 1.5 / p.fps && x.id !== c.id);
   const isMedia = c.kind === 'video' || c.kind === 'audio';
-  const visual = c.kind !== 'audio';
+  const visual = c.kind !== 'audio' && c.kind !== 'sfx';
   const hasSound = isMedia && !!m?.hasAudio;
   const color = colorOf(c);
-  const kindLabel = c.kind === 'text' ? 'Text' : c.kind === 'audio' ? 'Audio' : c.kind === 'image' ? 'Image' : 'Video';
+  const kindLabel = c.kind === 'text' ? 'Text' : c.kind === 'audio' ? 'Audio' : c.kind === 'image' ? 'Image' : c.kind === 'sfx' ? 'Sound' : 'Video';
   return (
     <div class="insp">
       <header class="insp-h">
@@ -99,6 +116,15 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
       {m && <p class="note mono">{m.name}{isMedia ? ` · source ${(c.in ?? 0).toFixed(2)}–${((c.in ?? 0) + c.dur * (c.speed ?? 1)).toFixed(2)}s` : ''}</p>}
 
       {c.kind === 'text' && <TextProps c={c} />}
+
+      {c.kind === 'sfx' && (
+        <Section title="Sound">
+          <Select<SfxType> id="sfx-type" label="Sound" value={c.sfx || 'whoosh'} onChange={v => updateClip(c.id, { sfx: v, in: 0, dur: SFX_INFO[v].dur })} options={SFX.map(t => ({ value: t, label: SFX_INFO[t].label }))} />
+          <p class="hint">{c.sfx ? SFX_INFO[c.sfx].hint : ''}</p>
+          <Slider id="sfx-vol" label="Volume" min={0} max={2} step={0.01} fmt={v => `${Math.round(v * 100)}%`} parse={x => parseFloat(x) / 100} dflt={0.35} {...anim('volume')} />
+          <Toggle id="sfx-mute" label="Mute" checked={!!c.muted} onChange={v => updateClip(c.id, { muted: v })} />
+        </Section>
+      )}
 
       {visual && (
         <Section title="Transform" right={<Btn title="Reset transform" onClick={() => store.commit(pp => { const x = pp.clips.find(y => y.id === c.id); if (x) { delete x.transform; if (x.kf) { for (const k of ['x', 'y', 'scale', 'rotation', 'opacity'] as const) delete x.kf[k]; } } })}>Reset</Btn>}>
@@ -136,6 +162,16 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
             ))}
           </div>
           {hasSound && <Toggle id="kp" label="Keep pitch" checked={c.keepPitch !== false} onChange={v => updateClip(c.id, { keepPitch: v })} />}
+          {c.kind === 'video' && (
+            <div class="ramp">
+              <span class="fld-l">Velocity ramp</span>
+              <p class="hint">{hasRamp(c) ? `A speed curve with ${c.kf?.speed?.length} keys is on this clip.` : 'A burst on every beat, slow motion between: the motion pass that turned "lacklustre" into a standard.'}</p>
+              <div class="chips-row">
+                <button type="button" class="chipbtn" onClick={() => rampSelected()}>{hasRamp(c) ? 'Rebuild on the beat' : 'Ramp on the beat'}</button>
+                {hasRamp(c) && <button type="button" class="chipbtn" onClick={() => rampSelected(true)}>Clear ramp</button>}
+              </div>
+            </div>
+          )}
         </Section>
       )}
 
@@ -160,7 +196,7 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
         </Section>
       )}
 
-      {c.kind !== 'text' && (
+      {c.kind !== 'text' && c.kind !== 'sfx' && (
         <Section title="Transition in">
           {prev ? (
             <>
@@ -189,12 +225,22 @@ function TextProps({ c }: { c: Clip }) {
         <textarea id="ttext" class="ta" rows={3} value={c.text || ''} aria-label="Text"
           onFocus={begin} onBlur={end}
           onInput={e => updateClip(c.id, { text: (e.target as HTMLTextAreaElement).value }, true)} />
+        <p class="hint">*Asterisks* mark emphasis words (drawn in the emphasis colour with a glow). A new line starts the second line.</p>
+        <div class="chips-row">
+          <button type="button" class="chipbtn" onClick={() => updateClip(c.id, { style: { font: 'Inter', weight: 900, uppercase: true, size: 0.046, lineScales: [1, 1.3], stroke: 0.07, strokeColor: '#0a0a0a', shadow: 0.65, scrim: 0.35, emphColor: s.emphColor || '#ff2b3a', emphGlow: 0.7, lineHeight: 1.05 }, anim: { in: 'words' }, transform: { y: 0.25 } })}>House caption style</button>
+          <button type="button" class="chipbtn" onClick={wordsOnBeats}>Words on the beats</button>
+          {c.words?.length ? <button type="button" class="chipbtn" onClick={() => updateClip(c.id, { words: null })}>Clear word times</button> : null}
+        </div>
         <Select id="tfont" label="Font" value={s.font} onChange={v => set({ font: v })} options={FONTS.map(f => ({ value: f, label: f }))} />
         <div class="fld fld-wide"><span class="fld-l">Weight</span>
           <Seg small value={s.weight} onChange={v => set({ weight: v })} options={[400, 600, 700, 800, 900].map(w => ({ value: w, label: String(w) }))} />
         </div>
         <Slider id="tsize" label="Size" min={0.01} max={0.25} log fmt={v => `${(v * 100).toFixed(1)}`} parse={x => parseFloat(x) / 100} value={s.size} onStart={begin} onEnd={end} onInput={v => live({ size: v })} dflt={0.045} />
         <ColorField id="tcol" label="Fill" value={s.color} onChange={v => live({ color: v })} />
+        <ColorField id="tecol" label="Emphasis" value={s.emphColor} onChange={v => live({ emphColor: v })} />
+        <Slider id="teglow" label="Emphasis glow" min={0} max={1} step={0.01} fmt={v => `${Math.round(v * 100)}`} parse={x => parseFloat(x) / 100} value={s.emphGlow} onStart={begin} onEnd={end} onInput={v => live({ emphGlow: v })} dflt={0.6} />
+        <Slider id="tscrim" label="Scrim" min={0} max={1} step={0.01} fmt={v => `${Math.round(v * 100)}`} parse={x => parseFloat(x) / 100} value={s.scrim} onStart={begin} onEnd={end} onInput={v => live({ scrim: v })} dflt={0} />
+        <Slider id="tl2" label="Line 2 size" min={0.5} max={2} step={0.01} fmt={v => `${Math.round(v * 100)}%`} parse={x => parseFloat(x) / 100} value={s.lineScales?.[1] ?? 1} onStart={begin} onEnd={end} onInput={v => live({ lineScales: [s.lineScales?.[0] ?? 1, v] })} dflt={1} />
         <Slider id="tstroke" label="Outline" min={0} max={0.4} step={0.005} fmt={v => `${Math.round(v * 100)}`} parse={x => parseFloat(x) / 100} value={s.stroke} onStart={begin} onEnd={end} onInput={v => live({ stroke: v })} dflt={0} />
         {s.stroke > 0 && <ColorField id="tscol" label="Outline colour" value={s.strokeColor} onChange={v => live({ strokeColor: v })} />}
         <Slider id="tshadow" label="Shadow" min={0} max={1} step={0.01} fmt={v => `${Math.round(v * 100)}`} parse={x => parseFloat(x) / 100} value={s.shadow} onStart={begin} onEnd={end} onInput={v => live({ shadow: v })} dflt={0.5} />
@@ -220,7 +266,7 @@ function TextProps({ c }: { c: Clip }) {
 }
 
 function animLabel(x: string) {
-  const map: Record<string, string> = { none: 'None', fade: 'Fade', rise: 'Rise', drop: 'Drop', pop: 'Pop', blur: 'Blur', typewriter: 'Typewriter', words: 'Word by word', slide_left: 'Slide left', slide_right: 'Slide right', sink: 'Sink', lift: 'Lift', shrink: 'Shrink' };
+  const map: Record<string, string> = { none: 'None', fade: 'Fade', rise: 'Rise', drop: 'Drop', pop: 'Pop', blur: 'Blur', typewriter: 'Typewriter', words: 'Word by word', letters: 'Letter build', scatter: 'Scatter', fall: 'Fall', slide_left: 'Slide left', slide_right: 'Slide right', sink: 'Sink', lift: 'Lift', shrink: 'Shrink' };
   return map[x] || x;
 }
 

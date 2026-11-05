@@ -8,6 +8,10 @@ import { isTextInput, projectDuration } from '../state/util';
 import { deleteSelected, duplicateSelected, nudgeSelection, splitAtPlayhead } from './actions';
 import { Btn, Icon } from './controls';
 import { DirectorPanel } from './DirectorPanel';
+import { ChecksPanel } from './ChecksPanel';
+import { Home } from './home/Home';
+import { closeToHome, createProject } from '../state/projects';
+import { LOGO_URL } from '../engine/logo';
 import { ExportDialog } from './ExportDialog';
 import { Inspector } from './Inspector';
 import { LeftPanel, Rail } from './LeftPanel';
@@ -16,12 +20,21 @@ import { Timeline } from './Timeline';
 import { Viewer } from './Viewer';
 
 export function App() {
+  const view = useStore(s => s.view);
+  const toasts = useStore(s => s.toasts);
+  return (
+    <>
+      {view === 'home' ? <Home /> : <Editor />}
+      <div class="toasts" aria-live="polite">{toasts.map(t => <div class={`toast t-${t.kind}`}>{t.text}</div>)}</div>
+    </>
+  );
+}
+
+function Editor() {
   const [dragging, setDragging] = useState(false);
   const [tlH, setTlH] = useState(() => {
     try { return Math.max(180, Math.min(600, +(localStorage.getItem('voidfx.tlh') || 300))); } catch { return 300; }
   });
-  const toasts = useStore(s => s.toasts);
-
   // keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -108,7 +121,6 @@ export function App() {
       <section class="bottom"><Timeline /></section>
       <ExportDialog />
       {dragging && <div class="dropzone"><div><b>Drop to import</b><span>Video, audio and images. Large files are read from disk as needed.</span></div></div>}
-      <div class="toasts" aria-live="polite">{toasts.map(t => <div class={`toast t-${t.kind}`}>{t.text}</div>)}</div>
     </div>
   );
 }
@@ -117,6 +129,7 @@ function RightPanel() {
   const tab = useStore(s => s.rightTab);
   const sel = useStore(s => s.selection.length);
   const running = useStore(s => s.director.running);
+  const bad = useStore(s => s.checks.filter(c => c.status === 'fail' || c.status === 'warn').length);
   return (
     <aside class="rp">
       <div class="rp-tabs" role="tablist">
@@ -126,8 +139,11 @@ function RightPanel() {
         <button type="button" role="tab" aria-selected={tab === 'inspector'} class={tab === 'inspector' ? 'is-on' : ''} onClick={() => store.set({ rightTab: 'inspector' })}>
           {Icon.sliders}<span>Edit</span>{sel > 0 && <b class="count">{sel}</b>}
         </button>
+        <button type="button" role="tab" aria-selected={tab === 'checks'} class={tab === 'checks' ? 'is-on' : ''} onClick={() => store.set({ rightTab: 'checks' })}>
+          {Icon.diamond}<span>Checks</span>{bad > 0 && <b class="count warn">{bad}</b>}
+        </button>
       </div>
-      <div class="rp-body">{tab === 'director' ? <DirectorPanel /> : <Inspector />}</div>
+      <div class="rp-body">{tab === 'director' ? <DirectorPanel /> : tab === 'checks' ? <ChecksPanel /> : <Inspector />}</div>
     </aside>
   );
 }
@@ -164,7 +180,7 @@ function TopBar() {
   };
   return (
     <header class="top">
-      <div class="brand" aria-label="VOIDFX Studio"><span class="brand-v">VOIDFX</span><span class="brand-s">Studio</span></div>
+      <button type="button" class="brand" onClick={() => closeToHome()} title="Back to the main menu (your edit is saved)" aria-label="Main menu"><img src={LOGO_URL} alt="voidfx" /><span class="brand-s">Studio</span></button>
       <input class="pname" type="text" value={name} aria-label="Project name" onChange={e => store.commit(p => { p.name = (e.target as HTMLInputElement).value.slice(0, 80) || 'Untitled edit'; })} />
       <span class="top-grow" />
       <label class="aspect">
@@ -180,7 +196,9 @@ function TopBar() {
         <Btn title="Project menu" onClick={() => setMenu(!menu)} active={menu}>{Icon.menu}</Btn>
         {menu && (
           <div class="menu-pop" onMouseLeave={() => setMenu(false)}>
-            <button type="button" onClick={() => { if (store.state.project.clips.length) store.replace(newProject()); else store.replace(newProject()); store.set({ selection: [], time: 0 }); player.seek(0); setMenu(false); }}>New edit (keeps the library)</button>
+            <button type="button" onClick={() => { setMenu(false); closeToHome(); }}>Main menu</button>
+            <button type="button" onClick={() => { setMenu(false); void createProject({ name: 'Untitled edit' }); }}>New project</button>
+            <button type="button" onClick={() => { store.replace(newProject()); store.set({ selection: [], time: 0 }); player.seek(0); setMenu(false); }}>Clear this timeline</button>
             <button type="button" onClick={saveProject}>Save project file…</button>
             <button type="button" onClick={() => { fileRef.current?.click(); setMenu(false); }}>Open project file…</button>
           </div>

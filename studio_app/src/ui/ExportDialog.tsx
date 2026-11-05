@@ -4,7 +4,7 @@ import { player } from '../engine/player';
 import { store, useStore } from '../state/store';
 import { fmtBytes, projectDuration } from '../state/util';
 import { saveFile } from './save';
-import { Btn, Icon, Seg } from './controls';
+import { Btn, Icon, Seg, Toggle } from './controls';
 
 type Quality = 'standard' | 'high' | 'max';
 const BPP: Record<Quality, number> = { standard: 0.12, high: 0.2, max: 0.32 };
@@ -15,6 +15,8 @@ export function ExportDialog() {
   const [res, setRes] = useState<number>(1080);
   const [fps, setFps] = useState<number>(p.fps);
   const [quality, setQuality] = useState<Quality>('high');
+  const [master, setMaster] = useState(true);
+  const [lufs, setLufs] = useState(-13);
   const [phase, setPhase] = useState<ExportPhase | 'idle' | 'done' | 'error'>('idle');
   const [frac, setFrac] = useState(0);
   const [note, setNote] = useState('');
@@ -23,7 +25,7 @@ export function ExportDialog() {
   const [error, setError] = useState('');
   const ctl = useRef<AbortController | null>(null);
 
-  useEffect(() => { if (open) setFps(p.fps); }, [open]);
+  useEffect(() => { if (open) setFps(p.fps || 60); }, [open]);
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
   if (!open) return null;
 
@@ -43,7 +45,7 @@ export function ExportDialog() {
     try {
       let r: ExportResult;
       try {
-        r = await exportVideo({ width: W, height: H, fps, bitrate, audioBitrate: 192000 }, (ph, f, n) => { setPhase(ph); setFrac(f); setNote(n || ''); }, ctl.current.signal);
+        r = await exportVideo({ width: W, height: H, fps, bitrate, audioBitrate: 256000, loudness: master ? { target: lufs, ceiling: -3.5 } : null }, (ph, f, n) => { setPhase(ph); setFrac(f); setNote(n || ''); }, ctl.current.signal);
       } catch (e: any) {
         if (e?.message !== 'NO_WEBCODECS') throw e;
         setPhase('video');
@@ -85,8 +87,14 @@ export function ExportDialog() {
             <div class="fld fld-wide"><span class="fld-l">Quality</span>
               <Seg value={quality} onChange={setQuality} options={[{ value: 'standard', label: 'Standard' }, { value: 'high', label: 'High' }, { value: 'max', label: 'Maximum' }]} />
             </div>
+            <Toggle id="exp-master" label="Master the sound to the house standard" checked={master} onChange={setMaster} />
+            {master && (
+              <div class="fld fld-wide"><span class="fld-l">Loudness</span>
+                <Seg value={lufs} onChange={setLufs} options={[{ value: -13, label: '−13 LUFS (house)' }, { value: -14, label: '−14 LUFS' }, { value: -16, label: '−16 LUFS' }]} />
+              </div>
+            )}
             <dl class="exp-sum">
-              <dt>Output</dt><dd>{W}×{H} · {fps} fps · MP4 (H.264 + AAC)</dd>
+              <dt>Output</dt><dd>{W}×{H} · {fps} fps · MP4 (H.264 + AAC 256k, fast-start)</dd>
               <dt>Length</dt><dd>{dur.toFixed(2)} s ({Math.round(dur * fps)} frames)</dd>
               <dt>Video bitrate</dt><dd>{(bitrate / 1e6).toFixed(1)} Mbps</dd>
               <dt>Estimated size</dt><dd>{estMB.toFixed(estMB < 10 ? 1 : 0)} MB</dd>
@@ -110,7 +118,8 @@ export function ExportDialog() {
             <video class="exp-video" src={url} controls playsInline />
             <dl class="exp-sum">
               <dt>File</dt><dd>{fmtBytes(result.blob.size)} · {result.videoCodec}{result.audioCodec ? ` + ${result.audioCodec}` : ', no audio'}</dd>
-              <dt>Rendered in</dt><dd>{result.seconds.toFixed(1)} s</dd>
+              <dt>Rendered in</dt><dd>{result.seconds.toFixed(1)} s{result.frames ? ` · ${result.frames} frames` : ''}</dd>
+              {result.master && <><dt>Loudness</dt><dd>{result.master.lufs.toFixed(1)} LUFS · true peak {result.master.truePeakDb.toFixed(1)} dBTP (gain {result.master.gainDb >= 0 ? '+' : ''}{result.master.gainDb.toFixed(1)} dB)</dd></>}
             </dl>
             {result.warnings.map(w => <p class="note warn">{w}</p>)}
             <div class="modal-a">

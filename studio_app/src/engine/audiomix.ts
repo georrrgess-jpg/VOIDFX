@@ -3,7 +3,8 @@
 import { AudioBufferSink } from 'mediabunny';
 import { runtime } from '../media/library';
 import { Clip, MediaInfo, Project } from '../state/types';
-import { clamp, clipEnd, clipIn, clipSpeed, volumeAt } from '../state/util';
+import { clamp, clipEnd, hasRamp, srcAt, volumeAt } from '../state/util';
+import { SFX_RATE, sfxData } from './sfx';
 import { trackWindows } from './evaluate';
 
 export const MIX_RATE = 48000;
@@ -128,20 +129,44 @@ export async function mixAudio(
       jobs.push({ clip: c, from: w.from, to: w.to, tin: w.tin, tout: w.tout });
     }
   }
-  if (!jobs.length) return null;
+  // generated sound effects
+  let sfxCount = 0;
+  for (const tr of p.tracks) {
+    if (tr.muted || tr.kind !== 'audio') continue;
+    for (const c of p.clips) {
+      if (c.track !== tr.id || c.kind !== 'sfx' || !c.sfx || c.muted) continue;
+      const d = sfxData(c.sfx);
+      const off = c.in ?? 0;
+      const i0 = Math.max(0, Math.floor(c.start * MIX_RATE)), i1 = Math.min(N, Math.ceil((c.start + c.dur) * MIX_RATE));
+      for (let k = i0; k < i1; k++) {
+        const lt = k / MIX_RATE - c.start;
+        const x = (off + lt) * SFX_RATE;
+        const j = Math.floor(x);
+        if (j < 0 || j >= d.L.length - 1) continue;
+        const g = volumeAt(c, clamp(lt, 0, c.dur)) * fade(c, lt);
+        const f = x - j;
+        L[k] += (d.L[j] + (d.L[j + 1] - d.L[j]) * f) * g;
+        R[k] += (d.R[j] + (d.R[j + 1] - d.R[j]) * f) * g;
+      }
+      sfxCount++;
+    }
+  }
+  if (!jobs.length && !sfxCount) return null;
   let done = 0;
   for (const j of jobs) {
     if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError');
     const c = j.clip;
     const m = media[c.media!];
-    const speed = clipSpeed(c);
-    const srcAt = (t: number) => clipIn(c) + (t - c.start) * speed;
-    const a = clamp(srcAt(j.from), 0, m.duration), b = clamp(srcAt(j.to), 0, m.duration);
+    const ramp = hasRamp(c);
+    const speed = c.speed ?? 1;
+    const srcAtT = (t: number) => srcAt(c, t - c.start);
+    const a = clamp(srcAtT(j.from), 0, m.duration), b = clamp(srcAtT(j.to), 0, m.duration);
     if (b - a <= 0.001) { done++; continue; }
     const dec = await decodeRange(m.id, a - 0.05, b + 0.05, signal);
     if (!dec) { warn?.(`Sound of ${m.name} could not be decoded and was left out.`); done++; continue; }
     let chans = dec.chans;
-    const stretch = speed !== 1 && c.keepPitch !== false;
+    // constant speed keeps pitch (WSOLA); speed ramps resample like a tape (pitch follows speed)
+    const stretch = !ramp && speed !== 1 && c.keepPitch !== false;
     if (stretch) chans = timeStretch(chans, speed, dec.sr);
     const cL = chans[0], cR = chans[1] || chans[0];
     const i0 = Math.max(0, Math.floor(j.from * MIX_RATE)), i1 = Math.min(N, Math.ceil(j.to * MIX_RATE));
@@ -154,8 +179,9 @@ export async function mixAudio(
       else if (j.tout && t >= clipEnd(c) - j.tout.dur / 2) g *= Math.cos(clamp((t - (clipEnd(c) - j.tout.dur / 2)) / j.tout.dur, 0, 1) * Math.PI / 2);
       if (g <= 1e-5) continue;
       const end = Math.min(i1, i + BLOCK);
+      const sA = srcAtT(i / MIX_RATE), sB = srcAtT(end / MIX_RATE);
       for (let k = i; k < end; k++) {
-        const st = srcAt(k / MIX_RATE);
+        const st = sA + (sB - sA) * ((k - i) / Math.max(1, end - i));
         if (st < 0 || st > m.duration) continue;
         const x = stretch ? ((st - dec.t0) / speed) * dec.sr : (st - dec.t0) * dec.sr;
         if (x < 0 || x >= cL.length - 1) continue;
@@ -166,14 +192,6 @@ export async function mixAudio(
     done++;
     onProgress(done / jobs.length);
     await new Promise(r => setTimeout(r, 0));
-  }
-  // gentle safety limiter against clipping when many clips stack up
-  let peak = 0;
-  for (let i = 0; i < N; i++) { const a = Math.abs(L[i]), b = Math.abs(R[i]); if (a > peak) peak = a; if (b > peak) peak = b; }
-  if (peak > 0.98) {
-    const k = 0.98 / peak;
-    for (let i = 0; i < N; i++) { L[i] *= k; R[i] *= k; }
-    warn?.(`The mix peaked at ${(20 * Math.log10(peak)).toFixed(1)} dBFS and was turned down to avoid clipping.`);
   }
   return [L, R];
 }

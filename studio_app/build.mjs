@@ -5,7 +5,7 @@ import * as esbuild from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
 const watch = process.argv.includes('--watch');
-const FONTS = 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Unbounded:wght@600;800&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Montserrat:ital,wght@0,600;0,800;0,900;1,800&family=Oswald:wght@500;700&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Poppins:wght@600;800&family=Space+Mono:wght@700&display=swap';
+const FONTS = 'https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..900&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Unbounded:wght@600;800&family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Montserrat:ital,wght@0,600;0,800;0,900;1,800&family=Oswald:wght@500;700&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Poppins:wght@600;800&family=Space+Mono:wght@700&display=swap';
 
 function page(js, css) {
   const safeJs = js.replace(/<\/script/gi, '<\\/script');
@@ -33,6 +33,7 @@ async function build() {
     legalComments: 'none',
     define: { 'process.env.NODE_ENV': '"production"' },
     logLevel: 'warning',
+    loader: { '.webp': 'dataurl', '.png': 'dataurl' },
   });
   const js = res.outputFiles[0].text;
   const css = readFileSync('src/styles.css', 'utf8');

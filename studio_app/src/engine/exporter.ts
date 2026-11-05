@@ -1,6 +1,6 @@
 // Offline, frame-accurate export (WebCodecs via Mediabunny) and still rendering for Opus reviews.
 import {
-  AudioBufferSource, BufferTarget, CanvasSource, Mp4OutputFormat, Output, StreamTarget, StreamTargetChunk,
+  AudioSample, AudioSampleSource, BufferTarget, CanvasSource, Mp4OutputFormat, Output, StreamTarget, StreamTargetChunk,
   VideoSample, VideoSampleSink, WebMOutputFormat, canEncodeAudio, canEncodeVideo,
 } from 'mediabunny';
 import { registerAacEncoder } from '@mediabunny/aac-encoder';
@@ -9,13 +9,16 @@ import { store } from '../state/store';
 import { Clip, MediaInfo, Project } from '../state/types';
 import { clamp, deepClone, projectDuration, textStyleOf } from '../state/util';
 import { mixAudio, MIX_RATE } from './audiomix';
-import { Compositor, fitSize } from './compositor';
+import { Compositor } from './compositor';
+import { drawLayers, FrameRef } from './drawlayers';
+import { loadLogo } from './logo';
+import { masterMix, MasterStats } from './loudness';
 import { evaluate, VisualLayer } from './evaluate';
 import { player } from './player';
-import { dropTextRasters, ensureFont, renderText } from './text';
+import { dropTextRasters, ensureFont } from './text';
 
-export interface ExportSettings { width: number; height: number; fps: number; bitrate: number; audioBitrate: number }
-export interface ExportResult { blob: Blob; ext: 'mp4' | 'webm'; videoCodec: string; audioCodec: string | null; seconds: number; warnings: string[] }
+export interface ExportSettings { width: number; height: number; fps: number; bitrate: number; audioBitrate: number; loudness?: { target: number; ceiling: number } | null }
+export interface ExportResult { blob: Blob; ext: 'mp4' | 'webm'; videoCodec: string; audioCodec: string | null; seconds: number; warnings: string[]; master?: MasterStats; frames?: number }
 export type ExportPhase = 'prepare' | 'audio' | 'video' | 'finish';
 
 const abortErr = () => new DOMException('Export cancelled', 'AbortError');
@@ -77,40 +80,21 @@ async function drawOffline(
   frameFor: (L: VisualLayer) => Promise<{ src: TexImageSource; w: number; h: number; release?: () => void } | null>,
   slot: string, frameNo: number,
 ) {
-  const W = comp.width, H = comp.height;
-  comp.begin(p.background);
+  const frames = new Map<string, FrameRef | null>();
   const releases: (() => void)[] = [];
   for (const L of layers) {
-    const c = L.clip;
-    if (L.kind === 'text') {
-      const r = renderText(c, L.lt, W, H, slot);
-      if (!r) continue;
-      comp.draw({
-        key: c.id, version: r.version, source: r.canvas as any, srcW: r.w, srcH: r.h, srcRot: 0, baseW: r.w, baseH: r.h,
-        transform: L.transform, fx: { ...L.fx, dx: L.fx.dx + r.dx, opacity: L.fx.opacity * r.opacity, scale: L.fx.scale * r.scale }, premultiplied: true,
-      });
-      continue;
-    }
-    const rt = c.media ? runtime.get(c.media) : undefined;
-    if (!rt) continue;
-    if (L.kind === 'image') {
-      if (!rt.image) continue;
-      const [bw, bh] = fitSize(rt.image.width, rt.image.height, W, H, c.fit || 'cover');
-      comp.draw({ key: c.id, version: c.media, source: rt.image, srcW: rt.image.width, srcH: rt.image.height, srcRot: 0, baseW: bw, baseH: bh, transform: L.transform, fx: L.fx, color: L.color });
-      continue;
-    }
+    if (L.kind !== 'video') continue;
     const f = await frameFor(L);
-    const m = media[c.media!];
-    const sw = f?.w || m.width || 16, sh = f?.h || m.height || 9;
-    const [bw, bh] = fitSize(sw, sh, W, H, c.fit || 'cover');
-    comp.draw({ key: c.id, version: f ? frameNo : undefined, source: f?.src ?? null, srcW: sw, srcH: sh, srcRot: 0, baseW: bw, baseH: bh, transform: L.transform, fx: L.fx, color: L.color });
+    frames.set(L.clip.id, f ? { src: f.src, w: f.w, h: f.h, version: frameNo } : null);
     if (f?.release) releases.push(f.release);
   }
+  drawLayers(comp, p, media, layers, L => frames.get(L.clip.id), slot);
   for (const r of releases) r();
 }
 
 async function loadFonts(p: Project) {
-  const waits = p.clips.filter(c => c.kind === 'text').map(c => ensureFont(textStyleOf(c)));
+  const waits: Promise<unknown>[] = p.clips.filter(c => c.kind === 'text').map(c => ensureFont(textStyleOf(c)));
+  if (p.clips.some(c => c.transition?.type === 'logo')) waits.push(loadLogo());
   await Promise.all(waits);
 }
 
@@ -122,15 +106,20 @@ export async function pickCodecs(w: number, h: number, bitrate: number, needAudi
     else if (await canEncodeVideo('vp9', { width: w, height: h, bitrate }).catch(() => false)) video = 'vp9';
   }
   let audio: 'aac' | 'opus' | null = null;
+  // Encoder delay in samples. The bundled WASM AAC encoder (FFmpeg's) primes with 1024 samples and does
+  // not report it, so the export feeds audio from -1024 samples and the MP4 edit list trims the priming:
+  // audio and video then start together and end at the same frame (the loop needs both).
+  let priming = 0;
   if (needAudio && video) {
     let nativeAac = false;
     try {
       nativeAac = typeof AudioEncoder !== 'undefined' && !!(await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: MIX_RATE, numberOfChannels: 2, bitrate: 192000 })).supported;
     } catch { nativeAac = false; }
-    if (video === 'avc' && (nativeAac || (wasmAllowed() && (registerAacEncoder(), await canEncodeAudio('aac').catch(() => false))))) audio = 'aac';
+    if (video === 'avc' && nativeAac) audio = 'aac';
+    else if (video === 'avc' && wasmAllowed() && (registerAacEncoder(), await canEncodeAudio('aac').catch(() => false))) { audio = 'aac'; priming = 1024; }
     else if (await canEncodeAudio('opus').catch(() => false)) audio = 'opus';
   }
-  return { video, audio };
+  return { video, audio, priming };
 }
 
 function wasmAllowed(): boolean {
@@ -162,7 +151,61 @@ function blobCollector() {
       }
     },
   });
-  return { writable, blob: (type: string) => new Blob(parts as BlobPart[], { type }) };
+  return { writable, parts, blob: (type: string) => new Blob(parts as BlobPart[], { type }) };
+}
+
+/**
+ * The AAC encoder pads its last frame, so the audio track runs up to 21 ms past the picture. With fast-start
+ * the moov box is at the head of the file: set the audio edit's duration (and the track and movie durations)
+ * to the picture's length, so audio and video end on the same frame and the loop wraps cleanly.
+ */
+function clampAudioEdit(parts: Uint8Array[], seconds: number): boolean {
+  const offs: number[] = []; let acc = 0;
+  for (const pt of parts) { offs.push(acc); acc += pt.byteLength; }
+  const total = acc;
+  const loc = (pos: number) => { let i = offs.length - 1; while (i > 0 && offs[i] > pos) i--; return [i, pos - offs[i]] as const; };
+  const u8 = (pos: number) => { const [i, o] = loc(pos); return parts[i][o]; };
+  const set8 = (pos: number, v: number) => { const [i, o] = loc(pos); parts[i][o] = v & 255; };
+  const u32 = (pos: number) => ((u8(pos) << 24) >>> 0) + (u8(pos + 1) << 16) + (u8(pos + 2) << 8) + u8(pos + 3);
+  const put32 = (pos: number, v: number) => { for (let k = 0; k < 4; k++) set8(pos + k, Math.floor(v / 2 ** (8 * (3 - k)))); };
+  const put64 = (pos: number, v: number) => { put32(pos, Math.floor(v / 2 ** 32)); put32(pos + 4, v % 2 ** 32); };
+  const type = (pos: number) => String.fromCharCode(u8(pos + 4), u8(pos + 5), u8(pos + 6), u8(pos + 7));
+  const boxes = (start: number, end: number) => {
+    const out: { t: string; s: number; e: number; h: number }[] = [];
+    for (let pos = start; pos + 8 <= end;) {
+      let size = u32(pos), h = 8;
+      if (size === 1) { size = u32(pos + 8) * 2 ** 32 + u32(pos + 12); h = 16; }
+      if (size < h || pos + size > end) break;
+      out.push({ t: type(pos), s: pos, e: pos + size, h });
+      pos += size;
+    }
+    return out;
+  };
+  const moov = boxes(0, Math.min(total, 64 * 1024 * 1024)).find(b => b.t === 'moov');
+  if (!moov) return false;
+  const kids = boxes(moov.s + moov.h, moov.e);
+  const mvhd = kids.find(b => b.t === 'mvhd');
+  if (!mvhd) return false;
+  const mv1 = u8(mvhd.s + 8) === 1;
+  const scale = u32(mvhd.s + (mv1 ? 28 : 20));
+  const dur = Math.round(seconds * scale);
+  let done = false;
+  for (const trak of kids.filter(b => b.t === 'trak')) {
+    const tk = boxes(trak.s + trak.h, trak.e);
+    const mdia = tk.find(b => b.t === 'mdia');
+    const hdlr = mdia && boxes(mdia.s + mdia.h, mdia.e).find(b => b.t === 'hdlr');
+    if (!hdlr || type(hdlr.s + 12) !== 'soun') continue;
+    const edts = tk.find(b => b.t === 'edts');
+    const elst = edts && boxes(edts.s + edts.h, edts.e).find(b => b.t === 'elst');
+    if (!elst || u32(elst.s + 12) !== 1) return false; // only the single trimming edit Mediabunny writes for priming
+    const ev1 = u8(elst.s + 8) === 1;
+    if (ev1) put64(elst.s + 16, dur); else put32(elst.s + 16, dur);
+    const tkhd = tk.find(b => b.t === 'tkhd');
+    if (tkhd) { if (u8(tkhd.s + 8) === 1) put64(tkhd.s + 36, dur); else put32(tkhd.s + 28, dur); }
+    done = true;
+  }
+  if (done) { if (mv1) put64(mvhd.s + 32, dur); else put32(mvhd.s + 24, dur); }
+  return done;
 }
 
 export async function exportVideo(
@@ -175,6 +218,7 @@ export async function exportVideo(
   const warnings: string[] = [];
   const total = projectDuration(p);
   if (total <= 0) throw new Error('The timeline is empty.');
+  if (total > 3600) throw new Error(`The edit is ${Math.round(total)} s long; something sits far down the timeline. Check the last clips.`);
   const { width: W, height: H, fps } = settings;
   const missing = p.clips.filter(c => c.media && !runtime.has(c.media));
   if (missing.length) throw new Error(`Re-link ${new Set(missing.map(c => media[c.media!]?.name)).size} offline media file(s) in the Media panel first.`);
@@ -193,6 +237,20 @@ export async function exportVideo(
     onProgress('audio', 0);
     mix = await mixAudio(p, media, total, f => onProgress('audio', f), signal, w => warnings.push(w));
   }
+  let master: MasterStats | undefined;
+  if (mix) {
+    if (settings.loudness) {
+      master = masterMix(mix[0], mix[1], settings.loudness.target, settings.loudness.ceiling);
+    } else {
+      let peak = 0;
+      for (const ch of mix) for (let i = 0; i < ch.length; i++) { const a = Math.abs(ch[i]); if (a > peak) peak = a; }
+      if (peak > 0.98) {
+        const k = 0.98 / peak;
+        for (const ch of mix) for (let i = 0; i < ch.length; i++) ch[i] *= k;
+        warnings.push(`The mix peaked at ${(20 * Math.log10(peak)).toFixed(1)} dBFS and was turned down to avoid clipping.`);
+      }
+    }
+  }
   if (signal.aborted) throw abortErr();
 
   // ---- output ----
@@ -207,9 +265,9 @@ export async function exportVideo(
   comp.resize(W, H);
   const videoSource = new CanvasSource(canvas, { codec: codecs.video, bitrate: settings.bitrate, keyFrameInterval: 1 });
   output.addVideoTrack(videoSource, { frameRate: fps });
-  let audioSource: AudioBufferSource | null = null;
+  let audioSource: AudioSampleSource | null = null;
   if (codecs.audio && mix) {
-    audioSource = new AudioBufferSource({ codec: codecs.audio, bitrate: settings.audioBitrate });
+    audioSource = new AudioSampleSource({ codec: codecs.audio, bitrate: settings.audioBitrate });
     output.addAudioTrack(audioSource);
   }
   await output.start();
@@ -241,10 +299,12 @@ export async function exportVideo(
     const until = Math.min(mix[0].length, Math.ceil(tSec * MIX_RATE));
     while (audioPushed < until) {
       const len = Math.min(MIX_RATE, mix[0].length - audioPushed);
-      const buf = new AudioBuffer({ numberOfChannels: 2, length: len, sampleRate: MIX_RATE });
-      buf.copyToChannel(mix[0].subarray(audioPushed, audioPushed + len) as Float32Array<ArrayBuffer>, 0);
-      buf.copyToChannel(mix[1].subarray(audioPushed, audioPushed + len) as Float32Array<ArrayBuffer>, 1);
-      await audioSource.add(buf);
+      const data = new Float32Array(len * 2);
+      data.set(mix[0].subarray(audioPushed, audioPushed + len), 0);
+      data.set(mix[1].subarray(audioPushed, audioPushed + len), len);
+      const sample = new AudioSample({ data, format: 'f32-planar', numberOfChannels: 2, sampleRate: MIX_RATE, timestamp: (audioPushed - codecs.priming) / MIX_RATE });
+      await audioSource.add(sample);
+      sample.close();
       audioPushed += len;
     }
   };
@@ -297,7 +357,8 @@ export async function exportVideo(
     dropTextRasters('x');
   }
   const mime = ext === 'mp4' ? 'video/mp4' : 'video/webm';
-  return { blob: sink.blob(mime), ext, videoCodec: codecs.video === 'avc' ? 'H.264' : 'VP9', audioCodec: codecs.audio ? (codecs.audio === 'aac' ? 'AAC' : 'Opus') : null, seconds: (performance.now() - t0) / 1000, warnings };
+  if (ext === 'mp4' && codecs.priming && audioSource) { try { clampAudioEdit(sink.parts, nFrames / fps); } catch { /* leave the file as written */ } }
+  return { blob: sink.blob(mime), ext, videoCodec: codecs.video === 'avc' ? 'H.264' : 'VP9', audioCodec: codecs.audio ? (codecs.audio === 'aac' ? 'AAC' : 'Opus') : null, seconds: (performance.now() - t0) / 1000, warnings, master, frames: nFrames };
 }
 
 /** Real-time fallback for browsers without WebCodecs encoders: records the preview while it plays. */
@@ -387,3 +448,22 @@ export async function renderStills(p: Project, times: number[], height: number, 
 export function clipsUsingMedia(p: Project, id: string): Clip[] { return p.clips.filter(c => c.media === id); }
 
 export { BufferTarget };
+
+/** Loop seam: blurred mean difference (0-255) between frame 0 and the last frame. */
+export async function measureLoopSeam(p: Project): Promise<number | null> {
+  const dur = projectDuration(p);
+  if (dur <= 0.2) return null;
+  const [a, b] = await renderStills(p, [0, Math.max(0, dur - 1 / p.fps)], 96);
+  if (!a || !b) return null;
+  const w = 18, h = Math.max(8, Math.round((18 * p.height) / p.width));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true })!;
+  g.drawImage(a, 0, 0, w, h);
+  const da = g.getImageData(0, 0, w, h).data;
+  g.drawImage(b, 0, 0, w, h);
+  const db = g.getImageData(0, 0, w, h).data;
+  let s = 0;
+  for (let i = 0; i < da.length; i += 4) s += (Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) + Math.abs(da[i + 2] - db[i + 2])) / 3;
+  return s / (w * h);
+}

@@ -1,7 +1,7 @@
-// What Opus reads. This describes the studio's capabilities and data formats only; it deliberately
-// contains no editing style. House style and presets come from the user's Studio knowledge.
+// What Opus reads: the studio's capabilities and data formats. The owner's house style lives in
+// knowledge.ts and the presets, and is added by the Director when a preset uses it.
 import { store } from '../state/store';
-import { AudioAnalysis, FONTS, MediaInfo, Project, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
+import { AudioAnalysis, FONTS, MediaInfo, Project, SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { projectDuration } from '../state/util';
 
 export function reference(p: Project): string {
@@ -25,21 +25,27 @@ OPERATIONS
 {"op":"set","id":"c1", ...fields to change}  (start, dur, in, track and any clip or text field)
 {"op":"remove","id":"c1"}  or  {"op":"remove","ids":["c1","c2"]}
 {"op":"split","id":"c1","at":3.2,"newId":"c1b"}  split at timeline time "at"
+{"op":"sfx","sound":"whoosh","start":2.1,"volume":0.35}  a generated sound effect on an SFX track; start may be before the cut so the sound peaks on it. Sounds: ${SFX.join(', ')} (lengths: whoosh 0.9 s peaking at 0.56 s, swish 0.35 s, impact 1.4 s, hit 0.45 s, boom 2.6 s, riser 2.0 s ending on its peak, subdrop 1.3 s, reverse 1.2 s ending on its peak, glitch 0.5 s, shutter 0.25 s, tick 0.08 s, tapestop 0.9 s)
+{"op":"sounds","volume":0.35}  give every transition its own matched sound (replaces earlier automatic sounds)
+{"op":"project","camera":{"on":true,"every":"beat","punch":0.055,"kick":1,"decay":0.16,"from":0,"to":24}}  the beat camera: zoom punch and rotation kick on the music's beats ("beat", "half" = every other beat, "downbeat"); video layers only, text stays clean
 Ids you give must be new and unique (letters, digits, - or _).
 
 CLIP FIELDS (all optional)
 speed 0.1-10 (default 1); keepPitch true|false (default true)
+ramp {"fast":2.2,"slow":0.45,"burst":0.18}: a velocity ramp synced to the music: a speed burst on every beat inside the clip, slow motion between (needs a music clip under it; the studio fits it to the source length). Or keyframe "speed" yourself. "ramp": null removes it
 volume 0-4 (1 = as recorded); fadeIn, fadeOut (seconds); muted true|false
 fit "cover" (fills the frame, crops; default) | "contain" (whole picture, may leave bars)
 transform {x, y, scale, rotation, opacity}: x and y offset the centre in frame widths and heights (0,0 = centred); scale 1 = fitted size; rotation in degrees clockwise; opacity 0-1
-kf {"scale": [[t, value, ease], ...], ...}: keyframes for x, y, scale, rotation, opacity, volume; t is seconds from the clip's start; ease is linear|in|out|inOut|hold (default inOut) and shapes the move to the next key
+kf {"scale": [[t, value, ease], ...], ...}: keyframes for x, y, scale, rotation, opacity, volume, speed; t is seconds from the clip's start; ease is linear|in|out|inOut|hold (default inOut) and shapes the move to the next key
 color {brightness, contrast, saturation, temperature, tint: -1..1; hue: -180..180; vignette, blur: 0..1}
-transition {"type": .., "dur": seconds}: transition from the previous clip on the same track into this clip, centred on the cut; the previous clip must end exactly where this one starts. Types: ${TRANSITIONS.join(', ')}
+transition {"type": .., "dur": seconds}: transition from the previous clip on the same track into this clip, centred on the cut; the previous clip must end exactly where this one starts; the outgoing clip keeps playing past its end during the first half (make sure its file has room). Types: ${TRANSITIONS.join(', ')}.
+  Signature types: logo (the voidfx logo slams in and the camera flies through its "o" into the next shot; allowed once per edit; ~1.2 s), blink (eyelids close with blur and blink open), ink (a blood-red stain blooms open into the next shot), burn (film-burn holes with an ember rim), slash (a blade cuts the frame and the halves fly apart), punch (impact frame: one-frame negative and a zoom punch), light_leak (warm leak sweeps across), roll (the world rolls 90 degrees), shadow (darkness swallows the frame, the next shot emerges brightest-first), warp (radial pull through the centre). flash is a flare that keeps the picture.
 
 TEXT FIELDS
-text: the words (use \\n for a line break)
-style {font, weight 100-900, italic, size (fraction of frame height), color, stroke (outline width as a fraction of size), strokeColor, shadow 0-1, bg (box behind each line), bgColor, align left|center|right, uppercase, tracking (em), lineHeight, maxWidth (fraction of frame width)}; colours are hex. Fonts: ${FONTS.join(', ')}
-anim {in: ${TEXT_ANIMS_IN.join('|')}; out: ${TEXT_ANIMS_OUT.join('|')}; inDur; outDur}; "words" reveals one word after another across inDur
+text: the words (use \\n for a line break; wrap a word in *asterisks* to emphasise it)
+words [t1, t2, ...]: when each word starts, in seconds from the clip's start (with anim.in "words", each word eases in on its own time)
+style {font, weight 100-900, italic, size (fraction of frame height), lineScales [per-line size multipliers], color, emphColor, emphGlow 0-1, stroke (outline width as a fraction of size), strokeColor, shadow 0-1, scrim 0-1 (soft dark backing), bg (box behind each line), bgColor, align left|center|right, uppercase, tracking (em), lineHeight, maxWidth (fraction of frame width)}; colours are hex. Fonts: ${FONTS.join(', ')}
+anim {in: ${TEXT_ANIMS_IN.join('|')}; out: ${TEXT_ANIMS_OUT.join('|')}; inDur; outDur}; "words" reveals one word after another (on "words" times if given); "letters" builds a title letter by letter; "scatter" bursts the letters apart; "fall" drops them away
 transform and kf work as for media clips; x and y move the text block's centre`;
 }
 
@@ -82,6 +88,8 @@ export function mediaCatalog(): string {
     const fps = m.kind === 'video' ? ` ${m.fps}fps` : '';
     const snd = m.kind === 'image' ? '' : m.hasAudio ? ' with sound' : ' no sound';
     rows.push(`${m.id} ${m.kind} "${m.name}" ${len}${dims}${fps}${snd}`);
+    if (m.shots && m.shots.length > 1) rows.push(`    shots (${m.shots.length}): ${m.shots.slice(0, 220).map(([a, b], i) => `#${i + 1} ${r2(a)}-${r2(b)}`).join(', ')}${m.shots.length > 220 ? ' …' : ''}`);
+    if (m.tags?.length) rows.push(`    tags: ${m.tags.join(', ')}`);
     if (m.analysis && m.hasAudio) rows.push(`    ${soundLine(m.analysis)}`);
     else if (m.hasAudio && m.analysisState !== 'done') rows.push('    (sound not analysed)');
   }
@@ -94,19 +102,48 @@ export function timelineJson(p: Project): string {
     const { track, ...rest } = c;
     return { ...rest, track };
   });
-  return JSON.stringify({ name: p.name, width: p.width, height: p.height, fps: p.fps, background: p.background, duration: +projectDuration(p).toFixed(3), tracks, clips });
+  return JSON.stringify({ name: p.name, width: p.width, height: p.height, fps: p.fps, background: p.background, camera: p.camera, duration: +projectDuration(p).toFixed(3), tracks, clips });
 }
 
-export function contextBlock(p: Project, imageCaptions: string[], imageNote?: string): string {
-  const k = store.state.director.knowledge.trim();
+export interface ContextExtras {
+  houseRules: string;
+  benchmarks: string;
+  presetName: string;
+  presetPrompt: string;
+  standards: string;
+  knowledge: string;
+  checks?: string;
+}
+
+export function contextBlock(p: Project, imageCaptions: string[], imageNote: string | undefined, x: ContextExtras): string {
   return [
-    'You are the editor inside VOIDFX Studio, a video editing app. You build and change the user\'s edit by replying with operations that the studio applies to its timeline. You cannot watch or hear the media: the images and the sound analysis below are how you perceive it.',
-    k ? `STUDIO KNOWLEDGE (from the user; follow it)\n${k}` : '',
+    'You are the editor inside VOIDFX Studio, a video editing app. You build and change the owner\'s edit by replying with operations that the studio applies to its timeline. You cannot watch or hear the media: the images and the sound analysis below are how you perceive it.',
+    x.houseRules ? x.houseRules : '',
+    x.benchmarks ? `THE OWNER'S STANDARDS (approved edits; match or exceed them, never copy their look)\n${x.benchmarks}` : '',
+    x.standards ? `REFERENCE EDITS THE OWNER ADDED AS STANDARDS\n${x.standards}` : '',
+    x.knowledge.trim() ? `STUDIO KNOWLEDGE (from the owner; follow it)\n${x.knowledge.trim()}` : '',
+    x.presetPrompt.trim() ? `PRESET "${x.presetName}" (the standing brief for this edit)\n${x.presetPrompt.trim()}` : '',
     reference(p),
     `MEDIA\n${mediaCatalog()}`,
     imageNote ? `IMAGES\n${imageNote}` : imageCaptions.length ? `IMAGES (attached, in this order)\n${imageCaptions.map((c, i) => `${i + 1}. ${c}`).join('\n')}` : 'IMAGES: none attached.',
     `CURRENT TIMELINE\n${timelineJson(p)}`,
+    x.checks ? `AUTOMATED CHECKPOINT (the studio's measurable gates on the current timeline)\n${x.checks}` : '',
   ].filter(Boolean).join('\n\n');
+}
+
+/** Parse one JSON value from a reply (whole text, a code fence, or the outermost braces). */
+export function parseJson(text: string): any {
+  const tryParse = (s: string) => { try { return JSON.parse(s); } catch { return undefined; } };
+  let v = tryParse(text.trim());
+  if (v === undefined) {
+    const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fence) v = tryParse(fence[1]);
+  }
+  if (v === undefined) {
+    const a = text.indexOf('{'), b = text.lastIndexOf('}');
+    if (a >= 0 && b > a) v = tryParse(text.slice(a, b + 1));
+  }
+  return v;
 }
 
 /** Parse the JSON object Opus replies with. */
