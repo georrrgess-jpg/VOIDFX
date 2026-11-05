@@ -1,6 +1,6 @@
 # voidfx studio handbook
 
-This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers the standard, every preference learned over seven edits and fourteen revision rounds, what works and what doesn't, and how to work twice as fast.
+This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers the standard, every preference learned over eleven edits (v1–v11) and their revision rounds, plus Studio 2's notes, what works and what doesn't, and how to work twice as fast.
 
 Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (the engine) and `/CLAUDE.md` (the binding rules).
 
@@ -329,8 +329,8 @@ Fresh directions for future edits:
 | v7 | Gunna "Him All Along" | 130 BPM | half-beats 528–640 (2:01.9–2:27.8, 14 bars) | 2:13.0, +17 dB return → plastic burst |
 | v8 | Brent Faiyaz "Wish You Well" (screen recording) | 138 BPM | half-beats 64–164 (13.96–35.69 s) | 33.08 drop → blood blooms in water |
 | v9 | fakemink "Night, Blooming Jasmine" | 102.8 BPM | h448–h506 + h634–h650, spliced on the 4-bar cycle (2:10.9–2:27.8 + 3:05.2–3:09.9) | 2:19.38 dead silence → freeze; 2:20.84 drop → petal bloom |
-| v11 | DaBaby "BOP" | 127 BPM | h32–h120 (7.75–28.54 s, 11 bars) | 9.64 beat in → red shudder; 14.34 "Let's go!"; 15.31 drop → bolt split; 28.54 → tape stop → loop |
 | v10 | Tame Impala "Let It Happen" (radio edit) | 125 BPM | h392–h496 (1:34.3–1:59.3, 13 bars) | 1:41.94 drop → emblem dive; 1:52.04 gated stutter → time freeze; 1:59.3 → rewind loop |
+| v11 | DaBaby "BOP" | 127 BPM | h32–h120 (7.75–28.54 s, 11 bars) | 9.64 beat in → red shudder; 14.34 "Let's go!"; 15.31 drop → bolt split; 28.54 → tape stop → loop |
 
 ## 11. Communication
 

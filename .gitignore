@@ -67,3 +67,4 @@ v11/frames/
 v11/out/
 v11/work/*.npz
 v11/work/*.npy
+handoff/

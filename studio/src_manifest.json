@@ -9,6 +9,13 @@
    "uploaded_as": "Blood_Theme_Instrumental.mp3"
   },
   {
+   "file": "bop.mp3",
+   "bytes": 2760401,
+   "sha256": "b233da80fc02302d57f7e158fa6db4041c54bda8581a16e64e4ca429e870a099",
+   "duration": "159.921633",
+   "uploaded_as": "Dababy_-_BOP_Official_Audio.mp3"
+  },
+  {
    "file": "doakes.mp4",
    "bytes": 15049684,
    "sha256": "5cbb6b973037ec62d3a8ed9cc1d453363bc18170c1528dca9448a70fdddb519c",
@@ -35,6 +42,13 @@
    "sha256": "ade1fc472681e85b8c3032916b06a8ca0469a5a8e547c9ee5cba2a379eac6177",
    "duration": "150.813605",
    "uploaded_as": "The Flash scene pack (one of two)"
+  },
+  {
+   "file": "flash_s4.mp4",
+   "bytes": 27598694,
+   "sha256": "f002bf755beee56e2bf56e35a09568ddec861181f733df33c8e3ceab4c9ca94b",
+   "duration": "186.015057",
+   "uploaded_as": "FLASH_SEASON_4_SCENE_PACK_4K_60FPS_theflash_scenepacks.mp4"
   },
   {
    "file": "him_all_along.mp3",
@@ -133,6 +147,13 @@
    "sha256": "175636e1329f0d9073edeb7c111258b31d5413c642bd14495a65620724974531",
    "duration": "23.533333",
    "uploaded_as": "v12044gd0000d9vh707og65vbajocleg.mp4 (reference TikTok)"
+  },
+  {
+   "file": "reverse_flash.mp4",
+   "bytes": 16302802,
+   "sha256": "87d702fd070f76ac4e2ae74c7e2f9ce63071e92f63a6051dbc0510fe54a9d685",
+   "duration": "93.855057",
+   "uploaded_as": "Reverse_Flash_CW_Flash_Scenepack_Head_Tracked__Topazed_4k_60fps_With_Intro_Clips.mp4"
   },
   {
    "file": "scenepack.mp4",
