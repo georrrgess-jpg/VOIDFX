@@ -42,7 +42,7 @@ export const ERR: Record<string, string> = {
   session_expired: 'Sign in to Claude again, then retry.',
   rate_limited: 'Too many requests or your usage limit was reached. Wait a little, then retry.',
   refused: 'Opus declined this request. Try rewording it.',
-  empty_completion: 'Opus returned nothing. Try again with a shorter request.',
+  empty_completion: 'Opus thought for too long and wrote nothing, even on a lighter retry. Press Retry, or use a lower effort for this edit.',
   invalid_json: 'Opus replied in a shape the studio could not read. Retry.',
   prompt_too_large: 'The request was too large. Use fewer database items or shorten the knowledge text.',
   image_rejected: 'A contact sheet was rejected. Try again with fewer files.',
@@ -104,6 +104,66 @@ export async function ask(io: JobIO, input: string | Turn[], images: Sheet[], ef
   io.model(model);
   store.setDirector({ lastModel: model });
   return { text: res.text, model, truncated: res.truncated };
+}
+
+const LIGHTER: Record<Effort, Effort> = { extra: 'medium', high: 'medium', medium: 'low', low: 'low' };
+const ANSWER_NOW = '\n\n(Answer now: keep your thinking short and write the reply as compact JSON, no extra whitespace.)';
+
+/**
+ * `ask`, with one lighter second attempt when Opus writes nothing (it ran out of time thinking) or the
+ * connection drops: less effort, half the images, and a request to answer straight away. Never more
+ * than one retry; anything else is thrown as it came.
+ */
+export async function askSafe(io: JobIO, input: string | Turn[], images: Sheet[], effort: Effort, label: string, describe?: (text: string) => string) {
+  try {
+    return await ask(io, input, images, effort, label, describe);
+  } catch (e: any) {
+    const code = e?.code;
+    if ((code !== 'empty_completion' && code !== 'upstream_error') || io.signal.aborted) throw e;
+    const empty = code === 'empty_completion';
+    io.step(label, { detail: empty ? 'Opus ran out of time thinking; asking again, lighter' : 'the connection dropped; asking again' });
+    const next = typeof input === 'string'
+      ? input + (empty ? ANSWER_NOW : '')
+      : [...input.slice(0, -1), { role: 'user' as const, content: input[input.length - 1].content + (empty ? ANSWER_NOW : '') }];
+    return await ask(io, next, empty ? images.slice(0, Math.ceil(images.length / 2)) : images, empty ? LIGHTER[effort] : effort, label, describe);
+  }
+}
+
+/** High and Extra split a pass in two calls: decide (with the images), then write the operations. */
+export const twoStage = (effort: Effort) => effort === 'high' || effort === 'extra';
+
+/**
+ * Two calls instead of one long one, so neither runs out of time: Opus directs the pass (decisions
+ * only, short text, with the images), then writes the operations for exactly that direction (lighter
+ * thinking, no images). Returns the operations, Opus's message to the owner and the turns so far.
+ */
+async function directThenBuild(io: JobIO, o: { ctx: string; ctxNoImages: string; history: Turn[]; request: string; images: Sheet[]; effort: Effort; revision: boolean }) {
+  const step1 = o.revision
+    ? 'STEP 1 OF 2: DECIDE THE CHANGES. Do not write operations yet. For every instruction and critic point, write down exactly what you will change: the time, the clip, the new shot or value, the transition and its sound, the text. Add anything else the edit needs to clear the standards. Be compact.'
+    : 'STEP 1 OF 2: DIRECT THE EDIT. Do not write operations yet. Decide everything and write it down compactly: CONCEPT (one sentence); SONG (media id, source in and out, where the drop or hook lands on the timeline); STRUCTURE (sections with timeline times); SHOTS in order ("t0-t1 media id, shot number, source in -> what it shows, framing, speed or ramp"); TRANSITIONS ("time, type, why, its sound"); SET PIECES (each step by step); TEXT ("t0-t1 words, animation in and out, style"); CAMERA; SOUNDS; LOOP.';
+  const t1: Turn[] = [{ role: 'user', content: o.ctx }, ...o.history, { role: 'user', content: `${o.request}
+
+${step1}
+Reply with only JSON: {"message": "${o.revision ? 'what will change, for the owner' : 'the concept sentence and the set pieces, for the owner'}", "direction": "the full plan as compact text"}` }];
+  io.step('direct', { state: 'run', detail: 'thinking…' });
+  const a = await askSafe(io, t1, o.images, o.effort, 'direct', t => `writing the direction… ${t.length} characters`);
+  const av: any = parseJson(a.text);
+  const direction = typeof av?.direction === 'string' && av.direction.trim() ? av.direction : a.text;
+  const note = typeof av?.message === 'string' ? av.message : '';
+  io.step('direct', { state: 'done', detail: `${direction.length} characters${a.truncated ? ' (cut short)' : ''}` });
+
+  const step2 = o.revision
+    ? 'STEP 2 OF 2: Write the operations for exactly the changes you decided, against the CURRENT TIMELINE. Keep everything else. Reply with only JSON: {"message": "what you changed", "ops": [...]}.'
+    : 'STEP 2 OF 2: BUILD IT. Turn your direction into operations exactly, in the studio\'s operation format. Start with {"op":"clear"}. Reply with only JSON: {"message": "the concept sentence and the set pieces", "ops": [...]}.';
+  const t2: Turn[] = [{ role: 'user', content: o.ctxNoImages }, ...o.history, { role: 'user', content: `${o.request}
+
+${step1}` }, { role: 'assistant', content: a.text }, { role: 'user', content: step2 }];
+  io.step('plan', { state: 'run', detail: 'writing operations…' });
+  const b = await askSafe(io, t2, [], o.effort === 'extra' || o.effort === 'high' ? 'medium' : 'low', 'plan');
+  const plan = parseReply(b.text);
+  if (!plan || !plan.ops.length) throw { code: b.truncated ? 'empty_completion' : 'invalid_json' };
+  io.step('plan', { state: 'done', detail: `${plan.ops.length} operations${(plan as any).salvaged ? ' (kept what was written before it was cut short)' : ''}` });
+  return { plan: { message: plan.message || note, ops: plan.ops }, turns: [...t2, { role: 'assistant' as const, content: b.text }] };
 }
 
 export function maxImagesFor(effort: Effort) {
@@ -182,7 +242,7 @@ async function castFromLibrary(io: JobIO, req: NonNullable<Job['request']>, pres
     mosaic ? 'The attached image shows each item\'s poster frame, labelled with its id.' : '',
     'Pick one music item (unless the notes or attached files already supply the song) and the scene packs or clips with the strongest material for this concept; at most 6 items in total. Reply with only JSON: {"items": [{"id": "...", "why": "..."}], "message": "one sentence on the choice"}',
   ].filter(Boolean).join('\n\n');
-  const r = await ask(io, prompt, mosaic ? [mosaic] : [], effort === 'extra' ? 'high' : effort, 'cast');
+  const r = await askSafe(io, prompt, mosaic ? [mosaic] : [], effort === 'extra' || effort === 'high' ? 'medium' : effort, 'cast');
   const raw: any = parseJson(r.text);
   const ids: string[] = Array.isArray(raw?.items) ? raw.items.map((x: any) => String(x?.id ?? x)) : [];
   const chosen = pool.filter(i => ids.includes(i.id)).slice(0, 6);
@@ -242,9 +302,24 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
     ].join('\n\n');
     opts.turns.push({ role: 'user', content: reviewMsg });
     const ctxNow = contextBlock(ws.ctx, [], opts.mediaImages ? REVIEW_NOTE : undefined, extrasFor(opts.preset, opts.standards));
-    const rk = await ask(io, [{ role: 'user', content: ctxNow }, ...opts.turns.slice(1)], rSheets, opts.effort, id);
+    let rk: { text: string; truncated: boolean };
+    try {
+      rk = await askSafe(io, [{ role: 'user', content: ctxNow }, ...opts.turns.slice(1)], rSheets, opts.effort, id);
+    } catch (e: any) {
+      if (e?.code === 'cancelled' || io.signal.aborted || e?.code === 'not_granted' || e?.code === 'rate_limited') throw e;
+      // the edit is already built: a review that fails is skipped, not fatal
+      opts.turns.pop();
+      io.step(id, { state: 'skip', detail: `skipped: ${errText(e).code}` });
+      for (let j = k + 1; j <= cfg.reviews; j++) io.step(`review${j}`, { state: 'skip', detail: 'not run' });
+      break;
+    }
     const rev = parseReply(rk.text);
-    if (!rev) throw { code: 'invalid_json' };
+    if (!rev) {
+      opts.turns.pop();
+      io.step(id, { state: 'skip', detail: 'skipped: unreadable reply' });
+      for (let j = k + 1; j <= cfg.reviews; j++) io.step(`review${j}`, { state: 'skip', detail: 'not run' });
+      break;
+    }
     opts.turns.push({ role: 'assistant', content: rk.text });
     if (rev.ops.length) {
       res = applyOps(ws.project, rev.ops, ws.media());
@@ -276,7 +351,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
       ...(job.request && job.request.library.mode !== 'none' ? [{ id: 'cast', label: 'Pick material from the database', state: 'wait' as const }] : []),
       { id: 'media', label: 'Read the media', state: 'wait' },
       { id: 'sheets', label: 'Make contact sheets', state: 'wait' },
-      { id: 'plan', label: 'Opus plans the edit', state: 'wait' },
+      ...(twoStage(job.effort) ? [{ id: 'direct', label: 'Opus directs: concept, song, shots, set pieces', state: 'wait' as const }, { id: 'plan', label: 'Opus writes the operations', state: 'wait' as const }] : [{ id: 'plan', label: 'Opus plans the edit', state: 'wait' as const }]),
       { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
       { id: 'check', label: 'Run the checkpoint', state: 'wait' },
       ...rev,
@@ -285,7 +360,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
   return [
     { id: 'media', label: 'Read the media', state: 'wait' },
     { id: 'look', label: 'Render the current edit', state: 'wait' },
-    { id: 'plan', label: `Opus works on round ${job.round}`, state: 'wait' },
+    ...(twoStage(job.effort) ? [{ id: 'direct', label: `Opus decides the round ${job.round} changes`, state: 'wait' as const }, { id: 'plan', label: 'Opus writes the operations', state: 'wait' as const }] : [{ id: 'plan', label: `Opus works on round ${job.round}`, state: 'wait' as const }]),
     { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
     { id: 'check', label: 'Run the checkpoint', state: 'wait' },
     ...rev,
@@ -311,7 +386,15 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   let castNote = '';
   if (req.library.mode !== 'none') {
     io.step('cast', { state: 'run' });
-    const { items, note } = await castFromLibrary(io2, req, preset, effort);
+    const { items, note } = await castFromLibrary(io2, req, preset, effort).catch(async (e: any) => {
+      if (e?.code === 'cancelled' || io.signal.aborted || e?.code === 'not_granted') throw e;
+      // casting failed: use the database items the preset favours rather than stopping the build
+      const all = (await listLibrary()).filter(i => i.state === 'ready');
+      const pool = req.library.mode === 'picked' ? all.filter(i => req.library.ids.includes(i.id)) : all;
+      const music = pool.filter(i => i.role === 'music').slice(0, 1);
+      const rest = pool.filter(i => i.role !== 'music' && (!preset.libraryTags.length || i.tags.some(t => preset.libraryTags.includes(t)))).slice(0, 4);
+      return { items: [...music, ...(rest.length ? rest : pool.filter(i => i.role !== 'music').slice(0, 4))], note: 'Picked by the studio (Opus could not answer the casting call).' };
+    });
     for (const it of items) await attachLibraryItem(it, ws);
     castNote = note || '';
     io.step('cast', { state: items.length ? 'done' : 'skip', detail: items.length ? items.map(i => i.name).slice(0, 4).join(', ') + (items.length > 4 ? '…' : '') : 'the database is empty' });
@@ -327,21 +410,29 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   const images = [...stdImgs, ...sheets];
   io.step('sheets', { state: images.length ? 'done' : 'skip', detail: images.length ? `${images.length} image${images.length > 1 ? 's' : ''}` : 'images not available here' });
 
-  io.step('plan', { state: 'run', detail: 'thinking…' });
-  const ctx = contextBlock(ws.ctx, images.map(x => x.caption), undefined, extrasFor(preset, standards));
+  const extras = extrasFor(preset, standards);
+  const ctx = contextBlock(ws.ctx, images.map(x => x.caption), undefined, extras);
   const request = [
     'OWNER\'S REQUEST FOR THIS EDIT (round 1: the build)',
     req.notes || 'No extra notes: make the best edit you can from this material.',
     castNote ? `MATERIAL CHOSEN FROM THE DATABASE: ${castNote}` : '',
     req.lyrics ? `LYRICS (the owner supplied them; caption only what is sung, on its time)\n${req.lyrics}` : '',
-    'Plan it first in your head: the concept sentence, the song section and drop, the set pieces, the shot list, the transitions and sounds, the text and the loop; compare it with the standards; then build it. Start with {"op":"clear"} unless the request asks you to keep the current timeline. Put the concept sentence and the set pieces in "message".',
   ].filter(Boolean).join('\n\n');
-  const turns: Turn[] = [{ role: 'user', content: ctx }, { role: 'user', content: request }];
-  const r1 = await ask(io2, turns, images, effort, 'plan');
-  const plan = parseReply(r1.text);
-  if (!plan) throw { code: 'invalid_json' };
-  turns.push({ role: 'assistant', content: r1.text });
-  io.step('plan', { state: 'done', detail: `${plan.ops.length} operations${r1.truncated ? ' (cut short)' : ''}` });
+  let plan: { message: string; ops: unknown[] };
+  let turns: Turn[];
+  if (twoStage(effort)) {
+    const ctxNoImages = contextBlock(ws.ctx, [], images.length ? 'Contact sheets of the media were attached in step 1 and are not repeated: use the media ids, shots and source times from your direction.' : undefined, extras);
+    ({ plan, turns } = await directThenBuild(io2, { ctx, ctxNoImages, history: [], request, images, effort, revision: false }));
+  } else {
+    io.step('plan', { state: 'run', detail: 'thinking…' });
+    turns = [{ role: 'user', content: ctx }, { role: 'user', content: `${request}\n\nPlan it first in your head: the concept sentence, the song section and drop, the set pieces, the shot list, the transitions and sounds, the text and the loop; compare it with the standards; then build it. Start with {"op":"clear"} unless the request asks you to keep the current timeline. Put the concept sentence and the set pieces in "message".` }];
+    const r1 = await askSafe(io2, turns, images, effort, 'plan');
+    const p1 = parseReply(r1.text);
+    if (!p1 || !p1.ops.length) throw { code: 'invalid_json' };
+    plan = p1;
+    turns.push({ role: 'assistant', content: r1.text });
+    io.step('plan', { state: 'done', detail: `${plan.ops.length} operations${(p1 as any).salvaged ? ' (kept what was written before it was cut short)' : r1.truncated ? ' (cut short)' : ''}` });
+  }
 
   io.step('apply', { state: 'run' });
   const res = applyOps(ws.project, plan.ops, ws.media());
@@ -380,9 +471,9 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   const sheets = [...timeSheets, ...footage];
   io.step('look', { state: sheets.length ? 'done' : 'skip', detail: sheets.length ? `${sheets.length} image${sheets.length > 1 ? 's' : ''}` : 'no images' });
 
-  io.step('plan', { state: 'run', detail: 'thinking…' });
   const checks0 = await checkpoint(ws, preset, true);
-  const ctx = contextBlock(ws.ctx, sheets.map(x => x.caption), undefined, extrasFor(preset, standards, checksText(checks0)));
+  const extras = extrasFor(preset, standards, checksText(checks0));
+  const ctx = contextBlock(ws.ctx, sheets.map(x => x.caption), undefined, extras);
   const rounds = ws.rec.rounds || [];
   const history: Turn[] = (ws.rec.aiTurns || []).slice(-6);
   const past = rounds.map(r => `Round ${r.n} (${r.kind}): owner asked "${r.brief.slice(0, 400)}"${r.summary ? `; you answered "${r.summary.slice(0, 300)}"` : ''}${r.critique ? `; the critic scored it ${r.critique.score}/10: ${r.critique.headline}` : ''}`).join('\n');
@@ -392,14 +483,23 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
     job.brief?.trim() || '(no extra words: work through the critic\'s points)',
     fromCritic,
     past ? `EARLIER ROUNDS\n${past}` : '',
-    'Change the current timeline to do all of this. Keep what already works unless the instructions say otherwise; rebuild a section completely when that is what it takes. The first images are frames rendered from the edit as it stands; the rest are contact sheets of the media for finding better shots. Put what you changed, round by round point, in "message".',
+    'Change the current timeline to do all of this. Keep what already works unless the instructions say otherwise; rebuild a section completely when that is what it takes. The first images are frames rendered from the edit as it stands; the rest are contact sheets of the media for finding better shots.',
   ].filter(Boolean).join('\n\n');
-  const turns: Turn[] = [{ role: 'user', content: ctx }, ...history, { role: 'user', content: instruction }];
-  const r = await ask(io2, turns, sheets, effort, 'plan');
-  const plan = parseReply(r.text);
-  if (!plan) throw { code: 'invalid_json' };
-  turns.push({ role: 'assistant', content: r.text });
-  io.step('plan', { state: 'done', detail: `${plan.ops.length} operations${r.truncated ? ' (cut short)' : ''}` });
+  let plan: { message: string; ops: unknown[] };
+  let turns: Turn[];
+  if (twoStage(effort)) {
+    const ctxNoImages = contextBlock(ws.ctx, [], sheets.length ? 'The rendered frames and contact sheets were attached in step 1 and are not repeated: use the times, media ids and shots from your decisions.' : undefined, extras);
+    ({ plan, turns } = await directThenBuild(io2, { ctx, ctxNoImages, history, request: instruction, images: sheets, effort, revision: true }));
+  } else {
+    io.step('plan', { state: 'run', detail: 'thinking…' });
+    turns = [{ role: 'user', content: ctx }, ...history, { role: 'user', content: `${instruction}\n\nPut what you changed, point by point, in "message".` }];
+    const r = await askSafe(io2, turns, sheets, effort, 'plan');
+    const p1 = parseReply(r.text);
+    if (!p1) throw { code: 'invalid_json' };
+    plan = p1;
+    turns.push({ role: 'assistant', content: r.text });
+    io.step('plan', { state: 'done', detail: `${plan.ops.length} operations${(p1 as any).salvaged ? ' (kept what was written before it was cut short)' : r.truncated ? ' (cut short)' : ''}` });
+  }
 
   io.step('apply', { state: 'run' });
   const res = applyOps(ws.project, plan.ops, ws.media());

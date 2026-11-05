@@ -74,6 +74,7 @@ await ctx.addInitScript(() => {
         const f = async (input, opts = {}) => {
           const turns = typeof input === 'string' ? [{ role: 'user', content: input }] : input;
           const full = turns.map(t => t.content).join('\n\n=====\n\n');
+          const last = turns[turns.length - 1].content;
           window.__calls.push({ roles: turns.map(t => t.role), full, images: (opts.images || []).length, effort: opts.effort, model: opts.model });
           window.__lastImages = opts.images || [];
           await new Promise(r => setTimeout(r, 200));
@@ -95,7 +96,13 @@ await ctx.addInitScript(() => {
               versus: 'Below the v7 and v10 benchmarks: fewer set pieces and no motion pass on the montage.',
               brief: '1. Rebuild the first second around a hit.\n2. Snap every cut to the beat grid.\n3. Close the loop on frame 0.',
             });
-          } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full)) {
+          } else if (last.includes('STEP 1 OF 2')) {
+            // the first direction call comes back empty, as it did for the owner: the studio must retry lighter
+            if (!window.__failedOnce) { window.__failedOnce = true; window.__calls[window.__calls.length - 1].failed = 'empty_completion'; throw { code: 'empty_completion', message: 'no text' }; }
+            reply = JSON.stringify({ message: 'Concept: the evidence points back at him.', direction: 'CONCEPT: the evidence points back at him. SHOTS: every file twice, logo dive on the first downbeat.' });
+          } else if (last.includes('STEP 2 OF 2') && /ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full)) {
+            reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
+          } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && !full.includes('REVIEW 1 of')) {
             reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
           } else if (full.includes('REVIEW 1 of')) {
             reply = JSON.stringify({ message: 'Reviewed: the checkpoint is clean enough; approved.', ops: [] });
@@ -208,7 +215,7 @@ await page.waitForTimeout(800);
 report.director = await page.evaluate(() => {
   const s = window.__voidfx.store.state;
   return {
-    calls: window.__calls.map(c => ({ roles: c.roles.length, images: c.images, chars: c.full.length, house: c.full.includes('VOIDFX HOUSE RULES'), standards: c.full.includes('REFERENCE EDITS THE OWNER ADDED'), checkpoint: c.full.includes('AUTOMATED CHECKPOINT'), casting: c.full.includes('You are casting material'), critic: c.full.includes('You are the critic'), round2: c.full.includes('ROUND 2 INSTRUCTIONS') })),
+    calls: window.__calls.map(c => ({ failed: c.failed, effort: c.effort, last: c.full.slice(-80).replace(/\s+/g, ' '), roles: c.roles.length, images: c.images, chars: c.full.length, house: c.full.includes('VOIDFX HOUSE RULES'), standards: c.full.includes('REFERENCE EDITS THE OWNER ADDED'), checkpoint: c.full.includes('AUTOMATED CHECKPOINT'), casting: c.full.includes('You are casting material'), critic: c.full.includes('You are the critic'), round2: c.full.includes('ROUND 2 INSTRUCTIONS') })),
     rounds: s.rounds.map(r => `R${r.n} ${r.kind} applied=${r.applied} critique=${r.critique ? r.critique.score : '-'} fromCritic=${(r.fromCritic || []).length}`),
     lockAfter: s.lock,
     jobs: s.jobs.map(j => `${j.kind}:${j.state}:R${j.round}`),

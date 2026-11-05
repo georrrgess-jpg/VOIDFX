@@ -40,7 +40,7 @@ export const BUILTIN_PRESETS: Preset[] = [
   {
     id: 'voidfx-flash', name: 'VOIDFX · The Flash', accent: '#ffb000', builtIn: true, updated: 0,
     description: 'Lightning, the Speed Force and the rivalry: the v10/v11 motion standard with a focal set piece and an exact loop.',
-    prompt: 'Make a Flash edit at the voidfx standard. Take the concept from the song\'s own words or the character\'s history (the Speed Force, the emblem, the Reverse-Flash rivalry), with red-vs-gold or another fresh look of its own. Motion is the priority: a speed burst on every beat with slow motion between, the camera punching and kicking on the beat, warp and whip transitions through the Speed Force, one focal set piece, the voidfx logo transition once, a sound on every transition, and a loop that lands exactly on frame 0.',
+    prompt: 'Make a Flash edit at the voidfx standard. Take the concept from the song\'s own words or the character\'s history (the Speed Force, the emblem, the Reverse-Flash rivalry), with red-vs-gold or another fresh look of its own. Motion is the priority: a speed burst on every beat with slow motion between, the camera punching and kicking on the beat, lightning-strike (bolt) transitions with the zap sound where the footage has lightning or a burst of speed, time-freeze holds (speed keyframes near 0.05) that burst back into motion, warp and whip transitions through the Speed Force, one focal set piece, the voidfx logo transition once, a sound on every transition, and a loop that lands exactly on frame 0.',
     effort: 'extra', aspect: '9:16', fps: 60, duration: [20, 26], houseRules: true,
     standards: ['bm-v11', 'bm-v10'], libraryTags: ['flash'],
   },

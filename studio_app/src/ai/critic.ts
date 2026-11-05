@@ -11,7 +11,7 @@ import { whenMediaIdle } from '../media/library';
 import { getPreset } from '../state/catalog';
 import { Critique, CritiqueIssue, Effort, Job } from '../state/types';
 import { projectDuration } from '../state/util';
-import { ask, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
+import { askSafe, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
 import { standardSheets, timelineSheets } from './sheets';
 import type { Workspace } from './workspace';
@@ -206,7 +206,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
  "brief": "the write-up for the editor's next round: numbered, imperative instructions in priority order, ready to paste"}
 Order issues by severity. Up to 14 issues.`,
   ].filter(Boolean).join('\n\n');
-  const r = await ask(io2, prompt, images, effort, 'critic', t => {
+  const r = await askSafe(io2, prompt, images, effort, 'critic', t => {
     const n = (t.match(/"problem"\s*:/g) || []).length;
     return n ? `writing… ${n} issue${n > 1 ? 's' : ''} so far` : 'writing…';
   });

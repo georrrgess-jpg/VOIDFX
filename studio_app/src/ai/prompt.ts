@@ -38,7 +38,8 @@ transform {x, y, scale, rotation, opacity}: x and y offset the centre in frame w
 kf {"scale": [[t, value, ease], ...], ...}: keyframes for x, y, scale, rotation, opacity, volume, speed; t is seconds from the clip's start; ease is linear|in|out|inOut|hold (default inOut) and shapes the move to the next key
 color {brightness, contrast, saturation, temperature, tint: -1..1; hue: -180..180; vignette, blur: 0..1}
 transition {"type": .., "dur": seconds}: transition from the previous clip on the same track into this clip, centred on the cut; the previous clip must end exactly where this one starts; the outgoing clip keeps playing past its end during the first half (make sure its file has room). Types: ${TRANSITIONS.join(', ')}.
-  Signature types: logo (the voidfx logo slams in and the camera flies through its "o" into the next shot; allowed once per edit; ~1.2 s), blink (eyelids close with blur and blink open), ink (a blood-red stain blooms open into the next shot), burn (film-burn holes with an ember rim), slash (a blade cuts the frame and the halves fly apart), punch (impact frame: one-frame negative and a zoom punch), light_leak (warm leak sweeps across), roll (the world rolls 90 degrees), shadow (darkness swallows the frame, the next shot emerges brightest-first), warp (radial pull through the centre). flash is a flare that keeps the picture.
+  Signature types: logo (the voidfx logo slams in and the camera flies through its "o" into the next shot; allowed once per edit; ~1.2 s), blink (eyelids close with blur and blink open), ink (a blood-red stain blooms open into the next shot), burn (film-burn holes with an ember rim), slash (a blade cuts the frame and the halves fly apart), punch (impact frame: one-frame negative and a zoom punch), light_leak (warm leak sweeps across), roll (the world rolls 90 degrees), shadow (darkness swallows the frame, the next shot emerges brightest-first), warp (radial pull through the centre), bolt (a forked lightning bolt strikes down the frame and the next shot opens out from its channel, with its light on both shots; ~0.55 s; pair it with the zap sound). flash is a flare that keeps the picture.
+  Time-freeze: speed keyframes down to 0.05 hold a moment almost still (a 1 s hold plays 0.05 s of source); ramp back up to burst out of it.
 
 TEXT FIELDS
 text: the words (use \\n for a line break; wrap a word in *asterisks* to emphasise it)
@@ -103,6 +104,14 @@ export function timelineJson(p: Project): string {
   return JSON.stringify({ name: p.name, width: p.width, height: p.height, fps: p.fps, background: p.background, camera: p.camera, duration: +projectDuration(p).toFixed(3), tracks, clips });
 }
 
+/** What the owner's notes may ask for that the studio cannot do, with the nearest thing it can. */
+export const STUDIO_LIMITS = `WHAT THE STUDIO CANNOT DO (the owner's notes may ask for these: do the nearest thing below, say so in one line of "message", and do not spend thinking on the rest)
+- You cannot watch video or hear audio, or review an exported file: you see contact sheets, rendered frames and the sound analysis. Judge the song section from the analysis (beats, rises, quiet parts, loudness).
+- No subject isolation, masks or rotoscoping: no cut-out afterimages or subject-only speed trails. Nearest: speed ramps, whips, warp, the beat camera, and the bolt transition for lightning.
+- No motion tracking: text cannot follow movement. Place it beside the action, timed to the beat or the vocal.
+- No footage beyond this project's media and the database items attached to it. If the notes name material that is not in MEDIA, say it is missing.
+- One output: the timeline. Export, delivery and saving are the owner's step.`;
+
 export interface ContextExtras {
   houseRules: string;
   benchmarks: string;
@@ -123,6 +132,7 @@ export function contextBlock(ctx: { project: Project; media: Record<string, Medi
     x.knowledge.trim() ? `STUDIO KNOWLEDGE (from the owner; follow it)\n${x.knowledge.trim()}` : '',
     x.presetPrompt.trim() ? `PRESET "${x.presetName}" (the standing brief for this edit)\n${x.presetPrompt.trim()}` : '',
     reference(p),
+    STUDIO_LIMITS,
     `MEDIA\n${mediaCatalog(ctx.media, ctx.order)}`,
     imageNote ? `IMAGES\n${imageNote}` : imageCaptions.length ? `IMAGES (attached, in this order)\n${imageCaptions.map((c, i) => `${i + 1}. ${c}`).join('\n')}` : 'IMAGES: none attached.',
     `CURRENT TIMELINE\n${timelineJson(p)}`,
@@ -157,7 +167,35 @@ export function parseReply(text: string): { message: string; ops: unknown[] } | 
     const a = text.indexOf('{'), b = text.lastIndexOf('}');
     if (a >= 0 && b > a) v = tryParse(text.slice(a, b + 1));
   }
-  if (!v || typeof v !== 'object') return null;
+  if (!v || typeof v !== 'object') return salvageOps(text);
   if (Array.isArray(v)) return { message: '', ops: v };
   return { message: typeof v.message === 'string' ? v.message : '', ops: Array.isArray(v.ops) ? v.ops : [] };
+}
+
+/**
+ * A reply cut short mid-JSON (time or length limit): keep the message and every operation that was
+ * written out completely, so a long build is not thrown away for its last half-written line.
+ */
+export function salvageOps(text: string): { message: string; ops: unknown[]; salvaged: true } | null {
+  const k = text.indexOf('"ops"');
+  if (k < 0) return null;
+  const a = text.indexOf('[', k);
+  if (a < 0) return null;
+  const ops: unknown[] = [];
+  let depth = 0, start = -1, inStr = false, esc = false;
+  for (let i = a + 1; i < text.length; i++) {
+    const ch = text[i];
+    if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === '"') inStr = false; continue; }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === '{') { if (depth === 0) start = i; depth++; }
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0 && start >= 0) { try { ops.push(JSON.parse(text.slice(start, i + 1))); } catch { /* skip a broken one */ } start = -1; }
+    } else if (ch === ']' && depth === 0) break;
+  }
+  if (!ops.length) return null;
+  const m = text.slice(0, k).match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  let message = '';
+  if (m) { try { message = JSON.parse(`"${m[1]}"`); } catch { message = m[1]; } }
+  return { message, ops, salvaged: true };
 }

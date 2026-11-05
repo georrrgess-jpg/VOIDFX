@@ -119,11 +119,15 @@ export function stopJob(id: string) {
   if (current?.id === id) current.ctl.abort();
 }
 
-export function resumeJob(id: string) {
+const LOWER: Record<Effort, Effort> = { extra: 'high', high: 'medium', medium: 'low', low: 'low' };
+
+/** Run a stopped or failed job again; `lighter` steps its effort down one level first. */
+export function resumeJob(id: string, opts: { lighter?: boolean } = {}) {
   const j = store.state.jobs.find(x => x.id === id);
   if (!j || !['error', 'stopped', 'interrupted'].includes(j.state)) return;
-  const fresh = j.kind === 'critique' ? criticSteps() : stepsFor(j, files.has(j.id));
-  patchJob(id, { state: 'queued', error: undefined, steps: fresh, started: undefined, finished: undefined });
+  const effort = opts.lighter ? LOWER[j.effort] : j.effort;
+  const fresh = j.kind === 'critique' ? criticSteps() : stepsFor({ ...j, effort }, files.has(j.id));
+  patchJob(id, { state: 'queued', error: undefined, steps: fresh, started: undefined, finished: undefined, effort });
   void pump();
 }
 
@@ -203,8 +207,9 @@ async function run(job: Job) {
   } catch (e: any) {
     const { code, text } = errText(e);
     const cancelled = code === 'cancelled' || ctl.signal.aborted;
+    const failedAt = store.state.jobs.find(j => j.id === job.id)?.steps.find(s => s.state === 'run')?.label;
     patchJob(job.id, j => ({
-      state: cancelled ? 'stopped' : 'error', finished: Date.now(), error: cancelled ? 'Stopped.' : text,
+      state: cancelled ? 'stopped' : 'error', finished: Date.now(), error: cancelled ? 'Stopped.' : failedAt ? `${failedAt}: ${text}` : text,
       steps: j.steps.map(s => (s.state === 'run' ? { ...s, state: 'error' as const, detail: cancelled ? 'stopped' : code } : s)),
     }));
     if (!cancelled) store.toast(`${job.projectName}: ${text}`, 'error', 8000, { label: 'Open', run: () => void openProject(job.projectId) });

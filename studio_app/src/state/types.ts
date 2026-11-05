@@ -51,7 +51,7 @@ export const TRANSITIONS = [
   'push_left', 'push_right', 'push_up', 'push_down',
   'wipe_left', 'wipe_right', 'wipe_up', 'wipe_down',
   'iris', 'zoom_in', 'zoom_out', 'whip_left', 'whip_right', 'whip_up', 'whip_down',
-  'spin', 'blur', 'glitch',
+  'spin', 'blur', 'glitch', 'bolt',
   'logo', 'blink', 'ink', 'burn', 'slash', 'punch', 'light_leak', 'roll', 'shadow', 'warp',
 ] as const;
 export type TransitionType = typeof TRANSITIONS[number];
@@ -160,7 +160,7 @@ export interface BeatCamera {
   to?: number;
 }
 
-export const SFX = ['whoosh', 'swish', 'impact', 'hit', 'boom', 'riser', 'subdrop', 'reverse', 'glitch', 'shutter', 'tick', 'tapestop'] as const;
+export const SFX = ['whoosh', 'swish', 'impact', 'hit', 'boom', 'riser', 'subdrop', 'reverse', 'glitch', 'shutter', 'tick', 'tapestop', 'zap'] as const;
 export type SfxType = typeof SFX[number];
 
 export interface AudioAnalysis {

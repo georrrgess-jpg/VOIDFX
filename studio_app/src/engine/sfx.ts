@@ -17,6 +17,7 @@ export const SFX_INFO: Record<SfxType, { label: string; dur: number; hint: strin
   shutter: { label: 'Shutter', dur: 0.25, hint: 'Camera shutter / blink' },
   tick: { label: 'Tick', dur: 0.08, hint: 'Small click: text and UI beats' },
   tapestop: { label: 'Tape stop', dur: 0.9, hint: 'Pitch slows to a stop: endings' },
+  zap: { label: 'Electric zap', dur: 0.75, hint: 'Lightning crack and crackle: bolts, Speed Force hits' },
 };
 
 function rng(seed: number) {
@@ -102,6 +103,17 @@ export function sfxData(type: SfxType): { L: Float32Array; R: Float32Array } {
         l = v; r = (k % 2 ? v : -v) * 0.9;
         break;
       }
+      case 'zap': {
+        // a sharp crack, then crackle bursts and a fading electrical buzz
+        const crack = fl(rnd(), 6000, 0.6).band * Math.exp(-t / 0.012) * 2.2;
+        const k = Math.floor(t * 70);
+        const burst = ((k * 2654435761) >>> 0) % 4 === 0 ? 1 : 0.15;
+        const crackle = fl(rnd(), 3200 + 2400 * Math.exp(-t * 4), 0.75).band * burst * Math.exp(-t / 0.22) * 1.3;
+        const buzz = (Math.sign(Math.sin(2 * Math.PI * 120 * t)) * 0.5 + Math.sin(2 * Math.PI * 240 * t) * 0.5) * Math.exp(-t / 0.3) * 0.25;
+        const v = crack + crackle + buzz;
+        l = v; r = crack + crackle * (k % 2 ? 0.85 : 1.1) + buzz * 0.9;
+        break;
+      }
       case 'shutter': {
         const c1 = Math.exp(-((t - 0.01) ** 2) / 0.000004), c2 = Math.exp(-((t - 0.11) ** 2) / 0.000006);
         const v = fl(rnd(), 4000, 0.7).band * (c1 + c2 * 0.8) * 3 + Math.sin(2 * Math.PI * 1800 * t) * (c1 + c2) * 0.3;
@@ -173,6 +185,7 @@ export function soundsForTransition(type: string, dur: number): [SfxType, number
   if (type.startsWith('whip') || type.startsWith('push') || type.startsWith('slide') || type === 'roll' || type === 'spin') return [['whoosh', -0.62 * 0.9]];
   if (type === 'slash' || type.startsWith('wipe') || type === 'iris') return [['swish', -0.17]];
   if (type === 'punch') return [['hit', -0.02]];
+  if (type === 'bolt') return [['zap', -h + 0.12 * dur - 0.01]];
   if (type === 'flash' || type === 'dip_white') return [['impact', -0.03]];
   if (type === 'glitch') return [['glitch', -0.25]];
   if (type === 'blink') return [['shutter', -0.12]];

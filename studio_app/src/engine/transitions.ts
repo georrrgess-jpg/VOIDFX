@@ -11,8 +11,8 @@ export interface LayerFx {
   blur: number; // 0..1 (fraction of frame height * 0.035)
   dirX: number; dirY: number; // directional blur, frame fractions
   radial: number; // radial zoom blur toward the centre, 0..1
-  /** 0 none, 1 linear wipe, 2 iris, 3 logo counter, 4 eyelid slit, 5 noise dissolve, 6 brightest-first */
-  mask: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  /** 0 none, 1 linear wipe, 2 iris, 3 logo counter, 4 eyelid slit, 5 noise dissolve, 6 brightest-first, 7 lightning */
+  mask: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
   maskX: number; maskY: number; // direction for linear masks, centre for noise masks (frame fractions)
   maskP: number;
   edge: [number, number, number]; // glow colour on dissolve edges
@@ -151,6 +151,14 @@ export function transitionFx(type: TransitionType, p: number, role: 'out' | 'in'
       const q = in3(seg(p, 0, 0.5));
       return { visible: p < 0.5, mask: 4, maskP: 1 - q, blur: 0.6 * q, chroma: 0.008 * q, flash: 0.45 * q, flashColor: [0.05, 0, 0] };
     }
+    case 'bolt': {
+      // a forked lightning bolt strikes down the frame (maskY = how far it has struck, maskX = its shape);
+      // the next shot opens out from the channel; its light falls on both shots and flickers out
+      const strike = clamp(p / 0.16, 0, 1);
+      const glow = p < 0.16 ? 0.35 + 0.65 * strike : Math.max(0, 1 - (p - 0.16) / 0.6) * (0.78 + 0.22 * Math.sin(p * 95));
+      if (isIn) return { mask: 7, maskX: 0.37, maskY: strike, maskP: -0.02 + 0.92 * io3(clamp((p - 0.1) / 0.8, 0, 1)), edge: [1.0, 0.8, 0.28], edgeW: glow, flash: 0.12 * glow, flashColor: [1, 0.92, 0.7] };
+      return { flash: 0.2 * glow, flashColor: [1, 0.9, 0.62], chroma: 0.003 * glow, dx: 0.004 * glow * Math.sin(p * 120) };
+    }
     case 'ink': {
       // a blood-red stain blooms from the centre and opens into the next shot
       return isIn ? { mask: 5, maskP: -0.12 + 0.98 * io3(p), maskX: 0.5, maskY: 0.5, edge: [0.42, 0.0, 0.02], edgeW: 0.09 } : {};
@@ -209,14 +217,14 @@ export const TRANSITION_LABELS: Record<TransitionType, string> = {
   wipe_left: 'Wipe left', wipe_right: 'Wipe right', wipe_up: 'Wipe up', wipe_down: 'Wipe down',
   iris: 'Iris', zoom_in: 'Zoom in', zoom_out: 'Zoom out',
   whip_left: 'Whip left', whip_right: 'Whip right', whip_up: 'Whip up', whip_down: 'Whip down',
-  spin: 'Spin', blur: 'Blur', glitch: 'Glitch',
+  spin: 'Spin', blur: 'Blur', glitch: 'Glitch', bolt: 'Lightning strike',
   logo: 'voidfx logo fly-through', blink: 'Blink (eyelids)', ink: 'Blood bloom', burn: 'Film burn', slash: 'Blade slash',
   punch: 'Impact frame', light_leak: 'Light leak', roll: 'Roll 90°', shadow: 'Shadow (brightest first)', warp: 'Warp pull',
 };
 
 /** Groups for the transitions panel. */
 export const TRANSITION_GROUPS: { name: string; items: TransitionType[] }[] = [
-  { name: 'Signature', items: ['logo', 'blink', 'ink', 'burn', 'slash', 'punch', 'shadow', 'warp', 'roll', 'light_leak'] },
+  { name: 'Signature', items: ['logo', 'bolt', 'blink', 'ink', 'burn', 'slash', 'punch', 'shadow', 'warp', 'roll', 'light_leak'] },
   { name: 'Motion', items: ['whip_left', 'whip_right', 'whip_up', 'whip_down', 'push_left', 'push_right', 'push_up', 'push_down', 'slide_left', 'slide_right', 'slide_up', 'slide_down', 'zoom_in', 'zoom_out', 'spin'] },
   { name: 'Reveal', items: ['iris', 'wipe_left', 'wipe_right', 'wipe_up', 'wipe_down', 'glitch'] },
   { name: 'Soft', items: ['crossfade', 'blur', 'dip_black', 'dip_white', 'flash'] },
@@ -227,8 +235,9 @@ export function defaultTransitionDur(t: TransitionType): number {
   if (t === 'logo') return 1.2;
   if (t === 'punch' || t === 'glitch' || t.startsWith('whip') || t === 'slash') return 0.35;
   if (t === 'blink' || t === 'shadow' || t === 'ink' || t === 'burn') return 0.7;
+  if (t === 'bolt') return 0.55;
   return 0.5;
 }
 
 /** Transitions that count as a flash for the flash-rate rule. */
-export const FLASHY = new Set<TransitionType>(['flash', 'dip_white', 'punch', 'glitch', 'warp']);
+export const FLASHY = new Set<TransitionType>(['flash', 'dip_white', 'punch', 'glitch', 'warp', 'bolt']);

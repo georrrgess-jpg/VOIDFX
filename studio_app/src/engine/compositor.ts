@@ -106,6 +106,7 @@ void main() {
   }
   c = mix(c, uFlashColor, uFlash);
   float m = 1.0;
+  vec3 bolt = vec3(0.0);
   if (uMask == 1) {
     float proj = dot(sp - 0.5, uMaskDir) + 0.5;
     m = 1.0 - smoothstep(uMaskP - uMaskSoft, uMaskP + uMaskSoft, proj);
@@ -128,12 +129,31 @@ void main() {
     m = 1.0 - smoothstep(uMaskP - 0.012, uMaskP, field);
     float e = smoothstep(uMaskP - uEdgeW, uMaskP - 0.004, field) * m;
     c = mix(c, uEdge, clamp(e * 1.4, 0.0, 1.0));
+  } else if (uMask == 7) {
+    // lightning: a jagged channel from the top edge down with one fork; shape seed in uMaskDir.x, strike
+    // progress in uMaskDir.y; the next shot opens out from the channel, the bolt's light is added on top
+    vec2 q = vec2((sp.x - 0.5) * uRes.x / uRes.y, sp.y);
+    float seed = uMaskDir.x * 17.0;
+    float x0 = (hash(vec2(seed, 1.0)) - 0.5) * 0.2 * uRes.x / uRes.y;
+    float path = x0 + (fbm(vec2(q.y * 2.6, seed)) - 0.5) * 0.5 + (vnoise(vec2(q.y * 28.0, seed + 5.0)) - 0.5) * 0.05;
+    float d = abs(q.x - path);
+    float fy = 0.34 + hash(vec2(seed, 3.0)) * 0.18;
+    float side = hash(vec2(seed, 4.0)) > 0.5 ? 1.0 : -1.0;
+    float fpath = path + (q.y - fy) * 0.75 * side + (fbm(vec2(q.y * 5.0, seed + 9.0)) - 0.5) * 0.18 + (vnoise(vec2(q.y * 34.0, seed + 2.0)) - 0.5) * 0.03;
+    float fd = q.y > fy ? abs(q.x - fpath) : 9.0;
+    float reach = uMaskDir.y * 1.08;
+    float alive = smoothstep(reach + 0.001, reach - 0.05, q.y);
+    float forkAlive = smoothstep(reach * 0.92 + 0.001, reach * 0.92 - 0.05, q.y) * smoothstep(fy + 0.62, fy, q.y);
+    m = 1.0 - smoothstep(uMaskP - 0.012, uMaskP + 0.012, d + (1.0 - alive) * 2.0);
+    float core = exp(-d * d / 0.000016) * alive + exp(-fd * fd / 0.000007) * forkAlive * 0.7;
+    float halo = exp(-d / 0.03) * alive * 0.5 + exp(-fd / 0.016) * forkAlive * 0.28 + exp(-d / 0.16) * alive * 0.12;
+    bolt = (vec3(1.0) * core * 1.5 + uEdge * (core * 0.7 + halo)) * uEdgeW;
   } else if (uMask == 6) {
     float th = 1.0 - uMaskP * 1.2;
     m = smoothstep(th, th + 0.22, lum0);
   }
   float alpha = a * uOpacity * m;
-  outColor = vec4(c * alpha, alpha);
+  outColor = vec4(c * alpha + bolt * uOpacity, alpha);
 }`;
 
 export interface DrawParams {

@@ -59,6 +59,7 @@ export function JobCard({ job, compact }: { job: Job; compact?: boolean }) {
         {job.state === 'done' && job.kind === 'critique' && <button type="button" class="chipbtn" onClick={() => { markSeen(job.projectId); openComposer(job.projectId, 'revise'); }}>{Icon.pen}<span>Write round {job.round + 1}</span></button>}
         {job.state === 'done' && job.kind !== 'critique' && <button type="button" class="chipbtn hot" onClick={open}>{Icon.play}<span>Open</span></button>}
         {(job.state === 'error' || job.state === 'stopped' || job.state === 'interrupted') && <button type="button" class="chipbtn" onClick={() => resumeJob(job.id)}>{Icon.retry}<span>{job.state === 'error' ? 'Retry' : 'Resume'}</span></button>}
+        {job.state === 'error' && job.effort !== 'low' && <button type="button" class="chipbtn" title="Run it again one effort level lower" onClick={() => resumeJob(job.id, { lighter: true })}>Retry lighter</button>}
         {!running && job.state !== 'done' && <button type="button" class="chipbtn" onClick={open}>Open project</button>}
         <span class="job-when">{job.finished ? timeAgo(job.finished) : job.started ? `started ${timeAgo(job.started)}` : timeAgo(job.created)}</span>
       </div>
