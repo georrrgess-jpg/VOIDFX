@@ -136,5 +136,19 @@ The new punch shot (s4 90.45–91.30) is the gold beating the red just before th
 - speed passes on the runs and the flight;
 - a power-down whine under the loop's tape stop.
 
-REV2_RESULTS_V11
+### Ship checkpoint (rev 2, measured on the encoded MP4)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1247 frames, decodes clean |
+| Loudness | −13.2 LUFS, −3.4 dBTP after AAC |
+| Faces | every shot centred (the punch was reframed on Thawne with Barry's glove at his collar; speed particles are masked off faces) |
+| Text vs faces | clear (frames 394/396 are the dolly frames before LET'S appears) |
+| Cuts | 16 cuts, 0 audio clicks |
+| Black frames | frame 849 only: the ignite blackout, by design |
+| Loop seam | blurred diff 3.49, inside the red shudder's own frame-to-frame motion; frames 1246 → 0 show the same image |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Visual sign-off:** frames from the encoded file for each new transition: the red eye dive (330 → 356), the strobe echo, the bolt trace, the heat haze, the clash and the punch. Also the particles and edge lightning, and the loop seam.
 
