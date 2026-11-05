@@ -158,3 +158,43 @@ The owner: *"I really like what you did with Dexter being upside down and that t
 **Visual sign-off** was done on frames pulled from the encoded MP4: the opening seep, the roll and the turning upside-down hold, the speed-ramped trails, the passenger's red edge, the quarter-turn, the silhouette window, the ink-out and the seam.
 
 **Not verified:** watching and listening in real time.
+
+## Revision 3 (owner notes)
+
+*"Further detail and improve the dark side animation to be more professional and visually appealing. Add more animations, transitions and graphics towards the beginning of the edit to get rid of the dead space."*
+
+**THE PASSENGER, rebuilt as a lit set piece:**
+1. **The light:** just before "DARK", a hard light comes on behind him (a lamp click). The wall behind him washes to lit paper, brightest where the light hits and falling off into the corners, and the light catches the edge of him.
+2. **The shadow:** his silhouette (MODNet, his body only) is thrown onto the wall beside him. It has a crisp, organic ink edge and a thin red-ink rim, leans slightly, sways and breathes on the bass hits.
+3. **The smoke:** animated ink smoke rises off the top of the shadow.
+4. **The embers:** two red eyes open in the shadow's head on "DARK" (an ember-ignite sound and a sub drop under the word). They're masked behind his body, so they never sit on his face.
+5. **The camera:** a slow push-in with a 2.4° dutch tilt while it rises.
+6. **The lunge:** the shadow turns to the lens and pans to centre as it zooms. Both eyes rush at the camera with motion blur as the ink swallows the frame, and the red smirk surfaces out of the ink.
+
+**The opening (0–5.9 s): no more dead space.**
+1. **The pickup draws itself:** an ink sketch of him (line art from the first shot) is drawn stroke by stroke on the paper, one stroke group per synth note, with pen and brush scratches. Ink creeps in from the corners and the drop forms, falls and blooms on the bass. Frame 0 is still bare, so the loop matches.
+2. **Two more cuts and a new transition:**
+   - the dock walk is trimmed to one bar with a speed ramp;
+   - a **page turn** (the frame turns over like a sketchbook page, with paper on its back and a cast shadow; paper-flip sound) reveals a new S4 night stare;
+   - a new **"shh"** insert (S1, a finger to his lips) closes the phrase.
+   The opening now cuts at k12, 20, 26, 35, 41 and 44 (was 12, 28, 38, 44).
+3. **Graphics:**
+   - floating **ink motes** in depth over the opening shots;
+   - an **ivory brush swash** painted behind the red "ALONE." as it lands (red letters on white paint);
+   - stronger beat punches on the opening's bass hits.
+
+### Revision 3 checkpoint: 10/10 PASS on the first run, visual sign-off PASS
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1378 frames (22.97 s), H.264 + AAC, fast-start, 16 Mb/s cap |
+| Loudness after AAC | −13.3 LUFS, true peak −4.1 dBTP |
+| Clicks | 0 at the 26 cuts; loop seam clean by the QC rule |
+| Loop seam picture | blurred difference 0.14 (frame 0 is still bare paper) |
+| Faces | centred in every shot; 0 text-over-face frames. Frame 964 was checked: the title sits about 400 px below his chin |
+| Black or frozen frames | none |
+| Length | audio and video within 9.3 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4: the whole opening (the sketch drawing itself, the page turn, the new stare and shh shots, the swash) and THE PASSENGER frame by frame (the light coming on, the shadow, the embers, the lunge, the reveal).
+
+**Not verified:** watching and listening in real time.
