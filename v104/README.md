@@ -142,3 +142,19 @@ The owner: *"I really like what you did with Dexter being upside down and that t
    - sub hits under the phrase starts (P2, P4, P5);
    - risers into the spatter (P3) and into the finale (P5);
    - a deep spin whoosh for both rotations.
+
+### Revision 2 checkpoint: 10/10 PASS on the first run, visual sign-off PASS
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1378 frames (22.97 s), H.264 + AAC, fast-start, 16 Mb/s cap |
+| Loudness after AAC | −13.3 LUFS, true peak about −4 dBTP |
+| Clicks | 0 at the 24 cuts; loop seam clean by the QC rule |
+| Loop seam picture | blurred difference 0.15 |
+| Faces | centred in every shot; 0 text-over-face frames. Frame 300 (his knee) and frame 964 (the title sits about 400 px below his chin; YuNet's box runs long) were checked on frames |
+| Black or frozen frames | none |
+| Length | audio and video within 9.3 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4: the opening seep, the roll and the turning upside-down hold, the speed-ramped trails, the passenger's red edge, the quarter-turn, the silhouette window, the ink-out and the seam.
+
+**Not verified:** watching and listening in real time.
