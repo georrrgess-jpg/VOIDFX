@@ -86,5 +86,19 @@ The cold open is Harrison Wells / the Reverse-Flash, in red: Wells' face on "Har
   - The loop streak moved to the bottom of the frame.
 - **Exposure:** brought down on the fire shots, the dark lightning run and the drop (white skies and fire clipped). The speed ramp no longer brightens. The drop's impact frame was halved, so there's no full-screen white flash.
 
-V11_RESULTS
+## Ship checkpoint (measured on the encoded MP4)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1247 frames, decodes clean |
+| Loudness | −13.2 LUFS, −3.3 dBTP after AAC |
+| Faces | every shot centred. The first final render failed here: a background guard's face was cut at the frame edge in the BOP run. That shot is now framed on Barry |
+| Text vs faces | clear. Frames 394/396 flag the dolly frames *before* LET'S appears (checked: no text yet). LET'S GO was moved 80 px lower, clear of his chin |
+| Cuts | 15 cuts, 0 audio clicks |
+| Black frames | frame 849 only: the ignite blackout, by design |
+| Loop seam | blurred diff 3.47, inside the red shudder's own frame-to-frame motion (4.0–7.9 across 1243 → 2): frames 1244 → 2 show the same image. Audio continuous through the tape stop |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Visual sign-off:** frames pulled from the encoded file around every transition, both titles, the freeze, the Speed Force flight, the emblem reveal and the loop seam.
 
