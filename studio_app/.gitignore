@@ -1,0 +1,6 @@
+node_modules/
+test/media/
+test/out/
+# the repo root ignores media folders named src/; the studio source must be tracked
+!/src/
+dist/index.html
