@@ -528,6 +528,21 @@ def fx104():
     for s_ in E.SHOTS:                                                                 # the rotations get a deep spin whoosh
         if s_.get("tin") in ("roll", "quarter_roll"):
             place(fx, A2.whoosh(0.45, -21, 1050 + int(s_["t0"] * 10), False), s_["t0"] - 0.24); place(fx, rev_swell(0.22, -25, 1060 + int(s_["t0"])), s_["t0"] - 0.22)
+    # rev 3: the sketch draws itself (brush and pen scratches on the synth notes), the page turns, the swash, the passenger's light and eyes
+    for i, kn in enumerate((0, 3, 6, 9)):
+        n_ = I(0.32); q = np.arange(n_) / SR; rng_ = np.random.default_rng(1100 + i)
+        scr = bq(noise(n_, 1110 + i), "band", np.array([2500, 9000]), 2) * (rng_.random(n_) > 0.6) * np.sin(np.pi * q / 0.32) ** 0.6
+        place(fx, stereo(norm(scr, -33), -0.3 + 0.2 * i), th(kn) + 0.02)
+    for s_ in E.SHOTS:
+        if s_.get("tin") == "page_turn":
+            t0 = s_["t0"]; n_ = I(0.30); q = np.arange(n_) / SR; rng_ = np.random.default_rng(1120)
+            flip = bq(noise(n_, 1121), "band", np.array([800, 6000]), 2) * (0.4 + (rng_.random(n_) > 0.85)) * np.sin(np.pi * q / 0.30) ** 0.8
+            place(fx, stereo(norm(flip, -21), 0.3), t0 - 6 / E.FPS); place(fx, A2.whoosh(0.28, -26, 1122, True), t0 - 4 / E.FPS)
+        if s_.get("swash"): place(fx, stereo(bristle(0.30, -23, 1123), -0.2), th(s_["swash"]["k0"]))
+    spp = next(x for x in E.SHOTS if x.get("passenger")); kp = spp["passenger"]
+    place(fx, stereo(lamp_click(-18, 1130)), th(kp["k_rise"] - 0.6))                    # the light comes on behind him
+    place(fx, stereo(fire_whoosh(-24, 0.4, 1131)), th(kp["k_rise"]) + 0.02)             # the embers catch
+    place(fx, stereo(A2.impact(-17, (36, 20), 0.7, 0.1, 1132)), th(kp["k_rise"]))       # a sub drop under "DARK"
     # THE PASSENGER: a dark drone rises with the shadow, and a reverse swell pulls into the lunge
     sp = next(x for x in E.SHOTS if x.get("passenger")); pk = sp["passenger"]
     place(fx, stereo(drone_rise(th(sp["k1"]) - th(pk["k_rise"]), -22, 1020)), th(pk["k_rise"]))

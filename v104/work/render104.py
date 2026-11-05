@@ -6223,6 +6223,14 @@ def main():
 
 
 
+
+
+
+
+
+
+
+
 # >>> v104 section (generated from fx104.py by splice.py)
 # ============================================================================ v104 — SMOOTH CRIMINAL — Dexter × Michael Jackson: toolkit from the v103 FOREVER standard (restyle it)
 # spliced into render104.py before main() by splice.py; the last definitions win, so this section owns the frame.
@@ -7309,6 +7317,175 @@ def base104(s, f):
     out = ink_drift(out, f, s.get("drift", 1.0))
     if s.get("spin"): out = spin_fx(out, f, s)
     else: out = cam_float(out, f, s)
+    return out
+
+# ============================================================================ v104 rev 3: a fuller opening, and THE PASSENGER rebuilt
+# ---- the pickup: an ink sketch of him draws itself on the paper, stroke by stroke, on the synth notes
+def sketch_layer():
+    """line art of the first shot (edges of the graded frame, thickened and softened) + a light wash in the darkest areas."""
+    if "sk" not in _PP:
+        img = render_shot(E.SHOTS[1], E.SHOTS[1]["f0"], False); L = lum(img)
+        L8 = (cv2.GaussianBlur(L, (0, 0), 1.6) * 255).astype(np.uint8)
+        ed = cv2.Canny(L8, 18, 55).astype(np.float32) / 255
+        ed = cv2.dilate(ed, np.ones((2, 2), np.uint8)); ed = cv2.GaussianBlur(ed, (0, 0), 1.1)
+        n = nz(181, (30, 16)); ed = ed * (0.65 + 0.5 * n)                                 # brush pressure varies along the lines
+        wash = cv2.GaussianBlur(np.clip((0.22 - L) / 0.20, 0, 1), (0, 0), 3) * 0.12
+        order = np.clip(0.62 * (_GY / H) + 0.38 * nz(182, (14, 8)), 0, 1)               # roughly top to bottom, in patches (stroke order)
+        _PP["sk"] = (np.clip(ed * 1.6, 0, 1).astype(np.float32), wash.astype(np.float32), order.astype(np.float32))
+    return _PP["sk"]
+
+def sketch_fx(o, f):
+    k = f / FPS / E.HB
+    prog = sum(eout(clamp((k - kn) / 2.6, 0, 1), 2.0) for kn in (0, 3, 6, 9)) / 4      # four strokes of progress, one per synth note
+    if prog <= 0.001: return o
+    ed, wash, order = sketch_layer()
+    shown = np.clip((prog * 1.08 - order) / 0.05, 0, 1)
+    wet = np.exp(-((prog * 1.08 - order) / 0.04) ** 2) * (prog < 0.995)                 # the freshly laid ink is darker for a moment
+    a = (ed * 0.80 + wash * 0.6) * shown + ed * wet * 0.25
+    return np.clip(o * (1 - a[..., None]) + INK * a[..., None], 0, 1)
+
+_ink_open1 = ink_open
+def ink_open(f, s):
+    return sketch_fx(_ink_open1(f, s), f)
+
+# ---- ink motes: specks of ink and paper dust drifting in depth (soft when near, sharp when far)
+_MO = {}
+def motes_fx(out, f, s):
+    amt = s.get("motes", 0.0)
+    if amt <= 0: return out
+    key = s["n"]
+    if key not in _MO:
+        rng = np.random.default_rng(sum(map(ord, key)))
+        _MO[key] = [(rng.uniform(0, W), rng.uniform(0, H), rng.uniform(0.2, 1.0), rng.uniform(-25, 25), rng.uniform(-45, -10), rng.random() < 0.7) for _ in range(46)]
+    t = f / FPS; dk = np.zeros((H // 2, W // 2), np.float32); lt = np.zeros((H // 2, W // 2), np.float32)
+    for x, y, d, vx, vy, ink in _MO[key]:
+        X = (x + vx * t * (0.4 + d)) % W; Y = (y + vy * t * (0.4 + d)) % H; r = max(1, int((1.5 + 7 * d ** 2) / 2))
+        cv2.circle(dk if ink else lt, (int(X / 2), int(Y / 2)), r, 0.35 + 0.5 * (1 - d) if ink else 0.5, -1, cv2.LINE_AA)
+    dk = cv2.resize(cv2.GaussianBlur(dk, (0, 0), 1.6), (W, H))[..., None] * amt; lt = cv2.resize(cv2.GaussianBlur(lt, (0, 0), 2.2), (W, H))[..., None] * amt
+    return np.clip(out * (1 - dk * 0.8) + INK * dk * 0.8 + PAPER * lt * 0.35 * (1 - lum(out)[..., None]), 0, 1)
+
+# ---- page turn: the frame turns over like a page of his sketchbook; its back is the paper
+def page_turn(A, B, j, f, sa, sb, pre=6, post=11):
+    u = clamp((j + pre + 0.5) / (pre + post), 0, 1)
+    d = np.array([-0.62, -0.785], np.float32); d /= np.linalg.norm(d)                    # from the bottom-right corner toward the top-left
+    s_ = (_GX - W) * d[0] + (_GY - H) * d[1]; smax = float(W * -d[0] + H * -d[1])
+    p = smax * 1.12 * ein(u, 1.35)
+    unc = s_ < p                                                                         # uncovered: the next page
+    flap = (s_ >= p) & (s_ < 2 * p)                                                      # the turned page, lying over the old one
+    o = np.where(unc[..., None], B, A)
+    mx = _GX - 2 * (s_ - p) * d[0]; my = _GY - 2 * (s_ - p) * d[1]                       # mirror across the fold: the page's back
+    inb = flap & (mx >= 0) & (mx < W) & (my >= 0) & (my < H)
+    back = cv2.remap(A, mx.astype(np.float32), my.astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    q = np.clip((s_ - p) / np.maximum(p, 1), 0, 1)
+    shade = (0.78 + 0.22 * np.exp(-(q / 0.12) ** 2) - 0.18 * q)[..., None]              # bright at the fold, falling off toward the edge
+    backc = (paper() * 1.02 + (1 - lum(back))[..., None] * INK * 0.06) * shade           # paper, the old picture faintly showing through
+    o = np.where(inb[..., None], backc, o)
+    sh1 = np.exp(-np.clip(p - s_, 0, None) / 40)[..., None] * unc[..., None] * 0.55      # the page's shadow on the next shot
+    sh2 = np.exp(-np.clip(s_ - 2 * p, 0, None) / 30)[..., None] * (s_ >= 2 * p)[..., None] * 0.35 * (p > 4)
+    o = o * (1 - sh1) * (1 - sh2)
+    o = o + (np.exp(-((s_ - p) / 3) ** 2) * (p > 4) * (p < smax))[..., None] * PAPER * 0.35
+    return np.clip(o, 0, 1)
+
+TR2["page_turn"] = (page_turn, 6, 11)
+
+# ---- the swash: a black dry-brush stroke is laid behind ALONE. as it lands
+def swash_fx(out, f, s):
+    p = s["swash"]; k = f / FPS / E.HB
+    if k < p["k0"] - 0.2 or k > p["k1"] + 1.5: return out
+    u = clamp((k - p["k0"]) / 1.6, 0, 1); fade = 1 - smooth((k - p["k1"]) / 1.5)
+    x0, x1 = W * 0.08, W * 0.92; yc = p["y"]; hgt = 210
+    front = x0 + (x1 - x0 + 120) * eout(u, 2.2)
+    if "sw" not in _PP:
+        rng = np.random.default_rng(191); n = H
+        prof = np.convolve(rng.normal(0, 1, n), np.ones(9) / 9, "same"); gaps = np.convolve(rng.random(n), np.ones(5) / 5, "same")
+        _PP["sw"] = (prof.astype(np.float32), gaps.astype(np.float32))
+    prof, gaps = _PP["sw"]
+    yi = np.clip(_GY.astype(np.int32), 0, H - 1)
+    top, bot = yc - hgt / 2 + prof[yi] * 6, yc + hgt / 2 + prof[yi] * 6
+    inside = ((_GY > top) & (_GY < bot)).astype(np.float32)
+    taper = np.clip(np.minimum((_GY - (yc - hgt / 2 - 20)) / 70, ((yc + hgt / 2 + 20) - _GY) / 70), 0, 1)
+    dry = np.clip(1 - np.clip((_GX - (x1 - 200)) / 200, 0, 1) * (gaps[yi] > 0.45) * 1.4, 0, 1)   # the tail breaks into dry bristles
+    head = np.clip((front - _GX) / 30, 0, 1) * np.clip((_GX - x0 + 30) / 60, 0, 1)
+    m = (inside * taper * dry * head * 0.92 * fade)[..., None]
+    sw_col = PAPER * (0.93 + 0.07 * nz(192, (50, 28)))[..., None]                      # an ivory stroke: red letters on white paint
+    return np.clip(out * (1 - m) + sw_col * m, 0, 1)
+
+# ---- THE PASSENGER, rebuilt: a hard light comes on behind him; his shadow is thrown on the paper wall, smoke rises off it,
+#      two embers open in its head on "DARK"; the camera pushes in with a slow dutch tilt; the shadow turns to the lens and lunges.
+def passenger_fx(f, s):
+    p = s["passenger"]; k = f / FPS / E.HB; t = f / FPS
+    img, msk = render_shot(s, f, True, True)
+    if k < p["k_rise"] - 0.6: return img
+    u = clamp((k - p["k_rise"]) / (p["k_lunge"] - p["k_rise"]), 0, 1)
+    v = clamp((k - p["k_lunge"]) / (s["k1"] - 0.6 - p["k_lunge"]), 0, 1)
+    on = smooth((k - p["k_rise"] + 0.6) / 0.9)                                           # the light comes on just before "DARK"
+    cut = (_GY < H * p.get("cut_y", 1.0)).astype(np.float32)
+    body = msk * cut
+    ys, xs = np.nonzero(body > 0.5)
+    if len(xs) < 50: return img
+    ax, ay = float(np.median(xs)), float(ys.max())
+    # the lit wall: paper, brightest where the light hits (behind and right of him), falling off into the corners
+    lx, ly = ax + 160, H * 0.42
+    fall = np.exp(-(((_GX - lx) / 1100) ** 2 + ((_GY - ly) / 1300) ** 2))
+    wall = paper() * (0.70 + 0.34 * fall[..., None])
+    wash = (on * 0.94 * (1 - msk) * cut)[..., None]
+    lit = img * (1 - wash) + wall * wash
+    rim = cv2.GaussianBlur(msk, (0, 0), 6) - msk                                        # the light catches the edge of him
+    lit = lit + np.clip(-rim * 3, 0, 1)[..., None] * PAPER * 0.25 * on
+    # his shadow on the wall: thrown up and to the left, breathing on the bass, a beat behind him
+    br = 0.025 * sum(math.exp(-max(0, k - kb) / 1.2) for kb in (112, 116) if k >= kb)
+    sc = 1.03 + 0.09 * eout(u, 2.0) + br
+    off = -(390 + 60 * eout(u, 2.0)); lift = 70 - 20 * eout(u, 2.0); shear = -0.08 * eout(u, 2.0)   # beside him on the wall, its head in frame
+    sway = 10 * math.sin(t * 2.1)
+    M = np.float32([[sc, shear * sc, ax - sc * ax - shear * sc * ay + off + sway], [0, sc, ay - sc * ay + lift]])
+    sh = cv2.warpAffine(body, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+    sh = np.clip((cv2.GaussianBlur(sh, (0, 0), 2.2) - 0.5 - 0.10 * (nz(201, (60, 34)) - 0.5)) * 7 + 0.5, 0, 1)   # a crisp, organic edge
+    # smoke: ink rising off the top of the shadow, drifting with time
+    n1 = np.roll(nz(202, (26, 14)), -int(150 * t) % H, 0); n2 = np.roll(nz(203, (60, 34)), -int(240 * t) % H, 0)
+    zone = np.clip(np.roll(cv2.GaussianBlur(sh, (0, 0), 22), -int(70 + 50 * u), 0) - sh * 0.6, 0, 1)
+    smoke = np.clip(zone * 2.4 * np.clip((n1 * 0.7 + n2 * 0.3 - 0.42) * 3.2, 0, 1), 0, 1) * 0.85
+    # the lunge: the shadow turns to the lens and swallows the frame (zoom-blurred toward us)
+    hy = float(np.nonzero(sh > 0.5)[0].min()) if (sh > 0.5).any() else H * 0.2
+    hx = float(np.median(np.nonzero(sh > 0.5)[1])) if (sh > 0.5).any() else W * 0.3
+    zz = 1 + 7.0 * ein(v, 2.3)
+    sh0 = sh
+    fs = face_scr(s, f)
+    if fs is not None:                                                                  # the lunge is centred between its eyes
+        ex0, ey0 = fs[0], fs[1] - fs[2] * 0.10
+        hx = M[0, 0] * ex0 + M[0, 1] * ey0 + M[0, 2]; hy = M[1, 0] * ex0 + M[1, 1] * ey0 + M[1, 2]
+    pv = eout(v, 1.4); dxs, dys = (W / 2 - hx) * pv, (H * 0.36 - hy) * pv                # it pans to the centre as it comes at us
+    M2 = np.float32([[zz, 0, hx * (1 - zz) + dxs], [0, zz, hy * (1 - zz) + dys]])
+    if v > 0:
+        sh = cv2.warpAffine(sh, M2, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+        sh = radial_blur(np.dstack([sh] * 3), W / 2, H * 0.36, 1.0, 1.10, 4)[..., 0]
+        smoke = cv2.warpAffine(smoke, M2, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+    shadow = np.clip(np.maximum(sh, smoke), 0, 1)[..., None] * (0.30 + 0.70 * smooth(u * 2.5 + v))
+    keep = msk[..., None] * (1 - smooth((v - 0.30) / 0.45))
+    o = lit * (1 - shadow * (1 - keep) * 0.96) + INK * shadow * (1 - keep) * 0.96
+    redge = np.exp(-((sh - 0.5) / 0.14) ** 2)[..., None] * smooth(u * 3) * (1 - v) * (1 - msk[..., None]) * 0.65
+    redge = redge * (_GY < H * p.get("cut_y", 1.0) - 40)[..., None]                    # (not along the shadow's cut-off base)
+    o = o * (1 - redge) + INKRED * redge
+    # the embers: two red eyes open in the shadow's head on "DARK"
+    if fs is not None and v < 0.97:                                                     # the embers open on "DARK", and rush at the lens in the lunge
+        ex, ey, ew = fs[0], fs[1] - fs[2] * 0.10, fs[2]
+        sx = M[0, 0] * ex + M[0, 1] * ey + M[0, 2]; sy = M[1, 0] * ex + M[1, 1] * ey + M[1, 2]
+        sx, sy = M2[0, 0] * sx + M2[0, 2], M2[1, 1] * sy + M2[1, 2]; esc = sc * zz
+        op = eout(clamp((k - p["k_rise"] - 0.1) / 1.2, 0, 1), 2.0) * (1 - smooth((v - 0.80) / 0.17)) * (0.88 + 0.12 * math.sin(t * 17))
+        if op > 0.01:
+            lay = np.zeros((H, W), np.float32); dx = ew * 0.22 * esc
+            for sgn in (-1, 1):
+                cv2.ellipse(lay, (int(sx + sgn * dx), int(sy)), (max(2, int(ew * 0.075 * esc)), max(1, int(ew * 0.035 * esc * min(1, op * 1.2)))), 8, 0, 360, 1.0, -1, cv2.LINE_AA)
+            lay = cv2.GaussianBlur(lay, (0, 0), 1.2 + 4 * v)[..., None] * op * ((sh0[..., None] > 0.3) * (1 - msk[..., None]) if v <= 0 else (1 - keep))
+            glow = cv2.GaussianBlur(lay[..., 0], (0, 0), 14)[..., None] * 2.2
+            o = o * (1 - lay) + INKRED_H * lay + INKRED * glow * 0.9
+    # the camera: a slow push-in with a dutch tilt, a kick on the lunge
+    return np.clip(zoom_about(o, W / 2, H * 0.42, 1 + 0.06 * eout(u, 1.6) + 0.04 * ein(v, 2), -2.4 * eout(u, 1.6) * (1 - v)), 0, 1)
+
+_base104_r2 = base104
+def base104(s, f):
+    out = _base104_r2(s, f)
+    if s.get("motes"): out = motes_fx(out, f, s)
+    if s.get("swash"): out = swash_fx(out, f, s)
     return out
 
 # <<< v104 section

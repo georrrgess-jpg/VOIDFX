@@ -65,9 +65,12 @@ def shot(n, src, k0, k1, a, b=None, **kw):
 # ---- pickup (k0-12): paper; one drop of ink falls; "I like to pretend I'm..."
 shot("ink", "p9", 0, 12, 73.80, 73.80, tin=None, graphic="ink_open", face=None, cx=(640, 640))
 # ---- P1 (k12-44): alone. The drop lands on the bass entry and blooms into him.
-shot("dock", "p9", 12, 28, 73.80, tin="ink_bloom", z=[(0, 1.10), (1, 1.00)], echo=0.35)
-shot("floor", "p8", 28, 38, 392.40, tin="brush", z=[(0, 1.02), (1, 1.10)], brush=dict(ang=-28, seed=3, white=True))
-shot("chain", "p1", 38, 44, 171.10, 171.74, tin="whip", z=[(0, 1.04), (1, 1.10)])
+shot("dock", "p9", 12, 20, 73.80, 74.95, tmap=[(0, 73.80), (0.35, 74.55), (1, 74.95)], tin="ink_bloom", z=[(0, 1.10), (1, 1.02)], motes=1.0)
+shot("stare", "p9", 20, 26, 118.00, tin="page_turn", z=[(0, 1.00), (1, 1.08)], motes=1.0)                     # rev 3
+shot("floor", "p8", 26, 35, 392.40, tin="brush", z=[(0, 1.02), (1, 1.10)], brush=dict(ang=-28, seed=3, white=True), motes=0.8,
+     swash=dict(k0=29, k1=43, y=1478))
+shot("chain", "p1", 35, 41, 171.10, 171.74, tin="whip", z=[(0, 1.04), (1, 1.10)], motes=0.6)
+shot("shh", "p1", 41, 44, 96.45, 96.85, tin="smear", z=[(0, 1.00), (1, 1.06)], redthr=0.45)                            # rev 3
 # ---- P2 (k44-76): the ritual. Gloves, the slide, the mirror, the shield goes down.
 shot("gloving", "p1", 44, 49, 102.15, tin="impact", z=[(0, 1.00), (1, 1.08)])
 shot("gloves", "p7", 49, 55, 33.30, tin="slam", z=[(0, 1.00), (1, 1.06)], flare=0.6)
@@ -82,7 +85,7 @@ shot("container", "p4", 90, 96, 65.75, 66.70, tmap=[(0, 65.75), (0.30, 66.35), (
 shot("gun", "p9", 96, 102, 94.30, tin="facematch", z=[(0, 1.00), (1, 1.08)])
 shot("redroom", "p7", 102, 108, 0.10, tin="burn", z=[(0, 1.00), (1, 1.08)])
 # ---- P4 (k108-140): THE PASSENGER. "I have a dark side, too."
-shot("table", "p8", 108, 120, 389.00, 390.30, tmap=[(0, 389.00), (0.45, 389.75), (1, 389.90)], tin="ink_bleed", z=[(0, 1.00), (1, 1.06)],
+shot("table", "p8", 108, 120, 389.00, 390.30, tmap=[(0, 389.00), (0.45, 389.75), (1, 389.90)], tin="ink_bleed", z=[(0, 1.00), (1, 1.04)], target=0.43,
      seg=True, passenger=dict(k_rise=112, k_lunge=117, cut_y=0.80))
 shot("redsmirk", "p8", 120, 126, 346.90, tin="passenger", z=[(0, 1.10), (1, 1.02)])
 shot("turn", "p5", 126, 131, 16.30, 17.00, tmap=[(0, 16.30), (0.40, 16.80), (1, 17.00)], tin="quarter_roll", z=[(0, 1.00), (1, 1.06)], redthr=0.45, ghost=0.45)
@@ -117,7 +120,7 @@ for _t in TEXT:
 CAP_Y = (1380, 1496)
 
 # ---- animation layers
-BEAT_PUNCH = [(k, 0.55 if k in PHR else 0.25) for k in BASS if k < 44] + [(k, 1.0 if k in PHR or (k - 12) % 16 == 0 else 0.5) for k in BASS if k >= 44]
+BEAT_PUNCH = [(k, 0.6 if k in PHR else 0.38) for k in BASS if k < 44] + [(k, 1.0 if k in PHR or (k - 12) % 16 == 0 else 0.5) for k in BASS if k >= 44]
 PULSE_K = []
 T_SURFACE = 0.0; T_SPLASH = DUR + 1                  # (FOREVER's water loop is off in this edit)
 
