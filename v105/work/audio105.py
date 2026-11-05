@@ -651,6 +651,46 @@ def light_sweep_snd(level=-24, seed=1280):
 def place_w(buf, sig, t):
     sig = sig if sig.ndim == 2 else np.stack([sig, sig], 1); A2.place(buf, sig, I(t) + PRE)
 
+def cloth_whoosh(dur=0.36, level=-19, seed=1400):
+    """a heavy cape swung past the lens: low-mid air with the cloth's own flutter, panned left to right."""
+    n = I(dur); q = np.arange(n) / SR; u = q / dur
+    x = bq(noise(n, seed), "band", np.array([140, 1400]), 2) * (0.75 + 0.25 * np.sin(2 * np.pi * 23 * q + 3 * np.sin(2 * np.pi * 4 * q)))
+    x = x * np.sin(np.pi * u) ** 1.4 + bq(noise(n, seed + 1), "band", np.array([1500, 5000]), 2) * 0.25 * np.sin(np.pi * u) ** 3
+    snap = np.zeros(n, np.float32); i0 = int(n * 0.62); m_ = I(0.04)
+    snap[i0:i0 + m_] = bq(noise(m_, seed + 2), "band", np.array([300, 3000]), 2) * np.exp(-np.arange(m_) / SR / 0.012)
+    y = norm(x + 1.6 * snap, level); pan = np.linspace(-0.8, 0.8, n)
+    return np.stack([y * (1 - 0.5 * pan), y * (1 + 0.5 * pan)], 1).astype(np.float32)
+
+def mist_breath(dur=0.55, level=-22, seed=1410):
+    """turning to mist: an airy breath that swells and drifts, with a low hollow whoom under it."""
+    n = I(dur); q = np.arange(n) / SR; u = q / dur
+    air = bq(noise(n, seed), "band", np.array([700, 6500]), 2) * np.sin(np.pi * u) ** 1.2
+    whoom = np.sin(2 * np.pi * np.cumsum(70 - 25 * u) / SR) * np.sin(np.pi * u) ** 2 * 0.6
+    st_ = np.stack([air + whoom, np.roll(air, I(0.009)) + whoom], 1)
+    st_ = st_ + A2.conv(st_, A2.ir(1.0, seed=seed + 1)) * db(-8)
+    return (st_ / (np.abs(st_).max() + 1e-9) * db(level)).astype(np.float32)
+
+def big_wings(level=-18, seed=1420, n_=3, rate=4.5):
+    """the great bat: a few heavy, leathery wingbeats getting louder as it nears."""
+    dur = n_ / rate + 0.2; n = I(dur); out = np.zeros(n, np.float32)
+    for k in range(n_):
+        m_ = I(0.11); kq = np.arange(m_) / m_; i0 = I(k / rate)
+        beat = bq(noise(m_, seed + k), "band", np.array([90, 1100]), 2) * np.sin(np.pi * kq) ** 1.5 * (0.45 + 0.55 * (k + 1) / n_)
+        out[i0:i0 + m_] += beat
+    return stereo(norm(out, level))
+
+def crackle(dur=1.6, level=-26, seed=1430):
+    """embers: a sizzle and fine crackle that build as the light takes him."""
+    n = I(dur); u = np.arange(n) / n; rng = np.random.default_rng(seed)
+    sz = bq(noise(n, seed), "band", np.array([3000, 9000]), 2) * 0.25 * u ** 1.5
+    ck = np.zeros(n, np.float32)
+    for _ in range(int(220 * dur)):
+        i = int(rng.uniform(0, 1) ** 0.6 * (n - I(0.004))); m_ = I(rng.uniform(0.001, 0.004))
+        ck[i:i + m_] += rng.uniform(0.2, 1) * bq(noise(m_, int(rng.integers(1e6))), "high", 1800, 2)
+    y = sz + ck * u ** 0.8
+    st_ = np.stack([y, np.roll(y, I(0.004))], 1)
+    return (st_ / (np.abs(st_).max() + 1e-9) * db(level)).astype(np.float32)
+
 def fx105():
     n = N + PRE + TAIL; fx = np.zeros((n, 2), np.float32); th = E.th; t32 = th(32)
     tt = (np.arange(n) - PRE) / SR
@@ -701,6 +741,13 @@ def fx105():
         elif tin == "moon_iris":                                                         # THE BLOOD MOON
             place_w(fx, rev_swell(0.30, -24, 1366), t0 - 0.30); place_w(fx, toll(-22), t0 - 0.01)
             place_w(fx, stereo(A2.impact(-19, (40, 22), 0.9, 0.1, 1367)), t0)
+        elif tin == "cape":                                                              # the cape sweeps the lens
+            place_w(fx, cloth_whoosh(0.36, -12, 1440), t0 - 8 / E.FPS)
+        elif tin == "mist":                                                              # he turns to mist
+            place_w(fx, mist_breath(0.62, -18, 1441), t0 - 10 / E.FPS); place_w(fx, rev_swell(0.3, -26, 1442), t0 - 0.3)
+        elif tin == "bat_pass":                                                          # the great bat flies through the lens
+            place_w(fx, big_wings(-13, 1443, 3, 4.5), t0 - 0.62); place_w(fx, A2.whoosh(0.30, -16, 1444, False), t0 - 0.10)
+            place_w(fx, bat_chirps(-29, 1445, 2, 0.08), t0 - 0.16); place_w(fx, stereo(A2.impact(-22, (60, 32), 0.3, 0.3, 1446)), t0)
         elif tin == "coffin":                                                            # THE COFFIN
             place_w(fx, stereo(creak(0.30, -21, 1368), -0.3), t0 - 0.36); place_w(fx, A2.whoosh(0.16, -24, 1369, False), t0 - 8 / E.FPS)
             place_w(fx, stereo(wood_thud(-14, 1370)), t0 - 0.004); place_w(fx, dust(0.6, -33, 1371), t0 + 0.02)
@@ -712,6 +759,7 @@ def fx105():
     hero = next(x for x in E.TEXT if x["style"] == "hero"); place_w(fx, wings(0.45, -21, 1380, 40, (9, 12), shape=lambda u: np.clip(u / 0.1, 0, 1) * (1 - u)), hero["end"] - 0.05)
     # sub hits on the phrase starts
     for k_ in (48, 64): place_w(fx, stereo(A2.impact(-21, (42, 22), 0.6, 0.1, 1390 + k_)), th(k_) - 0.005)
+    place_w(fx, crackle(th(87.4) - th(84.6), -17, 1450), th(84.6))                   # he burns: embers crackle as the light takes him
     # DAYBREAK: the chord swells as the frame burns white; its tail rings into frame 0 (wrapped below)
     place_w(fx, dawn_chord(th(88) - th(84.5), -19), th(84.5)); place_w(fx, rev_swell(0.6, -24, 1395), E.DUR - 0.6)
     place_w(fx, np.stack([A2.shimmer(1.6, -30)] * 2, 1), E.DUR - 0.02)

@@ -194,3 +194,68 @@ Each pass asked "what would make this unforgettable?", not just "what's broken?"
 The renderer's frame 0 and the MP4's frame 0 were also compared: they match (mean colour within 3 levels).
 
 **Not verified:** watching and listening in real time. The sound was checked by measurement only (levels per section, effects against the music at every set piece, clicks, the loop).
+
+## Revision 2 (owner notes)
+
+The owner: *"I like the edit but what happened with the sun and the top right part of Dexter's head? Additionally, I would like for you to add a couple more transitions, graphics, and unique creative animations."*
+
+**1. The sun and his head.**
+- **What was wrong:** the sun (disc, glow and rays) was laid over the whole frame. In the boat, pink-wall, palms and sunset shots it sat at the top right, just where his hair meets the sky, so the glow burned the top right of his head away. The sun was in front of him, not behind.
+- **Now:** every sun shot has his MODNet cut-out.
+  - The disc and its rays come only from the sky behind him: he hides the sun, and the rays stream out around his edges.
+  - Only a little of the light scatters over him (22%).
+  - The light wraps a warm rim onto the side of him nearest the sun.
+  - The lens ghosts dim as much of the sun as he covers.
+- **The result:** his hair stays intact against a backlit sky.
+
+**2. Three new transitions (one replacing the repeated whip; two on new cuts):**
+- **Cape sweep** (k46, replaces the second whip). A Dracula cape swings across the lens: black satin in broad moving folds, its crimson lining turned out along the billowing leading edge, a lit hem, motion blur and a soft shadow thrown ahead of it. Sound: a heavy cloth whoosh with the cloth's flutter and a snap.
+- **Mist** (k66, new cut). After the coffin, Dracula turns to mist: the shot softens and lifts upward as it breaks into slow billows of silver mist, the frame fills with fog, and a new **knife** shot (p9 178.30) condenses out of it from soft to sharp. Sound: an airy breath with a hollow whoom.
+- **Great bat** (k82, new cut). One huge bat comes out of the top right of the dark, grows, beats its wings and flies through the lens. The cut happens in its shadow. It's drawn soft as it comes close, with wing bones in the membrane, and it dives out under the camera to reveal a new **flashlight** shot (p9 185.40), whose torch flares into the dawn. Sound: three heavy wingbeats, a whoosh, chirps.
+
+The edit now has **27 designed transitions in 22.97 s** (was 25), and the whip is no longer repeated.
+
+**3. New graphics and animations:**
+- **Sunlit dust** in every day shot: motes drifting in the warm air, brighter near the sun. Far ones are fine and sharp, near ones are soft discs, and they stay in the air behind and around him.
+- **He burns in the sunlight (daybreak).**
+  - The final shot is now a medium shot of him walking toward camera (p9 75.00). The old close-up filled the frame, so his outline couldn't be used.
+  - As the sun comes up beside him, a hot, flickering rim of light catches his edge and embers lift off his hair and shoulders into the light.
+  - Then the frame burns to white and clears into frame 0, as before.
+  - Sound: a sizzle and fine crackle that build under the dawn chord.
+
+### Review log (rev 2, before the full render)
+1. **The great bat** first started on his face, and its crimson outline was thick and cartoonish when large. It now enters from the top right, and the edge is a fine, faint crimson line.
+2. **The bat lingered:** after the cut it still blacked out most of the frame. It now dives out under the camera within 4 frames.
+3. **The cape** first read as thin wavy stripes. The folds are now broad satin with a soft sheen, and the lining is a wide crimson band.
+4. **The mist's first two versions failed:**
+   - hard-edged blotchy holes with a bright fringe;
+   - then vertical streaks that read as drips (the owner disliked drips).
+   It's now a soft dissolve: the shot blurs and rises into billowing fog.
+5. **The dawn burn didn't show** on the old close-up (the matte covered the whole frame). The new final shot has a clear silhouette. The embers were then too small to read, so they're now bigger, brighter, more numerous and weighted to his hair and shoulders.
+6. **Sound levels:** the new sounds first sat 15–17 dB under the song. The cape, the bat and the crackle were raised 4–6 dB.
+7. **Full render (rev 2, first pass): 9/10.** With the light wrap on his edge, the face detector read the sunset close-up as about 1,000 px wide and slightly off-centre: 3 of 21 frames counted as cut off, one more than the tolerance. The shot is now framed with his face slightly right of centre (`face_x=0.62`). All 20 sunset frames were checked with the same detector before re-rendering.
+
+### Revision 2 checkpoint: 10/10 PASS, visual sign-off PASS (shipped)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1378 frames (22.97 s), H.264 + AAC, fast-start |
+| Loudness after AAC | −13.0 LUFS, true peak −4.1 dBTP |
+| Clicks | 0 at the 27 cuts; loop seam clean by the QC rule |
+| Loop seam picture | blurred difference 4.16 (the white clears into frame 0) |
+| Faces | centred in every shot, 0 flagged; 0 text-over-face frames. The low detections at 456/458 (his chin in the looks-up shot) and 970 (the upside-down shot) carry no text |
+| Black frames | 844–847 (the lamp-on blackout) and 1111–1112 (the eye dive's pupil), both by design |
+| Frozen runs | none |
+| Length | audio and video within 9.3 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4. It covered:
+- the whole edit, every 22nd frame;
+- every sun shot (10, 30, 200, 220, 395, 410): his hair intact, the sun behind him;
+- the cape (714–723);
+- the mist (1026–1040);
+- the great bat (1278–1286);
+- the burn at daybreak (1330–1356);
+- the seam (1370–1377 → 0–4).
+
+**Not verified:** watching and listening in real time. The new sounds were checked by measurement against the music.
+

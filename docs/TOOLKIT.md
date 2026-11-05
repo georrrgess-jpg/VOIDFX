@@ -156,6 +156,12 @@ These live on Studio 1's branch (`claude/gallant-planck-pqpczp`); this copy only
 | `daybreak=True` on the last shot + `seam_out` | Dawn light rises, the sun comes up low right, the frame burns white, then crossfades into frame 0 (which opens at `SEAM_W` white). | B-flat-minor chord swell, tail wrapped into frame 0 |
 | hero `exit="bats"` | The per-letter hero title (red flood) breaks into crimson bats that scatter sideways, away from the face. | a small flutter |
 | `fog=a` | Night fog drifting through the shot. | — |
+| `cape` | A Dracula cape sweeps across the lens: black satin in broad moving folds, a crimson lining turned out along the billowing edge, a lit hem, motion blur, a shadow thrown ahead; the next shot is behind it. | heavy cloth whoosh |
+| `mist` | He turns to mist: the shot softens and rises into billowing silver fog; the next condenses out of it, soft to sharp. | airy breath + hollow whoom |
+| `bat_pass` | One great bat flies out of the dark through the lens (soft when near, wing bones in the membrane, fine crimson edge); the cut is in its shadow; it dives out under the camera. | three heavy wingbeats, whoosh, chirps |
+| `motes=a` on a day shot | Sunlit dust: drifting motes, brighter near the sun, sharp far and soft near, kept behind him with the matte. | — |
+| `seg=True` on a sun shot | The sun sits behind him: disc and rays only from the sky, a light wrap on his near edge, ghosts dimmed by how much he covers. (rev 2 fix: the sun used to be laid over his hair.) | — |
+| `daybreak=True` + `seg=True` | He burns in the sunlight: a flickering hot rim on his edge, embers lifting off his hair and shoulders, then the white. Needs a shot with a clear silhouette (not a frame-filling close-up). | sizzle + crackle |
 | always on | `render_shot` upscale: Lanczos + a noise-gated luma detail boost (not AI super-resolution). `finish105`: warm or moonlit halation and a crimson bloom (skipped on logo frames). | — |
 
 ## 3. Graphics and text

@@ -6242,6 +6242,11 @@ def main():
 
 
 
+
+
+
+
+
 # >>> v105 section (generated from fx105.py by splice.py)
 # ============================================================================ v105 — DRACULA — Dexter × Tame Impala: toolkit from the v104 standard (restyle it)
 # spliced into render105.py before main() by splice.py; the last definitions win, so this section owns the frame.
@@ -7574,31 +7579,45 @@ def grade(img, s, f):
     return np.clip(o, 0, 1)
 
 # ---------------------------------------------------------------------------- the sun, with light rays and lens ghosts
-def sun_fx(out, f, sx, sy, amt=1.0, col=SUNC, r=70.0):
+def sun_fx(out, f, sx, sy, amt=1.0, col=SUNC, r=70.0, m=None):
+    """the sun with light rays and lens ghosts. With his matte m, the sun and its rays sit BEHIND him: the disc is hidden where
+    he covers it, the rays stream out of the sky around his edges, and the light wraps a warm rim onto the side of him nearest it."""
     if amt <= 0.01: return out
     L = lum(out); bright = np.clip((L - 0.62) / 0.38, 0, 1) ** 2
     sm = cv2.resize(bright, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
-    gy, gx = np.mgrid[0:H // 4, 0:W // 4].astype(np.float32)
-    disc = np.exp(-(((gx - sx / 4) ** 2 + (gy - sy / 4) ** 2) / (r / 4) ** 2))
-    src = np.clip(sm * 0.6 + disc, 0, 1)
+    gy, gx = qgrid(4)
+    d2 = (gx - sx / 4) ** 2 + (gy - sy / 4) ** 2
+    disc = np.exp(-(d2 / (r / 4) ** 2))
+    if m is not None:
+        mq = cv2.resize(m, (W // 4, H // 4), interpolation=cv2.INTER_AREA); bg = 1 - mq
+        vis = float((disc * bg).sum() / (disc.sum() + 1e-6))
+        src = np.clip(sm * 0.6 * bg + disc * bg, 0, 1)
+    else:
+        mq = None; bg = 1.0; vis = 1.0; src = np.clip(sm * 0.6 + disc, 0, 1)
     acc = np.zeros_like(src)
-    for i in range(10):                                                                  # rays: the bright parts streaked away from the sun
+    for i in range(10):                                                                  # rays: the bright sky streaked away from the sun
         sc = 1.0 + 0.045 * i; M = np.float32([[sc, 0, sx / 4 * (1 - sc)], [0, sc, sy / 4 * (1 - sc)]])
         acc += cv2.warpAffine(src, M, (W // 4, H // 4), flags=cv2.INTER_LINEAR) * (1 - i / 11)
     rays = cv2.resize(cv2.GaussianBlur(acc / 6.0, (0, 0), 1.5), (W, H))[..., None]
-    glow = cv2.resize(cv2.GaussianBlur(disc, (0, 0), 6), (W, H))[..., None]
-    o = out + rays * col * 0.42 * amt + glow * col * 0.9 * amt
-    ax, ay = W / 2 - sx, H / 2 - sy                                                      # ghosts along the axis through the centre
+    glow = cv2.resize(cv2.GaussianBlur(disc * bg, (0, 0), 6), (W, H))[..., None]
+    add = rays * col * 0.42 * amt + glow * col * 0.9 * amt
+    if mq is not None:
+        front = 1 - 0.78 * m[..., None]                                                  # a little of it scatters over him, most stays behind
+        halo = np.exp(-(d2 / (r * 3.2 / 4) ** 2))
+        wrap = cv2.GaussianBlur(bg * halo, (0, 0), 3.0) * mq                              # light wrap: the sun bleeds round his edge
+        o = out + add * front + cv2.resize(wrap, (W, H))[..., None] * col * 1.1 * amt
+    else:
+        o = out + add
+    ax, ay = W / 2 - sx, H / 2 - sy                                                      # lens ghosts along the axis through the centre
     for i, (pos, rr, a) in enumerate(((0.6, 46, 0.07), (1.15, 90, 0.05), (1.55, 34, 0.08), (1.9, 140, 0.035))):
-        gx_, gy_ = W / 2 + ax * pos, H / 2 + ay * pos
-        o = add_glow(o, gx_, gy_, rr, a * amt, col * np.array([1.0, 0.85, 0.7], np.float32))
+        o = add_glow(o, W / 2 + ax * pos, H / 2 + ay * pos, rr, a * amt * vis, col * np.array([1.0, 0.85, 0.7], np.float32))
     return np.clip(o, 0, 1)
 
 def sun_pos(s, f):
     """the sun of a day shot, or the setting / rising sun of the dusk shots."""
     k = kof(f)
     if s.get("daybreak"):
-        u = clamp((k - E.DAWN_K[0]) / (E.DAWN_K[1] - E.DAWN_K[0]), 0, 1); return W * SUN_DAWN[0], H * (1.20 - (1.20 - SUN_DAWN[1]) * eout(u, 1.6)), 1.0, 90 + 60 * u
+        u = clamp((k - E.DAWN_K[0]) / (E.DAWN_K[1] - E.DAWN_K[0]), 0, 1); return W * SUN_DAWN[0], H * (SUN_DAWN[1] + 0.14 * (1 - eout(u, 1.6))), 0.7 + 0.5 * u, 80 + 70 * u
     if s.get("look") == "dusk":
         u = clamp((k - E.SUN_K[0]) / (E.SUN_K[1] - E.SUN_K[0]), 0, 1)
         return W * (0.86 + 0.04 * u), H * (0.12 + 1.05 * ein(u, 1.7)), 1.0 - 0.6 * smooth((u - 0.75) / 0.25), 70 + 90 * u   # it sets down the right edge, off his face
@@ -7608,29 +7627,38 @@ def sun_pos(s, f):
 # ---------------------------------------------------------------------------- bats: procedural silhouettes with flapping wings
 _BAT = {}
 def bat_sprite(phase, size=60, tone=0):
-    """a flapping bat silhouette. tone 0: black with a cold moonlit top edge; 1: black, backlit crimson; 2: crimson (the letters' bats)."""
+    """a flapping bat silhouette. tone 0: black with a cold moonlit top edge; 1: black, backlit crimson; 2: crimson (the letters'
+    bats); 3: the great bat (fine crimson edge, wing bones in the membrane)."""
     q = int(round(math.log(max(4.0, size)) / math.log(1.10))); S_ = int(1.10 ** q)
     key = (int(phase * 8) % 8, S_, tone)
     if key in _BAT: return _BAT[key]
     w, h = S_ * 2 + 8, int(S_ * 1.2) + 8; m = np.zeros((h, w), np.float32); cx, cy = w / 2, h * 0.45
+    bones = np.zeros_like(m)
     fl = math.sin(key[0] / 8 * 2 * math.pi)                                             # wing angle
     for sg in (-1, 1):
         tip = (cx + sg * S_ * 0.98, cy - S_ * 0.45 * fl - S_ * 0.05)
         elbow = (cx + sg * S_ * 0.45, cy - S_ * 0.30 * fl - S_ * 0.12)
-        pts = [(cx + sg * 4, cy - S_ * 0.08), elbow, tip]
+        pts = [(cx + sg * 4, cy - S_ * 0.08), elbow, tip]; edge = []
         for i in range(4):                                                               # the scalloped trailing edge
             a = 1 - (i + 0.5) / 4; bx = cx + sg * S_ * 0.98 * a; by = cy + S_ * (0.10 + 0.18 * (i % 2)) - S_ * 0.35 * fl * a
-            pts.append((bx, by))
+            pts.append((bx, by)); edge.append((bx, by))
         pts.append((cx + sg * 4, cy + S_ * 0.12))
         cv2.fillPoly(m, [np.array(pts, np.int32)], 1.0, cv2.LINE_AA)
+        if tone == 3:
+            th_ = max(1, S_ // 70)
+            cv2.line(bones, (int(cx + sg * 4), int(cy - S_ * 0.08)), (int(elbow[0]), int(elbow[1])), 1.0, th_ * 2, cv2.LINE_AA)
+            for p in [tip] + edge[::2]: cv2.line(bones, (int(elbow[0]), int(elbow[1])), (int(p[0]), int(p[1])), 1.0, th_, cv2.LINE_AA)
     cv2.ellipse(m, (int(cx), int(cy)), (max(2, S_ // 9), max(3, S_ // 5)), 0, 0, 360, 1.0, -1, cv2.LINE_AA)    # body
     cv2.circle(m, (int(cx), int(cy - S_ * 0.2)), max(2, S_ // 10), 1.0, -1, cv2.LINE_AA)                         # head
     for sg in (-1, 1): cv2.fillConvexPoly(m, np.array([(cx + sg * S_ * 0.03, cy - S_ * 0.26), (cx + sg * S_ * 0.09, cy - S_ * 0.40), (cx + sg * S_ * 0.10, cy - S_ * 0.22)], np.int32), 1.0, cv2.LINE_AA)
     m = cv2.GaussianBlur(m, (0, 0), 0.7)
-    sh = max(1, S_ // 18); top = np.clip(m - np.roll(m, sh, 0), 0, 1)[..., None]        # the edge that faces the light above
+    sh = max(1, S_ // (130 if tone == 3 else 18)); top = np.clip(m - np.roll(m, sh, 0), 0, 1)[..., None]   # the edge that faces the light above
     body, rim = {0: (np.array([0.030, 0.025, 0.030], np.float32), MOONS * 0.55), 1: (np.array([0.020, 0.012, 0.030], np.float32), CRIMSON_H * 0.85),
-                 2: (CRIMSON * 0.40, CRIMSON_H)}[tone]
+                 2: (CRIMSON * 0.40, CRIMSON_H), 3: (np.array([0.014, 0.010, 0.020], np.float32), CRIMSON_H * 0.25)}[tone]
     rgb = body + top * (rim - body)
+    if tone == 3:                                                                        # the wing bones catch a little light through the membrane
+        b_ = cv2.GaussianBlur(bones, (0, 0), 1.0)[..., None] * m[..., None]
+        rgb = rgb + b_ * np.array([0.03, 0.03, 0.09], np.float32)
     _BAT[key] = np.dstack([rgb, m]).astype(np.float32); return _BAT[key]
 
 def bats_layer(bats, t, tone=0):
@@ -7824,8 +7852,9 @@ def dawn_white(out, f):
     o = np.broadcast_to(DAWNW, (H, W, 3)).copy()
     return sun_fx(o, f, W * SUN_DAWN[0], H * SUN_DAWN[1], 0.8, SUNC, 150)
 
-def daybreak_fx(out, f, s):
+def daybreak_fx(out, f, s, m=None):
     k = kof(f); u = clamp((k - E.DAWN_K[0]) / (E.DAWN_K[1] - E.DAWN_K[0]), 0, 1)
+    out = burn_fx(out, f, s, m, smooth((k - (E.DAWN_K[0] + 0.6)) / 1.8))
     rise = np.clip(((_GY / H) - (1.05 - 0.9 * eout(u, 1.5))) / 0.35, 0, 1)[..., None]   # the light comes up from the horizon
     o = out * (1 - rise * 0.55 * u) + DAWNW * rise * 0.55 * u
     w = smooth((k - (E.DAWN_K[1] - 2.2)) / 1.3)                                         # and burns everything to the dawn white
@@ -7839,7 +7868,7 @@ def opening_white(out, f):
 # ---------------------------------------------------------------------------- DRACULA: the hero title whose letters burst into bats
 def smooth_arr(u): u = np.clip(u, 0, 1); return u * u * (3 - 2 * u)
 
-SUN_DAWN = (0.80, 0.88)                                                                  # the rising sun sits low right, off his face
+SUN_DAWN = (0.84, 0.22)                                                                  # the rising sun comes up behind his shoulder, off his face
 
 SEAM_W = 0.30                                                                            # how white frame 0 is (and the last frame returns to it)
 
@@ -7867,6 +7896,156 @@ def render(f):
     out = text103(out, f)
     out = finish105(out, f, s.get("look", "night") == "night", logo)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+_QG = {}
+
+def qgrid(q=4):
+    if q not in _QG: _QG[q] = np.mgrid[0:H // q, 0:W // q].astype(np.float32)
+    return _QG[q]
+
+def day_motes(out, f, s, m=None, sp=None):
+    """sunlit dust: motes drifting in the warm air, brighter near the sun; far ones fine and sharp, near ones soft discs.
+    With his matte they stay in the air behind and around him."""
+    a = s.get("motes", 0.0)
+    if not a: return out
+    t = f / FPS; rng = np.random.default_rng(700 + int(s["k0"]))
+    far = np.zeros((H // 2, W // 2), np.float32); near = np.zeros_like(far)
+    for i in range(54):
+        x0, y0, z = rng.uniform(0, W), rng.uniform(0, H), rng.uniform(0.25, 1.0)
+        vx, vy, w_, ph = rng.normal(10, 16), rng.uniform(-30, -8), rng.uniform(0.6, 1.5), rng.uniform(0, 6.3)
+        x = (x0 + vx * t / z + 22 * math.sin(t * w_ + ph)) % W; y = (y0 + vy * t / z) % H
+        tw = 0.55 + 0.45 * math.sin(t * rng.uniform(2.0, 5.0) + ph); b = tw * rng.uniform(0.45, 1.0)
+        if z < 0.45: cv2.circle(near, (int(x / 2), int(y / 2)), int(rng.uniform(5, 11)), b * 0.45, -1, cv2.LINE_AA)
+        else: cv2.circle(far, (int(x / 2), int(y / 2)), 1, b, -1, cv2.LINE_AA)
+    lay = cv2.GaussianBlur(far, (0, 0), 0.8) * 1.6 + cv2.GaussianBlur(near, (0, 0), 3.0)
+    lay = cv2.resize(lay, (W, H), interpolation=cv2.INTER_LINEAR)
+    if sp is not None: lay = lay * (0.30 + 0.70 * np.exp(-(((_GX - sp[0]) ** 2 + (_GY - sp[1]) ** 2) / (0.75 * W) ** 2)))
+    if m is not None: lay = lay * (1 - 0.85 * m)
+    return np.clip(out + lay[..., None] * SUNC * 0.55 * a, 0, 1)
+
+EMBER = np.array([0.18, 0.52, 1.00], np.float32)                                     # BGR hot orange
+
+_EB = {}
+
+def ember_points(s):
+    """the background pixels just outside his silhouette (once per shot): where the embers lift off. Hair and shoulders weigh most."""
+    if s["n"] not in _EB:
+        _, m0 = render_shot(s, s["f0"] + 24, True, True)
+        ring = np.clip(cv2.GaussianBlur(m0, (0, 0), 8) - m0, 0, 1)
+        ys, xs = np.nonzero(ring > 0.05)
+        keep = ys < H * 0.92; xs, ys = xs[keep], ys[keep]
+        wgt = 1.0 + 2.5 * (ys < H * 0.40)                                               # more off his hair and shoulders
+        _EB[s["n"]] = (xs, ys, wgt / wgt.sum())
+    return _EB[s["n"]]
+
+def burn_fx(out, f, s, m, heat):
+    """he burns in the sunlight: a hot flickering rim on his edge and embers lifting off him into the light."""
+    if heat <= 0.01 or m is None: return out
+    t = (f - s["f0"]) / FPS
+    inner = np.clip(m - cv2.GaussianBlur(m, (0, 0), 6), 0, 1); outer = np.clip(cv2.GaussianBlur(m, (0, 0), 14) - m, 0, 1)
+    flick = 0.85 + 0.15 * math.sin(t * 31) * math.sin(t * 17 + 1)
+    out = out + (inner * 3.2 + outer * 2.0)[..., None] * EMBER * heat * flick
+    xs, ys, p = ember_points(s)
+    if len(xs) == 0: return out
+    rng = np.random.default_rng(881); core = np.zeros((H // 2, W // 2), np.float32); halo = np.zeros_like(core)
+    picks = rng.choice(len(xs), 300, p=p)
+    for i in range(300):
+        idx = int(picks[i]); ts = rng.uniform(0.10, 0.95); life = rng.uniform(0.35, 0.85)
+        vy, vx, w_, r_ = rng.uniform(200, 520), rng.normal(0, 70), rng.uniform(5, 11), rng.uniform(1.6, 4.2)
+        age = t - ts
+        if age < 0 or age > life: continue
+        x = xs[idx] + vx * age + 20 * math.sin(age * w_ + i); y = ys[idx] - vy * age - 80 * age * age
+        b = (1 - age / life) ** 1.1 * min(1.0, age / 0.05) * (0.6 + 0.4 * math.sin(age * 40 + i))
+        cv2.circle(core, (int(x / 2), int(y / 2)), max(1, int(r_ / 2 + 0.5)), b, -1, cv2.LINE_AA)
+        cv2.circle(halo, (int(x / 2), int(y / 2)), int(r_ * 3), b * 0.45, -1, cv2.LINE_AA)
+    core = cv2.resize(cv2.GaussianBlur(core, (0, 0), 0.6), (W, H)); halo = cv2.resize(cv2.GaussianBlur(halo, (0, 0), 5), (W, H))
+    return out + (core[..., None] * np.array([0.70, 0.90, 1.0], np.float32) * 1.6 + halo[..., None] * EMBER * 1.1) * heat
+
+def cape_tr(A, B, j, f, sa, sb, pre=8, post=10):
+    """a Dracula cape sweeps across the lens: black satin in broad moving folds with a soft sheen, a wide crimson lining
+    turned out along its billowing leading edge, a soft shadow thrown ahead of it; the next shot is behind it."""
+    u = clamp((j + pre + 0.5) / (pre + post), 0, 1); t = f / FPS
+    e = u * u * (3 - 2 * u)
+    yy = _GY / H; xl = -0.32 * W + 2.50 * W * e
+    lead = xl + 0.24 * W * np.sin(np.pi * yy) ** 1.5 + 34 * np.sin(_GY * 0.0065 + t * 7) + 12 * np.sin(_GY * 0.019 - t * 11)
+    trail = lead - 1.05 * W - 0.10 * W * np.sin(np.pi * yy)
+    ahead = np.clip((_GX - lead) / 3 + 0.5, 0, 1); behind = np.clip((trail - _GX) / 3 + 0.5, 0, 1)
+    cover = np.clip(1 - ahead - behind, 0, 1)
+    dl = lead - _GX
+    ph = dl * 0.0085 + 1.6 * np.sin(_GY * 0.0031 + t * 1.3) + 0.8 * np.sin(_GY * 0.0083 - t * 2.1)
+    sh = 0.5 + 0.5 * np.sin(ph)                                                          # broad satin folds
+    lumf = (0.010 + 0.075 * sh ** 2 + 0.20 * sh ** 9)[..., None]
+    satin = lumf * np.array([1.10, 1.0, 1.0], np.float32) * 1.0
+    lin = smooth_arr(1 - dl / 190) + smooth_arr(1 - (_GX - trail) / 60)                  # the lining, turned out along both edges
+    lin = np.clip(lin, 0, 1)[..., None]
+    lining = CRIMSON * (0.20 + 0.45 * sh[..., None] ** 2) + CRIMSON_H * 0.45 * sh[..., None] ** 10
+    hem = np.exp(-(dl / 5.0) ** 2)[..., None] * CRIMSON_H * 0.5                         # the hem catches the light
+    fabric = satin * (1 - lin) + lining * lin + hem
+    fabric = cv2.GaussianBlur(fabric, (0, 0), sigmaX=10, sigmaY=0.1)                    # it's moving fast
+    shadow = (np.clip(1 + dl / 200, 0, 1) * (dl < 0) * 0.6)[..., None]
+    o = A * (1 - shadow) * ahead[..., None] + B * behind[..., None] + fabric * cover[..., None]
+    return np.clip(o, 0, 1)
+
+_MS = {}
+
+def mist_field(seed, t, rise):
+    """slow billows of mist: three octaves of soft value noise drifting upward at different speeds (quarter res), about 0..1."""
+    h, w = H // 4, W // 4; acc = np.zeros((h, w), np.float32)
+    for o, (cells, amp, sp) in enumerate(((3, 0.55, 1.0), (6, 0.30, 1.6), (12, 0.15, 2.4))):
+        key = (seed, o)
+        if key not in _MS:
+            g = np.random.default_rng(seed * 10 + o).random((int(cells * 1.8) * 3, cells + 1)).astype(np.float32)
+            _MS[key] = cv2.GaussianBlur(cv2.resize(g, (w, h * 3), interpolation=cv2.INTER_CUBIC), (0, 0), 2)
+        st_ = int(t * rise * sp * h) % (h * 2)
+        acc += _MS[key][st_:st_ + h] * amp
+    return np.clip((acc - 0.22) / 0.56, 0, 1)
+
+def mist_tr(A, B, j, f, sa, sb, pre=10, post=14):
+    """Dracula turns to mist: the shot softens and drifts upward as it breaks into slow billows of silver mist, the frame
+    fills with fog, and the next shot condenses out of the mist (from soft to sharp)."""
+    u = clamp((j + pre + 0.5) / (pre + post), 0, 1); t = f / FPS
+    n = cv2.resize(mist_field(77, t, 0.35), (W, H)); n2 = cv2.resize(mist_field(91, t, 0.25), (W, H))
+    uA = clamp(u / 0.60, 0, 1); uB = clamp((u - 0.40) / 0.60, 0, 1)
+    def soften(X, amt, dy):                                                              # a quarter-res blur, lifted upward
+        q = cv2.resize(X.astype(np.float32), (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+        if amt > 0.2: q = cv2.GaussianBlur(q, (0, 0), amt)
+        q = cv2.resize(q, (W, H), interpolation=cv2.INTER_LINEAR)
+        if abs(dy) > 0.5: q = np.roll(q, -int(dy), axis=0)
+        return q
+    As = soften(A, 7 * uA, 110 * uA ** 1.5) if uA > 0 else A
+    A2_ = A * (1 - smooth(uA / 0.5)) + As * smooth(uA / 0.5)
+    Bs = soften(B, 7 * (1 - uB), -40 * (1 - uB)) if uB < 1 else B
+    B2_ = B * smooth((uB - 0.5) / 0.5) + Bs * (1 - smooth((uB - 0.5) / 0.5))
+    vA = smooth_arr((n - 1.30 * uA + 0.30) / 0.45); vB = smooth_arr((n2 - 1.30 * (1 - uB) + 0.30) / 0.45)
+    vB = vB * (1 - vA)
+    fog = np.clip(1 - vA - vB, 0, 1)[..., None]
+    billow = (0.6 * n + 0.4 * n2)[..., None]
+    mistc = MOONS * (0.14 + 0.40 * billow ** 1.3) + CRIMSON * 0.05 * (_GY / H)[..., None]
+    o = A2_ * vA[..., None] + B2_ * vB[..., None] + mistc * fog
+    veil = math.sin(math.pi * u) ** 1.5 * 0.30                                          # drifting mist over everything at the peak
+    return np.clip(o * (1 - veil * billow) + MOONS * 0.40 * veil * billow ** 1.5, 0, 1)
+
+def bat_pass_tr(A, B, j, f, sa, sb, pre=7, post=9):
+    """one great bat flies out of the dark straight through the lens: it comes out of the top-right, grows, beats its wings,
+    fills the frame (the cut happens in its shadow) and dives out under the camera to reveal the next shot."""
+    size = min(3200.0, 46 * 1.55 ** (j + pre)); g = min(1.0, size / 1100)
+    x = W * (0.84 - 0.34 * g); y = H * (0.08 + 0.52 * g) + max(0, j) * H * 0.30
+    spr = bat_sprite(((f / FPS) * 4.5) % 1.0, 260, 3); s0 = spr.shape[1] / 2 - 4
+    sc = size / s0 / 4                                                                   # drawn at quarter res (it's soft when that close)
+    pm = np.dstack([spr[..., :3] * spr[..., 3:4], spr[..., 3:4]])
+    hs, ws = spr.shape[:2]
+    M = np.float32([[sc, 0, x / 4 - sc * ws / 2], [0, sc, y / 4 - sc * hs / 2]])
+    lay = cv2.warpAffine(pm, M, (W // 4, H // 4), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
+    bl = clamp((size - 300) / 220, 0, 10)
+    if bl > 0.3: lay = cv2.GaussianBlur(lay, (0, 0), bl)
+    lay = cv2.resize(lay, (W, H), interpolation=cv2.INTER_LINEAR)
+    a = np.clip(lay[..., 3:4], 0, 1)
+    base = A if j < 1 else B
+    shade = 0.80 * math.exp(-((j - 0.5) / 1.5) ** 2)                                     # its shadow sweeps the frame as it passes
+    o = base * (1 - shade) * (1 - a) + lay[..., :3]
+    return np.clip(o, 0, 1)
+
+TR2.update({"cape": (cape_tr, 8, 10), "mist": (mist_tr, 10, 14), "bat_pass": (bat_pass_tr, 7, 9)})
 
 def hero105(out, f, tx):
     t = f / FPS; words = tx["words"]
@@ -7928,17 +8107,21 @@ def finish105(out, f, night, logo=False):
     return np.clip(out * VIG, 0, 1)
 
 def base105(s, f):
+    sp = sun_pos(s, f); m = None
     if s.get("bloodmoon"): out = bloodmoon_fx(f, s)
+    elif s.get("seg") and (sp is not None or s.get("daybreak")): out, m = render_shot(s, f, True, True)
     else: out = render_shot(s, f)
     if s.get("ghost"): out = ghost_fx(out, f, s)
-    sp = sun_pos(s, f)
-    if sp is not None: out = sun_fx(out, f, sp[0], sp[1], sp[2], SUNC if s.get("look") == "day" else SUNC * 0.6 + DUSKC * 0.5, sp[3])
+    if sp is not None: out = sun_fx(out, f, sp[0], sp[1], sp[2], SUNC if s.get("look") == "day" else SUNC * 0.6 + DUSKC * 0.5, sp[3], m)
+    if s.get("motes"): out = day_motes(out, f, s, m, sp)
     if s.get("flare"): out = anam_flare(out, s["flare"], f)
     if s.get("fog"): out = fog_fx(out, f, s["fog"])
-    if s.get("daybreak"): out = daybreak_fx(out, f, s)
+    if s.get("daybreak"): out = daybreak_fx(out, f, s, m)
     if s.get("spin"): out = spin_fx(out, f, s)
     else: out = cam_float(out, f, s)
     return out
+
+# ---------------------------------------------------------------------------- rev 2 transitions: the cape, the mist, the great bat
 
 _E5 = {}
 def edge105(S_, which):

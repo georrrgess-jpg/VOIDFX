@@ -298,6 +298,7 @@ The full list is in `/docs/TOOLKIT.md` §4. The most expensive ones:
 - **Particles over a big close-up:** a person matte that fills the frame hides every "behind" particle, and "front" particles land on the face. Give close-ups a few placed hero particles that frame the face instead (v9 freeze).
 - **9:16 kills two-subject shots:** a reflection or two-shot whose subjects are more than about 400 source px apart can't keep both in the crop. Check before building a transition around it.
 - **Distortion transitions** (bulges, barrels) must not warp titles. Weight the distortion to the centre.
+- **Light sources go behind him, not over him** (v105, the owner noticed). A sun, glow or rays laid over the whole frame burns the top of his head away where his hair meets the sky. Give the shot his MODNet matte (`seg=True`), draw the light only from the background, and add a light wrap on his near edge (v105 rev 2 `sun_fx`).
 - **Particles** (blood spray, dust) must move fast and fade, or they read as blobs.
 - **The last `render()` in the file wins.** Insert routing in the active one.
 - **Optical flow breaks on lighting flashes:** blend those pairs instead.

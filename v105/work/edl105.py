@@ -61,37 +61,39 @@ def shot(n, src, k0, k1, a, b=None, **kw):
     d.update(kw); S.append(d)
 
 # ---- DAY (k0-24): the mask. "Saw this moment coming from afar."
-shot("boat", "p6", 0, 3, 17.20, tin=None, look="day", sun=(0.78, 0.13), z=[(0, 1.06), (1, 1.00)], con=0.7)
-shot("hood", "p3", 3, 6, 24.30, 25.08, tin="sun_flare", look="day", sun=(0.85, 0.10))
+shot("boat", "p6", 0, 3, 17.20, tin=None, look="day", sun=(0.78, 0.13), z=[(0, 1.06), (1, 1.00)], con=0.7, seg=True, motes=1.0)
+shot("hood", "p3", 3, 6, 24.30, 25.08, tin="sun_flare", look="day", sun=(0.85, 0.10), seg=True, motes=0.8)
 shot("icecream", "p1", 6, 9, 69.25, 70.20, tmap=[(0, 69.25), (0.55, 69.80), (1, 70.20)], tin="whip", look="day")
-shot("badge", "p7", 9, 12, 14.60, tin="burn", look="day", sun=(0.15, 0.08))
-shot("pinkwall", "p5", 12, 15, 6.60, tin="slam", look="day", sun=(0.88, 0.12))
+shot("badge", "p7", 9, 12, 14.60, tin="burn", look="day", sun=(0.15, 0.08), seg=True, motes=0.8)
+shot("pinkwall", "p5", 12, 15, 6.60, tin="slam", look="day", sun=(0.88, 0.12), seg=True, motes=0.8)
 shot("lollipop", "p8", 15, 18, 117.70, tin="tilt", look="day")
-shot("boatgrin", "p1", 18, 21, 70.90, tin="quarter_roll", look="day", sun=(0.12, 0.10))
-shot("palms", "p10", 21, 24, 130.60, tin="smear", look="day", sun=(0.80, 0.10))
+shot("boatgrin", "p1", 18, 21, 70.90, tin="quarter_roll", look="day", sun=(0.12, 0.10), seg=True, motes=0.8)
+shot("palms", "p10", 21, 24, 130.60, tin="smear", look="day", sun=(0.80, 0.10), seg=True, motes=1.0)
 # ---- SUNDOWN (k24-32): the drop-out bar. "Run from the sun like ..."
-shot("sunset", "p8", 24, 27, 405.95, 406.62, tin="light_sweep", look="dusk", sun=(0.70, 0.12), z=[(0, 1.00), (1, 1.03)])   # ends before he leans out of the crop
-shot("looksup", "p9", 27, 32, 230.60, 231.90, tin="whip_up", look="dusk", z=[(0, 1.00), (1, 1.10)])
+shot("sunset", "p8", 24, 27, 405.95, 406.62, tin="light_sweep", look="dusk", sun=(0.70, 0.12), z=[(0, 1.00), (1, 1.03)], seg=True, motes=0.6, face_x=0.62)   # ends before he leans out of the crop
+shot("looksup", "p9", 27, 32, 230.60, 231.90, tin="whip_up", look="dusk", z=[(0, 1.00), (1, 1.10)], seg=True)
 # ---- NIGHT (k32-84): DRACULA. The bats burst on the drop.
 shot("scope", "dk", 32, 38, 46.20, 47.80, tin="bat_burst", z=[(0, 1.12), (1, 1.02)], fog=0.8)
 shot("redrive", "p9", 38, 41, 0.40, 1.20, tin="strobe", redthr=0.05)
 shot("blinds", "p9", 41, 44, 101.30, 102.10, tin="impact", ev=0.6)
 shot("lighttable", "p9", 44, 46, 145.95, 146.45, tin="torch_blind", face=None, cx=(640, 360))
-shot("gloving", "p1", 46, 48, 102.20, 102.72, tin="whip")
+shot("gloving", "p1", 46, 48, 102.20, 102.72, tin="cape")                                 # a Dracula cape sweeps across the lens
 # THE BLOOD MOON (the 2nd "Dracula", k48.5): his cut-out against a rising crimson moon, bats across it
 shot("moon", "p1", 48, 54, 186.50, 187.70, tin="moon_iris", seg=True, bloodmoon=dict(k0=48, k1=54), z=[(0, 1.00), (1, 1.06)])
 shot("lamp", "p10", 54, 57, 181.10, tin="lamp_on", flare=0.7, ev=0.55)
 shot("garage", "p9", 57, 60, 203.30, 204.40, tmap=[(0, 203.30), (0.35, 203.95), (1, 204.40)], tin="logo_orig", ghost=0.25)
 shot("flip", "p9", 60, 64, 125.00, tin="roll", spin=(0.0, -4.0), redthr=0.45)            # he hangs upside down like a bat
 # THE COFFIN (the 3rd "Dracula", k64.6): a lid slams shut over him and opens on the next
-shot("container", "p4", 64, 68, 65.80, 66.70, tmap=[(0, 65.80), (0.30, 66.35), (1, 66.70)], tin="coffin", ghost=0.4)
+shot("container", "p4", 64, 66, 65.80, 66.45, tmap=[(0, 65.80), (0.40, 66.20), (1, 66.45)], tin="coffin", ghost=0.4)
+shot("knife", "p9", 66, 68, 178.30, tin="mist")                                     # he rises out of the coffin as mist and re-forms with the knife
 shot("attack", "p9", 68, 71, 164.80, 165.75, tmap=[(0, 164.80), (0.30, 165.40), (1, 165.75)], tin="bat_swarm", ghost=0.45)
 shot("syringe", "p8", 71, 74, 146.30, tin="pupil_dive", face=None, cx=(980, 980))
 shot("profile", "p6", 74, 77, 68.60, tin="facematch", cx=(560, 560))
 shot("stare", "p9", 77, 80, 117.80, tin="shutter")
-shot("low", "p9", 80, 84, 222.60, tin="zipper")
+shot("low", "p9", 80, 82, 222.60, tin="zipper")
+shot("torch", "p9", 82, 84, 185.40, tin="bat_pass", flare=0.8)                       # one great bat flies through the lens; his torch flares into the dawn
 # ---- DAYBREAK (k84-88): the sun comes up and burns the frame white (the loop opens in this light)
-shot("dawn", "p8", 84, 88, 297.40, tin="sun_flare", look="dusk", daybreak=True, z=[(0, 1.02), (1, 1.10)])
+shot("dawn", "p9", 84, 88, 75.00, tin="sun_flare", look="dusk", daybreak=True, z=[(0, 1.20), (1, 1.30)], seg=True)   # he walks into the sunrise and burns
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
