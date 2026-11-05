@@ -79,6 +79,7 @@ The owner, after rev 5: *"I like this edit. I would like for you to make it a st
 
 | Edit | Folder | Why it is a benchmark |
 |---|---|---|
+| **The Flash edit approved in chat 1** (Studio 1; version, title, song and folder not passed to Studio 2) | Studio 1's branch | **The newest benchmark (Studio 1)**, quoted with the owner's approval in Studio 1's docs. Its specialty is **motion and finish**: speed ramps with smooth slow motion, the beat-synced camera, light rays, the multi-stage set pieces and the Speed Force loop. Two rounds of "lacklustre" were fixed by **the motion pass, not by adding more effects**. Match or beat it. |
 | **THE PASSENGER** (Dexter × GLM-RST "still love you (super slowed + reverb)", rev 3, Studio 2) | `v104/` | **The newest standard (§0); the scaffold starts from it.** *"I really like this edit and would like for it to be a standard."* The ink-wash look, the self-drawing opening, the lit dark-side set piece, the rotation motif. |
 | **FOREVER** (Dexter × Foo Fighters "Everlong", rev 5, Studio 2) | `v103/` | **The standard (§0).** *"I like this edit. I would like for you to make it a standard."* New edits start from it and must add more animations and transitions and caption the sung lyrics. |
 | **HIM ALL ALONG** (Dexter × Gunna, rev 2) | `v7/` | Approved as a standard: *"The transitions were creative and well animated."* Physical, themed, Dexter-specific transitions (blood-slide box, plastic burst, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop), and a hero transition on the song's drop. |
@@ -226,6 +227,13 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
 6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
 7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
+7a. **The Flash benchmark's rules (Studio 1, chat 1).** Check each one off in the plan:
+   - a **motion pass on every hook shot** (speed ramps, smooth slow motion where it stays clean, beat-synced camera);
+   - the **720p source upscaled**;
+   - **lyrics checked against the sung vocal**;
+   - **designed set pieces on the drop, the hook and the loop**;
+   - a **loop that lands exactly on the first frame**.
+   When an edit reads as lacklustre, do the motion pass first; more effects didn't fix it.
 8. **More motion than FOREVER, and no headspace (§0):**
    - count the plan's designed transitions (at least 24 per ~24 s; THE PASSENGER has 26);
    - list the beat-punch sections;

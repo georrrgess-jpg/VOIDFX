@@ -16,6 +16,9 @@ Avoid (optional): [anything beyond the handbook's rejected list]
 
 Exceed the standards, v104 THE PASSENGER and v103 FOREVER (handbook §0), and the benchmarks (v7 HIM ALL ALONG, v6 WARMPOP, v4 SURPRISE).
 No headspace: no span longer than about a second without a cut, a transition or a designed beat.
+Match or beat Studio 1's newest benchmark, the Flash edit (motion and finish: speed ramps with smooth slow motion, a beat-synced
+camera, light rays, multi-stage set pieces, a loop that lands exactly on the first frame). Do a motion pass on every hook shot,
+upscale the 720p source, and check the lyrics against the sung vocal.
 More animations and transitions than FOREVER: 24+ designed transitions per ~24 s, the camera punching on the beat through
 every section with drums, and no dead holds. Lyric recognition: a window with sung lyrics, every clearly sung line captioned
 word by word on its sung time (tools/lyrics.py with the published lyrics), and key moments landing on sung words.

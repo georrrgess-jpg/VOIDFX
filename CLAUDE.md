@@ -25,6 +25,24 @@
   - the song window chosen so its lyrics are on screen;
   - every clearly sung line captioned on its words (`tools/lyrics.py`), with key moments landing on sung words.
 
+**Newest benchmark from Studio 1: the Flash edit approved in chat 1.** Recorded here from the owner's notes; the version number, title, song and folder weren't passed to Studio 2. Studio 1's CLAUDE.md, handbook, toolkit and start prompt name it as the newest benchmark and quote the owner's approval. Every edit must match or beat it, alongside v7, v6 and v4 (and Studio 2's standards above).
+- **Its specialty is motion and finish:**
+  - speed ramps with smooth slow motion;
+  - the beat-synced camera;
+  - light rays;
+  - the multi-stage set pieces;
+  - the Speed Force loop.
+- **The lesson:** two rounds of "lacklustre" on it were fixed by **the motion pass, not by adding more effects**.
+- **Where the code is:** the motion pass and the 720p upscaling are implemented on Studio 1's branch (`claude/gallant-planck-pqpczp`). Fetch them from there before using them; this Studio 2 copy only records the rules.
+
+**Rules from the Flash benchmark (every edit, both studios):**
+1. **A motion pass on every hook shot:** speed ramps, smooth slow motion where it's earned, and beat-synced camera moves, before adding any more effects.
+2. **Upscale the 720p source:** every pack is 1280×720 and a 9:16 crop is about 405 px wide, so upscale properly rather than stretching the crop.
+3. **Lyrics checked against the sung vocal:** the isolated Demucs vocal plus the published lyrics (`tools/lyrics.py` in Studio 2).
+4. **Designed set pieces on the drop, the hook and the loop.**
+5. **A loop that lands exactly on the first frame**, in picture and in sound.
+- **Smooth slow motion vs. interpolation artefacts:** the owner also asked (v104 brief) to *"avoid introducing visible interpolation artifacts."* Use flow-interpolated slow motion only where it stays clean, and check those frames one by one. On fast motion or occlusions, prefer a held 24p cadence, a speed ramp that stays at 1x or faster, or a cut.
+
 **Earlier benchmarks (approved as standards; FOREVER builds on them):**
 - `v7/`, *HIM ALL ALONG* (Dexter × Gunna "Him All Along", rev 2): the newest engine, and the reference for **creative, well-animated, character-themed transitions** (blood-slide box, plastic burst on the drop, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop). The user: "The transitions were creative and well animated."
 - `v6/`, *WARMPOP* (Dexter × George Clanton "Warmpop", 9:16): the reference for the **amount and quality of designed transitions, animations and graphics**, how the music drives the structure, and the text. The user: "wonderful transitions, animations, graphics, while maintaining the style that I like… I like how the music correlates to the edit. I like the text."

@@ -113,6 +113,16 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 | `caustics=amt`, `snow=True`, `rain=True`, `moonglow=True` | water light, marine snow, rain on the glass, a glow on the moon. |
 | `TEXT` dicts | `style="cap"` (v9 keyline captions; `band=` for QC, optional `ys=`), `style="hero"` (per-letter title; `exit="bubbles"` or `"blood"`). Word times come from `tools/lyrics.py` (lyrics) or `transcribe.py` (dialogue), each on its sung or spoken time. |
 
+### From Studio 1's Flash benchmark (chat 1): the motion pass and the 720p upscale
+
+These live on Studio 1's branch (`claude/gallant-planck-pqpczp`); this copy only records them. Fetch the code from there before relying on it.
+- **The motion pass:** speed ramps with smooth slow motion, a beat-synced camera, and light rays, applied to every hook shot. In Studio 2's engine, the closest pieces are:
+  - `tmap` ramps (above 1.7x the engine adds shutter blur);
+  - `interp="flow"` (for clean slow motion only; check the frames);
+  - `beat_fx`, `cam_float` and `anam_flare`;
+  - the engine's ray and beam graphics.
+- **The upscale:** the 720p packs are cropped to about 405×720 and enlarged to 1080×1920. Studio 2 uses a cubic resample plus a mild unsharp mask in `finish`; Studio 1's upscaler replaces that.
+
 ### The v104 THE PASSENGER toolkit (the newest standard; in `fx104.py`, copied into every new edit's `fxN.py`)
 
 | tin / flag | What it does | Sound in `audio104.py` |
