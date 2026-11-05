@@ -300,6 +300,7 @@ Only then deliver.
 | v8 WISH YOU WELL | sodium nocturne (indigo shadows, sodium-vapour highlights, rain on glass, streetlight sweeps, warm halation) |
 | v9 NIGHT BLOOM | moonbloom (violet-black night, moon-silver highlights, white Pro-Mist bloom, jasmine petals in depth, a blood moon; bold keyline captions) |
 | v10 LET IT HAPPEN | prism speed (graphite-slate shadows, suit crimson, white-gold lightning bloom, prismatic RGB time-slice, frozen world in steel) |
+| v11 BOP | voltage / rival (deep clean blacks, crimson suit, warm gold lightning bloom, teal shadows; the rival's shots red-shifted with red halation) |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);
@@ -324,6 +325,7 @@ Fresh directions for future edits:
 | v7 | Gunna "Him All Along" | 130 BPM | half-beats 528–640 (2:01.9–2:27.8, 14 bars) | 2:13.0, +17 dB return → plastic burst |
 | v8 | Brent Faiyaz "Wish You Well" (screen recording) | 138 BPM | half-beats 64–164 (13.96–35.69 s) | 33.08 drop → blood blooms in water |
 | v9 | fakemink "Night, Blooming Jasmine" | 102.8 BPM | h448–h506 + h634–h650, spliced on the 4-bar cycle (2:10.9–2:27.8 + 3:05.2–3:09.9) | 2:19.38 dead silence → freeze; 2:20.84 drop → petal bloom |
+| v11 | DaBaby "BOP" | 127 BPM | h32–h120 (7.75–28.54 s, 11 bars) | 9.64 beat in → red shudder; 14.34 "Let's go!"; 15.31 drop → bolt split; 28.54 → tape stop → loop |
 | v10 | Tame Impala "Let It Happen" (radio edit) | 125 BPM | h392–h496 (1:34.3–1:59.3, 13 bars) | 1:41.94 drop → emblem dive; 1:52.04 gated stutter → time freeze; 1:59.3 → rewind loop |
 
 ## 11. Communication

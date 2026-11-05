@@ -309,12 +309,45 @@ More fb shots, verified in v10 (fb is 24p in a 60 fps container: use `interp="ho
 | 124.8–127.48 | Reverse-Flash (yellow suit) by a "FAST TRACK LABS" sign | Different speedster: avoid unless the concept needs him |
 | 139.0–147.3, 129.2–130.6 | Purple/blue/green lightning; another speedster | Off-colour for Barry's gold: avoid or regrade |
 
+### `flash_s4.mp4` (key `s4`): "FLASH SEASON 4 SCENE PACK 4K 60FPS", really 1280×720, 60 fps container with **24p content**, 3:06, 97 shots (v11)
+
+Shots 0–12 are a CGI/fan-render city run plus a non-Flash face: skip them for live-action edits. Shot list: `v11/work/shots_s4.json`.
+
+| Time | Shot | Notes |
+|---|---|---|
+| 28.67–30.80 | Masked, yellow lenses, gold lightning streaming off him, white sky | v11 drop shot (`ev=-0.15`: the sky clips) |
+| 31.07–34.10 | **Grinning in the suit, swinging round** (S4 return) | v11 swagger shot |
+| 62.87–63.98 | **Masked smirk close-up**, blue-grey | v11 |
+| 79.75–80.42 | Barry in a tux disarming an Earth-X soldier, lightning on his chest; face at x≈760, y≈220 | v11 time freeze (`cx=760`) |
+| 73.55–75.95 | Tux run through the wedding with lightning | Very orange and blown out: avoid or grade hard |
+| 93.87–101.03 | Barry's intense close-ups facing Thawne (blue-grey), Thawne smirking in the Reverse-Flash suit, cowl down (95.47–96.75, 98.35–99.25); his **red streak** 99.27–99.70 | v11 cold open / the answer |
+| 122.90–125.48 | Running in the dark with lightning, a guard behind | v11 (mixed cadence, 45 unique fps) |
+| 137.18–138.60, 140.70–143.40 | **Low-angle lightning run** (the same S4E1 scene as fb 80.8) | v11 `cx=(500, 540)` |
+| 146.37–147.70 | Frontal close-up, bright, calm | v11 final stare |
+| 155.5–157.4 | Masked close-up in a bar, bokeh | v11 |
+| 171.73–178.95 | **Flying through an explosion of fire** (wide 171.73–173.25, close 173.27–178.95) | v11 Speed Force moment |
+| 178.97–185.93 | Standing in a burning street with a crowd | Not used yet |
+| 57.77–61.75, 85.60–89.17, 160–167 | Moody masked close-ups (blue, cortex, night) | Spare |
+
+### `reverse_flash.mp4` (key `rf`): "Reverse Flash CW Flash Scenepack Head Tracked Topazed 4K 60fps", really 1280×720, **true 60 fps**, 94 s, 56 shots (v11)
+
+Every clip is a ~600×600 inset (x≈340–940, y≈60–660) over a blurred, scan-lined copy, with "SCENEPACK LINK IN DESC" at y≈680–705 and "Intro Clip" cards (37.7–39.7, 64.9–67.3, 80.3–93.8 end card). Frame inside the inset: `face=None`, `cx` on the panel, `z ≥ 1.24` (no watermark).
+
+| Time | Shot | Notes |
+|---|---|---|
+| 13.00–13.98 | Harrison Wells (bruised), lit from the side, studded wall | v11 opener (`ev=0.55`: it's dark) |
+| 15.00–15.98 | **The Reverse-Flash mask, frontal** | v11 |
+| 33.97–34.95 | Eobard in the suit, cowl down, **red eyes**, smiling | v11 |
+| 4.0–11.98, 19–22, 52–53, 75–76.5 | Red-eyed masked shots | Dark and soft |
+| 18.00–18.98 | Wells with the glowing tachyon device | Spare |
+
 ---
 
 ## Songs (`src/`)
 
 | File | Uploaded as | Notes |
 |---|---|---|
+| `bop.mp3` | `Dababy_-_BOP_Official_Audio.mp3` | 2:40, 127.0 BPM, P=0.23622, offset 0.1890. Spoken intro "…they're like, **Harrison**" 9.60; **beat drops in 9.64 (+24.8 dB)**; dip 13.42 with "Let's go!" 14.34; **drop 15.31** (the verse). Explicit verse (no captions). Bridge 121–138 (bass out) → return 140.03 (v11) |
 | `let_it_happen.mp3` | `Tame_Impala_-_Let_It_Happen_Official_Video.mp3` | Radio edit, 4:16. 125.0 BPM, P=0.24003, offset 0.1920. Whirlwind breakdown 90.4–101.9 (no bass); **drop 101.94 (+26.5 dB)** "...when it happens"; "So let it happen" 107.7; **gated stutter 112.04–115.41** (silence every 4th half-beat); "All this running around" 115.24 (+15 dB) (v10) |
 | `night_blooming_jasmine.mp3` | `fakemink_-_Night__Blooming_Jasmine_._official_music_video.mp3` | 102.8 BPM, P=0.29185. The second half is on its own grid (HB_OFF 0.1673: h482 = the drop at 140.839). Filtered breakdown 112–137.8 s, build 137.78, **dead silence 139.38–140.83, drop 140.84 (+26 dB)**. The instrumental repeats on a 4-bar cycle (bar h506 = bar h634). Hook *"night bloom jasmine, second name Yasmin"* at 74.8 and 187.12 (v9) |
 | `paint_it_black.mp3` | `The_Rolling_Stones_-_Paint_It_Black_Official_Lyric_Video.mp3` | 160 BPM, P=0.18748, offset 0.0469. Sitar intro; **drums enter at 7.55 s (+22 dB)**; "I see a red door…" 14.0; bridge dip 87–96.5 → return 97.54; climax "painted, painted black" 157.4–175.7. Map and lyrics in `studio/songs/paint_it_black/` (not used yet) |
