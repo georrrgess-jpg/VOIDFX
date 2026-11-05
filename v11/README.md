@@ -189,3 +189,35 @@ The beat camera now rests from 19.37: the loop plays as one controlled move.
 
 **Visual sign-off** (frames from the encoded file): the AURA rings, the REMNANTS, the CHARGE, and the whole REVERSE sequence (1145 → 14).
 
+## Revision 4 (owner feedback)
+
+> "I like the transition/loop at the end now but I would like for you to polish the symbol more and make it more detailed… make the transition smoother and flashier… implement a new creative graphic, animation or transition… one of the focal points of the edit."
+
+**The symbol: a detailed Reverse-Flash emblem, revealed by a coin flip (19.37 s).** The pixel inversion is replaced by a designed emblem, built procedurally at 768 px and downsampled:
+- a **bevelled crimson-metal rim** with spun-metal brushing, a light-from-top-left highlight, an engraved groove and a thin red neon line;
+- a **glossy black disc** with a curved reflection and fine concentric texture;
+- a **bevelled red bolt** with a dark outline, a glowing core, and red light spilling onto the black.
+
+It's lit by the shot (a gain from the real emblem's own brightness), and placed on the real emblem, which is found in every source frame by a circle fit to its visible edge.
+
+**The reveal:** after the red strike, the real emblem **flips like a coin** on its vertical axis. Its edge thickness is visible, it darkens as it turns edge-on, and the suit behind it is filled in. At edge-on there's a **red flare with an anamorphic star**. It lands on the Reverse-Flash side with a settling wobble, a **red shockwave and a spark burst**, then the emblem stays alive (crackles along the bolt, a core that pulses on the beat). Sound: a fast spin whir, a sizzle at edge-on, a metal ring and thump on landing, crackles.
+
+**The dive, smoother and flashier (20.08 → 20.79 s):**
+- an **anticipation pull-back**, then an accelerating plunge into the black disc;
+- **motion blur matched to the zoom speed**, **radial chromatic fringes** and **light rays** streaming past;
+- red sparks flying past the rim and lightning along it;
+- a **red flare as the rim passes the lens**.
+
+Everything settles to exactly the frame-0 image. Sound: an anticipation swell, the rush and whine, a crackle and zap as the rim passes, and the landing.
+
+**New focal point: THE RIFT (15.12 s, on a bar line).** After the charge-up gathers lightning into his chest, Barry **tears a rift across the frame** in a diagonal below his face:
+1. A crack runs out from the centre.
+2. It splits open into a jagged lens with white-gold electric edges, crackles spitting off it and the Speed Force's light spilling onto him.
+3. Inside, **the Speed Force churns**: a turning tunnel of light streaks with lightning.
+4. The camera **flies through the tear**, into the tunnel.
+5. **The flight through fire rushes out of the vanishing point** in a glowing frame and fills the screen.
+
+Sound: a crack, the tear ripping across the stereo field, a deep reversed swell into a sub drop, the Speed Force roar and whine, and a whoosh and impact on arrival.
+
+REV4_RESULTS_V11
+
