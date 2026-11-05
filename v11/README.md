@@ -102,3 +102,39 @@ The cold open is Harrison Wells / the Reverse-Flash, in red: Wells' face on "Har
 
 **Visual sign-off:** frames pulled from the encoded file around every transition, both titles, the freeze, the Speed Force flight, the emblem reveal and the loop seam.
 
+## Revision 2 (owner feedback)
+
+> "Add a lot more animations, graphics, transitions etc. I also want more sound effects… absolutely amazing with wonderful animations, transitions etc."
+
+**New transitions (each with its own layered sound):**
+
+| Edit | Into | Transition | Sound |
+|---|---|---|---|
+| 4.72 | Eobard (red eyes) | **Red streak** (moved here): the rival runs past and Eobard is behind him | Swirl pass + crackle |
+| 5.67 | Barry's answer | **RED EYE DIVE:** the camera dives into Eobard's glowing red eye until the frame is red light, then pulls out of Barry's eye (a macro of his eye, widening to his face) | Power-up whine, red rush, sub drop |
+| 8.98 | The grin | **STROBE ECHO:** the frame snaps left leaving a trail of gold stroboscopic afterimages; the grin lands from the right with its own echoes collapsing | A stuttered run of five passes, a zap |
+| 10.87 | Low-angle run | **BOLT TRACE:** a bolt zig-zags across the frame below his face and the next shot burns in along it, edges glowing like embers | Crackle panned left to right, fire whoosh |
+| 16.54 | The flight, close | **HEAT HAZE:** the fire's heat rises up the frame, refracting the picture, and carries the next shot in behind a glowing wall | Fire roar swelling up |
+| 17.48 | **New shot: the punch** (Barry slams Thawne into the pillar, his red glove at Thawne's collar) | **CLASH:** a red bolt and a gold bolt race in from opposite sides and collide; red and gold sparks burst out behind a refracting shockwave | Two zaps racing in, impact, thunder crack, crackle |
+
+The new punch shot (s4 90.45–91.30) is the gold beating the red just before the final stare. The fire flight was shortened to make room.
+
+**New graphics:**
+- **Embers in depth:** red for the rival (cold open), orange rising off the fire. They pass behind the subject through the matte.
+- **Gold dust:** drifts through the calm and close-up shots.
+- **Speed particles:** streaks rushing past in depth on the drop, the runs and the slam. They're masked off every face.
+- **Edge lightning on bar lines:** red on the beat-in (1.89) and 3.78; gold at 9.45, 11.34 and 17.0.
+- **Light sweeps:** white-gold diagonal sweeps at 6.14, 10.39 and 13.70.
+
+**New sound design:**
+- a red crackle bed under the whole cold open;
+- a sub swell into the beat-in;
+- a reverse swell (the breath) before the drop;
+- crackles on every edge-lightning bar;
+- shimmers on the sweeps;
+- clock ticks in the frozen moment;
+- speed passes on the runs and the flight;
+- a power-down whine under the loop's tape stop.
+
+REV2_RESULTS_V11
+
