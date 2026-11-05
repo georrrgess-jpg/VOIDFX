@@ -145,6 +145,18 @@ print(f"   audio: last 20 ms {20*np.log10(np.sqrt(np.mean(m[-960:]**2))+1e-9):.1
 dur_v = n / E.FPS; dur_a = len(m) / sr
 print(f"   durations: video {dur_v:.4f} s, audio {dur_a:.4f} s, diff {1000 * (dur_a - dur_v):.1f} ms")
 
+# ---- 7b. flashes (Studio 1's v11 rule: measure every flash in the encode; a flare should keep the picture)
+ml = np.array([s_.mean() for s_ in small])
+wruns = []
+for f_ in np.nonzero(ml >= 200)[0]:
+    if wruns and f_ == wruns[-1][1] + 1: wruns[-1][1] = f_
+    else: wruns.append([int(f_), int(f_)])
+fev = [f_ for f_ in range(1, len(ml) - 1) if ml[f_] - ml[max(0, f_ - 12):f_].min() >= 25.5 and ml[f_] - ml[f_ + 1:f_ + 13].min() >= 25.5
+       and ml[f_] == ml[max(0, f_ - 6):f_ + 7].max()]
+fps_max = max((sum(1 for e in fev if a_ <= e < a_ + E.FPS) for a_ in range(len(ml))), default=0)
+print(f"\n== 7b. flashes: brightest frame mean luma {ml.max():.0f} (median {np.median(ml):.0f}); most flashes in any second: {fps_max}")
+for a_, b_ in wruns: print(f"  WHITE-OUT frames {a_}-{b_} ({b_ - a_ + 1} f), peak mean luma {ml[a_:b_ + 1].max():.0f}: a flare should keep the picture (v11 took its rim flash from 178 to 104)")
+
 # ---- 8. SHIP / NO-SHIP checkpoint
 print("\n== 8. SHIP CHECKPOINT")
 crit = {
@@ -157,6 +169,7 @@ crit = {
   "no audio clicks at cuts or loop seam": clicks == 0 and not seam_click,
   "loop seam picture matched (static -> static)": seam_d < 12 and tex < 12,
   "audio and video same length (<= 1 frame)": abs(dur_a - dur_v) <= 1 / E.FPS,
+  "no more than 3 flashes in any second": fps_max <= 3,
 }
 for k_, v_ in crit.items(): print(f"  [{'PASS' if v_ else 'FAIL'}] {k_}")
 print("  VERDICT:", "SHIP (pending visual sign-off)" if all(crit.values()) else "NOT READY -> fix and re-render")

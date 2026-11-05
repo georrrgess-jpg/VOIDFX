@@ -23,7 +23,7 @@
   - **Keep zoom at or under about 1.1** on 720p sources.
   - **Prefer the high-bitrate packs:** p5, p7, p3, p4 and scenepack2 (1.7–2.2 Mb/s).
   - **Ask the owner for 1080p or 4K packs** for the hero shots.
-  - **Limits of the tools:** the upscale pass (Lanczos plus noise-gated detail) can't invent detail, and an AI upscaler (Real-ESRGAN class) needs a GPU (about 10 s a frame on this CPU).
+  - **Limits of the tools:** Studio 2's upscale pass (Lanczos plus noise-gated detail) can't invent detail. Studio 1's `tools/sr_prep.py` (Real-ESRGAN compact, 2×, on the CPU) restores the sources and is the fix (see Studio 1's rules below). The large Real-ESRGAN model tried in v105 took about 10 s a frame on the CPU; the compact one is practical.
   - **v105's softest shots:**
     - the daybreak walk (p9, zoom 1.3, 3.5×);
     - the palms (p10);
@@ -53,22 +53,45 @@
   - the song window chosen so its lyrics are on screen;
   - every clearly sung line captioned on its words (`tools/lyrics.py`), with key moments landing on sung words.
 
-**Newest benchmark from Studio 1: the Flash edit approved in chat 1.** Recorded here from the owner's notes; the version number, title, song and folder weren't passed to Studio 2. Studio 1's CLAUDE.md, handbook, toolkit and start prompt name it as the newest benchmark and quote the owner's approval. Every edit must match or beat it, alongside v7, v6 and v4 (and Studio 2's standards above).
-- **Its specialty is motion and finish:**
-  - speed ramps with smooth slow motion;
-  - the beat-synced camera;
+**Studio 1's standards: `v11/` *BOP* (newest) and `v10/` *LET IT HAPPEN*.** These are recorded from the owner's notes and checked against Studio 1's branch (`claude/gallant-planck-pqpczp`, read at `122013b`), where the code lives. Studio 1's CLAUDE.md, handbook, toolkit and start prompt list BOP first and quote the owner's approval. Every edit must match or beat both, alongside v7, v6 and v4 and Studio 2's standards above.
+- **`v11/`, *BOP*** (The Flash × DaBaby "BOP", rev 4): *"I like this edit and would like for you to make it a standard."* It is Studio 1's newest benchmark and the base engine of its scaffold. It's the reference for:
+  - **a concept found in the song itself:** the intro's "Harrison" becomes the Reverse-Flash rivalry, red against gold in two grades;
+  - **a single focal set piece:** THE RIFT, a tear across the frame into the Speed Force, flown through;
+  - **detailed graphics revealed on real objects:** the real chest emblem coin-flips into a lit, bevelled Reverse-Flash emblem;
+  - **an animation for every shot that only moved to the beat:** aura rings, time remnants, a charge-up, each with its own sound;
+  - **a loop that lands exactly on the first frame** (seam 0.11).
+- **`v10/`, *LET IT HAPPEN*** (The Flash × Tame Impala "Let It Happen", rev 5): this is the Flash edit approved in chat 1, recorded earlier without its number. It stays Studio 1's standard for **motion and finish**:
+  - speed ramps on every hook shot, with optical-flow slow motion on restored source;
+  - the beat camera;
   - light rays;
-  - the multi-stage set pieces;
-  - the Speed Force loop.
-- **The lesson:** two rounds of "lacklustre" on it were fixed by **the motion pass, not by adding more effects**.
-- **Where the code is:** the motion pass and the 720p upscaling are implemented on Studio 1's branch (`claude/gallant-planck-pqpczp`). Fetch them from there before using them; this Studio 2 copy only records the rules.
+  - multi-stage set pieces;
+  - the AROUND ring loop.
+  Two rounds of "lacklustre" were fixed by **the motion pass, not by more effects**.
 
-**Rules from the Flash benchmark (every edit, both studios):**
-1. **A motion pass on every hook shot:** speed ramps, smooth slow motion where it's earned, and beat-synced camera moves, before adding any more effects.
-2. **Upscale the 720p source:** every pack is 1280×720 and a 9:16 crop is about 405 px wide, so upscale properly rather than stretching the crop.
-3. **Lyrics checked against the sung vocal:** the isolated Demucs vocal plus the published lyrics (`tools/lyrics.py` in Studio 2).
-4. **Designed set pieces on the drop, the hook and the loop.**
-5. **A loop that lands exactly on the first frame**, in picture and in sound.
+**Rules from Studio 1's standards (every edit, both studios):**
+1. **A motion pass on every hook shot** (v10): speed ramps, smooth slow motion where it's earned, and beat-synced camera moves, before adding any more effects.
+2. **Restore the 720p source** (v10): Studio 1's `tools/sr_prep.py` + `tools/srnet.py`. They run a Real-ESRGAN compact model through ONNX Runtime on the CPU, 2×, on only the band each frame is cropped from, in the background after prep.
+   - **It is also the fix for the owner's v105 clip-quality note.** Studio 2's v105 note said an AI upscaler needed a GPU; that held for the large model tried, not for this compact one.
+   - After the merge, run it on every edit as well as checking `tools/sharpness.py`.
+3. **Lyrics checked against the sung vocal** (v10): the isolated Demucs vocal plus the published lyrics (`tools/lyrics.py` in Studio 2).
+4. **Designed set pieces on the drop, the hook and the loop** (v10).
+5. **Find the concept in the song or the character** (v11): a hook in the song's own words or the character's history, carried through picture, grade, sound and the loop.
+6. **One focal set piece** the owner can point to (v11): multi-stage, with its own layered sound, on a structural moment such as a bar line after a build.
+7. **Hero graphics detailed and lit to the shot** (v11): lit, bevelled procedural assets matched to the shot's light, revealed physically on real objects. Check them at full size.
+8. **No "just moving to the beat" shots** (v11): give each its own beat animation, with its own sound.
+9. **Measure the loop seam** (v11): build the last frames from frame 0's own image, and aim for a blurred difference of ≤ 1 (v11: 0.11). Studio 2's QC measures the same thing.
+   - v104 THE PASSENGER: 0.14.
+   - v105 DRACULA: 8.4. The light is still collapsing into frame 0's sun on the last frame.
+10. **Measure flash brightness in the final file** (v11): a flare should keep the picture; v11's rim flash went from mean luma 178 to 104.
+    - Studio 2's `qcN.py` now reports it in section 7b: every white-out run (mean luma ≥ 200) and the most flashes in any second, and it fails above 3 flashes a second.
+    - v105 measured two white-outs: the torch blind-out (frames 687–692, peak 236) and the loop flare (1360–1372, peak 223). At most 2 flashes a second.
+11. **When the lyrics are explicit, use only a couple of designed titles** (v11: LET'S GO, BOP), not captions.
+
+**Engines after the merge:** the two studios' scaffolds start from different engines.
+- **Studio 1:** `tools/new_edit.py` copies the v11 engine (v4–v11, 91 transitions plus the audio builder). Its EDL template adds v11's three timing settings: `E_BEAT` (where the beat drops in), `E_DIP` (the dip before the drop) and `E_LOOP` (where the loop set piece starts). Its setup check confirms v11 loads.
+- **Studio 2:** starts from v105 (the v4–v9 engine plus the v103, v104 and v105 toolkits).
+- **The decision:** the engines are separate files and can live side by side. Which one `new_edit.py` uses is the owner's call at merge time; one option is Flash edits from v11 and Dexter edits from v105.
+
 - **Smooth slow motion vs. interpolation artefacts:** the owner also asked (v104 brief) to *"avoid introducing visible interpolation artifacts."* Use flow-interpolated slow motion only where it stays clean, and check those frames one by one. On fast motion or occlusions, prefer a held 24p cadence, a speed ramp that stays at 1x or faster, or a cut.
 
 **Earlier benchmarks (approved as standards; FOREVER builds on them):**

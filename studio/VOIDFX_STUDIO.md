@@ -40,7 +40,8 @@ The owner, after rev 3: *"I like this edit and would like for you to make it a s
   3. Prefer the high-bitrate packs (p5, p7, p3, p4, scenepack2: 1.7–2.2 Mb/s) for close-ups and hero shots. Use the 0.4–0.8 Mb/s packs for fast or dark moments, where softness hides.
   4. Hide what's left of the softness with grade and grain, not with sharpening.
   5. Run `tools/sharpness.py N` on the render, and list the SOFT shots in the README's checkpoint.
-  6. Ask the owner for 1080p or 4K packs when a hero moment depends on a soft source. An AI upscaler (Real-ESRGAN class) is the other fix, but it needs a GPU: it took about 10 s a frame on this CPU.
+  5a. Restore the sources with Studio 1's `tools/sr_prep.py` (Real-ESRGAN compact, 2×, on the CPU) once the branches are merged. It's the direct fix for soft 720p packs.
+  6. Ask the owner for 1080p or 4K packs when a hero moment depends on a soft source. Otherwise restore the sources with Studio 1's `tools/sr_prep.py` (Real-ESRGAN compact, 2×, practical on the CPU; the large model tried in v105 took about 10 s a frame).
 
 ### v104 THE PASSENGER (a standard)
 
@@ -113,7 +114,8 @@ The owner, after rev 5: *"I like this edit. I would like for you to make it a st
 
 | Edit | Folder | Why it is a benchmark |
 |---|---|---|
-| **The Flash edit approved in chat 1** (Studio 1; version, title, song and folder not passed to Studio 2) | Studio 1's branch | **The newest benchmark (Studio 1)**, quoted with the owner's approval in Studio 1's docs. Its specialty is **motion and finish**: speed ramps with smooth slow motion, the beat-synced camera, light rays, the multi-stage set pieces and the Speed Force loop. Two rounds of "lacklustre" were fixed by **the motion pass, not by adding more effects**. Match or beat it. |
+| **BOP** (The Flash × DaBaby "BOP", rev 4, Studio 1) | `v11/` (Studio 1's branch) | **Studio 1's newest benchmark and base engine.** *"I like this edit and would like for you to make it a standard."* The reference for a concept found in the song itself ("Harrison" → the Reverse-Flash rivalry), a single focal set piece (THE RIFT), detailed graphics revealed on real objects (the emblem coin flip), a beat animation for every shot that only moved to the beat, and a loop that lands exactly on frame 0 (seam 0.11). Its rules are in CLAUDE.md. |
+| **LET IT HAPPEN** (The Flash × Tame Impala "Let It Happen", rev 5, Studio 1) | `v10/` (Studio 1's branch) | **Studio 1's standard for motion and finish** (the Flash edit approved in chat 1): speed ramps with smooth slow motion on restored source, the beat camera, light rays, multi-stage set pieces, the AROUND ring loop. Two rounds of "lacklustre" were fixed by **the motion pass, not by more effects**. |
 | **DRACULA** (Dexter × Tame Impala "Dracula", rev 3, Studio 2) | `v105/` | **The newest standard (§0); the scaffold starts from it.** *"I like this edit and would like for you to make it a standard."* The day/night split on the drop, the sun behind him, the bat burst, the blood moon, the eclipse and the ASHES TO SUN loop. The gripe: clip quality (§0, §2 item 11). |
 | **THE PASSENGER** (Dexter × GLM-RST "still love you (super slowed + reverb)", rev 3, Studio 2) | `v104/` | **A standard (§0).** *"I really like this edit and would like for it to be a standard."* The ink-wash look, the self-drawing opening, the lit dark-side set piece, the rotation motif. |
 | **FOREVER** (Dexter × Foo Fighters "Everlong", rev 5, Studio 2) | `v103/` | **The standard (§0).** *"I like this edit. I would like for you to make it a standard."* New edits start from it and must add more animations and transitions and caption the sung lyrics. |
@@ -157,7 +159,7 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
    - **−13 LUFS, true peak ≤ −2.5 dBTP, measured after AAC.** Keep margin; aim for −3.0 or lower.
 9. **Review before delivery:** run the ship checkpoint (section 7), then a visual sign-off on frames pulled from the **encoded** file. If anything fails, fix it and re-render. Never ship on the automated pass alone.
 10. **Honesty:** you can't watch or listen. Say what was verified by frames and measurement, and ask the owner to watch once with sound.
-11. **Clip quality (v105):** run `tools/sharpness.py N --src` when choosing shots and `tools/sharpness.py N` on the render. Swap SOFT shots, keep zoom at or under about 1.1 on 720p packs, put the hero shots on the high-bitrate packs, and ask for 1080p or 4K packs when a hero moment needs one (§0).
+11. **Clip quality (v105):** restore the sources with Studio 1's `tools/sr_prep.py` (after the merge), run `tools/sharpness.py N --src` when choosing shots and `tools/sharpness.py N` on the render. Swap SOFT shots, keep zoom at or under about 1.1 on 720p packs, put the hero shots on the high-bitrate packs, and ask for 1080p or 4K packs when a hero moment needs one (§0).
 
 ---
 
@@ -263,12 +265,18 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
 6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
 7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
-7a. **The Flash benchmark's rules (Studio 1, chat 1).** Check each one off in the plan:
+7a. **Studio 1's rules (v10 LET IT HAPPEN and v11 BOP).** Check each one off in the plan:
    - a **motion pass on every hook shot** (speed ramps, smooth slow motion where it stays clean, beat-synced camera);
-   - the **720p source upscaled**;
+   - the **720p source restored** (Studio 1's `tools/sr_prep.py`, Real-ESRGAN compact on the CPU), plus `tools/sharpness.py`;
    - **lyrics checked against the sung vocal**;
    - **designed set pieces on the drop, the hook and the loop**;
-   - a **loop that lands exactly on the first frame**.
+   - a **concept found in the song or the character** (v11: "Harrison" → the Reverse-Flash);
+   - **one focal set piece** with its own layered sound, on a structural moment;
+   - **hero graphics detailed and lit to the shot**, revealed on real objects, checked at full size;
+   - **no shot that only moves to the beat**: each gets its own beat animation and sound;
+   - a **loop that lands exactly on the first frame**: measure the seam (blurred difference ≤ 1);
+   - **flash brightness measured in the final file** (`qcN.py` section 7b): a flare should keep the picture;
+   - when the lyrics are explicit, **only a couple of designed titles**.
    When an edit reads as lacklustre, do the motion pass first; more effects didn't fix it.
 8. **More motion than FOREVER, and no headspace (§0):**
    - count the plan's designed transitions (at least 24 per ~24 s; THE PASSENGER has 26);

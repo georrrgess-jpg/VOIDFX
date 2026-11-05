@@ -18,9 +18,12 @@ Exceed the standards, v105 DRACULA, v104 THE PASSENGER and v103 FOREVER (handboo
 No headspace: no span longer than about a second without a cut, a transition or a designed beat.
 Clip quality: check every shot with tools/sharpness.py (--src before the render, then on the MP4), swap soft shots, keep zoom
 at or under about 1.1 on 720p packs, and put the hero shots on the sharpest, highest-bitrate packs.
-Match or beat Studio 1's newest benchmark, the Flash edit (motion and finish: speed ramps with smooth slow motion, a beat-synced
-camera, light rays, multi-stage set pieces, a loop that lands exactly on the first frame). Do a motion pass on every hook shot,
-upscale the 720p source, and check the lyrics against the sung vocal.
+Match or beat Studio 1's standards, v11 BOP (newest) and v10 LET IT HAPPEN (motion and finish): a concept found in the song or the
+character, one focal set piece with its own layered sound, hero graphics detailed and lit to the shot (checked at full size), a beat
+animation for every shot that would only move to the beat, a motion pass on every hook shot, the 720p source restored
+(tools/sr_prep.py), lyrics checked against the sung vocal, a loop that lands exactly on the first frame (measure the seam: blurred
+diff <= 1), flash brightness measured in the final file (a flare keeps the picture), and only a couple of designed titles when the
+lyrics are explicit.
 More animations and transitions than FOREVER: 24+ designed transitions per ~24 s, the camera punching on the beat through
 every section with drums, and no dead holds. Lyric recognition: a window with sung lyrics, every clearly sung line captioned
 word by word on its sung time (tools/lyrics.py with the published lyrics), and key moments landing on sung words.

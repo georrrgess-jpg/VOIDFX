@@ -364,3 +364,5 @@ The owner: *"I like this edit and would like for you to make it a standard. The 
 - put the hero shots on the high-bitrate packs;
 - ask for 1080p or 4K packs when a hero moment needs one.
 
+**Update (Studio 1's notes):** Studio 1's branch already has the fix for this gripe: `tools/sr_prep.py` + `tools/srnet.py`, which run a Real-ESRGAN compact model through ONNX Runtime on the CPU, restoring and 2× upscaling only the band of each frame that's used. The "needs a GPU" remark held for the large model tried here, not for that compact one. v105 itself is unchanged (the owner asked for no further edits). Its loop seam (blurred difference 8.4) and its two white-outs (torch blind-out 687–692, peak mean luma 236; loop flare 1360–1372, peak 223) are now measured against Studio 1's v11 rules (seam ≤ 1; a flare should keep the picture), and recorded in CLAUDE.md for future edits.
+
