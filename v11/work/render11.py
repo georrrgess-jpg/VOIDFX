@@ -8906,8 +8906,17 @@ def emblem_src(s, t):
         n, lab, st, cen = cv2.connectedComponentsWithStats(m)
         if n < 2: _EMB[k] = None
         else:
-            i = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA])); a = st[i, cv2.CC_STAT_AREA]
-            _EMB[k] = (float(cen[i][0] + 420), float(cen[i][1] + 400), math.sqrt(a / math.pi) * 1.24)
+            i = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))
+            cs, _ = cv2.findContours((lab == i).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            pts = max(cs, key=len)[:, 0, :].astype(np.float64)
+            pts = pts[(pts[:, 1] < 313) & (pts[:, 0] > 2) & (pts[:, 0] < 437)]                # drop the frame edges (the disc is cut there)
+            if len(pts) < 20:
+                a_ = st[i, cv2.CC_STAT_AREA]; _EMB[k] = (float(cen[i][0] + 420), float(cen[i][1] + 400), math.sqrt(a_ / math.pi) * 1.24)
+            else:                                                                              # algebraic circle fit to the visible edge
+                A_ = np.column_stack([pts[:, 0], pts[:, 1], np.ones(len(pts))]); b_ = -(pts[:, 0] ** 2 + pts[:, 1] ** 2)
+                c_ = np.linalg.lstsq(A_, b_, rcond=None)[0]; xc, yc = -c_[0] / 2, -c_[1] / 2
+                r_ = math.sqrt(max(1.0, xc * xc + yc * yc - c_[2]))
+                _EMB[k] = (float(xc + 420), float(yc + 400), r_ * 1.13)                          # + the gold rim
     return _EMB[k]
 
 def emblem_screen(s, f):
@@ -9054,6 +9063,7 @@ def time_remnants(out, s, f, person, amt):
 
 # ---- CHARGE: lightning gathers from the frame edges into his chest ----------------------------------------------
 def charge_up(out, s, f, person, amt):
+    amt = amt * (1 - 0.6 * smooth((f - (s["f1"] - 18)) / 10))                              # the rift takes over
     if amt <= 0.01: return out
     u = (f - s["f0"]) / max(1, s["f1"] - s["f0"]); cx, cy = subject_point(s, f, person)
     bx = face_box(s, f); cy = max(cy, (bx[2] + 120) if bx else cy)
@@ -9103,6 +9113,322 @@ def render(f):
     out = text11(out, f, s, False)
     out = finish11(out, f, SHOTS[0] if f >= fh(E_RADIATE) + 8 else s)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+
+
+# ============================================================================ v11 rev 4 — the emblem, the dive, THE RIFT
+# Owner notes: polish the symbol, make it more detailed; the loop transition smoother and flashier; a new creative
+# focal-point effect.
+#   EMBLEM: a detailed Reverse-Flash emblem (bevelled crimson-metal rim with a groove and a neon line, glossy black disc
+#     with a reflection, a bevelled red bolt with an emissive core and red light spill), lit to match the shot; the real
+#     emblem FLIPS like a coin to reveal it (its edge visible, a flare at 90 degrees, a shockwave and sparks on landing).
+#   DIVE: an anticipation pull-back, then an accelerating dive into the black disc with speed-matched motion blur, radial
+#     light rays, chromatic fringes, sparks flying past and a red flare as the rim passes the camera; lands on frame 0.
+#   THE RIFT (focal point, e64): after the charge-up he tears a lightning rift across the frame (below his face); the
+#     Speed Force churns inside it, the frame's light spills out, the camera flies through, and the flight through fire
+#     rushes out of the vanishing point.
+E_DIVE = 85
+
+# ---- the Reverse-Flash emblem ------------------------------------------------------------------------------------
+_RFE = {}
+def rf_emblem_base():
+    if "base" in _RFE: return _RFE["base"]
+    S = 768; R = 360.0; c = S / 2
+    gy, gx = np.mgrid[0:S, 0:S].astype(np.float32); dx, dy = gx - c, gy - c; r = np.sqrt(dx * dx + dy * dy) + 1e-6
+    Lv = np.array([-0.45, -0.65, 0.62], np.float32); Lv /= np.linalg.norm(Lv)
+    Hv = Lv + np.array([0, 0, 1], np.float32); Hv /= np.linalg.norm(Hv)
+    def shade(h):
+        hy, hx = np.gradient(h)
+        n = np.dstack([-hx, -hy, np.ones_like(h)]); n /= np.linalg.norm(n, axis=2, keepdims=True)
+        return np.clip(n @ Lv, 0, 1), np.clip(n @ Hv, 0, 1) ** 48
+    ri, ro = 0.84 * R, R
+    hr = np.where((r >= ri) & (r <= ro), np.sin(np.pi * (r - ri) / (ro - ri)), 0).astype(np.float32)
+    dif_r, spe_r = shade(hr * 26)
+    brushed = 0.04 * np.sin(np.arctan2(dy, dx) * 90)                                           # spun-metal rim
+    rim = np.array([0.05, 0.05, 0.42], np.float32) * (0.30 + 0.95 * dif_r[..., None] + brushed[..., None]) \
+        + spe_r[..., None] * np.array([0.85, 0.85, 1.0], np.float32) * 0.95
+    blk = 0.014 + 0.035 * np.clip(1 - r / (0.83 * R), 0, 1)
+    ref = np.exp(-((np.sqrt((gx - (c - 0.30 * R)) ** 2 + (gy - (c - 0.38 * R)) ** 2) - 0.70 * R) / (0.035 * R)) ** 2)
+    ref *= np.clip(-(dx + dy) / (0.8 * R), 0, 1)
+    inner = np.dstack([blk, blk, blk * 1.25]) + ref[..., None] * np.array([0.30, 0.28, 0.38], np.float32) * 0.40
+    inner += (0.006 * np.sin(r * 0.55))[..., None]
+    P = np.array([(0.18, -0.92), (-0.46, 0.08), (-0.04, 0.08), (-0.20, 0.92), (0.48, -0.14), (0.05, -0.14)], np.float32)
+    poly = np.stack([c + P[:, 0] * 0.82 * R * 1.10, c + P[:, 1] * 0.82 * R * 1.10], 1)
+    bm = np.zeros((S, S), np.uint8); cv2.fillPoly(bm, [(poly * 4).astype(np.int32)], 255, cv2.LINE_AA, shift=2)
+    bmf = bm.astype(np.float32) / 255
+    dt = cv2.distanceTransform((bmf > 0.5).astype(np.uint8), cv2.DIST_L2, 5)
+    dif_b, spe_b = shade(np.clip(dt / 9.0, 0, 1) ** 0.6 * 14)
+    core = np.clip((dt - 6) / 10, 0, 1)
+    bolt = np.array([0.05, 0.07, 0.86], np.float32) * (0.35 + 0.9 * dif_b[..., None]) + spe_b[..., None] * np.array([0.75, 0.8, 1.0], np.float32) * 0.8 \
+        + core[..., None] * np.array([0.30, 0.38, 1.0], np.float32) * 0.35
+    outline = np.clip(cv2.dilate(bmf, np.ones((7, 7), np.uint8)) - bmf, 0, 1)
+    spill = cv2.GaussianBlur(bmf, (0, 0), 22)
+    col = np.where((r < ri)[..., None], inner + spill[..., None] * RED2 * 0.55, rim)
+    groove = np.exp(-((r - 0.835 * R) / 2.2) ** 2); ghi = np.exp(-((r - 0.826 * R) / 1.4) ** 2)
+    col = col * (1 - groove[..., None] * 0.8) + ghi[..., None] * np.array([0.35, 0.3, 0.6], np.float32) * 0.6
+    col = col * (1 - outline[..., None]) + np.array([0.01, 0.0, 0.03], np.float32) * outline[..., None]
+    col = col * (1 - bmf[..., None]) + bolt * bmf[..., None]
+    col = col + np.exp(-((r - 0.845 * R) / 3.0) ** 2)[..., None] * RED2 * 0.45
+    alpha = np.clip((R + 0.5 - r) / 1.5, 0, 1)
+    _RFE["base"] = (np.clip(col, 0, 1.5).astype(np.float32), alpha.astype(np.float32), bmf, poly / S, R, S)
+    return _RFE["base"]
+
+def rf_emblem(Rpx):
+    key = int(round(Rpx))
+    if key not in _RFE:
+        if len(_RFE) > 40: [_RFE.pop(k_) for k_ in list(_RFE) if k_ != "base"][:1]
+        col, alpha, bmf, poly, R, S = rf_emblem_base(); n = max(8, int(round(S * key / R)))
+        _RFE[key] = (cv2.resize(np.dstack([col, alpha]), (n, n), interpolation=cv2.INTER_AREA),
+                     cv2.resize(bmf, (n, n), interpolation=cv2.INTER_AREA), poly * n)
+    return _RFE[key]
+
+def paste_rgba(out, rgba, cx, cy, sx=1.0, a=1.0):
+    h, w = rgba.shape[:2]; nw = max(2, int(round(w * sx)))
+    t = cv2.resize(rgba, (nw, h), interpolation=cv2.INTER_AREA) if nw != w else rgba
+    x0, y0 = int(round(cx - nw / 2)), int(round(cy - h / 2))
+    xa, ya, xb, yb = max(0, x0), max(0, y0), min(W, x0 + nw), min(H, y0 + h)
+    if xb <= xa or yb <= ya: return out
+    sub = t[ya - y0:yb - y0, xa - x0:xb - x0]; al = sub[..., 3:4] * a
+    out[ya:yb, xa:xb] = out[ya:yb, xa:xb] * (1 - al) + sub[..., :3] * al
+    return out
+
+def light_match(out, cx, cy, R):
+    """the shot's soft light over the emblem (from the real emblem's own luminance), as a gain map to multiply into it."""
+    x0, y0, x1, y1 = int(max(0, cx - R)), int(max(0, cy - R)), int(min(W, cx + R)), int(min(H, cy + R))
+    if x1 - x0 < 8 or y1 - y0 < 8: return 1.0
+    L = cv2.GaussianBlur(lum8(out[y0:y1, x0:x1]), (0, 0), max(2, R * 0.4)); return float(np.clip(L.mean() / 0.62, 0.75, 1.2))
+
+def coin_flip(out, cx, cy, R, theta, f):
+    """the real emblem flips on its vertical axis like a coin; its back is the Reverse-Flash emblem."""
+    hs = int(R * 1.45); x0, y0, x1, y1 = int(max(0, cx - hs)), int(max(0, cy - hs)), int(min(W, cx + hs)), int(min(H, cy + hs))
+    if x1 - x0 < 16 or y1 - y0 < 16: return out
+    crop = out[y0:y1, x0:x1].copy(); lcx, lcy = cx - x0, cy - y0
+    gy, gx = np.mgrid[0:y1 - y0, 0:x1 - x0].astype(np.float32); rr = np.sqrt((gx - lcx) ** 2 + (gy - lcy) ** 2)
+    disc = np.clip((R * 1.0 - rr) / 2.0, 0, 1)
+    m = ((rr < R * 1.08) * 255).astype(np.uint8)
+    h2, w2 = (y1 - y0) // 2, (x1 - x0) // 2
+    inp = cv2.inpaint((cv2.resize(crop, (w2, h2)) * 255).astype(np.uint8), cv2.resize(m, (w2, h2)), 5, cv2.INPAINT_TELEA)
+    inp = cv2.resize(inp.astype(np.float32) / 255, (x1 - x0, y1 - y0))
+    mm = cv2.GaussianBlur(m.astype(np.float32) / 255, (0, 0), 3)[..., None]
+    base = crop * (1 - mm) + inp * mm
+    th_ = math.radians(theta); sx = abs(math.cos(th_)); edge = 0.08 * R * abs(math.sin(th_)); side = 1 if math.sin(th_) >= 0 else -1
+    if edge > 0.5:                                                                        # the coin's edge (its thickness)
+        em = np.zeros(base.shape[:2], np.float32)
+        cv2.ellipse(em, (int(lcx + side * edge * 0.5), int(lcy)), (max(1, int(sx * R + edge * 0.5)), int(R)), 0, 0, 360, 1.0, -1, cv2.LINE_AA)
+        shade = 0.5 + 0.5 * np.clip((gy - lcy) / R * -1, -1, 1)
+        ec = np.array([0.05, 0.05, 0.35], np.float32) * (0.4 + 0.6 * shade[..., None]) + np.exp(-((gy - (lcy - R * 0.55)) / 6) ** 2)[..., None] * 0.25
+        base = base * (1 - em[..., None]) + ec * em[..., None]
+    tile = base.copy()
+    if theta < 90:                                                                        # the front: the real emblem, in place
+        pad = np.dstack([crop, disc]).astype(np.float32)
+    else:                                                                                 # the back: the Reverse-Flash emblem
+        sp, _, _ = rf_emblem(R); rgba = sp.copy(); rgba[..., :3] *= light_match(out, cx, cy, R)
+        pad = np.zeros((y1 - y0, x1 - x0, 4), np.float32)
+        hh, ww = rgba.shape[:2]; px0, py0 = int(round(lcx - ww / 2)), int(round(lcy - hh / 2))
+        xa, ya, xb, yb = max(0, px0), max(0, py0), min(x1 - x0, px0 + ww), min(y1 - y0, py0 + hh)
+        if xb > xa and yb > ya: pad[ya:yb, xa:xb] = rgba[ya - py0:yb - py0, xa - px0:xb - px0]
+    pad[..., :3] *= (0.55 + 0.45 * sx)                                                    # edge-on, it darkens
+    nw = max(2, int(round((x1 - x0) * sx)))
+    sq = cv2.resize(pad, (nw, y1 - y0), interpolation=cv2.INTER_AREA)
+    ox = int(round(lcx - lcx * sx))
+    xa, xb = max(0, ox), min(x1 - x0, ox + nw)
+    if xb > xa:
+        part = sq[:, xa - ox:xb - ox]; al = part[..., 3:4]
+        tile[:, xa:xb] = tile[:, xa:xb] * (1 - al) + part[..., :3] * al
+    out[y0:y1, x0:x1] = tile
+    return out
+
+def emblem_energy(out, cx, cy, R, f, amt):
+    """the reversed emblem alive: a pulsing core, small red crackles along the bolt."""
+    _, _, poly = rf_emblem(R); pts = poly - rf_emblem(R)[0].shape[0] / 2 + np.array([cx, cy], np.float32)
+    cv = bolt_canvas(); rng = np.random.default_rng(f // 2 * 13 + 2)
+    for q in range(3):
+        i = int(rng.integers(len(pts))); a = pts[i]; b = pts[(i + 1) % len(pts)]; t0 = rng.uniform(0, 0.7)
+        put_bolt(cv, tuple(a + (b - a) * t0), tuple(a + (b - a) * (t0 + 0.3) + rng.normal(0, R * 0.05, 2)), 6000 + f // 2 * 7 + q, 1, 0.4, 4, 0)
+    o = out + light_rgb(cv, 0.9 * amt, REDW, RED2)
+    return add_glow(o, cx, cy, R * 0.9, (0.25 + 0.30 * beat_kick(f)) * amt, RED2)
+
+def star_flare(out, cx, cy, a, col):
+    """an anamorphic star: a long horizontal streak and a shorter vertical one."""
+    if a <= 0.01: return out
+    hz = np.exp(-((_GY - cy) / 5.0) ** 2) * np.exp(-np.abs(_GX - cx) / 520.0)
+    vt = np.exp(-((_GX - cx) / 4.0) ** 2) * np.exp(-np.abs(_GY - cy) / 300.0)
+    return out + (hz + 0.6 * vt)[..., None] * col * a
+
+def red_sparks(out, cx, cy, R, age, seed):
+    if age < 0 or age > 22: return out
+    rng = np.random.default_rng(seed); cv = bolt_canvas(); v = age / 22
+    for i in range(36):
+        a = rng.uniform(0, 2 * math.pi); sp = rng.uniform(0.5, 1.0)
+        d0 = R * (1.0 + 2.6 * eout(v, 1.8) * sp); d1 = d0 + 18 + 60 * (1 - v)
+        cv2.line(cv, (int(cx + math.cos(a) * d0), int(cy + math.sin(a) * d0 * 0.95)), (int(cx + math.cos(a) * d1), int(cy + math.sin(a) * d1 * 0.95)),
+                 int(255 * (1 - v)), 2, cv2.LINE_AA)
+    return out + light_rgb(cv, 1.0, REDW, RED2)
+
+# ---- the loop, rebuilt ------------------------------------------------------------------------------------------
+def red_drain(out, cx, cy, u):
+    rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2); Rw = 120 + 2300 * ein(clamp(u, 0, 1), 1.3)
+    w = np.clip((Rw - rr) / 140, 0, 1)[..., None]
+    L = lum8(out)[..., None]; red_ = L * np.array([0.30, 0.32, 1.12], np.float32) + 0.02 * RED2
+    return out * (1 - 0.65 * w) + red_ * 0.65 * w
+
+def reverse_loop(out, f, s, person):
+    if s["n"] != "stare" or f < fh(E_STRIKE) - 10: return out
+    fs, fr, fd = fh(E_STRIKE), fh(E_RADIATE), fh(E_DIVE)
+    cx, cy, R = emblem_screen(s, f) if f < fd else dive_anchor(s)
+    if f < fs:                                                                              # red crackles creep in
+        k = (f - fs + 10) / 10; cv = bolt_canvas()
+        for side in (0, 1):
+            x0 = -20 if side == 0 else W + 20
+            put_bolt(cv, (x0, H * (0.55 + 0.1 * side)), (x0 + (1 - 2 * side) * 260 * k, H * (0.62 + 0.08 * side)), 5000 + f + side, 2, 0.35, 5, 1)
+        return np.clip(out + light_rgb(cv, 0.8 * k, REDW, RED2), 0, 1)
+    k = f - fs
+    if f < fd:
+        if k < 4: th_ = 0.0
+        elif k < 17: th_ = 180 * smooth((k - 4) / 13)
+        else: th_ = 180 + 14 * math.exp(-(k - 17) / 3.0) * math.sin((k - 17) * 1.5)
+        if th_ < 0: th_ = -th_
+        o = out.copy()
+        if f >= fr: o = red_drain(o, cx, cy, (f - fr) / max(1, fd - fr) * 0.8 + 0.2 * clamp((f - fr) / 6, 0, 1))
+        o = coin_flip(o, cx, cy, R, min(th_, 359.0), f)
+        cv = bolt_canvas()
+        if k < 9: put_bolt(cv, (W + 30, H * 0.50), (cx + R * 0.55, cy - R * 0.85), 5100 + f, 5, 0.22, 7, 2)
+        o = o + light_rgb(cv, 1.4, REDW, RED2)
+        if k < 6: o = add_glow(o, cx + R * 0.5, cy - R * 0.8, 160, 1.0 * (1 - k / 6), REDW)
+        fl = math.exp(-((k - 10.5) / 1.8) ** 2)                                           # the flare as it turns edge-on
+        o = add_glow(o, cx, cy, R * 2.0, 1.2 * fl, REDW); o = star_flare(o, cx, cy, 0.9 * fl, REDW * 0.7 + 0.3)
+        if k >= 17:
+            o = red_sparks(o, cx, cy, R, k - 17, 77)
+            rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2); Rw = R + 1100 * eout(min(1, (k - 17) / 14), 1.6)
+            o = o + np.exp(-((rr - Rw) / 9.0) ** 2)[..., None] * REDW * 0.7 * max(0, 1 - (k - 17) / 14)
+            o = emblem_energy(o, cx, cy, R, f, clamp((k - 17) / 6, 0, 1))
+        if f >= fr:
+            u = (f - fr) / max(1, fd - fr)
+            o = red_arcs(o, f, person, 0.6 + 0.4 * u, 9)
+            cv = bolt_canvas(); rng = np.random.default_rng(f // 2 * 5 + 1)
+            for q in range(5):
+                a = rng.uniform(-0.3, math.pi + 0.3); L_ = R * rng.uniform(1.6, 3.6) * (0.6 + u)
+                put_bolt(cv, (cx + math.cos(a) * R, cy + math.sin(a) * R * 0.9), (cx + math.cos(a) * (R + L_), cy + math.sin(a) * (R + L_) * 0.9), 5200 + f // 2 * 7 + q, 3, 0.3, 6, 1)
+            o = o + light_rgb(cv, 1.1, REDW, RED2)
+        return np.clip(o, 0, 1)
+    # ---- THE DIVE: anticipation, then an accelerating plunge through the black disc onto frame 0
+    k = f - fd; n = E.DUR_F - 1 - fd; q = clamp(k / n, 0, 1)
+    base = red_drain(out.copy(), cx, cy, 1.0)
+    sp, _, _ = rf_emblem(R); sp = sp.copy(); sp[..., :3] *= light_match(out, cx, cy, R)
+    base = paste_rgba(base, sp, cx, cy)
+    base = emblem_energy(base, cx, cy, R, f, 1.0 - q)
+    def Zq(qq): return (1 - 0.06 * math.sin(math.pi * clamp(qq / 0.18, 0, 1))) * math.exp(math.log(34.0) * ein(clamp((qq - 0.10) / 0.90, 0, 1), 2.5))
+    Z = Zq(q); spd = (math.log(Zq(min(1, q + 0.02))) - math.log(Zq(q))) / 0.02
+    o = zoom_about(base, cx, cy, Z)
+    bs = min(0.14, 0.012 * spd)
+    if bs > 0.004: o = radial_blur(o, cx, cy, 1.0, 1.0 + bs, 5)
+    cs = min(1.0, spd / 6)
+    if cs > 0.02:                                                                          # chromatic fringe, radial
+        o2 = o.copy(); o2[..., 2] = zoom_about(o, cx, cy, 1 + 0.012 * cs)[..., 2]; o2[..., 0] = zoom_about(o, cx, cy, 1 - 0.012 * cs)[..., 0]; o = o2
+    rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2); ang = np.arctan2(_GY - cy, _GX - cx)
+    if cs > 0.02:                                                                          # light rays streaming past
+        rays = np.clip(np.sin(ang * 23 + 1.3) * np.sin(ang * 37 - f * 0.2), 0, 1) ** 6 * np.clip((rr - 80) / 600, 0, 1)
+        o = o + rays[..., None] * (REDW * 0.5 + 0.15) * 0.55 * cs
+    Rp = R * 0.80 * Z
+    zi = 1.03 + 0.85 * (1 - smooth(q))
+    inside = zoom_about(frame0_base(), W / 2, H * 0.45, zi)
+    if q < 1: inside = radial_blur(inside, W / 2, H * 0.45, 1.0, 1.0 + 0.05 * (1 - q) ** 2, 3)
+    tint = (1 - smooth(q / 0.92)) * 0.45
+    if tint > 0.005: inside = inside * (1 - tint) + (lum8(inside)[..., None] * np.array([0.30, 0.32, 1.12], np.float32)) * tint
+    m = np.clip((Rp - rr) / 6.0, 0, 1)[..., None]
+    o = inside * m + o * (1 - m)
+    diag = math.hypot(max(cx, W - cx), max(cy, H - cy))
+    fade = 1 - smooth((Rp - diag) / (0.45 * diag))
+    ring = np.exp(-((rr - Rp) / (4 + 0.03 * Rp)) ** 2) + 0.45 * np.exp(-((rr - Rp) / (20 + 0.10 * Rp)) ** 2)
+    o = o + ring[..., None] * (REDW * 0.9 + RED2 * 0.5) * fade
+    if fade > 0.05:
+        cv = bolt_canvas(); rng = np.random.default_rng(f * 3 + 7)
+        for qq in range(7):
+            a0 = rng.uniform(0, 2 * math.pi); a1 = a0 + rng.uniform(0.25, 0.6)
+            put_bolt(cv, (cx + Rp * math.cos(a0), cy + Rp * math.sin(a0)), (cx + Rp * math.cos(a1), cy + Rp * math.sin(a1)), 5300 + f + qq, 3, 0.25, 5, 0)
+        o = o + light_rgb(cv, 1.0 * fade, REDW, RED2)
+        o = red_sparks(o, cx, cy, Rp * 0.9, int(22 * q), 91)
+    flash = math.exp(-((Rp - diag) / (0.30 * diag)) ** 2) * (1 - smooth((q - 0.86) / 0.12))   # the rim passes the lens
+    if flash > 0.01: o = o * (1 - 0.25 * flash) + flash * (REDW * 0.45 + 0.20)
+    return np.clip(o, 0, 1)
+
+def dive_anchor(s):
+    if "a" not in _DV: _DV["a"] = emblem_screen(s, fh(E_DIVE))
+    return _DV["a"]
+
+# ---- THE RIFT (focal point): torn open across the frame, the Speed Force inside, flown through --------------------
+_RT = {}
+def rift_geom():
+    if "g" in _RT: return _RT["g"]
+    p0, p1 = (-80.0, H * 0.94), (W + 80.0, H * 0.60)
+    pts = bolt_points(p0, p1, 4242, 0.09, 6).astype(np.float32)
+    d = np.diff(pts, axis=0); seg = np.hypot(d[:, 0], d[:, 1]); s = np.concatenate([[0], np.cumsum(seg)]); s /= s[-1]
+    tg = np.vstack([d, d[-1:]]); tg /= np.linalg.norm(tg, axis=1, keepdims=True) + 1e-6
+    nrm = np.stack([-tg[:, 1], tg[:, 0]], 1)
+    i = int(np.argmin(np.abs(s - 0.5)))
+    _RT["g"] = (pts, s, nrm, (float(pts[i, 0]), float(pts[i, 1]))); return _RT["g"]
+
+def rift_mask(oa, f, grow=1.0):
+    """the opening (full res, float): a jagged lens along the path, oa = how open, grow = how much of the length is torn."""
+    pts, s, nrm, _ = rift_geom()
+    w = oa * 390 * np.sin(np.pi * s) ** 0.7 * (0.82 + 0.18 * np.sin(s * 47 + f * 0.35)) * np.clip((grow - np.abs(s - 0.5) * 2) * 6, 0, 1)
+    left = pts + nrm * (w / 2)[:, None]; right = pts - nrm * (w / 2)[:, None]
+    poly = np.vstack([left, right[::-1]])
+    m = np.zeros((H // 2, W // 2), np.uint8); cv2.fillPoly(m, [(poly * 2).astype(np.int32)], 255, cv2.LINE_AA, shift=2)
+    return cv2.resize(m.astype(np.float32) / 255, (W, H), interpolation=cv2.INTER_LINEAR)
+
+def sf_interior(f, z):
+    t = f / FPS; o = speedforce_bg(z, t).astype(np.float32) * 1.25 + 0.04 * GOLD2
+    cv = bolt_canvas(); rng = np.random.default_rng(f // 2 * 3 + 11)
+    for q in range(4):
+        a0 = rng.uniform(0, 2 * math.pi); r0, r1 = rng.uniform(120, 300), rng.uniform(600, 1100)
+        put_bolt(cv, (W / 2 + r0 * math.cos(a0), H / 2 + r0 * math.sin(a0) * 1.4), (W / 2 + r1 * math.cos(a0 + 0.3), H / 2 + r1 * math.sin(a0 + 0.3) * 1.4), 6100 + f + q, 2, 0.3, 6, 1)
+    return np.clip(o + light_from(cv, 0.8), 0, 1)
+
+def rift_edges(m, f, amt):
+    """white-gold glowing edges with electric crackles along the tear."""
+    e = cv2.morphologyEx((m[::2, ::2] > 0.5).astype(np.uint8), cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8)).astype(np.float32)
+    e = cv2.resize(e, (W, H), interpolation=cv2.INTER_LINEAR)
+    core = cv2.GaussianBlur(e, (0, 0), 1.5); gl = cv2.resize(cv2.GaussianBlur(cv2.resize(e, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 5), (W, H))
+    return (core[..., None] * GOLDW * 1.3 + gl[..., None] * GOLD2 * 2.2) * amt
+
+def rift(A, B, j, f, sa, sb, pre=18, post=26):
+    pts, s, nrm, Pc = rift_geom()
+    if j < 0:
+        u = (j + pre + 1) / pre
+        grow = ein(clamp(u / 0.40, 0, 1), 1.2); oa = 0.06 + 0.94 * ein(clamp((u - 0.30) / 0.70, 0, 1), 1.5)
+        m = rift_mask(oa, f, grow)
+        inter = sf_interior(f, u * 0.6)
+        spill = cv2.GaussianBlur(m[::4, ::4], (0, 0), 18); spill = cv2.resize(spill, (W, H))[..., None]
+        o = A * (1 - m[..., None]) + inter * m[..., None] + spill * GOLD2 * 0.55 * oa + rift_edges(m, f, 0.6 + 0.6 * oa)
+        cv = bolt_canvas(); rng = np.random.default_rng(f * 5 + 3)
+        for q in range(int(3 + 5 * u)):
+            i = int(rng.integers(len(pts))); side = 1 if rng.random() < 0.5 else -1
+            p = pts[i]; a = p + nrm[i] * side * 40; b = a + nrm[i] * side * rng.uniform(60, 200) + rng.normal(0, 40, 2)
+            if abs(s[i] - 0.5) * 2 < grow: put_bolt(cv, tuple(a), tuple(b), 6200 + f * 9 + q, 2, 0.35, 5, 0)
+        return np.clip(o + light_from(cv, 0.9), 0, 1)
+    v = (j + 1) / post
+    if j < 12:                                                                              # fly through the tear
+        Z = math.exp(math.log(10.0) * ein((j + 1) / 12, 2.0))
+        m = rift_mask(1.0, f, 1.0); inter = sf_interior(f, 0.6 + j * 0.08)
+        comp = A * (1 - m[..., None]) + inter * m[..., None] + rift_edges(m, f, 1.2)
+        o = radial_blur(zoom_about(comp, Pc[0], Pc[1], Z), Pc[0], Pc[1], 1.0, 1.0 + 0.10 * math.sin(math.pi * min(1, (j + 1) / 12)), 5)
+        inside_full = clamp((j - 8) / 4, 0, 1)
+        if inside_full > 0: o = o * (1 - inside_full) + sf_interior(f, 0.6 + j * 0.08) * inside_full
+        return np.clip(o, 0, 1)
+    inter = sf_interior(f, 0.6 + j * 0.08)                                                  # the next shot rushes out of the vanishing point
+    w = clamp((j - 12) / (post - 15), 0, 1); sB = 0.05 + 0.95 * ein(w, 2.4)
+    Bz = zoom_about(B, W / 2, H * 0.45, sB)
+    if w < 1: Bz = radial_blur(Bz, W / 2, H * 0.45, 1.0, 1.0 + 0.10 * (1 - w), 4)
+    hw, hh = W / 2 * sB, H / 2 * sB
+    box = np.clip(np.minimum(hw - np.abs(_GX - W / 2), hh - np.abs(_GY - H * 0.45)) / 6.0, 0, 1)[..., None]
+    o = inter * (1 - box) + Bz * box
+    rim = np.exp(-(np.minimum(np.abs(np.abs(_GX - W / 2) - hw), np.abs(np.abs(_GY - H * 0.45) - hh)) / 5.0) ** 2) * (np.abs(_GX - W / 2) <= hw + 6) * (np.abs(_GY - H * 0.45) <= hh + 6)
+    o = o + rim[..., None] * GOLDW * 1.0 * (1 - w)
+    if w >= 1: o = Bz
+    return np.clip(o, 0, 1)
+
+TR2["rift"] = (rift, 18, 26)
 
 
 

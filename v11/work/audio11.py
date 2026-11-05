@@ -477,6 +477,18 @@ def main():
             place(fx, stereo(zap(-24, 1915, 1500, 4200, 0.16), -0.7), t0 - 0.16); place(fx, stereo(zap(-24, 1916, 1700, 4600, 0.16), 0.7), t0 - 0.16)
             place(fx, stereo(A2.impact(-12, (60, 30), 0.6, 0.6, 1917)), t0); place(fx, stereo(thunder(-19, 1918, 0.9)), t0 + 0.01)
             place(fx, stereo(crackle(0.4, -25, 1919, 0.9)), t0 + 0.02)
+        elif tin == "rift":                                      # THE RIFT: a crack, the tear ripping across, a deep whoom, the Speed Force roar, the arrival
+            pre_, post_ = 18 / 60, 26 / 60
+            place(fx, stereo(zap(-22, 2200, 5200, 900, 0.14)), t0 - pre_); place(fx, stereo(crackle(0.12, -22, 2201, 0.95)), t0 - pre_)
+            n_ = I(pre_ - 0.02); q_ = np.arange(n_) / SR
+            rip = bq(noise(n_, 2202), "band", np.array([500, 6000]), 2) * (np.random.default_rng(2203).random(n_) > 0.45) * np.linspace(0.4, 1.0, n_)
+            p_ = np.linspace(-0.8, 0.8, n_); r_ = norm(rip, -21)
+            place(fx, np.stack([r_ * (1 - p_) / 1.4, r_ * (1 + p_) / 1.4], 1).astype(np.float32), t0 - pre_ + 0.03)
+            place(fx, rev_swell(0.35, -24, 2204), t0 - 0.35); place(fx, stereo(sub_drop(-14, 0.9, 60, 24)), t0)
+            n_ = I(post_); q_ = np.arange(n_) / SR
+            roar = bq(noise(n_, 2205), "band", np.array([180, 2600]), 2) * np.sin(np.pi * q_ / post_) ** 0.8
+            place(fx, stereo(norm(roar, -21)), t0); place(fx, stereo(whine(post_, -25, 400, 4200)), t0)
+            place(fx, A2.whoosh(0.35, -20, 2206, True), t0 + post_ - 0.25); place(fx, stereo(A2.impact(-15, (58, 30), 0.5, 0.5, 2207)), t0 + post_ - 0.05)
         elif tin == "emblem_flash":                              # the emblem draws itself, flares
             place(fx, np.stack([A2.shimmer(0.7, -29)] * 2, 1), t0 - 0.20); place(fx, stereo(A2.impact(-20, (100, 55), 0.15, 0.7, 1833)), t0)
     for e_ in list(range(34, 84, 2)):                                       # a quiet swish on each camera punch that isn't a cut
@@ -509,7 +521,13 @@ def main():
         elif tx["style"] == "bop":
             for q in range(3): place(fx, stereo(A2.impact(-27, (120 + 30 * q, 70), 0.06, 0.8, 1862 + q), -0.3 + 0.3 * q), tx["words"][0][1] + 0.06 * q)
     # rev 3, REVERSE: the strike on his emblem, the inversion, the red radiating, the dive through it into Harrison
-    t_s, t_r, t_d = th(82), th(84), th(86)
+    t_s, t_r, t_d = th(82), th(84), th(85)
+    # rev 4: the coin flip: a fast spin whir, a sizzle at edge-on, a metal ring + thump on landing, sparks
+    place(fx, A2.whoosh(0.22, -24, 2210, True), t_s + 4 / 60); place(fx, stereo(zap(-26, 2211, 2600, 5200, 0.08)), t_s + 10 / 60)
+    place(fx, stereo(metal_shing(-22, 0.8)), t_s + 17 / 60); place(fx, stereo(A2.impact(-21, (80, 45), 0.25, 0.6, 2212)), t_s + 17 / 60)
+    place(fx, stereo(crackle(0.35, -27, 2213, 0.9)), t_s + 18 / 60)
+    place(fx, rev_swell(0.25, -27, 2214), t_d - 0.25)                                          # the dive's anticipation
+    place(fx, stereo(crackle(0.22, -23, 2215, 0.95)), t_d + 0.46); place(fx, stereo(zap(-24, 2216, 5000, 1200, 0.12)), t_d + 0.48)   # the rim passes
     place(fx, stereo(thunder(-18, 2100, 1.0)), t_s); place(fx, stereo(zap(-23, 2101, 4400, 500, 0.18)), t_s - 0.02)
     inv = rev(np.stack([A2.shimmer(0.42, -26)] * 2, 1)) if hasattr(A2, "shimmer") else None
     if inv is not None: place(fx, inv.astype(np.float32), t_r - 0.42)                         # the inversion: a reversed shimmer

@@ -93,7 +93,7 @@ shot("smirk", "s4", 56, 60, 62.90, 63.85, z=[(0, 1.00), (1, 1.06)], tin="restart
 shot("bar", "s4", 60, 64, 155.80, 156.75, z=[(0, 1.00), (1, 1.08)], tin="ignite", seg=True, arcs=0.3, charge=1.0,
      tmap=vel(60, 64, 155.80, 156.75), lin=True, interp="flow")
 # the Speed Force moment: the flight through fire
-shot("firewide", "s4", 64, 70, 171.76, 173.20, z=[(0, 1.00), (1, 1.12)], tin="speedforce_in", face=None, cx=(560, 700), ev=-0.55, fire=0.9,
+shot("firewide", "s4", 64, 70, 171.76, 173.20, z=[(0, 1.00), (1, 1.12)], tin="rift", face=None, cx=(560, 700), ev=-0.55, fire=0.9,
      tmap=vel(64, 70, 171.76, 173.20), lin=True, interp="flow", warp=0.8)
 shot("fireclose", "s4", 70, 74, 173.40, 174.35, z=[(0, 1.00), (1, 1.08)], tin="heat_haze", seg=True, ev=-0.25, fire=0.8,
      tmap=vel(70, 74, 173.40, 174.35), lin=True, interp="flow", warp=0.6)
