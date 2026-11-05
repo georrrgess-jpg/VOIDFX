@@ -259,3 +259,69 @@ The edit now has **27 designed transitions in 22.97 s** (was 25), and the whip i
 
 **Not verified:** watching and listening in real time. The new sounds were checked by measurement against the music.
 
+## Revision 3 (owner notes)
+
+The owner: *"Improve the transition/loop at the end and make it a more creative and unique transition. Try to do something creative and different. Please add transitions, graphics and animations wherever possible."*
+
+**1. The new loop: ASHES TO SUN (k83–88, now 1.30 s).** Before, the dawn burned the frame to plain white and cross-faded into a hazy frame 0. Now:
+1. **Sunrise (k83–84.3).** The sun comes up behind him (the sun sees only what's left of him), and his edge catches fire: a flickering hot rim, with embers lifting off his hair and shoulders.
+2. **He burns like paper (k84.3–86.5).**
+   - A burn front sweeps across him from the side facing the sun inward, along a ragged paper-burn edge (two octaves of noise over the distance from his edge).
+   - Just ahead of it he chars; at it a thin line glows white-orange.
+   - Behind it, the street shows through: each row continues the background on either side of him (an earlier inpainting version smeared into pale diagonal wedges).
+   - The sun's rays only see what's left of him, so he casts no shadow once he's gone.
+3. **Ashes to sun.** 3,000 embers, one per burnt piece of him, each carrying his colour as it starts. They drift up with turbulence, then spiral into the sun, turning hot orange and then white-gold as they arrive (k86.95).
+4. **The flare (k86.75–87.25).** As they arrive, the sun flares: its light bursts out over the frame with radial rays and a shock ring. Under the flash, the picture becomes frame 0.
+5. **The light collapses back into the sun (k87.25–88)** like an iris closing, revealing the boat shot. **Frame 0 is now the clean boat shot**, its sun blazing and calming over the first quarter second (it had been hazed white). The sun of frame 0 sits exactly where the embers went: his ashes become the sun he ran from, and the day (and the mask) begins again.
+
+Sound: crackle and a paper-burn hiss, a riser as the embers rise, a bright impact and shimmer on the flare, a reverse swell as the light collapses, and a warm bloom on the loop point. The dawn chord is moved to the new timing.
+
+To make room, the flashlight shot is one half-beat (k82–83) and the daybreak shot is five (k83–88, p9 75.00–76.30).
+
+**2. New transitions:**
+- **Eclipse** (k27, replaces whip up). The sun goes out: the moon's black disc slides across the sunset with a streaming corona, the next shot (night) is inside it, and a diamond-ring flash fires on its rim as it centres. Then the disc swells until night fills the frame. Sound: a reverse swell, a deep impact, a shimmer, a low bell.
+- **Card flip** (k15, replaces tilt). The frame turns over in 3D against the bright blurred sky of both shots, pulling back as it turns and catching the sun edge-on. Sound: a whoosh and a flick.
+- **Palm sweep** (k21, replaces smear). Palm fronds sweep past the lens against the sun (near ones big and soft, far ones sharp), with dappled light; the palms shot comes in their shadow. Sound: a leaf rustle and a whoosh.
+- **Rejected along the way:** the library's cube and foliage transitions brought old edits' looks with them (v6's purple synthwave grid, v9's jasmine flowers), so both were replaced with new ones.
+
+**3. New graphics and animations:**
+- **Bats gather** in the darkening sky behind him in the looks-up shot: a few far silhouettes at first, more toward the drop (kept behind him with his matte), leading into the bat burst.
+- **A crimson backlight** on his edge in the profile, stare and low shots, pulsing gently.
+- **Night fog** drifts through the stare and low shots.
+
+### Review log (rev 3)
+1. **The first loop** filled his burnt silhouette with flat cream (a cut-out). The burn front was blobby, the white-out held flat cream for about 15 frames, and the closing iris had a hard bubble outline. Fixes:
+   - the street now shows behind him;
+   - the burn is a ragged, thin paper-burn edge with char ahead of it;
+   - the sun flare bursts out with rays and a shock ring;
+   - the light collapses as a soft exposure fall-off.
+2. **The sun's rays still saw his burnt body:** straight-edged wedges streamed off the shirt. He now burns before the sun is drawn, and the sun only sees what's left of him.
+3. **The inpainted street** smeared into pale diagonal wedges where his body fills the whole bottom of the frame. It's now continued row by row.
+4. **A faint outline of him** lingered once he was gone; a hard, slightly dilated matte drives the burn now.
+5. **The library's cube and foliage transitions** brought old looks (a v6 synthwave grid, v9 jasmine). They were replaced by the new card flip and palm sweep.
+6. **The palm fronds** lingered over his face after the cut; they now clear by the end of the transition.
+7. **The gathering bats** were too small to see; they're now 16–38 px.
+
+### Revision 3 checkpoint: 10/10 PASS on the first run, visual sign-off PASS (shipped)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1378 frames (22.97 s), H.264 + AAC, fast-start |
+| Loudness after AAC | −13.1 LUFS, true peak −4.1 dBTP |
+| Clicks | 0 at the 27 cuts. Loop seam within the QC rule: the step of 0.14 is the reverse swell ending on the loop's downbeat, under the 0.25 limit |
+| Loop seam picture | blurred difference 8.4: the light collapsing into frame 0's sun |
+| Faces | centred in every shot, 0 flagged; 0 text-over-face frames. The low detections at 456/458 (his chin, looking up) and 970/974 (upside down) carry no text |
+| Black frames | 844–847 (lamp-on) and 1111–1112 (the eye dive's pupil), both by design |
+| Frozen runs | none |
+| Length | audio and video within 9.3 ms |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4:
+- the whole edit, every 25th frame;
+- the finale frame by frame (1300–1377 → 0–40);
+- the card flip, the palm sweep and the eclipse;
+- the gathering bats;
+- the crimson rims;
+- the flagged frames.
+
+**Not verified:** watching and listening in real time. The new sounds were checked by measurement against the music.
+

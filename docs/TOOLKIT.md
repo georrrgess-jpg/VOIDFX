@@ -161,6 +161,12 @@ These live on Studio 1's branch (`claude/gallant-planck-pqpczp`); this copy only
 | `bat_pass` | One great bat flies out of the dark through the lens (soft when near, wing bones in the membrane, fine crimson edge); the cut is in its shadow; it dives out under the camera. | three heavy wingbeats, whoosh, chirps |
 | `motes=a` on a day shot | Sunlit dust: drifting motes, brighter near the sun, sharp far and soft near, kept behind him with the matte. | — |
 | `seg=True` on a sun shot | The sun sits behind him: disc and rays only from the sky, a light wrap on his near edge, ghosts dimmed by how much he covers. (rev 2 fix: the sun used to be laid over his hair.) | — |
+| `eclipse` | The sun goes out: the moon's black disc slides across with a streaming corona, the next shot inside it, a diamond-ring flash on its rim, then the disc swells to fill the frame. | reverse swell, deep impact, shimmer, low bell |
+| `card_flip` | A 3D card flip around the vertical axis against the bright blurred sky of both shots (a sun glint edge-on). | whoosh + flick |
+| `palm_sweep` | Procedural palm fronds sweep past the lens (depth blur, dappled light); the next shot comes in their shadow. | leaf rustle + whoosh |
+| `gather=True` (+ `seg`) | Bats gather in the sky behind him through the shot, more and more toward its end. | — |
+| `rim=a` (+ `seg`) | A pulsing crimson backlight on his edge. | — |
+| ASHES TO SUN (`daybreak` on the last shot; `ASH`, `SUN_T`, `seam_out`) | The loop: he burns like paper (char, glowing line, the street behind him, row-continued); 3,000 embers spiral into the sun at frame 0's sun position; the sun flares over the frame and the light collapses back into it, revealing frame 0. | crackle, hiss, riser, flare impact + shimmer, reverse swell, bloom on the loop |
 | `daybreak=True` + `seg=True` | He burns in the sunlight: a flickering hot rim on his edge, embers lifting off his hair and shoulders, then the white. Needs a shot with a clear silhouette (not a frame-filling close-up). | sizzle + crackle |
 | always on | `render_shot` upscale: Lanczos + a noise-gated luma detail boost (not AI super-resolution). `finish105`: warm or moonlit halation and a crimson bloom (skipped on logo frames). | — |
 

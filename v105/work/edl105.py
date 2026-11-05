@@ -45,7 +45,7 @@ LOCK_FACE = dict(x=540, y=760, w=680)
 T_DROP = th(HDROP); T_SPLICE = th(K_SPL)
 BASS = list(range(0, 88, 2))                          # the kick: every beat
 SUN_K = (24, 31.5)                                     # the sun sets across the drop-out bar
-DAWN_K = (84, 88)                                      # it rises again at the end (the loop)
+DAWN_K = (83, 88)                                      # it rises again at the end (the loop)
 
 # ---- no dialogue: the song's own voice carries the text
 VO = []; VO_STEMS = {}
@@ -66,12 +66,12 @@ shot("hood", "p3", 3, 6, 24.30, 25.08, tin="sun_flare", look="day", sun=(0.85, 0
 shot("icecream", "p1", 6, 9, 69.25, 70.20, tmap=[(0, 69.25), (0.55, 69.80), (1, 70.20)], tin="whip", look="day")
 shot("badge", "p7", 9, 12, 14.60, tin="burn", look="day", sun=(0.15, 0.08), seg=True, motes=0.8)
 shot("pinkwall", "p5", 12, 15, 6.60, tin="slam", look="day", sun=(0.88, 0.12), seg=True, motes=0.8)
-shot("lollipop", "p8", 15, 18, 117.70, tin="tilt", look="day")
+shot("lollipop", "p8", 15, 18, 117.70, tin="card_flip", look="day")
 shot("boatgrin", "p1", 18, 21, 70.90, tin="quarter_roll", look="day", sun=(0.12, 0.10), seg=True, motes=0.8)
-shot("palms", "p10", 21, 24, 130.60, tin="smear", look="day", sun=(0.80, 0.10), seg=True, motes=1.0)
+shot("palms", "p10", 21, 24, 130.60, tin="palm_sweep", look="day", sun=(0.80, 0.10), seg=True, motes=1.0)
 # ---- SUNDOWN (k24-32): the drop-out bar. "Run from the sun like ..."
 shot("sunset", "p8", 24, 27, 405.95, 406.62, tin="light_sweep", look="dusk", sun=(0.70, 0.12), z=[(0, 1.00), (1, 1.03)], seg=True, motes=0.6, face_x=0.62)   # ends before he leans out of the crop
-shot("looksup", "p9", 27, 32, 230.60, 231.90, tin="whip_up", look="dusk", z=[(0, 1.00), (1, 1.10)], seg=True)
+shot("looksup", "p9", 27, 32, 230.60, 231.90, tin="eclipse", look="dusk", z=[(0, 1.00), (1, 1.10)], seg=True, gather=True)   # the sun is eclipsed; bats gather behind him
 # ---- NIGHT (k32-84): DRACULA. The bats burst on the drop.
 shot("scope", "dk", 32, 38, 46.20, 47.80, tin="bat_burst", z=[(0, 1.12), (1, 1.02)], fog=0.8)
 shot("redrive", "p9", 38, 41, 0.40, 1.20, tin="strobe", redthr=0.05)
@@ -88,12 +88,12 @@ shot("container", "p4", 64, 66, 65.80, 66.45, tmap=[(0, 65.80), (0.40, 66.20), (
 shot("knife", "p9", 66, 68, 178.30, tin="mist")                                     # he rises out of the coffin as mist and re-forms with the knife
 shot("attack", "p9", 68, 71, 164.80, 165.75, tmap=[(0, 164.80), (0.30, 165.40), (1, 165.75)], tin="bat_swarm", ghost=0.45)
 shot("syringe", "p8", 71, 74, 146.30, tin="pupil_dive", face=None, cx=(980, 980))
-shot("profile", "p6", 74, 77, 68.60, tin="facematch", cx=(560, 560))
-shot("stare", "p9", 77, 80, 117.80, tin="shutter")
-shot("low", "p9", 80, 82, 222.60, tin="zipper")
-shot("torch", "p9", 82, 84, 185.40, tin="bat_pass", flare=0.8)                       # one great bat flies through the lens; his torch flares into the dawn
+shot("profile", "p6", 74, 77, 68.60, tin="facematch", cx=(560, 560), seg=True, rim=1.0)
+shot("stare", "p9", 77, 80, 117.80, tin="shutter", seg=True, rim=1.0, fog=0.35)
+shot("low", "p9", 80, 82, 222.60, tin="zipper", seg=True, rim=0.8, fog=0.35)
+shot("torch", "p9", 82, 83, 185.40, tin="bat_pass", flare=0.8)                       # one great bat flies through the lens; his torch flares into the dawn
 # ---- DAYBREAK (k84-88): the sun comes up and burns the frame white (the loop opens in this light)
-shot("dawn", "p9", 84, 88, 75.00, tin="sun_flare", look="dusk", daybreak=True, z=[(0, 1.20), (1, 1.30)], seg=True)   # he walks into the sunrise and burns
+shot("dawn", "p9", 83, 88, 75.00, tin="sun_flare", look="dusk", daybreak=True, z=[(0, 1.20), (1, 1.30)], seg=True)   # he walks into the sunrise and burns
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

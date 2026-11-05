@@ -1364,14 +1364,17 @@ def sun_fx(out, f, sx, sy, amt=1.0, col=SUNC, r=70.0, m=None):
     return np.clip(o, 0, 1)
 
 def sun_pos(s, f):
-    """the sun of a day shot, or the setting / rising sun of the dusk shots."""
+    """the sun of a day shot (frame 0's flares up as the loop lands in it), the setting sun at dusk, the rising sun at daybreak."""
     k = kof(f)
     if s.get("daybreak"):
-        u = clamp((k - E.DAWN_K[0]) / (E.DAWN_K[1] - E.DAWN_K[0]), 0, 1); return W * SUN_DAWN[0], H * (SUN_DAWN[1] + 0.14 * (1 - eout(u, 1.6))), 0.7 + 0.5 * u, 80 + 70 * u
+        u = clamp((k - E.DAWN_K[0]) / 1.6, 0, 1); g = smooth((k - 85.0) / 2.3)
+        return W * SUN_T[0], H * (SUN_T[1] + 0.17 * (1 - eout(u, 1.6))), 0.7 + 1.0 * g, 80 + 60 * g
     if s.get("look") == "dusk":
         u = clamp((k - E.SUN_K[0]) / (E.SUN_K[1] - E.SUN_K[0]), 0, 1)
         return W * (0.86 + 0.04 * u), H * (0.12 + 1.05 * ein(u, 1.7)), 1.0 - 0.6 * smooth((u - 0.75) / 0.25), 70 + 90 * u   # it sets down the right edge, off his face
-    if s.get("sun"): return W * s["sun"][0], H * s["sun"][1], 1.0, 70
+    if s.get("sun"):
+        b = math.exp(-f / 16.0) if s is E.SHOTS[0] else 0.0                             # the sun of frame 0 still blazing from the embers
+        return W * s["sun"][0], H * s["sun"][1], 1.0 + 0.9 * b, 70 + 70 * b
     return None
 
 # ---------------------------------------------------------------------------- bats: procedural silhouettes with flapping wings
@@ -1603,12 +1606,13 @@ def dawn_white(out, f):
     return sun_fx(o, f, W * SUN_DAWN[0], H * SUN_DAWN[1], 0.8, SUNC, 150)
 
 def daybreak_fx(out, f, s, m=None):
+    """DAYBREAK -> ASHES TO SUN: the sun comes up behind him, his edge catches fire (rim and embers), he burns away into embers
+    that spiral into the sun, and the frame floods with light (the iris into frame 0 is in seam_out)."""
     k = kof(f); u = clamp((k - E.DAWN_K[0]) / (E.DAWN_K[1] - E.DAWN_K[0]), 0, 1)
-    out = burn_fx(out, f, s, m, smooth((k - (E.DAWN_K[0] + 0.6)) / 1.8))
+    out = burn_fx(out, f, s, m, smooth((k - ASH["heat"]) / 1.0) * (1 - smooth((k - 86.4) / 0.8)))
     rise = np.clip(((_GY / H) - (1.05 - 0.9 * eout(u, 1.5))) / 0.35, 0, 1)[..., None]   # the light comes up from the horizon
-    o = out * (1 - rise * 0.55 * u) + DAWNW * rise * 0.55 * u
-    w = smooth((k - (E.DAWN_K[1] - 2.2)) / 1.3)                                         # and burns everything to the dawn white
-    return np.clip(o * (1 - w) + dawn_white(o, f) * w, 0, 1)
+    out = out * (1 - rise * 0.35 * u) + DAWNW * rise * 0.35 * u
+    return np.clip(ashes_fx(out, f, s, m), 0, 1.6)
 
 def opening_white(out, f):
     k = kof(f); w = SEAM_W * (1 - smooth(k / 1.8))                                       # the loop opens half in the same white, which burns off the boat
@@ -1620,16 +1624,31 @@ def smooth_arr(u): u = np.clip(u, 0, 1); return u * u * (3 - 2 * u)
 
 SUN_DAWN = (0.84, 0.22)                                                                  # the rising sun comes up behind his shoulder, off his face
 
-SEAM_W = 0.30                                                                            # how white frame 0 is (and the last frame returns to it)
+SEAM_W = 0.0                                                                             # frame 0 is the clean boat shot now (the loop lands in its sun)
 
 _F0 = {}
 
 def seam_out(out, f):
-    """the last frames come out of the white into frame 0 itself, so the loop has no seam."""
-    n = 12; m = smooth((f - (E.DUR_F - n - 1)) / n)
-    if m <= 0: return out
-    if "f0" not in _F0: _F0["f0"] = opening_white(base105(E.SHOTS[0], 0), 0)
-    return np.clip(out * (1 - m) + _F0["f0"] * m, 0, 1)
+    """the loop: when the last embers reach the sun it flares and its light bursts out over the whole frame (radial rays);
+    under the flash the picture becomes frame 0 (the boat), and the light collapses back into the sun, which is frame 0's sun."""
+    k = kof(f)
+    if k < ASH["flash0"]: return out
+    if "f0" not in _F0: _F0["f0"] = base105(E.SHOTS[0], 0)
+    sx, sy = W * SUN_T[0], H * SUN_T[1]; t = f / FPS
+    if k < ASH["flash1"]:
+        v = clamp((k - ASH["flash0"]) / (ASH["flash1"] - ASH["flash0"]), 0, 1); base = np.clip(out, 0, 1); rad = 70 + 2600 * eout(v, 2.4)
+    else:
+        v = clamp((k - ASH["flash1"]) / (E.DAWN_K[1] - ASH["flash1"]), 0, 1); base = _F0["f0"]; rad = 100 + 2570 * (1 - ein(v, 2.4))
+    rr = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2)
+    L = smooth_arr(1 - (rr - rad * 0.45) / (rad * 0.55 + 1))[..., None]
+    ang = np.arctan2(_GY - sy, _GX - sx)
+    rays = ((0.5 + 0.5 * np.sin(ang * 23 + t * 1.5) * np.sin(ang * 9 - t)) ** 5)[..., None] * smooth_arr(1 - (rr - rad) / (rad * 0.8 + 1))[..., None]
+    o = 1 - (1 - base) * (1 - LIGHT_G * 0.95 * L)                                         # screen the sunlight over the picture
+    o = o + rays * SUNC * 0.30 * (1 - L)
+    if k < ASH["flash1"]:                                                                # the shock ring of the flare as it bursts out
+        ring = np.exp(-((rr - rad * 0.92) / (20 + rad * 0.06)) ** 2)[..., None]
+        o = o + ring * (SUNC * 0.55 + WHITE * 0.25) * (1 - v)
+    return np.clip(o, 0, 1)
 
 def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
@@ -1856,17 +1875,229 @@ def finish105(out, f, night, logo=False):
     out = out + grain(f, 1.0) * (0.010 + 0.018 * L * (1 - L) * 2.5)
     return np.clip(out * VIG, 0, 1)
 
+# ---------------------------------------------------------------------------- rev 3
+def eclipse_tr(A, B, j, f, sa, sb, pre=10, post=14):
+    """the sun goes out: the moon's black disc slides across the frame with a blazing, streaming corona; the next shot (night)
+    is inside it. A diamond-ring flash fires on its rim as it centres, then the disc swells until night fills the frame."""
+    u = clamp((j + pre + 0.5) / (pre + post), 0, 1); t = f / FPS
+    e1 = eout(clamp(u / 0.55, 0, 1), 2.2)
+    cx = -0.60 * W + 1.10 * W * e1; cy = H * 0.40
+    R = 0.62 * W + 1.30 * H * ein(clamp((u - 0.50) / 0.50, 0, 1), 2.0)
+    rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2)
+    inside = np.clip((R - rr) / 2.5 + 0.5, 0, 1)[..., None]
+    ang = np.arctan2(_GY - cy, _GX - cx)
+    streak = 0.55 + 0.45 * np.sin(ang * 13 + t * 2.0) * np.sin(ang * 7 - t * 1.3)        # corona streamers
+    d = np.clip(rr - R, 0, None)
+    corona = (np.exp(-d / (16 + 34 * streak)) * (0.55 + 0.45 * streak) * (rr >= R - 2))[..., None]
+    dim = 0.12 + 0.55 * e1                                                               # the world dims as the light goes
+    o = A * (1 - dim) * (1 - inside) + B * inside
+    o = o + corona * (WHITE * 0.55 + SUNC * 0.45) * (1 - 0.7 * ein(clamp((u - 0.55) / 0.45, 0, 1), 1.5))
+    dr = math.exp(-((u - 0.47) / 0.07) ** 2)                                              # the diamond ring
+    if dr > 0.02:
+        px, py = cx + R * 0.92, cy - R * 0.39
+        o = add_glow(o, px, py, 55, 1.5 * dr, WHITE); o = add_glow(o, px, py, 260, 0.55 * dr, SUNC)
+        sh_ = (np.exp(-((_GY - py) / 5) ** 2) * np.exp(-((_GX - px) / 560) ** 2) + np.exp(-((_GX - px) / 4) ** 2) * np.exp(-((_GY - py) / 300) ** 2) * 0.6) * dr
+        o = o + sh_[..., None] * (WHITE * 0.6 + SUNC * 0.4)
+    return np.clip(o, 0, 1)
+
+def gather_bats(out, f, s, m):
+    """bats begin to gather in the darkening sky behind him: a few far silhouettes at first, more toward the drop."""
+    if m is None: return out
+    k = kof(f); g = clamp((k - s["k0"]) / (s["k1"] - s["k0"]), 0, 1); t = f / FPS
+    rng = np.random.default_rng(910); nf = 3 + 30 * g ** 1.4
+    lay = np.zeros((H, W, 4), np.float32)
+    for i in range(34):
+        x0, y0 = rng.uniform(-100, W + 100), rng.uniform(0.03 * H, 0.42 * H); sp = rng.uniform(70, 190) * (1 if rng.random() < 0.6 else -1)
+        sz, ph, hz = rng.uniform(16, 38), rng.random(), rng.uniform(7, 11)
+        a = clamp(nf - i, 0, 1)
+        if a <= 0: continue
+        x = (x0 + sp * t) % (W + 200) - 100; y = y0 + 20 * math.sin(t * 2.3 + i)
+        draw_sprite(lay, bat_sprite((ph + t * hz) % 1.0, sz, 0), x, y, 1.0, 0, 1.0, 0.4, a)
+    a_ = lay[..., 3:4] * (1 - m[..., None])
+    return np.clip(out * (1 - a_) + lay[..., :3] * a_, 0, 1)
+
+def rim_fx(out, f, s, m):
+    """a crimson backlight on his edge (night shots)."""
+    a = s.get("rim", 0.0)
+    if not a or m is None: return out
+    inner = np.clip(m - cv2.GaussianBlur(m, (0, 0), 5), 0, 1); glow = np.clip(cv2.GaussianBlur(m, (0, 0), 18) - m, 0, 1)
+    pul = 0.85 + 0.15 * math.sin(f / FPS * 6.0)
+    return np.clip(out + (inner * 1.5 + glow * 0.8)[..., None] * CRIMSON_H * 0.55 * a * pul, 0, 1)
+
+SUN_T = (0.78, 0.13)                                                                     # the sun of frame 0 (the boat): the finale's embers fly into it
+
+ASH = dict(heat=83.5, r0=84.3, r1=86.5, arrive=86.95, flash0=86.75, flash1=87.25)
+
+LIGHT_G = np.clip(DAWNW * 0.62 + SUNC * 0.40, 0, 1)
+
+_AS = {}
+
+def ash_setup(s):
+    """once: the burn order over his silhouette (edges facing the sun first, the core last, a ragged paper-burn edge) and the
+    ember particles."""
+    if "R" in _AS: return _AS
+    f_r = E.fh(ASH["r0"]); img, m0 = render_shot(s, f_r, True, True)
+    mb = (m0 > 0.5).astype(np.uint8)
+    dn = cv2.distanceTransform(mb, cv2.DIST_L2, 5).astype(np.float32); dn = dn / (np.percentile(dn[mb > 0], 99) + 1e-6)
+    rng0 = np.random.default_rng(431)
+    noise = (cv2.resize(rng0.random((24, 14)).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC) * 0.6
+             + cv2.resize(rng0.random((90, 52)).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC) * 0.4)
+    o = 0.46 * np.clip(dn, 0, 1) + 0.30 * (1 - _GX / W) + 0.12 * (_GY / H) + 0.20 * noise
+    lo, hi = np.percentile(o[mb > 0], 2), np.percentile(o[mb > 0], 98)
+    on = np.clip((o - lo) / (hi - lo + 1e-6), 0, 1)
+    _AS["R"] = ASH["r0"] + (ASH["r1"] - ASH["r0"]) * on                                  # release time (k) for every pixel
+    ys, xs = np.nonzero(mb); rng = np.random.default_rng(432); N = 3000
+    pick = rng.choice(len(xs), N, replace=len(xs) < N)
+    px, py = xs[pick].astype(np.float32), ys[pick].astype(np.float32)
+    kr = _AS["R"][ys[pick], xs[pick]]
+    _AS.update(px=px, py=py, col=np.clip(img[ys[pick], xs[pick]].astype(np.float32), 0, 1), kr=kr,
+               ka=np.minimum(kr + rng.uniform(0.7, 1.4, N), ASH["arrive"]), vx=rng.uniform(-110, 110, N).astype(np.float32),
+               vy=rng.uniform(140, 380, N).astype(np.float32), ph=rng.uniform(0, 6.3, N).astype(np.float32),
+               th0=rng.uniform(0, 6.3, N).astype(np.float32), rho=rng.uniform(40, 230, N).astype(np.float32))
+    return _AS
+
+def clean_plate(out, m):
+    """the street behind him, guessed: each row continues the background on either side of him (the street, the hedge line and
+    the sky are horizontal), smoothed, with a little texture. Rows he fills completely take the nearest row that shows the street."""
+    q = cv2.resize(np.clip(out, 0, 1), (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    bg = (cv2.resize(m, (W // 4, H // 4), interpolation=cv2.INTER_AREA) < 0.15).astype(np.float32)
+    cnt = bg.sum(1); rows = (q * bg[..., None]).sum(1) / np.maximum(cnt, 1)[:, None]
+    good = cnt > 6; idx = np.arange(len(cnt))
+    if good.any():
+        for c in range(3): rows[:, c] = np.interp(idx, idx[good], rows[good, c])
+    rows = cv2.GaussianBlur(rows[:, None, :], (0, 0), sigmaX=0.1, sigmaY=4)[:, 0, :]
+    pl = np.repeat(rows[:, None, :], W // 4, axis=1)
+    tex = cv2.GaussianBlur(q, (0, 0), 6) - cv2.GaussianBlur(q, (0, 0), 20)               # a breath of the frame's own texture
+    pl = np.clip(pl + tex * 0.3, 0, 1)
+    return cv2.GaussianBlur(cv2.resize(pl, (W, H), interpolation=cv2.INTER_LINEAR), (0, 0), 3) * 0.9
+
+def ash_body(out, f, s, m):
+    """the paper burn on his body (runs before the sun is drawn, so the sun only sees the street where he has gone): a
+    charred edge, then a thin glowing line, then the street behind him."""
+    k = kof(f)
+    if k < ASH["r0"] - 0.15 or m is None: return out
+    R = ash_setup(s)["R"]; d = k - R
+    mh = cv2.dilate(np.clip(m * 1.8 - 0.15, 0, 1), np.ones((7, 7), np.uint8))          # a hard matte, a little wide: no ghost of his edge
+    char = mh * smooth_arr((d + 0.13) / 0.10)                                            # it chars just ahead of the flame
+    rel = mh * smooth_arr(d / 0.035)                                                     # what has burnt away
+    front = m * np.exp(-((d - 0.01) / 0.03) ** 2)                                        # the thin burning line
+    out = out * (1 - 0.70 * char[..., None] * (1 - rel[..., None]))
+    if rel.max() > 0.001: out = out * (1 - rel[..., None]) + clean_plate(out, m) * rel[..., None]
+    halo = cv2.GaussianBlur(front, (0, 0), 6)
+    return out + front[..., None] * (EMBER * 2.4 + np.array([0.25, 0.45, 0.55], np.float32)) + halo[..., None] * EMBER * 1.2
+
+def ashes_fx(out, f, s, m):
+    """ASHES TO SUN: he burns away like paper (a charred edge, a thin glowing line, the street behind showing through), from the
+    side facing the sun inward; every burnt piece becomes an ember that drifts up and spirals into the sun."""
+    k = kof(f)
+    if k < ASH["r0"] - 0.15 or m is None: return out
+    A_ = ash_setup(s)
+    alive = (k > A_["kr"]) & (k < A_["ka"])
+    if alive.any():
+        kr, ka = A_["kr"][alive], A_["ka"][alive]
+        sP = np.clip((k - kr) / (ka - kr), 0, 1); tau = (k - kr) * E.HB
+        dx = A_["px"][alive] + A_["vx"][alive] * tau + 26 * np.sin(5 * tau + A_["ph"][alive])
+        dy = A_["py"][alive] - A_["vy"][alive] * tau - 90 * tau * tau
+        th_ = A_["th0"][alive] + 7.0 * sP; rho = A_["rho"][alive] * (1 - sP) ** 1.4
+        tx, ty = W * SUN_T[0] + rho * np.cos(th_), H * SUN_T[1] + rho * np.sin(th_)
+        e = sP ** 1.7 * (3 - 2 * sP)
+        x = dx * (1 - e) + tx * e; y = dy * (1 - e) + ty * e
+        h1 = np.clip(sP * 3, 0, 1)[:, None]; h2 = np.clip((sP - 0.6) / 0.4, 0, 1)[:, None]
+        col = A_["col"][alive] * 1.4 * (1 - h1) + EMBER * 1.6 * h1
+        col = col * (1 - h2) + (WHITE * 0.7 + SUNC * 0.5) * 1.5 * h2
+        b = (np.clip((k - kr) / 0.05, 0, 1) * (0.7 + 0.6 * sP))[:, None]
+        xi, yi = (x / 2).astype(np.int32), (y / 2).astype(np.int32)
+        ok = (xi >= 0) & (xi < W // 2) & (yi >= 0) & (yi < H // 2)
+        buf = np.zeros((H // 2, W // 2, 3), np.float32)
+        np.add.at(buf, (yi[ok], xi[ok]), col[ok] * b[ok])
+        core = cv2.GaussianBlur(buf, (0, 0), 0.7); glow = cv2.GaussianBlur(buf, (0, 0), 4.0)
+        out = out + cv2.resize(core * 1.3 + glow * 3.0, (W, H), interpolation=cv2.INTER_LINEAR)
+    return out
+
+TR2.update({"eclipse": (eclipse_tr, 10, 14)})
+
+def card_flip(A, B, j, f, sa, sb, pre=9, post=11):
+    """a sunny card flip: the frame turns over in 3D around its vertical axis (a slight bow, a hot specular glint as it passes
+    edge-on to the sun) against the bright blurred sky of both shots; the next shot is on its back."""
+    u = clamp((j + pre + 0.5) / (pre + post), 0, 1); e = u * u * (3 - 2 * u); th = e * math.pi
+    face = A if th < math.pi / 2 else B
+    ang = th if th < math.pi / 2 else th - math.pi
+    sky = cv2.resize(cv2.GaussianBlur(cv2.resize((A + B) * 0.5, (W // 8, H // 8), interpolation=cv2.INTER_AREA), (0, 0), 6), (W, H))
+    sky = np.clip(sky * 0.55 + SUNC * 0.42, 0, 1)
+    sc = 0.86 + 0.14 * abs(math.cos(th)) ** 0.5                                          # it pulls back a little as it turns
+    foc = 2400.0; c, s_ = math.cos(ang), math.sin(ang)
+    pts = []
+    for (x, y) in ((-W / 2, -H / 2), (W / 2, -H / 2), (W / 2, H / 2), (-W / 2, H / 2)):
+        X, Z = x * c * sc, x * s_ * sc; Y = y * sc
+        p = foc / (foc + Z); pts.append((W / 2 + X * p, H / 2 + Y * p))
+    M = cv2.getPerspectiveTransform(np.float32([(0, 0), (W, 0), (W, H), (0, H)]), np.float32(pts))
+    card = cv2.warpPerspective(face.astype(np.float32), M, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
+    msk = cv2.warpPerspective(np.ones((H, W), np.float32), M, (W, H), flags=cv2.INTER_LINEAR)[..., None]
+    shade = 0.75 + 0.25 * abs(math.cos(ang))
+    glint = math.exp(-((abs(ang) - 1.25) / 0.18) ** 2)                                  # it catches the sun as it turns edge-on
+    card = card * shade + glint * 0.45 * SUNC
+    sh = cv2.GaussianBlur(msk[..., 0], (0, 0), 30)[..., None] * 0.35
+    o = sky * (1 - sh) * (1 - msk) + card * msk
+    return np.clip(o, 0, 1)
+
+_PF2 = {}
+def palm_frond(seed, L=900):
+    """a palm frond silhouette (RGBA, dark green-black): a curved spine with long drooping leaflets."""
+    if seed in _PF2: return _PF2[seed]
+    rng = np.random.default_rng(seed); w, h = int(L * 1.25), int(L * 0.75); m = np.zeros((h, w), np.float32)
+    sp = [(w * 0.04 + L * q, h * 0.30 + L * 0.32 * q * q - L * 0.05 * math.sin(q * 3)) for q in np.linspace(0, 1, 40)]
+    cv2.polylines(m, [np.array(sp, np.int32)], False, 1.0, max(3, L // 90), cv2.LINE_AA)
+    for i in range(2, 38):
+        x0, y0 = sp[i]; dx, dy = sp[i + 1][0] - sp[i - 1][0], sp[i + 1][1] - sp[i - 1][1]; n_ = math.hypot(dx, dy) + 1e-6
+        for side in (-1, 1):
+            ll = L * (0.30 + 0.12 * math.sin(i / 38 * math.pi)) * rng.uniform(0.8, 1.1) * (1 - 0.6 * (i / 38) ** 3)
+            a0 = math.atan2(dy, dx) + side * rng.uniform(0.55, 0.9)
+            tip = (x0 + ll * math.cos(a0), y0 + ll * math.sin(a0) + ll * 0.35)
+            mid = ((x0 + tip[0]) / 2 + side * 6, (y0 + tip[1]) / 2)
+            wdt = max(2, int(L / 70))
+            poly = np.array([(x0, y0), (mid[0] - wdt * (-dy / n_), mid[1] - wdt * (dx / n_)), tip, (mid[0] + wdt * (-dy / n_), mid[1] + wdt * (dx / n_))], np.int32)
+            cv2.fillPoly(m, [poly], 1.0, cv2.LINE_AA)
+    rgb = np.zeros((h, w, 3), np.float32) + np.array([0.04, 0.07, 0.05], np.float32)
+    _PF2[seed] = np.dstack([rgb, cv2.GaussianBlur(m, (0, 0), 0.8)]).astype(np.float32); return _PF2[seed]
+
+def palm_sweep(A, B, j, f, sa, sb, pre=9, post=11):
+    """palm fronds sweep past the lens against the sun (near ones big and soft, far ones sharp); in their shadow the next shot
+    comes in, warm light flickering through the leaves."""
+    u = clamp((j + pre + 0.5) / (pre + post), 0, 1); t = f / FPS
+    lay = np.zeros((H, W, 4), np.float32)
+    for i, (seed, z, y0, flip) in enumerate(((11, 0.55, 0.20, 1), (12, 0.75, 0.62, -1), (13, 0.42, 0.88, 1), (14, 0.9, 0.40, -1), (15, 0.5, 0.05, -1))):
+        fr = palm_frond(seed)
+        x = (-0.9 * W + 3.6 * W * eout(clamp(u * 1.18 - i * 0.03, 0, 1), 1.3)) * (1 / z) * 0.55 + W * 0.2
+        y = H * y0 + 40 * math.sin(t * 3 + i)
+        sc = 1.25 / z; rot = 18 * math.sin(t * 2 + i) + (8 if flip > 0 else -8)
+        draw_sprite(lay, fr, x, y, sc, rot, flip, clamp((0.8 - z) * 14, 0, 9), 1.0)
+    a = lay[..., 3:4]
+    cov = clamp(math.sin(math.pi * u) * 1.2, 0, 1)
+    mix = smooth(clamp((u - 0.35) / 0.3, 0, 1))
+    base = A * (1 - mix) + B * mix
+    dapple = cv2.resize(cv2.GaussianBlur(cv2.resize(a, (W // 8, H // 8), interpolation=cv2.INTER_AREA), (0, 0), 3), (W, H))
+    base = base * (1 - 0.35 * dapple[..., None] * cov) + SUNC * 0.10 * (1 - dapple[..., None]) * cov
+    return np.clip(base * (1 - a) + lay[..., :3] * a, 0, 1)
+
+TR2.update({"card_flip": (card_flip, 9, 11), "palm_sweep": (palm_sweep, 9, 11)})
+
 def base105(s, f):
     sp = sun_pos(s, f); m = None
     if s.get("bloodmoon"): out = bloodmoon_fx(f, s)
-    elif s.get("seg") and (sp is not None or s.get("daybreak")): out, m = render_shot(s, f, True, True)
+    elif s.get("seg") and (sp is not None or s.get("daybreak") or s.get("rim") or s.get("gather")): out, m = render_shot(s, f, True, True)
     else: out = render_shot(s, f)
     if s.get("ghost"): out = ghost_fx(out, f, s)
-    if sp is not None: out = sun_fx(out, f, sp[0], sp[1], sp[2], SUNC if s.get("look") == "day" else SUNC * 0.6 + DUSKC * 0.5, sp[3], m)
-    if s.get("motes"): out = day_motes(out, f, s, m, sp)
+    if s.get("gather"): out = gather_bats(out, f, s, m)
+    ms = m
+    if s.get("daybreak") and m is not None and kof(f) > ASH["r0"] - 0.2:               # he burns first, and the sun only sees what is left of him
+        out = ash_body(out, f, s, m)
+        ms = m * (1 - smooth_arr((kof(f) - ash_setup(s)["R"]) / 0.035)) * (kof(f) < ASH["r1"] + 0.1)
+    if sp is not None: out = sun_fx(out, f, sp[0], sp[1], sp[2], SUNC if s.get("look") == "day" else SUNC * 0.6 + DUSKC * 0.5, sp[3], ms)
+    if s.get("motes"): out = day_motes(out, f, s, ms, sp)
+    if s.get("rim"): out = rim_fx(out, f, s, m)
     if s.get("flare"): out = anam_flare(out, s["flare"], f)
     if s.get("fog"): out = fog_fx(out, f, s["fog"])
-    if s.get("daybreak"): out = daybreak_fx(out, f, s, m)
+    if s.get("daybreak"): out = daybreak_fx(out, f, s, ms)
     if s.get("spin"): out = spin_fx(out, f, s)
     else: out = cam_float(out, f, s)
     return out

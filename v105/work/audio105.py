@@ -741,6 +741,13 @@ def fx105():
         elif tin == "moon_iris":                                                         # THE BLOOD MOON
             place_w(fx, rev_swell(0.30, -24, 1366), t0 - 0.30); place_w(fx, toll(-22), t0 - 0.01)
             place_w(fx, stereo(A2.impact(-19, (40, 22), 0.9, 0.1, 1367)), t0)
+        elif tin == "eclipse":                                                           # the sun goes out
+            place_w(fx, rev_swell(0.30, -22, 1460), t0 - 0.30); place_w(fx, stereo(A2.impact(-17, (44, 24), 1.0, 0.05, 1461)), t0 - 0.02)
+            place_w(fx, np.stack([A2.shimmer(1.1, -24)] * 2, 1), t0); place_w(fx, toll(-27, 116.54, 2.5), t0 + 0.02)
+        elif tin == "card_flip":                                                         # the card turns over
+            place_w(fx, A2.whoosh(0.30, -17, 1462, True), t0 - 9 / E.FPS); place_w(fx, stereo(click(-20, 1463)), t0 - 0.005)
+        elif tin == "palm_sweep":                                                        # palm fronds past the lens
+            place_w(fx, leaves(0.45, -15, 1464), t0 - 9 / E.FPS); place_w(fx, A2.whoosh(0.26, -19, 1465, False), t0 - 6 / E.FPS)
         elif tin == "cape":                                                              # the cape sweeps the lens
             place_w(fx, cloth_whoosh(0.36, -12, 1440), t0 - 8 / E.FPS)
         elif tin == "mist":                                                              # he turns to mist
@@ -759,10 +766,18 @@ def fx105():
     hero = next(x for x in E.TEXT if x["style"] == "hero"); place_w(fx, wings(0.45, -21, 1380, 40, (9, 12), shape=lambda u: np.clip(u / 0.1, 0, 1) * (1 - u)), hero["end"] - 0.05)
     # sub hits on the phrase starts
     for k_ in (48, 64): place_w(fx, stereo(A2.impact(-21, (42, 22), 0.6, 0.1, 1390 + k_)), th(k_) - 0.005)
-    place_w(fx, crackle(th(87.4) - th(84.6), -17, 1450), th(84.6))                   # he burns: embers crackle as the light takes him
-    # DAYBREAK: the chord swells as the frame burns white; its tail rings into frame 0 (wrapped below)
-    place_w(fx, dawn_chord(th(88) - th(84.5), -19), th(84.5)); place_w(fx, rev_swell(0.6, -24, 1395), E.DUR - 0.6)
-    place_w(fx, np.stack([A2.shimmer(1.6, -30)] * 2, 1), E.DUR - 0.02)
+    # ASHES TO SUN: he burns (crackle and a paper-burn hiss), the embers rise into the sun (a riser), the sun flares (a bright
+    # impact and shimmer), the light collapses back into it (a reverse swell) and the loop lands on frame 0 with a warm bloom
+    place_w(fx, crackle(th(86.8) - th(83.6), -16, 1450), th(83.6))
+    n_ = I(th(86.5) - th(84.3)); q = np.arange(n_) / SR
+    hiss = bq(noise(n_, 1451), "band", np.array([2500, 9000]), 2) * np.sin(np.pi * q / q[-1]) ** 0.7
+    place_w(fx, stereo(norm(hiss, -22), -0.2), th(84.3))
+    place_w(fx, A2.riser(th(86.75) - th(85.2), -16, 1452), th(85.2))
+    place_w(fx, stereo(A2.impact(-17, (90, 50), 0.5, 0.25, 1453)), th(86.75)); place_w(fx, np.stack([A2.shimmer(1.4, -22)] * 2, 1), th(86.75))
+    place_w(fx, rev_swell(E.DUR - th(87.25), -19, 1454), th(87.25))
+    place_w(fx, dawn_chord(th(88) - th(83.5), -20), th(83.5))
+    place_w(fx, stereo(A2.impact(-21, (60, 34), 1.2, 0.0, 1455)), E.DUR - 0.004)            # the warm bloom as the sun of frame 0 lands (wraps)
+    place_w(fx, np.stack([A2.shimmer(1.6, -27)] * 2, 1), E.DUR - 0.02)
     over = fx[N + PRE:]; fx = fx[:N + PRE]; fx[PRE:PRE + len(over)] += over         # wrap the tail into the start of the loop
     return fx
 
