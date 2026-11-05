@@ -219,5 +219,22 @@ Everything settles to exactly the frame-0 image. Sound: an anticipation swell, t
 
 Sound: a crack, the tear ripping across the stereo field, a deep reversed swell into a sub drop, the Speed Force roar and whine, and a whoosh and impact on arrival.
 
-REV4_RESULTS_V11
+### Ship checkpoint (rev 4, measured on the encoded MP4)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1247 frames, decodes clean |
+| Loudness | −13.2 LUFS, −3.4 dBTP after AAC |
+| Faces / text | every shot centred; no text over faces |
+| Cuts | 16 cuts, 0 audio clicks |
+| Loop seam | blurred diff 0.11; audio continuous |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Review fixes in this pass:**
+- **Coin flip:** at first the reverse side sat off-centre. The emblem is now found by a circle fit to its visible edge, and the real emblem flips in place.
+- **Rift:** made wider and brighter, and the charge-up lightning hands off to it instead of crowding the opening.
+- **Rim flash:** the first version blew the frame out to near-white (mean luma 178 for four frames). It's now a red flare that peaks at 104 with Harrison visible through it.
+
+**Visual sign-off:** frames from the encoded file through the rift (892 → 931), the flip (1165 → 1186), the radiate, the dive (1226 → 1246) and the seam (1246 → 4).
 
