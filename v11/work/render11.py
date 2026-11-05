@@ -8535,21 +8535,21 @@ def text_letsgo(out, f, tx):
     letters crackling; the pair rides the bolt split (drawn before the transition), so the drop tears it apart."""
     t = f / FPS; (w0, t0, _), (w1, t1, _) = tx["words"]
     if t < t0 - 0.02 or t > tx["end"] + 0.02: return out
-    out = out * cap_scrim(1180, 1600, 0.36 * smooth((t - t0 + 0.05) / 0.25))
+    out = out * cap_scrim(1260, 1680, 0.36 * smooth((t - t0 + 0.05) / 0.25))
     a = cap_word(w0, 112, False); v0 = eout(clamp((t - t0) / 0.18, 0, 1), 2.4)
-    out = ease_word(out, a, W / 2, 1250, v0, 1.0, 30)
+    out = ease_word(out, a, W / 2, 1330, v0, 1.0, 30)                                    # clear of his chin
     if t >= t1 - 0.02:
         b = cap_word(w1, 300, True); v = clamp((t - t1) / 0.16, 0, 1); sc = 1.5 - 0.5 * eout(v, 3.0)
         bb = cv2.resize(b, (int(b.shape[1] * sc), int(b.shape[0] * sc)))
         if v < 1: bb = cv2.GaussianBlur(bb, (0, 0), 0.1 + 6 * (1 - v))
         hot = clamp(1 - (t - t1) / 0.30, 0, 1)
         bb[..., :3] = bb[..., :3] * (1 - 0.6 * hot) + GOLDW * 0.6 * hot * (bb[..., 3:4] > 0.5)
-        out = paste(out, bb, int(W / 2 - bb.shape[1] / 2), int(1440 - bb.shape[0] / 2), min(1, v * 1.5))
+        out = paste(out, bb, int(W / 2 - bb.shape[1] / 2), int(1515 - bb.shape[0] / 2), min(1, v * 1.5))
         cv = bolt_canvas()
-        if v < 0.7: put_bolt(cv, (W / 2 + 60, 1120), (W / 2 - 10, 1330), 3600 + f, 4, 0.25, 6, 1)
+        if v < 0.7: put_bolt(cv, (W / 2 + 60, 1200), (W / 2 - 10, 1405), 3600 + f, 4, 0.25, 6, 1)
         hw = b.shape[1] / 2 - 60
         for q in range(2):
-            x0 = W / 2 + (q * 2 - 1) * hw * 0.7; put_bolt(cv, (x0, 1330), (x0 + 40 * (q * 2 - 1), 1250 - 30 * ((f // 3 + q) % 2)), 3610 + q + f // 2, 2, 0.35, 4, 0)
+            x0 = W / 2 + (q * 2 - 1) * hw * 0.7; put_bolt(cv, (x0, 1405), (x0 + 40 * (q * 2 - 1), 1340 - 30 * ((f // 3 + q) % 2)), 3610 + q + f // 2, 2, 0.35, 4, 0)
         out = out + light_from(cv, 0.9 * (0.5 + 0.5 * hot))
     return np.clip(out, 0, 1)
 

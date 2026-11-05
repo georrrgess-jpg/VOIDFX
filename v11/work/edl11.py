@@ -81,8 +81,8 @@ shot("drop", "s4", 32, 38, 28.70, 30.12, z=[(0, 1.06), (1, 1.00)], tin="bolt_spl
      tmap=vel(32, 38, 28.70, 30.12), lin=True, interp="flow", rays=0.8)
 shot("smile", "s4", 38, 42, 31.40, 32.35, z=[(0, 1.00), (1, 1.06)], tin="gold_link", seg=True, arcs=0.4,
      tmap=vel(38, 42, 31.40, 32.35), lin=True, interp="flow")
-shot("run", "s4", 42, 46, 122.95, 123.90, z=[(0, 1.04), (1, 1.10)], tin="whip", seg=True, ev=-0.65,
-     tmap=vel(42, 46, 122.95, 123.90), lin=True, interp="flow")
+shot("run", "s4", 42, 46, 122.95, 123.45, z=[(0, 1.04), (1, 1.10)], tin="whip", seg=True, ev=-0.55,
+     tmap=vel(42, 46, 122.95, 123.45, lo=0.25, hi=1.6), lin=True, interp="flow")
 shot("runlow", "s4", 46, 50, 137.20, 138.15, z=[(0, 1.00), (1, 1.06)], tin="slices", face=None, cx=(500, 540), ev=-0.15,
      tmap=vel(46, 50, 137.20, 138.15), lin=True, interp="flow")
 # the time freeze among the soldiers: time stops on the beat, the camera glides through it (bullet time), time resumes
