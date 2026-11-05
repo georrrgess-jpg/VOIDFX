@@ -103,3 +103,21 @@ Each pass asked "what would make this unforgettable?", not just "what's broken?"
 6. **Text-over-face rules:** the enso ring landed around his face (too close to the rejected v7 "target ring"), so it was replaced by a lamp-on: he walks out of the dark. The v7 blood-on-the-lens drop landed on his face, so it was replaced by a film burn into the red kill room.
 7. **Ink bleed:** it held about 7 fully black frames on the P4 downbeat; the blooms now leave gaps.
 8. **Other replacements:** the blinds transition moiréd in mono, so it was replaced by the camera shutter. The red-lit smirk wasn't detected at 344.5 (the crop showed an arm), so it now starts on the face at 346.9.
+9. **Full render 1: 9/10, not shipped.** The loop seam failed (blurred difference 18.9): frame 0 has the faint ghost of the first shot washed into the paper, but the ink drained to clean paper. Now the ink drains back onto exactly the same ghosted paper. The final shot was also lifted in exposure (target 0.46) so the ending reads.
+
+## Checkpoint: render 2, 10/10 PASS, visual sign-off PASS (shipped)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1378 frames (22.97 s), H.264 + AAC, fast-start, 16 Mb/s cap |
+| Loudness after AAC | −13.3 LUFS, true peak −4.0 dBTP |
+| Clicks | 0 at the 24 cuts; loop seam clean by the QC rule |
+| Loop seam picture | paper at both ends: blurred difference 0.12 |
+| Faces | centred in every shot; 0 text-over-face frames. Frame 300 was checked: the detection is his knee, and the caption sits below his face. The low detections at 774–856 fall where there's no text |
+| Black frames | none |
+| Length | audio and video within 9.3 ms |
+| Voice vs music | the voice is 8–13 dB above the music in the speech band (300 Hz–4 kHz) |
+
+**Visual sign-off** was done on frames pulled from the encoded MP4: the whole edit every 22 frames, every cut (6 frames around each), all five set pieces frame by frame, the flagged frames and the seam.
+
+**Not verified:** watching and listening in real time. The sound was checked by measurement only.

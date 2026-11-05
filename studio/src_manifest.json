@@ -170,6 +170,27 @@
    "uploaded_as": "4K_PACK.mp4 or topaz_Dexter_S1-S8.mp4 (v2 uploads)"
   },
   {
+   "file": "smooth_criminal.mp3",
+   "bytes": 4500070,
+   "sha256": "cb78a552b61b820e6dcf408a4c3fd3c2becd177377dae120bb2f6f291b8d0397",
+   "duration": "259.395918",
+   "uploaded_as": "Michael_Jackson_-_Smooth_Criminal_Lyrics.mp3"
+  },
+  {
+   "file": "still_love_you_rec.wav",
+   "bytes": 4426826,
+   "sha256": "b32adcc03f41248eddd2cc75f877868e557a9e6075a0997145b4f5c5b81a844c",
+   "duration": "23.055979",
+   "uploaded_as": "extracted from still_love_you_screenrec.mp4 (ffmpeg -vn, 48 kHz stereo PCM)"
+  },
+  {
+   "file": "still_love_you_screenrec.mp4",
+   "bytes": 21635188,
+   "sha256": "36f07525b6f3820209f91f6c27204c8dcc657f6b7c19fab150a5cd7bea2bfda5",
+   "duration": "23.063674",
+   "uploaded_as": "ScreenRecording_11-04-2026_18-23-11_1.mp4 (TikTok sound page: still love you (super slowed + reverb), GLM-RST)"
+  },
+  {
    "file": "trinity_goodbye.mp4",
    "bytes": 21768129,
    "sha256": "9a08ab615692e88b5f20b00dbdd8daa9c672c1be145e82b5a78a7880677de1d0",

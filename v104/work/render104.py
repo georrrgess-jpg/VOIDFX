@@ -6221,6 +6221,7 @@ def main():
 
 
 
+
 # >>> v104 section (generated from fx104.py by splice.py)
 # ============================================================================ v104 — SMOOTH CRIMINAL — Dexter × Michael Jackson: toolkit from the v103 FOREVER standard (restyle it)
 # spliced into render104.py before main() by splice.py; the last definitions win, so this section owns the frame.
@@ -6915,12 +6916,17 @@ def drop_at(f):
     u = clamp((k - 9) / 3.0, 0, 1)                                                     # falls k9 -> k12 (lands on the bass)
     y = 70 + (DROP_Y - 70) * u * u; return W / 2, y, 24, 1.0 + 1.6 * u
 
+def open_paper(a=0.10):
+    """the paper of the pickup: the first shot washed faintly into it (the loop drains back onto exactly this)."""
+    if ("op", a) not in _PP:
+        ghost = render_shot(E.SHOTS[1], E.SHOTS[1]["f0"], False); gL = lum(ghost)[..., None]
+        _PP[("op", a)] = np.clip(paper() * (1 - a * (1 - gL)) + INK * a * (1 - gL) * 0.3, 0, 1).astype(np.float32)
+    return _PP[("op", a)]
+
 def ink_open(f, s):
     """pickup: paper, a ghost of the first shot washed into it, and the drop."""
-    o = paper().copy()
-    ghost = render_shot(E.SHOTS[1], E.SHOTS[1]["f0"], False)
-    gL = lum(ghost)[..., None]; a = 0.10 + 0.05 * smooth(f / FPS / (12 * E.HB))
-    o = o * (1 - a * (1 - gL)) + INK * a * (1 - gL) * 0.3
+    a = 0.10 + 0.05 * smooth(f / FPS / (12 * E.HB))
+    o = open_paper(0.10) * (1 - smooth(f / FPS / (12 * E.HB))) + open_paper(0.15) * smooth(f / FPS / (12 * E.HB))
     x, y, r, stv = drop_at(f)
     lay = np.zeros((H, W, 4), np.float32); draw_sprite(lay, drop_shape(int(r)), x, y, 1.0, 0, 1.0, 0.0, 1.0, 1.0 / stv)
     sh = cv2.GaussianBlur(lay[..., 3], (0, 0), 10)[..., None] * 0.20
@@ -6952,14 +6958,15 @@ def ink_out(out, f, s):
     u = clamp((k - k0) / (E.K_END - 1.2 - k0), 0, 1)
     R = 2300 * (1 - ein(u, 1.4)) + 24
     fld = bloom_field(W / 2, DROP_Y, R, 81, rough=0.45 * (1 - u) + 0.05); m, rim = ink_edge(fld, 10 + 40 * (1 - u))
-    o = paper() * (1 - m[..., None]) + out * m[..., None]
+    pp = open_paper(0.10)
+    o = pp * (1 - m[..., None]) + out * m[..., None]
     o = o * (1 - rim[..., None] * 0.7) + INK * rim[..., None] * 0.7
     if u > 0.82:                                                                       # the last blob becomes the drop and lifts away
         v = (u - 0.82) / 0.18; lay = np.zeros((H, W, 4), np.float32)
         y = DROP_Y - (DROP_Y + 120) * ein(v, 2.2)
         draw_sprite(lay, drop_shape(24), W / 2, y, 1.0, 180, 1.0, 0.0, 1.0, 1.0 / (1 + 1.4 * v))
         o = o * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4]
-        o = paper() * smooth(v * 1.5) + o * (1 - smooth(v * 1.5)) if v > 0.4 else o
+        o = pp * smooth(v * 1.5) + o * (1 - smooth(v * 1.5)) if v > 0.4 else o
         if v > 0.4: o = o * (1 - lay[..., 3:4]) + lay[..., :3] * lay[..., 3:4]
     return np.clip(o, 0, 1)
 

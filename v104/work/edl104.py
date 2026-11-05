@@ -93,7 +93,7 @@ shot("walkout", "p1", 140, 148, 186.60, tin="lamp_on", z=[(0, 1.00), (1, 1.08)],
 shot("torch", "p10", 148, 152, 161.20, tin="wrap", z=[(0, 1.00), (1, 1.06)], flare=1.0)
 shot("darkside", "p8", 152, 156, 297.60, tin="torch_blind", z=[(0, 1.02), (1, 1.08)])
 shot("grin", "p9", 156, 162, 41.00, tin="pupil_dive", z=[(0, 1.00), (1, 1.08)])
-shot("low", "p9", 162, 172, 222.60, tin="zipper", z=[(0, 1.00), (1, 1.10)], ink_out=dict(k0=166))
+shot("low", "p9", 162, 172, 222.60, tin="zipper", z=[(0, 1.00), (1, 1.10)], ink_out=dict(k0=166), target=0.46)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

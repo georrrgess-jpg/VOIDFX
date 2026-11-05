@@ -329,6 +329,7 @@ Only then deliver.
 | v101 THE LESS YOU KNOW | 16 mm psychedelic reel (oxblood / amber / plum liquid light, film burn, 70s soft-serif type). **Rejected: don't reuse** |
 | v102 LET GO (The Flash) | storm (crimson suit, gold lightning with white-hot cores, steel-blue shadows, gold halation, anamorphic flares) |
 | v103 FOREVER | undertow (deep teal-black water, bone highlights, blood the only warm colour, caustics, marine snow, cyan halation) |
+| v104 THE PASSENGER | SUMI ink wash (ivory paper highlights with fibres, ink-blue lifted blacks, only strong reds kept as red ink; ink drop, ink blooms, brush strokes, ink-bled vignette) |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);
@@ -356,6 +357,7 @@ Fresh directions for future edits:
 | v101 | Tame Impala "The Less I Know The Better" | 117 BPM | half-beats 7–95 (0:01.9–0:24.4, 11 bars); the last half bar is the song's own intro pickup, so the loop wraps onto the first downbeat | 0:10.08, the bassline enters after the 4-bar drum intro → film burn-through |
 | v102 | Ark Patrol "Let Go" | 164 BPM | half-beats 720–848 (2:11.8–2:35.2, 16 bars); the last 6 half-beats rewind the whole edit back to the start | 2:20.56, drop 2 (+31 dB) → the strike |
 | v103 | Foo Fighters "Everlong" | 158 BPM | h1000–h1080 + h1096–h1152 (3:09.9–3:38.7; two riff bars spliced out) | 3:20.51, the full band returns → THE RIP (rev 4; was THE SAMPLE) |
+| v104 | GLM-RST "still love you (super slowed + reverb)" (TikTok sound, screen-recorded) | 112.19 BPM (fitted to the sub-bass hits; k = sixteenth 0.13370 s, k0 = 0.042 s) | the whole 23 s clip: synth pickup + five two-bar phrases, ends on a loop boundary | 1.65 s, the sub-bass enters → THE INK DROP lands |
 
 ## 11. Communication
 
