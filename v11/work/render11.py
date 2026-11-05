@@ -8299,7 +8299,7 @@ def red_slices(A, B, j, f, sa, sb, pre=6, post=9):
 def red_streak(A, B, j, f, sa, sb, pre=8, post=8):
     """the rival runs: a red lightning streak tears across the frame at chest height and the hero is behind it."""
     p = (j + pre + 1) / (pre + post); hx = -300 + (W + 600) * ein(p, 1.15)
-    bx = face_box(sb, sb["f0"]); y = min(H * 0.90, max(H * 0.66, (bx[2] + 110) if bx else 0))      # below his face
+    bx = face_box(sb, sb["f0"]); y = min(H * 0.90, max(H * 0.78, (bx[2] + 150) if bx else 0))      # below his chin
     m = np.clip((hx - _GX - 40) / 160, 0, 1)[..., None]                                   # B behind the head of the streak
     smear = hblur(A, 60 + 200 * math.sin(math.pi * p))
     wake = np.exp(-((_GY - y) / 300) ** 2)[..., None] * np.clip(1 - (hx - _GX) / 900, 0, 1)[..., None] * (_GX < hx)[..., None]
@@ -8372,7 +8372,7 @@ def bolt_split(A, B, j, f, sa, sb, pre=22, post=16):
     o = Bz * side + Az * (1 - side)
     cv = bolt_canvas(); cv2.polylines(cv, [bolt_path(shift).astype(np.int32)], False, 255, 7, cv2.LINE_AA)
     o = o + light_rgb(cv, 1.6 * (1 - v) + 0.3, GOLDW, GOLD2)
-    if j < 3: o = o + (1 - j / 3) * 0.55 * (GOLDW * 0.6 + 0.4)                            # the impact frame
+    if j < 3: o = o + (1 - j / 3) * 0.30 * (GOLDW * 0.6 + 0.4)                            # the impact frame (brief, not a white-out)
     return np.clip(o, 0, 1)
 
 # ---- the gold moves ---------------------------------------------------------------------------------------------
@@ -8420,7 +8420,7 @@ def speed_warp(out, f, amt, c=None):
 def emblem_flash(A, B, j, f, sa, sb, pre=12, post=12):
     """the emblem reveal: the Flash emblem draws itself in light over the frame (the ring traced round, the bolt
     slashed in), flares, and the next shot opens through the ring."""
-    cx, cy, R = W / 2, H * 0.47, 330
+    cx, cy, R = W / 2, 1690, 190                                         # drawn where his chest emblem will be (off the face)
     ring, disc, bolt = emblem_shape(cx, cy, R)
     if j < 0:
         u = (j + pre + 1) / pre; cv = bolt_canvas()
@@ -8431,7 +8431,7 @@ def emblem_flash(A, B, j, f, sa, sb, pre=12, post=12):
             k = clamp((u - 0.55) / 0.45, 0, 1); n = max(2, int(len(P) * k + 1))
             cv2.polylines(cv, [np.stack([cx + P[:n, 0] * R, cy + P[:n, 1] * R], 1).astype(np.int32)], False, 255, 6, cv2.LINE_AA)
         return np.clip(A * (1 - 0.35 * u) + light_from(cv, 1.0 + 0.6 * u), 0, 1)
-    v = (j + 1) / post; s_ = 1 + 6 * ein(v, 2.0)
+    v = (j + 1) / post; s_ = 1 + 11 * ein(v, 2.0)
     ring, disc, bolt = emblem_shape(cx, cy, R * s_)
     m = cv2.GaussianBlur(disc, (0, 0), 3)[..., None]
     o = B * m + A * (1 - 0.5 * v) * (1 - m)
@@ -8470,6 +8470,15 @@ def loop_in(out, f, k, n=14):
     v = k / n; amt = 3 + 22 * 0.4 * (1 - smooth(v)) ** 1.2
     return red_vibe(out, amt * (1 - v) + 0.6, f, 6) if amt * (1 - v) > 0.6 else out
 
+# ---- the time freeze: the world drains to steel, he stays in colour (alive=True) ------------------------------
+_frozen_world_v10 = frozen_world
+def frozen_world(img, person, f, s, amt):
+    """the stopped moment: gold sparks hang in the air; the colour only partly drains (drain=), so he stays readable."""
+    o = _frozen_world_v10(img, person, f, s, amt)
+    d = s.get("drain")
+    if d is None: return o
+    return np.clip(img + (o - img) * d, 0, 1)
+
 # ---- graphics in the frame -------------------------------------------------------------------------------------
 def base11(s, f):
     img, person = base10(s, f)
@@ -8505,6 +8514,16 @@ def beat_fx(out, f):
     if not hook or ph > 0.06: return out
     k = math.exp(-ph / 0.025)
     return np.clip(rgb_split(radial_blur(out, W / 2, H * 0.46, 1.0, 1.0 + 0.04 * k, 4), 8 * k), 0, 1)
+
+_ramp_v10 = ramp
+def ramp(A, B, j, f, sa, sb, pre=6, post=7):
+    """the speed ramp, without the brightness lift (the fire shots are already hot)."""
+    if j < 0:
+        u = (j + pre + 1) / pre; z = 1 + 0.25 * ein(u, 2.2)
+        return np.clip(hblur(zoom_about(A, W / 2, H * 0.45, z), 2 + 180 * ein(u, 2)), 0, 1)
+    v = (j + 1) / post; z = 1 + 0.22 * (1 - eout(v, 2.4))
+    return np.clip(hblur(zoom_about(B, W / 2, H * 0.45, z), 2 + 160 * (1 - eout(v, 2))), 0, 1)
+TR2["ramp"] = (ramp, 6, 7)
 
 def init_hits():
     HITS.clear()
