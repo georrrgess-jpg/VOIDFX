@@ -888,10 +888,12 @@ def passenger_fx(f, s):
     n = nz(121, (40, 22)); fib = np.clip((sh - 0.15 - 0.35 * (n - 0.5)) * 3.0, 0, 1)    # fibrous ink edges
     wisp = np.clip((cv2.GaussianBlur(np.roll(sh, -int(40 + 60 * u), 0), (0, 0), 18) - 0.2) * 1.2, 0, 1) * (n > 0.5) * 0.5 * (1 - v)
     shadow = np.clip(np.maximum(fib, wisp), 0, 1)[..., None] * (0.25 + 0.75 * smooth(u * 3))
+    redge = np.exp(-((fib - 0.5) / 0.16) ** 2)[..., None] * smooth(u * 3) * (1 - v) * (1 - msk[..., None]) * 0.75
     keep = msk[..., None] * (1 - smooth((v - 0.35) / 0.4))                              # he stays in front until the lunge swallows him
     wash = smooth(u * 2.5) * 0.88 * (1 - msk[..., None]) * (_GY < H * p.get("cut_y", 1.0))[..., None]   # behind him, the wall goes to paper
     img = img * (1 - wash) + paper() * wash
     o = img * (1 - shadow * (1 - keep) * 0.94) + INK * shadow * (1 - keep) * 0.94
+    o = o * (1 - redge) + INKRED * redge                                                # rev 2: a red-ink edge on the figure
     return np.clip(o, 0, 1)
 
 def passenger_tr(A, B, j, f, sa, sb, post=16):
@@ -992,3 +994,93 @@ def render(f):
 def init_hits():
     HITS.clear()
     for k_, a in ((12, 14), (44, 9), (76, 20), (108, 8), (112, 10), (120, 14), (140, 10)): HITS.append((E.fh(k_), a, 4.0))
+
+
+# ============================================================================ v104 rev 2: more animation, graphics and polish
+def beat_fx(out, f):
+    """the camera punches on the sub-bass: a zoom kick with a short radial motion blur on the strong hits and a chromatic kick
+    on the half-bars."""
+    z = 0.0; ch = 0.0
+    for k, a in E.BEAT_PUNCH:
+        kk = f - E.fh(k)
+        if a > 0 and 0 <= kk < 14:
+            e = a * math.exp(-kk / 3.5); z = max(z, e)
+            if a >= 0.9: ch = max(ch, e)
+    if z < 0.01: return out
+    o = zoom_about(out, W / 2, H * 0.42, 1 + 0.045 * z)
+    if z > 0.45: o = radial_blur(o, W / 2, H * 0.42, 1.0, 1 + 0.030 * z, 4)
+    if ch > 0.05: o = rgb_split(o, 9 * ch)
+    return np.clip(o * (1 + 0.10 * z), 0, 1)
+
+def cam_float(out, f, s):
+    """a slow, breathing camera float on every hold, so no frame sits dead."""
+    ph = (sum(map(ord, s["n"])) % 97) / 97 * 6.28; t = f / FPS
+    px = W / 2 + 9 * math.sin(t * 1.3 + ph); py = H * 0.45 + 7 * math.cos(t * 1.1 + ph * 0.7)
+    return zoom_about(out, px, py, 1.018, 0.22 * math.sin(t * 0.9 + ph))
+
+def spin_fx(out, f, s):
+    """the upside-down shot keeps turning: a slow roll through the hold (zoomed to cover the corners)."""
+    a0, a1 = s["spin"]; u = clamp((f - s["f0"]) / max(1, s["f1"] - s["f0"]), 0, 1)
+    return zoom_about(out, W / 2, H * 0.45, 1.13, a0 + (a1 - a0) * eout(u, 1.6))
+
+def ghost_fx(out, f, s):
+    """ink ghost trails: the last moments of the motion linger as darker echoes behind him."""
+    a = s["ghost"]; f1, f2 = max(s["f0"], f - 3), max(s["f0"], f - 6)
+    if f2 >= f: return out
+    p1 = render_shot(s, f1, False); p2 = render_shot(s, f2, False)
+    trail = cv2.GaussianBlur(np.minimum(p1, p2 * 1.03), (0, 0), 1.5) * 0.96 + INK * 0.04
+    return np.clip(out * (1 - a) + np.minimum(out, trail) * a, 0, 1)
+
+def quarter_roll(A, B, j, f, sa, sb, pre=7, post=9):
+    """a quarter turn: the frame rolls 90 degrees into a rotational blur and the next shot rolls out of it upright."""
+    if j < 0: u = (j + pre + 1) / (pre + 1); img = A; ang = 90 * ein(u, 2.2); z = 1 + 0.85 * ein(u, 2.0)
+    else: v = (j + 1) / post; img = B; ang = -90 * (1 - eout(v, 2.2)); z = 1 + 0.85 * (1 - eout(v, 2.0))
+    span = 10 * (1 - abs(ang) / 90 * 0) * min(1.0, abs(ang) / 30 + 0.2)
+    acc = None
+    for i in range(5):
+        w_ = zoom_about(img, W / 2, H * 0.45, z, ang + (i - 2) / 2 * span)
+        acc = w_ if acc is None else acc + w_
+    return np.clip(acc / 5, 0, 1)
+
+TR2["quarter_roll"] = (quarter_roll, 7, 9)
+
+def edge_seep(o, f):
+    """during the pickup, ink creeps in from the paper's corners (nothing at frame 0, so the loop still matches)."""
+    k = f / FPS / E.HB; R = 330 * smooth(k / 12) ** 1.3
+    if R < 2: return o
+    fld = None
+    for i, (cx, cy) in enumerate(((-40, -40), (W + 40, -40), (-40, H + 40), (W + 40, H + 40))):
+        fl = bloom_field(cx, cy, R * (0.8 + 0.15 * i), 171 + i, 0.6)
+        fld = fl if fld is None else np.minimum(fld, fl)
+    m, rim = ink_edge(fld, 14)
+    return np.clip(o * (1 - m[..., None] * 0.92) + INK * m[..., None] * 0.92 - rim[..., None] * 0.05, 0, 1)
+
+_ink_open0 = ink_open
+def ink_open(f, s):
+    return edge_seep(_ink_open0(f, s), f)
+
+_finish0 = finish104
+def finish104(out, f):
+    """the ink-bled vignette breathes in on each phrase start."""
+    e = 0.0
+    for p in E.PHR[1:]:
+        kk = f - E.fh(p)
+        if 0 <= kk < 40: e = max(e, math.exp(-kk / 9))
+    if e > 0.02:
+        paper(); r = np.sqrt(((_GX - W / 2) / (W * 0.62)) ** 2 + ((_GY - H * 0.46) / (H * 0.60)) ** 2)
+        if "vb" not in _PP: _PP["vb"] = np.clip((r - 0.62 - 0.18 * (nz(151, (16, 9)) - 0.5)) / 0.35, 0, 1)[..., None] ** 1.4
+        vb = _PP["vb"] * 0.45 * e; out = out * (1 - vb) + INK * vb
+    return _finish0(out, f)
+
+def base104(s, f):
+    if s.get("graphic") == "ink_open": return ink_open(f, s)
+    if s.get("passenger"): out = passenger_fx(f, s)
+    elif s.get("window"): out = silhouette_fx(f, s)
+    else: out = render_shot(s, f)
+    if s.get("ghost"): out = ghost_fx(out, f, s)
+    if s.get("flare"): out = anam_flare104(out, s["flare"], f)
+    if s.get("spat"): out = spatter_fx(out, f, s)
+    out = ink_drift(out, f, s.get("drift", 1.0))
+    if s.get("spin"): out = spin_fx(out, f, s)
+    else: out = cam_float(out, f, s)
+    return out

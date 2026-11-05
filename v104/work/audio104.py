@@ -489,7 +489,7 @@ def fx104():
     for s_ in E.SHOTS:
         tin, t0 = s_.get("tin"), s_["t0"]
         if tin == "brush": place(fx, stereo(bristle(0.28, -21, 960 + int(t0 * 10)), 0.3 if s_["brush"].get("red") else -0.3), t0 - 5 / E.FPS)
-        elif tin in ("whip", "whip_up", "roll", "tilt", "smear", "light_sweep"): place(fx, A2.whoosh(0.26, -22, 970 + int(t0 * 10), True), t0 - 6 / E.FPS)
+        elif tin in ("whip", "whip_up", "tilt", "smear", "light_sweep"): place(fx, A2.whoosh(0.26, -22, 970 + int(t0 * 10), True), t0 - 6 / E.FPS)
         elif tin == "impact": place(fx, stereo(A2.impact(-17, (80, 40), 0.3, 1.0, 975)), t0)
         elif tin == "slam": place(fx, stereo(A2.impact(-21, (90, 50), 0.15, 0.8, 976)), t0); place(fx, A2.whoosh(0.18, -25, 977, True), t0 - 3 / E.FPS)
         elif tin == "spatter":                                                           # THE SPATTER
@@ -519,6 +519,15 @@ def fx104():
                 teeth = (np.sin(2 * np.pi * np.cumsum(rate) / SR) > 0.85).astype(np.float32)
                 zz = bq(noise(n_, int(k0 * 100) + 7), "band", np.array([1500, 7000]), 2) * (0.3 + teeth) * np.sin(np.pi * q / dur) ** 0.5
                 place(fx, stereo(norm(zz, -22), 0.2), k0)
+    # rev 2: paper foley under the pickup, sub hits on the phrase starts, risers into P3 and P5
+    n_ = I(th(12)); q = np.arange(n_) / SR; rng_ = np.random.default_rng(1030)
+    rustle = bq(noise(n_, 1031), "band", np.array([600, 4000]), 2) * (rng_.random(n_) > 0.93) * np.minimum(1, q / 0.4)
+    place(fx, stereo(norm(np.convolve(rustle, np.ones(40) / 40, "same"), -38), -0.2), 0.0)
+    for k_ in (44, 108, 140): place(fx, stereo(A2.impact(-20, (42, 22), 0.6, 0.1, 1032 + k_)), th(k_) - 0.005)
+    place(fx, rev_swell(th(76) - th(70), -24, 1040), th(70)); place(fx, rev_swell(th(140) - th(132), -23, 1041), th(132))
+    for s_ in E.SHOTS:                                                                 # the rotations get a deep spin whoosh
+        if s_.get("tin") in ("roll", "quarter_roll"):
+            place(fx, A2.whoosh(0.45, -21, 1050 + int(s_["t0"] * 10), False), s_["t0"] - 0.24); place(fx, rev_swell(0.22, -25, 1060 + int(s_["t0"])), s_["t0"] - 0.22)
     # THE PASSENGER: a dark drone rises with the shadow, and a reverse swell pulls into the lunge
     sp = next(x for x in E.SHOTS if x.get("passenger")); pk = sp["passenger"]
     place(fx, stereo(drone_rise(th(sp["k1"]) - th(pk["k_rise"]), -22, 1020)), th(pk["k_rise"]))
