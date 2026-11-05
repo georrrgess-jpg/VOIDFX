@@ -16,7 +16,8 @@ Avoid (optional): [anything beyond the handbook's rejected list]
 
 Exceed the benchmarks (v11 BOP, v10 LET IT HAPPEN, v7 HIM ALL ALONG, v6 WARMPOP, v4 SURPRISE). Start from the v11 standard:
 a concept found in the song or the character, one focal set piece, detailed hero assets revealed on real objects, a beat
-animation for every shot that only moves to the beat, and a loop that lands exactly on frame 0. Keep the v10 standard: velocity
+animation for every shot that only moves to the beat, and a loop that lands exactly on frame 0. Check sharpness with
+tools/sharpness.py while picking and on the finished video (zoom ≤ 10 % on 720p, close-ups on the least-compressed packs). Keep the v10 standard: velocity
 ramps + flow slow motion on every hook shot, the beat camera, restored source (tools/sr_prep.py), lyrics on the sung onsets,
 and a loop that is a set piece. Many creative, themed transitions
 that go through something (each with its own sound), new graphics, eased text, and a hero transition on the drop.

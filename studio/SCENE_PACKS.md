@@ -10,6 +10,29 @@ All times are **seconds in that file**. "w" is the YuNet face width in source pi
 
 ---
 
+## Pack quality (measured with `tools/sharpness.py packs`)
+
+Every pack is 1280×720 (some are labelled 4K), so a 9:16 crop is enlarged about 2.7× before any zoom. Bits per pixel = how much data each pixel gets (higher = less compressed). Detail = the in-focus detail score (higher = crisper; the Reverse-Flash pack scores high because it was pre-sharpened).
+
+| Pack | Mb/s | Bits/px | Detail | Use for close-ups? |
+|---|---|---|---|---|
+| `reverse_flash.mp4` | 1.25 | 0.023 | 1.18 | Yes (inside its 600×600 inset; pre-sharpened) |
+| `scenepack2_60fps.mp4` | 2.02 | 0.036 | 0.65 | Yes |
+| `scenepack3_24fps.mp4` | 1.95 | 0.088 | 0.63 | Yes |
+| `flash_b.mp4` | 1.18 | 0.021 | 0.60 | Yes |
+| `pack7_4k.mp4` ("4K", really 720p) | 2.10 | 0.038 | 0.59 | Yes |
+| `pack8_s1.mp4` (S1) | **0.43** | **0.008** | 0.58 | Detail looks fine on still frames, but it's the most compressed pack: blocks in dark and moving areas. Wide or static shots only |
+| `flash_a.mp4` | 1.78 | 0.076 | 0.58 | Yes |
+| `pack9_s4_best.mp4` | 0.69 | 0.013 | 0.55 | Static close-ups only |
+| `doakes.mp4` | 1.07 | 0.019 | 0.55 | OK |
+| `pack10_s4_24p.mp4` | 0.76 | 0.034 | 0.53 | OK |
+| `pack5_mixtape120.mp4` | 2.19 | 0.040 | 0.51 | OK |
+| `scenepack.mp4` | 1.03 | 0.020 | 0.50 | OK |
+| `trinity_goodbye.mp4` | 1.46 | 0.026 | 0.44 | Soft |
+| `pack6_s5.mp4` | 0.71 | 0.026 | 0.44 | Soft |
+| `flash_s4.mp4` | 1.08 | 0.020 | 0.39 | Soft: pick the crispest moments, keep zoom low |
+| `pack4_aesthetic.mp4` | 1.70 | 0.064 | 0.36 | Softest (filtered/graded): wide shots, not close-ups |
+
 ## Dexter scene packs
 
 ### `trinity_goodbye.mp4` (key `tg`): "Trinity Finds Out Who Dexter Is (Goodbye Dexter Morgan)", 1280×720, 60 fps, 1:49, 36 shots

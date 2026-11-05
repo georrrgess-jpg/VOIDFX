@@ -14,6 +14,7 @@ Timings were measured on this 4-core box for a 26 s edit.
 | Dialogue / lyrics | `python3 tools/transcribe.py vN NAME MEDIA [--vad] [--start S --dur D]` | 1–3 min |
 | Voice under score | `python3 -m demucs -n htdemucs --two-stems=vocals -o vN/audio/sep CLIP.wav` | 15 s per 30 s clip |
 | Tracks and mattes | `bash tools/build.sh N prep` | ~35 s |
+| **Sharpness check** (Studio 2 rule) | `python3 tools/sharpness.py packs` before picking; `python3 tools/sharpness.py N` on the finished video (flags zoom > 10 % on 720p and shots under 0.80× the edit's median in-focus detail) | packs ~1 min; an edit ~40 s |
 | **Source restoration** (v10 rev 3) | `nohup python3 tools/sr_prep.py N &` right after `prep`: Real-ESRGAN compact restores and 2× upscales only the band each frame is cropped from; the renderer uses it automatically | ~3 s per source frame (45 min for 900 frames, in the background while you build) |
 | **Every-cut review sheets** | `bash tools/build.sh N auto` → `vN/frames/cuts_*.jpg` | ~35 s |
 | Soundtrack | `bash tools/build.sh N audio` (circular, wrapped master, AAC-checked) | ~7 s |
@@ -156,6 +157,7 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 11. **CJK subtitles and VHS counters read as clutter** to the user. Don't add them.
 14. **Whisper word times drift on sung, held notes** (v10: up to 1.1 s early on "All this running around", ~0.2 s late on others). Before captions go in, check every word against the Demucs vocal stem: a 30 ms RMS + pitch track shows where each syllable starts, and the line's parallel phrase (verse 1 vs verse 2) confirms it.
 15. **A 720p pack cropped to 9:16 is a 2.7× blow-up.** Run `tools/sr_prep.py` (restoration + 2× from the network) instead of cubic + unsharp mask; the renderer drops the unsharp mask to 0.16 on restored frames.
+16. **Soft shots (Studio 2, DRACULA):** check every shot with `tools/sharpness.py` while picking and on the finished video; zoom ≤ 10 % on 720p; close-ups on the least-compressed packs. The detail score is per-tile (80th percentile), so a shallow depth-of-field background doesn't read as soft, but motion blur and restoration-smoothed skin do.
 
 ## 5b. What made v11 the standard (carry the principles, not the look)
 
