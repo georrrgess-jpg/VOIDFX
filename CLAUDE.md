@@ -1,6 +1,34 @@
 # voidfx edit standard
 
-**THE STANDARDS: `v104/` *THE PASSENGER* (the newest) and `v103/` *FOREVER* (Studio 2).** Every new edit starts from THE PASSENGER: `tools/new_edit.py` copies its engine, its toolkit (which also carries all of FOREVER's) and its EDL. Every new edit must **exceed both**. See the handbook §0.
+**THE STANDARDS: `v105/` *DRACULA* (the newest), `v104/` *THE PASSENGER* and `v103/` *FOREVER* (Studio 2).** Every new edit starts from DRACULA: `tools/new_edit.py` copies its engine, its toolkit (which also carries all of THE PASSENGER's and FOREVER's) and its EDL. Every new edit must **exceed all three**. See the handbook §0.
+
+**`v105/`, *DRACULA*** (Dexter × Tame Impala "Dracula", rev 3). The owner: *"I like this edit and would like for you to make it a standard."*
+- **The concept, SUNDOWN:** by day he wears the mask (sunny Miami, the boat, the smile). The last chorus is "run from the sun like Dracula", so the sun sets across the song's one-bar drop-out and night slams in on the drop. At the end the sun takes him.
+- **The look:** two looks split on the drop. By day, a bleached warm postcard with the sun **behind him** (his matte, a light wrap on his edge, sunlit dust). By night, cold moonlit silver where only crimson survives.
+- **Set pieces:**
+  - SUNDOWN with an **eclipse**;
+  - THE BAT BURST on the drop, with the per-letter "DRACULA" breaking into bats;
+  - THE BLOOD MOON behind his cut-out;
+  - THE COFFIN;
+  - **ASHES TO SUN, the loop:** he burns like paper, his embers spiral into the sun (frame 0's sun), it flares, and the light collapses into it on the opening shot.
+- **Motion:** 27 designed transitions in 23 s, each with its own sound. New this edit: sun flare, card flip, palm sweep, eclipse, bat burst, moon iris, cape, coffin, mist, bat swarm, great bat.
+- **Animation:** gathering bats, fog, a crimson backlight, a camera float, beat punches, and speed ramps with ghost trails.
+- **Captions:** only the words verified on the vocal stem, on their sung times.
+- **The owner's one gripe, a rule from now on:** *"The only gripe I have is the quality of some of the clips."* **Clip quality:**
+  - **Every library pack is 720p** (even `pack7_4k`), and several are heavily compressed:
+    - p8 (S1) at 0.43 Mb/s;
+    - p9, p6 and p10 at about 0.7 Mb/s.
+    So every 9:16 crop is enlarged about 2.8×.
+  - **Check sharpness twice:** run `tools/sharpness.py N --src` while choosing shots, and `tools/sharpness.py N` on the render. Swap anything flagged SOFT for a sharper moment or pack.
+  - **Keep zoom at or under about 1.1** on 720p sources.
+  - **Prefer the high-bitrate packs:** p5, p7, p3, p4 and scenepack2 (1.7–2.2 Mb/s).
+  - **Ask the owner for 1080p or 4K packs** for the hero shots.
+  - **Limits of the tools:** the upscale pass (Lanczos plus noise-gated detail) can't invent detail, and an AI upscaler (Real-ESRGAN class) needs a GPU (about 10 s a frame on this CPU).
+  - **v105's softest shots:**
+    - the daybreak walk (p9, zoom 1.3, 3.5×);
+    - the palms (p10);
+    - the lollipop (p8);
+    - then the ice cream (p1), hood (p3) and pink-wall (p5) shots.
 
 **`v104/`, *THE PASSENGER*** (Dexter × GLM-RST "still love you (super slowed + reverb)", rev 3). The owner: *"I really like this edit and would like for it to be a standard."*
 - **The concept:** "I like to pretend I'm alone. Completely alone." Then "I have a dark side, too." The ink is his Dark Passenger.
@@ -48,7 +76,7 @@
 - `v6/`, *WARMPOP* (Dexter × George Clanton "Warmpop", 9:16): the reference for the **amount and quality of designed transitions, animations and graphics**, how the music drives the structure, and the text. The user: "wonderful transitions, animations, graphics, while maintaining the style that I like… I like how the music correlates to the edit. I like the text."
 - `v4/`, *SURPRISE* (Doakes × Need It, 9:16): the reference for dialogue-led openings that play as one continuous take.
 
-**Start with `studio/VOIDFX_STUDIO.md`.** It holds every preference, like, dislike and lesson, the benchmarks, the style bank and the fast workflow. Then read `studio/SCENE_PACKS.md` (every source, the proven shots and dialogue timecodes) and **`docs/TOOLKIT.md`** (engine, transition catalog, pitfalls). Build every new edit on the standard with `python3 tools/new_edit.py N SLUG "TITLE"`. It copies the v104 engine (`render104.py` with every v4–v9 transition, `audio104.py`, `qc104.py`, `facetrack.py`, `analyze.py`), plus `fx104.py` as the edit's own `fxN.py` section (the FOREVER and THE PASSENGER toolkits, spliced in by `splice.py`) and THE PASSENGER's EDL as the worked template. The scaffold renders THE PASSENGER pixel-for-pixel until you change it. Restyle the edit's own grade, palette, set pieces, text colours and finish in `fxN.py`. Don't start from scratch, and **don't reuse a benchmark's look**: each edit needs its own style. For a second studio session, see `studio/NEW_STUDIO_SETUP.md`.
+**Start with `studio/VOIDFX_STUDIO.md`.** It holds every preference, like, dislike and lesson, the benchmarks, the style bank and the fast workflow. Then read `studio/SCENE_PACKS.md` (every source, the proven shots and dialogue timecodes) and **`docs/TOOLKIT.md`** (engine, transition catalog, pitfalls). Build every new edit on the standard with `python3 tools/new_edit.py N SLUG "TITLE"`. It copies the v105 engine (`render105.py` with every v4–v9 transition, `audio105.py`, `qc105.py`, `facetrack.py`, `analyze.py`, `big.py`), plus `fx105.py` as the edit's own `fxN.py` section (the FOREVER, THE PASSENGER and DRACULA toolkits, spliced in by `splice.py`) and DRACULA's EDL as the worked template. The scaffold renders DRACULA pixel-for-pixel until you change it (checked on 10 frames across the set pieces and the loop). Restyle the edit's own grade, palette, set pieces, text colours and finish in `fxN.py`. Don't start from scratch, and **don't reuse a benchmark's look**: each edit needs its own style. For a second studio session, see `studio/NEW_STUDIO_SETUP.md`.
 
 ## User preferences (learned over several revisions)
 
@@ -132,7 +160,7 @@
 
 - Sources go in `src/` (read-only copies). Each edit gets its own folder (`vN/work`, `vN/out`, ...).
 - One EDL file per edit holds every decision, and the renderer reads only that file. The EDL also sets `VER`, `SLUG` and `SONG`, plus the engine knobs (`DROP_TITLE`, `MONTAGE`, `VANISH_T0`, `VO_STEM`, `CAPS`, `END_CAP`); the template is `tools/edl_template.py`.
-- Tools: `tools/new_edit.py` (scaffold from the v104 standard), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/lyrics.py` (lyric recognition: Demucs vocals + Whisper word times aligned to the published lyrics, with a ready caption block), `tools/transcribe.py` (dialogue word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc), `tools/setup_studio.sh` (deps, models, source-library check).
+- Tools: `tools/new_edit.py` (scaffold from the v105 standard), `tools/sharpness.py` (clip quality: soft, over-zoomed and low-bitrate shots, before and after the render), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/lyrics.py` (lyric recognition: Demucs vocals + Whisper word times aligned to the published lyrics, with a ready caption block), `tools/transcribe.py` (dialogue word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc), `tools/setup_studio.sh` (deps, models, source-library check).
 - Two studios: each works on its own branch with its own version range (Studio 1 `v8+`, Studio 2 `v101+`); see `studio/NEW_STUDIO_SETUP.md`.
 - Media (`src/`, audio, frames, outputs, models) stays out of git. Commit the code, EDL, transcripts, tracks and README, then push to the session's branch.
 - Models are downloaded at runtime: YuNet (`v3/models/face_detection_yunet_2023mar.onnx`), MODNet (`Xenova/modnet`), and faster-whisper large-v3 for dialogue and lyric timing.

@@ -325,3 +325,42 @@ To make room, the flashlight shot is one half-beat (k82–83) and the daybreak s
 
 **Not verified:** watching and listening in real time. The new sounds were checked by measurement against the music.
 
+## Approved as a standard (after rev 3)
+
+The owner: *"I like this edit and would like for you to make it a standard. The only gripe I have is the quality of some of the clips. You do not have to edit this further."*
+
+**The edit is unchanged.** It's recorded as the newest standard in:
+- CLAUDE.md;
+- handbook §0, §1 and §2 (item 11);
+- the start prompt;
+- TOOLKIT.md.
+
+`tools/new_edit.py` now scaffolds from v105, with DRACULA's EDL as the template and `big.py` included. A scaffolded test edit rendered pixel-identical to v105 on 10 frames spanning the set pieces and the loop; the test edit was then removed.
+
+**The gripe, measured.** Every library pack is 720p, so every 9:16 crop is enlarged about 2.8×. `tools/sharpness.py 105` (new) ranks the shipped MP4's shots by fine detail relative to coarse structure (independent of brightness). The eight softest:
+
+| Shot | Pack | Detail | Upscale | Pack bitrate (kb/s) |
+|---|---|---|---|---|
+| dawn | p9 | 0.147 | 3.47× | 690 |
+| palms | p10 | 0.154 | 2.83× | 762 |
+| lollipop | p8 | 0.200 | 2.83× | 434 |
+| icecream | p1 | 0.203 | 2.83× | 1030 |
+| hood | p3 | 0.212 | 2.83× | 1953 |
+| pinkwall | p5 | 0.215 | 2.83× | 2191 |
+| badge | p7 | 0.218 | 2.83× | 2104 |
+| flip | p9 | 0.219 | 2.83× | 690 |
+
+**Causes:**
+- **The zoom on the daybreak walk** (1.3, so 3.5×).
+- **The low-bitrate packs:**
+  - p8 (S1) at 434 kb/s;
+  - p10 at 762;
+  - p9 at 690.
+- **The older seasons' softer masters** in the day section.
+
+**The rule from now on** (handbook §0 and §2 item 11):
+- check sharpness before and after the render, and swap SOFT shots;
+- keep zoom at or under about 1.1 on 720p packs;
+- put the hero shots on the high-bitrate packs;
+- ask for 1080p or 4K packs when a hero moment needs one.
+

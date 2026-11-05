@@ -123,7 +123,7 @@ These live on Studio 1's branch (`claude/gallant-planck-pqpczp`); this copy only
   - the engine's ray and beam graphics.
 - **The upscale:** the 720p packs are cropped to about 405×720 and enlarged to 1080×1920. Studio 2 uses a cubic resample plus a mild unsharp mask in `finish`; Studio 1's upscaler replaces that.
 
-### The v104 THE PASSENGER toolkit (the newest standard; in `fx104.py`, copied into every new edit's `fxN.py`)
+### The v104 THE PASSENGER toolkit (a standard; in `fx104.py`, carried in every new edit's `fxN.py`)
 
 | tin / flag | What it does | Sound in `audio104.py` |
 |---|---|---|
@@ -141,7 +141,9 @@ These live on Studio 1's branch (`claude/gallant-planck-pqpczp`); this copy only
 | `motes=a`, `swash=dict(k0, k1, y)`, `flare=a` | Ink motes drifting in depth; an ivory brush swash painted behind a hero word; ivory anamorphic flares. | bristle swish for the swash |
 | always on | `cam_float` (a breathing camera on every hold), `beat_fx` (punches with radial motion blur on strong hits), the breathing vignette on `PHR`, `ink_drift` in the shadows. | — |
 
-### The v105 DRACULA toolkit (in `fx105.py`)
+### The v105 DRACULA toolkit (the newest standard; in `fx105.py`, copied into every new edit's `fxN.py`)
+
+Clip quality (the owner's v105 gripe): `tools/sharpness.py N --src` ranks the source crop of every shot (detail, upscale factor, pack bitrate; flags SOFT, ZOOM, LOWBIT) before the render; `tools/sharpness.py N` does the same on the encoded MP4.
 
 | tin / flag | What it does | Sound in `audio105.py` |
 |---|---|---|

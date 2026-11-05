@@ -1,0 +1,198 @@
+[
+ {
+  "shot": "boat",
+  "pack": "p6",
+  "detail": 0.295,
+  "upscale": 2.83,
+  "kbps": 709
+ },
+ {
+  "shot": "hood",
+  "pack": "p3",
+  "detail": 0.212,
+  "upscale": 2.83,
+  "kbps": 1953
+ },
+ {
+  "shot": "icecream",
+  "pack": "p1",
+  "detail": 0.203,
+  "upscale": 2.83,
+  "kbps": 1030
+ },
+ {
+  "shot": "badge",
+  "pack": "p7",
+  "detail": 0.218,
+  "upscale": 2.83,
+  "kbps": 2104
+ },
+ {
+  "shot": "pinkwall",
+  "pack": "p5",
+  "detail": 0.215,
+  "upscale": 2.83,
+  "kbps": 2191
+ },
+ {
+  "shot": "lollipop",
+  "pack": "p8",
+  "detail": 0.2,
+  "upscale": 2.83,
+  "kbps": 434
+ },
+ {
+  "shot": "boatgrin",
+  "pack": "p1",
+  "detail": 0.247,
+  "upscale": 2.83,
+  "kbps": 1030
+ },
+ {
+  "shot": "palms",
+  "pack": "p10",
+  "detail": 0.154,
+  "upscale": 2.83,
+  "kbps": 762
+ },
+ {
+  "shot": "sunset",
+  "pack": "p8",
+  "detail": 0.265,
+  "upscale": 2.75,
+  "kbps": 434
+ },
+ {
+  "shot": "looksup",
+  "pack": "p9",
+  "detail": 0.247,
+  "upscale": 2.93,
+  "kbps": 690
+ },
+ {
+  "shot": "scope",
+  "pack": "dk",
+  "detail": 0.221,
+  "upscale": 2.99,
+  "kbps": 1067
+ },
+ {
+  "shot": "redrive",
+  "pack": "p9",
+  "detail": 0.432,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "blinds",
+  "pack": "p9",
+  "detail": 0.368,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "lighttable",
+  "pack": "p9",
+  "detail": 0.226,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "gloving",
+  "pack": "p1",
+  "detail": 0.253,
+  "upscale": 2.83,
+  "kbps": 1030
+ },
+ {
+  "shot": "moon",
+  "pack": "p1",
+  "detail": 0.301,
+  "upscale": 2.83,
+  "kbps": 1030
+ },
+ {
+  "shot": "lamp",
+  "pack": "p10",
+  "detail": 0.281,
+  "upscale": 2.83,
+  "kbps": 762
+ },
+ {
+  "shot": "garage",
+  "pack": "p9",
+  "detail": 0.27,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "flip",
+  "pack": "p9",
+  "detail": 0.219,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "container",
+  "pack": "p4",
+  "detail": 0.32,
+  "upscale": 2.83,
+  "kbps": 1705
+ },
+ {
+  "shot": "knife",
+  "pack": "p9",
+  "detail": 0.307,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "attack",
+  "pack": "p9",
+  "detail": 0.308,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "syringe",
+  "pack": "p8",
+  "detail": 0.294,
+  "upscale": 2.83,
+  "kbps": 434
+ },
+ {
+  "shot": "profile",
+  "pack": "p6",
+  "detail": 0.29,
+  "upscale": 2.83,
+  "kbps": 709
+ },
+ {
+  "shot": "stare",
+  "pack": "p9",
+  "detail": 0.323,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "low",
+  "pack": "p9",
+  "detail": 0.319,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "torch",
+  "pack": "p9",
+  "detail": 0.287,
+  "upscale": 2.83,
+  "kbps": 690
+ },
+ {
+  "shot": "dawn",
+  "pack": "p9",
+  "detail": 0.147,
+  "upscale": 3.47,
+  "kbps": 690
+ }
+]

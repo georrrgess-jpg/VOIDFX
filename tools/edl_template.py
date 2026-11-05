@@ -1,98 +1,97 @@
 """{{TITLE}} (voidfx {{VER}}, 9:16). Single source of truth: the renderer, audio builder and QC read only this file.
 
-STARTING POINT = the v104 THE PASSENGER standard (approved: "I really like this edit and would like for it to be a standard").
-Everything below is THE PASSENGER's real EDL, kept as a worked example so the scaffold renders on day one (FOREVER, v103, is
-the other standard; its toolkit is in fxN.py too). Replace it section by section: song + window (tools/song_map.py), the grid
-(k = one sixteenth here: fit it to the song's own hits), shots, dialogue, captions (tools/lyrics.py for sung words), set pieces.
+STARTING POINT = the v105 DRACULA standard (approved: "I like this edit and would like for it to be a standard").
+Everything below is DRACULA's real EDL, kept as a worked example so the scaffold renders on day one (THE PASSENGER, v104, and
+FOREVER, v103, are the other standards; their toolkits are in fxN.py too). Replace it section by section: song + window
+(tools/song_map.py), the grid (k = one half-beat here), shots (check their sharpness first: tools/sharpness.py), captions
+(tools/lyrics.py for sung words), set pieces, the loop.
 Keep the bar: a designed cut or animation beat in EVERY span (no headspace: nothing longer than about a second without a cut,
-a transition or a designed beat), BEAT_PUNCH through every music section, graphics in every hold (handbook §0).
+a transition or a designed beat), BEAT_PUNCH through every music section, graphics in every hold (handbook §0). Light sources
+go behind him (seg=True on sun shots). Prefer the sharpest sources: the owner's v105 gripe was the quality of some clips.
 
 Concept: <one sentence from the character's world>. Set pieces on the phrase starts: <...>.
 """
 ROOT = "/home/user/VOIDFX"
-VER, SLUG = "{{VER}}", "{{SLUG}}"           # v104/out/the_passenger_dexter_voidfx_9x16.mp4
-SONG = f"{ROOT}/src/still_love_you_rec.wav"
+VER, SLUG = "{{VER}}", "{{SLUG}}"           # v105/out/dracula_dexter_voidfx_9x16.mp4
+SONG = f"{ROOT}/src/dracula.mp3"
 FPS, W, H = 60, 1080, 1920                           # 60 fps output; every source plays at its own 24p/30p cadence (interp="hold": no optical flow)
 SRC = {"p1": (f"{ROOT}/src/scenepack.mp4", 60.0, 1200, 720), "p4": (f"{ROOT}/src/pack4_aesthetic.mp4", 29000 / 1001, 1280, 720),
        "p5": (f"{ROOT}/src/pack5_mixtape120.mp4", 60.0, 1280, 720), "p7": (f"{ROOT}/src/pack7_4k.mp4", 60.0, 1280, 720),
        "p8": (f"{ROOT}/src/pack8_s1.mp4", 60.0, 1280, 720), "p9": (f"{ROOT}/src/pack9_s4_best.mp4", 60.0, 1280, 720),
-       "p10": (f"{ROOT}/src/pack10_s4_24p.mp4", 24.0, 1280, 720)}
+       "p10": (f"{ROOT}/src/pack10_s4_24p.mp4", 24.0, 1280, 720),
+       "p3": (f"{ROOT}/src/scenepack3_24fps.mp4", 24000 / 1001, 1280, 720), "p6": (f"{ROOT}/src/pack6_s5.mp4", 30.0, 1280, 720),
+       "dk": (f"{ROOT}/src/doakes.mp4", 60.0, 1280, 720)}
 
-HB, HB_OFF = 0.13370, 0.042                          # k = one sixteenth (the bass grid), song time of k0
-H0, H1 = 0, 172
-K_SPL = 172; K_END = 172; HDROP = 12                 # no splice; the bass entry is the drop
-PHR = [12, 44, 76, 108, 140]                         # phrase starts (two bars each)
+HB, HB_OFF = 0.26090, 0.0978                         # tools/song_map.py (v105/work/song_map.json)
+H0, H1 = 592, 680
+K_SPL = 88; K_END = 88; HDROP = 32                  # no splice
+PHR = [0, 24, 32, 48, 64, 84]                         # verse, sundown, drop, blood moon, coffin, daybreak
 def st(h): return HB_OFF + h * HB
 def th(k): return k * HB
 def song_at(e): return st(H0) + e
 def s2e(sng): return sng - st(H0)
+def sw(sng): return s2e(sng)
 def fe(t): return int(round(t * FPS))
 def fh(k): return fe(th(k))
 DUR = th(K_END); DUR_F = fh(K_END)
 H1_EDIT = K_END
 def te(k): return th(k)
 T_STOP = DUR; DROP_HB = HDROP
-BAR = 16 * HB; BEAT = 4 * HB
+BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 T_DROP = th(HDROP); T_SPLICE = th(K_SPL)
-# the sub-bass hits (k), measured on the Demucs bass stem; the last phrase repeats the first one's pattern
-BASS = [12, 16, 20, 23, 26, 29, 32, 35, 38, 41, 44, 48, 52, 55, 58, 60, 63, 66, 69, 72, 76, 80, 84, 87, 90, 93, 96, 99, 102, 105,
-        108, 112, 116, 119, 122, 124, 127, 130, 133, 136, 140, 144, 148, 151, 154, 157, 160, 163, 166, 169]
+BASS = list(range(0, 88, 2))                          # the kick: every beat
+SUN_K = (24, 31.5)                                     # the sun sets across the drop-out bar
+DAWN_K = (83, 88)                                      # it rises again at the end (the loop)
 
-# ---- dialogue: two short lines of his narration (S1, pack 8), played as voice-over (his lips aren't shown saying them).
-#      Stems: Demucs of p8 222-234 s and 293-302 s. Word onsets measured on the stem envelope.
-VO_STEMS = {"a": (f"{ROOT}/{VER}/audio/sep/htdemucs/p8_222/vocals.wav", 222.0), "b": (f"{ROOT}/{VER}/audio/sep/htdemucs/p8_293/vocals.wav", 293.0)}
-# (stem, stem in, stem out, edit at): "I like to pretend I'm ALONE" -> ALONE on the bass entry; "completely ALONE." -> on the k29 hit;
-# "I have a DARK side, too." -> DARK on the k112 hit as the shadow rises
-VO = [("a", 4.30, 5.92, th(12) - (5.10 - 4.30)), ("a", 7.02, 8.30, th(29) - (7.62 - 7.02)), ("b", 5.55, 6.92, th(112) - (6.22 - 5.55))]
-def vo_e(seg, src_t):
-    st_, a, b, at = VO[seg]; return at + (src_t - a)
+# ---- no dialogue: the song's own voice carries the text
+VO = []; VO_STEMS = {}
+def vo_e(seg, src_t): return 0.0
 VO_STEM = None; VO_STEM_T0 = 0.0
 SONG_VOX = None; SONG_VOX_T0 = 0.0; VOX_MUTE = None
 
 S = []
 def shot(n, src, k0, k1, a, b=None, **kw):
     if b is None: b = a + (k1 - k0) * HB             # 1:1 by default
-    d = dict(n=n, src=src, t0=th(k0), t1=th(k1), k0=k0, k1=k1, tmap=kw.pop("tmap", [(0, a), (1, b)]), look=kw.pop("look", "sumi"),
+    d = dict(n=n, src=src, t0=th(k0), t1=th(k1), k0=k0, k1=k1, tmap=kw.pop("tmap", [(0, a), (1, b)]), look=kw.pop("look", "night"),
              z=kw.pop("z", [(0, 1.00), (1, 1.06)]), face=kw.pop("face", "largest"), interp=kw.pop("interp", "hold"))
     d.update(kw); S.append(d)
 
-# ---- pickup (k0-12): paper; one drop of ink falls; "I like to pretend I'm..."
-shot("ink", "p9", 0, 12, 73.80, 73.80, tin=None, graphic="ink_open", face=None, cx=(640, 640))
-# ---- P1 (k12-44): alone. The drop lands on the bass entry and blooms into him.
-shot("dock", "p9", 12, 20, 73.80, 74.95, tmap=[(0, 73.80), (0.35, 74.55), (1, 74.95)], tin="ink_bloom", z=[(0, 1.10), (1, 1.02)], motes=1.0)
-shot("stare", "p9", 20, 26, 118.00, tin="page_turn", z=[(0, 1.00), (1, 1.08)], motes=1.0)                     # rev 3
-shot("floor", "p8", 26, 35, 392.40, tin="brush", z=[(0, 1.02), (1, 1.10)], brush=dict(ang=-28, seed=3, white=True), motes=0.8,
-     swash=dict(k0=29, k1=43, y=1478))
-shot("chain", "p1", 35, 41, 171.10, 171.74, tin="whip", z=[(0, 1.04), (1, 1.10)], motes=0.6)
-shot("shh", "p1", 41, 44, 96.45, 96.85, tin="smear", z=[(0, 1.00), (1, 1.06)], redthr=0.45)                            # rev 3
-# ---- P2 (k44-76): the ritual. Gloves, the slide, the mirror, the shield goes down.
-shot("gloving", "p1", 44, 49, 102.15, tin="impact", z=[(0, 1.00), (1, 1.08)])
-shot("gloves", "p7", 49, 55, 33.30, tin="slam", z=[(0, 1.00), (1, 1.06)], flare=0.6)
-shot("slide", "p1", 55, 60, 109.80, tin="light_sweep", z=[(0, 1.00), (1, 1.06)])
-shot("mirror", "p9", 60, 66, 158.40, tin="brush", z=[(0, 1.02), (1, 1.08)], brush=dict(ang=62, seed=7, red=True), redthr=0.45)
-shot("flip", "p9", 66, 72, 125.00, tin="roll", z=[(0, 1.00), (1, 1.06)], redthr=0.45, spin=(0.0, -4.0))   # rev 2: longer, and it keeps turning
-shot("visor", "p9", 72, 76, 180.62, 181.42, tin="tilt", z=[(0, 1.00), (1, 1.08)])
-# ---- P3 (k76-108): THE SPATTER, then the violence.
-shot("shield", "p1", 76, 84, 58.60, 59.12, tin="spatter", z=[(0, 1.12), (1, 1.04)], spat=dict(k=76, x=0.80, y=0.70))
-shot("attack", "p9", 84, 90, 164.70, 165.85, tmap=[(0, 164.70), (0.30, 165.45), (1, 165.85)], tin="whip_up", z=[(0, 1.02), (1, 1.10)], ghost=0.55)
-shot("container", "p4", 90, 96, 65.75, 66.70, tmap=[(0, 65.75), (0.30, 66.35), (1, 66.70)], tin="strobe", z=[(0, 1.00), (1, 1.06)], ghost=0.5)
-shot("gun", "p9", 96, 102, 94.30, tin="facematch", z=[(0, 1.00), (1, 1.08)])
-shot("redroom", "p7", 102, 108, 0.10, tin="burn", z=[(0, 1.00), (1, 1.08)])
-# ---- P4 (k108-140): THE PASSENGER. "I have a dark side, too."
-shot("table", "p8", 108, 120, 389.00, 390.30, tmap=[(0, 389.00), (0.45, 389.75), (1, 389.90)], tin="ink_bleed", z=[(0, 1.00), (1, 1.04)], target=0.43,
-     seg=True, passenger=dict(k_rise=112, k_lunge=117, cut_y=0.80))
-shot("redsmirk", "p8", 120, 126, 346.90, tin="passenger", z=[(0, 1.10), (1, 1.02)])
-shot("turn", "p5", 126, 131, 16.30, 17.00, tmap=[(0, 16.30), (0.40, 16.80), (1, 17.00)], tin="quarter_roll", z=[(0, 1.00), (1, 1.06)], redthr=0.45, ghost=0.45)
-shot("police", "p9", 131, 136, 47.30, 48.10, tmap=[(0, 47.30), (0.35, 47.90), (1, 48.10)], tin="logo_orig", z=[(0, 1.00), (1, 1.06)], redthr=0.45)
-shot("eyesup", "p1", 136, 140, 46.60, tin="shutter", z=[(0, 1.02), (1, 1.08)])
-# ---- P5 (k140-172): THE SILHOUETTE, the fastest run, then back into the drop.
-shot("walkout", "p1", 140, 148, 186.60, tin="lamp_on", z=[(0, 1.00), (1, 1.08)], seg=True, window=dict(src="p10", a=165.95, k_in=140, k_out=147))
-shot("torch", "p10", 148, 152, 161.20, tin="wrap", z=[(0, 1.00), (1, 1.06)], flare=1.0)
-shot("darkside", "p8", 152, 156, 297.60, tin="torch_blind", z=[(0, 1.02), (1, 1.08)])
-shot("grin", "p9", 156, 162, 41.00, tin="pupil_dive", z=[(0, 1.00), (1, 1.08)])
-shot("low", "p9", 162, 172, 222.60, tin="zipper", z=[(0, 1.00), (1, 1.10)], ink_out=dict(k0=166), target=0.46)
+# ---- DAY (k0-24): the mask. "Saw this moment coming from afar."
+shot("boat", "p6", 0, 3, 17.20, tin=None, look="day", sun=(0.78, 0.13), z=[(0, 1.06), (1, 1.00)], con=0.7, seg=True, motes=1.0)
+shot("hood", "p3", 3, 6, 24.30, 25.08, tin="sun_flare", look="day", sun=(0.85, 0.10), seg=True, motes=0.8)
+shot("icecream", "p1", 6, 9, 69.25, 70.20, tmap=[(0, 69.25), (0.55, 69.80), (1, 70.20)], tin="whip", look="day")
+shot("badge", "p7", 9, 12, 14.60, tin="burn", look="day", sun=(0.15, 0.08), seg=True, motes=0.8)
+shot("pinkwall", "p5", 12, 15, 6.60, tin="slam", look="day", sun=(0.88, 0.12), seg=True, motes=0.8)
+shot("lollipop", "p8", 15, 18, 117.70, tin="card_flip", look="day")
+shot("boatgrin", "p1", 18, 21, 70.90, tin="quarter_roll", look="day", sun=(0.12, 0.10), seg=True, motes=0.8)
+shot("palms", "p10", 21, 24, 130.60, tin="palm_sweep", look="day", sun=(0.80, 0.10), seg=True, motes=1.0)
+# ---- SUNDOWN (k24-32): the drop-out bar. "Run from the sun like ..."
+shot("sunset", "p8", 24, 27, 405.95, 406.62, tin="light_sweep", look="dusk", sun=(0.70, 0.12), z=[(0, 1.00), (1, 1.03)], seg=True, motes=0.6, face_x=0.62)   # ends before he leans out of the crop
+shot("looksup", "p9", 27, 32, 230.60, 231.90, tin="eclipse", look="dusk", z=[(0, 1.00), (1, 1.10)], seg=True, gather=True)   # the sun is eclipsed; bats gather behind him
+# ---- NIGHT (k32-84): DRACULA. The bats burst on the drop.
+shot("scope", "dk", 32, 38, 46.20, 47.80, tin="bat_burst", z=[(0, 1.12), (1, 1.02)], fog=0.8)
+shot("redrive", "p9", 38, 41, 0.40, 1.20, tin="strobe", redthr=0.05)
+shot("blinds", "p9", 41, 44, 101.30, 102.10, tin="impact", ev=0.6)
+shot("lighttable", "p9", 44, 46, 145.95, 146.45, tin="torch_blind", face=None, cx=(640, 360))
+shot("gloving", "p1", 46, 48, 102.20, 102.72, tin="cape")                                 # a Dracula cape sweeps across the lens
+# THE BLOOD MOON (the 2nd "Dracula", k48.5): his cut-out against a rising crimson moon, bats across it
+shot("moon", "p1", 48, 54, 186.50, 187.70, tin="moon_iris", seg=True, bloodmoon=dict(k0=48, k1=54), z=[(0, 1.00), (1, 1.06)])
+shot("lamp", "p10", 54, 57, 181.10, tin="lamp_on", flare=0.7, ev=0.55)
+shot("garage", "p9", 57, 60, 203.30, 204.40, tmap=[(0, 203.30), (0.35, 203.95), (1, 204.40)], tin="logo_orig", ghost=0.25)
+shot("flip", "p9", 60, 64, 125.00, tin="roll", spin=(0.0, -4.0), redthr=0.45)            # he hangs upside down like a bat
+# THE COFFIN (the 3rd "Dracula", k64.6): a lid slams shut over him and opens on the next
+shot("container", "p4", 64, 66, 65.80, 66.45, tmap=[(0, 65.80), (0.40, 66.20), (1, 66.45)], tin="coffin", ghost=0.4)
+shot("knife", "p9", 66, 68, 178.30, tin="mist")                                     # he rises out of the coffin as mist and re-forms with the knife
+shot("attack", "p9", 68, 71, 164.80, 165.75, tmap=[(0, 164.80), (0.30, 165.40), (1, 165.75)], tin="bat_swarm", ghost=0.45)
+shot("syringe", "p8", 71, 74, 146.30, tin="pupil_dive", face=None, cx=(980, 980))
+shot("profile", "p6", 74, 77, 68.60, tin="facematch", cx=(560, 560), seg=True, rim=1.0)
+shot("stare", "p9", 77, 80, 117.80, tin="shutter", seg=True, rim=1.0, fog=0.35)
+shot("low", "p9", 80, 82, 222.60, tin="zipper", seg=True, rim=0.8, fog=0.35)
+shot("torch", "p9", 82, 83, 185.40, tin="bat_pass", flare=0.8)                       # one great bat flies through the lens; his torch flares into the dawn
+# ---- DAYBREAK (k84-88): the sun comes up and burns the frame white (the loop opens in this light)
+shot("dawn", "p9", 83, 88, 75.00, tin="sun_flare", look="dusk", daybreak=True, z=[(0, 1.20), (1, 1.30)], seg=True)   # he walks into the sunrise and burns
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
@@ -102,23 +101,24 @@ for _d in range(4):
 DUR_F = fh(K_END) - _d; DUR = DUR_F / FPS; T_STOP = DUR
 SHOTS[-1]["f1"] = DUR_F; SHOTS[-1]["t1"] = DUR
 
-# ---- text: only spoken words (no clear lyric in this sound: Whisper and the published-lyrics search both came up empty)
+# ---- text: only the clearly sung words (checked on the vocal stem), each on its sung time
 TEXT = [
-    dict(style="cap", words=[("I", vo_e(0, 4.38), 0), ("LIKE", vo_e(0, 4.46), 0), ("TO", vo_e(0, 4.62), 0), ("PRETEND", vo_e(0, 4.72), 0),
-                             ("I'M", vo_e(0, 4.98), 1), ("ALONE,", vo_e(0, 5.10), 1)], end=vo_e(1, 7.02) - 0.02, emph=["ALONE,"], band=(1330, 1545)),
-    dict(style="hero", lines=["COMPLETELY", "ALONE."], words=[("COMPLETELY", vo_e(1, 7.10), 0), ("ALONE.", vo_e(1, 7.62), 1)],
-         end=th(43), exit="blood", band=(1180, 1600)),
-    dict(style="hero", lines=["I HAVE A", "DARK SIDE, TOO."], words=[("I HAVE A", vo_e(2, 5.64), 0), ("DARK SIDE, TOO.", vo_e(2, 6.22), 1)],
-         end=th(126) - 0.05, exit="blood", band=(1180, 1600)),
+    dict(style="cap", words=[("SAW", sw(155.16), 0), ("THIS", sw(155.62), 0), ("MOMENT", sw(155.90), 0), ("COMING", sw(156.34), 1), ("FROM", sw(156.86), 1),
+                             ("AFAR", sw(157.22), 1)], end=sw(158.45), emph=["AFAR"], band=(1330, 1545)),
+    dict(style="cap", words=[("RUN", sw(161.02), 0), ("FROM", sw(161.42), 0), ("THE", sw(161.88), 0), ("SUN", sw(162.28), 0), ("LIKE", sw(162.52), 1)],
+         end=sw(162.98), emph=["SUN"], band=(1330, 1545)),
+    dict(style="hero", lines=["DRACULA"], words=[("DRACULA", sw(163.14), 0)], end=th(36.2), exit="bats", band=(1080, 1300)),
+    dict(style="cap", words=[("DRACULA", sw(167.20), 0)], end=sw(167.20) + 0.62, emph=["DRACULA"], big=True, band=(1330, 1545)),
+    dict(style="cap", words=[("DRACULA", sw(171.42), 0)], end=sw(171.42) + 0.62, emph=["DRACULA"], big=True, band=(1570, 1785)),
 ]
 for _t in TEXT:
     assert _t["end"] > _t["words"][-1][1] + 0.25, (_t["words"], _t["end"])
 CAP_Y = (1380, 1496)
 
 # ---- animation layers
-BEAT_PUNCH = [(k, 0.6 if k in PHR else 0.38) for k in BASS if k < 44] + [(k, 1.0 if k in PHR or (k - 12) % 16 == 0 else 0.5) for k in BASS if k >= 44]
+BEAT_PUNCH = [(k, 0.35) for k in BASS if k < 24] + [(k, 0.0) for k in BASS if 24 <= k < 32] + [(k, 1.0 if k % 8 == 0 else 0.55) for k in BASS if k >= 32]
 PULSE_K = []
-T_SURFACE = 0.0; T_SPLASH = DUR + 1                  # (FOREVER's water loop is off in this edit)
+T_SURFACE = 0.0; T_SPLASH = DUR + 1
 
 # ---- engine knobs (older-engine compatibility)
 CAPS = []; END_CAP = []; DROP_TITLE = None; VANISH_T0 = None; CLOSE_T = None

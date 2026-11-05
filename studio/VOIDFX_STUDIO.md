@@ -1,14 +1,48 @@
 # voidfx studio handbook
 
-This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers the standard (§0: v103 FOREVER), every preference learned over ten edits and more than twenty revision rounds, what works and what doesn't, and how to work twice as fast.
+This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers the standards (§0: v105 DRACULA, v104 THE PASSENGER, v103 FOREVER), every preference learned over ten edits and more than twenty revision rounds, what works and what doesn't, and how to work twice as fast.
 
 Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (the engine) and `/CLAUDE.md` (the binding rules).
 
 ---
 
-## 0. The standards: v104 THE PASSENGER and v103 FOREVER (watch both first)
+## 0. The standards: v105 DRACULA, v104 THE PASSENGER and v103 FOREVER (watch all three first)
 
-### v104 THE PASSENGER (the newest standard; the scaffold starts from it)
+### v105 DRACULA (the newest standard; the scaffold starts from it)
+
+The owner, after rev 3: *"I like this edit and would like for you to make it a standard. The only gripe I have is the quality of some of the clips."*
+
+| Layer | DRACULA (v105 rev 3) |
+|---|---|
+| Concept | SUNDOWN. By day he wears the mask (sunny Miami, the boat, the smile). The last chorus is "run from the sun like Dracula", so the sun sets across the song's one-bar drop-out and night slams in on the drop (the biggest change in the song). Night is the hunt. At the end the sun takes him, and the loop opens in that same sun. |
+| Look | Two looks split on the drop. **Day:** a bleached warm "Sunshine State postcard" with teal shadows; the sun with rays and lens ghosts sits **behind him** (his MODNet matte, a light wrap on his near edge), with sunlit dust in the air. **Night:** cold moonlit silver and deep blacks, only crimson kept and pushed, with a crimson bloom. |
+| Opening | The clean boat shot with the sun still blazing from the loop, calming over the first quarter second. |
+| Set pieces | **SUNDOWN:** the sun sets down the edge of the frame, then an **eclipse** (the moon's disc with a streaming corona and a diamond ring) takes the light, and bats gather behind him. **THE BAT BURST** (the drop): a 3D cloud of bats pours at the lens against a crimson flash, and a per-letter "DRACULA" breaks into bats. **THE BLOOD MOON:** a procedural blood moon rises behind his cut-out. **THE COFFIN:** a height-map-lit lid slams over him. **ASHES TO SUN** (the loop): he burns like paper, 3,000 embers spiral into the sun (frame 0's sun), it flares, and the light collapses into it on the opening shot. |
+| Transitions | 27 designed cuts in 23 s, each with its own sound: sun flare, whip, film burn, slam, card flip, quarter-turn, palm sweep, light sweep, eclipse, bat burst, strobe, impact, torch blind-out, cape, moon iris, lamp on, logo, roll into the upside-down shot, coffin, mist, bat swarm, eye dive, face-match, shutter, zipper, great bat, sun flare. |
+| Animation | A camera float on every hold; beat punches (strong on the bars) from the drop on; speed ramps with ghost trails; gathering bats; drifting fog; a pulsing crimson backlight. |
+| Text | Only the words verified on the Demucs vocal stem (Whisper in tight windows, no hint), on their sung times, in the v9 style: SAW THIS MOMENT / COMING FROM **AFAR**, RUN FROM THE **SUN** / LIKE, the per-letter hero **DRACULA**, and **DRACULA** twice more. |
+| Music | Tame Impala "Dracula", h592–h680, one pass, built circularly; the sound design is in the song's key (B-flat minor): a church-bell toll, a dawn chord. |
+
+**The owner's gripe, now a rule: clip quality.**
+- *"The only gripe I have is the quality of some of the clips."*
+- **Why:** every library pack is 720p (even `pack7_4k`), and several are heavily compressed:
+  - p8 (S1) at 0.43 Mb/s;
+  - p9, p6 and p10 at about 0.7 Mb/s.
+  A 9:16 crop uses about 405×720 source pixels, enlarged about 2.8× (more with zoom). The upscale pass (Lanczos plus noise-gated detail) can't invent detail.
+- **v105's softest shots** (`tools/sharpness.py 105` on the shipped MP4):
+  - the daybreak walk (p9, zoom 1.3, so 3.5×);
+  - the palms (p10);
+  - the lollipop (p8);
+  - then the ice cream (p1), hood (p3) and pink-wall (p5) shots.
+- **From now on:**
+  1. Run `tools/sharpness.py N --src` while choosing shots, and swap anything flagged SOFT for a sharper moment or pack.
+  2. Keep zoom at or under about 1.1 on 720p sources.
+  3. Prefer the high-bitrate packs (p5, p7, p3, p4, scenepack2: 1.7–2.2 Mb/s) for close-ups and hero shots. Use the 0.4–0.8 Mb/s packs for fast or dark moments, where softness hides.
+  4. Hide what's left of the softness with grade and grain, not with sharpening.
+  5. Run `tools/sharpness.py N` on the render, and list the SOFT shots in the README's checkpoint.
+  6. Ask the owner for 1080p or 4K packs when a hero moment depends on a soft source. An AI upscaler (Real-ESRGAN class) is the other fix, but it needs a GPU: it took about 10 s a frame on this CPU.
+
+### v104 THE PASSENGER (a standard)
 
 The owner, after rev 3: *"I really like this edit and would like for it to be a standard. Only gripe I have is that one span of the edit had some headspace that definitely could have had an edit or a cool transition."*
 
@@ -80,7 +114,8 @@ The owner, after rev 5: *"I like this edit. I would like for you to make it a st
 | Edit | Folder | Why it is a benchmark |
 |---|---|---|
 | **The Flash edit approved in chat 1** (Studio 1; version, title, song and folder not passed to Studio 2) | Studio 1's branch | **The newest benchmark (Studio 1)**, quoted with the owner's approval in Studio 1's docs. Its specialty is **motion and finish**: speed ramps with smooth slow motion, the beat-synced camera, light rays, the multi-stage set pieces and the Speed Force loop. Two rounds of "lacklustre" were fixed by **the motion pass, not by adding more effects**. Match or beat it. |
-| **THE PASSENGER** (Dexter × GLM-RST "still love you (super slowed + reverb)", rev 3, Studio 2) | `v104/` | **The newest standard (§0); the scaffold starts from it.** *"I really like this edit and would like for it to be a standard."* The ink-wash look, the self-drawing opening, the lit dark-side set piece, the rotation motif. |
+| **DRACULA** (Dexter × Tame Impala "Dracula", rev 3, Studio 2) | `v105/` | **The newest standard (§0); the scaffold starts from it.** *"I like this edit and would like for you to make it a standard."* The day/night split on the drop, the sun behind him, the bat burst, the blood moon, the eclipse and the ASHES TO SUN loop. The gripe: clip quality (§0, §2 item 11). |
+| **THE PASSENGER** (Dexter × GLM-RST "still love you (super slowed + reverb)", rev 3, Studio 2) | `v104/` | **A standard (§0).** *"I really like this edit and would like for it to be a standard."* The ink-wash look, the self-drawing opening, the lit dark-side set piece, the rotation motif. |
 | **FOREVER** (Dexter × Foo Fighters "Everlong", rev 5, Studio 2) | `v103/` | **The standard (§0).** *"I like this edit. I would like for you to make it a standard."* New edits start from it and must add more animations and transitions and caption the sung lyrics. |
 | **HIM ALL ALONG** (Dexter × Gunna, rev 2) | `v7/` | Approved as a standard: *"The transitions were creative and well animated."* Physical, themed, Dexter-specific transitions (blood-slide box, plastic burst, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop), and a hero transition on the song's drop. |
 | **WARMPOP** (Dexter × George Clanton, rev 3) | `v6/` | Approved as a standard: *"wonderful transitions, animations, graphics, while maintaining the style that I like … I like how the music correlates to the edit. I like the text."* The amount of designed motion per second, the music-led structure, the eased two-line captions and the depth graphics. |
@@ -122,6 +157,7 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
    - **−13 LUFS, true peak ≤ −2.5 dBTP, measured after AAC.** Keep margin; aim for −3.0 or lower.
 9. **Review before delivery:** run the ship checkpoint (section 7), then a visual sign-off on frames pulled from the **encoded** file. If anything fails, fix it and re-render. Never ship on the automated pass alone.
 10. **Honesty:** you can't watch or listen. Say what was verified by frames and measurement, and ask the owner to watch once with sound.
+11. **Clip quality (v105):** run `tools/sharpness.py N --src` when choosing shots and `tools/sharpness.py N` on the render. Swap SOFT shots, keep zoom at or under about 1.1 on 720p packs, put the hero shots on the high-bitrate packs, and ask for 1080p or 4K packs when a hero moment needs one (§0).
 
 ---
 
