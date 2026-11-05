@@ -1,6 +1,6 @@
 # voidfx toolkit: how an edit gets made (fast)
 
-The engine is the standard, `v103/work/` (FOREVER; see the handbook §0). `render103.py` contains every v4–v9 transition and graphic, and the edit's own section is spliced in from `fx103.py` by `splice.py` (the last definitions win, so that section owns the grade, the frame function, the text and the finish). New edits copy all of it, plus FOREVER's EDL as the worked template, with `tools/new_edit.py`. Then they rewrite the EDL, restyle their `fxN.py` (grade, palette, set pieces, frame) and the sound design, and run `python3 vN/work/splice.py` after each `fxN.py` change. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
+The engine is the newest standard, `v104/work/` (THE PASSENGER; see the handbook §0). `render104.py` contains every v4–v9 transition and graphic, and the edit's own section is spliced in from `fx104.py` by `splice.py`. That section carries FOREVER's toolkit and THE PASSENGER's on top of it (the last definitions win, so that section owns the grade, the frame function, the text and the finish). New edits copy all of it, plus THE PASSENGER's EDL as the worked template, with `tools/new_edit.py`. Then they rewrite the EDL, restyle their `fxN.py` (grade, palette, set pieces, frame) and the sound design, and run `python3 vN/work/splice.py` after each `fxN.py` change. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
 
 ## 1. Pipeline and timings
 
@@ -112,6 +112,24 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 | `plastic=(t0, t1)` | `plastic_sheet`: milky kill-room sheeting with swaying, light-catching folds is pulled over the lens between t0 and t1. |
 | `caustics=amt`, `snow=True`, `rain=True`, `moonglow=True` | water light, marine snow, rain on the glass, a glow on the moon. |
 | `TEXT` dicts | `style="cap"` (v9 keyline captions; `band=` for QC, optional `ys=`), `style="hero"` (per-letter title; `exit="bubbles"` or `"blood"`). Word times come from `tools/lyrics.py` (lyrics) or `transcribe.py` (dialogue), each on its sung or spoken time. |
+
+### The v104 THE PASSENGER toolkit (the newest standard; in `fx104.py`, copied into every new edit's `fxN.py`)
+
+| tin / flag | What it does | Sound in `audio104.py` |
+|---|---|---|
+| `graphic="ink_open"` (first shot) | The pickup: bare paper (frame 0 matches the loop's last frame). An ink sketch of the next shot draws itself, one stroke group per beat (`sketch_fx`), ink creeps in from the corners (`edge_seep`), and a drop forms, swells and falls (`drop_at`). | pen and brush scratches, a plink, a reverse swell |
+| `ink_bloom` | The drop lands on the downbeat: a crown of droplets, and the bloom spreads with fingered edges and an ink rim; the picture lives inside the ink. | splat, wet bloom, impact |
+| `ink_out=dict(k0)` (last shot) | The loop: the picture drains back into one blob on the same ghosted paper, which pulls into a drop and lifts away. | reverse swell, reversed plink |
+| `brush` + `brush=dict(ang, seed, red/white)` | A sumi brush band sweeps across: wet ragged front, dry bristly tail, the next shot behind it. Ivory reads on dark footage, red on light; black disappears on dark. | dry bristle swish |
+| `page_turn` | The frame turns over like a sketchbook page: paper on its back, a bright fold, cast shadows. | paper flip + whoosh |
+| `ink_bleed` | Ink blooms in from several points and retracts onto the next shot (it leaves gaps: no dead black frame). | reverse swell, wet bloom |
+| `spatter` + `spat=dict(k, x, y)` | A two-frame red impact; red ink spatter lands on the lens (organic body, elongated drops pointing away, gloss), hangs, then the heavy drops run. Place it off the face. | splat, impact, drips |
+| `passenger` set piece: `passenger=dict(k_rise, k_lunge, cut_y)` on a `seg=True` shot, then `tin="passenger"` on the next | A light comes on behind him and the wall goes to lit paper; his matte shadow (body only, above `cut_y`) is thrown beside him, with a crisp ink edge, a red rim, sway, breathing on the bass and rising smoke; two ember eyes open (masked behind him); push-in with a dutch tilt; the lunge pans to centre and both eyes rush the lens; the next shot surfaces through thinning ink. | lamp click, ember ignite, sub drop, rising drone, reverse swell, impact |
+| `window=dict(src, a, k_in, k_out)` on a `seg=True` shot | The silhouette: the world goes to paper, his body becomes a window into another shot, his face stays. | a breath of air |
+| `roll` / `quarter_roll` / `spin=(a0, a1)` | The rotation motif (the owner's favourite): a spin into an upside-down shot that keeps turning through its hold; a 90° roll into a rotational blur and out upright. | deep spin whoosh + swell |
+| `ghost=a` | Ink ghost trails: darker echoes of the last frames of motion (pair with a speed ramp in `tmap`). | (the cut's own) |
+| `motes=a`, `swash=dict(k0, k1, y)`, `flare=a` | Ink motes drifting in depth; an ivory brush swash painted behind a hero word; ivory anamorphic flares. | bristle swish for the swash |
+| always on | `cam_float` (a breathing camera on every hold), `beat_fx` (punches with radial motion blur on strong hits), the breathing vignette on `PHR`, `ink_drift` in the shadows. | — |
 
 ## 3. Graphics and text
 

@@ -6,7 +6,35 @@ Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (t
 
 ---
 
-## 0. The standard: v103 FOREVER (watch it first)
+## 0. The standards: v104 THE PASSENGER and v103 FOREVER (watch both first)
+
+### v104 THE PASSENGER (the newest standard; the scaffold starts from it)
+
+The owner, after rev 3: *"I really like this edit and would like for it to be a standard. Only gripe I have is that one span of the edit had some headspace that definitely could have had an edit or a cool transition."*
+
+| Layer | THE PASSENGER (v104 rev 3) |
+|---|---|
+| Concept | His own lines: "I like to pretend I'm alone. Completely alone." Then "I have a dark side, too." The ink is his Dark Passenger. |
+| Look | SUMI ink wash: ivory paper with fibres, ink-blue lifted blacks, only strong reds kept as red ink. One grade unifies footage from five seasons. |
+| Opening | Frame 0 is bare paper. An ink sketch of him draws itself, one stroke group per synth note, while ink creeps in from the corners. A drop forms, falls, and blooms into him on the bass entry and on "ALONE". |
+| Set pieces (one per phrase start) | **THE SPATTER:** red ink on his already spattered suit. **THE PASSENGER:** a light comes on, the wall goes to paper, his shadow is thrown beside him with smoke rising off it, ember eyes open on "DARK", and it lunges so both eyes rush the lens. **THE SILHOUETTE:** his body becomes a window into the kill room. **THE INK-OUT:** the picture drains back into the drop, which is the loop. |
+| Transitions | 26 designed cuts in 23 s, almost none repeated, each with its own sound: ink bloom, page turn, ivory brush, whip, smear, impact, slam, light sweep, red brush, **roll into the upside-down shot** (the owner's favourite), tilt, spatter, whip up, strobe, face-match, film burn, ink bleed, passenger reveal, **quarter-turn**, logo, shutter, lamp on, plastic wrap, flashlight blind-out, eye dive, zipper. |
+| Animation | A camera float on every hold; beat punches on every sub-bass hit with motion blur; speed ramps with ink ghost trails; the upside-down hold keeps turning; a breathing ink vignette on the phrase starts. |
+| Graphics | Paper and its fibres, ink drift in the shadows, ink motes in depth, an ivory swash behind "ALONE.", ivory anamorphic flares, the self-drawing sketch. |
+| Text | Dexter's two lines, word-timed on the isolated voice, in the v9 style. "COMPLETELY / ALONE." and "I HAVE A / DARK SIDE, TOO." are per-letter hero titles. The sound has no intelligible lyric (checked with Whisper and a published-lyrics search), so per the rule there are no lyric captions. |
+| Music | A screen-recorded TikTok sound with no drums. The grid is fitted to its sub-bass hits; every cut lands on a hit or a phrase start. |
+
+**The owner's gripe, now a rule: no headspace.**
+- No span longer than about a second without a cut, a transition or a designed beat (a speed ramp, a reveal, a graphic hit or a text beat). That includes the inside of set pieces and dialogue holds.
+- The owner didn't say which span. v104's longest are the candidates:
+  - the pickup, 1.60 s;
+  - the dark-side shot, 1.60 s;
+  - the final shot, 1.31 s;
+  - the floor shot, 1.20 s;
+  - the dock, spatter and silhouette shots, 1.07 s each.
+- In a new edit, plan a cut or a beat inside anything that long, and list each span over a second in the pre-build gate (§5a, item 8).
+
+### v103 FOREVER
 
 The owner, after rev 5: *"I like this edit. I would like for you to make it a standard. I just have one note. I would like for there to be more animations and transitions moving forward and that lyric kind of recognition to happen."*
 
@@ -51,6 +79,7 @@ The owner, after rev 5: *"I like this edit. I would like for you to make it a st
 
 | Edit | Folder | Why it is a benchmark |
 |---|---|---|
+| **THE PASSENGER** (Dexter × GLM-RST "still love you (super slowed + reverb)", rev 3, Studio 2) | `v104/` | **The newest standard (§0); the scaffold starts from it.** *"I really like this edit and would like for it to be a standard."* The ink-wash look, the self-drawing opening, the lit dark-side set piece, the rotation motif. |
 | **FOREVER** (Dexter × Foo Fighters "Everlong", rev 5, Studio 2) | `v103/` | **The standard (§0).** *"I like this edit. I would like for you to make it a standard."* New edits start from it and must add more animations and transitions and caption the sung lyrics. |
 | **HIM ALL ALONG** (Dexter × Gunna, rev 2) | `v7/` | Approved as a standard: *"The transitions were creative and well animated."* Physical, themed, Dexter-specific transitions (blood-slide box, plastic burst, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop), and a hero transition on the song's drop. |
 | **WARMPOP** (Dexter × George Clanton, rev 3) | `v6/` | Approved as a standard: *"wonderful transitions, animations, graphics, while maintaining the style that I like … I like how the music correlates to the edit. I like the text."* The amount of designed motion per second, the music-led structure, the eased two-line captions and the depth graphics. |
@@ -197,7 +226,10 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
 6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
 7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
-8. **More motion than FOREVER (§0):** count the plan's designed transitions (at least 24 per ~24 s), list the beat-punch sections, and name the animation inside every hold longer than about a second.
+8. **More motion than FOREVER, and no headspace (§0):**
+   - count the plan's designed transitions (at least 24 per ~24 s; THE PASSENGER has 26);
+   - list the beat-punch sections;
+   - **list every span longer than about a second** and name the cut, transition or designed beat inside it.
 9. **Lyric recognition (§0):** the window has sung lyrics; `tools/lyrics.py` has been run with the published lyrics; every clearly sung line is captioned on its words; at least three picture moments land on sung words.
 
 ## 5. What works: craft lessons

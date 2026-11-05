@@ -198,3 +198,15 @@ The owner: *"I really like what you did with Dexter being upside down and that t
 **Visual sign-off** was done on frames pulled from the encoded MP4: the whole opening (the sketch drawing itself, the page turn, the new stare and shh shots, the swash) and THE PASSENGER frame by frame (the light coming on, the shadow, the embers, the lunge, the reveal).
 
 **Not verified:** watching and listening in real time.
+
+## Approved as a standard (after rev 3)
+
+The owner: *"I really like this edit and would like for it to be a standard. Only gripe I have is that one span of the edit had some headspace that definitely could have had an edit or a cool transition. Do not change anything about the edit just keep for future reference."*
+
+- **The edit is unchanged.** It's written into CLAUDE.md, handbook §0/§1 and TOOLKIT.md as the newest standard, and `tools/new_edit.py` now scaffolds from it. A scaffolded test edit rendered pixel-identical to v104.
+- **The gripe is recorded as a rule: no headspace.** No span longer than about a second without a cut, a transition or a designed beat. The owner didn't say which span. The longest here, all candidates for next time:
+  - the pickup, 1.60 s;
+  - the dark-side shot, 1.60 s;
+  - the final shot, 1.31 s;
+  - the floor shot, 1.20 s;
+  - the dock, spatter and silhouette shots, 1.07 s each.

@@ -1,6 +1,22 @@
 # voidfx edit standard
 
-**THE STANDARD: `v103/`, *FOREVER* (Dexter × Foo Fighters "Everlong", rev 5, Studio 2).** The owner: *"I like this edit. I would like for you to make it a standard."* Every new edit starts from it (`tools/new_edit.py` copies its engine, toolkit and EDL) and must **exceed** it on two counts the owner named: **more animations and transitions**, and **lyric recognition**. See the handbook §0.
+**THE STANDARDS: `v104/` *THE PASSENGER* (the newest) and `v103/` *FOREVER* (Studio 2).** Every new edit starts from THE PASSENGER: `tools/new_edit.py` copies its engine, its toolkit (which also carries all of FOREVER's) and its EDL. Every new edit must **exceed both**. See the handbook §0.
+
+**`v104/`, *THE PASSENGER*** (Dexter × GLM-RST "still love you (super slowed + reverb)", rev 3). The owner: *"I really like this edit and would like for it to be a standard."*
+- **The concept:** "I like to pretend I'm alone. Completely alone." Then "I have a dark side, too." The ink is his Dark Passenger.
+- **The look:** SUMI ink wash (ivory paper, ink-blue blacks, only strong reds kept as red ink). One grade unifies five seasons of footage.
+- **The opening:** an ink sketch of him draws itself on the paper. A drop falls and blooms into him on the bass entry.
+- **Set pieces on every phrase start:**
+  - the spatter on his suit;
+  - THE PASSENGER: a light comes on, his shadow is thrown on the wall, ember eyes open on "DARK", and it lunges at the lens;
+  - the silhouette window into the kill room;
+  - the ink-out loop back into the drop.
+- **Motion:** 26 designed cuts in 23 s. The upside-down roll and a quarter-turn make rotation a motif. A page turn, ivory and red brush strokes, and the shared standard pieces (eye dive, flashlight blind-out, zipper).
+- **Animation:** a camera float on every hold, motion-blurred beat punches on the sub-bass, speed ramps with ink ghost trails, ink motes, and a breathing vignette. Every transition and set piece has its own sound.
+- **The owner liked:** the upside-down shot and the roll into it; the rebuilt dark-side moment.
+- **The owner's one gripe, a rule from now on:** *"one span of the edit had some headspace that definitely could have had an edit or a cool transition."* **No headspace: no span longer than about a second without a cut, a transition or a designed beat**, even inside a set piece or a dialogue hold. v104's longest spans, all candidates (the owner didn't say which): the pickup 1.60 s, the dark-side shot 1.60 s, the final shot 1.31 s, the floor shot 1.20 s, and the dock, spatter and silhouette shots at 1.07 s each. Plan a cut or a beat inside anything that long.
+
+**`v103/`, *FOREVER*** (Dexter × Foo Fighters "Everlong", rev 5). The owner: *"I like this edit. I would like for you to make it a standard."* New edits must **exceed** it on two counts the owner named: **more animations and transitions**, and **lyric recognition**.
 - What it is: a concept from Dexter's world ("How is it I can kill people and feel no regret?"; he keeps every kill forever, the Gulf Stream keeps the rest); three multi-stage set pieces (THE RIP: kill-room plastic tears open on the drop; THE EVIDENCE PHOTOS: the ring flash fires on "IF" and the frame is tossed away as a photo; THE GULF STREAM: the loop sinks and surfaces in the same water); 20 designed transitions in 24 s, each with its own sound (eye dive, flashlight blind-out, camera shutter, flash-photo toss, water ripple, sea spray, rain focus, zipper, logo, bubbles); the camera punching on every beat; graphics in every hold (caustics, marine snow, heartbeat pulse, swinging lamp, anamorphic flare); the narrated line as voice-over; and **every clearly sung lyric captioned word by word on its sung time** in the v9 style.
 - **The owner's note for every edit from now on:** *"more animations and transitions moving forward, and that lyric kind of recognition."* In numbers:
   - at least 24 designed transitions per ~24 s (FOREVER had 20);
@@ -14,7 +30,7 @@
 - `v6/`, *WARMPOP* (Dexter × George Clanton "Warmpop", 9:16): the reference for the **amount and quality of designed transitions, animations and graphics**, how the music drives the structure, and the text. The user: "wonderful transitions, animations, graphics, while maintaining the style that I like… I like how the music correlates to the edit. I like the text."
 - `v4/`, *SURPRISE* (Doakes × Need It, 9:16): the reference for dialogue-led openings that play as one continuous take.
 
-**Start with `studio/VOIDFX_STUDIO.md`.** It holds every preference, like, dislike and lesson, the benchmarks, the style bank and the fast workflow. Then read `studio/SCENE_PACKS.md` (every source, the proven shots and dialogue timecodes) and **`docs/TOOLKIT.md`** (engine, transition catalog, pitfalls). Build every new edit on the standard with `python3 tools/new_edit.py N SLUG "TITLE"`. It copies the v103 engine (`render103.py` with every v4–v9 transition, `audio103.py`, `qc103.py`, `facetrack.py`, `analyze.py`), plus `fx103.py` as the edit's own `fxN.py` section (spliced in by `splice.py`) and FOREVER's EDL as the worked template. The scaffold renders FOREVER pixel-for-pixel until you change it. Restyle the edit's own grade, palette, set pieces, text colours and finish in `fxN.py`. Don't start from scratch, and **don't reuse a benchmark's look**: each edit needs its own style. For a second studio session, see `studio/NEW_STUDIO_SETUP.md`.
+**Start with `studio/VOIDFX_STUDIO.md`.** It holds every preference, like, dislike and lesson, the benchmarks, the style bank and the fast workflow. Then read `studio/SCENE_PACKS.md` (every source, the proven shots and dialogue timecodes) and **`docs/TOOLKIT.md`** (engine, transition catalog, pitfalls). Build every new edit on the standard with `python3 tools/new_edit.py N SLUG "TITLE"`. It copies the v104 engine (`render104.py` with every v4–v9 transition, `audio104.py`, `qc104.py`, `facetrack.py`, `analyze.py`), plus `fx104.py` as the edit's own `fxN.py` section (the FOREVER and THE PASSENGER toolkits, spliced in by `splice.py`) and THE PASSENGER's EDL as the worked template. The scaffold renders THE PASSENGER pixel-for-pixel until you change it. Restyle the edit's own grade, palette, set pieces, text colours and finish in `fxN.py`. Don't start from scratch, and **don't reuse a benchmark's look**: each edit needs its own style. For a second studio session, see `studio/NEW_STUDIO_SETUP.md`.
 
 ## User preferences (learned over several revisions)
 
@@ -98,7 +114,7 @@
 
 - Sources go in `src/` (read-only copies). Each edit gets its own folder (`vN/work`, `vN/out`, ...).
 - One EDL file per edit holds every decision, and the renderer reads only that file. The EDL also sets `VER`, `SLUG` and `SONG`, plus the engine knobs (`DROP_TITLE`, `MONTAGE`, `VANISH_T0`, `VO_STEM`, `CAPS`, `END_CAP`); the template is `tools/edl_template.py`.
-- Tools: `tools/new_edit.py` (scaffold from the v103 standard), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/lyrics.py` (lyric recognition: Demucs vocals + Whisper word times aligned to the published lyrics, with a ready caption block), `tools/transcribe.py` (dialogue word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc), `tools/setup_studio.sh` (deps, models, source-library check).
+- Tools: `tools/new_edit.py` (scaffold from the v104 standard), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/lyrics.py` (lyric recognition: Demucs vocals + Whisper word times aligned to the published lyrics, with a ready caption block), `tools/transcribe.py` (dialogue word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc), `tools/setup_studio.sh` (deps, models, source-library check).
 - Two studios: each works on its own branch with its own version range (Studio 1 `v8+`, Studio 2 `v101+`); see `studio/NEW_STUDIO_SETUP.md`.
 - Media (`src/`, audio, frames, outputs, models) stays out of git. Commit the code, EDL, transcripts, tracks and README, then push to the session's branch.
 - Models are downloaded at runtime: YuNet (`v3/models/face_detection_yunet_2023mar.onnx`), MODNet (`Xenova/modnet`), and faster-whisper large-v3 for dialogue and lyric timing.

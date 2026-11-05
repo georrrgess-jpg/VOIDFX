@@ -1,16 +1,17 @@
-"""Scaffold a new voidfx edit from the standard: the v103 FOREVER engine (every v4-v9 transition + the v103 toolkit).
+"""Scaffold a new voidfx edit from the newest standard: the v104 THE PASSENGER engine (every v4-v9 transition + the v103
+FOREVER toolkit + the v104 ink toolkit).
 
 Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song"
         e.g. python3 tools/new_edit.py 7 night_drive_dexter "NIGHT DRIVE — Dexter × Song"
 Creates vN/{work,frames,audio,out}; copies the engine (render, audio, qc, facetrack, analyze) wired to vN/work/edlN.py,
-plus fxN.py (the edit's own section: the v103 toolkit to restyle) and splice.py; writes edlN.py from tools/edl_template.py
-(FOREVER's EDL as the worked example); adds the media folders to .gitignore. The engine reads every path and the
+plus fxN.py (the edit's own section: the v103 + v104 toolkit to restyle) and splice.py; writes edlN.py from tools/edl_template.py
+(THE PASSENGER's EDL as the worked example); adds the media folders to .gitignore. The engine reads every path and the
 output file name from the EDL (VER, SLUG), so nothing else needs renaming.
 """
 import os, sys, re, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE = "v103"                                                   # the standard (v4-v9 engine + v103: plastic rip, evidence photos, eye dive, flashlight blind-out, beat punches, lyric captions)
+BASE = "v104"                                                   # the newest standard (v4-v9 engine + v103 FOREVER toolkit + v104 ink toolkit: ink drop/bloom, brushes, page turn, spatter, the passenger, silhouette window, quarter roll, camera float, ghost trails)
 n, slug, title = sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
 V = f"v{n}"; D = f"{ROOT}/{V}"
 if os.path.exists(f"{D}/work/edl{n}.py"): sys.exit(f"{V} already exists — refusing to overwrite")
@@ -25,10 +26,10 @@ def port(src, dst, extra=()):
 
 port(f"render{BN}.py", f"render{n}.py", [(f"# >>> {BASE} section (generated from fx{BN}.py by splice.py)", f"# >>> {V} section (generated from fx{n}.py by splice.py)"),
                                           (f"# <<< {BASE} section", f"# <<< {V} section")])
-port(f"fx{BN}.py", f"fx{n}.py", [("# ============================================================================ v103 — FOREVER: undertow toolkit (Dexter × Everlong)",
-                                  f"# ============================================================================ {V} — {title}: toolkit from the v103 FOREVER standard (restyle it)", 1),
-                                 ("render103.py", f"render{n}.py")])
-port("splice.py", "splice.py", [("v103", V), ("103", n)])
+fx = open(f"{ROOT}/{BASE}/work/fx{BN}.py").read().split("\n", 1)                           # the edit's own section, with a fresh header line
+open(f"{D}/work/fx{n}.py", "w").write(f"# ============================================================================ {V} — {title}: toolkit from the {BASE} standard (restyle it)\n"
+                                       + fx[1].replace(f"render{BN}.py", f"render{n}.py"))
+port("splice.py", "splice.py", [(BASE, V), (BN, n)])
 port(f"audio{BN}.py", f"audio{n}.py", [('"""', f'"""[{title} (voidfx {V}) — ported from the {BASE} engine; rewrite the sound design below]\nPrevious edit: ', 1)])
 port(f"qc{BN}.py", f"qc{n}.py")
 shutil.copy(f"{ROOT}/{BASE}/work/facetrack.py", f"{D}/work/facetrack.py")
