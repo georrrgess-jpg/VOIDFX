@@ -1,11 +1,13 @@
 import { useRef, useState } from 'preact/hooks';
-import { createEdit, EFFORTS } from '../../ai/director';
-import { importFiles, detectKind } from '../../media/library';
+import { startAiEdit } from '../../ai/jobs';
+import { detectKind, importFiles } from '../../media/library';
 import { LibraryItem, listLibrary, listPresets, listStandards, Preset, Standard } from '../../state/catalog';
 import { createProject } from '../../state/projects';
 import { Effort, store, useStore } from '../../state/store';
 import { fmtBytes } from '../../state/util';
 import { Icon } from '../controls';
+import { EffortSeg } from '../ai/Composer';
+import { ActivityList } from '../ai/Activity';
 import { fmtDur, SectionHead, useCatalog } from './common';
 
 type Source = 'files' | 'library' | 'both';
@@ -29,6 +31,9 @@ export function CreateSection() {
   const [stdOverride, setStdOverride] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
+  const [critic, setCritic] = useState(true);
+  const [auto, setAuto] = useState(0);
+  const [started, setStarted] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const preset = presets.find(p => p.id === presetId) || presets[0];
@@ -53,11 +58,25 @@ export function CreateSection() {
     setBusy(true);
     try {
       const name = title.trim() || `${preset.name.replace(/^VOIDFX · /, '')} edit`;
-      await createProject({ name, aspect: preset.aspect, fps: preset.fps, presetId: preset.id });
-      store.setDirector({ presetId: preset.id, brief: notes, effort });
-      if (useFiles && files.length) await importFiles(files);
-      if (!opusOk) { store.toast('The project is ready with your files. Opus is not available in this view, so build the edit by hand.', 'info', 7000); return; }
-      void createEdit({ presetId: preset.id, notes, lyrics, effort, library: useLib ? { mode: libMode, ids: picked } : { mode: 'none', ids: [] }, standards: stdIds });
+      store.setDirector({ presetId: preset.id, effort });
+      if (!opusOk) {
+        // no Opus here: make the project with the files and open it for editing by hand
+        await createProject({ name, aspect: preset.aspect, fps: preset.fps, presetId: preset.id });
+        if (useFiles && files.length) await importFiles(files);
+        store.toast('The project is ready with your files. Opus is not available in this view, so build the edit by hand.', 'info', 7000);
+        return;
+      }
+      const job = await startAiEdit({
+        name, presetId: preset.id, effort, files: useFiles ? files : [],
+        request: { notes, lyrics, library: useLib ? { mode: libMode, ids: picked } : { mode: 'none', ids: [] }, standards: stdIds },
+        follow: { critic, autoRounds: critic ? auto : 0 },
+      });
+      if (job) {
+        setStarted(name);
+        setFiles([]); setNotes(''); setLyrics(''); setTitle('');
+        window.scrollTo?.({ top: 0, behavior: 'smooth' });
+        document.querySelector('.home-main')?.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } finally {
       setBusy(false);
     }
@@ -67,6 +86,16 @@ export function CreateSection() {
     <div class="hs create">
       <SectionHead eyebrow="AI Edit" title="Opus builds the edit" text="Pick a preset for the standing brief, add what makes this edit unique, and give Opus material: your own files, the database, or both." />
       {!opusOk && <p class="note warn glass-note">{director.unavailableReason || 'Opus is not connected in this view.'} You can still create the project with your files and edit by hand.</p>}
+      {started && (
+        <div class="started glass">
+          <div class="started-h">
+            <span class="started-ic" aria-hidden="true">{Icon.check}</span>
+            <div><b>“{started}” is building in the background.</b><p class="muted">Leave this page, open other projects or start another edit. You'll get a notice when it's ready{critic ? ' and when the critic has reviewed it' : ''}.</p></div>
+            <button type="button" class="btn btn-ghost" onClick={() => setStarted(null)} aria-label="Dismiss">{Icon.close}</button>
+          </div>
+          <ActivityList compact limit={3} />
+        </div>
+      )}
 
       <section class="cstep">
         <h2><span class="cstep-n">1</span>Preset</h2>
@@ -162,15 +191,31 @@ export function CreateSection() {
         </div>
       </section>
 
-      <section class="cstep cgo">
-        <div class="fld fld-wide">
-          <span class="fld-l">Effort</span>
-          <div class="seg seg-effort" role="radiogroup" aria-label="Effort">
-            {(Object.keys(EFFORTS) as Effort[]).map(k => <button type="button" role="radio" aria-checked={effort === k} class={effort === k ? 'is-on' : ''} onClick={() => setEffort(k)} title={EFFORTS[k].hint}>{EFFORTS[k].label}</button>)}
+      <section class="cstep">
+        <h2><span class="cstep-n">5</span>After it's built</h2>
+        <div class="after">
+          <label class={`toggle${critic ? ' on' : ''}`}>
+            <input type="checkbox" checked={critic} onChange={() => { setCritic(!critic); if (critic) setAuto(0); }} />
+            <span class="toggle-t" aria-hidden="true" />
+            <span><b>Send it to the critic automatically</b><em>A harsh review against your standards and the best TikTok edits, with a write-up for the next round.</em></span>
+          </label>
+          <div class={`after-auto${critic ? '' : ' off'}`}>
+            <span class="fld-l">Then</span>
+            <div class="seg seg-auto" role="radiogroup" aria-label="Automatic rounds">
+              {[[0, 'Wait for my instructions'], [1, 'Revise once on its own'], [2, 'Revise twice on its own']].map(([v, l]) => (
+                <button type="button" role="radio" aria-checked={auto === v} class={auto === v ? 'is-on' : ''} disabled={!critic} onClick={() => setAuto(v as number)}>{l}</button>
+              ))}
+            </div>
           </div>
+          <p class="muted">{!critic ? 'Opus builds round 1 and stops; you decide what happens next.' : auto ? `Fully autonomous: build, critique, then ${auto === 1 ? 'one revision' : 'two revisions'} from the critic's write-up, each critiqued again.` : 'Opus builds round 1 and the critic reviews it. You then write the round 2 instructions, with the critic\'s points if you want them.'}</p>
         </div>
-        <p class="muted">{EFFORTS[effort].hint} Uses your Claude usage; Opus sees contact sheets and the sound analysis.</p>
-        <button type="button" class="cta cta-opus cta-xl" disabled={!canGo} onClick={() => void go()}>{Icon.spark}<span>{busy ? 'Setting up…' : 'Create edit'}</span></button>
+      </section>
+
+      <section class="cstep cgo">
+        <h2><span class="cstep-n">6</span>Effort</h2>
+        <EffortSeg value={effort} onChange={setEffort} />
+        <p class="muted">Runs in the background on your Claude usage. Opus sees contact sheets and the sound analysis; closing the studio stops the job (you can resume it).</p>
+        <button type="button" class="cta cta-opus cta-xl" disabled={!canGo} onClick={() => void go()}>{Icon.spark}<span>{busy ? 'Starting…' : opusOk ? 'Create edit in the background' : 'Create the project'}</span></button>
       </section>
     </div>
   );

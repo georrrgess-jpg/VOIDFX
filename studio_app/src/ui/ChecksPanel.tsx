@@ -1,5 +1,7 @@
 import { useState } from 'preact/hooks';
-import { refineEdit } from '../ai/director';
+import { activeJobFor } from '../ai/jobs';
+import { updateRecord, saveCurrent } from '../state/projects';
+import { openComposer } from './ai/actions';
 import { refreshChecks } from '../ai/checkrunner';
 import { player } from '../engine/player';
 import { addTransitionSounds, normalize } from '../state/ops';
@@ -8,9 +10,21 @@ import { Btn, Icon } from './controls';
 
 const ICON: Record<string, string> = { pass: '✓', warn: '!', fail: '✕', info: 'i' };
 
+/** Open the next round's brief with the failing gates written in. */
+async function fixWithOpus(checks: { status: string; label: string; detail: string }[]) {
+  const pid = store.state.projectId;
+  if (!pid) return;
+  await saveCurrent();
+  const bad = checks.filter(c => c.status === 'fail' || c.status === 'warn').map(c => `- ${c.label}: ${c.detail}`).join('\n');
+  await updateRecord(pid, r => { r.draft = `Fix every failing or flagged gate in the checkpoint without losing what works:\n${bad}`; });
+  openComposer(pid, 'revise');
+}
+
 export function ChecksPanel() {
   const checks = useStore(s => s.checks);
-  const running = useStore(s => s.director.running);
+  const pid = useStore(s => s.projectId);
+  useStore(s => s.jobs);
+  const running = !!(pid && activeJobFor(pid));
   const opus = useStore(s => s.director.available === 'yes');
   const [measuring, setMeasuring] = useState(false);
   const fails = checks.filter(c => c.status === 'fail').length, warns = checks.filter(c => c.status === 'warn').length;
@@ -35,7 +49,7 @@ export function ChecksPanel() {
       <div class="chk-acts">
         <Btn kind="solid" disabled={measuring} onClick={async () => { setMeasuring(true); await refreshChecks({ seam: true }); setMeasuring(false); }}>{measuring ? 'Measuring…' : 'Measure the loop seam'}</Btn>
         {silent && <Btn kind="solid" onClick={() => { store.commit(p => { addTransitionSounds(p); normalize(p, store.state.media); }); store.toast('Every transition now has its own sound.', 'ok'); }}>{Icon.vol}<span>Add transition sounds</span></Btn>}
-        {opus && (fails > 0 || warns > 0) && <Btn kind="opus" disabled={running} onClick={() => { store.set({ rightTab: 'director' }); void refineEdit('Fix every failing or flagged gate in the automated checkpoint without losing what works.'); }}>{Icon.spark}<span>Fix with Opus</span></Btn>}
+        {opus && (fails > 0 || warns > 0) && <Btn kind="opus" disabled={running} onClick={() => void fixWithOpus(checks)}>{Icon.spark}<span>Fix with Opus</span></Btn>}
       </div>
     </div>
   );

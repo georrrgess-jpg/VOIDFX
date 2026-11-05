@@ -37,6 +37,17 @@ export const Icon = {
   stop: <svg viewBox="0 0 16 16" class="ic"><path d="M4 4h8v8H4z" fill="currentColor" stroke="none" /></svg>,
   frameBack: <svg viewBox="0 0 16 16" class="ic">{P('M11.5 3.5 6 8l5.5 4.5M4 3.5v9')}</svg>,
   frameFwd: <svg viewBox="0 0 16 16" class="ic">{P('M4.5 3.5 10 8l-5.5 4.5M12 3.5v9')}</svg>,
+  dots: <svg viewBox="0 0 16 16" class="ic"><circle cx="8" cy="3.2" r="1.25" fill="currentColor" stroke="none" /><circle cx="8" cy="8" r="1.25" fill="currentColor" stroke="none" /><circle cx="8" cy="12.8" r="1.25" fill="currentColor" stroke="none" /></svg>,
+  critic: <svg viewBox="0 0 16 16" class="ic">{P('M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z')}<circle cx="8" cy="8" r="2" />{P('M11.5 1.8l1.3 1.3M4.5 1.8 3.2 3.1')}</svg>,
+  pen: <svg viewBox="0 0 16 16" class="ic">{P('M10.8 2.4l2.8 2.8-7.9 7.9-3.4.6.6-3.4z')}{P('M9.4 3.8l2.8 2.8')}</svg>,
+  retry: <svg viewBox="0 0 16 16" class="ic">{P('M13 8a5 5 0 1 1-1.5-3.6')}{P('M13 2.5v3h-3')}</svg>,
+  bolt: <svg viewBox="0 0 16 16" class="ic">{P('M9 1.5 3.5 9H8l-1 5.5L12.5 7H8z')}</svg>,
+  clock: <svg viewBox="0 0 16 16" class="ic"><circle cx="8" cy="8" r="6" />{P('M8 4.6V8l2.4 1.6')}</svg>,
+  check: <svg viewBox="0 0 16 16" class="ic">{P('m3 8.5 3.2 3L13 4.5')}</svg>,
+  folder: <svg viewBox="0 0 16 16" class="ic">{P('M1.8 4.2v8.3h12.4V5.6H7.6L6.2 3.5H2.5z')}</svg>,
+  search: <svg viewBox="0 0 16 16" class="ic"><circle cx="7" cy="7" r="4.5" />{P('m10.4 10.4 3.6 3.6')}</svg>,
+  edit: <svg viewBox="0 0 16 16" class="ic">{P('M2.5 13.5h11')}{P('M9.8 2.8l2.4 2.4-6.6 6.6H3.2V9.4z')}</svg>,
+  arrowR: <svg viewBox="0 0 16 16" class="ic">{P('M2.5 8h11M9.5 4l4 4-4 4')}</svg>,
 };
 
 export function Btn(props: { onClick?: (e: MouseEvent) => void; title?: string; children?: ComponentChildren; kind?: 'ghost' | 'solid' | 'primary' | 'opus' | 'danger'; active?: boolean; disabled?: boolean; class?: string; id?: string; type?: 'button' | 'submit' }) {

@@ -4,14 +4,20 @@
 import { ALL_FORMATS, AudioBufferSink, BlobSource, CanvasSink, Input, InputAudioTrack, InputVideoTrack } from 'mediabunny';
 import { store } from '../state/store';
 import { AudioAnalysis, MediaInfo, MediaKind } from '../state/types';
-import { shortId } from '../state/util';
-import { blobKeyFor, getBlob, idbGet, idbPut, saveBlob } from '../state/storage';
+import { blobKeyFor, getBlob, idbGet, idbPut, pinnedBlobs, saveBlob } from '../state/storage';
 import { AudioAnalyzer, PEAK_RATE } from './analysis';
 
 export interface Thumb { t: number; img: CanvasImageSource; w: number; h: number }
 
 export interface MediaRuntime {
   file: Blob;
+  /** Storage key of the file (shared between projects and jobs that use the same file). */
+  blobId?: string;
+  /** Media bays (the open editor 'ui', background jobs) using this file. */
+  users: Set<string>;
+  /** Everything known about the file (seed info plus what probing found). */
+  meta: MediaInfo;
+  ready: boolean;
   url: string;
   input: Input | null;
   video: InputVideoTrack | null;
@@ -30,6 +36,42 @@ export interface Derived { peaks?: Float32Array; analysis?: AudioAnalysis | null
 
 export const runtime = new Map<string, MediaRuntime>();
 
+/**
+ * A media bay is one place media lives: the open editor (the store) or a background job's own copy of
+ * a project. Loaded files are shared between bays by media id (ids are unique across projects), so a
+ * job and the editor working on the same project read the same file handles.
+ */
+export interface MediaBay {
+  key: string;
+  media(): Record<string, MediaInfo>;
+  order(): string[];
+  add(info: MediaInfo): void;
+  patch(id: string, patch: Partial<MediaInfo>): void;
+  /** Build timeline filmstrips (only the editor needs them). */
+  thumbs: boolean;
+}
+
+export const uiBay: MediaBay = {
+  key: 'ui',
+  media: () => store.state.media,
+  order: () => store.state.mediaOrder,
+  add: info => store.set(s => ({ media: { ...s.media, [info.id]: info }, mediaOrder: s.mediaOrder.includes(info.id) ? s.mediaOrder : [...s.mediaOrder, info.id] })),
+  patch: (id, patch) => store.set(s => (s.media[id] ? { media: { ...s.media, [id]: { ...s.media[id], ...patch } } } : {})),
+  thumbs: true,
+};
+
+const bays = new Map<string, MediaBay>([['ui', uiBay]]);
+export function registerBay(b: MediaBay) { bays.set(b.key, b); }
+
+/** Media ids are unique across every project, so loaded files can be shared safely. */
+export function newMediaId(taken: Iterable<string> = []): string {
+  const used = new Set(taken);
+  for (;;) {
+    const id = 'm' + Math.random().toString(36).slice(2, 7);
+    if (id.length === 6 && !used.has(id) && !runtime.has(id)) return id;
+  }
+}
+
 const VIDEO_EXT = /\.(mp4|m4v|mov|webm|mkv|avi|3gp|ts|mts|m2ts|ogv)$/i;
 const AUDIO_EXT = /\.(mp3|wav|m4a|aac|ogg|oga|opus|flac|aif|aiff|weba)$/i;
 const IMAGE_EXT = /\.(png|jpe?g|webp|gif|avif|bmp)$/i;
@@ -42,8 +84,12 @@ export function detectKind(f: { name: string; type?: string }): MediaKind | null
   return null;
 }
 
+/** Update a file's info in every bay that uses it. */
 function patchMedia(id: string, patch: Partial<MediaInfo>) {
-  store.set(s => (s.media[id] ? { media: { ...s.media, [id]: { ...s.media[id], ...patch } } } : {}));
+  const rt = runtime.get(id);
+  if (rt) rt.meta = { ...rt.meta, ...patch };
+  const users = rt ? [...rt.users] : ['ui'];
+  for (const k of users) bays.get(k)?.patch(id, patch);
 }
 
 function bumpRuntime() {
@@ -55,6 +101,7 @@ let quotaWarned = false;
 /** Import files into the current project's library. */
 export async function importFiles(files: File[] | FileList, opts: { origin?: 'file' | 'library'; tags?: string[] } = {}): Promise<string[]> {
   const ids: string[] = [];
+  if (store.blocked()) return ids;
   for (const file of Array.from(files)) {
     const kind = detectKind(file);
     if (!kind) { store.toast(`${file.name} is not a video, audio or image file.`, 'error'); continue; }
@@ -63,7 +110,7 @@ export async function importFiles(files: File[] | FileList, opts: { origin?: 'fi
     const dup = st.mediaOrder.map(id => st.media[id]).find(m => m && m.blobId === key && m.status !== 'offline');
     if (dup) { ids.push(dup.id); continue; }
     const offline = st.mediaOrder.map(id => st.media[id]).find(m => m && m.status === 'offline' && m.name === file.name && m.size === file.size);
-    const id = offline ? offline.id : shortId('m', new Set(st.mediaOrder));
+    const id = offline ? offline.id : newMediaId(st.mediaOrder);
     const info: MediaInfo = offline
       ? { ...offline, status: 'loading', blobId: key }
       : {
@@ -71,9 +118,9 @@ export async function importFiles(files: File[] | FileList, opts: { origin?: 'fi
         fps: 0, hasVideo: kind !== 'audio', hasAudio: kind !== 'image', rotation: 0, status: 'loading', blobId: key,
         analysisState: kind === 'image' ? 'none' : 'pending', origin: opts.origin || 'file', tags: opts.tags,
       };
-    store.set(s => ({ media: { ...s.media, [id]: info }, mediaOrder: s.mediaOrder.includes(id) ? s.mediaOrder : [...s.mediaOrder, id] }));
+    uiBay.add(info);
     ids.push(id);
-    attach(id, file, kind, false);
+    attach(uiBay, info, file, false);
     // keep the bytes so the project reopens with its media (large files are written to disk by the browser)
     void saveBlob(file, key).then(k => {
       if (!k && !quotaWarned) {
@@ -85,25 +132,37 @@ export async function importFiles(files: File[] | FileList, opts: { origin?: 'fi
   return ids;
 }
 
-/** Bring stored media of a reopened project back online. */
-export async function attachStored(list: MediaInfo[]) {
+/** Bring stored media of a project back online in a bay (the editor by default). */
+export async function attachStored(list: MediaInfo[], bay: MediaBay = uiBay, files?: Map<string, Blob>) {
   for (const m of list) {
-    if (!m.blobId || runtime.has(m.id)) continue;
-    const blob = await getBlob(m.blobId).catch(() => undefined);
-    if (!blob) { patchMedia(m.id, { status: 'offline' }); continue; }
-    patchMedia(m.id, { status: 'loading' });
-    attach(m.id, blob, m.kind, true);
+    if (!m.blobId) continue;
+    if (adopt(bay, m)) continue;
+    const blob = files?.get(m.blobId) || (await getBlob(m.blobId).catch(() => undefined));
+    if (!blob) { bay.patch(m.id, { status: 'offline' }); continue; }
+    bay.patch(m.id, { status: 'loading' });
+    attach(bay, { ...m, status: 'loading' }, blob, true);
   }
 }
 
+/** Use a file another bay already loaded (same id and file). */
+function adopt(bay: MediaBay, m: MediaInfo): boolean {
+  const rt = runtime.get(m.id);
+  if (!rt || (rt.blobId && m.blobId && rt.blobId !== m.blobId)) return false;
+  rt.users.add(bay.key);
+  if (rt.ready) bay.patch(m.id, { ...rt.meta, id: m.id, status: 'ready' });
+  else bay.patch(m.id, { status: 'loading' });
+  if (bay.thumbs && rt.ready && !rt.thumbs.length && rt.meta.kind === 'video') queue(() => buildThumbs(m.id));
+  return true;
+}
+
 /** Add a stored database item to the current project's library (no copy of the file is made). */
-export async function attachLibraryItem(item: { id: string; blobId: string; name: string; kind: MediaKind; size: number; tags?: string[] }): Promise<string | null> {
-  const st = store.state;
-  const existing = st.mediaOrder.map(id => st.media[id]).find(m => m && m.blobId === item.blobId);
+export async function attachLibraryItem(item: { id: string; blobId: string; name: string; kind: MediaKind; size: number; tags?: string[] }, bay: MediaBay = uiBay): Promise<string | null> {
+  if (bay === uiBay && store.blocked()) return null;
+  const existing = bay.order().map(id => bay.media()[id]).find(m => m && m.blobId === item.blobId);
   if (existing) return existing.id;
   const blob = await getBlob(item.blobId).catch(() => undefined);
   if (!blob) return null;
-  const id = shortId('m', new Set(st.mediaOrder));
+  const id = newMediaId(bay.order());
   const der = await idbGet<Derived>('derived', item.blobId).catch(() => undefined);
   const info: MediaInfo = {
     id, name: item.name, kind: item.kind, size: item.size, lastModified: 0, mime: blob.type, duration: 0, width: 0, height: 0, fps: 0,
@@ -111,20 +170,54 @@ export async function attachLibraryItem(item: { id: string; blobId: string; name
     analysis: der?.analysis ?? undefined, analysisState: der?.analysis ? 'done' : 'pending', shots: der?.shots, poster: der?.poster,
     origin: 'library', libraryId: item.id, tags: item.tags,
   };
-  store.set(s => ({ media: { ...s.media, [id]: info }, mediaOrder: [...s.mediaOrder, id] }));
-  attach(id, blob, item.kind, !!der?.analysis);
+  bay.add(info);
+  attach(bay, info, blob, !!der?.analysis);
   return id;
 }
 
-function attach(id: string, blob: Blob, kind: MediaKind, haveAnalysis: boolean) {
+/** Add a file to a bay that is not the editor (a background job's project). The file is kept in storage. */
+export async function addFileToBay(file: File, bay: MediaBay, opts: { tags?: string[] } = {}): Promise<string | null> {
+  const kind = detectKind(file);
+  if (!kind) return null;
+  const key = blobKeyFor(file);
+  const dup = bay.order().map(id => bay.media()[id]).find(m => m && m.blobId === key);
+  if (dup) return dup.id;
+  const id = newMediaId(bay.order());
+  const info: MediaInfo = {
+    id, name: file.name, kind, size: file.size, lastModified: file.lastModified, mime: file.type, duration: 0, width: 0, height: 0,
+    fps: 0, hasVideo: kind !== 'audio', hasAudio: kind !== 'image', rotation: 0, status: 'loading', blobId: key,
+    analysisState: kind === 'image' ? 'none' : 'pending', origin: 'file', tags: opts.tags,
+  };
+  bay.add(info);
+  attach(bay, info, file, false);
+  pinnedBlobs.add(key);
+  const saved = await saveBlob(file, key);
+  if (!saved) store.toast(`This browser has no room to keep ${file.name}. The edit can use it now, but it must be re-imported after a reload.`, 'error', 8000);
+  return id;
+}
+
+function attach(bay: MediaBay, seed: MediaInfo, blob: Blob, haveAnalysis: boolean) {
+  const id = seed.id;
   const old = runtime.get(id);
-  if (old) { URL.revokeObjectURL(old.url); old.input?.dispose(); }
-  runtime.set(id, { file: blob, url: URL.createObjectURL(blob), input: null, video: null, audio: null, canDecodeVideo: false, canDecodeAudio: false, elementOk: true, thumbs: [], peaks: null, image: null, poster: null });
-  probe(id, blob, kind, haveAnalysis).catch(err => {
+  if (old) {
+    if (old.blobId && old.blobId === seed.blobId) { adopt(bay, seed); return; }
+    disposeRuntime(old);
+  }
+  runtime.set(id, {
+    file: blob, blobId: seed.blobId, users: new Set([bay.key]), meta: { ...seed }, ready: false,
+    url: URL.createObjectURL(blob), input: null, video: null, audio: null, canDecodeVideo: false, canDecodeAudio: false, elementOk: true, thumbs: [], peaks: null, image: null, poster: null,
+  });
+  probe(id, blob, seed.kind, haveAnalysis).catch(err => {
     console.error(err);
     patchMedia(id, { status: 'error', error: String(err?.message || err) });
-    store.toast(`Could not open ${store.state.media[id]?.name || 'a file'}: ${err?.message || 'unsupported file'}`, 'error', 6000);
+    store.toast(`Could not open ${seed.name || 'a file'}: ${err?.message || 'unsupported file'}`, 'error', 6000);
   });
+}
+
+function disposeRuntime(rt: MediaRuntime) {
+  URL.revokeObjectURL(rt.url);
+  try { rt.input?.dispose(); } catch { /* already disposed */ }
+  rt.image?.close();
 }
 
 /** Probe a stored or picked file without a project (database items, standards). */
@@ -161,7 +254,7 @@ export async function probeBlob(blob: Blob, name: string): Promise<Partial<Media
 
 async function probe(id: string, file: Blob, kind: MediaKind, haveAnalysis: boolean) {
   const rt = runtime.get(id)!;
-  const blobId = store.state.media[id]?.blobId;
+  const blobId = rt.blobId;
   if (kind === 'image') {
     const probeBmp = await createImageBitmap(file);
     const { width, height } = probeBmp;
@@ -175,6 +268,7 @@ async function probe(id: string, file: Blob, kind: MediaKind, haveAnalysis: bool
     rt.image = bmp;
     rt.poster = posterFrom(bmp, bmp.width, bmp.height);
     rt.thumbs = [{ t: 0, img: bmp, w: bmp.width, h: bmp.height }];
+    rt.ready = true;
     patchMedia(id, { status: 'ready', width, height, duration: 0, hasAudio: false, hasVideo: true, analysisState: 'none', poster: rt.poster });
     bumpRuntime();
     return;
@@ -251,15 +345,17 @@ async function probe(id: string, file: Blob, kind: MediaKind, haveAnalysis: bool
   // cached waveform and analysis from an earlier session
   const der = blobId ? await idbGet<Derived>('derived', blobId).catch(() => undefined) : undefined;
   if (der?.peaks) rt.peaks = der.peaks;
-  const cur = store.state.media[id];
+  const cur = rt.meta;
   const analysisKnown = (haveAnalysis || !!der?.analysis) && !!(cur?.analysis || der?.analysis);
+  rt.ready = true;
   patchMedia(id, {
     ...patch, kind: finalKind, status: 'ready',
     analysis: cur?.analysis ?? der?.analysis ?? undefined,
     shots: cur?.shots ?? der?.shots,
     analysisState: patch.hasAudio ? (analysisKnown && rt.peaks ? 'done' : 'pending') : 'none',
   });
-  queue(() => buildThumbs(id));
+  if ([...rt.users].some(k => bays.get(k)?.thumbs)) queue(() => buildThumbs(id));
+  else if (!cur?.poster && finalKind === 'video') queue(() => buildPoster(id));
   if (patch.hasAudio && !(analysisKnown && rt.peaks)) queue(() => buildAudio(id));
 }
 
@@ -281,11 +377,12 @@ async function pump() {
 }
 export const mediaBusy = () => busy || jobs.length > 0;
 /** Resolves when queued imports, thumbnails and analysis are finished. */
-export async function whenMediaIdle(timeoutMs = 600000) {
+export async function whenMediaIdle(timeoutMs = 600000, bay: MediaBay = uiBay, signal?: AbortSignal) {
   const t0 = Date.now();
-  while ((busy || jobs.length) && Date.now() - t0 < timeoutMs) await new Promise(r => setTimeout(r, 200));
-  while (store.state.mediaOrder.some(id => store.state.media[id]?.status === 'loading') && Date.now() - t0 < timeoutMs) await new Promise(r => setTimeout(r, 200));
-  while ((busy || jobs.length) && Date.now() - t0 < timeoutMs) await new Promise(r => setTimeout(r, 200));
+  const live = () => Date.now() - t0 < timeoutMs && !signal?.aborted;
+  while ((busy || jobs.length) && live()) await new Promise(r => setTimeout(r, 200));
+  while (bay.order().some(id => bay.media()[id]?.status === 'loading') && live()) await new Promise(r => setTimeout(r, 200));
+  while ((busy || jobs.length) && live()) await new Promise(r => setTimeout(r, 200));
 }
 
 export function posterFrom(img: CanvasImageSource, w: number, h: number): string {
@@ -307,8 +404,8 @@ async function saveDerived(blobId: string | undefined, patch: Derived) {
 
 async function buildThumbs(id: string) {
   const rt = runtime.get(id);
-  const m = store.state.media[id];
-  if (!rt || !m || !m.hasVideo || m.kind !== 'video') return;
+  const m = rt?.meta;
+  if (!rt || !m || !m.hasVideo || m.kind !== 'video' || rt.thumbs.length) return;
   const count = Math.max(6, Math.min(160, Math.round(m.duration / 1.5)));
   const times = Array.from({ length: count }, (_, i) => ((i + 0.5) / count) * m.duration);
   const frames = await grabFrames(id, times, 120);
@@ -322,13 +419,26 @@ async function buildThumbs(id: string) {
   bumpRuntime();
 }
 
+/** A poster frame only (background jobs do not need filmstrips). */
+async function buildPoster(id: string) {
+  const rt = runtime.get(id);
+  const m = rt?.meta;
+  if (!rt || !m || !m.hasVideo || m.kind !== 'video' || m.poster) return;
+  const [f] = await grabFrames(id, [Math.min(m.duration * 0.15, Math.max(0, m.duration - 0.1))], 240);
+  if (!f?.img) return;
+  const poster = posterFrom(f.img, f.w, f.h);
+  rt.poster = poster;
+  patchMedia(id, { poster });
+  void saveDerived(m.blobId, { poster });
+}
+
 /**
  * Frames of a media file at the given source times, `height` pixels tall, rotation applied.
  * Decodes with WebCodecs where possible and falls back to seeking a media element.
  */
 export async function grabFrames(id: string, times: number[], height: number, signal?: AbortSignal): Promise<{ t: number; img: CanvasImageSource | null; w: number; h: number }[]> {
   const rt = runtime.get(id);
-  const m = store.state.media[id];
+  const m = rt?.meta;
   if (!rt || !m) return times.map(t => ({ t, img: null, w: 0, h: 0 }));
   if (m.kind === 'image' && rt.image) return times.map(t => ({ t, img: rt.image, w: rt.image!.width, h: rt.image!.height }));
   const order = times.map((t, i) => ({ t, i })).sort((a, b) => a.t - b.t);
@@ -428,7 +538,7 @@ export async function analyseAudioBlob(blob: Blob, onProgress?: (f: number) => v
 
 async function buildAudio(id: string) {
   const rt = runtime.get(id);
-  const m = store.state.media[id];
+  const m = rt?.meta;
   if (!rt || !m || !m.hasAudio) return;
   patchMedia(id, { analysisState: 'running' });
   try {
@@ -499,12 +609,11 @@ export async function detectShots(blob: Blob, onProgress?: (f: number) => void, 
 }
 
 export function removeMedia(id: string) {
+  if (store.blocked()) return;
   const rt = runtime.get(id);
   if (rt) {
-    URL.revokeObjectURL(rt.url);
-    rt.input?.dispose();
-    rt.image?.close();
-    runtime.delete(id);
+    rt.users.delete('ui');
+    if (!rt.users.size) { disposeRuntime(rt); runtime.delete(id); }
   }
   store.commit(p => { p.clips = p.clips.filter(c => c.media !== id); });
   store.set(s => {
@@ -514,14 +623,16 @@ export function removeMedia(id: string) {
   });
 }
 
-/** Drop every loaded file of the current project (switching projects). */
-export function clearRuntime() {
-  for (const [, rt] of runtime) {
-    URL.revokeObjectURL(rt.url);
-    try { rt.input?.dispose(); } catch { /* already disposed */ }
-    rt.image?.close();
+/** Let go of every file a bay uses; files no other bay uses are closed. */
+export function releaseBay(key: string) {
+  for (const [id, rt] of runtime) {
+    if (!rt.users.delete(key)) continue;
+    if (!rt.users.size) { disposeRuntime(rt); runtime.delete(id); }
   }
-  runtime.clear();
+  if (key !== 'ui') bays.delete(key);
 }
+
+/** Drop the editor's files (switching projects); files a background job still uses stay open. */
+export function clearRuntime() { releaseBay('ui'); }
 
 export { PEAK_RATE };

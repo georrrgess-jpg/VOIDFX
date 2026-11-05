@@ -1,32 +1,63 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
-import { createEdit, EFFORTS, MODEL, refineEdit, resetConversation, stopDirector } from '../ai/director';
-import { Effort, store, useStore } from '../state/store';
-import { Btn, Icon } from './controls';
-import { listPresets, Preset } from '../state/catalog';
-import { useCatalog } from './home/common';
+// The editor's Opus tab: the project's rounds (what the owner asked, what Opus did, what the critic
+// said), the job working on it right now, and the next step. Rounds run in the background.
+import { MODEL } from '../ai/director';
+import { activeJobFor } from '../ai/jobs';
+import { normalize } from '../state/ops';
+import { store, useStore } from '../state/store';
+import { deepClone } from '../state/util';
+import { Round } from '../state/types';
+import { Icon } from './controls';
+import { openComposer, sendToCritic } from './ai/actions';
+import { JobCard } from './ai/Activity';
+import { ScoreRing } from './ai/CritiqueView';
+import { timeAgo } from './home/common';
+
+function restore(r: Round) {
+  if (!r.snapshot) return;
+  const p = normalize(deepClone(r.snapshot), store.state.media);
+  if (store.state.lock) { store.blocked(); return; }
+  store.replace({ ...p, name: store.state.project.name });
+  store.toast(`Restored the timeline from round ${r.n}. Undo (Ctrl+Z) brings the newer version back.`, 'ok', 6000);
+}
+
+function RoundItem({ r, projectId, latest }: { r: Round; projectId: string; latest: boolean }) {
+  const c = r.critique;
+  return (
+    <li class={`rnd k-${r.kind}`}>
+      <span class="rnd-n" aria-hidden="true">{r.n}</span>
+      <div class="rnd-b">
+        <p class="rnd-h"><b>Round {r.n} · {r.kind === 'create' ? 'build' : 'revision'}</b><span>{timeAgo(r.at)}{r.applied !== undefined ? ` · ${r.applied} changes` : ''}</span></p>
+        {(r.brief || r.fromCritic?.length) && (
+          <p class="rnd-ask"><em>You:</em> {r.brief ? r.brief.slice(0, 220) + (r.brief.length > 220 ? '…' : '') : ''}{r.fromCritic?.length ? <span class="rnd-tag">{r.fromCritic.length} critic point{r.fromCritic.length > 1 ? 's' : ''}</span> : null}</p>
+        )}
+        {r.summary && <p class="rnd-say"><em>Opus:</em> {r.summary}</p>}
+        {c && (
+          <button type="button" class="rnd-crit" onClick={() => store.set({ critique: { projectId, round: r.n } })}>
+            <ScoreRing score={c.score} size={40} />
+            <span><b>Critic</b> {c.headline}</span>
+            <span class="rnd-go" aria-hidden="true">{Icon.chevR}</span>
+          </button>
+        )}
+        {r.snapshot && !latest && <button type="button" class="linkbtn rnd-restore" onClick={() => restore(r)}>Restore this version</button>}
+      </div>
+    </li>
+  );
+}
 
 export function DirectorPanel() {
   const d = useStore(s => s.director);
+  const pid = useStore(s => s.projectId);
+  const rounds = useStore(s => s.rounds);
   const clips = useStore(s => s.project.clips.length);
   const ready = useStore(s => s.mediaOrder.filter(id => s.media[id]?.status === 'ready').length);
-  const [chat, setChat] = useState('');
-  const [showKnow, setShowKnow] = useState(false);
-  const logRef = useRef<HTMLDivElement>(null);
-  const [, tick] = useState(0);
-  useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' }); }, [d.messages.length, d.steps]);
-  useEffect(() => {
-    if (!d.running) return;
-    const t = setInterval(() => tick(x => x + 1), 1000);
-    return () => clearInterval(t);
-  }, [d.running]);
-
-  const [presets] = useCatalog<Preset[]>(listPresets, []);
-  const preset = presets.find(p => p.id === d.presetId);
-  const effortKeys = Object.keys(EFFORTS) as Effort[];
-  const hasConversation = d.messages.some(m => m.role === 'opus');
+  const jobs = useStore(s => s.jobs);
+  const job = pid ? activeJobFor(pid) : undefined;
+  const recent = pid ? [...jobs].reverse().find(j => j.projectId === pid && (j.state === 'error' || j.state === 'interrupted' || j.state === 'stopped') && (!job)) : undefined;
+  const last = rounds[rounds.length - 1];
+  const next = last ? last.n + 1 : 1;
   const disabled = d.available !== 'yes';
   return (
-    <div class={`dir${d.running ? ' is-running' : ''}`}>
+    <div class="dir">
       <header class="dir-h">
         <div class="dir-title">
           <span class="dir-mark" aria-hidden="true">{Icon.spark}</span>
@@ -35,107 +66,62 @@ export function DirectorPanel() {
             <p class="dir-model" title="The model Opus calls are sent to">{d.lastModel ? `answered by ${d.lastModel}` : MODEL}</p>
           </div>
         </div>
-        {d.messages.length > 0 && !d.running && <Btn title="Clear the conversation" onClick={resetConversation}>Clear</Btn>}
       </header>
 
       {d.available === 'no' && <p class="note warn">{d.unavailableReason || 'Opus is not available in this view.'} You can still edit by hand.</p>}
       {d.available === 'checking' && <p class="note">Connecting to Opus…</p>}
 
-      <div class="dir-log" ref={logRef} aria-live="polite">
-        {!d.messages.length && !d.running && (
+      <div class="dir-log">
+        {job && <JobCard job={job} />}
+        {recent && <JobCard job={recent} />}
+        {rounds.length > 0 ? (
+          <ol class="rounds">{[...rounds].reverse().map((r, i) => <RoundItem r={r} projectId={pid!} latest={i === 0} />)}</ol>
+        ) : !job && (
           <div class="dir-empty">
-            <p class="dir-empty-t">Opus builds the whole edit.</p>
+            <p class="dir-empty-t">{clips ? 'This edit was made by hand.' : 'Opus builds the whole edit.'}</p>
             <ol>
-              <li>Import your clips and music.</li>
-              <li>Say what you want, or leave it to Opus.</li>
-              <li>Press <b>Create edit</b>. Every change lands on the timeline as one undo step you can tweak by hand.</li>
+              {clips ? (
+                <>
+                  <li>Send it to the critic for a harsh, specific review.</li>
+                  <li>Write the next round's instructions (with the critic's points if you like).</li>
+                  <li>Opus revises it in the background while you keep working.</li>
+                </>
+              ) : (
+                <>
+                  <li>Import your clips and music, or use the database.</li>
+                  <li>Brief Opus: a preset and what makes this edit unique.</li>
+                  <li>It builds in the background; the critic can review it when it's done.</li>
+                </>
+              )}
             </ol>
           </div>
         )}
-        {d.messages.map(m => (
-          <div class={`msg m-${m.role}`}>
-            {m.role === 'opus' && <span class="msg-who">Opus</span>}
-            <p>{m.text}</p>
-            {(m.applied !== undefined || m.undoTo !== undefined) && (
-              <div class="msg-foot">
-                {m.applied !== undefined && <span>{m.applied} change{m.applied === 1 ? '' : 's'} applied</span>}
-                {m.model && <span class="mono">{m.model}</span>}
-                {m.undoTo !== undefined && !d.running && <button type="button" class="linkbtn" onClick={() => { store.undoTo(m.undoTo!); store.toast('Reverted to before this Opus edit.'); }}>Undo this edit</button>}
-              </div>
-            )}
-            {m.issues && m.issues.length > 0 && (
-              <details class="msg-issues"><summary>{m.issues.length} operation{m.issues.length > 1 ? 's were' : ' was'} adjusted</summary><ul>{m.issues.map(x => <li>{x}</li>)}</ul></details>
-            )}
-          </div>
-        ))}
-        {d.steps.length > 0 && (d.running || d.steps.some(s => s.state === 'error')) && (
-          <ol class="steps">
-            {d.steps.map(s => {
-              const secs = s.t0 ? Math.round(((s.t1 || Date.now()) - s.t0) / 1000) : 0;
-              return (
-                <li class={`step st-${s.state}`}>
-                  <span class="step-dot" aria-hidden="true" />
-                  <span class="step-l">{s.label}</span>
-                  <span class="step-d">{s.detail}{s.state === 'run' && secs > 1 ? ` · ${secs}s` : ''}</span>
-                </li>
-              );
-            })}
-          </ol>
+        {d.messages.length > 0 && !rounds.length && (
+          <details class="msg-issues"><summary>Earlier conversation ({d.messages.length})</summary>
+            {d.messages.map(m => <div class={`msg m-${m.role}`}>{m.role === 'opus' && <span class="msg-who">Opus</span>}<p>{m.text}</p></div>)}
+          </details>
         )}
       </div>
 
       <div class="dir-form">
-        <div class="fld fld-wide">
-          <label class="fld-l" for="dir-preset">Preset</label>
-          <select id="dir-preset" value={d.presetId} disabled={d.running} onChange={e => { const id = (e.target as HTMLSelectElement).value; const pr = presets.find(x => x.id === id); store.setDirector({ presetId: id, ...(pr ? { effort: pr.effort } : {}) }); }}>
-            {presets.map(p => <option value={p.id}>{p.name}</option>)}
-          </select>
-          {preset && <p class="hint">{preset.description}</p>}
-        </div>
-        {!hasConversation || d.running ? (
-          <>
-            <label class="fld-l" for="brief">What makes this edit unique</label>
-            <textarea id="brief" class="ta" rows={4} value={d.brief} disabled={d.running}
-              placeholder="Describe the edit: length, mood, story, the moments that matter. Leave empty and Opus decides."
-              onInput={e => store.setDirector({ brief: (e.target as HTMLTextAreaElement).value })} />
-          </>
-        ) : (
-          <>
-            <label class="fld-l" for="chat">Ask Opus for a change</label>
-            <textarea id="chat" class="ta" rows={3} value={chat} disabled={d.running}
-              placeholder="e.g. tighten the opening, end on the strongest shot, move the title up"
-              onInput={e => setChat((e.target as HTMLTextAreaElement).value)}
-              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && chat.trim()) { void refineEdit(chat); setChat(''); } }} />
-          </>
-        )}
-        <div class="fld fld-wide">
-          <span class="fld-l" id="effort-l">Effort</span>
-          <div class="seg seg-effort" role="radiogroup" aria-labelledby="effort-l">
-            {effortKeys.map(k => (
-              <button type="button" role="radio" aria-checked={d.effort === k} class={d.effort === k ? 'is-on' : ''} title={EFFORTS[k].hint} disabled={d.running} onClick={() => store.setDirector({ effort: k })}>
-                {EFFORTS[k].label}
-              </button>
-            ))}
-          </div>
-          <p class="hint">{EFFORTS[d.effort].hint}</p>
-        </div>
-        <div class="dir-actions">
-          {d.running ? (
-            <Btn kind="danger" class="grow" onClick={stopDirector}>{Icon.stop}<span>Stop</span></Btn>
-          ) : hasConversation ? (
+        <div class="next-card">
+          <p class="next-k">Next step</p>
+          {job ? (
+            <p class="next-t">{job.kind === 'critique' ? `The critic is reviewing round ${job.round}.` : `Round ${job.round} is running in the background.`} When it finishes you can {job.kind === 'critique' ? `write round ${job.round + 1} with its points` : 'send it to the critic or write the next round'}.</p>
+          ) : clips || rounds.length ? (
             <>
-              <Btn kind="opus" class="grow" disabled={disabled || !chat.trim()} onClick={() => { void refineEdit(chat); setChat(''); }}>{Icon.spark}<span>Send</span></Btn>
-              <Btn kind="solid" disabled={disabled || !ready} title="Build the edit again from scratch with the brief" onClick={() => { resetConversation(); }}>New brief</Btn>
+              <p class="next-t">Round {next}: you write the instructions, Opus revises in the background.</p>
+              <button type="button" class="btn btn-opus grow next-b" disabled={disabled || !!job} onClick={() => pid && openComposer(pid, 'revise')}>{Icon.pen}<span>Write the round {next} brief</span></button>
+              <button type="button" class="btn btn-solid grow" disabled={disabled || !!job || !clips} onClick={() => pid && void sendToCritic(pid)}>{Icon.critic}<span>{last?.critique ? 'Ask the critic again' : 'Send to the critic'}</span></button>
             </>
           ) : (
-            <Btn kind="opus" class="grow" disabled={disabled || !ready} onClick={() => void createEdit()}>{Icon.spark}<span>{clips ? 'Rebuild edit' : 'Create edit'}</span></Btn>
+            <>
+              <p class="next-t">Round 1: brief Opus and it builds the edit from this project's media.</p>
+              <button type="button" class="btn btn-opus grow next-b" disabled={disabled || !!job || !ready} title={!ready ? 'Import media first' : undefined} onClick={() => pid && openComposer(pid, 'create')}>{Icon.spark}<span>Build it with Opus</span></button>
+            </>
           )}
         </div>
-        <button type="button" class="linkbtn know-t" onClick={() => setShowKnow(!showKnow)} aria-expanded={showKnow}>
-          {showKnow ? '▾' : '▸'} {preset?.houseRules ? 'House rules on' : 'House rules off'} · your additions {d.knowledge.trim() ? `(${d.knowledge.trim().length} chars)` : '(none)'}
-        </button>
-        {showKnow && <p class="hint">Edit the house rules view, your additions, presets and standards from the main menu.</p>}
-        <p class="dir-foot">Uses your Claude usage. Opus sees contact sheets and sound analysis of your media; it cannot hear audio.</p>
+        <p class="dir-foot">Uses your Claude usage. Opus and the critic see contact sheets, rendered frames and sound analysis; they cannot hear audio. Jobs keep running while you edit other projects, but stop if the studio is closed.</p>
       </div>
     </div>
   );

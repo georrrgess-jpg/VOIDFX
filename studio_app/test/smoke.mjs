@@ -1,8 +1,9 @@
 // End-to-end test of the studio in headless Chromium (after `node build.mjs`; media from test/make_media.sh).
 // Stubs the claude.ai runtime: `sample` answers like Opus would (casting, a plan built from the media
 // it is shown, an approving review) and records what it was sent; `downloads.save` hands files back.
-// Flow: main menu → database → standards → AI Edit (files + database) → editor → checks → export
-// (mastered) → reload → reopen the project from Projects. Writes screenshots and the MP4 to test/out/.
+// Flow: main menu → database → standards → AI Edit (files + database) built in the background while a
+// blank project is edited → the critic → its write-up → the round 2 composer → the revision (editor
+// locked) → editor → checks → export (mastered) → reload → reopen. Writes screenshots and the MP4 to test/out/.
 import { createRequire } from 'node:module';
 import http from 'node:http';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
@@ -47,7 +48,7 @@ await ctx.addInitScript(() => {
   };
   const TRANS = ['logo', 'ink', 'blink', 'slash', 'punch', 'light_leak', 'roll', 'shadow', 'warp', 'burn', 'whip_left'];
   function planFrom(text) {
-    const media = [...text.matchAll(/^(m\d+) (video|audio|image) "([^"]+)" ([\d.]+s|still image)/gm)].map(m => ({ id: m[1], kind: m[2], dur: m[4] === 'still image' ? 3 : parseFloat(m[4]) }));
+    const media = [...text.matchAll(/^(m[a-z0-9]+) (video|audio|image) "([^"]+)" ([\d.]+s|still image)/gm)].map(m => ({ id: m[1], kind: m[2], dur: m[4] === 'still image' ? 3 : parseFloat(m[4]) }));
     const ops = [{ op: 'clear' }, { op: 'project', camera: { on: true, every: 'beat', punch: 0.055, kick: 1 } }];
     let t = 0, k = 0;
     const vis = media.filter(m => m.kind !== 'audio');
@@ -80,6 +81,22 @@ await ctx.addInitScript(() => {
           if (full.includes('You are casting material')) {
             const ids = [...full.matchAll(/^(lib\S+) /gm)].map(m => m[1]);
             reply = JSON.stringify({ items: ids.map(id => ({ id, why: 'test' })), message: 'Took the song and the landscape clip.' });
+          } else if (full.includes('You are the critic for VOIDFX Studio')) {
+            reply = JSON.stringify({
+              score: 6.2, verdict: 'not ready', headline: 'Competent, but the hook is soft and three cuts drift off the beat.',
+              scores: { hook: 5, rhythm: 5.5, transitions: 7, motion: 6, text: 7.5, sound: 6, concept: 6.5, picture: 6, loop: 3 },
+              strengths: ['The logo dive lands on a downbeat.', 'Captions are clean and well timed.'],
+              issues: [
+                { severity: 'critical', at: 0, area: 'hook', problem: 'The first second is a static shot with nothing hitting.', fix: 'Open on the strongest shot with a zoom punch on the first downbeat.' },
+                { severity: 'major', at: 3.2, area: 'rhythm', problem: 'The blood bloom starts 90 ms after the snare.', fix: 'Move the cut onto the beat at 3.20 s.' },
+                { severity: 'major', at: null, area: 'loop', problem: 'The last frame does not match frame 0.', fix: 'End on the opening shot so the loop is invisible.' },
+                { severity: 'minor', at: 8.0, area: 'text', problem: 'ALONG sits close to the face.', fix: 'Move it up to y 0.3.' },
+              ],
+              versus: 'Below the v7 and v10 benchmarks: fewer set pieces and no motion pass on the montage.',
+              brief: '1. Rebuild the first second around a hit.\n2. Snap every cut to the beat grid.\n3. Close the loop on frame 0.',
+            });
+          } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full)) {
+            reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
           } else if (full.includes('REVIEW 1 of')) {
             reply = JSON.stringify({ message: 'Reviewed: the checkpoint is clean enough; approved.', ops: [] });
           } else {
@@ -138,25 +155,78 @@ await page.setInputFiles('.cdrop input[type=file]', [join(MEDIA, 'portrait.mp4')
 await page.waitForTimeout(400);
 await shot('06-create');
 await page.click('.cgo .cta-opus');
+// the build runs in the background: the wizard says so and the owner is free to do other things
+await page.waitForSelector('.started', { timeout: 30000 });
+await page.waitForTimeout(800);
+await shot('06b-started');
+report.backgroundStart = await page.evaluate(() => ({ view: window.__voidfx.store.state.view, jobs: window.__voidfx.store.state.jobs.map(j => `${j.kind}:${j.state}`) }));
+// meanwhile: open a blank project, edit it, go back to the menu
+await page.click('.home-link:has-text("Home")');
+await page.waitForTimeout(700);
+await shot('07a-dashboard-running');
+await page.click('.hero .cta-ice');
+await page.waitForSelector('.app');
+await page.evaluate(() => window.__voidfx.store.commit(p => { p.name = 'Side project'; }));
+report.whileBuilding = await page.evaluate(() => ({ lock: window.__voidfx.store.state.lock, name: window.__voidfx.store.state.project.name, job: window.__voidfx.store.state.jobs.map(j => `${j.kind}:${j.state}:${(j.steps.find(s => s.state === 'run') || {}).id || ''}`) }));
+await page.click('.top .brand');
+await page.waitForSelector('.home');
+// wait for the build and the automatic critique
+await page.waitForFunction(() => { const j = window.__voidfx.store.state.jobs; return j.some(x => x.kind === 'critique' && ['done', 'error'].includes(x.state)) || j.some(x => x.state === 'error'); }, null, { timeout: 300000 });
+await page.waitForTimeout(1200);
+report.jobs = await page.evaluate(() => window.__voidfx.store.state.jobs.map(j => ({ kind: j.kind, state: j.state, round: j.round, summary: (j.summary || j.error || '').slice(0, 120), steps: j.steps.map(x => `${x.id}:${x.state}${x.detail ? `(${x.detail})` : ''}`) })));
+await shot('07b-dashboard-done');
+// the "⋮" menu on the recent card
+await page.click('.recent .pcard:has-text("Dexter") .kebab-b');
+await page.waitForTimeout(300);
+await shot('07c-kebab');
+report.menu = await page.evaluate(() => [...document.querySelectorAll('.kebab-pop button')].map(b => b.textContent));
+await page.click('.kebab-pop button:has-text("Read the critique")');
+await page.waitForSelector('.crit-modal .crit');
+await page.waitForTimeout(600);
+await shot('07d-critique');
+await page.click('.crit-modal .comp-foot .cta-opus');
+await page.waitForSelector('.comp .comp-right');
+await page.waitForTimeout(500);
+await page.fill('.comp-right textarea.ta.big', 'Open on the bathtub shot and make the drop hit harder.');
+await page.click('.comp .quick .chipbtn:has-text("Keep everything")');
+await page.click('.comp-right .linkbtn:has-text("What Opus will receive")');
+await page.waitForTimeout(300);
+await shot('07e-composer');
+report.composer = await page.evaluate(() => ({ title: document.querySelector('#comp-title')?.textContent, count: document.querySelector('.comp-count')?.textContent, preview: document.querySelector('.comp-preview')?.textContent?.slice(0, 600) }));
+await page.click('.comp-go .cta-opus');
+await page.waitForFunction(() => !document.querySelector('.comp-right'), null, { timeout: 10000 });
+// open the project while round 2 runs: the editor is locked and says so
+const builtId = await page.evaluate(() => window.__voidfx.store.state.jobs.find(j => j.kind === 'create').projectId);
+await page.evaluate(id => window.__voidfx.open(id), builtId);
 await page.waitForSelector('.app', { timeout: 30000 });
-await page.waitForFunction(() => { const d = window.__voidfx.store.state.director; return !d.running && d.messages.some(m => m.role === 'opus' || (m.role === 'note' && !m.text.startsWith('Material'))); }, null, { timeout: 240000 });
+await page.waitForSelector('.lockbar', { timeout: 30000 }).catch(() => {});
+await page.waitForTimeout(400);
+await shot('07f-locked');
+report.locked = await page.evaluate(() => ({ lock: window.__voidfx.store.state.lock, banner: document.querySelector('.lockbar')?.textContent?.slice(0, 160) || null }));
+await page.waitForFunction(() => { const j = window.__voidfx.store.state.jobs; return j.filter(x => x.kind === 'critique' && ['done', 'error'].includes(x.state)).length >= 2 || j.some(x => x.state === 'error'); }, null, { timeout: 300000 });
+await page.waitForTimeout(800);
 report.director = await page.evaluate(() => {
   const s = window.__voidfx.store.state;
   return {
-    calls: window.__calls.map(c => ({ roles: c.roles.length, images: c.images, chars: c.full.length, house: c.full.includes('VOIDFX HOUSE RULES'), standards: c.full.includes('REFERENCE EDITS THE OWNER ADDED'), checkpoint: c.full.includes('AUTOMATED CHECKPOINT'), casting: c.full.includes('You are casting material') })),
-    messages: s.director.messages.map(m => `${m.role}: ${m.text.slice(0, 90)}`),
-    steps: s.director.steps.map(x => `${x.id}:${x.state}:${x.detail || ''}`),
-    media: s.mediaOrder.map(id => `${id} ${s.media[id].kind} ${s.media[id].name} ${s.media[id].origin}`),
+    calls: window.__calls.map(c => ({ roles: c.roles.length, images: c.images, chars: c.full.length, house: c.full.includes('VOIDFX HOUSE RULES'), standards: c.full.includes('REFERENCE EDITS THE OWNER ADDED'), checkpoint: c.full.includes('AUTOMATED CHECKPOINT'), casting: c.full.includes('You are casting material'), critic: c.full.includes('You are the critic'), round2: c.full.includes('ROUND 2 INSTRUCTIONS') })),
+    rounds: s.rounds.map(r => `R${r.n} ${r.kind} applied=${r.applied} critique=${r.critique ? r.critique.score : '-'} fromCritic=${(r.fromCritic || []).length}`),
+    lockAfter: s.lock,
+    jobs: s.jobs.map(j => `${j.kind}:${j.state}:R${j.round}`),
+    media: s.mediaOrder.map(id => `${id} ${s.media[id].kind} ${s.media[id].name} ${s.media[id].origin} ${s.media[id].status}`),
     format: `${s.project.width}x${s.project.height}@${s.project.fps}`,
     transitions: s.project.clips.filter(c => c.transition).map(c => c.transition.type),
     sfx: s.project.clips.filter(c => c.kind === 'sfx').length,
     ramp: s.project.clips.filter(c => c.kf?.speed?.length).map(c => `${c.id}:${c.kf.speed.length} keys`),
     camera: s.project.camera,
-    checks: s.checks.map(c => `${c.status} ${c.label}: ${c.detail}`),
-    seam: s.seam,
   };
 });
-writeFileSync(join(OUT, 'prompt-plan.txt'), await page.evaluate(() => window.__calls.find(c => !c.full.includes('casting'))?.full || ''));
+await page.click('.rp-tabs button:has-text("Opus")').catch(() => {});
+await page.waitForTimeout(500);
+await shot('07g-rounds');
+writeFileSync(join(OUT, 'prompt-plan.txt'), await page.evaluate(() => window.__calls.find(c => !c.full.includes('casting') && !c.full.includes('You are the critic'))?.full || ''));
+writeFileSync(join(OUT, 'prompt-critic.txt'), await page.evaluate(() => window.__calls.find(c => c.full.includes('You are the critic'))?.full || ''));
+writeFileSync(join(OUT, 'prompt-round2.txt'), await page.evaluate(() => window.__calls.find(c => c.full.includes('ROUND 2 INSTRUCTIONS'))?.full || ''));
+report.checks = await page.evaluate(() => window.__voidfx.store.state.checks.map(c => `${c.status} ${c.label}: ${c.detail}`));
 
 // editor frames at signature transitions
 const tAt = await page.evaluate(() => Object.fromEntries(window.__voidfx.store.state.project.clips.filter(c => c.transition).map(c => [c.transition.type, c.start])));
@@ -208,7 +278,7 @@ await page.waitForSelector('.home');
 await page.click('.home-link:has-text("Projects")');
 await page.waitForSelector('.pcard');
 await shot('12-projects');
-await page.click('.pcard .pcard-open');
+await page.click(`.pcard:has-text("Dexter") .pcard-thumb`);
 await page.waitForSelector('.app');
 await page.waitForFunction(() => { const s = window.__voidfx.store.state; return s.mediaOrder.length && s.mediaOrder.every(id => ['ready', 'error'].includes(s.media[id].status)); }, null, { timeout: 120000 });
 report.reopened = await page.evaluate(b => {

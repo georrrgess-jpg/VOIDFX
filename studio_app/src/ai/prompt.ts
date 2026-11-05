@@ -1,6 +1,5 @@
 // What Opus reads: the studio's capabilities and data formats. The owner's house style lives in
 // knowledge.ts and the presets, and is added by the Director when a preset uses it.
-import { store } from '../state/store';
 import { AudioAnalysis, FONTS, MediaInfo, Project, SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { projectDuration } from '../state/util';
 
@@ -77,11 +76,10 @@ function soundLine(a: AudioAnalysis): string {
   return parts.join('\n    ');
 }
 
-export function mediaCatalog(): string {
-  const s = store.state;
+export function mediaCatalog(media: Record<string, MediaInfo>, order: string[]): string {
   const rows: string[] = [];
-  for (const id of s.mediaOrder) {
-    const m: MediaInfo | undefined = s.media[id];
+  for (const id of order) {
+    const m: MediaInfo | undefined = media[id];
     if (!m || m.status !== 'ready') continue;
     const dims = m.kind !== 'audio' ? ` ${m.width}x${m.height}` : '';
     const len = m.kind === 'image' ? 'still image' : `${m.duration.toFixed(2)}s`;
@@ -115,7 +113,8 @@ export interface ContextExtras {
   checks?: string;
 }
 
-export function contextBlock(p: Project, imageCaptions: string[], imageNote: string | undefined, x: ContextExtras): string {
+export function contextBlock(ctx: { project: Project; media: Record<string, MediaInfo>; order: string[] }, imageCaptions: string[], imageNote: string | undefined, x: ContextExtras): string {
+  const p = ctx.project;
   return [
     'You are the editor inside VOIDFX Studio, a video editing app. You build and change the owner\'s edit by replying with operations that the studio applies to its timeline. You cannot watch or hear the media: the images and the sound analysis below are how you perceive it.',
     x.houseRules ? x.houseRules : '',
@@ -124,7 +123,7 @@ export function contextBlock(p: Project, imageCaptions: string[], imageNote: str
     x.knowledge.trim() ? `STUDIO KNOWLEDGE (from the owner; follow it)\n${x.knowledge.trim()}` : '',
     x.presetPrompt.trim() ? `PRESET "${x.presetName}" (the standing brief for this edit)\n${x.presetPrompt.trim()}` : '',
     reference(p),
-    `MEDIA\n${mediaCatalog()}`,
+    `MEDIA\n${mediaCatalog(ctx.media, ctx.order)}`,
     imageNote ? `IMAGES\n${imageNote}` : imageCaptions.length ? `IMAGES (attached, in this order)\n${imageCaptions.map((c, i) => `${i + 1}. ${c}`).join('\n')}` : 'IMAGES: none attached.',
     `CURRENT TIMELINE\n${timelineJson(p)}`,
     x.checks ? `AUTOMATED CHECKPOINT (the studio's measurable gates on the current timeline)\n${x.checks}` : '',

@@ -1,7 +1,8 @@
 # VOIDFX Studio
 
 A browser video editor in the style of CapCut, published as a claude.ai artifact, where **Opus 5.5
-can build the whole edit** to the voidfx standard. Stages 1 and 2 of [`PLAN.md`](PLAN.md).
+can build the whole edit** to the voidfx standard, a critic can tear it apart, and Opus revises it round by
+round in the background. Stages 1 to 3 of [`PLAN.md`](PLAN.md).
 
 - **Live studio:** https://claude.ai/artifact/24udnvqoodFM824UfV4Md1 (private to the owner until shared from claude.ai).
 - **Source of truth:** `src/`. The published page is the single file `dist/voidfx-studio.html`.
@@ -12,15 +13,24 @@ The studio opens on the **main menu**:
 
 - **AI Edit**: pick a preset, write the notes that make this edit unique (and paste lyrics if you
   have them), choose the material (your files, the **Database**, or both), tick the standards to
-  follow, set the effort and press **Create edit**. Opus casts, plans, builds, checks and reviews
-  the edit, then opens it in the editor.
-- **Projects**: open, rename, duplicate or delete projects, or start a blank one.
+  follow, choose what happens after (send to the critic; wait for your instructions or revise once or
+  twice on its own), set the effort and press **Create edit in the background**. Keep working: the
+  **Activity** panel and notices tell you when the edit and the critique are ready.
+- **Projects**: every card has a **⋮** menu: open, write the next round, send to the critic, read
+  the critique, export, rename, duplicate, delete.
 - **Presets**: standing briefs for AI edits. Built-ins can be duplicated and changed.
 - **Database**: scene packs, clips and music Opus can use. Files of any size (well past 100 MB)
   are stored in this browser and read on demand.
 - **Standards**: your approved benchmarks and any reference edits you add, for all edits or for
   chosen presets.
 - **House rules**: what Opus is told about the voidfx style, plus your own additions.
+
+**The critic and the revision stage.** The critic judges an edit against your standards, your house
+rules and the best TikTok edits of its kind, and writes a scored assessment with timed issues and a
+write-up for Opus. In the round composer you write the next round's instructions, tick which critic
+points go in, and start the round; it runs in the background and the editor shows it live (read-only
+until it finishes). Every round is kept with its brief, Opus's summary, the critic's score and a
+snapshot you can restore. **Ctrl/⌘+K** jumps to any section, project or action.
 
 In the editor: drag files onto the timeline, trim edges, split with **S**, and add text, transitions
 and sounds from the left rail (every animation has a moving picture; hover to play it). The **Edit**
@@ -34,8 +44,9 @@ and lands as one undo step. **Effort**: Low, Medium and High set Opus's thinking
 High plus more footage per call and two review passes in which Opus checks frames rendered from its
 own edit and the checkpoint results.
 
-Everything (projects, media, database, presets, standards) is stored in this browser's storage for
-the artifact. It does not sync to other devices, and clearing site data removes it.
+Everything (projects, media, database, presets, standards, rounds, critiques) is stored in this
+browser's storage for the artifact. It does not sync to other devices, and clearing site data removes
+it. Background jobs run while the studio is open; closing it stops them, and they can be resumed.
 
 ## Keyboard
 
@@ -60,7 +71,9 @@ bash test/make_media.sh && node test/smoke.mjs && node test/bigfile.mjs
 stubbed `claude` runtime (scripted Opus replies, captured downloads): the main menu sections, the
 database (a scene pack split into shots, music analysed), a standard, the AI Edit wizard and the
 Director pipeline with casting, contact sheets, the checkpoint and a review pass, transition and text
-previews, export with mastering, and reopening the project after a reload. It writes screenshots and
+previews, the build running in the background while another project is edited, the automatic
+critique, its write-up, the round 2 composer, the locked editor during the revision, export with
+mastering, and reopening the project after a reload. It writes screenshots and
 the export to `test/out/`. `bigfile.mjs` imports a ~2 GB file with
 its index at the end and reports time-to-ready, JS heap and export time.
 
@@ -71,8 +84,8 @@ its index at the end and reports time-to-ready, JS heap and export time.
 | `src/state/` | Project model (`types.ts`), store with undo/redo and autosave, validated edit operations shared by the UI and Opus (`ops.ts`), IndexedDB storage, projects, presets, standards and the database (`catalog.ts`) |
 | `src/media/` | Import and probing through Mediabunny, filmstrips, waveforms, streaming audio analysis |
 | `src/engine/` | Timeline evaluation, WebGL2 compositor, text renderer, transitions, logo, sound effects, loudness, checkpoint, previews, preview player, WebCodecs fallback, audio mix, exporter |
-| `src/ai/` | Opus Director: house rules and benchmarks (`knowledge.ts`), contact sheets, prompt, pipeline |
-| `src/ui/` | Preact components; `src/ui/home/` holds the main menu |
+| `src/ai/` | Opus Director: house rules and benchmarks (`knowledge.ts`), contact sheets, prompt, build and revision (`director.ts`), the critic (`critic.ts`), background jobs (`jobs.ts`, `workspace.ts`) |
+| `src/ui/` | Preact components; `src/ui/home/` holds the main menu, `src/ui/ai/` the activity list, the critique and the round composer |
 | `assets/` | The voidfx logo, used as supplied |
 
 Libraries are bundled (no runtime CDN): Preact 10.29.8, Mediabunny 1.62.0 and its AAC encoder

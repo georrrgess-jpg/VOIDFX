@@ -239,3 +239,85 @@ export const FONTS = [
 export const ASPECTS: Record<string, [number, number]> = {
   '9:16': [1080, 1920], '4:5': [1080, 1350], '1:1': [1080, 1080], '16:9': [1920, 1080],
 };
+
+// ---------- AI rounds, critiques and background jobs ----------
+
+export type Effort = 'low' | 'medium' | 'high' | 'extra';
+
+export interface JobStep { id: string; label: string; state: 'wait' | 'run' | 'done' | 'error' | 'skip'; detail?: string; t0?: number; t1?: number }
+
+/** One issue the critic found. `at` is timeline seconds when the issue is at a moment. */
+export interface CritiqueIssue { severity: 'critical' | 'major' | 'minor'; at?: number; area: string; problem: string; fix: string }
+
+/** The critic's assessment of one round of an edit. */
+export interface Critique {
+  at: number;
+  model?: string;
+  /** 0-10, one decimal. */
+  score: number;
+  verdict: 'not ready' | 'close' | 'ready';
+  headline: string;
+  /** Category scores 0-10 (hook, rhythm, transitions, motion, text, sound, concept, picture, loop). */
+  scores: Record<string, number>;
+  strengths: string[];
+  issues: CritiqueIssue[];
+  /** How it compares with the owner's standards and the best TikTok edits of its kind. */
+  versus: string;
+  /** The critic's write-up for Opus: what the next round must do. */
+  brief: string;
+  /** Edit length and round the critique looked at. */
+  duration: number;
+  round: number;
+}
+
+/** One pass of Opus on a project: the build (round 1) or a revision. */
+export interface Round {
+  n: number;
+  kind: 'create' | 'revise';
+  at: number;
+  jobId: string;
+  effort: Effort;
+  presetId: string;
+  /** The owner's instructions for this round (notes for the build, the brief for a revision). */
+  brief: string;
+  /** Critic points the owner chose to pass on (revisions). */
+  fromCritic?: string[];
+  /** Opus's own summary: the concept and what changed. */
+  summary?: string;
+  applied?: number;
+  model?: string;
+  /** The critic's assessment of the result of this round. */
+  critique?: Critique;
+  /** The timeline as this round left it, so it can be restored. */
+  snapshot?: Project;
+}
+
+export type JobKind = 'create' | 'revise' | 'critique';
+export type JobState = 'queued' | 'running' | 'done' | 'error' | 'stopped' | 'interrupted';
+
+export interface Job {
+  id: string;
+  kind: JobKind;
+  projectId: string;
+  projectName: string;
+  state: JobState;
+  steps: JobStep[];
+  created: number;
+  started?: number;
+  finished?: number;
+  round: number;
+  effort: Effort;
+  presetId: string;
+  /** Round 1: the owner's notes, lyrics, database use and standards. */
+  request?: { notes: string; lyrics: string; library: { mode: 'none' | 'auto' | 'picked'; ids: string[] }; standards?: string[] };
+  /** Revisions: the owner's instructions and the critic points passed on. */
+  brief?: string;
+  fromCritic?: string[];
+  /** What happens after this job: send to the critic, then revise automatically this many more times. */
+  follow?: { critic: boolean; autoRounds: number };
+  summary?: string;
+  error?: string;
+  /** The owner has seen the result. */
+  seen?: boolean;
+  streamChars?: number;
+}

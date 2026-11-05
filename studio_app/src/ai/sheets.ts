@@ -2,7 +2,6 @@
 // per-call image limit (each image is downsized to about 1.2 megapixels by the platform).
 import { ALL_FORMATS, BlobSource, CanvasSink, Input } from 'mediabunny';
 import { grabFrames } from '../media/library';
-import { store } from '../state/store';
 import { MediaInfo, Project } from '../state/types';
 import { renderStills } from '../engine/exporter';
 import { getBlob } from '../state/storage';
@@ -88,13 +87,15 @@ function timesFor(m: MediaInfo, n: number): { t: number; label: string }[] {
   });
 }
 
+/** What the sheets and prompts read: a project with its media (the editor's or a background job's). */
+export interface EditCtx { project: Project; media: Record<string, MediaInfo>; order: string[] }
+
 /** Contact sheets for the project's video and image files. */
-export async function mediaSheets(maxImages: number, cellsPerSheet: number, signal?: AbortSignal, onStep?: (msg: string) => void): Promise<Sheet[]> {
-  const s = store.state;
-  const proj = s.project;
+export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet: number, signal?: AbortSignal, onStep?: (msg: string) => void): Promise<Sheet[]> {
+  const proj = ctx.project;
   const frameAspect = proj.width / proj.height;
-  const vids = s.mediaOrder.map(id => s.media[id]).filter(m => m && m.status === 'ready' && m.kind === 'video' && m.hasVideo);
-  const stills = s.mediaOrder.map(id => s.media[id]).filter(m => m && m.status === 'ready' && m.kind === 'image');
+  const vids = ctx.order.map(id => ctx.media[id]).filter(m => m && m.status === 'ready' && m.kind === 'video' && m.hasVideo);
+  const stills = ctx.order.map(id => ctx.media[id]).filter(m => m && m.status === 'ready' && m.kind === 'image');
   const sheets: Sheet[] = [];
   if (maxImages <= 0) return sheets;
   const budget = Math.max(1, maxImages - (stills.length ? Math.ceil(stills.length / cellsPerSheet) : 0));
@@ -149,17 +150,16 @@ export async function mediaSheets(maxImages: number, cellsPerSheet: number, sign
 }
 
 /** Frames of the edit itself (rendered by the studio), labelled with timeline time. */
-export async function timelineSheets(p: Project, times: number[], perSheet: number, maxImages: number, signal?: AbortSignal): Promise<Sheet[]> {
+export async function timelineSheets(p: Project, media: Record<string, MediaInfo>, times: number[], perSheet: number, maxImages: number, signal?: AbortSignal, cellH = p.width / p.height < 1 ? 420 : 300, labels?: string[]): Promise<Sheet[]> {
   const aspect = p.width / p.height;
-  const cellH = aspect < 1 ? 420 : 300;
   const list = times.slice(0, perSheet * maxImages);
-  const stills = await renderStills(p, list, cellH, signal);
+  const stills = await renderStills(p, list, cellH, signal, media);
   const sheets: Sheet[] = [];
   for (let i = 0; i < list.length; i += perSheet) {
     const part = list.slice(i, i + perSheet);
     const blob = await compose(part.map((t, k) => {
       const c = stills[i + k];
-      return { img: c, w: c?.width || 0, h: c?.height || 0, label: `T ${t.toFixed(2)}s` };
+      return { img: c, w: c?.width || 0, h: c?.height || 0, label: labels?.[i + k] || `T ${t.toFixed(2)}s` };
     }), aspect);
     sheets.push({ blob, caption: `frames of the current edit rendered by the studio at timeline times ${part[0].toFixed(2)}s to ${part[part.length - 1].toFixed(2)}s` });
   }

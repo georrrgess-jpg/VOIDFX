@@ -1,11 +1,11 @@
 // Projects: every edit is saved in this browser (IndexedDB) with its media references, so it
 // reopens exactly as left. Media files themselves are stored once and shared between projects.
 import { player } from '../engine/player';
-import { attachStored, clearRuntime } from '../media/library';
+import { attachStored, clearRuntime, newMediaId } from '../media/library';
 import { normalize } from './ops';
 import { idbAll, idbDel, idbGet, idbPut, collectGarbage } from './storage';
 import { DirectorMsg, newProject, store } from './store';
-import { ASPECTS, MediaInfo, Project } from './types';
+import { ASPECTS, MediaInfo, Project, Round } from './types';
 import { deepClone, projectDuration, uid } from './util';
 
 export interface ProjectRecord {
@@ -22,6 +22,49 @@ export interface ProjectRecord {
   aspect: string;
   /** Set when the edit was made by Opus from a preset. */
   presetId?: string;
+  /** Opus rounds (the build and each revision) with the critic's assessments. */
+  rounds?: Round[];
+  /** Opus's recent replies, so a revision knows what it did before (sample calls are memoryless). */
+  aiTurns?: { role: 'user' | 'assistant'; content: string }[];
+  /** The owner's unsent instructions for the next round. */
+  draft?: string;
+}
+
+// Every write to a project record goes through one queue, so the editor's autosave and background
+// jobs never overwrite each other's fields.
+let writes: Promise<unknown> = Promise.resolve();
+export function updateRecord(id: string, mutate: (rec: ProjectRecord) => void | false): Promise<ProjectRecord | undefined> {
+  const run = writes.then(async () => {
+    const rec = await idbGet<ProjectRecord>('projects', id).catch(() => undefined);
+    if (!rec) return undefined;
+    if (mutate(rec) === false) return rec;
+    await idbPut('projects', id, rec).catch(e => console.warn('project save failed', e));
+    return rec;
+  });
+  writes = run.catch(() => undefined);
+  return run;
+}
+
+export async function getRecord(id: string): Promise<ProjectRecord | undefined> {
+  await writes;
+  return idbGet<ProjectRecord>('projects', id).catch(() => undefined);
+}
+
+/** Older projects numbered their media m1, m2…; give them ids unique across projects (loaded files are shared by id). */
+export async function ensureUniqueMediaIds(rec: ProjectRecord): Promise<ProjectRecord> {
+  const legacy = (rec.media || []).filter(m => /^m\d+$/.test(m.id));
+  if (!legacy.length) return rec;
+  const map = new Map<string, string>();
+  const taken = new Set((rec.media || []).map(m => m.id));
+  for (const m of legacy) { const id = newMediaId(taken); taken.add(id); map.set(m.id, id); }
+  const fix = (r: ProjectRecord) => {
+    r.media = (r.media || []).map(m => (map.has(m.id) ? { ...m, id: map.get(m.id)! } : m));
+    r.project.clips = r.project.clips.map(c => (c.media && map.has(c.media) ? { ...c, media: map.get(c.media)! } : c));
+  };
+  const out = await updateRecord(rec.id, r => { if (!(r.media || []).some(m => map.has(m.id))) return false; fix(r); });
+  if (out) return out;
+  fix(rec);
+  return rec;
 }
 
 export async function listProjects(): Promise<ProjectRecord[]> {
@@ -55,25 +98,28 @@ function recordFromState(): ProjectRecord | null {
   };
 }
 
-let saving = Promise.resolve();
-export function saveCurrent(): Promise<void> {
+export async function saveCurrent(): Promise<void> {
   const rec = recordFromState();
-  if (!rec) return saving;
-  saving = saving.then(async () => {
-    const prev = await idbGet<ProjectRecord>('projects', rec.id).catch(() => undefined);
-    rec.created = prev?.created || Date.now();
-    rec.presetId = prev?.presetId ?? rec.presetId;
-    await idbPut('projects', rec.id, rec).catch(e => console.warn('project save failed', e));
+  if (!rec) return;
+  const exists = await updateRecord(rec.id, prev => {
+    const keep = { created: prev.created || Date.now(), presetId: prev.presetId ?? rec.presetId, rounds: prev.rounds, aiTurns: prev.aiTurns, draft: prev.draft };
+    Object.assign(prev, rec, keep);
   });
-  return saving;
+  if (!exists) await updateRecordNew(rec);
+}
+
+async function updateRecordNew(rec: ProjectRecord) {
+  rec.created = Date.now();
+  await idbPut('projects', rec.id, rec).catch(e => console.warn('project save failed', e));
 }
 
 store.persist = () => { void saveCurrent(); };
 
 export async function openProject(id: string): Promise<boolean> {
-  const rec = await idbGet<ProjectRecord>('projects', id).catch(() => undefined);
-  if (!rec) { store.toast('That project could not be found.', 'error'); return false; }
   if (store.state.projectId && store.state.projectId !== id) await saveCurrent();
+  let rec = await getRecord(id);
+  if (!rec) { store.toast('That project could not be found.', 'error'); return false; }
+  rec = await ensureUniqueMediaIds(rec);
   player.reset();
   clearRuntime();
   store.resetHistory();
@@ -90,6 +136,9 @@ export async function openProject(id: string): Promise<boolean> {
     playing: false,
     view: 'editor',
     rightTab: 'director',
+    rounds: rec.rounds || [],
+    checks: [],
+    seam: null,
     director: {
       ...store.state.director,
       messages: rec.director?.messages || [],
@@ -101,9 +150,14 @@ export async function openProject(id: string): Promise<boolean> {
     },
   });
   void idbPut('kv', 'lastProject', rec.id);
+  onProjectOpened?.(rec.id);
   await attachStored(rec.media || []);
   return true;
 }
+
+/** Set by the job runner: re-evaluates the editor lock when a project opens. */
+export let onProjectOpened: ((id: string) => void) | null = null;
+export function setOnProjectOpened(fn: (id: string) => void) { onProjectOpened = fn; }
 
 export async function createProject(opts: { name?: string; aspect?: string; fps?: number; presetId?: string; open?: boolean } = {}): Promise<string> {
   const p = newProject();
@@ -123,26 +177,27 @@ export async function createProject(opts: { name?: string; aspect?: string; fps?
 }
 
 export async function renameProject(id: string, name: string) {
-  const rec = await idbGet<ProjectRecord>('projects', id);
-  if (!rec) return;
-  rec.name = name.slice(0, 80) || 'Untitled edit';
-  rec.project.name = rec.name;
-  rec.updated = Date.now();
-  await idbPut('projects', id, rec);
-  if (store.state.projectId === id) store.set(s => ({ project: { ...s.project, name: rec.name } }));
+  const nm = name.trim().slice(0, 80) || 'Untitled edit';
+  await updateRecord(id, rec => { rec.name = nm; rec.project.name = nm; rec.updated = Date.now(); });
+  if (store.state.projectId === id) store.set(s => ({ project: { ...s.project, name: nm } }));
+  store.set(s => ({ catalogRev: s.catalogRev + 1 }));
 }
 
 export async function duplicateProject(id: string): Promise<string | null> {
-  const rec = await idbGet<ProjectRecord>('projects', id);
+  if (store.state.projectId === id) await saveCurrent();
+  const rec = await getRecord(id);
   if (!rec) return null;
   const copy: ProjectRecord = { ...deepClone(rec), id: uid('P'), name: `${rec.name} (copy)`, created: Date.now(), updated: Date.now() };
   copy.project.name = copy.name;
   await idbPut('projects', copy.id, copy);
+  store.set(s => ({ catalogRev: s.catalogRev + 1 }));
   return copy.id;
 }
 
 export async function deleteProject(id: string) {
+  await writes;
   await idbDel('projects', id);
+  store.set(s => ({ catalogRev: s.catalogRev + 1 }));
   if (store.state.projectId === id) closeToHome(false);
   void collectGarbage();
 }

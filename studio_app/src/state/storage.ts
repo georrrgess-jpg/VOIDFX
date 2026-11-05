@@ -75,8 +75,11 @@ export async function saveBlob(file: Blob & { name?: string; lastModified?: numb
 export const getBlob = (key: string) => idbGet<Blob>('blobs', key);
 
 /** Remove stored files that no project, database item or standard uses any more. */
+/** Files a background job has stored but not yet listed in a project (never collected). */
+export const pinnedBlobs = new Set<string>();
+
 export async function collectGarbage() {
-  const used = new Set<string>();
+  const used = new Set<string>(pinnedBlobs);
   for (const p of await idbAll<any>('projects')) for (const m of p.media || []) if (m.blobId) used.add(m.blobId);
   for (const d of await idbAll<any>('library')) if (d.blobId) used.add(d.blobId);
   for (const s of await idbAll<any>('standards')) if (s.blobId) used.add(s.blobId);

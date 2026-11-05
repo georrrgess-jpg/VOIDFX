@@ -403,8 +403,7 @@ export async function recordRealtime(onProgress: (f: number) => void, signal: Ab
 const sinkCache = new Map<string, VideoSampleSink>();
 
 /** Render timeline frames at the given times, `height` pixels tall. Random access, for reviews. */
-export async function renderStills(p: Project, times: number[], height: number, signal?: AbortSignal): Promise<(HTMLCanvasElement | null)[]> {
-  const media = store.state.media;
+export async function renderStills(p: Project, times: number[], height: number, signal?: AbortSignal, media: Record<string, MediaInfo> = store.state.media): Promise<(HTMLCanvasElement | null)[]> {
   const H = Math.round(height), W = Math.max(2, Math.round((H * p.width) / p.height));
   await loadFonts(p);
   const out: (HTMLCanvasElement | null)[] = [];
@@ -450,10 +449,10 @@ export function clipsUsingMedia(p: Project, id: string): Clip[] { return p.clips
 export { BufferTarget };
 
 /** Loop seam: blurred mean difference (0-255) between frame 0 and the last frame. */
-export async function measureLoopSeam(p: Project): Promise<number | null> {
+export async function measureLoopSeam(p: Project, media: Record<string, MediaInfo> = store.state.media): Promise<number | null> {
   const dur = projectDuration(p);
   if (dur <= 0.2) return null;
-  const [a, b] = await renderStills(p, [0, Math.max(0, dur - 1 / p.fps)], 96);
+  const [a, b] = await renderStills(p, [0, Math.max(0, dur - 1 / p.fps)], 96, undefined, media);
   if (!a || !b) return null;
   const w = 18, h = Math.max(8, Math.round((18 * p.height) / p.width));
   const c = document.createElement('canvas');

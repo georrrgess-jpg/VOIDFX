@@ -30,7 +30,7 @@ It replaces the single-clip "TikTok Edit Studio" prototype with a multi-track ed
 | Export | Offline, frame-accurate MP4 (H.264 + AAC, fast-start) via WebCodecs; saved through the `downloads` capability; MediaRecorder fallback |
 | Opus Director | One button builds the edit: local analysis, contact sheets of every clip, Opus plans the timeline as edit operations, the app applies and validates them, then renders frames of the result for an Opus review pass. Chat to refine. Effort: Low, Medium, High, Extra (High plus an extra review pass). Shows which model answered. |
 
-## Stage 2: main menu, AI edits and the owner's standard (this build)
+## Stage 2: main menu, AI edits and the owner's standard
 
 | Area | What ships |
 | --- | --- |
@@ -47,13 +47,28 @@ It replaces the single-clip "TikTok Edit Studio" prototype with a multi-track ed
 | Sound | Export masters to -13 LUFS with a true-peak limiter (pre-encode ceiling -3.5 dBTP) and reports the measured result |
 | Editor | Picture previews of every transition and text animation (play on hover), Sounds panel, database picker in Media, ramp and beat-camera controls, Checks tab |
 
-## Stage 3 candidates
+## Stage 3: autonomous rounds, the critic, the revision stage (this build)
+
+| Area | What ships |
+| --- | --- |
+| Background jobs | Builds, revisions and critiques run in a queue, each on its own copy of its project (`src/ai/workspace.ts`, `src/ai/jobs.ts`). Leave the editor, open or edit other projects, queue more edits; notices (with an Open or Read button) and the tab title say when work is ready. A project being revised is read-only in the editor with a progress bar, and the timeline updates live. Jobs stop if the studio is closed and can be resumed |
+| Shared media | Media ids are unique across projects, and loaded files are shared by reference count between the editor and jobs (`MediaBay` in `src/media/library.ts`); older projects are migrated on open |
+| The critic | A harsh second Opus pass (`src/ai/critic.ts`) with the TikTok edit canon, the owner's rules, benchmarks and standards, a dense rendered filmstrip, every transition as three frames, measured cut timing against the beat, pacing, the hook's first second and the checkpoint. Returns a score, nine category scores, what works, issues with times and fixes, a comparison with the standards and a write-up for Opus |
+| Autonomy | AI Edit and every round: send to the critic when done, then wait for instructions or revise once or twice on its own from the write-up |
+| Revision stage | The round composer: "You're writing the instructions for round N", the critic's issues as checkboxes (critical and major pre-picked), the write-up toggle, quick instructions, effort, what happens after, and a preview of exactly what Opus will receive |
+| Rounds | Every round is kept on the project: the owner's words, the critic points passed on, Opus's summary, the critic's score, and a snapshot of the timeline that can be restored |
+| Menus | "⋮" on every project card and in the editor: open, the next round, send to the critic, read the critique, export, rename, duplicate, delete (confirmed) |
+| Main menu | A lensed black hole (starfield Einstein ring, Keplerian accretion disk with Doppler brightening, the far side lensed over the shadow, infalling matter, photon ring) tinted per section; dashboard with live Activity, recent projects with live job status and critic scores, the Brief → Build → Critic → Revise flow |
+| Everywhere | Ctrl/⌘+K command palette; segmented controls wrap instead of overlapping; toasts with actions sit clear of dialogs |
+
+## Stage 4 candidates
 
 - Freeze frames and reverse; optical-flow slow motion.
 - Face tracking for framing checks (no face model runs in the artifact yet).
 - Proxy generation for 4K/HEVC sources; background export in a worker.
 - Lyric/dialogue timing (needs a transcription source the artifact can reach).
 - Tool-driven editing rounds (`sample` tools) once the operation format is stable.
+- Run jobs when the studio is closed (needs a server-side runner; the artifact runs only while open).
 
 ## Layout
 

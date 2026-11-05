@@ -9,6 +9,13 @@ import { deleteSelected, duplicateSelected, nudgeSelection, splitAtPlayhead } fr
 import { Btn, Icon } from './controls';
 import { DirectorPanel } from './DirectorPanel';
 import { ChecksPanel } from './ChecksPanel';
+import { Composer, CritiqueModal } from './ai/Composer';
+import { ActivityButton } from './ai/Activity';
+import { KebabMenu } from './Menu';
+import { Palette } from './Palette';
+import { projectMenu } from './ai/actions';
+import { activeJobFor, stopJob } from '../ai/jobs';
+import { getRecord, ProjectRecord } from '../state/projects';
 import { refreshChecks } from '../ai/checkrunner';
 import { Home } from './home/Home';
 import { closeToHome, createProject } from '../state/projects';
@@ -26,7 +33,15 @@ export function App() {
   return (
     <>
       {view === 'home' ? <Home /> : <Editor />}
-      <div class="toasts" aria-live="polite">{toasts.map(t => <div class={`toast t-${t.kind}`}>{t.text}</div>)}</div>
+      <Composer />
+      <CritiqueModal />
+      <Palette />
+      <div class="toasts" aria-live="polite">{toasts.map(t => (
+        <div class={`toast t-${t.kind}${t.action ? ' has-act' : ''}`}>
+          <span>{t.text}</span>
+          {t.action && <button type="button" class="toast-act" onClick={() => { t.action!.run(); store.set(s => ({ toasts: s.toasts.filter(x => x.id !== t.id) })); }}>{t.action.label}</button>}
+        </div>
+      ))}</div>
     </>
   );
 }
@@ -119,9 +134,29 @@ function Editor() {
       <main class="center"><Viewer /></main>
       <RightPanel />
       <div class="splitter" role="separator" aria-orientation="horizontal" aria-label="Resize timeline" onPointerDown={onSplitter as any} />
-      <section class="bottom"><Timeline /></section>
+      <section class="bottom"><Timeline /><LockBanner /></section>
       <ExportDialog />
       {dragging && <div class="dropzone"><div><b>Drop to import</b><span>Video, audio and images. Large files are read from disk as needed.</span></div></div>}
+    </div>
+  );
+}
+
+/** While a background round works on this project the editor is read-only; say so where the work happens. */
+function LockBanner() {
+  const lock = useStore(s => s.lock);
+  const pid = useStore(s => s.projectId);
+  const jobs = useStore(s => s.jobs);
+  if (!lock || !pid) return null;
+  const job = activeJobFor(pid);
+  const cur = job?.steps.find(x => x.state === 'run');
+  const done = job ? job.steps.filter(x => x.state === 'done' || x.state === 'skip').length : 0;
+  return (
+    <div class="lockbar" role="status">
+      <span class="lock-spin" aria-hidden="true" />
+      <div class="lock-t"><b>{lock}</b><span>{cur ? `${cur.label}${cur.detail ? ` · ${cur.detail}` : ''}` : 'Starting…'} · step {Math.min(done + 1, job?.steps.length || 1)} of {job?.steps.length || 1}. The timeline updates as it works; editing unlocks when it finishes.</span></div>
+      <button type="button" class="chipbtn" onClick={() => store.set({ rightTab: 'director' })}>Progress</button>
+      {job && <button type="button" class="chipbtn" onClick={() => stopJob(job.id)}>{Icon.stop}<span>Stop</span></button>}
+      <span hidden>{jobs.length}</span>
     </div>
   );
 }
@@ -129,7 +164,7 @@ function Editor() {
 function RightPanel() {
   const tab = useStore(s => s.rightTab);
   const sel = useStore(s => s.selection.length);
-  const running = useStore(s => s.director.running);
+  const running = useStore(s => !!s.projectId && s.jobs.some(j => j.projectId === s.projectId && j.state === 'running'));
   const bad = useStore(s => s.checks.filter(c => c.status === 'fail' || c.status === 'warn').length);
   const project = useStore(s => s.project);
   const media = useStore(s => s.media);
@@ -151,6 +186,19 @@ function RightPanel() {
       <div class="rp-body">{tab === 'director' ? <DirectorPanel /> : tab === 'checks' ? <ChecksPanel /> : <Inspector />}</div>
     </aside>
   );
+}
+
+/** The open project's Opus actions (same as the menu's "⋮" on project cards). */
+function ProjectKebab() {
+  const pid = useStore(s => s.projectId);
+  const rev = useStore(s => s.catalogRev);
+  useStore(s => s.jobs);
+  const clips = useStore(s => s.project.clips.length);
+  const [rec, setRec] = useState<ProjectRecord | null>(null);
+  useEffect(() => { if (pid) void getRecord(pid).then(r => setRec(r || null)); }, [pid, rev, clips > 0]);
+  if (!rec) return null;
+  const items = projectMenu({ ...rec, clips }, { inEditor: true }).filter(i => i.label !== 'Export video');
+  return <KebabMenu items={items} label="Opus and project actions" />;
 }
 
 function TopBar() {
@@ -210,6 +258,8 @@ function TopBar() {
         )}
         <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) void openProject(f); (e.target as HTMLInputElement).value = ''; }} />
       </div>
+      <ActivityButton variant="top" />
+      <ProjectKebab />
       <Btn kind="primary" disabled={!hasClips} onClick={() => store.set({ exportOpen: true })}>{Icon.download}<span>Export</span></Btn>
     </header>
   );

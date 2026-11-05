@@ -9,6 +9,8 @@ import { PresetsSection } from './Presets';
 import { LibrarySection } from './Library';
 import { StandardsSection } from './Standards';
 import { RulesSection } from './Rules';
+import { ActivityButton } from '../ai/Activity';
+import { openPalette } from '../Palette';
 
 export const SECTIONS: { id: HomeTab; label: string; tint: string; tint2: string; icon: any; blurb: string }[] = [
   { id: 'home', label: 'Home', tint: '#7fd3ff', tint2: '#8a5cff', icon: Icon.home, blurb: '' },
@@ -39,6 +41,8 @@ export function Home() {
             </button>
           ))}
         </div>
+        <ActivityButton variant="nav" />
+        <button type="button" class="home-k" onClick={openPalette} title="Jump to anything (Ctrl+K)">{Icon.search}<span>Jump to…</span><kbd>Ctrl K</kbd></button>
         <p class="home-foot">Opus 5.5 director · everything stays in this browser</p>
       </nav>
       <main class="home-main" key={tab}>
