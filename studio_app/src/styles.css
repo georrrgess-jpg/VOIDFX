@@ -516,7 +516,8 @@ button { cursor: pointer; }
 .pcard-thumb { position: relative; aspect-ratio: 9 / 14; border-radius: 9px; overflow: hidden; background: #000; display: grid; place-items: center; }
 .pcard-thumb.a-16x9 { aspect-ratio: 16 / 10; } .pcard-thumb.a-1x1 { aspect-ratio: 1; } .pcard-thumb.a-4x5 { aspect-ratio: 4 / 5; }
 .pcard-rename { margin-top: 8px; width: 100%; background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 6px; }
-.pcard-acts { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+.pcard-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+.pcard-acts .chipbtn { justify-content: center; text-align: center; }
 
 /* AI Edit wizard */
 .create { gap: 26px; }

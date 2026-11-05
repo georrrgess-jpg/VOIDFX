@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { refineEdit } from '../ai/director';
 import { refreshChecks } from '../ai/checkrunner';
 import { player } from '../engine/player';
@@ -10,12 +10,9 @@ const ICON: Record<string, string> = { pass: '✓', warn: '!', fail: '✕', info
 
 export function ChecksPanel() {
   const checks = useStore(s => s.checks);
-  const project = useStore(s => s.project);
-  const media = useStore(s => s.media);
   const running = useStore(s => s.director.running);
   const opus = useStore(s => s.director.available === 'yes');
   const [measuring, setMeasuring] = useState(false);
-  useEffect(() => { const t = setTimeout(() => void refreshChecks(), 250); return () => clearTimeout(t); }, [project, media]);
   const fails = checks.filter(c => c.status === 'fail').length, warns = checks.filter(c => c.status === 'warn').length;
   const ship = checks.length > 1 && !fails && !warns;
   const silent = checks.find(c => c.id === 'sound' && c.status !== 'pass');

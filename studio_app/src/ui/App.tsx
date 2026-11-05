@@ -9,6 +9,7 @@ import { deleteSelected, duplicateSelected, nudgeSelection, splitAtPlayhead } fr
 import { Btn, Icon } from './controls';
 import { DirectorPanel } from './DirectorPanel';
 import { ChecksPanel } from './ChecksPanel';
+import { refreshChecks } from '../ai/checkrunner';
 import { Home } from './home/Home';
 import { closeToHome, createProject } from '../state/projects';
 import { LOGO_URL } from '../engine/logo';
@@ -130,6 +131,10 @@ function RightPanel() {
   const sel = useStore(s => s.selection.length);
   const running = useStore(s => s.director.running);
   const bad = useStore(s => s.checks.filter(c => c.status === 'fail' || c.status === 'warn').length);
+  const project = useStore(s => s.project);
+  const media = useStore(s => s.media);
+  // the checkpoint follows every edit (debounced), so the tab badge is current without opening it
+  useEffect(() => { const t = setTimeout(() => void refreshChecks(), tab === 'checks' ? 250 : 700); return () => clearTimeout(t); }, [project, media, tab]);
   return (
     <aside class="rp">
       <div class="rp-tabs" role="tablist">
