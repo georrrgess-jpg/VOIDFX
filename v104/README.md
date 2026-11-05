@@ -1,0 +1,105 @@
+# THE PASSENGER — Dexter × GLM-RST "still love you (super slowed + reverb)" (voidfx v104, 9:16)
+
+Studio 2. Built from the v103 FOREVER standard (`tools/new_edit.py`), with the v9 text style (keyline captions, per-letter hero titles).
+
+**Song source:** the owner's screen recording of the TikTok sound page (`src/still_love_you_screenrec.mp4`, 23.06 s). The audio track is extracted to `src/still_love_you_rec.wav`. An earlier brief came with Michael Jackson "Smooth Criminal". It was replaced by this sound in the owner's next message; its song analysis is kept in `work/smooth_criminal_analysis/`.
+
+**Files not available in this session:**
+- **No new scene packs came with the brief.** Every uploaded pack is already in the library, so the edit uses library packs p1, p4, p5, p7, p8, p9 and p10.
+- `trinity_goodbye.mp4` is listed in the catalog but isn't in `src/`.
+- The rendered v4–v9 edits aren't in this session; they were reviewed through the handbook and their READMEs. FOREVER (v103) and the v101/v102 renders were available.
+
+## Pre-render check (handbook §0 and §5a)
+
+**1. A concept rooted in Dexter's world.** *"I like to pretend I'm alone. Completely alone."* He isn't: his Dark Passenger is the ink that seeps through every frame. It ends with his own ink shadow rising behind him as he says *"I have a dark side, too."*
+
+**2. Set pieces (multi-stage, themed, each with its own sound), one on every phrase start:**
+- **THE INK DROP (open and loop).**
+  - During the synth pickup, a drop of ink forms at the top of a sheet of paper, swelling on each synth note. It lets go and falls.
+  - It lands exactly on the bass entry, on the word "ALONE". A crown of ink flies out and the bloom spreads into him: the picture lives inside the ink.
+  - At the end, the picture drains back into one blob, which pulls into a drop and lifts off the paper. That is the loop.
+- **THE SPATTER (P3).** He pulls his face shield down. On the downbeat there's a two-frame red impact, then red ink spatter hits the lens over his already blood-spattered suit, off his face. It hangs, then the heavy drops run.
+- **THE PASSENGER (P4).** "I have a **dark** side, too": the world behind him washes to paper and his ink shadow rises behind him, taller than him and swaying. Then it lunges and swallows the frame, and the next shot surfaces through thinning ink.
+- **THE SILHOUETTE (P5).** He walks out of the dark (lamp-on). The world around him goes to paper and his body becomes a window into the red kill room; only his face stays.
+
+**3. Designed text and graphics in every section.**
+- **Text:** the VO caption I LIKE TO PRETEND / I'M **ALONE,** ("ALONE" lands on the bass entry), and the hero titles COMPLETELY / **ALONE.** and I HAVE A / **DARK SIDE, TOO.** (per letter, flooding red, exiting as red ink droplets).
+- **Graphics:**
+  - the paper and its fibres;
+  - ink drifting through the shadows of every shot;
+  - an ink-bled vignette;
+  - ivory anamorphic flares on the gloves and the flashlight;
+  - the brush strokes;
+  - the camera punching on the sub-bass hits.
+
+**4. Lyric recognition (handbook §0).**
+- **What was tried:** the sound's vocal is a slowed, reverb-washed sample. Whisper on the Demucs vocal stem heard nothing. On the full mix it produced invented lines with an identical confidence on every segment (a hallucination). A web search found no published lyrics for the track or for GLM-RST.
+- **So:** following the rule *text only on clearly sung or spoken words*, there are no lyric captions. The text comes from Dexter's own two lines, word-timed on the isolated voice. The picture "recognises" the music instead: every cut and set piece lands on a sub-bass hit or a phrase start.
+
+**5. Density (handbook §0: at least 24 designed transitions per ~24 s).** The edit has 24 designed cuts in 22.97 s, plus the ink open and the ink close.
+- **New ink transitions:** ink bloom, ivory brush, red brush, spatter, ink bleed, passenger reveal.
+- **Approved standard pieces:** eye dive, torch blind-out, zipper, logo, shutter, lamp on, plastic wrap.
+- **Motion connectors:** whip, impact, slam, light sweep, roll, tilt, whip up, strobe, face-match, film burn, smear.
+- **No transition repeats** except the two brushes (ivory, then red), which are deliberately a pair.
+- **Animation:** the camera punches on every sub-bass hit from P2 on, with a chromatic kick on the half-bars.
+
+**6. Comparison with WARMPOP (v6), HIM ALL ALONG (v7), WISH YOU WELL (v8) and FOREVER (v103).**
+- **Look:** v6 pastel vapor, v7 forensic noir, v8 sodium nocturne, v103 undertow. **v104 SUMI** is an ink-wash monochrome: ivory paper highlights, ink-blue blacks and only the strongest reds kept as red ink. It also unifies footage from five seasons into one look.
+- **Opening:**
+  - v7: an eye in a magnifier;
+  - v8: a push into a rear-view mirror;
+  - v103: surfacing from under water;
+  - **v104:** a drop of ink on blank paper with his voice, which lands on the bass and blooms into him.
+- **The big moments:**
+  - v7: a plastic burst;
+  - v103: a plastic rip and evidence photos;
+  - **v104:** his ink shadow detaching from him, a Dark Passenger graphic that interacts with a MODNet matte of the footage, and a subject cut-out that turns his body into the kill room.
+- **Loop:**
+  - v7: a pupil dive;
+  - v103: sinking and surfacing in the same water;
+  - **v104:** the picture drains back into the same drop that opened it.
+- **Weakest point of the plan and the answer:** the sound has no drums and no section change after the bass entry; it's a hypnotic loop. **Answer:** the progression is built into the edit:
+  - **P1 alone:** slow, VO;
+  - **P2 the ritual:** gloves, the slide, the mirror, the shield;
+  - **P3 the violence:** the spatter and attacks;
+  - **P4 the passenger;**
+  - **P5 the fastest run.**
+  Cuts tighten from 2 bars to 4–5 sixteenths, and every bass hit drives a cut, a punch or a set-piece beat.
+
+**7. Frame rate.** 60 fps output, with every source played at its own 24p/30p cadence (`interp="hold"`). There's no optical-flow interpolation, so no warping artefacts; the graphics and transitions animate at 60.
+
+## Song section
+
+The whole clip is the window: it's the section TikTok's sound already selected, and its five phrases end exactly on a loop boundary.
+
+- **Grid:** fitted to the sub-bass hits on the Demucs bass stem with a 2.7 ms mean error: **112.19 BPM**, k = one sixteenth = 0.13370 s, k0 = song 0.042 s.
+- **Bass pattern:** 4-4-3-3-3-3-3-3-3-3 sixteenths per two bars.
+
+| Song time | Edit | What happens |
+|---|---|---|
+| 0.04 | 0.00 (k0) | Synth pickup (dotted notes at k0, 3, 6, 9): the ink drop forms and falls; "I like to pretend I'm…" |
+| 1.65 | 1.60 (k12) | **The sub-bass enters**: the drop lands, the bloom, "ALONE," |
+| 5.92 | 5.88 (k44) | P2: the ritual |
+| 10.20 | 10.16 (k76) | P3: THE SPATTER |
+| 14.48 | 14.44 (k108) | P4: THE PASSENGER ("DARK" on the k112 hit) |
+| 18.76 | 18.72 (k140) | P5: THE SILHOUETTE, the fastest run, the ink-out |
+| 23.04 | 22.97 | Loop (end of the clip, on the phrase boundary) |
+
+**Dialogue** (S1, pack p8; Demucs stems; voice-over, not shown as spoken):
+- "I like to pretend I'm alone. Completely alone." (225.8–229.9; the pause between the halves is tightened so the second "ALONE" lands on the k29 hit);
+- "I have a dark side, too." (296.4–299.6).
+
+In the speech band the voice sits 8–13 dB above the music.
+
+## Review log (before the first full render)
+
+Each pass asked "what would make this unforgettable?", not just "what's broken?".
+
+1. **Brushes:** the first brush read as horizontal scanlines. It's rebuilt as a visible band of ink with a wet front and a dry, bristly tail, at a diagonal. The black stroke disappeared on dark footage, so the first is ivory ink and the second red.
+2. **Spatter:** it first looked like a cartoon splat over his face. It's now an organic splash on his already spattered white suit, flung left, off the face.
+3. **Passenger:** the shadow was invisible (black ink on a dark wall). Now the wall behind him goes to paper as it rises. The matte included the table, which made a black wall instead of a figure, so the shadow is cut from his body only and lifted so its head and shoulders rise up-left of his.
+4. **Silhouette window:** the first cut-out hid his face and then barely read. Now his face stays and his body becomes the kill room, brightened.
+5. **Red skin:** warm skin leaked red on four shots; a per-shot red threshold fixes it.
+6. **Text-over-face rules:** the enso ring landed around his face (too close to the rejected v7 "target ring"), so it was replaced by a lamp-on: he walks out of the dark. The v7 blood-on-the-lens drop landed on his face, so it was replaced by a film burn into the red kill room.
+7. **Ink bleed:** it held about 7 fully black frames on the P4 downbeat; the blooms now leave gaps.
+8. **Other replacements:** the blinds transition moiréd in mono, so it was replaced by the camera shutter. The red-lit smirk wasn't detected at 344.5 (the crop showed an arm), so it now starts on the face at 346.9.
