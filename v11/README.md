@@ -173,5 +173,19 @@ The new punch shot (s4 90.45–91.30) is the gold beating the red just before th
 
 The beat camera now rests from 19.37: the loop plays as one controlled move.
 
-REV3_RESULTS_V11
+### Ship checkpoint (rev 3, measured on the encoded MP4)
+
+| Check | Result |
+|---|---|
+| Format | 1080×1920, 60 fps, 1247 frames, decodes clean |
+| Loudness | −13.2 LUFS, −3.5 dBTP after AAC |
+| Faces | every shot centred |
+| Text vs faces | clear (frames 394/396 are the dolly frames before LET'S appears) |
+| Cuts | 16 cuts, 0 audio clicks; loop seam audio OK |
+| Black frames | frame 849 only: the ignite blackout, by design |
+| **Loop seam** | **blurred diff 0.10** (was 3.49): the dive lands on exactly the frame-0 image |
+| A/V length | within one frame |
+| Verdict | SHIP |
+
+**Visual sign-off** (frames from the encoded file): the AURA rings, the REMNANTS, the CHARGE, and the whole REVERSE sequence (1145 → 14).
 
