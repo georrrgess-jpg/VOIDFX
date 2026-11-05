@@ -32,6 +32,13 @@ points go in, and start the round; it runs in the background and the editor show
 until it finishes). Every round is kept with its brief, Opus's summary, the critic's score and a
 snapshot you can restore. **Ctrl/⌘+K** jumps to any section, project or action.
 
+**Custom graphics and effects.** Opus is not limited to the built-in library: for each edit it can
+draw its own vector graphics (emblems, bolts, marks) and write its own GPU effects (lightning, speed
+streaks, Speed Force distortion, energy rings, glows) that react to the music and can bend the picture
+underneath. They render the same in the preview, the export and the frames Opus and the critic review.
+The **Effects** panel has starters you can drop in, and the Edit tab lets you tune them or edit their
+SVG or code directly.
+
 In the editor: drag files onto the timeline, trim edges, split with **S**, and add text, transitions
 and sounds from the left rail (every animation has a moving picture; hover to play it). The **Edit**
 tab tunes the selected clip (speed ramps, beat camera, house caption style). The **Checks** tab runs

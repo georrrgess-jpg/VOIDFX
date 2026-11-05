@@ -10,7 +10,8 @@ import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
 import { getPreset, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
-import { addTransitionSounds, applyOps, normalize, OpsResult } from '../state/ops';
+import { addTransitionSounds, applyOps as applyOpsRaw, normalize, OpsResult } from '../state/ops';
+import { customIssues } from '../engine/custom';
 import { store } from '../state/store';
 import { ASPECTS, Effort, Job, JobStep, MediaInfo, Project, Round } from '../state/types';
 import { deepClone, projectDuration } from '../state/util';
@@ -19,6 +20,13 @@ import { libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } fro
 import type { Workspace } from './workspace';
 
 export const MODEL = 'claude-opus-5-5';
+
+/** Apply Opus's operations and report custom effects that will not compile, so the review can fix them. */
+function applyOps(base: Project, ops: unknown, media: Record<string, MediaInfo>): OpsResult {
+  const res = applyOpsRaw(base, ops, media);
+  const bad = customIssues(res.project);
+  return bad.length ? { ...res, issues: [...res.issues, ...bad] } : res;
+}
 
 type SampleFn = ((input: any, opts?: any) => Promise<{ text: string; truncated: boolean; modelTierApplied: string; modelApplied?: string }>) & {
   limits(): Promise<{ maxPromptBytes: number; images?: { maxCount: number; maxInputBytes: number; mediaTypes: string[] } }>;

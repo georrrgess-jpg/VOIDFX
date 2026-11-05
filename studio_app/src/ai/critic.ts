@@ -83,6 +83,7 @@ export function editMetrics(ws: Workspace): string {
     `Transitions (${trans.length}): ${trans.map(c => `${fmtT(c.start)} ${TRANSITION_LABELS[c.transition!.type] || c.transition!.type}`).join(', ') || 'none'}.`,
     `Text (${texts.length}): ${texts.map(c => `${fmtT(c.start)}-${fmtT(c.start + c.dur)} "${(c.text || '').replace(/\s+/g, ' ').slice(0, 60)}" (${c.anim?.in || 'none'} in)`).join('; ') || 'none'}.`,
     `Sound effects: ${sfx.length}. Speed-ramped clips: ${ramps.length}. Beat camera: ${p.camera?.on ? `on (punch ${p.camera.punch}, kick ${p.camera.kick})` : 'off'}.`,
+    `Custom graphics and effects designed for this edit (${p.clips.filter(c => c.kind === 'graphic' || c.kind === 'shader').length}): ${p.clips.filter(c => c.kind === 'graphic' || c.kind === 'shader').map(c => `${fmtT(c.start)}-${fmtT(c.start + c.dur)} ${c.kind === 'shader' ? 'effect' : 'graphic'} ${c.id}${c.blend && c.blend !== 'normal' ? ` (${c.blend})` : ''}`).join(', ') || 'none'}. Judge in the frames whether each looks designed, attached to the action and lit like the shot, or drawn on top.`,
     `In the first second: ${hookEvents.join(', ') || 'nothing but the opening shot'}.`,
   ].filter(Boolean).join('\n');
 }

@@ -5,6 +5,8 @@ import { Compositor } from './compositor';
 import { loadLogo } from './logo';
 import { renderText } from './text';
 import { logoLayerFx, NO_FX, transitionFx } from './transitions';
+import { graphicCanvas, revealFx, svgSize } from './custom';
+import type { FxPreset } from './fxlibrary';
 
 export const PW = 144, PH = 256;
 let comp: Compositor | null = null;
@@ -106,4 +108,32 @@ export function stillProgress(type: TransitionType): number {
   if (type === 'logo') return 0.62;
   if (type.startsWith('dip') || type === 'flash' || type === 'punch' || type === 'glitch' || type === 'spin' || type === 'roll' || type === 'blink' || type === 'warp' || type.startsWith('zoom')) return 0.42;
   return 0.5;
+}
+
+/** Draw a starter effect or graphic at progress u (0..1) over a sample shot. */
+export function drawFxPreview(target: HTMLCanvasElement, fx: FxPreset, u: number) {
+  const C = ensure();
+  if (!C || !shotA || !shotB) return;
+  C.resize(PW, PH);
+  C.begin('#000000');
+  const shot = fx.kind === 'graphic' ? shotA : shotB;
+  C.draw({ key: fx.kind === 'graphic' ? '__pa' : '__pb', version: 1, source: shot, srcW: shot.width, srcH: shot.height, srcRot: 0, baseW: PW, baseH: PH, transform: base, fx: NO_FX });
+  const t = u * fx.dur;
+  if (fx.kind === 'shader' && fx.code) {
+    const beatAge = (t % 0.5);
+    C.drawShader(fx.code, fx.blend, { t, p: u, dur: fx.dur, time: t, beat: Math.exp(-beatAge / 0.14), beatAge, energy: 0.6, opacity: 1, scale: 1, rot: 0, pos: [0.5, 0.42], seed: 3.1 });
+  } else if (fx.kind === 'graphic' && fx.svg) {
+    const clip: Clip = { id: `__fx_${fx.id}`, track: '', kind: 'graphic', start: 0, dur: fx.dur, svg: fx.svg, gw: fx.gw, glow: fx.glow, reveal: fx.reveal, blend: fx.blend };
+    const gw = (fx.gw ?? 0.6) * PW;
+    const cv = graphicCanvas(clip, gw * 2);
+    if (cv) {
+      const { vbW, vbH } = svgSize(fx.svg);
+      const rf = revealFx(clip, t);
+      const lfx = { ...NO_FX, ...rf };
+      const bh = (gw * vbH) / vbW;
+      if ((fx.glow ?? 0) > 0.01) C.draw({ key: `${clip.id}#g`, version: 1, source: cv, srcW: cv.width, srcH: cv.height, srcRot: 0, baseW: gw, baseH: bh, transform: { ...base, y: -0.05 }, fx: { ...lfx, blur: 0.25 + fx.glow! * 0.6, opacity: (lfx.opacity ?? 1) * fx.glow! }, premultiplied: true, blend: 'add' });
+      C.draw({ key: clip.id, version: 1, source: cv, srcW: cv.width, srcH: cv.height, srcRot: 0, baseW: gw, baseH: bh, transform: { ...base, y: -0.05 }, fx: lfx, premultiplied: true, blend: fx.blend });
+    }
+  }
+  blit(target);
 }

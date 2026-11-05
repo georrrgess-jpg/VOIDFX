@@ -4,6 +4,7 @@ import {
   VideoSample, VideoSampleSink, WebMOutputFormat, canEncodeAudio, canEncodeVideo,
 } from 'mediabunny';
 import { registerAacEncoder } from '@mediabunny/aac-encoder';
+import { preloadGraphics } from './custom';
 import { runtime } from '../media/library';
 import { store } from '../state/store';
 import { Clip, MediaInfo, Project } from '../state/types';
@@ -92,9 +93,10 @@ async function drawOffline(
   for (const r of releases) r();
 }
 
-async function loadFonts(p: Project) {
+async function loadFonts(p: Project, frameW = p.width) {
   const waits: Promise<unknown>[] = p.clips.filter(c => c.kind === 'text').map(c => ensureFont(textStyleOf(c)));
   if (p.clips.some(c => c.transition?.type === 'logo')) waits.push(loadLogo());
+  if (p.clips.some(c => c.kind === 'graphic')) waits.push(preloadGraphics(p, frameW));
   await Promise.all(waits);
 }
 
@@ -224,7 +226,7 @@ export async function exportVideo(
   if (missing.length) throw new Error(`Re-link ${new Set(missing.map(c => media[c.media!]?.name)).size} offline media file(s) in the Media panel first.`);
 
   onProgress('prepare', 0);
-  await loadFonts(p);
+  await loadFonts(p, W);
   const needAudio = p.clips.some(c => (c.kind === 'video' || c.kind === 'audio') && c.media && media[c.media]?.hasAudio && !c.muted);
   const codecs = await pickCodecs(W, H, settings.bitrate, needAudio);
   if (!codecs.video) throw new Error('NO_WEBCODECS');
@@ -405,7 +407,7 @@ const sinkCache = new Map<string, VideoSampleSink>();
 /** Render timeline frames at the given times, `height` pixels tall. Random access, for reviews. */
 export async function renderStills(p: Project, times: number[], height: number, signal?: AbortSignal, media: Record<string, MediaInfo> = store.state.media): Promise<(HTMLCanvasElement | null)[]> {
   const H = Math.round(height), W = Math.max(2, Math.round((H * p.width) / p.height));
-  await loadFonts(p);
+  await loadFonts(p, W);
   const out: (HTMLCanvasElement | null)[] = [];
   const canvas = document.createElement('canvas');
   const comp = new Compositor(canvas, { preserve: true });

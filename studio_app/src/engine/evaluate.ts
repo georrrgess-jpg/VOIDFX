@@ -3,10 +3,11 @@
 import { Clip, ColorAdjust, MediaInfo, Project, Transform } from '../state/types';
 import { clamp, clipEnd, colorOf, EPS, speedAt, srcAt, transformAt, volumeAt } from '../state/util';
 import { LayerFx, NO_FX, logoLayerFx, transitionFx } from './transitions';
+import { revealFx } from './custom';
 
 export interface VisualLayer {
   clip: Clip;
-  kind: 'video' | 'image' | 'text' | 'logo';
+  kind: 'video' | 'image' | 'text' | 'logo' | 'graphic' | 'shader';
   /** Seconds since the clip's start (negative or past the end during transitions). */
   lt: number;
   srcTime: number;
@@ -147,6 +148,15 @@ export function evaluate(p: Project, media: Record<string, MediaInfo>, t: number
           let lfx = fx;
           if (cam && c.kind !== 'text') [transform, lfx] = applyCamera(transform, fx, cam, aspect);
           layers.push({ clip: c, kind: c.kind, lt, srcTime: c.kind === 'video' ? sourceTime(c, t, m) : 0, transform, color: colorOf(c), fx: lfx });
+        } else if (c.kind === 'graphic') {
+          // graphics sit on the footage, so they ride with the beat camera
+          let transform = transformAt(c, ltc);
+          const rf = revealFx(c, lt);
+          let lfx: LayerFx = { ...fx, ...rf, opacity: fx.opacity * (rf.opacity ?? 1), scale: fx.scale * (rf.scale ?? 1) };
+          if (cam) [transform, lfx] = applyCamera(transform, lfx, cam, aspect);
+          layers.push({ clip: c, kind: 'graphic', lt, srcTime: 0, transform, color: colorOf(c), fx: lfx });
+        } else if (c.kind === 'shader') {
+          layers.push({ clip: c, kind: 'shader', lt, srcTime: 0, transform: transformAt(c, ltc), color: colorOf(c), fx });
         }
       }
       if (logoP >= 0 && tr.kind !== 'audio' && !tr.hidden) {

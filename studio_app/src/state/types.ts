@@ -2,7 +2,7 @@
 
 export type TrackKind = 'video' | 'audio' | 'text';
 export type MediaKind = 'video' | 'audio' | 'image';
-export type ClipKind = 'video' | 'audio' | 'image' | 'text' | 'sfx';
+export type ClipKind = 'video' | 'audio' | 'image' | 'text' | 'sfx' | 'graphic' | 'shader';
 
 export interface Track {
   id: string;
@@ -129,7 +129,26 @@ export interface Clip {
   words?: number[];
   style?: Partial<TextStyle>;
   anim?: Partial<TextAnim>;
+  // custom layers written by Opus (or the owner): vector graphics and GPU effects
+  /** Graphic: sanitized SVG markup. */
+  svg?: string;
+  /** Graphic width as a fraction of the frame width (height follows the SVG's viewBox). */
+  gw?: number;
+  /** Graphic and effect: how the layer combines with the picture under it. */
+  blend?: BlendMode;
+  /** Graphic: soft outer glow, 0..1. */
+  glow?: number;
+  /** Graphic: how it appears and leaves. */
+  reveal?: Partial<GraphicReveal>;
+  /** Effect: GLSL ES 3.0 source that defines `vec4 effect(vec2 uv, float t, float p)`. */
+  code?: string;
 }
+
+export type BlendMode = 'normal' | 'add' | 'screen';
+export const BLEND_MODES: BlendMode[] = ['normal', 'add', 'screen'];
+export const REVEALS_IN = ['none', 'fade', 'pop', 'iris', 'wipe', 'flicker'] as const;
+export const REVEALS_OUT = ['none', 'fade', 'shrink', 'wipe', 'flicker'] as const;
+export interface GraphicReveal { in: typeof REVEALS_IN[number]; out: typeof REVEALS_OUT[number]; inDur: number; outDur: number }
 
 export interface Project {
   version: 1;

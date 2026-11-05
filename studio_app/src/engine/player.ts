@@ -8,6 +8,7 @@ import { clamp, projectDuration, speedAt } from '../state/util';
 import { Compositor } from './compositor';
 import { FrameVoice, SoundVoice } from './decodevoice';
 import { Evaluation, evaluate, upcoming } from './evaluate';
+import { onGraphicReady } from './custom';
 import { drawLayers } from './drawlayers';
 import { sfxBuffer } from './sfx';
 
@@ -57,6 +58,7 @@ export class Player {
     this.host.setAttribute('aria-hidden', 'true');
     this.host.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;opacity:0;pointer-events:none;z-index:-1';
     document.body.appendChild(this.host);
+    onGraphicReady(() => { if (!this.playing) this.requestStill(); });
   }
 
   attach(canvas: HTMLCanvasElement) {

@@ -1,7 +1,8 @@
 // WebGL2 compositor. Draws media, image, text and logo layers with transform, colour, blur and
 // transition effects. One instance drives the preview canvas; export, review and previews use their own.
-import { ColorAdjust, Transform } from '../state/types';
+import { BlendMode, ColorAdjust, Transform } from '../state/types';
 import { logo } from './logo';
+import { readsFrame, SHADER_VS, wrapShader } from './custom';
 import { LayerFx } from './transitions';
 
 const VS = `#version 300 es
@@ -173,7 +174,18 @@ export interface DrawParams {
   fx: LayerFx;
   color?: ColorAdjust;
   premultiplied?: boolean;
+  /** How the layer combines with what is under it (graphics). */
+  blend?: BlendMode;
 }
+
+/** Values an effect reads (see the prelude in custom.ts). */
+export interface ShaderUniforms {
+  t: number; p: number; dur: number; time: number; beat: number; beatAge: number; energy: number;
+  opacity: number; scale: number; rot: number; pos: [number, number]; seed: number;
+}
+
+type FxProgram = { prog: WebGLProgram; u: Record<string, WebGLUniformLocation | null> } | { error: string };
+const FX_UNIFORMS = ['uRes', 'uT', 'uP', 'uDur', 'uTime', 'uBeat', 'uBeatAge', 'uEnergy', 'uOpacity', 'uScale', 'uRot', 'uAspect', 'uSeed', 'uPos', 'uFrame'];
 
 export interface Quad { cx: number; cy: number; w: number; h: number; rot: number }
 
@@ -193,6 +205,9 @@ export class Compositor {
   height = 1;
   /** Where each clip was drawn in the last frame (output pixels). */
   quads = new Map<string, Quad>();
+  private aPosLoc = 0;
+  private fxProgs = new Map<string, FxProgram>();
+  private frameTex: WebGLTexture | null = null;
 
   constructor(readonly canvas: HTMLCanvasElement | OffscreenCanvas, opts: { preserve?: boolean } = {}) {
     const gl = canvas.getContext('webgl2', {
@@ -224,6 +239,7 @@ export class Compositor {
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, 'aPos');
+    this.aPosLoc = loc;
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(this.u.uTex, 0);
@@ -327,8 +343,87 @@ export class Compositor {
       }
       return true;
     }
+    if (d.blend && d.blend !== 'normal') this.setBlend(d.blend);
     this.raw(e, cx, cy, w, h, rot, d.srcRot, fx, d.color, premul, opacity, fx.mask === 1 ? 0.02 : 0);
+    if (d.blend && d.blend !== 'normal') this.setBlend('normal');
     return true;
+  }
+
+  setBlend(mode: BlendMode) {
+    const gl = this.gl;
+    if (mode === 'add') gl.blendFunc(gl.ONE, gl.ONE);
+    else if (mode === 'screen') gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+    else gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  }
+
+  private buildFx(code: string): FxProgram {
+    const gl = this.gl;
+    const sh = (type: number, src: string): WebGLShader | string => {
+      const s = gl.createShader(type)!;
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { const log = gl.getShaderInfoLog(s) || 'did not compile'; gl.deleteShader(s); return log; }
+      return s;
+    };
+    const vs = sh(gl.VERTEX_SHADER, SHADER_VS), fs = sh(gl.FRAGMENT_SHADER, wrapShader(code));
+    if (typeof vs === 'string') return { error: vs };
+    if (typeof fs === 'string') return { error: fs.trim() };
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.bindAttribLocation(prog, this.aPosLoc, 'aPos');
+    gl.linkProgram(prog);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return { error: gl.getProgramInfoLog(prog) || 'did not link' };
+    const u: Record<string, WebGLUniformLocation | null> = {};
+    for (const n of FX_UNIFORMS) u[n] = gl.getUniformLocation(prog, n);
+    return { prog, u };
+  }
+
+  /** Run an effect over the whole frame. Returns the compiler's message when it cannot run (it is then skipped). */
+  drawShader(code: string, blend: BlendMode, v: ShaderUniforms): string | null {
+    const gl = this.gl;
+    let entry = this.fxProgs.get(code);
+    if (!entry) {
+      entry = this.buildFx(code);
+      this.fxProgs.set(code, entry);
+      if (this.fxProgs.size > 64) {
+        const [k, old] = this.fxProgs.entries().next().value as [string, FxProgram];
+        if ('prog' in old) gl.deleteProgram(old.prog);
+        this.fxProgs.delete(k);
+      }
+    }
+    if ('error' in entry) return entry.error;
+    if (v.opacity <= 0.001) return null;
+    if (readsFrame(code)) {
+      if (!this.frameTex) {
+        this.frameTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.frameTex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      }
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, this.frameTex);
+      gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, 0, 0, this.width, this.height, 0);
+    }
+    const u = entry.u;
+    gl.useProgram(entry.prog);
+    gl.uniform2f(u.uRes, this.width, this.height);
+    gl.uniform1f(u.uT, v.t); gl.uniform1f(u.uP, v.p); gl.uniform1f(u.uDur, v.dur); gl.uniform1f(u.uTime, v.time);
+    gl.uniform1f(u.uBeat, v.beat); gl.uniform1f(u.uBeatAge, v.beatAge); gl.uniform1f(u.uEnergy, v.energy);
+    gl.uniform1f(u.uOpacity, v.opacity); gl.uniform1f(u.uScale, v.scale); gl.uniform1f(u.uRot, v.rot);
+    gl.uniform1f(u.uAspect, this.width / this.height); gl.uniform1f(u.uSeed, v.seed);
+    gl.uniform2f(u.uPos, v.pos[0], v.pos[1]);
+    gl.uniform1i(u.uFrame, 2);
+    this.setBlend(blend);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    this.setBlend('normal');
+    gl.useProgram(this.prog);
+    gl.activeTexture(gl.TEXTURE0);
+    return null;
   }
 
   private raw(e: TexEntry, cx: number, cy: number, w: number, h: number, rot: number, srcRot: number, fx: LayerFx, c: ColorAdjust | undefined, premul: boolean, opacity: number, soft = 0) {
@@ -406,6 +501,8 @@ export class Compositor {
 
   dispose() {
     for (const e of this.textures.values()) this.gl.deleteTexture(e.tex);
+    for (const f of this.fxProgs.values()) if ('prog' in f) this.gl.deleteProgram(f.prog);
+    if (this.frameTex) this.gl.deleteTexture(this.frameTex);
     this.textures.clear();
     this.gl.getExtension('WEBGL_lose_context')?.loseContext();
   }

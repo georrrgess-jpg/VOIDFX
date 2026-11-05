@@ -61,7 +61,16 @@ It replaces the single-clip "TikTok Edit Studio" prototype with a multi-track ed
 | Main menu | A lensed black hole (starfield Einstein ring, Keplerian accretion disk with Doppler brightening, the far side lensed over the shadow, infalling matter, photon ring) tinted per section; dashboard with live Activity, recent projects with live job status and critic scores, the Brief → Build → Critic → Revise flow |
 | Everywhere | Ctrl/⌘+K command palette; segmented controls wrap instead of overlapping; toasts with actions sit clear of dialogs |
 
-## Stage 4 candidates
+## Stage 4: custom graphics and effects (this build)
+
+| Area | What ships |
+| --- | --- |
+| Graphics | Opus (or the owner) draws vector art as SVG for an edit: emblems, bolts, marks, frames, speed lines. The studio keeps drawing elements only (no scripts, images, text or outside links), draws it once at the right size, and animates it with transform keyframes, a reveal (pop, iris, wipe, flicker, fade) and a glow; it rides with the beat camera |
+| Effects | Opus writes a GLSL function `vec4 effect(vec2 uv, float t, float p)` that runs over the frame: procedural lightning, streaks, rings, particles, or distortions that read the picture underneath (`frame(uv)`). It reacts to the music (`uBeat`, `uBeatAge`, `uEnergy`) and follows a keyframed anchor (`uPos`). A helper library (noise, fbm, shapes, `boltDist` lightning paths, glow) comes with it. Code is limited to a safe subset (no preprocessor, no while loops, bounded for loops) and compiled before use; a failure is skipped and reported back to Opus in its review |
+| Everywhere | Preview, export, Opus's review frames and the critic's filmstrip draw these layers the same way; effects over a cut count as designed transitions; a new checkpoint gate asks for custom work on set pieces; the critic judges whether it looks designed and attached to the action |
+| Editor | Timeline styling for graphics and effects; Inspector with blend (normal, add light, screen), glow, reveal, width, live SVG and code editing with compile status; an Effects panel with 12 starters (lightning arc, Speed Force pull, speed streaks, electric edges, ghost echo, beat shockwave, rising sparks, chroma punch, lightning emblem, bolt, speed lines, blood slide) with moving previews |
+
+## Stage 5 candidates
 
 - Freeze frames and reverse; optical-flow slow motion.
 - Face tracking for framing checks (no face model runs in the artifact yet).

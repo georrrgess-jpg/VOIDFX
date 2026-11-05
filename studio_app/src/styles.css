@@ -1020,3 +1020,19 @@ kbd { font: 600 10.5px var(--font-mono); padding: 2px 6px; border-radius: 5px; b
 .home-k:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.15); }
 .home-k kbd { margin-left: auto; }
 @media (max-width: 900px) { .home-k span, .home-k kbd { display: none; } .home-k { height: 36px; flex: none; } }
+
+/* custom graphics and effects on the timeline */
+.clip.k-graphic { --cf: #3d2a08; --cb: #d99a1c; background-image: repeating-linear-gradient(135deg, rgba(255, 200, 80, 0.10) 0 6px, transparent 6px 12px); }
+.clip.k-shader { --cf: #2a1240; --cb: #b06cff; background-image: linear-gradient(90deg, rgba(176, 108, 255, 0.25), rgba(255, 179, 87, 0.18)); }
+.clip.k-graphic .clip-label, .clip.k-shader .clip-label { top: 50%; transform: translateY(-50%); }
+
+/* effects panel and custom-layer inspector */
+.tgroup { margin: 10px 0 2px; font: 600 10.5px var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.gfx-prev { display: grid; place-items: center; padding: 10px; border-radius: 9px; background: repeating-conic-gradient(#1b1b23 0 25%, #14141a 0 50%) 0 0 / 16px 16px; border: 1px solid var(--line); }
+.gfx-prev img { max-width: 100%; max-height: 140px; }
+.fx-status { margin: 0; font-size: 12px; padding: 7px 9px; border-radius: 8px; }
+.fx-status.ok { color: var(--ok); background: rgba(82, 214, 160, 0.08); }
+.fx-status.bad { color: #ffb1b8; background: rgba(255, 97, 112, 0.1); font-family: var(--font-mono); font-size: 11px; }
+.codebox summary { cursor: pointer; font-size: 12.5px; color: var(--ice); padding: 4px 0; }
+.ta.code { width: 100%; font: 500 11.5px/1.5 var(--font-mono); white-space: pre; tab-size: 2; margin: 6px 0; }
+.codebox .row-end { display: flex; gap: 8px; align-items: center; justify-content: space-between; }

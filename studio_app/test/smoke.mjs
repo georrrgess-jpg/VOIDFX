@@ -2,7 +2,8 @@
 // Stubs the claude.ai runtime: `sample` answers like Opus would (casting, a plan built from the media
 // it is shown, an approving review) and records what it was sent; `downloads.save` hands files back.
 // Flow: main menu → database → standards → AI Edit (files + database) built in the background while a
-// blank project is edited → the critic → its write-up → the round 2 composer → the revision (editor
+// blank project is edited (the plan includes a custom graphic, a custom effect and one effect that does not
+// compile, which the review must remove) → the critic → its write-up → the round 2 composer → the revision (editor
 // locked) → editor → checks → export (mastered) → reload → reopen. Writes screenshots and the MP4 to test/out/.
 import { createRequire } from 'node:module';
 import http from 'node:http';
@@ -64,6 +65,10 @@ await ctx.addInitScript(() => {
     if (music) ops.push({ op: 'add', id: 'mus', media: music.id, track: 'A1', start: 0, in: 0, dur: Math.min(music.dur, t) });
     ops.push({ op: 'text', id: 'cap', track: 'T1', start: 0.3, dur: 2.4, text: 'COULD IT BE\n*HIM*', words: [0, 0.25, 0.5, 0.9], style: { font: 'Inter', weight: 900, uppercase: true, size: 0.046, lineScales: [1, 1.3], stroke: 0.07, shadow: 0.65, scrim: 0.35, emphColor: '#ff2b3a' }, anim: { in: 'words', out: 'fade' }, transform: { y: 0.25 } });
     ops.push({ op: 'text', id: 'hero', track: 'T1', start: 4.0, dur: 1.8, text: 'ALONG', style: { font: 'Inter', weight: 900, size: 0.085, uppercase: true, stroke: 0.06 }, anim: { in: 'letters', out: 'scatter', inDur: 0.8, outDur: 0.5 }, transform: { y: 0.27 } });
+    ops.push({ op: 'graphic', id: 'emb', start: 0.4, dur: 1.2, gw: 0.45, glow: 0.6, reveal: { in: 'pop', out: 'fade' }, transform: { y: -0.12 },
+      svg: '<svg viewBox="0 0 400 400"><circle cx="200" cy="200" r="170" fill="none" stroke="#ffd23f" stroke-width="16"/><path d="M230 40 L120 220 L195 220 L160 360 L290 160 L210 160 Z" fill="#ffd23f" stroke="#fff" stroke-width="5"/></svg>' });
+    ops.push({ op: 'shader', id: 'arc', start: 3.0, dur: 0.6, blend: 'add', code: 'vec4 effect(vec2 uv, float t, float p) { vec2 q = aspectUv(uv); float d = boltDist(q, vec2(-0.18, -0.42), vec2(0.12, 0.35), floor(t * 14.0), 0.3); float core = glow(d - 0.002, 0.003), halo = glow(d, 0.035) * 0.55; float a = (core + halo) * (0.55 + 0.45 * uBeat) * smoothstep(0.0, 0.08, p) * smoothstep(1.0, 0.75, p); return vec4(mix(vec3(1.0, 0.72, 0.18), vec3(1.0), core), a); }' });
+    ops.push({ op: 'shader', id: 'oops', start: 5.0, dur: 0.4, code: 'vec4 effect(vec2 uv, float t, float p) { return vec4(nope(uv), 1.0); }' });
     ops.push({ op: 'sounds', volume: 0.35 });
     ops.push({ op: 'sfx', sound: 'riser', start: 1.4, volume: 0.3 });
     return { message: 'Concept: the evidence points back at him. Set pieces: the logo dive, the blood bloom, the blink.', ops };
@@ -104,7 +109,10 @@ await ctx.addInitScript(() => {
             reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
           } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && !full.includes('REVIEW 1 of')) {
             reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
-          } else if (full.includes('REVIEW 1 of')) {
+          } else if (last.includes('REVIEW 1 of') && last.includes('effect oops does not compile')) {
+            window.__sawCompileError = true;
+            reply = JSON.stringify({ message: 'Removed the effect that did not compile.', ops: [{ op: 'remove', id: 'oops' }] });
+          } else if (full.includes('REVIEW 1 of') || full.includes('REVIEW 2 of')) {
             reply = JSON.stringify({ message: 'Reviewed: the checkpoint is clean enough; approved.', ops: [] });
           } else {
             reply = JSON.stringify(planFrom(full));
@@ -217,6 +225,10 @@ report.director = await page.evaluate(() => {
   return {
     calls: window.__calls.map(c => ({ failed: c.failed, effort: c.effort, last: c.full.slice(-80).replace(/\s+/g, ' '), roles: c.roles.length, images: c.images, chars: c.full.length, house: c.full.includes('VOIDFX HOUSE RULES'), standards: c.full.includes('REFERENCE EDITS THE OWNER ADDED'), checkpoint: c.full.includes('AUTOMATED CHECKPOINT'), casting: c.full.includes('You are casting material'), critic: c.full.includes('You are the critic'), round2: c.full.includes('ROUND 2 INSTRUCTIONS') })),
     rounds: s.rounds.map(r => `R${r.n} ${r.kind} applied=${r.applied} critique=${r.critique ? r.critique.score : '-'} fromCritic=${(r.fromCritic || []).length}`),
+    custom: s.project.clips.filter(c => c.kind === 'graphic' || c.kind === 'shader').map(c => `${c.id}:${c.kind}:${c.track}`),
+    sawCompileError: !!window.__sawCompileError,
+    criticSawCustom: window.__calls.some(c => c.full.includes('You are the critic') && c.full.includes('Custom graphics and effects designed for this edit (2)')),
+    opusSawApi: window.__calls.some(c => c.full.includes('CUSTOM GRAPHICS AND EFFECTS')),
     lockAfter: s.lock,
     jobs: s.jobs.map(j => `${j.kind}:${j.state}:R${j.round}`),
     media: s.mediaOrder.map(id => `${id} ${s.media[id].kind} ${s.media[id].name} ${s.media[id].origin} ${s.media[id].status}`),

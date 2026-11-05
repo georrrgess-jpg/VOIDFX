@@ -7,6 +7,9 @@ import { SFX_INFO } from '../engine/sfx';
 import { DEFAULT_CAMERA, SFX, SfxType } from '../state/types';
 import { hasRamp } from '../state/util';
 import { Btn, ColorField, Icon, Section, Seg, Select, Slider, Toggle } from './controls';
+import { useEffect, useState } from 'preact/hooks';
+import { compileError } from '../engine/custom';
+import { BLEND_MODES, REVEALS_IN, REVEALS_OUT } from '../state/types';
 
 const begin = () => store.beginGesture();
 const end = () => store.endGesture();
@@ -105,7 +108,8 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
   const visual = c.kind !== 'audio' && c.kind !== 'sfx';
   const hasSound = isMedia && !!m?.hasAudio;
   const color = colorOf(c);
-  const kindLabel = c.kind === 'text' ? 'Text' : c.kind === 'audio' ? 'Audio' : c.kind === 'image' ? 'Image' : c.kind === 'sfx' ? 'Sound' : 'Video';
+  const kindLabel = c.kind === 'text' ? 'Text' : c.kind === 'audio' ? 'Audio' : c.kind === 'image' ? 'Image' : c.kind === 'sfx' ? 'Sound' : c.kind === 'graphic' ? 'Graphic' : c.kind === 'shader' ? 'Effect' : 'Video';
+  const custom = c.kind === 'graphic' || c.kind === 'shader';
   return (
     <div class="insp">
       <header class="insp-h">
@@ -116,6 +120,8 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
       {m && <p class="note mono">{m.name}{isMedia ? ` · source ${(c.in ?? 0).toFixed(2)}–${((c.in ?? 0) + c.dur * (c.speed ?? 1)).toFixed(2)}s` : ''}</p>}
 
       {c.kind === 'text' && <TextProps c={c} />}
+      {c.kind === 'graphic' && <GraphicProps c={c} />}
+      {c.kind === 'shader' && <EffectProps c={c} />}
 
       {c.kind === 'sfx' && (
         <Section title="Sound">
@@ -133,12 +139,12 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
           <Slider id="ts" label="Scale" min={0.05} max={8} log fmt={v => `${Math.round(v * 100)}%`} parse={s => parseFloat(s) / 100} dflt={1} {...anim('scale')} />
           <Slider id="tr" label="Rotation" min={-180} max={180} step={0.5} fmt={v => `${v.toFixed(1)}°`} dflt={0} {...anim('rotation')} />
           <Slider id="to" label="Opacity" min={0} max={1} step={0.01} fmt={v => `${Math.round(v * 100)}%`} parse={s => parseFloat(s) / 100} dflt={1} {...anim('opacity')} />
-          {c.kind !== 'text' && (
+          {c.kind !== 'text' && !custom && (
             <div class="fld fld-wide"><span class="fld-l">Fit</span>
               <Seg value={c.fit || 'cover'} onChange={v => updateClip(c.id, { fit: v })} options={[{ value: 'cover', label: 'Fill frame' }, { value: 'contain', label: 'Whole picture' }]} />
             </div>
           )}
-          <p class="hint">Drag the box on the preview to move; drag a corner to scale. ◆ adds a keyframe at the playhead.</p>
+          <p class="hint">{c.kind === 'shader' ? 'Position, scale and rotation move the effect\'s anchor (uPos, uScale, uRot); keyframe them to follow the action.' : 'Drag the box on the preview to move; drag a corner to scale. ◆ adds a keyframe at the playhead.'}</p>
         </Section>
       )}
 
@@ -184,7 +190,7 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
         </Section>
       )}
 
-      {(c.kind === 'video' || c.kind === 'image') && (
+      {(c.kind === 'video' || c.kind === 'image' || c.kind === 'graphic') && (
         <Section title="Color" right={<Btn title="Reset colour" onClick={() => updateClip(c.id, { color: { brightness: 0, contrast: 0, saturation: 0, temperature: 0, tint: 0, hue: 0, vignette: 0, blur: 0 } })}>Reset</Btn>}>
           {([
             ['brightness', 'Brightness', -1, 1], ['contrast', 'Contrast', -1, 1], ['saturation', 'Saturation', -1, 1],
@@ -196,7 +202,7 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
         </Section>
       )}
 
-      {c.kind !== 'text' && c.kind !== 'sfx' && (
+      {c.kind !== 'text' && c.kind !== 'sfx' && !custom && (
         <Section title="Transition in">
           {prev ? (
             <>
@@ -211,6 +217,49 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
         </Section>
       )}
     </div>
+  );
+}
+
+function CodeBox(props: { id: string; label: string; value: string; rows: number; apply: (v: string) => void; hint: string }) {
+  const [draft, setDraft] = useState(props.value);
+  useEffect(() => setDraft(props.value), [props.value]);
+  const dirty = draft !== props.value;
+  return (
+    <details class="codebox">
+      <summary>{props.label}</summary>
+      <textarea id={props.id} class="ta code" rows={props.rows} spellcheck={false} value={draft} onInput={e => setDraft((e.target as HTMLTextAreaElement).value)} />
+      <div class="row-end"><span class="hint">{props.hint}</span><Btn kind="solid" disabled={!dirty} onClick={() => props.apply(draft)}>Apply</Btn></div>
+    </details>
+  );
+}
+
+function GraphicProps({ c }: { c: Clip }) {
+  const live = (props: Record<string, any>) => updateClip(c.id, props, true);
+  const r = { in: 'fade', out: 'fade', inDur: 0.25, outDur: 0.2, ...(c.reveal || {}) };
+  const src = c.svg ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(c.svg)}` : '';
+  return (
+    <Section title="Graphic">
+      {src && <div class="gfx-prev"><img src={src} alt="The graphic" /></div>}
+      <Slider id="g-w" label="Width" min={0.05} max={2} step={0.01} fmt={v => `${Math.round(v * 100)}%`} parse={x => parseFloat(x) / 100} dflt={0.6} value={c.gw ?? 0.6} onStart={begin} onEnd={end} onInput={v => live({ gw: v })} />
+      <Slider id="g-glow" label="Glow" min={0} max={1} step={0.01} fmt={v => `${Math.round(v * 100)}%`} parse={x => parseFloat(x) / 100} dflt={0} value={c.glow ?? 0} onStart={begin} onEnd={end} onInput={v => live({ glow: v })} />
+      <div class="fld fld-wide"><span class="fld-l">Blend</span><Seg value={c.blend || 'normal'} onChange={v => updateClip(c.id, { blend: v })} options={BLEND_MODES.map(b => ({ value: b, label: b === 'add' ? 'Add light' : b === 'screen' ? 'Screen' : 'Normal' }))} /></div>
+      <Select id="g-in" label="Appear" value={r.in} onChange={v => updateClip(c.id, { reveal: { in: v } })} options={REVEALS_IN.map(x => ({ value: x, label: x }))} />
+      <Slider id="g-ind" label="Appear time" min={0} max={2} step={0.01} fmt={v => `${v.toFixed(2)}s`} dflt={0.25} value={r.inDur} onStart={begin} onEnd={end} onInput={v => live({ reveal: { inDur: v } })} />
+      <Select id="g-out" label="Leave" value={r.out} onChange={v => updateClip(c.id, { reveal: { out: v } })} options={REVEALS_OUT.map(x => ({ value: x, label: x }))} />
+      <Slider id="g-outd" label="Leave time" min={0} max={2} step={0.01} fmt={v => `${v.toFixed(2)}s`} dflt={0.2} value={r.outDur} onStart={begin} onEnd={end} onInput={v => live({ reveal: { outDur: v } })} />
+      <CodeBox id="g-svg" label="Edit the vector art (SVG)" value={c.svg || ''} rows={10} hint="Drawing elements only; scripts, images and text are removed." apply={v => updateClip(c.id, { svg: v })} />
+    </Section>
+  );
+}
+
+function EffectProps({ c }: { c: Clip }) {
+  const err = c.code ? compileError(c.code) : 'no code';
+  return (
+    <Section title="Effect">
+      <p class={`fx-status ${err ? 'bad' : 'ok'}`}>{err ? `Skipped: ${err}` : 'Compiles and renders in the preview, the export and Opus\'s review frames.'}</p>
+      <div class="fld fld-wide"><span class="fld-l">Blend</span><Seg value={c.blend || 'normal'} onChange={v => updateClip(c.id, { blend: v })} options={BLEND_MODES.map(b => ({ value: b, label: b === 'add' ? 'Add light' : b === 'screen' ? 'Screen' : 'Normal' }))} /></div>
+      <CodeBox id="e-code" label="Edit the effect code (GLSL)" value={c.code || ''} rows={14} hint="vec4 effect(vec2 uv, float t, float p): see the Effects panel for the helpers." apply={v => updateClip(c.id, { code: v })} />
+    </Section>
   );
 }
 

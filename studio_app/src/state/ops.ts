@@ -1,7 +1,7 @@
 // Edit operations shared by the UI and the Opus Director. Every change is validated here so the
 // timeline can never hold out-of-range values, overlapping clips or dangling references.
 import {
-  ANIM_PROPS, AnimProp, Clip, ClipKind, DEFAULT_CAMERA, Ease, FONTS, Keyframe, MediaInfo, Project, SFX, SfxType, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
+  ANIM_PROPS, AnimProp, BLEND_MODES, Clip, ClipKind, DEFAULT_CAMERA, Ease, FONTS, Keyframe, MediaInfo, Project, REVEALS_IN, REVEALS_OUT, SFX, SfxType, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
   Track, TrackKind, TRANSITIONS, TransitionType,
 } from './types';
 import { clamp, clipEnd, clipIn, clipSpeed, deepClone, EPS, hasRamp, num, round, shortId, srcAt, trackClips } from './util';
@@ -9,12 +9,23 @@ import { clamp, clipEnd, clipIn, clipSpeed, deepClone, EPS, hasRamp, num, round,
 import { SFX_INFO, soundsForTransition } from '../engine/sfx';
 import { timelineBeats } from '../engine/evaluate';
 import { defaultTransitionDur } from '../engine/transitions';
+import { checkShaderCode, sanitizeSvg } from '../engine/custom';
 import { newProject } from './store';
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const EASES: Ease[] = ['linear', 'in', 'out', 'inOut', 'hold'];
 
-export const trackKindFor = (k: ClipKind): TrackKind => (k === 'image' ? 'video' : k === 'sfx' ? 'audio' : k);
+export const trackKindFor = (k: ClipKind): TrackKind => (k === 'image' || k === 'graphic' || k === 'shader' ? 'video' : k === 'sfx' ? 'audio' : k);
+/** Custom layers (vector graphics and effects) live on overlay video tracks, never the main track. */
+export const isCustom = (c: Clip) => c.kind === 'graphic' || c.kind === 'shader';
+
+/** An overlay video track with room for [start, start+dur), named FX when it has to be added. */
+export function fxTrack(p: Project, start: number, dur: number, prefer?: string, ignore?: string): Track {
+  const pref = prefer ? p.tracks.find(t => t.id === prefer && t.kind === 'video' && !t.main) : undefined;
+  if (pref && isFree(p, pref.id, start, dur, ignore)) return pref;
+  for (const t of p.tracks) if (t.kind === 'video' && !t.main && isFree(p, t.id, start, dur, ignore)) return t;
+  return addTrack(p, 'video', undefined, 'FX');
+}
 
 export function mainTrack(p: Project): Track | undefined {
   return p.tracks.find(t => t.main) || p.tracks.find(t => t.kind === 'video');
@@ -25,7 +36,7 @@ export function allIds(p: Project): Set<string> {
 }
 
 export function newClipId(p: Project, kind: ClipKind): string {
-  return shortId(kind === 'text' ? 't' : kind === 'audio' ? 'a' : 'c', allIds(p));
+  return shortId(kind === 'text' ? 't' : kind === 'audio' ? 'a' : kind === 'graphic' ? 'g' : kind === 'shader' ? 'e' : 'c', allIds(p));
 }
 
 export function newTrackId(p: Project, kind: TrackKind): string {
@@ -64,7 +75,7 @@ export function freeTrack(p: Project, kind: TrackKind, start: number, dur: numbe
 
 export function mediaLimit(c: Clip, media: Record<string, MediaInfo>): number {
   // Longest timeline duration this clip may have given its in-point and speed (ramps included).
-  if (c.kind === 'text' || c.kind === 'image') return Infinity;
+  if (c.kind === 'text' || c.kind === 'image' || c.kind === 'graphic' || c.kind === 'shader') return Infinity;
   if (c.kind === 'sfx') return c.sfx ? Math.max(0.02, SFX_INFO[c.sfx].dur - (c.in ?? 0)) : Infinity;
   const m = c.media ? media[c.media] : undefined;
   if (!m || !m.duration) return Infinity;
@@ -87,9 +98,17 @@ export function normalize(p: Project, media: Record<string, MediaInfo>, opts: { 
   p.clips = p.clips.filter(c => {
     if (!trackIds.has(c.track)) return false;
     if (c.kind === 'sfx') return !!c.sfx;
+    if (c.kind === 'graphic') return !!c.svg;
+    if (c.kind === 'shader') return !!c.code;
     if (c.kind !== 'text' && (!c.media || !media[c.media])) return false;
     return true;
   });
+  // custom layers never sit on the magnetic main track or a non-video track
+  for (const c of p.clips) {
+    if (!isCustom(c)) continue;
+    const t = p.tracks.find(x => x.id === c.track);
+    if (!t || t.main || t.kind !== 'video') c.track = fxTrack(p, c.start, c.dur, undefined, c.id).id;
+  }
   for (const c of p.clips) {
     c.start = Math.max(0, round(c.start, 4));
     const lim = mediaLimit(c, media);
@@ -281,7 +300,8 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
       case 'track': {
         const t = p.tracks.find(x => x.id === v);
         if (!t) { issues.push(`${where}: no track "${v}"`); break; }
-        if (t.kind !== (c.kind === 'image' ? 'video' : c.kind) && !(c.kind === 'video' && t.kind === 'audio')) { issues.push(`${where}: cannot go on ${t.kind} track ${t.id}`); break; }
+        if (t.kind !== trackKindFor(c.kind) && !(c.kind === 'video' && t.kind === 'audio')) { issues.push(`${where}: cannot go on ${t.kind} track ${t.id}`); break; }
+        if (isCustom(c) && t.main) { issues.push(`${where}: graphics and effects go on an overlay track, not the main track`); break; }
         if (c.kind === 'video' && t.kind === 'audio') c.kind = 'audio';
         c.track = t.id;
         break;
@@ -381,6 +401,34 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         break;
       }
       case 'media': break; // fixed after creation
+      case 'svg': {
+        if (c.kind !== 'graphic') break;
+        const r = sanitizeSvg(v);
+        if ('error' in r) { issues.push(`${where}: svg rejected: ${r.error}`); break; }
+        c.svg = r.svg;
+        if (r.removed?.length) issues.push(`${where}: removed unsupported svg elements: ${r.removed.join(', ')}`);
+        break;
+      }
+      case 'gw': if (c.kind === 'graphic') c.gw = round(num(v, 0.02, 3, 0.6), 4); break;
+      case 'glow': if (c.kind === 'graphic') c.glow = round(num(v, 0, 1, 0), 3); break;
+      case 'blend': if (BLEND_MODES.includes(v)) c.blend = v; else issues.push(`${where}: blend must be ${BLEND_MODES.join(', ')}`); break;
+      case 'reveal': {
+        if (!v || typeof v !== 'object' || c.kind !== 'graphic') break;
+        const r = { ...(c.reveal || {}) };
+        if (v.in !== undefined) { if ((REVEALS_IN as readonly string[]).includes(v.in)) r.in = v.in; else issues.push(`${where}: reveal.in must be ${REVEALS_IN.join(', ')}`); }
+        if (v.out !== undefined) { if ((REVEALS_OUT as readonly string[]).includes(v.out)) r.out = v.out; else issues.push(`${where}: reveal.out must be ${REVEALS_OUT.join(', ')}`); }
+        if (v.inDur !== undefined) r.inDur = round(num(v.inDur, 0, 10, 0.25), 3);
+        if (v.outDur !== undefined) r.outDur = round(num(v.outDur, 0, 10, 0.2), 3);
+        c.reveal = r;
+        break;
+      }
+      case 'code': {
+        if (c.kind !== 'shader') break;
+        const r = checkShaderCode(v);
+        if (r.issues.length) { issues.push(`${where}: effect code rejected: ${r.issues.join('; ')}`); break; }
+        c.code = r.code;
+        break;
+      }
       default: issues.push(`${where}: unknown field "${k}"`);
     }
   }
@@ -551,6 +599,25 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           const { op: _o, track: _t, start: _s, dur: _d, id: _id, ...rest } = op;
           patchClip(c, rest, issues, p);
           if (!c.text) { issues.push(`${tag}: text clip without text was skipped`); return; }
+          p.clips.push(c);
+          touched.push(c.id);
+          applied++;
+          break;
+        }
+        case 'graphic': case 'shader': {
+          const kind = op.op as 'graphic' | 'shader';
+          const start = num(op.start, 0, 36000, 0), dur = num(op.dur, 1 / p.fps, 36000, 1);
+          const pref = typeof op.track === 'string' ? op.track : undefined;
+          const prefT = pref ? p.tracks.find(t => t.id === pref) : undefined;
+          if (pref && (!prefT || prefT.kind !== 'video' || prefT.main)) issues.push(`${tag}: ${kind}s go on an overlay video track; used a free one instead of "${pref}"`);
+          const track = fxTrack(p, start, dur, prefT && prefT.kind === 'video' && !prefT.main ? prefT.id : undefined);
+          const c: Clip = { id: newClipId(p, kind), track: track.id, kind, start, dur };
+          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
+          if (kind === 'graphic') { c.gw = 0.6; c.blend = 'normal'; } else c.blend = 'normal';
+          const { op: _o, track: _t, start: _s, dur: _d, id: _id, ...rest } = op;
+          patchClip(c, rest, issues, p);
+          if (kind === 'graphic' && !c.svg) { issues.push(`${tag}: graphic without a usable svg was skipped`); return; }
+          if (kind === 'shader' && !c.code) { issues.push(`${tag}: effect without usable code was skipped`); return; }
           p.clips.push(c);
           touched.push(c.id);
           applied++;

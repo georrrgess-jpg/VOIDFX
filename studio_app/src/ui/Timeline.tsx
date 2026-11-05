@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { runtime, PEAK_RATE } from '../media/library';
 import { player } from '../engine/player';
+import { compileError } from '../engine/custom';
 import { TRANSITION_LABELS } from '../engine/transitions';
 import { addTrack, mainTrack, mediaLimit, normalize, trackKindFor } from '../state/ops';
 import { store, useStore } from '../state/store';
@@ -424,7 +425,7 @@ function ClipView({ clip: c, row, zoom, sel, view, media, rev, fps }: { clip: Cl
   const left = c.start * zoom;
   const width = Math.max(3, c.dur * zoom);
   const m = c.media ? media[c.media] : undefined;
-  const label = c.kind === 'text' ? (c.text || '').replace(/\n/g, ' ').replace(/\*/g, '') : c.kind === 'sfx' ? `${c.sfx}` : c.name?.startsWith('auto:') ? (m?.name || c.kind) : c.name || m?.name || c.kind;
+  const label = c.kind === 'text' ? (c.text || '').replace(/\n/g, ' ').replace(/\*/g, '') : c.kind === 'sfx' ? `${c.sfx}` : c.kind === 'graphic' ? `◆ ${c.name || `graphic ${c.id}`}` : c.kind === 'shader' ? `✦ ${c.name || `effect ${c.id}`}` : c.name?.startsWith('auto:') ? (m?.name || c.kind) : c.name || m?.name || c.kind;
   const sp = clipSpeed(c);
   const offline = m && m.status === 'offline';
   const kfTimes = useMemo(() => {
@@ -440,6 +441,8 @@ function ClipView({ clip: c, row, zoom, sel, view, media, rev, fps }: { clip: Cl
         {offline && <b class="clip-badge bad">offline</b>}
         {hasRamp(c) ? <b class="clip-badge">ramp</b> : sp !== 1 && <b class="clip-badge">{sp}x</b>}
         {c.muted && <b class="clip-badge">muted</b>}
+        {c.kind === 'shader' && c.code && compileError(c.code) && <b class="clip-badge bad" title={compileError(c.code) || ''}>error</b>}
+        {(c.kind === 'shader' || c.kind === 'graphic') && c.blend && c.blend !== 'normal' && <b class="clip-badge">{c.blend}</b>}
         <span>{label}</span>
       </div>
       {c.transition && (

@@ -8,7 +8,8 @@ import { addSfx, addTransitionSounds, normalize } from '../state/ops';
 import { LeftTab, store, useStore } from '../state/store';
 import { MediaInfo, SFX, SfxType, STANDARD_CAPTION, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TextAnimIn, TextAnimOut } from '../state/types';
 import { fmtBytes, fmtTime } from '../state/util';
-import { addMediaClip, addText, applyTransition, selectedClips, TEXT_PRESETS, updateClip } from './actions';
+import { addCustom, addMediaClip, addText, applyTransition, selectedClips, TEXT_PRESETS, updateClip } from './actions';
+import { FX_PRESETS } from '../engine/fxlibrary';
 import { Btn, Icon } from './controls';
 import { EffectTile } from './EffectTile';
 import { useCatalog } from './home/common';
@@ -19,6 +20,7 @@ export function Rail() {
     { id: 'media', label: 'Media', icon: Icon.media },
     { id: 'text', label: 'Text', icon: Icon.text },
     { id: 'transitions', label: 'Transitions', icon: Icon.transition },
+    { id: 'effects', label: 'Effects', icon: Icon.bolt },
     { id: 'sounds', label: 'Sounds', icon: Icon.vol },
   ];
   return (
@@ -39,6 +41,7 @@ export function LeftPanel() {
       {tab === 'media' && <MediaPanel />}
       {tab === 'text' && <TextPanel />}
       {tab === 'transitions' && <TransitionsPanel />}
+      {tab === 'effects' && <EffectsPanel />}
       {tab === 'sounds' && <SoundsPanel />}
     </aside>
   );
@@ -205,6 +208,36 @@ function previewSfx(t: SfxType) {
   n.connect(g).connect(player.master);
   n.start();
   previewNode = n;
+}
+
+const BLANK_EFFECT = {
+  id: 'blank', name: 'Blank effect', kind: 'shader' as const, blend: 'add' as const, dur: 1, hint: 'Start from scratch',
+  code: `vec4 effect(vec2 uv, float t, float p) {
+  // uv 0..1 (0,0 top-left), t seconds, p 0..1 through the clip; frame(uv) is the picture underneath
+  vec2 q = toLocal(uv);
+  float a = glow(sdCircle(q, 0.1 + 0.05 * uBeat), 0.02) * sin(p * PI);
+  return vec4(vec3(1.0, 0.8, 0.3), a);
+}`,
+};
+
+function EffectsPanel() {
+  const shaders = FX_PRESETS.filter(f => f.kind === 'shader');
+  const graphics = FX_PRESETS.filter(f => f.kind === 'graphic');
+  return (
+    <div class="panel">
+      <header class="panel-h"><h2>Effects</h2></header>
+      <p class="note">Opus designs its own effects and graphics for every edit. These starters show what the tools do: add one at the playhead, then tune it or edit its code in the Edit tab. Hover to play.</p>
+      <p class="tgroup">GPU effects</p>
+      <div class="etgrid">
+        {shaders.map(f => <EffectTile kind="fx" fx={f} label={f.name} hint={f.hint} onPick={() => addCustom(f)} />)}
+      </div>
+      <button type="button" class="chipbtn" onClick={() => addCustom(BLANK_EFFECT)}>{Icon.plus}<span>Blank effect (write your own)</span></button>
+      <p class="tgroup">Vector graphics</p>
+      <div class="etgrid">
+        {graphics.map(f => <EffectTile kind="fx" fx={f} label={f.name} hint={f.hint} onPick={() => addCustom(f)} />)}
+      </div>
+    </div>
+  );
 }
 
 function SoundsPanel() {

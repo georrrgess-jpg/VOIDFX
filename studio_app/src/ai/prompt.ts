@@ -1,6 +1,6 @@
 // What Opus reads: the studio's capabilities and data formats. The owner's house style lives in
 // knowledge.ts and the presets, and is added by the Director when a preset uses it.
-import { AudioAnalysis, FONTS, MediaInfo, Project, SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
+import { AudioAnalysis, FONTS, MediaInfo, Project, REVEALS_IN, REVEALS_OUT, SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { projectDuration } from '../state/util';
 
 export function reference(p: Project): string {
@@ -46,7 +46,24 @@ text: the words (use \\n for a line break; wrap a word in *asterisks* to emphasi
 words [t1, t2, ...]: when each word starts, in seconds from the clip's start (with anim.in "words", each word eases in on its own time)
 style {font, weight 100-900, italic, size (fraction of frame height), lineScales [per-line size multipliers], color, emphColor, emphGlow 0-1, stroke (outline width as a fraction of size), strokeColor, shadow 0-1, scrim 0-1 (soft dark backing), bg (box behind each line), bgColor, align left|center|right, uppercase, tracking (em), lineHeight, maxWidth (fraction of frame width)}; colours are hex. Fonts: ${FONTS.join(', ')}
 anim {in: ${TEXT_ANIMS_IN.join('|')}; out: ${TEXT_ANIMS_OUT.join('|')}; inDur; outDur}; "words" reveals one word after another (on "words" times if given); "letters" builds a title letter by letter; "scatter" bursts the letters apart; "fall" drops them away
-transform and kf work as for media clips; x and y move the text block's centre`;
+transform and kf work as for media clips; x and y move the text block's centre
+
+CUSTOM GRAPHICS AND EFFECTS (design your own for this edit: set pieces, character-specific transitions, graphics no library has)
+They go on overlay video tracks (never the main track) above the footage, and render the same in the preview, the export and the frames you review.
+{"op":"graphic","id":"g1","start":3.1,"dur":1.2,"svg":"<svg viewBox='0 0 1000 1000'>…</svg>","gw":0.5,"blend":"normal|add|screen","glow":0.6,"reveal":{"in":"pop","out":"flicker","inDur":0.3,"outDur":0.25},"transform":{"x":0,"y":-0.12},"kf":{"rotation":[[0,-8],[1.2,0]]}}
+  svg: vector art you draw (emblems, a lightning bolt, marks, frames, speed lines, shards). Drawing elements only: svg, g, path, circle, ellipse, rect, line, polyline, polygon, defs, linearGradient, radialGradient, stop, clipPath, mask, filter with feGaussianBlur/feOffset/feMerge/feColorMatrix/feBlend/feComposite/feFlood, use. No text (use text clips), no images, no scripts, no outside links; it needs a viewBox; up to 40,000 characters. gw = width as a fraction of the frame width (height follows the viewBox). glow 0-1 adds a soft light around it. reveal.in: ${REVEALS_IN.join('|')}; reveal.out: ${REVEALS_OUT.join('|')}. transform, kf (x, y, scale, rotation, opacity) and color work as for media clips, and graphics ride with the beat camera.
+{"op":"shader","id":"e1","start":2.9,"dur":0.6,"blend":"normal|add|screen","code":"vec4 effect(vec2 uv, float t, float p) { … }","transform":{"x":0.1,"y":-0.05},"kf":{"x":[[0,0.1],[0.6,-0.1]]}}
+  code: a GLSL ES 3.0 function the studio runs over the whole frame for every frame of the clip. It returns straight (not premultiplied) RGBA laid over the picture with "blend": normal (alpha over), add (light: lightning, glows, sparks), screen.
+  uv: frame position, 0..1, (0,0) top-left. t: seconds since the clip started; p: 0..1 through the clip.
+  Uniforms: uRes (pixels), uAspect (width/height), uDur, uTime (timeline seconds), uBeat (1.0 on each music beat, decaying over ~0.14 s), uBeatAge (seconds since the last beat), uEnergy (music loudness 0..1 now), uPos (anchor in uv from transform/kf x,y: 0.5+x, 0.5+y), uScale, uRot (radians), uOpacity (applied for you), uSeed, PI.
+  Helpers: frame(uv) the picture under this layer (rgb) for distortions, ghosts, chromatic splits and relighting (return vec4(colour, 1.0) to replace the picture); aspectUv(uv) square coordinates centred on the frame (x in -0.28..0.28 for 9:16, y in -0.5..0.5); toLocal(uv) square coordinates around uPos with uScale/uRot applied; hash11, hash21, noise, fbm, rot2(angle), sdCircle, sdBox, sdSegment, glow(dist, width) = soft falloff, boltDist(p, a, b, seed, jag) = distance to a jagged lightning path from a to b (jag ~0.2-0.4; change seed every few frames, e.g. floor(t*12.0), to make it flicker), luma(rgb).
+  Rules: no #directives, uniform/in/out declarations, texture() (use frame), main(), while or do loops; for loops only as "for (int i = 0; i < N; i++)" with a literal N up to 64, at most 4 loops; up to 8000 characters. An effect that fails to compile is skipped and reported back to you with the compiler's message, so keep the code plain.
+  Use effects for what the footage and the beat call for: a lightning arc from the hand that throws it (anchor uPos on it from the contact sheet and keyframe x/y to follow its movement), speed streaks along the running direction, a Speed Force tunnel that warps the picture on the drop, an energy ring on a beat, a freeze-frame glow, a custom transition across a cut (place the effect over the cut, often over a plain cut or a short crossfade). Keep them attached to the action, lit like the scene and brief; vary them.
+  Example, a beat-pulsed lightning arc between two points (blend add):
+  vec4 effect(vec2 uv, float t, float p) { vec2 q = aspectUv(uv); float d = boltDist(q, vec2(-0.18, -0.42), vec2(0.12, 0.35), floor(t * 14.0), 0.3); float core = glow(d - 0.002, 0.003), halo = glow(d, 0.035) * 0.55; float a = (core + halo) * (0.55 + 0.45 * uBeat) * smoothstep(0.0, 0.08, p) * smoothstep(1.0, 0.75, p); return vec4(mix(vec3(1.0, 0.72, 0.18), vec3(1.0), core), a); }
+  Example, a Speed Force pull that warps the picture toward the anchor (blend normal, reads the frame):
+  vec4 effect(vec2 uv, float t, float p) { vec2 d = uv - uPos; float r = length(d * vec2(uAspect, 1.0)); float k = 0.5 * sin(p * PI); vec3 col = vec3(0.0); for (int i = 0; i < 12; i++) { float f = float(i) / 11.0; col += frame(uPos + d * (1.0 - k * f * 0.35)); } col /= 12.0; float streak = fbm(vec2(atan(d.y, d.x) * 4.0, r * 6.0 - t * 9.0)); col += vec3(1.0, 0.78, 0.3) * smoothstep(0.55, 0.9, streak) * k * 0.8; return vec4(col, 1.0); }
+  Example, speed streaks along the running direction (blend add): vec4 effect(vec2 uv, float t, float p) { vec2 q = rot2(-0.35) * aspectUv(uv); float lane = floor(q.y * 70.0); float s = fract(q.x * 1.5 - t * (3.0 + hash11(lane) * 4.0) + hash11(lane + 3.0)); float line = smoothstep(0.0, 0.02, s) * smoothstep(0.35, 0.0, s) * step(0.82, hash11(lane + 7.0)); return vec4(vec3(1.0, 0.85, 0.5), line * 0.7 * sin(p * PI)); }`;
 }
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
@@ -107,8 +124,8 @@ export function timelineJson(p: Project): string {
 /** What the owner's notes may ask for that the studio cannot do, with the nearest thing it can. */
 export const STUDIO_LIMITS = `WHAT THE STUDIO CANNOT DO (the owner's notes may ask for these: do the nearest thing below, say so in one line of "message", and do not spend thinking on the rest)
 - You cannot watch video or hear audio, or review an exported file: you see contact sheets, rendered frames and the sound analysis. Judge the song section from the analysis (beats, rises, quiet parts, loudness).
-- No subject isolation, masks or rotoscoping: no cut-out afterimages or subject-only speed trails. Nearest: speed ramps, whips, warp, the beat camera, and the bolt transition for lightning.
-- No motion tracking: text cannot follow movement. Place it beside the action, timed to the beat or the vocal.
+- No subject isolation, masks or rotoscoping: no cut-out afterimages or subject-only speed trails. Nearest: speed ramps, whips, warp, the beat camera, the bolt transition, and your own effects (ghost echoes of the whole frame with frame(), streaks, glows anchored near the subject).
+- No automatic motion tracking: you place text, graphics and effects yourself. To follow movement, keyframe x/y (and scale) from where the subject is in the contact sheets.
 - No footage beyond this project's media and the database items attached to it. If the notes name material that is not in MEDIA, say it is missing.
 - One output: the timeline. Export, delivery and saving are the owner's step.`;
 

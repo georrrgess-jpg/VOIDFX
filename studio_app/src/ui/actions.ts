@@ -1,10 +1,11 @@
 // User commands shared by keyboard shortcuts, toolbars and the inspector.
 import { player } from '../engine/player';
-import { addMediaToTimeline, deleteClips, duplicateClip, freeTrack, mainTrack, newClipId, normalize, patchClip, splitClipAt, velocityRamp } from '../state/ops';
+import { addMediaToTimeline, deleteClips, duplicateClip, freeTrack, fxTrack, mainTrack, newClipId, normalize, patchClip, splitClipAt, velocityRamp } from '../state/ops';
+import type { FxPreset } from '../engine/fxlibrary';
 import { timelineBeats } from '../engine/evaluate';
 import { store } from '../state/store';
 import { AnimProp, Clip, DEFAULT_TEXT_STYLE, Project, TextStyle, TransitionType } from '../state/types';
-import { clipEnd, EPS, propValue, round, trackClips } from '../state/util';
+import { clipEnd, EPS, projectDuration, propValue, round, trackClips } from '../state/util';
 
 const media = () => store.state.media;
 
@@ -188,3 +189,22 @@ export const TEXT_PRESETS: { name: string; style: Partial<TextStyle>; text: stri
 ];
 
 export { DEFAULT_TEXT_STYLE };
+
+/** Add a starter effect or graphic at the playhead on an overlay track, selected for editing. */
+export function addCustom(fx: FxPreset) {
+  let id = '';
+  const t = store.state.time;
+  commitNorm(p => {
+    const end = projectDuration(p);
+    const dur = end > 0 && t + fx.dur > end ? Math.max(0.2, end - t) : fx.dur;
+    const tr = fxTrack(p, t, dur);
+    const c: Clip = { id: newClipId(p, fx.kind), track: tr.id, kind: fx.kind, start: round(t, 4), dur: round(dur, 4), name: fx.name, blend: fx.blend };
+    const issues: string[] = [];
+    if (fx.kind === 'graphic') patchClip(c, { svg: fx.svg, gw: fx.gw ?? 0.6, glow: fx.glow ?? 0, reveal: fx.reveal || {} }, issues, p);
+    else patchClip(c, { code: fx.code }, issues, p);
+    p.clips.push(c);
+    id = c.id;
+  });
+  store.set({ selection: [id], rightTab: 'inspector' });
+  player.seek(store.state.time + 0.0001);
+}

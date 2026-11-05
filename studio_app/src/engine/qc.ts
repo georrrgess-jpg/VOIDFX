@@ -5,6 +5,7 @@ import { clipEnd, projectDuration, textStyleOf, transformAt } from '../state/uti
 import { timelineBeats } from './evaluate';
 import { textBlockHeight } from './text';
 import { FLASHY, TRANSITION_LABELS } from './transitions';
+import { customIssues } from './custom';
 
 export interface Check { id: string; label: string; status: 'pass' | 'warn' | 'fail' | 'info'; detail: string; at?: number[] }
 export interface CheckOptions { houseRules: boolean; duration?: [number, number]; fps?: number; seam?: number | null }
@@ -31,16 +32,29 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
     const [lo, hi] = o.duration;
     out.push({ id: 'length', label: 'Length', status: dur >= lo - 0.05 && dur <= hi + 0.05 ? 'pass' : 'warn', detail: `${f2(dur)} s (target ${lo}-${hi} s)` });
   }
-  // transition density
+  // transition density: library transitions plus custom effects or graphics laid over a cut
+  const custom = p.clips.filter(c => c.kind === 'shader' || c.kind === 'graphic');
+  const overCut = (t: number) => custom.some(c => c.start <= t + 0.02 && c.start + c.dur >= t - 0.02);
+  const customCuts = mainClips.slice(1).filter(c => !c.transition && overCut(c.start)).length;
+  const designed = trans.length + customCuts;
   const target = Math.max(15, Math.round(dur));
   const types = new Set(trans.map(c => c.transition!.type));
   out.push({
-    id: 'density', label: 'Designed transitions', status: trans.length >= target ? 'pass' : trans.length >= 15 || !o.houseRules ? 'warn' : 'fail',
-    detail: `${trans.length} in ${f2(dur)} s, ${types.size} different (target about ${target}: one per second)`,
+    id: 'density', label: 'Designed transitions', status: designed >= target ? 'pass' : designed >= 15 || !o.houseRules ? 'warn' : 'fail',
+    detail: `${designed} in ${f2(dur)} s, ${types.size + (customCuts ? 1 : 0)} different${customCuts ? ` (${customCuts} are custom effects over a cut)` : ''} (target about ${target}: one per second)`,
   });
+  // custom graphics and effects
+  if (custom.length || o.houseRules) {
+    const broken = customIssues(p);
+    out.push({
+      id: 'custom', label: 'Custom graphics and effects', status: broken.length ? 'fail' : custom.length ? 'pass' : 'warn',
+      detail: broken.length ? broken.slice(0, 3).join('; ') : custom.length ? `${custom.filter(c => c.kind === 'shader').length} effects and ${custom.filter(c => c.kind === 'graphic').length} graphics designed for this edit.` : 'None yet: set pieces should carry at least one effect or graphic designed for this edit.',
+      at: custom.map(c => c.start),
+    });
+  }
   // plain cuts
   const plain: number[] = [];
-  for (let i = 1; i < mainClips.length; i++) if (!mainClips[i].transition) plain.push(mainClips[i].start);
+  for (let i = 1; i < mainClips.length; i++) if (!mainClips[i].transition && !overCut(mainClips[i].start)) plain.push(mainClips[i].start);
   const music = p.clips.filter(c => c.kind === 'audio' && c.media && media[c.media]?.analysis);
   const quietAt = (t: number) => music.every(c => {
     const a = media[c.media!].analysis!;
@@ -59,6 +73,7 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   for (const c of p.clips) {
     if (c.kind === 'sfx' || c.kind === 'audio') continue;
     events.push(c.start);
+    if (c.kind === 'shader' || c.kind === 'graphic') events.push(c.start + c.dur);
     if (c.transition) events.push(c.start);
     for (const keys of Object.values(c.kf || {})) for (const k of keys || []) if (c.kind !== 'text' || true) events.push(c.start + k.t);
     if (c.kind === 'text' && c.words) for (const w of c.words) events.push(c.start + w);

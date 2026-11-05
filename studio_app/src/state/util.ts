@@ -165,9 +165,11 @@ export const colorOf = (c: Clip): ColorAdjust => ({ ...DEFAULT_COLOR, ...(c.colo
 export const textStyleOf = (c: Clip): TextStyle => ({ ...DEFAULT_TEXT_STYLE, ...(c.style || {}) });
 export const textAnimOf = (c: Clip): TextAnim => ({ ...DEFAULT_TEXT_ANIM, ...(c.anim || {}) });
 
+/** Length of the edit. Custom effects and graphics are overlays: they never make an edit longer. */
 export function projectDuration(p: Project): number {
   let d = 0;
-  for (const c of p.clips) d = Math.max(d, c.start + c.dur);
+  for (const c of p.clips) if (c.kind !== 'graphic' && c.kind !== 'shader') d = Math.max(d, c.start + c.dur);
+  if (d === 0) for (const c of p.clips) d = Math.max(d, c.start + c.dur);
   return d;
 }
 
