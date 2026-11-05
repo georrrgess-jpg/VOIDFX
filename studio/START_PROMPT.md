@@ -14,12 +14,14 @@ Theme / concept ideas (optional): [e.g. "Trinity winter", "the code of Harry", โ
 Must-haves (optional): [a line of dialogue, a lyric, a shot, a transition idea]
 Avoid (optional): [anything beyond the handbook's rejected list]
 
-Exceed the benchmarks (v7 HIM ALL ALONG, v6 WARMPOP, v4 SURPRISE): many creative, themed transitions
+Exceed the benchmarks (v10 LET IT HAPPEN, v7 HIM ALL ALONG, v6 WARMPOP, v4 SURPRISE). Start from the v10 standard: velocity
+ramps + flow slow motion on every hook shot, the beat camera, restored source (tools/sr_prep.py), lyrics on the sung onsets,
+and a loop that is a set piece. Many creative, themed transitions
 that go through something (each with its own sound), new graphics, eased text, and a hero transition on the drop.
 Go above and beyond: clear the handbook's pre-build gate (ยง5a) before the first render. That means a concept rooted in
 Dexter's world, three or more signature multi-stage set pieces (drop, hook, loop), the approved v9 text style
 (keyline captions + a per-letter hero title), graphics in
-every section, and a written comparison with v6/v7/v8. If the plan doesn't clearly beat them, redesign it.
+every section, and a written comparison with v6/v7/v10. If the plan doesn't clearly beat them, redesign it.
 Own look, not a copy. Run the built-in review passes and the ship checkpoint, fix anything weak, then deliver
 the MP4 with a short summary. Work efficiently: one full render per revision.
 ```

@@ -48,5 +48,7 @@ EOF
 
 echo "== smoke test"
 python3 v7/work/edl7.py >/dev/null 2>&1 && ok "benchmark EDL (v7) loads" || bad "v7 EDL"
+python3 v10/work/edl10.py >/dev/null 2>&1 && ok "standard EDL (v10) loads" || bad "v10 EDL"
+(cd v10/work && python3 -c "import sys; sys.argv=['x']; import render10" >/dev/null 2>&1) && ok "standard engine (v10) imports" || bad "v10 engine"
 [ -f src/pack8_s1.mp4 ] && { python3 tools/check_sources.py 7 | tail -1; } || echo "  (skip source audit: packs not uploaded yet)"
 [ $MISSING = 0 ] && echo "studio ready" || echo "some items missing (see [MISS] above)"

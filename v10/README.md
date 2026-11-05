@@ -1,5 +1,7 @@
 # LET IT HAPPEN — The Flash × Tame Impala "Let It Happen" (voidfx v10, 9:16)
 
+> **Approved as a standard (rev 5):** *"I like this edit and would like for you to make it a standard."* It's the newest benchmark and the engine `tools/new_edit.py` builds every new edit on. See `CLAUDE.md` and the handbook §1 for what it's the reference for.
+
 A 24.96 s, 1080×1920, 60 fps TikTok edit. It loops: on "running AROUND" the letters run a ring that opens into the Speed Force, and he flies back through the edit's own moments to its first frame (rev 3).
 
 **Deliverables:**

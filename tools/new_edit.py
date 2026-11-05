@@ -1,4 +1,5 @@
-"""Scaffold a new voidfx edit from the newest engine (v9: every v4-v9 transition + graphics; v7 and v6 remain the benchmarks).
+"""Scaffold a new voidfx edit from the newest standard engine (v10 LET IT HAPPEN rev 5: every v4-v10 transition and
+graphic, the restored-source sampler, velocity + optical flow, the beat camera, the v9 text system).
 
 Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song"
         e.g. python3 tools/new_edit.py 7 night_drive_dexter "NIGHT DRIVE — Dexter × Song"
@@ -9,7 +10,7 @@ output file name from the EDL (VER, SLUG), so nothing else needs renaming.
 import os, sys, re, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE = "v9"                                                     # newest engine (superset of v6-v9: v7 transitions, v8 mirror/freeze/knife/lamp/rain, v9 bloom/petals/moon/blinds/beam/smear)
+BASE = "v10"                                                    # the standard engine (superset of v4-v10)
 n, slug, title = sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
 V = f"v{n}"; D = f"{ROOT}/{V}"
 if os.path.exists(f"{D}/work/edl{n}.py"): sys.exit(f"{V} already exists — refusing to overwrite")
@@ -44,5 +45,6 @@ next:
   python3 tools/transcribe.py {V} NAME src/PACK.mp4 --vad          # dialogue word times (if using dialogue)
   edit {V}/work/edl{n}.py  (shots, transitions, text, knobs)
   bash tools/build.sh {n} prep auto                                # tracks/mattes + review sheets of every cut
+  nohup python3 tools/sr_prep.py {n} &                              # restore + 2x upscale the source (background, ~3 s/frame)
   bash tools/build.sh {n} audio clip:A:B preview                   # sound + motion checks
   bash tools/build.sh {n} video qc                                 # final render + ship checkpoint""")

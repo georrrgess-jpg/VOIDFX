@@ -1,6 +1,6 @@
 # voidfx toolkit: how an edit gets made (fast)
 
-The engine lives in the newest edit, `v9/work/` (NIGHT BLOOM; `v7/` and `v6/` remain the benchmarks). It contains every v4–v9 transition and graphic. New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
+The engine lives in the newest standard, `v10/work/` (LET IT HAPPEN rev 5; `v7/`, `v6/` and `v4/` remain benchmarks). It contains every v4–v10 transition and graphic, the restored-source sampler, velocity with optical flow, the beat camera and the v9 text system. New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
 
 ## 1. Pipeline and timings
 
@@ -144,6 +144,15 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 11. **CJK subtitles and VHS counters read as clutter** to the user. Don't add them.
 14. **Whisper word times drift on sung, held notes** (v10: up to 1.1 s early on "All this running around", ~0.2 s late on others). Before captions go in, check every word against the Demucs vocal stem: a 30 ms RMS + pitch track shows where each syllable starts, and the line's parallel phrase (verse 1 vs verse 2) confirms it.
 15. **A 720p pack cropped to 9:16 is a 2.7× blow-up.** Run `tools/sr_prep.py` (restoration + 2× from the network) instead of cubic + unsharp mask; the renderer drops the unsharp mask to 0.16 on restored frames.
+
+## 5a. What made v10 the standard (carry the principles, not the look)
+
+- **Motion first.** Velocity on every hook shot (`vel()`: a burst on each beat, ~0.3–0.6× flow slow motion between, the same source range), the beat camera (6 % punch, ±1.1° kick, zoom blur + colour split on the hit frames), bullet time in frozen holds. Without this, effects on static shots read as lacklustre.
+- **Quality.** `tools/sr_prep.py` restoration on every 720p pack; flow in-betweens run on the restored bands (`sr_flow_part`), so slow motion stays sharp.
+- **Set pieces from the character's world** on the drop (emblem dive + drop wave), the hook (lens shatter, perimeter lap), the freeze (time particles) and the loop (the AROUND ring → the Speed Force → frame 0), with signature moves between them (phase, whirlwind, lightning branches), each with its own layered sound.
+- **Type on the sung onsets**, every word verified on the vocal stem; each lyric moment acts out its meaning (runner drop-off and carry-off, the charge fill, the ring).
+- **Graphics with depth that react to the footage:** the matte-aware whirlwind and ribbons, light rays from the real lightning, edge arcs on the silhouette.
+- **Reviews:** stills of every transition at full size, the loop seam measured (blurred diff ≤ 1), QC flags checked visually and written into the README.
 
 ## 5. What made v6 the benchmark (carry the principles, not the look)
 

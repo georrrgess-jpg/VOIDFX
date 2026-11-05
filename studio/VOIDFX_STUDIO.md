@@ -10,6 +10,7 @@ Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (t
 
 | Edit | Folder | Why it is a benchmark |
 |---|---|---|
+| **LET IT HAPPEN** (The Flash × Tame Impala, rev 5) | `v10/` | Approved as a standard: *"I like this edit and would like for you to make it a standard."* The newest engine (`tools/new_edit.py` builds on it). The reference for **motion and professional finish**: velocity ramps with optical-flow slow motion on restored 2× source, a beat-synced camera (zoom punches, rotation kicks, hit-frame blur), light rays, multi-stage set pieces (emblem dive + drop wave, time particles, lens shatter, lightning branches, perimeter lap, phase, whirlwind), bullet time in frozen holds, onset-timed lyric type (runner drop-off, charge fill, AROUND ring), and the Speed Force loop back to frame 0. See `v10/README.md` for every revision and why. |
 | **HIM ALL ALONG** (Dexter × Gunna, rev 2) | `v7/` | Approved as a standard: *"The transitions were creative and well animated."* Physical, themed, Dexter-specific transitions (blood-slide box, plastic burst, body-bag zipper, blood on the lens, M99 blink, magnifier → pupil loop), and a hero transition on the song's drop. |
 | **WARMPOP** (Dexter × George Clanton, rev 3) | `v6/` | Approved as a standard: *"wonderful transitions, animations, graphics, while maintaining the style that I like … I like how the music correlates to the edit. I like the text."* The amount of designed motion per second, the music-led structure, the eased two-line captions and the depth graphics. |
 | **SURPRISE** (Doakes × Need It, v4) | `v4/` | The first approved standard. A dialogue-led cold open that plays as **one continuous take**, the barrel → scope fly-through, and the pupil → iris loop. |
@@ -166,10 +167,11 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 3. **Text in the approved v9 style** (§3: "it was perfect"): keyline captions for dialogue and lyrics, plus at least two designed title moments in the hero-title style that act out their meaning.
 4. **Graphics in every section**, not only the cold open: depth layers, themed overlays (evidence, slides, plastic, blood), beat-synced accents in the montage.
 5. **Shot strength.** Every shot earns its place by expression, motion or composition in 9:16. Swap weak, soft or awkward crops early (v9 lost three planned shots to the crop).
-6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v8 didn't. If a section has no answer, redesign it.
+6. **Benchmark comparison, written down:** for each section, say what the plan does that v6/v7/v10 didn't. If a section has no answer, redesign it.
 7. **Ambition in review.** Review passes must also ask "what would make this moment unforgettable?", not only "is anything broken?".
 8. **(v10 rev 3) Picture quality and timing are part of the bar.** The owner asked for "the best quality": restore the 720p packs (`tools/sr_prep.py`) on every edit, and check every caption word against the vocal stem (pitch + onsets) before the first render. In v10 the first two deliveries showed "ALL THIS RUNNING AROUND" a full second before it was sung.
 9. **(v10 rev 3) The loop is a set piece, not a rewind blur.** A plain motion-blurred rewind read as low quality. Build the loop from the character's world and the edit itself (v10: the lyric's letters run a ring that opens into the Speed Force; panels of the edit's own moments fly past back to frame 0), and keep every frame of it sharp.
+10. **(v10 rev 5, the standard) Motion is what reads as professional.** After two "lacklustre" notes, more effects on static shots didn't fix it; the motion pass did: every hook shot time-remapped to the beat (burst + flow slow motion), the camera punching and kicking on each beat with blur, light that reacts to the footage. Plan the velocity curve and the camera with the shot list, not as a last pass.
 
 ## 5. What works: craft lessons
 
