@@ -8622,6 +8622,265 @@ def render(f):
 
 
 
+# ============================================================================ v11 rev 2 — more of everything
+# Owner notes: "a lot more animations, graphics, transitions… more sound effects… absolutely amazing."
+# New transitions: RED EYE DIVE (into Eobard's glowing red eye, out of Barry's eye), STROBE ECHO (stroboscopic gold
+# afterimages), BOLT TRACE (a bolt zig-zags across and the next shot burns in along it), HEAT HAZE (the fire's heat
+# rises up the frame and carries the next shot in), CLASH (red and gold lightning collide on the new punch shot).
+# New graphics: embers (red for the rival, orange off the fire), gold dust, speed particles in depth (through the
+# matte), edge lightning on bar lines (red before the drop, gold after), light sweeps.
+
+# ---- particles in depth ----------------------------------------------------------------------------------------
+_PM11 = {}
+def pm11(mode):
+    if mode not in _PM11:
+        rng = np.random.default_rng({"ember": 3, "dust": 5, "speed": 7, "fire": 9}[mode])
+        n = {"ember": 70, "dust": 60, "speed": 54, "fire": 90}[mode]
+        _PM11[mode] = [dict(x0=rng.uniform(0, 1), y0=rng.uniform(0, 1), z=rng.uniform(0.1, 1.0) ** 1.4, ph=rng.uniform(0, 6.283),
+                            on=rng.uniform(0, 1), v=rng.uniform(0.6, 1.4)) for _ in range(n)]
+    return _PM11[mode]
+
+def motes11(out, f, person, dens, mode, rival=False, s=None):
+    """ember: rising embers; fire: denser orange embers; dust: slow gold dust; speed: streaks rushing past in depth."""
+    if dens <= 0.01: return out
+    t = f / FPS; back = np.zeros((H, W), np.float32); front = np.zeros((H, W), np.float32)
+    for p in pm11(mode):
+        if p["on"] > dens: continue
+        z = p["z"]; tgt = front if z > 0.62 else back
+        if mode in ("ember", "fire"):
+            sp = (110 + 300 * z) * p["v"] * (1.6 if mode == "fire" else 1.0)
+            x = (p["x0"] * W + 40 * math.sin(1.3 * t + p["ph"]) + 25 * z * math.sin(3.1 * t + p["ph"] * 2)) % W
+            y = (p["y0"] * (H + 200) - sp * t) % (H + 200) - 100
+            r = 1.2 + 4.2 * z; tw = 0.55 + 0.45 * math.sin(7 * t + p["ph"] * 3)
+            cv2.circle(tgt, (int(x), int(y)), max(1, int(r)), (0.55 + 0.45 * z) * tw, -1, cv2.LINE_AA)
+            if z > 0.5: cv2.line(tgt, (int(x), int(y)), (int(x), int(y + r * 5)), 0.35 * tw, max(1, int(r * 0.6)), cv2.LINE_AA)
+        elif mode == "dust":
+            x = (p["x0"] * (W + 200) + (25 + 70 * z) * t * p["v"] + 30 * math.sin(0.8 * t + p["ph"])) % (W + 200) - 100
+            y = (p["y0"] * (H + 200) - (15 + 40 * z) * t + 20 * math.sin(0.6 * t + p["ph"])) % (H + 200) - 100
+            r = 1.0 + 3.0 * z; tw = 0.5 + 0.5 * math.sin(5 * t + p["ph"] * 2)
+            cv2.circle(tgt, (int(x), int(y)), max(1, int(r)), (0.4 + 0.5 * z) * tw, -1, cv2.LINE_AA)
+        else:                                                                                  # speed
+            sp = (1400 + 3200 * z) * p["v"]; L_ = 80 + 520 * z
+            x = (p["x0"] * (W + 1200) + sp * t) % (W + 1200) - 600; y = p["y0"] * H
+            cv2.line(tgt, (int(x - L_), int(y)), (int(x), int(y)), 0.45 + 0.55 * z, max(1, int(1 + 3 * z)), cv2.LINE_AA)
+    if person is not None: back *= (1 - np.clip(person * 1.3, 0, 1))
+    hb = head_box(s, f, person) if s is not None else None
+    if hb is not None:                                                                      # nothing in front of his face
+        cxh, wh = (hb[0] + hb[1]) / 2, (hb[1] - hb[0]) / 2 + 40
+        hm = np.clip(1 - np.maximum(np.abs(_GX - cxh) / wh, (_GY - (hb[2] - 2.2 * wh)) * 0 + np.clip((_GY - hb[2]) / 60, 0, 1) * 9), 0, 1)
+        hm = cv2.GaussianBlur(hm.astype(np.float32), (0, 0), 25)
+        front *= (1 - hm); back *= (1 - hm * (0.0 if person is not None else 1.0))
+    lay = back * 0.8 + cv2.GaussianBlur(front, (0, 0), 1.8 + (2.0 if mode == "speed" else 0.0)) * 1.25
+    glow = cv2.resize(cv2.GaussianBlur(cv2.resize(lay, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 3), (W, H))
+    if mode == "ember" and rival: core, gl = REDW, RED2
+    elif mode in ("ember", "fire"): core, gl = np.array([0.35, 0.75, 1.0], np.float32), EMBER2
+    else: core, gl = GOLDW, GOLD2
+    a = min(1.0, dens * 1.2) * (0.75 if mode == "dust" else 1.0)
+    return np.clip(out + (lay[..., None] * core * 0.9 + glow[..., None] * gl * 1.5) * a, 0, 1)
+
+# ---- bar-line graphics -----------------------------------------------------------------------------------------
+EDGE11 = {8: "red", 16: "red", 40: "gold", 48: "gold", 72: "gold"}
+SWEEP11 = (26, 44, 58)
+def edge_bolts11(out, f):
+    """lightning flickers down both frame edges on chosen bar lines (red before the drop, gold after); never the centre."""
+    for e_, col in EDGE11.items():
+        k = f - fh(e_)
+        if not (0 <= k < 9): continue
+        a = [1.0, 0.4, 0.9, 0.2, 0.7, 0.3, 0.5, 0.15, 0.25][k]; cv = bolt_canvas()
+        for side, x0 in ((0, W * 0.05), (1, W * 0.95)):
+            put_bolt(cv, (x0 + (side * 2 - 1) * 10, -30), (x0 - (side * 2 - 1) * 40, H * (0.45 + 0.25 * ((f // 9 + side) % 2))), 4000 + e_ * 7 + f // 9 * 3 + side, 2, 0.30, 6, 1)
+        out = np.clip(out + (light_rgb(cv, a * 0.9, REDW, RED2) if col == "red" else light_from(cv, a * 0.9)), 0, 1)
+    return out
+
+def sweep11(out, f):
+    """a diagonal band of white-gold light sweeps across the frame on chosen half-beats."""
+    for e_ in SWEEP11:
+        k = f - fh(e_)
+        if not (0 <= k < 16): continue
+        u = k / 15; pos = -400 + (W + 800) * ein(u, 1.3); d = (_GX + (_GY - H / 2) * 0.35) - pos
+        band = np.exp(-(d / 70) ** 2) * 0.55 + np.exp(-(d / 240) ** 2) * 0.25
+        out = np.clip(out + band[..., None] * (GOLDW * 0.6 + GOLD2 * 0.4) * math.sin(math.pi * u) * 0.55, 0, 1)
+    return out
+
+# ---- transitions -----------------------------------------------------------------------------------------------
+_EYE11 = {}
+def red_eye_point(sa):
+    """the brightest red point (his glowing eye) in the outgoing shot's last frame, on screen."""
+    if sa["n"] not in _EYE11:
+        A = edge11(sa, "last"); r = A[..., 2] - np.maximum(A[..., 0], A[..., 1]) * 0.9
+        r = cv2.GaussianBlur(r[: int(H * 0.7)], (0, 0), 6)
+        y, x = np.unravel_index(int(np.argmax(r)), r.shape); _EYE11[sa["n"]] = (float(x), float(y))
+    return _EYE11[sa["n"]]
+
+def barry_eye(sb):
+    f = sb["f0"]; t, u, _ = src_time(sb, f); fa = face_at(sb, t)
+    if fa:
+        if len(fa) > 3 and fa[3] is not None and len(fa[3]) >= 4:
+            pts = [to_screen(sb, f, fa[3][0], fa[3][1])[:2], to_screen(sb, f, fa[3][2], fa[3][3])[:2]]
+            return min(pts, key=lambda q: abs(q[0] - W / 2))
+        x, y, _ = to_screen(sb, f, fa[0], fa[1]); return x, y
+    return W / 2, H * 0.37
+
+def red_eye_dive(A, B, j, f, sa, sb, pre=14, post=14):
+    """RED EYE DIVE: the camera dives into the rival's glowing red eye until the frame is red light, then pulls out of
+    Barry's eye on the other side (the answer)."""
+    if j < 0:
+        u = (j + pre + 1) / pre; ex, ey = red_eye_point(sa)
+        Z = math.exp(math.log(16.0) * ein(u, 2.3))
+        o = radial_blur(zoom_about(A, ex, ey, Z), ex, ey, 1.0, 1.0 + 0.10 * u, 5)
+        r = 30 + 1100 * ein(u, 2.0)
+        g = np.exp(-(((_GX - ex) ** 2 + (_GY - ey) ** 2) / (r * r)))[..., None]
+        o = o + g * (RED2 * 1.4 + REDW * 0.4) * (0.4 + 1.2 * u)
+        return np.clip(o * (1 - 0.25 * u) + 0.20 * u * RED2, 0, 1)
+    v = (j + 1) / post; bx, by = barry_eye(sb)
+    Z = math.exp(math.log(12.0) * (1 - eout(v, 2.2)))
+    o = radial_blur(zoom_about(B, bx, by, Z), bx, by, 1.0, 1.0 + 0.09 * (1 - v), 5)
+    k = (1 - v) ** 1.4
+    red = np.clip(o * np.array([0.55, 0.55, 1.25], np.float32) + 0.25 * RED2, 0, 1)
+    return np.clip(o * (1 - 0.8 * k) + red * 0.8 * k, 0, 1)
+
+def gold_tint(img, a=0.8):
+    L = lum8(img)[..., None]; return img * (1 - a) + (L * GOLD2 * 1.2 + L * GOLDW * 0.3) * a
+
+def shiftx(img, dx):
+    return cv2.warpAffine(img, np.float32([[1, 0, dx], [0, 1, 0]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+
+def strobe_echo(A, B, j, f, sa, sb, pre=8, post=10):
+    """STROBE ECHO: he moves so fast the frame strobes: the picture snaps left leaving a trail of gold stroboscopic
+    afterimages, and the next shot lands from the right with its own echoes collapsing into place."""
+    if j < 0:
+        u = (j + pre + 1) / pre; s = -W * 0.42 * ein(u, 2.0); gap = 70 + 120 * u
+        o = shiftx(A, s)
+        for k in range(4, 0, -1):
+            a = 0.42 * u / k ** 0.8
+            o = o * (1 - a) + gold_tint(shiftx(A, s + k * gap)) * a
+        return np.clip(hblur(o, 2 + 60 * u), 0, 1)
+    v = (j + 1) / post; s = W * 0.42 * (1 - eout(v, 2.4)); gap = (70 + 120 * (1 - v)) * (1 - v)
+    o = shiftx(B, s)
+    for k in range(4, 0, -1):
+        a = 0.42 * (1 - v) / k ** 0.8
+        o = o * (1 - a) + gold_tint(shiftx(B, s + k * gap)) * a
+    return np.clip(hblur(o, 2 + 60 * (1 - v)), 0, 1)
+
+_BT = {}
+def trace_path():
+    if "p" not in _BT:
+        way = [(-60, 1150), (230, 1010), (420, 1250), (640, 1080), (850, 1330), (1140, 1190)]
+        pts = [bolt_points(a, b, 900 + i, 0.18, 5) for i, (a, b) in enumerate(zip(way, way[1:]))]
+        _BT["p"] = np.vstack(pts).astype(np.float32)
+    return _BT["p"]
+
+def bolt_trace(A, B, j, f, sa, sb, pre=10, post=14):
+    """BOLT TRACE: a bolt zig-zags across the frame (below his face), and the next shot burns in along it, the
+    edges glowing like embers."""
+    pp = trace_path()
+    if j < 0:
+        u = (j + pre + 1) / pre; n = max(2, int(len(pp) * ein(u, 1.1)))
+        cv = bolt_canvas(); cv2.polylines(cv, [pp[:n].astype(np.int32)], False, 255, 4, cv2.LINE_AA)
+        hx, hy = pp[n - 1]
+        o = A * (1 - 0.2 * u) + light_from(cv, 1.2)
+        return np.clip(add_glow(o, hx, hy, 70, 1.0, GOLDW), 0, 1)
+    v = (j + 1) / post
+    if "d" not in _BT:
+        cv = bolt_canvas(); cv2.polylines(cv, [pp.astype(np.int32)], False, 255, 3, cv2.LINE_AA)
+        _BT["d"] = cv2.distanceTransform(255 - cv, cv2.DIST_L2, 3); _BT["cv"] = cv
+    dist = _BT["d"]; R = 8 + 1500 * ein(v, 1.8)
+    n_ = 0.5 + 0.5 * np.sin(_GX * 0.013 + _GY * 0.009 + f * 0.4)                            # a ragged burn edge
+    m = np.clip((R - dist - 40 * n_) / 22.0, 0, 1)[..., None]
+    o = B * m + A * (1 - m) * (1 - 0.3 * v)
+    rim = np.exp(-((dist + 40 * n_ - R) / 14.0) ** 2)[..., None] * (1 - v)
+    return np.clip(o + rim * (EMBER2 * 0.9 + GOLDW * 0.4) + light_from(_BT["cv"], 1.2 * (1 - v) ** 1.5), 0, 1)
+
+def heat_haze(A, B, j, f, sa, sb, pre=10, post=12):
+    """HEAT HAZE: the fire's heat rises up the frame: the picture shimmers and refracts, and the next shot is carried
+    in behind a rising wall of heat with a glowing edge."""
+    p = (j + pre + 1) / (pre + post); ye = H * (1.12 - 1.30 * smooth(p))
+    wav = 70 * np.sin(_GX[:1] * 0.018 + f * 0.35) + 40 * np.sin(_GX[:1] * 0.047 - f * 0.5)
+    edge = ye + wav
+    amp = 22 * math.sin(math.pi * p)
+    band = np.exp(-((_GY - edge) / 260.0) ** 2)
+    mx = (_GX + (amp * (0.35 + band) * np.sin(_GY * 0.045 + f * 0.9))).astype(np.float32)
+    my = (_GY + 12 * band * np.sin(_GX * 0.03 + f * 0.7)).astype(np.float32)
+    Ar = cv2.remap(A, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    Br = cv2.remap(B, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    m = np.clip((_GY - edge) / 70.0, 0, 1)[..., None]
+    o = Br * m + Ar * (1 - m)
+    glow = np.exp(-((_GY - edge) / 40.0) ** 2)[..., None] * math.sin(math.pi * p)
+    return np.clip(o + glow * (EMBER2 * 0.8 + GOLDW * 0.25), 0, 1)
+
+_CL = {}
+def clash_sparks():
+    if "s" not in _CL:
+        rng = np.random.default_rng(17)
+        _CL["s"] = [(rng.uniform(0, 2 * math.pi), rng.uniform(400, 1500), rng.uniform(0.4, 1.0), rng.random() < 0.5) for _ in range(46)]
+    return _CL["s"]
+
+def clash(A, B, j, f, sa, sb, pre=10, post=14):
+    """CLASH: a red bolt from the left and a gold bolt from the right race toward each other and collide; sparks of
+    both colours burst out and the punch lands behind a refracting shockwave."""
+    P = (W * 0.50, H * 0.64)
+    if j < 0:
+        u = (j + pre + 1) / pre; e = ein(u, 1.6)
+        cr, cg = bolt_canvas(), bolt_canvas()
+        put_bolt(cr, (-40, H * 0.50), (-40 + (P[0] + 40) * e, H * 0.50 + (P[1] - H * 0.50) * e), 4100 + f, 4, 0.22, 7, 2)
+        put_bolt(cg, (W + 40, H * 0.80), (W + 40 - (W + 40 - P[0]) * e, H * 0.80 + (P[1] - H * 0.80) * e), 4150 + f, 4, 0.22, 7, 2)
+        o = A * (1 - 0.3 * u) + light_rgb(cr, 1.2, REDW, RED2) + light_from(cg, 1.2)
+        return np.clip(o, 0, 1)
+    v = (j + 1) / post
+    o = B.copy()
+    dx, dy = _GX - P[0], _GY - P[1]; r = np.sqrt(dx * dx + dy * dy) + 1e-3; R = 80 + 1700 * eout(v, 1.5)
+    band = np.exp(-((r - R) / 80.0) ** 2); disp = band * 55 * (1 - v)
+    o = cv2.remap(o, (_GX - dx / r * disp).astype(np.float32), (_GY - dy / r * disp).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o = o + np.exp(-((r - R) / 8.0) ** 2)[..., None] * GOLDW * 0.7 * (1 - v)
+    cr, cg = bolt_canvas(), bolt_canvas()
+    for (a, L_, s_, red) in clash_sparks():
+        d0 = L_ * eout(v, 1.8) * s_; d1 = d0 + 40 + 120 * (1 - v)
+        cv2.line(cr if red else cg, (int(P[0] + math.cos(a) * d0), int(P[1] + math.sin(a) * d0)),
+                 (int(P[0] + math.cos(a) * d1), int(P[1] + math.sin(a) * d1)), int(255 * (1 - v)), 3, cv2.LINE_AA)
+    o = o + light_rgb(cr, 1.0, REDW, RED2) + light_from(cg, 1.0)
+    if j < 4: o = add_glow(o, P[0], P[1], 260, 1.2 * (1 - j / 4), GOLDW)
+    return np.clip(o, 0, 1)
+
+TR2.update({"red_eye_dive": (red_eye_dive, 14, 14), "strobe_echo": (strobe_echo, 8, 10), "bolt_trace": (bolt_trace, 10, 14),
+            "heat_haze": (heat_haze, 10, 12), "clash": (clash, 10, 14)})
+
+# ---- the frame (rev 2) -----------------------------------------------------------------------------------------
+_base11_r1 = base11
+def base11(s, f):
+    img, person = _base11_r1(s, f)
+    for mode in ("ember", "fire", "dust", "speed"):
+        if s.get(mode): img = motes11(img, f, person, s[mode], mode, rival=is_rival(s), s=s)
+    return img, person
+
+_init_hits_r1 = init_hits
+def init_hits():
+    _init_hits_r1(); HITS.append((fh(74), 16, 4.0))
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    out, person = base11(s, f)
+    out = text11(out, f, s, True)
+    if tin == "loop_in": out = loop_in(out, f, k)
+    elif tin in TR2 and k < TR2[tin][2] and P is not None:
+        A = edge11(P, "last")
+        if tin == "bolt_split": A = text11(A.copy(), P["f1"] - 1, P, True)
+        out = TR2[tin][0](A, out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge11(n_, "first"), kn, f, s, n_)
+    if s.get("wave"): out = drop_wave(out, f, s)
+    out = edge_bolts11(out, f)
+    out = sweep11(out, f)
+    out = beat_fx(out, f)
+    out = loop_out(out, f)
+    out = text11(out, f, s, False)
+    late = f >= fh(E.E_LOOP) + 0.55 * (E.DUR_F - fh(E.E_LOOP))
+    out = finish11(out, f, SHOTS[0] if late else s)
+    return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+
+
 def main():
     mode = sys.argv[1]
     load(); init_hits()

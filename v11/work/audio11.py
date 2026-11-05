@@ -461,11 +461,46 @@ def main():
             rr = bq(noise(I(1.2), 1831), "low", 220, 2) * np.sin(np.pi * np.arange(I(1.2)) / I(1.2)) ** 1.5
             place(fx, stereo(norm(rr, -26)), t0)
         elif tin == "ramp": place(fx, A2.whoosh(0.22, -24, 1832, True), t0 - 0.10)
+        elif tin == "red_eye_dive":                              # into the red eye: power-up whine, the red rush, a sub drop out of Barry's eye
+            place(fx, stereo(whine(0.24, -25, 300, 2600)), t0 - 0.24); place(fx, A2.whoosh(0.40, -22, 1900, True), t0 - 0.12)
+            place(fx, stereo(sub_drop(-17, 0.6, 90, 30)), t0); place(fx, rev_swell(0.25, -29, 1901), t0 - 0.25)
+        elif tin == "strobe_echo":                               # stroboscopic: a stuttered run of short passes
+            for q in range(5): place(fx, A2.whoosh(0.07, -27 - q, 1905 + q, True), t0 - 0.13 + q * 0.032)
+            place(fx, stereo(zap(-30, 1910, 3000, 1200, 0.06)), t0)
+        elif tin == "bolt_trace":                                # the bolt zig-zags across (panned L -> R), then the burn
+            cr = crackle(0.30, -22, 1911, 0.95); n_ = len(cr); p_ = np.linspace(-0.9, 0.9, n_)
+            place(fx, np.stack([cr * (1 - p_) / 1.4, cr * (1 + p_) / 1.4], 1).astype(np.float32), t0 - 0.16)
+            place(fx, stereo(fire_whoosh(-25, 0.45, 1912)), t0)
+        elif tin == "heat_haze":                                 # heat rising: a fire roar swelling up
+            place(fx, stereo(fire_whoosh(-21, 0.6, 1913)), t0 - 0.20); place(fx, rev_swell(0.30, -28, 1914), t0 - 0.30)
+        elif tin == "clash":                                     # red and gold collide: two zaps racing in, an impact, a thunder crack
+            place(fx, stereo(zap(-24, 1915, 1500, 4200, 0.16), -0.7), t0 - 0.16); place(fx, stereo(zap(-24, 1916, 1700, 4600, 0.16), 0.7), t0 - 0.16)
+            place(fx, stereo(A2.impact(-12, (60, 30), 0.6, 0.6, 1917)), t0); place(fx, stereo(thunder(-19, 1918, 0.9)), t0 + 0.01)
+            place(fx, stereo(crackle(0.4, -25, 1919, 0.9)), t0 + 0.02)
         elif tin == "emblem_flash":                              # the emblem draws itself, flares
             place(fx, np.stack([A2.shimmer(0.7, -29)] * 2, 1), t0 - 0.20); place(fx, stereo(A2.impact(-20, (100, 55), 0.15, 0.7, 1833)), t0)
     for e_ in list(range(34, 84, 2)):                                       # a quiet swish on each camera punch that isn't a cut
         if e_ in {s_["e0"] for s_ in E.SHOTS} or 50 <= e_ < 56: continue
         place(fx, A2.whoosh(0.12, -34, 1850 + e_, e_ % 4 == 0), th(e_) - 0.06)
+    # rev 2: the cold open breathes red (a low crackle bed + a sub swell into the beat), edge lightning, sweeps, freeze ticks
+    cw = np.clip(np.minimum((tt + PRE / SR) / 0.4, (th(E.HDROP) - tt) / 0.1), 0, 1) * (tt < th(E.HDROP))
+    bed = np.pad(crackle(E.DUR + PRE / SR + 0.05, -40, 1920, 0.5), (0, n))[:n]
+    fx += stereo(bed * cw, 0.0) * np.array([[1.0, 0.92]], np.float32)
+    place(fx, rev_swell(0.9, -26, 1921), th(E.E_BEAT) - 0.9); place(fx, stereo(A2.impact(-20, (48, 26), 0.5, 0.3, 1922)), th(E.E_BEAT))
+    place(fx, rev_swell(0.7, -25, 1923), th(E.HDROP) - 0.7)                                # the breath before the drop
+    for e_ in (8, 16, 40, 48, 72):
+        place(fx, np.stack([crackle(0.16, -29, 1930 + e_, 0.9), crackle(0.16, -30, 1980 + e_, 0.9)], 1), th(e_))
+    for e_ in (26, 44, 58):
+        n_ = I(0.26); q_ = np.arange(n_) / SR
+        sh = sum(np.sin(2 * np.pi * fq * q_) for fq in (3136, 4186, 5274)) * np.sin(np.pi * q_ / 0.26) ** 2
+        place(fx, stereo(norm(sh, -34), -0.5), th(e_) + 0.02)
+    for e_ in (52, 53):                                                                        # the clock in frozen time
+        place(fx, stereo(tick(-26, 1990 + e_)), th(e_))
+    for e_, pan in ((42, -0.8), (46, 0.8), (64, 0.0)):                                        # speed passes on the runs and the flight
+        place(fx, swirl(0.36, -27, 2000 + e_, 0.3), th(e_) + 0.12)
+    n_ = I(0.8); q_ = np.arange(n_) / SR                                                       # the loop: a power-down whine under the tape stop
+    pd = np.sin(2 * np.pi * np.cumsum(2600 * (180 / 2600) ** (q_ / 0.8)) / SR) * np.sin(np.pi * np.minimum(q_ / 0.8, 1)) ** 1.2
+    place(fx, stereo(norm(pd, -32)), E.DUR - 0.82)
     for tx in E.TEXT:
         if tx["style"] == "letsgo":
             place(fx, stereo(zap(-25, 1860, 4200, 1300, 0.10)), tx["words"][1][1]); place(fx, stereo(crackle(0.3, -27, 1861, 0.7)), tx["words"][1][1])

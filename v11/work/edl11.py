@@ -69,36 +69,39 @@ def shot(n, src, e0, e1, a, b, **kw):
 
 RF = dict(look="rival", face=None)             # the inset: fixed framing inside the 600x600 panel (no watermark)
 # ---- cold open: the rival (red)
-shot("wells", "rf", 0, 8, 13.05, 13.96, z=[(0, 1.26), (1, 1.36)], cx=(642, 642), interp="flow", tin="loop_in", ev=0.55, **RF)
-shot("rfmask", "rf", 8, 14, 15.02, 15.96, z=[(0, 1.26), (1, 1.40)], cx=(660, 660), interp="flow", tin="red_phase", seg=True, red_arcs=0.6, **RF)
-shot("thawne", "s4", 14, 20, 95.50, 96.72, z=[(0, 1.04), (1, 1.12)], tin="red_link", seg=True, red_arcs=0.5, look="rival")
-shot("eobard", "rf", 20, 24, 34.00, 34.93, z=[(0, 1.26), (1, 1.32)], cx=(640, 640), interp="flow", tin="red_slices", seg=True, red_arcs=0.7, ev=0.25, **RF)
+shot("wells", "rf", 0, 8, 13.05, 13.96, z=[(0, 1.26), (1, 1.36)], cx=(642, 642), interp="flow", tin="loop_in", ev=0.55, ember=0.55, **RF)
+shot("rfmask", "rf", 8, 14, 15.02, 15.96, z=[(0, 1.26), (1, 1.40)], cx=(660, 660), interp="flow", tin="red_phase", seg=True, red_arcs=0.6, ember=0.8, **RF)
+shot("thawne", "s4", 14, 20, 95.50, 96.72, z=[(0, 1.04), (1, 1.12)], tin="red_link", seg=True, red_arcs=0.5, look="rival", ember=0.6)
+shot("eobard", "rf", 20, 24, 34.00, 34.93, z=[(0, 1.26), (1, 1.32)], cx=(640, 640), interp="flow", tin="red_streak", seg=True, red_arcs=0.7, ev=0.25, ember=0.8, **RF)
 # ---- the answer: Barry, on the dip ("Let's go!")
-shot("answer", "s4", 24, 28, 93.90, 94.84, z=[(0, 1.02), (1, 1.10)], tin="red_streak", seg=True)
-shot("letsgo", "s4", 28, 32, 100.12, 101.00, z=[(0, 1.00), (1, 1.14)], tin="dolly", seg=True, arcs=0.4)
+shot("answer", "s4", 24, 28, 93.90, 94.84, z=[(0, 1.02), (1, 1.10)], tin="red_eye_dive", seg=True, dust=0.4)
+shot("letsgo", "s4", 28, 32, 100.12, 101.00, z=[(0, 1.00), (1, 1.14)], tin="dolly", seg=True, arcs=0.4, dust=0.5)
 # ---- THE DROP: red against gold along a lightning-bolt seam; the verse in gold (velocity on every shot)
-shot("drop", "s4", 32, 38, 28.70, 30.12, z=[(0, 1.06), (1, 1.00)], tin="bolt_split", seg=True, trails=0.6, arcs=0.5, wave=True, ev=-0.15,
+shot("drop", "s4", 32, 38, 28.70, 30.12, z=[(0, 1.06), (1, 1.00)], tin="bolt_split", seg=True, trails=0.6, arcs=0.5, wave=True, ev=-0.15, speed=0.5,
      tmap=vel(32, 38, 28.70, 30.12), lin=True, interp="flow", rays=0.8)
-shot("smile", "s4", 38, 42, 31.40, 32.35, z=[(0, 1.00), (1, 1.06)], tin="gold_link", seg=True, arcs=0.4,
+shot("smile", "s4", 38, 42, 31.40, 32.35, z=[(0, 1.00), (1, 1.06)], tin="strobe_echo", seg=True, arcs=0.4, dust=0.6,
      tmap=vel(38, 42, 31.40, 32.35), lin=True, interp="flow")
-shot("run", "s4", 42, 46, 122.95, 123.45, z=[(0, 1.04), (1, 1.10)], tin="whip", seg=True, ev=-0.55, face=None, cx=(815, 815),
+shot("run", "s4", 42, 46, 122.95, 123.45, z=[(0, 1.04), (1, 1.10)], tin="whip", seg=True, ev=-0.55, face=None, cx=(815, 815), speed=1.0, trails=0.35,
      tmap=vel(42, 46, 122.95, 123.45, lo=0.25, hi=1.6), lin=True, interp="flow")
-shot("runlow", "s4", 46, 50, 137.20, 138.15, z=[(0, 1.00), (1, 1.06)], tin="slices", face=None, cx=(500, 540), ev=-0.15,
+shot("runlow", "s4", 46, 50, 137.20, 138.15, z=[(0, 1.00), (1, 1.06)], tin="bolt_trace", face=None, cx=(500, 540), ev=-0.15, speed=0.45,
      tmap=vel(46, 50, 137.20, 138.15), lin=True, interp="flow")
 # the time freeze among the soldiers: time stops on the beat, the camera glides through it (bullet time), time resumes
 shot("freeze", "s4", 50, 56, 0, 0, tmap=[(0, 140.95), (1 / 3, 141.40), (2 / 3, 141.40), (1, 141.85)], lin=True, frozen=True,
      z=[(0, 1.02), (1, 1.10)], tin="freeze_in", seg=True, face=None, cx=(470, 470), ev=-0.1, drain=0.45)
-shot("smirk", "s4", 56, 60, 62.90, 63.85, z=[(0, 1.00), (1, 1.06)], tin="restart", seg=True, arcs=0.4,
+shot("smirk", "s4", 56, 60, 62.90, 63.85, z=[(0, 1.00), (1, 1.06)], tin="restart", seg=True, arcs=0.4, dust=0.6,
      tmap=vel(56, 60, 62.90, 63.85), lin=True, interp="flow")
-shot("bar", "s4", 60, 64, 155.80, 156.75, z=[(0, 1.00), (1, 1.08)], tin="ignite", seg=True, arcs=0.5,
+shot("bar", "s4", 60, 64, 155.80, 156.75, z=[(0, 1.00), (1, 1.08)], tin="ignite", seg=True, arcs=0.5, dust=0.5,
      tmap=vel(60, 64, 155.80, 156.75), lin=True, interp="flow")
 # the Speed Force moment: the flight through fire
-shot("firewide", "s4", 64, 70, 171.76, 173.20, z=[(0, 1.00), (1, 1.12)], tin="speedforce_in", face=None, cx=(560, 700), ev=-0.55,
+shot("firewide", "s4", 64, 70, 171.76, 173.20, z=[(0, 1.00), (1, 1.12)], tin="speedforce_in", face=None, cx=(560, 700), ev=-0.55, fire=0.9,
      tmap=vel(64, 70, 171.76, 173.20), lin=True, interp="flow", warp=0.8)
-shot("fireclose", "s4", 70, 78, 173.40, 175.30, z=[(0, 1.00), (1, 1.10)], tin="ramp", seg=True, ev=-0.25,
-     tmap=vel(70, 78, 173.40, 175.30), lin=True, interp="flow", warp=0.6)
+shot("fireclose", "s4", 70, 74, 173.40, 174.35, z=[(0, 1.00), (1, 1.08)], tin="heat_haze", seg=True, ev=-0.25, fire=0.8,
+     tmap=vel(70, 74, 173.40, 174.35), lin=True, interp="flow", warp=0.6)
+# the gold beats the red: Barry slams Thawne into the pillar
+shot("punch", "s4", 74, 78, 90.45, 91.30, z=[(0, 1.06), (1, 1.00)], tin="clash", face=None, cx=(930, 960), ev=0.3,
+     tmap=vel(74, 78, 90.45, 91.30), lin=True, interp="flow")
 # the final stare; the red lightning takes the frame back to Harrison (the loop)
-shot("stare", "s4", 78, 88, 146.40, 147.68, z=[(0, 1.00), (1, 1.12)], tin="emblem_flash", seg=True, orbit=1.0, interp="flow")
+shot("stare", "s4", 78, 88, 146.40, 147.68, z=[(0, 1.00), (1, 1.12)], tin="emblem_flash", seg=True, orbit=1.0, interp="flow", dust=0.6)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
