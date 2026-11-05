@@ -1,5 +1,7 @@
 """{{TITLE}} (voidfx {{VER}}, 9:16). Single source of truth: the renderer, audio builder and QC read only this file.
-Scaffolded from the v10 LET IT HAPPEN standard (rev 5). Keep its structure; replace the look, the shots and the text.
+Scaffolded from the v11 BOP standard (rev 4; v10 LET IT HAPPEN structure). Keep the structure; replace the look, the
+shots and the text. v11 reference: v11/work/edl11.py (a concept taken from the song's own words, a rival in a second
+grade, two designed titles, a focal set piece, beat moments, a loop that lands exactly on frame 0).
 
 Concept: <one paragraph rooted in the character's world: the cold open, what the drop goes through, the hook,
 the set pieces, the ending, how the loop lands back on frame 0>.
@@ -29,6 +31,8 @@ DUR = th(H1 - H0); DUR_F = fh(H1 - H0)
 HDROP = 32; DROP_HB = HDROP; T_STOP = DUR  # the drop (edit half-beat): the biggest set piece lands here
 E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0   # optional sections (v10: freeze / run / loop); = end when unused
 STUT_GAPS, STUT_HITS = [], []              # optional: half-beats where time freezes / jolts forward
+E_BEAT, E_DIP = 8, HDROP - 8               # v11 engine: where the beat drops in, the dip before the drop
+E_LOOP = H1 - H0 - 6                       # v11 engine: where the loop set piece starts (the beat camera rests from here)
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
@@ -57,7 +61,10 @@ def shot(n, src, e0, e1, a, b, **kw):
       shadow tv_off slidebox plastic zipper mirror_in tilt foliage petals bloom strobe beam blinds roll smear shutter ...
     Motion (rev 5 standard): tmap=vel(e0, e1, a, b), lin=True, interp="flow" on every hook shot; the beat camera is
       automatic (beat_bounce / shake / beat_fx); frozen=True + a tmap with flat holds gets the bullet-time glide.
-    Graphics: seg=True (MODNet matte) arcs= wind= orbit= sparks= trails= rays= wave=True streak_e=
+    v11 pieces: red_phase red_link red_streak red_slices red_eye_dive dolly bolt_split whip strobe_echo bolt_trace
+      heat_haze clash rift speedforce_in emblem_flash; look="voltage"|"rival"; the REVERSE loop (reverse_loop + loop_in).
+    Graphics: seg=True (MODNet matte) arcs= wind= orbit= sparks= trails= rays= wave=True streak_e= ember= fire= dust=
+      speed= red_arcs= aura= remnants= charge= warp=
     Framing: z=[(u, zoom)...] face="largest"|None (+cx=(x0, x1)); look= your own grade."""
     d = dict(n=n, src=src, t0=th(e0), t1=th(e1), e0=e0, e1=e1, tmap=kw.pop("tmap", [(0, a), (1, b)]), look=kw.pop("look", "prism"),
              z=kw.pop("z", [(0, 1.00), (1, 1.07)]), face=kw.pop("face", "largest"), interp=kw.pop("interp", "hold"))

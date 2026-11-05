@@ -1,5 +1,7 @@
 # BOP — The Flash × DaBaby "BOP" (voidfx v11, 9:16)
 
+> **Approved as a standard (rev 4):** *"I like this edit and would like for you to make it a standard."* It's the newest benchmark and the engine `tools/new_edit.py` builds every new edit on. See `CLAUDE.md` and the handbook §1 for what it's the reference for.
+
 A 20.79 s, 1080×1920, 60 fps TikTok edit. It's built on the v10 LET IT HAPPEN standard engine and loops: the red lightning snatches the last frame back to the first.
 
 **Deliverables:**

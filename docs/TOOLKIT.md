@@ -1,6 +1,6 @@
 # voidfx toolkit: how an edit gets made (fast)
 
-The engine lives in the newest standard, `v10/work/` (LET IT HAPPEN rev 5; `v7/`, `v6/` and `v4/` remain benchmarks). It contains every v4–v10 transition and graphic, the restored-source sampler, velocity with optical flow, the beat camera and the v9 text system. New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
+The engine lives in the newest standard, `v11/work/` (BOP rev 4; `v10/`, `v7/`, `v6/` and `v4/` remain benchmarks). It contains every v4–v11 transition and graphic, the restored-source sampler, velocity with optical flow, the beat camera, the v9 text system and the v11 pieces (rival grade, red effects, bolt split, red eye dive, clash, rift, the procedural Reverse-Flash emblem and coin flip, the REVERSE loop, the beat moments). New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
 
 ## 1. Pipeline and timings
 
@@ -156,6 +156,15 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 11. **CJK subtitles and VHS counters read as clutter** to the user. Don't add them.
 14. **Whisper word times drift on sung, held notes** (v10: up to 1.1 s early on "All this running around", ~0.2 s late on others). Before captions go in, check every word against the Demucs vocal stem: a 30 ms RMS + pitch track shows where each syllable starts, and the line's parallel phrase (verse 1 vs verse 2) confirms it.
 15. **A 720p pack cropped to 9:16 is a 2.7× blow-up.** Run `tools/sr_prep.py` (restoration + 2× from the network) instead of cubic + unsharp mask; the renderer drops the unsharp mask to 0.16 on restored frames.
+
+## 5b. What made v11 the standard (carry the principles, not the look)
+
+- **A concept found in the material:** the song's spoken "Harrison" became the whole edit (the Reverse-Flash rivalry): a second grade for the rival, red against gold at the drop (the bolt split), the gold winning on the punch (the clash), the red taking the symbol at the end (REVERSE).
+- **One focal set piece:** THE RIFT, on the bar line after the charge-up: a tear grows, opens with electric edges, the Speed Force inside, the camera flies through, the next shot rushes out of the vanishing point.
+- **Detailed hero assets on real objects:** the procedural Reverse-Flash emblem (bevel, brushed rim, groove, glossy disc, emissive bolt, light spill, matched to the shot) revealed by a coin flip of the tracked real emblem (circle-fit each frame, the suit inpainted behind it).
+- **Beat moments for "moving to the beat" shots:** aura rings, time remnants, a charge-up, each with a sound.
+- **A loop that lands:** the dive ends on frame 0's own image (seam 0.11), and the beat camera rests during it.
+- **Measured finish:** flash brightness measured in the encode, particles masked off faces, every new effect checked at full resolution.
 
 ## 5a. What made v10 the standard (carry the principles, not the look)
 

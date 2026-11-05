@@ -1,5 +1,5 @@
-"""Scaffold a new voidfx edit from the newest standard engine (v10 LET IT HAPPEN rev 5: every v4-v10 transition and
-graphic, the restored-source sampler, velocity + optical flow, the beat camera, the v9 text system).
+"""Scaffold a new voidfx edit from the newest standard engine (v11 BOP rev 4: every v4-v11 transition and graphic, the
+restored-source sampler, velocity + optical flow, the beat camera, the v9 text system, the v11 rival/emblem/rift pieces).
 
 Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song"
         e.g. python3 tools/new_edit.py 7 night_drive_dexter "NIGHT DRIVE — Dexter × Song"
@@ -10,7 +10,7 @@ output file name from the EDL (VER, SLUG), so nothing else needs renaming.
 import os, sys, re, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE = "v10"                                                    # the standard engine (superset of v4-v10)
+BASE = "v11"                                                    # the standard engine (superset of v4-v11)
 n, slug, title = sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]
 V = f"v{n}"; D = f"{ROOT}/{V}"
 if os.path.exists(f"{D}/work/edl{n}.py"): sys.exit(f"{V} already exists — refusing to overwrite")
