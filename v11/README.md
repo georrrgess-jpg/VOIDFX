@@ -152,3 +152,26 @@ The new punch shot (s4 90.45–91.30) is the gold beating the red just before th
 
 **Visual sign-off:** frames from the encoded file for each new transition: the red eye dive (330 → 356), the strobe echo, the bolt trace, the heat haze, the clash and the punch. Also the particles and edge lightning, and the loop seam.
 
+## Revision 3 (owner feedback)
+
+> "Improve the loop… make a more creative loop at the end… a cool graphic or a really cool animation paired with it… take some of the parts where Barry's just moving to the beat and replace it or implement a new animation or graphic."
+
+**The loop is now REVERSE** (18.9 → 20.79 → frame 0). Concept: the Reverse-Flash takes Barry's symbol.
+
+| Edit | What happens | Sound |
+|---|---|---|
+| 18.9 | Gold gives way: the lightning ribbons around him fade, and red crackles creep in from both frame edges | Red crackles |
+| **19.37** | **A red bolt strikes his chest emblem.** The **real emblem in the footage** (tracked per frame in the source) **inverts into the Reverse-Flash's**: the cream disc wipes to glossy black and the gold bolt and rim turn glowing red, keeping the footage's own shading. A red shockwave ring | Thunder crack, zap, a reversed shimmer and reversed boom into the inversion |
+| 19.84 | Red lightning radiates out of the reversed emblem over his suit, red arcs crawl on his silhouette, and the frame drains to the rival's red in a wave from the emblem | A growing crackle and red buzz |
+| **20.31** | **The camera dives through the reversed emblem.** Its black disc is a portal with Harrison Wells inside; the red rim and its lightning pass the camera, and the dive lands exactly on frame 0 | A long rush, a rising whine, the song's tape stop |
+| 0.00 | Frame 0 finishes the dive's last 3 % settle on Harrison | A soft landing impact |
+
+**New animations on the "moving to the beat" shots:**
+- **AURA (the grin, 8.98):** on every beat, glowing rings of his own silhouette pulse outward from his outline (a speedster aura), the older ring fading behind. Sound: a soft sub pulse and shimmer on each beat.
+- **REMNANTS (the smirk, 13.23):** on every beat, time-remnant copies of him split off to both sides (gold and ember tinted, two layers deep) and snap back as the beat decays, while he stays solid on top. Sound: a doubled whoosh panned left and right.
+- **CHARGE (the bar close-up, 14.17):** lightning gathers from the frame edges and the bottom into his chest emblem, gold dust spirals inward and the emblem's glow builds into the Speed Force flight. Sound: a rising electric hum and a growing crackle.
+
+The beat camera now rests from 19.37: the loop plays as one controlled move.
+
+REV3_RESULTS_V11
+
