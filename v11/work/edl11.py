@@ -42,7 +42,7 @@ DUR = th(H1 - H0); DUR_F = fh(H1 - H0)
 HDROP = 32; DROP_HB = HDROP; T_STOP = DUR
 E_BEAT = 8                                     # the beat drops in
 E_DIP = 24                                     # the dip before the drop
-E_LOOP = 84                                    # the red lightning starts to take the frame back
+E_LOOP = 82                                    # rev 3: REVERSE — the red strikes his emblem (the beat camera rests from here)
 E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0
 STUT_GAPS, STUT_HITS = [], []
 BAR = 8 * HB; BEAT = 2 * HB
@@ -79,7 +79,7 @@ shot("letsgo", "s4", 28, 32, 100.12, 101.00, z=[(0, 1.00), (1, 1.14)], tin="doll
 # ---- THE DROP: red against gold along a lightning-bolt seam; the verse in gold (velocity on every shot)
 shot("drop", "s4", 32, 38, 28.70, 30.12, z=[(0, 1.06), (1, 1.00)], tin="bolt_split", seg=True, trails=0.6, arcs=0.5, wave=True, ev=-0.15, speed=0.5,
      tmap=vel(32, 38, 28.70, 30.12), lin=True, interp="flow", rays=0.8)
-shot("smile", "s4", 38, 42, 31.40, 32.35, z=[(0, 1.00), (1, 1.06)], tin="strobe_echo", seg=True, arcs=0.4, dust=0.6,
+shot("smile", "s4", 38, 42, 31.40, 32.35, z=[(0, 1.00), (1, 1.06)], tin="strobe_echo", seg=True, arcs=0.3, dust=0.4, aura=1.0,
      tmap=vel(38, 42, 31.40, 32.35), lin=True, interp="flow")
 shot("run", "s4", 42, 46, 122.95, 123.45, z=[(0, 1.04), (1, 1.10)], tin="whip", seg=True, ev=-0.55, face=None, cx=(815, 815), speed=1.0, trails=0.35,
      tmap=vel(42, 46, 122.95, 123.45, lo=0.25, hi=1.6), lin=True, interp="flow")
@@ -88,9 +88,9 @@ shot("runlow", "s4", 46, 50, 137.20, 138.15, z=[(0, 1.00), (1, 1.06)], tin="bolt
 # the time freeze among the soldiers: time stops on the beat, the camera glides through it (bullet time), time resumes
 shot("freeze", "s4", 50, 56, 0, 0, tmap=[(0, 140.95), (1 / 3, 141.40), (2 / 3, 141.40), (1, 141.85)], lin=True, frozen=True,
      z=[(0, 1.02), (1, 1.10)], tin="freeze_in", seg=True, face=None, cx=(470, 470), ev=-0.1, drain=0.45)
-shot("smirk", "s4", 56, 60, 62.90, 63.85, z=[(0, 1.00), (1, 1.06)], tin="restart", seg=True, arcs=0.4, dust=0.6,
+shot("smirk", "s4", 56, 60, 62.90, 63.85, z=[(0, 1.00), (1, 1.06)], tin="restart", seg=True, arcs=0.3, dust=0.4, remnants=1.0,
      tmap=vel(56, 60, 62.90, 63.85), lin=True, interp="flow")
-shot("bar", "s4", 60, 64, 155.80, 156.75, z=[(0, 1.00), (1, 1.08)], tin="ignite", seg=True, arcs=0.5, dust=0.5,
+shot("bar", "s4", 60, 64, 155.80, 156.75, z=[(0, 1.00), (1, 1.08)], tin="ignite", seg=True, arcs=0.3, charge=1.0,
      tmap=vel(60, 64, 155.80, 156.75), lin=True, interp="flow")
 # the Speed Force moment: the flight through fire
 shot("firewide", "s4", 64, 70, 171.76, 173.20, z=[(0, 1.00), (1, 1.12)], tin="speedforce_in", face=None, cx=(560, 700), ev=-0.55, fire=0.9,

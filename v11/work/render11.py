@@ -8881,6 +8881,231 @@ def render(f):
 
 
 
+# ============================================================================ v11 rev 3 — REVERSE (the loop) + new beat moments
+# Owner notes: a more creative loop with a cool graphic/animation; replace the parts where Barry just moves to the beat.
+# THE LOOP, REVERSE (e82-e88): red lightning strikes Barry's chest emblem; the REAL emblem in the footage inverts into
+#   the Reverse-Flash's (the cream disc turns black, the gold bolt and rim turn red, lit by the footage's own shading);
+#   red lightning radiates out of it across his suit and the frame drains to the rival's red; the camera dives through
+#   the reversed emblem and lands on Harrison Wells (frame 0) — the rivalry loops.
+# NEW BEAT MOMENTS: AURA (the grin: silhouette rings pulse outward on every beat), REMNANTS (the smirk: time-remnant
+#   copies split off sideways on each beat and snap back), CHARGE (the bar close-up: lightning gathers from the frame
+#   edges into his chest before the Speed Force flight).
+E_STRIKE, E_RADIATE, E_DIVE = 82, 84, 86
+
+# ---- the chest emblem, found in the source frame and mapped to the screen -------------------------------------------
+_EMB = {}
+def emblem_src(s, t):
+    """(x, y, r) of the Flash emblem in source px: the cream disc in the lower half of the frame."""
+    pk = s["src"]; fps = E.SRC[pk][1]; U = UNIQ[pk]
+    k = U[clamp(bisect.bisect_right(U, t * fps + 0.3) - 1, 0, len(U) - 1)]
+    if k not in _EMB:
+        img = FR[(pk, k)][400:720, 420:860].astype(np.float32) / 255
+        L = img.mean(2); sat = img.max(2) - img.min(2)
+        m = ((L > 0.62) & (sat < 0.22)).astype(np.uint8)
+        m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (31, 31)))   # bridge the bolt
+        n, lab, st, cen = cv2.connectedComponentsWithStats(m)
+        if n < 2: _EMB[k] = None
+        else:
+            i = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA])); a = st[i, cv2.CC_STAT_AREA]
+            _EMB[k] = (float(cen[i][0] + 420), float(cen[i][1] + 400), math.sqrt(a / math.pi) * 1.24)
+    return _EMB[k]
+
+def emblem_screen(s, f):
+    t, u, _ = src_time(s, f); e = emblem_src(s, t)
+    if e is None: return W / 2, H * 0.88, 110.0
+    x, y, sc = to_screen(s, f, e[0], e[1]); return x, y, e[2] * sc
+
+def reverse_emblem(out, cx, cy, R, p, f):
+    """invert the emblem in place: the cream disc -> glossy black, the gold rim and bolt -> glowing red. p = wipe 0..1
+    from the top-right (where the strike hits)."""
+    x0, y0, x1, y1 = int(max(0, cx - R * 1.5)), int(max(0, cy - R * 1.5)), int(min(W, cx + R * 1.5)), int(min(H, cy + R * 1.5))
+    if x1 <= x0 or y1 <= y0 or p <= 0: return out
+    sub = out[y0:y1, x0:x1]; gy, gx = np.mgrid[y0:y1, x0:x1].astype(np.float32)
+    rr = np.sqrt((gx - cx) ** 2 + (gy - cy) ** 2)
+    disc = np.clip((R * 1.04 - rr) / 3.0, 0, 1)
+    sx, sy = cx + R * 0.55, cy - R * 0.85
+    wipe = np.clip((p * 2.6 * R - np.sqrt((gx - sx) ** 2 + (gy - sy) ** 2)) / 14.0, 0, 1)
+    m = (disc * wipe)[..., None]
+    L = sub.mean(2, keepdims=True); sat = sub.max(2, keepdims=True) - sub.min(2, keepdims=True)
+    gold = np.clip((sat - 0.12) * 5, 0, 1) * np.clip((L - 0.20) * 3, 0, 1)
+    dark = 0.018 + 0.10 * np.clip(L - 0.55, 0, 1) ** 1.5 * np.array([0.6, 0.6, 1.0], np.float32)      # glossy black, keeps the sheen
+    redm = L * np.array([0.25, 0.22, 1.25], np.float32) * 1.25 + RED2 * 0.25
+    new = dark * (1 - gold) + redm * gold
+    sub2 = sub * (1 - m) + new * m
+    glow = cv2.GaussianBlur((gold[..., 0] * m[..., 0]).astype(np.float32), (0, 0), 6)[..., None]
+    edge = np.exp(-((np.sqrt((gx - sx) ** 2 + (gy - sy) ** 2) - p * 2.6 * R) / 5.0) ** 2)[..., None] * disc[..., None] * (p < 1)
+    out[y0:y1, x0:x1] = np.clip(sub2 + glow * RED2 * 0.9 + edge * REDW * 0.9, 0, 1)
+    return out
+
+# ---- THE LOOP ----------------------------------------------------------------------------------------------------
+_W0 = {}
+def frame0_base():
+    if "w" not in _W0: _W0["w"], _ = base11(SHOTS[0], 0)
+    return _W0["w"]
+
+_DV = {}
+def dive_anchor(s):
+    if "a" not in _DV: _DV["a"] = emblem_screen(s, fh(E_DIVE))
+    return _DV["a"]
+
+def reverse_loop(out, f, s, person):
+    if s["n"] != "stare" or f < fh(E_STRIKE) - 10: return out
+    cx, cy, R = emblem_screen(s, f) if f < fh(E_DIVE) else dive_anchor(s)
+    if f < fh(E_STRIKE):                                                                    # red crackles creep in from the edges
+        k = (f - fh(E_STRIKE) + 10) / 10; cv = bolt_canvas()
+        for side in (0, 1):
+            x0 = -20 if side == 0 else W + 20
+            put_bolt(cv, (x0, H * (0.55 + 0.1 * side)), (x0 + (1 - 2 * side) * 260 * k, H * (0.62 + 0.08 * side)), 5000 + f + side, 2, 0.35, 5, 1)
+        return np.clip(out + light_rgb(cv, 0.8 * k, REDW, RED2), 0, 1)
+    if f < fh(E_RADIATE):                                                                   # the strike, the inversion
+        k = f - fh(E_STRIKE); n = fh(E_RADIATE) - fh(E_STRIKE)
+        p = ein(clamp((k - 3) / (n - 6), 0, 1), 1.3)
+        out = reverse_emblem(out.copy(), cx, cy, R, p, f)
+        cv = bolt_canvas()
+        if k < 9:
+            put_bolt(cv, (W + 30, H * 0.50), (cx + R * 0.55, cy - R * 0.85), 5100 + f, 5, 0.22, 7, 2)
+        out = out + light_rgb(cv, 1.4, REDW, RED2)
+        if k < 6: out = add_glow(out, cx + R * 0.5, cy - R * 0.8, 160, 1.0 * (1 - k / 6), REDW)
+        rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2); Rw = R + 900 * eout(k / n, 1.6)
+        out = out + np.exp(-((rr - Rw) / 9.0) ** 2)[..., None] * REDW * 0.6 * (1 - k / n)
+        return np.clip(out, 0, 1)
+    if f < fh(E_DIVE):                                                                      # the red radiates over him
+        k = f - fh(E_RADIATE); n = fh(E_DIVE) - fh(E_RADIATE); u = k / n
+        out = reverse_emblem(out.copy(), cx, cy, R, 1.0, f)
+        rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2); Rw = R + 2300 * ein(u, 1.3)
+        w = np.clip((Rw - rr) / 140, 0, 1)[..., None]
+        L = lum8(out)[..., None]; red_ = L * np.array([0.30, 0.32, 1.12], np.float32) + 0.02 * RED2
+        out = out * (1 - 0.65 * w) + red_ * 0.65 * w
+        out = red_arcs(out, f, person, 0.9 * u + 0.3, 9)
+        cv = bolt_canvas(); rng = np.random.default_rng(f // 2 * 5 + 1)
+        for q in range(5):
+            a = rng.uniform(-0.3, math.pi + 0.3); L_ = R * rng.uniform(1.6, 3.6) * (0.5 + u)
+            put_bolt(cv, (cx + math.cos(a) * R, cy + math.sin(a) * R * 0.9), (cx + math.cos(a) * (R + L_), cy + math.sin(a) * (R + L_) * 0.9), 5200 + f // 2 * 7 + q, 3, 0.3, 6, 1)
+        out = out + light_rgb(cv, 1.1, REDW, RED2)
+        return np.clip(add_glow(out, cx, cy, R * 1.6, 0.35 + 0.35 * beat_kick(f), RED2), 0, 1)
+    # the dive through the reversed emblem into Harrison (frame 0)
+    k = f - fh(E_DIVE); n = E.DUR_F - 1 - fh(E_DIVE); q = clamp(k / n, 0, 1)
+    out = reverse_emblem(out.copy(), cx, cy, R, 1.0, f)
+    L = lum8(out)[..., None]; out = out * 0.35 + (L * np.array([0.30, 0.32, 1.12], np.float32)) * 0.65
+    Z = math.exp(math.log(30.0) * ein(q, 2.2))
+    o = zoom_about(out, cx, cy, Z)
+    if q < 0.95: o = radial_blur(o, cx, cy, 1.0, 1.0 + 0.10 * math.sin(math.pi * q), 4)
+    Rp = R * 0.86 * Z
+    zi = 1.03 + 0.9 * (1 - smooth(q))
+    inside = zoom_about(frame0_base(), W / 2, H * 0.45, zi)
+    if q < 1: inside = radial_blur(inside, cx, cy, 1.0, 1.0 + 0.05 * (1 - q), 3)
+    rr = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2)
+    m = np.clip((Rp - rr) / 6.0, 0, 1)[..., None]
+    o = inside * m + o * (1 - m)
+    fade = 1 - smooth((Rp - 2300) / 600)
+    ring = np.exp(-((rr - Rp) / (4 + 0.03 * Rp)) ** 2) + 0.4 * np.exp(-((rr - Rp) / (20 + 0.10 * Rp)) ** 2)
+    o = o + ring[..., None] * (REDW * 0.9 + RED2 * 0.5) * fade
+    if fade > 0.05 and Rp < 2600:
+        cv = bolt_canvas(); rng = np.random.default_rng(f * 3 + 7)
+        for qq in range(6):
+            a0 = rng.uniform(0, 2 * math.pi); a1 = a0 + rng.uniform(0.25, 0.6)
+            put_bolt(cv, (cx + Rp * math.cos(a0), cy + Rp * math.sin(a0)), (cx + Rp * math.cos(a1), cy + Rp * math.sin(a1)), 5300 + f + qq, 3, 0.25, 5, 0)
+        o = o + light_rgb(cv, 1.0 * fade, REDW, RED2)
+    return np.clip(o, 0, 1)
+
+def loop_in(out, f, k, n=12):
+    """frame 0 continues the dive's momentum: a last 3 % settle as the reversed emblem's ring passes off the frame."""
+    if k >= n: return out
+    v = k / n; zi = 1.0 + 0.03 * (1 - smooth(v))
+    return zoom_about(out, W / 2, H * 0.45, zi)
+
+_orbit_v10 = orbit_ribbons
+def orbit_ribbons(out, s, f, person, amt):
+    if s["n"] == "stare": amt = amt * (1 - smooth((f - fh(E_STRIKE) + 14) / 12))          # gold gives way to red
+    return _orbit_v10(out, s, f, person, amt) if amt > 0.01 else out
+
+# ---- AURA: silhouette rings pulse outward on every beat ---------------------------------------------------------
+def aura_pulse(out, s, f, person, amt):
+    if person is None or amt <= 0.01: return out
+    pm = (cv2.resize(person, (W // 4, H // 4), interpolation=cv2.INTER_AREA) > 0.5).astype(np.uint8)
+    if pm.sum() < 200: return out
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; cv = np.zeros((H // 4, W // 4), np.float32)
+    for age, a0 in ((ph, 1.0), (ph + 2 * E.HB, 0.45)):
+        if age > 0.9: continue
+        r = 2 + int(42 * ein(min(1.0, age / 0.6), 1.4)); a = a0 * (1 - age / 0.9) ** 1.3
+        d1 = cv2.dilate(pm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1)))
+        r2 = max(0, r - 2); d2 = cv2.dilate(pm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r2 + 1, 2 * r2 + 1)))
+        cv += (d1 - d2).astype(np.float32) * a
+    cv = cv2.GaussianBlur(cv, (0, 0), 0.8)
+    big = cv2.resize(cv, (W, H), interpolation=cv2.INTER_LINEAR)
+    glow = cv2.resize(cv2.GaussianBlur(cv, (0, 0), 4), (W, H))
+    return np.clip(out + (big[..., None] * GOLDW * 0.9 + glow[..., None] * GOLD2 * 1.4) * amt, 0, 1)
+
+# ---- REMNANTS: time-remnant copies split off sideways on each beat ---------------------------------------------
+def time_remnants(out, s, f, person, amt):
+    if person is None or amt <= 0.01: return out
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB
+    off = 150 * math.exp(-ph / 0.16) + 14; a = (0.30 + 0.45 * math.exp(-ph / 0.20)) * amt
+    pm = np.clip(person * 1.15, 0, 1)
+    o = out.copy()
+    for d, col in ((-off, GOLD2), (off, np.array([1.0, 0.85, 0.55], np.float32)), (-off * 2.1, EMBER2), (off * 2.1, GOLD2)):
+        al = shiftx(pm[..., None].repeat(3, 2), d)[..., :1] * (a if abs(d) < off * 1.5 else a * 0.45)
+        im = shiftx(out, d); L = lum8(im)[..., None]
+        tint = im * 0.35 + L * col * 1.1
+        o = o * (1 - al) + tint * al
+    edge = cv2.GaussianBlur(cv2.morphologyEx((pm > 0.5).astype(np.uint8), cv2.MORPH_GRADIENT, np.ones((5, 5), np.uint8)).astype(np.float32), (0, 0), 3)
+    o = o * (1 - pm[..., None]) + out * pm[..., None]                                   # he stays on top, solid
+    return np.clip(o + edge[..., None] * GOLDW * 0.5 * math.exp(-ph / 0.2) * amt, 0, 1)
+
+# ---- CHARGE: lightning gathers from the frame edges into his chest ----------------------------------------------
+def charge_up(out, s, f, person, amt):
+    if amt <= 0.01: return out
+    u = (f - s["f0"]) / max(1, s["f1"] - s["f0"]); cx, cy = subject_point(s, f, person)
+    bx = face_box(s, f); cy = max(cy, (bx[2] + 120) if bx else cy)
+    cv = bolt_canvas(); rng = np.random.default_rng(f // 2 * 11 + 3)
+    starts = [(-30, H * 0.62), (W + 30, H * 0.66), (-30, H * 0.86), (W + 30, H * 0.90), (W * 0.25, H + 30), (W * 0.78, H + 30)]
+    nb = int(2 + 4 * u)
+    for i, (x0, y0) in enumerate(starts[:nb]):
+        reach = ein(clamp(u * 1.4 - i * 0.08, 0, 1), 1.2)
+        x1, y1 = x0 + (cx - x0) * reach, y0 + (cy - y0) * reach
+        put_bolt(cv, (x0, y0), (x1, y1), 5400 + i * 13 + f // 2, 2 + (u > 0.6), 0.28, 6, 1)
+    t = f / FPS; dust = np.zeros((H // 2, W // 2), np.float32)
+    for i in range(40):
+        a0 = i * 2.39996; R0 = 900 * ((i * 0.618 + t * 0.9) % 1.0)
+        r = R0 * (1 - 0.0); a = a0 + (900 - R0) / 300
+        x, y = (cx + math.cos(a) * r) / 2, (cy + math.sin(a) * r * 0.9) / 2
+        cv2.circle(dust, (int(x), int(y)), 1 + int(2 * (1 - R0 / 900)), 0.5 + 0.5 * (1 - R0 / 900), -1, cv2.LINE_AA)
+    dust = cv2.resize(cv2.GaussianBlur(dust, (0, 0), 0.8), (W, H))
+    o = out + light_from(cv, (0.7 + 0.6 * u) * amt) + dust[..., None] * GOLDW * 0.7 * amt
+    return np.clip(add_glow(o, cx, cy, 90 + 160 * u, (0.25 + 0.75 * u ** 2) * amt, GOLDW), 0, 1)
+
+_base11_r2 = base11
+def base11(s, f):
+    img, person = _base11_r2(s, f)
+    if s.get("aura"): img = aura_pulse(img, s, f, person, s["aura"])
+    if s.get("remnants"): img = time_remnants(img, s, f, person, s["remnants"])
+    if s.get("charge"): img = charge_up(img, s, f, person, s["charge"])
+    return img, person
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    out, person = base11(s, f)
+    out = text11(out, f, s, True)
+    if tin == "loop_in": out = loop_in(out, f, k)
+    elif tin in TR2 and k < TR2[tin][2] and P is not None:
+        A = edge11(P, "last")
+        if tin == "bolt_split": A = text11(A.copy(), P["f1"] - 1, P, True)
+        out = TR2[tin][0](A, out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge11(n_, "first"), kn, f, s, n_)
+    if s.get("wave"): out = drop_wave(out, f, s)
+    out = edge_bolts11(out, f)
+    out = sweep11(out, f)
+    out = beat_fx(out, f)
+    out = reverse_loop(out, f, s, person)
+    out = text11(out, f, s, False)
+    out = finish11(out, f, SHOTS[0] if f >= fh(E_RADIATE) + 8 else s)
+    return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
+
+
+
 def main():
     mode = sys.argv[1]
     load(); init_hits()

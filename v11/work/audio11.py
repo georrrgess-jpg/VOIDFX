@@ -490,6 +490,8 @@ def main():
     place(fx, rev_swell(0.7, -25, 1923), th(E.HDROP) - 0.7)                                # the breath before the drop
     for e_ in (8, 16, 40, 48, 72):
         place(fx, np.stack([crackle(0.16, -29, 1930 + e_, 0.9), crackle(0.16, -30, 1980 + e_, 0.9)], 1), th(e_))
+    for e_ in (80, 81):                                                                        # red crackles creeping in before the strike
+        place(fx, np.stack([crackle(0.2, -31, 2150 + e_, 0.9), crackle(0.2, -33, 2160 + e_, 0.9)], 1), th(e_) + 0.1)
     for e_ in (26, 44, 58):
         n_ = I(0.26); q_ = np.arange(n_) / SR
         sh = sum(np.sin(2 * np.pi * fq * q_) for fq in (3136, 4186, 5274)) * np.sin(np.pi * q_ / 0.26) ** 2
@@ -506,10 +508,25 @@ def main():
             place(fx, stereo(zap(-25, 1860, 4200, 1300, 0.10)), tx["words"][1][1]); place(fx, stereo(crackle(0.3, -27, 1861, 0.7)), tx["words"][1][1])
         elif tx["style"] == "bop":
             for q in range(3): place(fx, stereo(A2.impact(-27, (120 + 30 * q, 70), 0.06, 0.8, 1862 + q), -0.3 + 0.3 * q), tx["words"][0][1] + 0.06 * q)
-    # the loop: the red lightning takes the frame (a red crackle and the shudder) over the tape stop
-    t_l = th(E.E_LOOP)
-    place(fx, stereo(crackle(0.9, -24, 1870, 0.9)), t_l); place(fx, stereo(buzz(0.6, -25, 40, 180)), E.DUR - 0.6)
-    place(fx, swirl(0.6, -24, 1871, 0.6), t_l + 0.05)
+    # rev 3, REVERSE: the strike on his emblem, the inversion, the red radiating, the dive through it into Harrison
+    t_s, t_r, t_d = th(82), th(84), th(86)
+    place(fx, stereo(thunder(-18, 2100, 1.0)), t_s); place(fx, stereo(zap(-23, 2101, 4400, 500, 0.18)), t_s - 0.02)
+    inv = rev(np.stack([A2.shimmer(0.42, -26)] * 2, 1)) if hasattr(A2, "shimmer") else None
+    if inv is not None: place(fx, inv.astype(np.float32), t_r - 0.42)                         # the inversion: a reversed shimmer
+    rb = rev(stereo(A2.impact(-20, (60, 30), 0.35, 0.4, 2102))); place(fx, rb.astype(np.float32), t_r - len(rb) / SR)
+    cr = crackle(t_d - t_r, -23, 2103, 0.95) * np.linspace(0.4, 1.0, I(t_d - t_r)) ** 1.2
+    place(fx, stereo(cr.astype(np.float32)), t_r); place(fx, stereo(buzz(t_d - t_r, -28, 45, 160)), t_r)
+    place(fx, A2.whoosh(E.DUR - t_d, -20, 2104, True), t_d); place(fx, stereo(whine(E.DUR - t_d, -27, 300, 3800)), t_d)
+    place(fx, stereo(A2.impact(-22, (55, 30), 0.30, 0.25, 2105)), 0.0)                       # the landing on Harrison (loop start)
+    # rev 3, the new beat moments: AURA pulses (the grin), REMNANTS splitting (the smirk), the CHARGE (the bar)
+    for e_ in (38, 40):
+        place(fx, stereo(A2.impact(-27, (70, 40), 0.25, 0.1, 2110 + e_)), th(e_)); place(fx, np.stack([A2.shimmer(0.35, -33)] * 2, 1), th(e_))
+    for e_ in (56, 58):
+        place(fx, A2.whoosh(0.14, -27, 2120 + e_, True) * np.array([[1.0, 0.25]], np.float32), th(e_) - 0.03)
+        place(fx, A2.whoosh(0.14, -27, 2130 + e_, True) * np.array([[0.25, 1.0]], np.float32), th(e_) - 0.01)
+    place(fx, stereo(hum_rise(th(64) - th(60), -26, 90, 520)), th(60))
+    chg = crackle(th(64) - th(60), -26, 2140, 0.8) * np.linspace(0.2, 1.0, I(th(64) - th(60))) ** 1.5
+    place(fx, stereo(chg.astype(np.float32)), th(60))
     fx = np.tanh(fx * 1.2) / 1.2
     full = mus + fx
     lead, mix = full[:PRE].copy(), full[PRE:].copy()
