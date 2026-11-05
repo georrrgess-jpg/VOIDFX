@@ -179,7 +179,7 @@ report.backgroundStart = await page.evaluate(() => ({ view: window.__voidfx.stor
 await page.click('.home-link:has-text("Home")');
 await page.waitForTimeout(700);
 await shot('07a-dashboard-running');
-await page.click('.hero .cta-ice');
+await page.click('.desk-cta .cta-ice');
 await page.waitForSelector('.app');
 await page.evaluate(() => window.__voidfx.store.commit(p => { p.name = 'Side project'; }));
 report.whileBuilding = await page.evaluate(() => ({ lock: window.__voidfx.store.state.lock, name: window.__voidfx.store.state.project.name, job: window.__voidfx.store.state.jobs.map(j => `${j.kind}:${j.state}:${(j.steps.find(s => s.state === 'run') || {}).id || ''}`) }));
@@ -191,7 +191,7 @@ await page.waitForTimeout(1200);
 report.jobs = await page.evaluate(() => window.__voidfx.store.state.jobs.map(j => ({ kind: j.kind, state: j.state, round: j.round, summary: (j.summary || j.error || '').slice(0, 120), steps: j.steps.map(x => `${x.id}:${x.state}${x.detail ? `(${x.detail})` : ''}`) })));
 await shot('07b-dashboard-done');
 // the "⋮" menu on the recent card
-await page.click('.recent .pcard:has-text("Dexter") .kebab-b');
+await page.click('.prows .prow:has-text("Dexter") .kebab-b');
 await page.waitForTimeout(300);
 await shot('07c-kebab');
 report.menu = await page.evaluate(() => [...document.querySelectorAll('.kebab-pop button')].map(b => b.textContent));

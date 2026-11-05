@@ -196,9 +196,12 @@ export function VoidField({ tint, tint2 }: { tint: string; tint2: string }) {
       const aspect = cw / Math.max(1, ch);
       // wide screens: the hole sits right of the content; phones: above the hero, smaller
       const wide = aspect > 1.15;
-      const cx = wide ? Math.min(aspect * 0.5 - 0.34, 0.275 * aspect) : 0;
-      const cy = wide ? 0.14 : 0.36;
-      const scale = wide ? Math.min(1.0, 0.7 + aspect * 0.16) : 0.5;
+      // the hole hangs above the desk, between the greeting and the main buttons
+      // (narrower desktops: at the right edge, clear of the greeting)
+      const roomy = aspect > 1.5;
+      const cx = wide ? (roomy ? 0.17 * aspect : aspect * 0.5 - 0.2) : 0.12;
+      const cy = wide ? 0.4 : 0.38;
+      const scale = wide ? (roomy ? 0.6 : 0.48) : 0.42;
       const secs = (now - t0) / 1000;
       gl.uniform2f(uRes, w, h);
       gl.uniform1f(uTime, reduce ? secs * 0.15 : secs);
