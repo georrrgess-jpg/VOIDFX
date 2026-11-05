@@ -9349,7 +9349,7 @@ def reverse_loop(out, f, s, person):
         o = o + light_rgb(cv, 1.0 * fade, REDW, RED2)
         o = red_sparks(o, cx, cy, Rp * 0.9, int(22 * q), 91)
     flash = math.exp(-((Rp - diag) / (0.30 * diag)) ** 2) * (1 - smooth((q - 0.86) / 0.12))   # the rim passes the lens
-    if flash > 0.01: o = o * (1 - 0.25 * flash) + flash * (REDW * 0.45 + 0.20)
+    if flash > 0.01: o = o * (1 - 0.08 * flash) + flash * (REDW * 0.16 + RED2 * 0.10 + 0.03)     # a red flare, not a white-out
     return np.clip(o, 0, 1)
 
 def dive_anchor(s):
