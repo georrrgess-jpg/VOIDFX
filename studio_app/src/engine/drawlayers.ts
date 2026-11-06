@@ -16,6 +16,8 @@ export function drawLayers(
   frameOf: (L: VisualLayer) => FrameRef | null | undefined, slot: string,
 ) {
   const W = comp.width, H = comp.height;
+  // auto exposure: shots and stills are lifted toward a readable mean unless a clip opts out
+  const expose = (L: VisualLayer) => (p.exposure?.auto && L.clip.autoExposure !== false ? p.exposure.target ?? 0.34 : 0);
   comp.begin(p.background);
   for (const L of layers) {
     const c = L.clip;
@@ -71,7 +73,7 @@ export function drawLayers(
       const img = frameOf(L) || (c.media ? (() => { const b = runtime.get(c.media!)?.image; return b ? { src: b, w: b.width, h: b.height, version: c.media } : null; })() : null);
       if (!img?.src) continue;
       const [bw, bh] = fitSize(img.w, img.h, W, H, c.fit || 'cover');
-      comp.draw({ key: c.id, version: img.version, source: img.src, srcW: img.w, srcH: img.h, srcRot: 0, baseW: bw, baseH: bh, transform: L.transform, fx: L.fx, color: L.color });
+      comp.draw({ key: c.id, version: img.version, source: img.src, srcW: img.w, srcH: img.h, srcRot: 0, baseW: bw, baseH: bh, transform: L.transform, fx: L.fx, color: L.color, autoExpose: expose(L) });
       continue;
     }
     const m = c.media ? media[c.media] : undefined;
@@ -79,6 +81,6 @@ export function drawLayers(
     const f = frameOf(L);
     const sw = f?.w || m.width || 16, sh = f?.h || m.height || 9;
     const [bw, bh] = fitSize(sw, sh, W, H, c.fit || 'cover');
-    comp.draw({ key: c.id, version: f?.src ? f.version : undefined, source: f?.src ?? null, srcW: sw, srcH: sh, srcRot: 0, baseW: bw, baseH: bh, transform: L.transform, fx: L.fx, color: L.color });
+    comp.draw({ key: c.id, version: f?.src ? f.version : undefined, source: f?.src ?? null, srcW: sw, srcH: sh, srcRot: 0, baseW: bw, baseH: bh, transform: L.transform, fx: L.fx, color: L.color, autoExpose: expose(L) });
   }
 }

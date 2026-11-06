@@ -286,7 +286,17 @@ export function transitionFx(type: TransitionType, p: number, role: 'out' | 'in'
       return { visible: p < 0.5, warp: 10, warpP: p, warpA: b, chroma: 0.012 * b };
     }
     case 'tear': {
-      // the frame tears open along a jagged diagonal; the torn edge catches the light
+      // the frame tears open along a jagged diagonal; the torn edge catches the light. With "at" and "to"
+      // the tear starts at "at" (a cord, a blade, a crack) and runs toward "to"
+      if (spec?.at && spec?.to) {
+        let dx = spec.to.x - spec.at.x, dy = spec.to.y - spec.at.y;
+        const len = Math.hypot(dx, dy) || 1;
+        dx /= len; dy /= len;
+        // the jagged front sweeps the whole frame in that direction, from the corner behind "at"
+        const xs = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([cx, cy]) => (cx - 0.5) * dx + (cy - 0.5) * dy + 0.5);
+        const p0 = Math.min(...xs) - 0.08, p1 = Math.max(...xs) + 0.08;
+        return isIn ? { mask: 8, maskX: dx, maskY: dy, maskP: p0 + (p1 - p0) * io3(p), edge: [0.94, 0.92, 0.88], edgeW: 0.014 } : { dy: 0.015 * bump(p) };
+      }
       return isIn ? { mask: 8, maskX: 0.38, maskY: 0.92, maskP: -0.08 + 1.16 * io3(p), edge: [0.94, 0.92, 0.88], edgeW: 0.014 } : { dy: 0.015 * bump(p) };
     }
     case 'shutter': {

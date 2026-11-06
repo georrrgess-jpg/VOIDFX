@@ -209,7 +209,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     follow.length ? `WHAT THIS ROUND WAS ASKED TO FIX (check every item in the frames and the timeline; frames labelled with an item's id show its moment)\n${follow.map(f => `${f.id}${f.at !== undefined ? ` @ ${f.at.toFixed(2)}s` : ''}: ${f.text.slice(0, 320)}${f.plan ? ` | the editor's plan: ${f.plan.slice(0, 200)}` : ''}${f.check ? ` | the editor's own check: ${f.check.slice(0, 160)}` : ''}`).join('\n')}\nGive each item's status in "followUp": fixed (the frames or timeline show it done in full), partly, or not.` : '',
     prevCrit ? `SCORING AGAINST THE LAST ROUND: the last critique scored the edit ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). Score the edit as it is now, starting from that score: every point that is really fixed raises its area and the total (a critical point fixed is worth about +0.6 to +1.0, a major one +0.3 to +0.5, a minor one +0.1 to +0.2); every remaining or new problem holds it down or lowers it. Do not re-judge fixed points from scratch and never ignore a real fix; never inflate either: a fix you cannot see in the frames or the timeline does not count.` : '',
     p.lyrics?.lines.length ? `THE SONG'S LYRICS (from the owner${p.lyrics.timed ? '; song times' : ', untimed'}): check that every caption is a sung line on its time, never invented words\n${p.lyrics.lines.slice(0, 80).map((l, i) => `${p.lyrics!.timed ? `L${i + 1} ${l.t.toFixed(2)} ` : ''}${l.text}`).join('\n')}` : 'NO LYRICS WERE SUPPLIED: any caption that claims to be a sung line is a guess; flag captions that do not read as dialogue, a designed title or a likely sung hook.',
-    `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '')}` : ''}`,
+    `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '').replace(/: fine\.$/, '.')}` : ''}`,
     `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
     music.length ? `MUSIC\n${music.map(m => `${m.id} "${m.name}" ${m.analysis?.bpm ? `${m.analysis.bpm} BPM` : ''}`).join('\n')}` : '',
     `THE TIMELINE (what the studio will render)\n${timelineJson(p).slice(0, 24000)}`,
@@ -221,7 +221,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
  "headline": "one blunt sentence: the verdict in plain words",
  "scores": {${CRITIC_AREAS.map(a => `"${a.id}": 0-10`).join(', ')}},
  "strengths": ["what genuinely works (at most 4; empty if nothing does)"],
- "issues": [{"severity": "critical" | "major" | "minor", "at": seconds or null, "area": one of ${CRITIC_AREAS.map(a => a.id).join('/')}, "problem": "what is wrong and why it hurts the edit", "fix": "exactly what to change"}],
+ "issues": [{"severity": "critical" | "major" | "minor", "at": seconds or null, "area": one of ${CRITIC_AREAS.map(a => a.id).join('/')}, "problem": "what is wrong and why it hurts the edit", "fix": "exactly what to change", "lesson": "for critical and major issues: the general rule it breaks, one sentence true for any edit (no clip ids or times), so the studio can learn it"}],
  "versus": "two or three sentences: how it stands against the owner's benchmarks and the best TikTok edits of this kind",${follow.length ? `
  "followUp": [{"id": "${follow[0].id}", "status": "fixed" | "partly" | "not", "comment": "what the frames show"}],` : ''}
  "brief": "the write-up for the editor's next round: numbered, imperative instructions in priority order, each with its time and the studio tool that does it, ready to paste"}
@@ -234,7 +234,10 @@ Order issues by severity. Up to 14 issues.`,
   const crit = parseCritique(r.text, job.round, projectDuration(p), model, follow.map(f => ({ id: f.id, text: f.text })), prevCrit?.score);
   if (!crit) throw { code: 'invalid_json' };
   // the studio learns from it: serious findings go into the lessons every later edit is directed with
-  void addLessons(crit.issues.filter(i => i.severity !== 'minor').slice(0, 8).map(i => ({ area: i.area, severity: i.severity as 'critical' | 'major', problem: i.problem, fix: i.fix, project: ws.rec.name })));
+  // (the critic's general rule when it wrote one; else the problem's first sentence)
+  const raw: any = parseJson(r.text);
+  const lessonOf = (i: CritiqueIssue, k: number) => { const x = Array.isArray(raw?.issues) ? raw.issues.find((y: any) => String(y?.problem || '').trim() === i.problem) : undefined; return typeof x?.lesson === 'string' && x.lesson.trim() ? x.lesson.trim() : ''; };
+  void addLessons(crit.issues.filter(i => i.severity !== 'minor').slice(0, 8).map((i, k) => ({ area: i.area, severity: i.severity as 'critical' | 'major', problem: lessonOf(i, k) || i.problem, fix: lessonOf(i, k) ? '' : i.fix, project: ws.rec.name })));
   const fixed = crit.followUp?.filter(f => f.status === 'fixed').length || 0;
   io.step('critic', { state: 'done', detail: `${crit.score}/10${prevCrit ? ` (was ${prevCrit.score})` : ''} · ${crit.issues.length} issues${crit.followUp?.length ? ` · ${fixed}/${crit.followUp.length} points fixed` : ''}` });
 

@@ -140,6 +140,8 @@ export interface Clip {
    * crops the frame around it at any zoom, so it stays centred. */
   focus?: { x: number; y: number };
   color?: Partial<ColorAdjust>;
+  /** false: this shot keeps its own exposure when the project lifts dim shots (a designed dark moment). */
+  autoExposure?: boolean;
   /** Transition from the previous adjacent clip on the same track into this one. */
   transition?: TransitionSpec | null;
   kf?: Partial<Record<AnimProp, Keyframe[]>>;
@@ -189,6 +191,8 @@ export interface Project {
   clips: Clip[];
   /** Camera that punches and kicks on the music's beats (video layers only; text stays clean). */
   camera?: BeatCamera;
+  /** Auto exposure: dim shots are lifted toward a readable mean brightness (target 0-1, about 0.34). */
+  exposure?: { auto: boolean; target?: number };
   /** The song's lyrics as the owner supplied them (song times when timed). */
   lyrics?: Lyrics;
 }

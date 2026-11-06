@@ -255,8 +255,9 @@ export function ownerAsks(text: string): string[] {
 export function roundNotes(brief: string, fromCritic?: string[]): NoteCheck[] {
   const auto = /^\s*Automatic round/i.test(brief);
   const notes: NoteCheck[] = [];
-  for (const t of auto ? [] : ownerAsks(brief)) notes.push({ id: `N${notes.length + 1}`, text: t.slice(0, 700), from: 'owner', at: timeIn(t) });
-  for (const t of fromCritic || []) notes.push({ id: `N${notes.length + 1}`, text: t.replace(/\s*\n\s*/g, ' ').slice(0, 900), from: 'critic', at: timeIn(t) });
+  // notes carry their full text (a critic point's fix is at its end): the reminders later are shortened, never this
+  for (const t of auto ? [] : ownerAsks(brief)) notes.push({ id: `N${notes.length + 1}`, text: t.slice(0, 3000), from: 'owner', at: timeIn(t) });
+  for (const t of fromCritic || []) notes.push({ id: `N${notes.length + 1}`, text: t.replace(/\s*\n\s*/g, ' ').slice(0, 3000), from: 'critic', at: timeIn(t) });
   return notes.slice(0, 24);
 }
 
@@ -598,7 +599,7 @@ export function brightnessNote(sheets: Sheet[]): string {
   const avg = all.reduce((a, [, l]) => a + l, 0) / all.length;
   const dark = all.filter(([, l]) => l < 0.1).map(([t]) => t);
   const bright = all.filter(([, l]) => l > 0.82).map(([t]) => t);
-  if (avg >= 0.2 && dark.length <= Math.max(1, all.length * 0.08) && !bright.length) return '';
+  if (avg >= 0.2 && dark.length <= Math.max(1, all.length * 0.08) && !bright.length) return `MEASURED BRIGHTNESS of the rendered frames: average ${Math.round(avg * 100)}%, no run of near-black or blown-out frames: fine.`;
   return `MEASURED BRIGHTNESS of the rendered frames: average ${Math.round(avg * 100)}% (a strong edit sits around 25-45% with real blacks and bright highlights).${dark.length ? ` Near-black frames (under 10%): ${dark.slice(0, 16).map(t => `${t.toFixed(2)}s`).join(', ')}.` : ''}${bright.length ? ` Blown-out frames (over 82%): ${bright.slice(0, 10).map(t => `${t.toFixed(2)}s`).join(', ')}.` : ''} On a phone, a frame this dark or bright reads as a mistake unless it is a designed beat (the black of a blink, a dive or the loop; the peak of a wash). Lift dark shots (color brightness/contrast on the clip, or the look's params) and keep faces readable.`;
 }
 
@@ -733,6 +734,8 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   // the preset sets the format before anything is planned
   const [w, h] = ASPECTS[preset.aspect] || ASPECTS['9:16'];
   if (ws.project.width !== w || ws.project.height !== h || ws.project.fps !== preset.fps) ws.setProject({ ...ws.project, width: w, height: h, fps: preset.fps });
+  // dark grey is mud on a phone: house-style edits lift dim shots unless Opus turns it off
+  if (preset.houseRules && !ws.project.exposure) ws.setProject({ ...ws.project, exposure: { auto: true, target: 0.34 } });
   if (req.lyrics?.trim()) ws.setProject({ ...ws.project, lyrics: parseLyrics(req.lyrics) });
 
   let castNote = '';
@@ -909,7 +912,7 @@ async function finishRound(ws: Workspace, job: Job, out: { summary: string; appl
   const lastRev = [...body].reverse().find(t => t.role === 'assistant' && t !== plan0);
   const memory: Turn[] = [];
   if (ask0) memory.push({ role: 'user', content: ask0.content.slice(0, 4000) });
-  if (plan0) memory.push({ role: 'assistant', content: compactReply(plan0.content).slice(0, 8000) });
+  if (plan0) { const d = compactReply(plan0.content); memory.push({ role: 'assistant', content: d.length > 14000 ? `${d.slice(0, 14000)}… (the rest of the direction is shortened here; the CURRENT TIMELINE shows what was built)` : d }); }
   if (lastRev) memory.push({ role: 'user', content: 'Then the studio applied it and you reviewed the rendered frames.' }, { role: 'assistant', content: compactReply(lastRev.content).slice(0, 3000) });
   await ws.save(rec => {
     const rounds = (rec.rounds || []).filter(r => r.n !== round.n);

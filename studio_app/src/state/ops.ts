@@ -323,6 +323,7 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
       case 'fadeIn': c.fadeIn = round(num(v, 0, 60, 0), 3); break;
       case 'fadeOut': c.fadeOut = round(num(v, 0, 60, 0), 3); break;
       case 'muted': c.muted = !!v; break;
+      case 'autoExposure': if (v === false) c.autoExposure = false; else delete c.autoExposure; break;
       case 'fit': if (v === 'cover' || v === 'contain') c.fit = v; else issues.push(`${where}: fit must be "cover" or "contain"`); break;
       case 'name': c.name = String(v).slice(0, 60); break;
       case 'track': {
@@ -839,6 +840,12 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           if ('fps' in op) p.fps = [24, 25, 30, 48, 50, 60].includes(+op.fps) ? +op.fps : p.fps;
           if ('background' in op && HEX.test(String(op.background))) p.background = String(op.background);
           if ('camera' in op) p.camera = sanitizeCamera(op.camera, issues);
+          if ('exposure' in op) {
+            const v = op.exposure;
+            if (v === null || v === false) delete p.exposure;
+            else if (v === true) p.exposure = { auto: true, target: 0.34 };
+            else if (v && typeof v === 'object') p.exposure = { auto: v.auto !== false, target: round(num(v.target, 0.15, 0.6, p.exposure?.target ?? 0.34), 3) };
+          }
           applied++;
           break;
         }

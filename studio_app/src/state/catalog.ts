@@ -342,5 +342,6 @@ export function lessonsText(max = 14): string {
     pick.push(l);
     if (pick.length >= max) break;
   }
-  return pick.map(l => `- [${l.area}${l.severity === 'critical' ? ', critical' : ''}] ${l.problem.split(/(?<=[.!?])\s/)[0]} Fix pattern: ${l.fix.split(/(?<=[.!?])\s/)[0]}`).join('\n');
+  // a general rule when the critic wrote one; otherwise the first sentence of the problem and its fix
+  return pick.map(l => `- [${l.area}${l.severity === 'critical' ? ', critical' : ''}] ${l.fix ? `${l.problem.split(/(?<=[.!?])\s/)[0]} Fix pattern: ${l.fix.split(/(?<=[.!?])\s/)[0]}` : l.problem}`).join('\n');
 }

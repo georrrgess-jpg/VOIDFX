@@ -30,6 +30,7 @@ uniform sampler2D uMaskTex;
 uniform vec2 uTexel; uniform vec2 uRes;
 uniform float uOpacity;
 uniform float uBright, uContrast, uSat, uTemp, uTint, uHue, uVignette;
+uniform float uAutoExp;
 uniform float uBlur; uniform vec2 uDir; uniform float uRadial; uniform float uChroma;
 uniform int uMask; uniform vec2 uMaskDir; uniform float uMaskP; uniform float uMaskSoft;
 uniform vec2 uMaskCenter; uniform vec2 uMaskSize;
@@ -167,6 +168,14 @@ void main() {
   float a = col.a;
   vec3 c = col.rgb;
   if (uPremul == 1 && a > 0.0001) c /= a;
+  if (uAutoExp > 0.0) {
+    // the source's mean brightness from the top of its mip chain; a dim shot is lifted toward the target
+    // with a curve that raises shadows and mids and keeps the highlights
+    vec3 avg = textureLod(uTex, vec2(0.5), 16.0).rgb;
+    float m = max(0.02, dot(avg, vec3(0.2126, 0.7152, 0.0722)));
+    float g = clamp(uAutoExp / m, 1.0, 2.2);
+    c = c * g / (1.0 + (g - 1.0) * c);
+  }
   float lum0 = dot(c, vec3(0.2126, 0.7152, 0.0722));
   if (uGrade == 1) {
     c += uBright * 0.3;
@@ -287,6 +296,8 @@ export interface DrawParams {
   premultiplied?: boolean;
   /** How the layer combines with what is under it (graphics). */
   blend?: BlendMode;
+  /** Auto exposure: lift a dim picture toward this mean brightness (0-1; 0 = off). */
+  autoExpose?: number;
 }
 
 /** Values an effect reads (see the prelude in custom.ts). */
@@ -315,6 +326,7 @@ export class Compositor {
   private u: Record<string, WebGLUniformLocation | null> = {};
   private textures = new Map<string, TexEntry>();
   private frame = 0;
+  private autoExp = 0;
   width = 1;
   height = 1;
   /** Where each clip was drawn in the last frame (output pixels). */
@@ -349,7 +361,7 @@ export class Compositor {
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('Program: ' + gl.getProgramInfoLog(prog));
     this.prog = prog;
     gl.useProgram(prog);
-    const names = ['uCenter', 'uSize', 'uRot', 'uRes', 'uSrcRot', 'uTex', 'uMaskTex', 'uTexel', 'uOpacity', 'uBright', 'uContrast', 'uSat', 'uTemp', 'uTint', 'uHue', 'uVignette',
+    const names = ['uCenter', 'uSize', 'uRot', 'uRes', 'uSrcRot', 'uTex', 'uMaskTex', 'uTexel', 'uOpacity', 'uBright', 'uContrast', 'uSat', 'uTemp', 'uTint', 'uHue', 'uVignette', 'uAutoExp',
       'uBlur', 'uDir', 'uRadial', 'uChroma', 'uMask', 'uMaskDir', 'uMaskP', 'uMaskSoft', 'uMaskCenter', 'uMaskSize', 'uEdge', 'uEdgeW', 'uFlashColor', 'uFlash', 'uInvert', 'uLeak', 'uLeakPos', 'uPremul', 'uGrade',
       'uLeakColor', 'uWarp', 'uWarpP', 'uWarpA', 'uWarpC', 'uRect', 'uSrcRotF', 'uRadC', 'uIris', 'uExpo'];
     for (const n of names) this.u[n] = gl.getUniformLocation(prog, n);
@@ -390,7 +402,7 @@ export class Compositor {
     gl.uniform2f(this.u.uRes, this.width, this.height);
   }
 
-  private texture(key: string, version: unknown, source: TexImageSource | null, premul: boolean): TexEntry | null {
+  private texture(key: string, version: unknown, source: TexImageSource | null, premul: boolean, mip = false): TexEntry | null {
     const gl = this.gl;
     let e = this.textures.get(key);
     if (source && (!e || e.version !== version)) {
@@ -411,6 +423,9 @@ export class Compositor {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premul);
       try {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+        // auto exposure reads the picture's mean from the smallest mip level
+        if (mip) { gl.generateMipmap(gl.TEXTURE_2D); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); }
+        else gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         const s = source as any;
         e.w = s.displayWidth || s.videoWidth || s.naturalWidth || s.width || 1;
         e.h = s.displayHeight || s.videoHeight || s.naturalHeight || s.height || 1;
@@ -443,7 +458,8 @@ export class Compositor {
 
   draw(d: DrawParams): boolean {
     const premul = !!d.premultiplied;
-    const e = this.texture(d.key, d.version, d.source, premul);
+    this.autoExp = d.autoExpose && d.autoExpose > 0 ? d.autoExpose : 0;
+    const e = this.texture(d.key, d.version, d.source, premul, this.autoExp > 0);
     if (!e) return false;
     const fx = d.fx;
     const t = d.transform;
@@ -587,6 +603,7 @@ export class Compositor {
     gl.uniform2f(this.u.uTexel, 1 / e.w, 1 / e.h);
     gl.uniform1f(this.u.uOpacity, opacity);
     gl.uniform1i(this.u.uGrade, c ? 1 : 0);
+    gl.uniform1f(this.u.uAutoExp, this.autoExp);
     if (c) {
       gl.uniform1f(this.u.uBright, c.brightness);
       gl.uniform1f(this.u.uContrast, c.contrast);

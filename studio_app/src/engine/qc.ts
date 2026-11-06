@@ -245,10 +245,11 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
     mainClips.forEach((c, i) => {
       if (!c.media) return;
       const a0 = c.in ?? 0, a1 = a0 + c.dur * (c.speed ?? 1);
-      const twin = mainClips.slice(0, i).find(d => d.media === c.media && Math.max(a0, d.in ?? 0) < Math.min(a1, (d.in ?? 0) + d.dur * (d.speed ?? 1)) + 2.5 && Math.abs(a0 - (d.in ?? 0)) < 6);
+      // the same moment shown again later (a scene playing on across consecutive cuts is continuity, not a repeat)
+      const twin = mainClips.slice(0, Math.max(0, i - 1)).find(d => d.media === c.media && Math.max(a0, d.in ?? 0) < Math.min(a1, (d.in ?? 0) + d.dur * (d.speed ?? 1)) + 1);
       if (twin) repeats.push(c.start);
     });
-    out.push({ id: 'repeats', label: 'Repeated shots', status: repeats.length > 1 ? 'warn' : 'pass', detail: repeats.length ? `${repeats.length} shot${repeats.length > 1 ? 's' : ''} reuse a set-up already shown (${repeats.map(f2).join(', ')} s): one deliberate callback is fine; more reads as a few images on rotation. Find new moments in the shot list.` : 'Every shot is a new set-up.', at: repeats });
+    out.push({ id: 'repeats', label: 'Repeated shots', status: repeats.length > 1 ? 'warn' : 'pass', detail: repeats.length ? `${repeats.length} shot${repeats.length > 1 ? 's' : ''} show a moment already shown earlier (the same file, source ranges within 1 s of each other, with other shots between; ${repeats.map(f2).join(', ')} s): one deliberate callback is fine; more reads as a few images on rotation. Find new moments in the shot list. A scene playing on across consecutive cuts is fine.` : 'Every shot is a new moment.', at: repeats });
     // the same family of moves crowded together reads as a template
     const FAMILY: Record<string, string> = { flip_h: 'turn', flip_v: 'turn', roll: 'turn', spin: 'turn', cube_left: 'turn', cube_right: 'turn', cube_up: 'turn', cube_down: 'turn', whip_left: 'whip', whip_right: 'whip', whip_up: 'whip', whip_down: 'whip', slide_left: 'slide', slide_right: 'slide', push_left: 'slide', push_right: 'slide' };
     const fam = trans.filter(c => FAMILY[c.transition!.type]).sort((a, b) => a.start - b.start);
@@ -281,7 +282,18 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   });
   if (zoomed.length) out.push({ id: 'zoom', label: 'Zoom on 720p', status: 'warn', detail: `${zoomed.length} clip${zoomed.length > 1 ? 's' : ''} zoom past 1.1x on 720p footage and may look soft.`, at: zoomed.map(c => c.start) });
   // loop seam (measured on rendered frames)
-  if (o.seam !== undefined && o.seam !== null) out.push({ id: 'loop', label: 'Loop seam', status: o.seam <= 1 ? 'pass' : o.seam <= 8 ? 'warn' : 'fail', detail: `Last frame vs frame 0 differ by ${o.seam.toFixed(1)} (house standard <= 1; blurred mean difference).` });
+  if (o.seam !== undefined && o.seam !== null) {
+    // say why when it can: the shots on both sides of the wrap and the source times they show
+    let why = '';
+    const first = mainClips[0], last = mainClips[mainClips.length - 1];
+    if (first && last) {
+      const srcEnd = (last.in ?? 0) + last.dur * (last.speed ?? 1), src0 = first.in ?? 0;
+      why = first.media && first.media === last.media
+        ? ` The last shot ends on source ${f2(srcEnd)} s of the same file frame 0 shows at ${f2(src0)} s${Math.abs(srcEnd - src0) > 0.1 ? ': land the end on that source time (or put a twin of the first shot on top for the last frames)' : ''}; check its scale, position, colour and the layers on either side.`
+        : ` Frame 0 is ${first.media || 'a'} at ${f2(src0)} s and the last frame is ${last.media || 'another shot'}: an exact twin of the first shot over the last frames, the same scale, position, colour and layers, closes it.`;
+    }
+    out.push({ id: 'loop', label: 'Loop seam', status: o.seam <= 1 ? 'pass' : o.seam <= 8 ? 'warn' : 'fail', detail: `Last frame vs frame 0 differ by ${o.seam.toFixed(1)} (house standard <= 1; blurred mean difference).${o.seam > 1 ? why : ''}` });
+  }
   else if (o.houseRules) out.push({ id: 'loop', label: 'Loop seam', status: 'info', detail: 'Measured when Opus reviews, or press Measure.' });
   out.push({ id: 'eyes', label: 'Needs eyes', status: 'info', detail: 'Faces centred and uncut, set-piece quality and anything that looks drawn are checked by the review on rendered frames.' });
   return out;

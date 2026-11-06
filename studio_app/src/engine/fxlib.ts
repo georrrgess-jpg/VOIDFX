@@ -724,13 +724,16 @@ export const FX_LIBRARY: FxDef[] = [
   },
   {
     id: 'freeze', name: 'Frozen moment', group: 'camera', blend: 'normal', dur: 1.2,
-    hint: 'For a time-freeze hold: colour drains to a cold tint, edges catch a rim glow, the frame darkens at the sides.',
-    params: [n('drain', 'Drain colour', 0.8), col('rim', 'Rim colour', '#9fd8ff'), n('glow', 'Rim glow', 0.6)],
+    hint: 'For a time-freeze hold: colour drains to a cold tint, the silhouette catches a rim light and the highlights bloom in the rim colour, the frame darkens at the sides (never a glowing-edges filter over the face).',
+    params: [n('drain', 'Drain colour', 0.8), col('rim', 'Rim colour', '#9fd8ff'), n('glow', 'Rim glow', 0.45)],
     code: `vec4 effect(vec2 uv, float t, float p) {
   vec3 c = frame(uv);
   vec3 o = mix(c, vec3(luma(c)) * vec3(0.85, 0.95, 1.1), $drain * smoothstep(0.0, 0.15, p));
-  o += $rim * smoothstep(0.06, 0.3, sobel(uv, 2.0)) * $glow * 0.8;
-  return vec4(o * vignette(uv, 0.45), 1.0);
+  // only the strong, large contours (the silhouette against light), plus a soft bloom of the highlights
+  float e = smoothstep(0.2, 0.5, sobel(uv, 4.5));
+  float bloom = luma(glowFrame(uv, 0.014, 0.6));
+  o += $rim * (e * 0.45 + bloom * 0.55) * $glow * smoothstep(0.0, 0.2, p);
+  return vec4(o * vignette(uv, 0.35), 1.0);
 }`,
   },
   // ---------------- beat moments (for shots that would only "move to the beat") ----------------

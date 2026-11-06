@@ -60,6 +60,11 @@ function ProjectProps() {
         </div>
         <ColorField id="pbg" label="Background" value={p.background} onChange={v => store.commit(pp => { pp.background = v; })} />
       </Section>
+      <Section title="Exposure">
+        <Toggle id="exp-auto" label="Lift dim shots (auto exposure)" checked={!!p.exposure?.auto} onChange={v => store.commit(pp => { pp.exposure = v ? { auto: true, target: pp.exposure?.target ?? 0.34 } : undefined; })} />
+        {p.exposure?.auto && <Slider id="exp-target" label="Target brightness" min={0.2} max={0.5} step={0.01} fmt={v => `${Math.round(v * 100)}%`} parse={x => parseFloat(x) / 100} value={p.exposure.target ?? 0.34} dflt={0.34} onStart={begin} onEnd={end} onInput={v => store.live(pp => { pp.exposure = { auto: true, target: v }; })} />}
+        <p class="hint">Dark grey reads as mud on a phone. Shots dimmer than the target are lifted (shadows and mids, highlights kept) before their grade and the look.</p>
+      </Section>
       <Section title="Beat camera">
         <p class="hint">Zoom punch and rotation kick on the music's beats (video only; text stays clean). Needs a song on an audio track.</p>
         <Toggle id="cam-on" label="Punch on the beat" checked={!!p.camera?.on} onChange={v => store.commit(pp => { pp.camera = { ...(pp.camera || DEFAULT_CAMERA), on: v }; })} />
