@@ -223,6 +223,8 @@ uniform vec2 uRes;
 uniform float uT, uP, uDur, uTime, uBeat, uBeatAge, uEnergy, uOpacity, uScale, uRot, uAspect, uSeed;
 uniform vec2 uPos;
 uniform sampler2D uFrame;
+uniform sampler2D uTextMask;
+uniform vec4 uTextRect;
 out vec4 fxOut;
 const float PI = 3.14159265;
 float hash11(float x) { return fract(sin(x * 127.1 + uSeed) * 43758.5453); }
@@ -246,6 +248,36 @@ float boltDist(vec2 p, vec2 a, vec2 b, float seed, float jag) {
 }
 vec3 frame(vec2 uv) { return texture(uFrame, vec2(clamp(uv.x, 0.0, 1.0), 1.0 - clamp(uv.y, 0.0, 1.0))).rgb; }
 float luma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+vec3 rgb2hsv(vec3 c) { vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0); vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r)); float d = q.x - min(q.w, q.y); return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + 1e-10)), d / (q.x + 1e-10), q.x); }
+vec3 hsv2rgb(vec3 c) { vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0); return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y); }
+vec3 saturate3(vec3 c, float s) { return mix(vec3(luma(c)), c, s); }
+vec3 sCurve(vec3 c, float k) { vec3 x = clamp(c, 0.0, 1.0); return mix(x, x * x * (3.0 - 2.0 * x), k); }
+vec3 splitTone(vec3 c, vec3 shadows, vec3 highs) { float l = luma(c); return c + shadows * (1.0 - l) * (1.0 - l) + highs * l * l; }
+vec3 screen3(vec3 a, vec3 b) { return 1.0 - (1.0 - a) * (1.0 - b); }
+vec3 overlay3(vec3 a, vec3 b) { return mix(2.0 * a * b, 1.0 - 2.0 * (1.0 - a) * (1.0 - b), step(0.5, a)); }
+float filmGrain(vec2 uv, float t) { vec2 px = floor(uv * uRes / 1.6); float f = floor(t * 24.0); return hash21(px + vec2(f * 37.0, f * 11.0)) + hash21(px * 1.37 + vec2(f * 3.1, 7.7)) - 1.0; }
+float vignette(vec2 uv, float k) { vec2 q = aspectUv(uv); return 1.0 - k * smoothstep(0.22, 0.78, length(q * vec2(1.3, 1.0))); }
+vec3 blurFrame(vec2 uv, float r) { vec3 s = frame(uv); for (int i = 0; i < 16; i++) { float f = (float(i) + 0.5) / 16.0; float a = float(i) * 2.39996;
+  s += frame(uv + vec2(cos(a) / uAspect, sin(a)) * sqrt(f) * r); } return s / 17.0; }
+vec3 glowFrame(vec2 uv, float r, float th) { vec3 s = vec3(0.0); for (int i = 0; i < 16; i++) { float f = (float(i) + 0.5) / 16.0; float a = float(i) * 2.39996;
+  vec3 c = frame(uv + vec2(cos(a) / uAspect, sin(a)) * sqrt(f) * r); s += c * smoothstep(th, th + 0.25, luma(c)) * (1.0 - 0.6 * f); } return s / 11.2; }
+vec3 sharpenFrame(vec2 uv, float k) { vec2 px = 1.5 / uRes; vec3 c = frame(uv); if (k <= 0.0) return c;
+  vec3 b = (frame(uv + vec2(px.x, 0.0)) + frame(uv - vec2(px.x, 0.0)) + frame(uv + vec2(0.0, px.y)) + frame(uv - vec2(0.0, px.y))) * 0.25; return c + (c - b) * k * 1.6; }
+vec3 lookFinish(vec3 c, vec2 uv, float t, float grain, float vig, float halo, vec3 haloTint) {
+  if (halo > 0.0) c = screen3(c, vec3(luma(glowFrame(uv, 0.02, 0.6))) * haloTint * halo * 1.5);
+  c *= vignette(uv, vig);
+  c += filmGrain(uv, t) * grain * 0.085 * (0.55 + 0.45 * (1.0 - luma(c)));
+  return clamp(c, 0.0, 1.0); }
+vec4 voronoi(vec2 x, float seed) { vec2 n = floor(x), f = fract(x); vec2 mg = vec2(0.0), mr = vec2(0.0); float md = 8.0;
+  for (int k = 0; k < 9; k++) { vec2 g = vec2(float(k - (k / 3) * 3) - 1.0, float(k / 3) - 1.0); vec2 o = vec2(hash21(n + g + seed), hash21(n + g + seed + 19.7)); vec2 r = g + o - f; float d = dot(r, r); if (d < md) { md = d; mr = r; mg = g; } }
+  float me = 8.0; for (int k = 0; k < 9; k++) { vec2 g = mg + vec2(float(k - (k / 3) * 3) - 1.0, float(k / 3) - 1.0); vec2 o = vec2(hash21(n + g + seed), hash21(n + g + seed + 19.7)); vec2 r = g + o - f;
+    if (dot(mr - r, mr - r) > 1e-5) me = min(me, dot(0.5 * (mr + r), normalize(r - mr))); }
+  return vec4(mr, hash21(n + mg + seed + 3.3), me); }
+float textMask(vec2 uv) { vec2 t = (uv * uRes - uTextRect.xy) / max(uTextRect.zw, vec2(1.0));
+  if (t.x < 0.0 || t.y < 0.0 || t.x > 1.0 || t.y > 1.0) return 0.0; return texture(uTextMask, t).a; }
+float sobel(vec2 uv, float w) { vec2 px = w / uRes; float gx = luma(frame(uv + vec2(px.x, 0.0))) - luma(frame(uv - vec2(px.x, 0.0)));
+  float gy = luma(frame(uv + vec2(0.0, px.y))) - luma(frame(uv - vec2(0.0, px.y))); return length(vec2(gx, gy)); }
 `;
 
 export function wrapShader(code: string): string {
@@ -265,7 +297,7 @@ in vec2 aPos;
 void main() { gl_Position = vec4(aPos * 2.0 - 1.0, 0.0, 1.0); }`;
 
 /** Does the effect read the picture under it (so the frame must be copied first)? */
-export const readsFrame = (code: string) => /\bframe\s*\(/.test(code);
+export const readsFrame = (code: string) => /\b(frame|blurFrame|glowFrame|sharpenFrame|sobel|lookFinish)\s*\(/.test(code);
 
 let checkGl: WebGL2RenderingContext | null | undefined;
 const compileMemo = new Map<string, string | null>();
@@ -320,4 +352,18 @@ export function musicAt(p: Project, media: Record<string, MediaInfo>, t: number)
     energy = Math.max(energy, a.energy[clamp(i, 0, a.energy.length - 1)] || 0);
   }
   return { beat: Math.exp(-beatAge / 0.14), beatAge, energy };
+}
+
+/** Footage-in-letters (v4 BAY HARBOR BUTCHER): the letters show the picture brightened, the rest darkens and
+ * softens, and a thin light edge outlines each letter. */
+export function knockoutCode(dark: number): string {
+  const d = (Math.round(Math.min(1, Math.max(0, dark)) * 100) / 100).toFixed(2);
+  return `vec4 effect(vec2 uv, float t, float p) {
+  float m = textMask(uv);
+  vec2 px = 2.0 / uRes;
+  float e = clamp(max(max(textMask(uv + vec2(px.x, 0.0)), textMask(uv - vec2(px.x, 0.0))), max(textMask(uv + vec2(0.0, px.y)), textMask(uv - vec2(0.0, px.y)))) - m, 0.0, 1.0);
+  vec3 bg = blurFrame(uv, 0.006) * (1.0 - ${d});
+  vec3 inside = pow(clamp(frame((uv - 0.5) / 1.04 + 0.5) * 1.6, 0.0, 1.0), vec3(0.85));
+  return vec4(mix(bg, inside, m) + vec3(0.92) * e * 0.9, 1.0);
+}`;
 }

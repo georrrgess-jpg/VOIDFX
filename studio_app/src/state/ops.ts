@@ -11,6 +11,7 @@ import { SFX_INFO, SFX_PEAK, sfxPeakAt, soundsForTransition } from '../engine/sf
 import { timelineBeats } from '../engine/evaluate';
 import { defaultTransitionDur } from '../engine/transitions';
 import { checkShaderCode, sanitizeSvg } from '../engine/custom';
+import { FX_LIBRARY, fxCode, fxParams, getFx } from '../engine/fxlib';
 import { newProject } from './store';
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -20,12 +21,21 @@ export const trackKindFor = (k: ClipKind): TrackKind => (k === 'image' || k === 
 /** Custom layers (vector graphics and effects) live on overlay video tracks, never the main track. */
 export const isCustom = (c: Clip) => c.kind === 'graphic' || c.kind === 'shader';
 
-/** An overlay video track with room for [start, start+dur), named FX when it has to be added. */
-export function fxTrack(p: Project, start: number, dur: number, prefer?: string, ignore?: string): Track {
-  const pref = prefer ? p.tracks.find(t => t.id === prefer && t.kind === 'video' && !t.main) : undefined;
+/**
+ * An overlay video track with room for [start, start+dur), named FX when it has to be added. Effects
+ * go under the edit's look (so they are graded with the picture) unless `over` puts them above it.
+ */
+export function fxTrack(p: Project, start: number, dur: number, prefer?: string, ignore?: string, over = false): Track {
+  const ok = (t: Track) => t.kind === 'video' && !t.main && t.role !== 'look' && (over ? t.role === 'over' : t.role !== 'over');
+  const pref = prefer ? p.tracks.find(t => t.id === prefer && ok(t)) : undefined;
   if (pref && isFree(p, pref.id, start, dur, ignore)) return pref;
-  for (const t of p.tracks) if (t.kind === 'video' && !t.main && isFree(p, t.id, start, dur, ignore)) return t;
-  return addTrack(p, 'video', undefined, 'FX');
+  for (const t of p.tracks) if (ok(t) && isFree(p, t.id, start, dur, ignore)) return t;
+  return over ? addTrack(p, 'video', undefined, 'FX over look', 'over') : addTrack(p, 'video', undefined, 'FX');
+}
+
+/** The edit's look track (the grade over every video track, under the text), added when needed. */
+export function lookTrack(p: Project): Track {
+  return p.tracks.find(t => t.role === 'look') || addTrack(p, 'video', undefined, 'Look', 'look');
 }
 
 export function mainTrack(p: Project): Track | undefined {
@@ -44,11 +54,23 @@ export function newTrackId(p: Project, kind: TrackKind): string {
   return shortId(kind === 'video' ? 'V' : kind === 'audio' ? 'A' : 'T', allIds(p));
 }
 
-/** Add a track of `kind`. Video and text tracks go above existing ones of their kind, audio below. */
-export function addTrack(p: Project, kind: TrackKind, id?: string, name?: string): Track {
-  const t: Track = { id: id || newTrackId(p, kind), kind, name: name || (kind === 'video' ? 'Overlay' : kind === 'audio' ? 'Audio' : 'Text') };
+/**
+ * Add a track of `kind`. Video and text tracks go above existing ones of their kind, audio below.
+ * Video order, top to bottom: effects over the look, the look, then every other video track.
+ */
+export function addTrack(p: Project, kind: TrackKind, id?: string, name?: string, role?: Track['role']): Track {
+  const t: Track = { id: id || newTrackId(p, kind), kind, name: name || (kind === 'video' ? 'Overlay' : kind === 'audio' ? 'Audio' : 'Text'), ...(role ? { role } : {}) };
+  const lookAt = p.tracks.findIndex(x => x.role === 'look');
+  const lastOver = p.tracks.map(x => x.role === 'over').lastIndexOf(true);
+  const firstVideo = p.tracks.findIndex(x => x.kind === 'video');
   if (kind === 'audio') {
     p.tracks.push(t);
+  } else if (kind === 'video' && role === 'over') {
+    p.tracks.splice(firstVideo >= 0 ? firstVideo : p.tracks.findIndex(x => x.kind === 'audio') < 0 ? p.tracks.length : p.tracks.findIndex(x => x.kind === 'audio'), 0, t);
+  } else if (kind === 'video' && role === 'look') {
+    p.tracks.splice(lastOver >= 0 ? lastOver + 1 : firstVideo >= 0 ? firstVideo : p.tracks.length, 0, t);
+  } else if (kind === 'video' && (lookAt >= 0 || lastOver >= 0)) {
+    p.tracks.splice(Math.max(lookAt, lastOver) + 1, 0, t);
   } else {
     const firstOfKind = p.tracks.findIndex(x => x.kind === kind);
     if (firstOfKind >= 0) p.tracks.splice(firstOfKind, 0, t);
@@ -70,7 +92,7 @@ export function isFree(p: Project, trackId: string, start: number, dur: number, 
 export function freeTrack(p: Project, kind: TrackKind, start: number, dur: number, prefer?: string, ignore?: string): Track {
   const pref = prefer ? p.tracks.find(t => t.id === prefer && t.kind === kind) : undefined;
   if (pref && (pref.main || isFree(p, pref.id, start, dur, ignore))) return pref;
-  for (const t of p.tracks) if (t.kind === kind && !t.main && isFree(p, t.id, start, dur, ignore)) return t;
+  for (const t of p.tracks) if (t.kind === kind && !t.main && !t.role && isFree(p, t.id, start, dur, ignore)) return t;
   return addTrack(p, kind);
 }
 
@@ -146,7 +168,8 @@ export function normalize(p: Project, media: Record<string, MediaInfo>, opts: { 
       const prev = list[i - 1];
       if (!prev || Math.abs(clipEnd(prev) - c.start) > minDur * 1.5 || tr.kind === 'text') { delete c.transition; continue; }
       const maxD = Math.min(prev.dur, c.dur, 3);
-      c.transition = { type: c.transition.type, dur: round(clamp(c.transition.dur, minDur * 2, maxD), 3) };
+      const { at, to } = c.transition;
+      c.transition = { type: c.transition.type, dur: round(clamp(c.transition.dur, minDur * 2, maxD), 3), ...(at ? { at } : {}), ...(to ? { to } : {}) };
     }
   }
   if (opts.pruneTracks) {
@@ -160,6 +183,9 @@ export function normalize(p: Project, media: Record<string, MediaInfo>, opts: { 
     const v = p.tracks.find(t => t.kind === 'video');
     if (v) v.main = true;
   }
+  // looks that cover the whole edit follow its length
+  const len = projectDuration(p);
+  if (len > 0) for (const c of p.clips) if (c.span === 'all') c.dur = round(Math.max(minDur, len - c.start), 4);
   p.clips.sort((a, b) => a.start - b.start);
   return p;
 }
@@ -334,7 +360,9 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         if (!TRANSITIONS.includes(type)) { issues.push(`${where}: unknown transition "${type}"`); break; }
         if (type === 'logo' && p.clips.some(x => x.id !== c.id && x.transition?.type === 'logo')) { issues.push(`${where}: the voidfx logo transition is already used once in this edit`); break; }
         const dur = typeof v === 'object' && v.dur !== undefined ? num(v.dur, 0.05, 3, 0.4) : defaultTransitionDur(type);
-        c.transition = { type: type as TransitionType, dur: round(dur, 3) };
+        const pt = (q: any) => (q && typeof q === 'object' ? { x: round(clamp(num(q.x, -0.5, 1.5, 0.5), -0.5, 1.5), 4), y: round(clamp(num(q.y, -0.5, 1.5, 0.5), -0.5, 1.5), 4) } : undefined);
+        const at = typeof v === 'object' ? pt(v.at) : undefined, to = typeof v === 'object' ? pt(v.to) : undefined;
+        c.transition = { type: type as TransitionType, dur: round(dur, 3), ...(at ? { at } : {}), ...(to ? { to } : {}) };
         break;
       }
       case 'kf': {
@@ -384,6 +412,10 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         if ('emphColor' in v) { if (HEX.test(String(v.emphColor))) s.emphColor = String(v.emphColor); else issues.push(`${where}: emphColor must be a hex colour`); }
         if ('emphGlow' in v) s.emphGlow = round(num(v.emphGlow, 0, 1, 0.6), 3);
         if ('scrim' in v) s.scrim = round(num(v.scrim, 0, 1, 0), 3);
+        if ('fit' in v) s.fit = !!v.fit;
+        if ('knockout' in v) s.knockout = !!v.knockout;
+        if ('knockDark' in v) s.knockDark = round(num(v.knockDark, 0, 1, 0.82), 3);
+        if ('motif' in v) { if (['blood', 'ash', 'glass', 'sparks', 'petals'].includes(v.motif)) s.motif = v.motif; else issues.push(`${where}: motif must be blood, ash, glass, sparks or petals`); }
         if ('lineScales' in v) {
           if (Array.isArray(v.lineScales)) s.lineScales = v.lineScales.slice(0, 6).map((x: unknown) => round(num(x, 0.3, 3, 1), 3));
           else if (v.lineScales === null) delete s.lineScales;
@@ -434,8 +466,37 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         const r = checkShaderCode(v);
         if (r.issues.length) { issues.push(`${where}: effect code rejected: ${r.issues.join('; ')}`); break; }
         c.code = r.code;
+        if (c.preset && r.code !== fxCode(getFx(c.preset)!, c.params || {})) { delete c.preset; delete c.params; }
         break;
       }
+      case 'preset': {
+        if (c.kind !== 'shader') break;
+        const def = getFx(String(v));
+        if (!def) { issues.push(`${where}: unknown effect preset "${v}" (see the effect library)`); break; }
+        c.preset = def.id;
+        c.params = fxParams(def, c.params);
+        c.code = fxCode(def, c.params);
+        if (!('blend' in props)) c.blend = def.blend;
+        break;
+      }
+      case 'params': {
+        if (c.kind !== 'shader' || !v || typeof v !== 'object') break;
+        const def = c.preset ? getFx(c.preset) : undefined;
+        if (!def) { c.params = { ...(c.params || {}), ...v }; break; }
+        const unknown = Object.keys(v).filter(k2 => !def.params.some(p2 => p2.id === k2));
+        if (unknown.length) issues.push(`${where}: ${def.id} has no parameter ${unknown.join(', ')} (it takes ${def.params.map(p2 => p2.id).join(', ')})`);
+        c.params = fxParams(def, { ...(c.params || {}), ...v });
+        c.code = fxCode(def, c.params);
+        break;
+      }
+      case 'at': {
+        // an anchor point in frame coordinates (0..1 from the top-left) for effects, graphics and text
+        if (!v || typeof v !== 'object' || c.kind === 'audio' || c.kind === 'sfx') break;
+        c.transform = { ...(c.transform || {}), x: round(num(v.x, -1, 2, 0.5) - 0.5, 4), y: round(num(v.y, -1, 2, 0.5) - 0.5, 4) };
+        break;
+      }
+      case 'span': if (v === 'all') c.span = 'all'; else delete c.span; break;
+      case 'over': break; // handled by the fx operation
       default: issues.push(`${where}: unknown field "${k}"`);
     }
   }
@@ -795,6 +856,36 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           const { op: _o, track: _t, start: _s, dur: _d, id: _id, ...rest } = op;
           patchClip(c, rest, issues, p);
           if (!c.text) { issues.push(`${tag}: text clip without text was skipped`); return; }
+          p.clips.push(c);
+          touched.push(c.id);
+          applied++;
+          break;
+        }
+        case 'look': case 'fx': {
+          const def = getFx(String(op.preset ?? op.look ?? op.fx ?? ''));
+          if (!def) { issues.push(`${tag}: unknown ${op.op} "${op.preset ?? op.look ?? op.fx}" (looks: ${FX_LIBRARY.filter(d => d.group === 'look').map(d => d.id).join(', ')}; effects: see the library)`); return; }
+          const isLook = op.op === 'look';
+          const start = num(op.start, 0, 36000, 0);
+          const whole = isLook && op.dur === undefined;
+          const dur = whole ? Math.max(1, projectDuration(p) - start) : num(op.dur, 1 / p.fps, 36000, def.dur);
+          let track: Track;
+          if (isLook) {
+            track = lookTrack(p);
+            // one look at a time: a new look replaces the ones it overlaps
+            const end = start + dur;
+            p.clips = p.clips.filter(c => !(c.track === track.id && (whole || (c.start < end - EPS && c.start + c.dur > start + EPS))));
+          } else track = fxTrack(p, start, dur, typeof op.track === 'string' ? op.track : undefined, undefined, op.over === true);
+          const c: Clip = { id: newClipId(p, 'shader'), track: track.id, kind: 'shader', start, dur, blend: def.blend, preset: def.id, name: def.name };
+          if (whole) c.span = 'all';
+          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
+          c.params = fxParams(def, op.params && typeof op.params === 'object' ? op.params : undefined);
+          if (op.params && typeof op.params === 'object') {
+            const unknown = Object.keys(op.params).filter(k => !def.params.some(q => q.id === k));
+            if (unknown.length) issues.push(`${tag}: ${def.id} has no parameter ${unknown.join(', ')} (it takes ${def.params.map(q => q.id).join(', ') || 'none'})`);
+          }
+          c.code = fxCode(def, c.params);
+          const { op: _o, track: _t, start: _s, dur: _d, id: _id, preset: _p, params: _pa, look: _l, fx: _f, over: _ov, ...rest } = op;
+          patchClip(c, rest, issues, p);
           p.clips.push(c);
           touched.push(c.id);
           applied++;

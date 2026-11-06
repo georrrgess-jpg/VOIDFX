@@ -1,4 +1,4 @@
-import { TransitionType } from '../state/types';
+import { TransitionSpec, TransitionType } from '../state/types';
 import { clamp } from '../state/util';
 
 /** Per-layer effect parameters a transition sets on the outgoing ('out') and incoming ('in') clip. */
@@ -11,8 +11,9 @@ export interface LayerFx {
   blur: number; // 0..1 (fraction of frame height * 0.035)
   dirX: number; dirY: number; // directional blur, frame fractions
   radial: number; // radial zoom blur toward the centre, 0..1
-  /** 0 none, 1 linear wipe, 2 iris, 3 logo counter, 4 eyelid slit, 5 noise dissolve, 6 brightest-first, 7 lightning */
-  mask: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  /** 0 none, 1 linear wipe, 2 iris, 3 logo counter, 4 eyelid slit, 5 noise dissolve, 6 brightest-first, 7 lightning,
+   * 8 jagged tear, 9 six-blade aperture, 10 wiper arm, 11 venetian blinds */
+  mask: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
   maskX: number; maskY: number; // direction for linear masks, centre for noise masks (frame fractions)
   maskP: number;
   edge: [number, number, number]; // glow colour on dissolve edges
@@ -29,12 +30,20 @@ export interface LayerFx {
   top: boolean;
   /** Logo geometry (logo layer and the counter mask): scale, anchor in logo uv kept at frame centre. */
   logoS: number; logoAx: number; logoAy: number;
+  /** Screen-space warp: 0 none, 1/2 plane turning about a vertical/horizontal axis (cube, flip), 3 shatter,
+   * 4 sliding strips, 5 ripple, 6 swirl, 7 pixelate, 8 kaleidoscope, 9 heat haze, 10 datamosh blocks. */
+  warp: number; warpP: number; warpA: number; warpC: [number, number];
+  /** Centre of the radial blur in layer uv; centre of the iris and aperture masks in frame fractions. */
+  radC: [number, number]; iris: [number, number];
+  /** Exposure push (0 = none, 1 = +400 %); colour of the light leak. */
+  expo: number; leakColor: [number, number, number];
 }
 
 export const NO_FX: LayerFx = {
   visible: true, dx: 0, dy: 0, scale: 1, rot: 0, opacity: 1, blur: 0, dirX: 0, dirY: 0, radial: 0,
   mask: 0, maskX: 1, maskY: 0, maskP: 1, edge: [0, 0, 0], edgeW: 0, chroma: 0, flash: 0, flashColor: [0, 0, 0],
   invert: 0, leak: 0, leakPos: 0.5, split: null, top: false, logoS: 1, logoAx: 0.5, logoAy: 0.5,
+  warp: 0, warpP: 0, warpA: 0, warpC: [0.5, 0.5], radC: [0.5, 0.5], iris: [0.5, 0.5], expo: 0, leakColor: [1, 0.58, 0.22],
 };
 
 const io3 = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -69,13 +78,20 @@ export function logoLayerFx(p: number): Partial<LayerFx> {
   return { logoS: g.s, logoAx: g.ax, logoAy: g.ay, opacity: g.opacity, radial: g.radial, visible: p < 0.995 };
 }
 
-/** Effects for one side of a transition at progress p (0..1). */
-export function transitionFx(type: TransitionType, p: number, role: 'out' | 'in'): Partial<LayerFx> {
+/** Default anchor: where a face sits once a shot is framed on its focus point. */
+const FACE: [number, number] = [0.5, 0.42];
+
+/** Effects for one side of a transition at progress p (0..1). `spec` carries the anchors (at, to). */
+export function transitionFx(type: TransitionType, p: number, role: 'out' | 'in', spec?: Partial<TransitionSpec>): Partial<LayerFx> {
   p = clamp(p, 0, 1);
   const e = io3(p);
   const isIn = role === 'in';
   const parts = type.split('_');
-  const kind = type === 'light_leak' ? 'leak' : parts[0];
+  const kind = type === 'light_leak' ? 'leak' : type === 'light_sweep' ? 'sweep' : parts[0];
+  // a dive goes into the face by default; a burst or a shatter lands off it (never over his face)
+  const at: [number, number] = spec?.at ? [spec.at.x, spec.at.y] : kind === 'shatter' ? [0.62, 0.66] : FACE;
+  const to: [number, number] = spec?.to ? [spec.to.x, spec.to.y] : spec?.at ? at : FACE;
+  const anchor = isIn ? to : at;
   const dirName = parts[1];
   const dir = DIRS[dirName || 'left'] || DIRS.left;
 
@@ -102,7 +118,7 @@ export function transitionFx(type: TransitionType, p: number, role: 'out' | 'in'
     case 'wipe':
       return isIn ? { mask: 1, maskX: dir[0], maskY: dir[1], maskP: -0.03 + 1.06 * e } : {};
     case 'iris':
-      return isIn ? { mask: 2, maskP: e } : {};
+      return isIn ? { mask: 2, maskP: e, iris: spec?.to || spec?.at ? to : [0.5, 0.5] } : {};
     case 'zoom': {
       const inward = dirName !== 'out';
       const q = io5(p);
@@ -205,6 +221,107 @@ export function transitionFx(type: TransitionType, p: number, role: 'out' | 'in'
       if (isIn) return { visible: p >= 0.5, scale: 1 + 0.35 * (1 - io3(seg(p, 0.5, 1))), radial: 0.9 * b, flash: 0.2 * b, flashColor: [1, 0.95, 0.8] };
       return { visible: p < 0.5, scale: 1 + 0.45 * in3(seg(p, 0, 0.5)), radial: 0.9 * b };
     }
+    // ---------- added: physical and designed moves ----------
+    case 'cube': {
+      // the shots are faces of a cube turning away; the cube recedes a little mid-turn
+      const vert = dirName === 'up' || dirName === 'down';
+      const sgn = dirName === 'left' || dirName === 'up' ? 1 : -1;
+      const q = io3(p), recede = 1 - 0.1 * bump(p);
+      const th = isIn ? sgn * (Math.PI / 2) * (1 - q) : -sgn * (Math.PI / 2) * q;
+      return { warp: vert ? 2 : 1, warpP: th, warpA: 0.5, scale: recede, visible: isIn ? p > 0.02 : p < 0.98 };
+    }
+    case 'flip': {
+      // a card flip about the centre: the first shot turns edge-on, the next turns in from behind
+      const vert = dirName === 'v';
+      if (isIn) return { visible: p >= 0.5, warp: vert ? 2 : 1, warpP: -(Math.PI / 2) * (1 - out3(seg(p, 0.5, 1))), warpA: 0, scale: 1 - 0.08 * bump(p) };
+      return { visible: p < 0.5, warp: vert ? 2 : 1, warpP: (Math.PI / 2) * in3(seg(p, 0, 0.5)), warpA: 0, scale: 1 - 0.08 * bump(p) };
+    }
+    case 'shatter': {
+      // the frame cracks at the anchor, then bursts into shards that fly at the lens over the next shot
+      if (isIn) return { scale: 1.08 - 0.08 * out3(seg(p, 0.3, 1)), flash: 0.35 * (1 - seg(p, 0.28, 0.6)), flashColor: [1, 1, 1] };
+      const crack = seg(p, 0.05, 0.3);
+      return { visible: p < 0.97, top: true, warp: 3, warpP: in3(seg(p, 0.28, 1)) * 1.1, warpA: crack * (1 - seg(p, 0.3, 0.55)), warpC: at, flash: 0.15 * crack * (1 - seg(p, 0.3, 0.5)), flashColor: [1, 1, 1] };
+    }
+    case 'slices': {
+      // vertical strips of the frame slide away in alternating directions onto the next shot
+      if (isIn) return { scale: 1.05 - 0.05 * out3(p) };
+      return { visible: p < 0.99, top: true, warp: 4, warpP: p, warpA: 7 };
+    }
+    case 'blinds': {
+      // backlit venetian slats open from the top down onto the next shot
+      if (isIn) return { mask: 11, maskP: e, edge: [1.0, 0.86, 0.6], edgeW: 0.5 };
+      return { flash: 0.35 * bump(p), flashColor: [0, 0, 0] };
+    }
+    case 'ripple': {
+      const b = bump(p);
+      if (isIn) return { warp: 5, warpP: p, warpA: b, warpC: to, opacity: io3(seg(p, 0.35, 0.65)) };
+      return { warp: 5, warpP: p, warpA: b, warpC: at };
+    }
+    case 'swirl': {
+      const b = bump(p);
+      if (isIn) return { warp: 6, warpA: -4.5 * b * b, warpC: to, opacity: io3(seg(p, 0.4, 0.6)) };
+      return { warp: 6, warpA: 4.5 * b * b, warpC: at };
+    }
+    case 'pixelate': {
+      const b = bump(p);
+      const blk = 1 + 70 * b * b;
+      if (isIn) return { warp: 7, warpA: blk, opacity: clamp((p - 0.45) * 10, 0, 1) };
+      return { warp: 7, warpA: blk };
+    }
+    case 'kaleido': {
+      const b = bump(p);
+      if (isIn) return { warp: 8, warpA: b, warpP: p * 2, warpC: to, opacity: io3(seg(p, 0.4, 0.6)) };
+      return { warp: 8, warpA: b, warpP: p * 2, warpC: at };
+    }
+    case 'heat': {
+      // rising heat haze carries the next shot in behind a glowing wall
+      const b = bump(p);
+      const lk = { leak: 0.55 * b, leakPos: 1.2 - 1.4 * p, leakColor: [1, 0.45, 0.12] as [number, number, number] };
+      if (isIn) return { warp: 9, warpP: p, warpA: b, opacity: io3(seg(p, 0.3, 0.7)), ...lk };
+      return { warp: 9, warpP: p, warpA: b, ...lk };
+    }
+    case 'datamosh': {
+      const b = bump(p);
+      if (isIn) return { visible: p >= 0.5, warp: 10, warpP: p, warpA: b, chroma: 0.012 * b };
+      return { visible: p < 0.5, warp: 10, warpP: p, warpA: b, chroma: 0.012 * b };
+    }
+    case 'tear': {
+      // the frame tears open along a jagged diagonal; the torn edge catches the light
+      return isIn ? { mask: 8, maskX: 0.38, maskY: 0.92, maskP: -0.08 + 1.16 * io3(p), edge: [0.94, 0.92, 0.88], edgeW: 0.014 } : { dy: 0.015 * bump(p) };
+    }
+    case 'shutter': {
+      // a six-blade aperture closes on the anchor of the first shot and opens from the anchor of the next
+      if (isIn) { const q = io3(seg(p, 0.5, 1)); return { visible: p >= 0.5, mask: 9, maskP: 0.02 + 1.1 * q, iris: to, scale: 1.12 - 0.12 * q }; }
+      const q = io3(seg(p, 0, 0.5));
+      return { visible: p < 0.5, mask: 9, maskP: 1.12 - 1.1 * q, iris: at, scale: 1 + 0.1 * q };
+    }
+    case 'wiper': {
+      // a windscreen wiper sweeps across and leaves the next shot behind it
+      return isIn ? { mask: 10, maskP: io3(p), edge: [0.02, 0.02, 0.025], edgeW: 0.035 } : {};
+    }
+    case 'dive': {
+      // the camera dives into the anchor (an eye, a pupil, a light) until it swallows the frame,
+      // then the next shot opens out of its own anchor through an aperture
+      const A = anchor;
+      if (isIn) {
+        const q = seg(p, 0.5, 1), s = 1 + 3.2 * (1 - out3(q));
+        return { visible: p >= 0.5, scale: s, dx: (A[0] - 0.5) * (1 - s), dy: (A[1] - 0.5) * (1 - s), radial: 0.8 * (1 - q), radC: A, mask: 9, maskP: 0.02 + 1.3 * out3(q), iris: A, flash: 0.8 * (1 - seg(q, 0, 0.35)), flashColor: [0, 0, 0] };
+      }
+      const q = seg(p, 0, 0.5), s = 1 + 7 * in3(q);
+      return { visible: p < 0.5, scale: s, dx: (A[0] - 0.5) * (1 - s), dy: (A[1] - 0.5) * (1 - s), radial: 0.9 * q, radC: A, flash: 0.9 * seg(q, 0.55, 1), flashColor: [0, 0, 0] };
+    }
+    case 'sweep': {
+      // a streetlight band sweeps across; the shots cross under the light
+      const pos = -0.3 + 1.6 * io3(p);
+      const lk = { leak: 0.95 * bump(p), leakPos: pos, leakColor: [1.0, 0.86, 0.62] as [number, number, number] };
+      return isIn ? { opacity: io3(seg(p, 0.35, 0.65)), ...lk } : lk;
+    }
+    case 'wash': {
+      // the drop hit: exposure pushes toward white and recovers fast so the face reads again
+      if (isIn) { const k = Math.exp(-seg(p, 0.5, 1) * 5); return { visible: p >= 0.5, expo: 0.8 * k, flash: 0.5 * k, flashColor: [1, 0.98, 0.95] }; }
+      const k = seg(p, 0, 0.5) ** 2;
+      return { visible: p < 0.5, expo: 0.8 * k, flash: 0.5 * k, flashColor: [1, 0.98, 0.95] };
+    }
     default:
       return isIn ? { opacity: e } : {};
   }
@@ -220,11 +337,16 @@ export const TRANSITION_LABELS: Record<TransitionType, string> = {
   spin: 'Spin', blur: 'Blur', glitch: 'Glitch', bolt: 'Lightning strike',
   logo: 'voidfx logo fly-through', blink: 'Blink (eyelids)', ink: 'Blood bloom', burn: 'Film burn', slash: 'Blade slash',
   punch: 'Impact frame', light_leak: 'Light leak', roll: 'Roll 90°', shadow: 'Shadow (brightest first)', warp: 'Warp pull',
+  cube_left: 'Cube turn left', cube_right: 'Cube turn right', cube_up: 'Cube turn up', cube_down: 'Cube turn down', flip_h: 'Card flip', flip_v: 'Card flip vertical',
+  shatter: 'Glass shatter', slices: 'Slices', blinds: 'Venetian blinds', ripple: 'Ripple', swirl: 'Swirl', pixelate: 'Pixelate', kaleido: 'Kaleidoscope',
+  heat: 'Heat haze', datamosh: 'Datamosh', tear: 'Tear', shutter: 'Camera aperture', wiper: 'Wiper', dive: 'Dive into the eye', light_sweep: 'Streetlight sweep', wash: 'Exposure wash',
 };
 
 /** Groups for the transitions panel. */
 export const TRANSITION_GROUPS: { name: string; items: TransitionType[] }[] = [
-  { name: 'Signature', items: ['logo', 'bolt', 'blink', 'ink', 'burn', 'slash', 'punch', 'shadow', 'warp', 'roll', 'light_leak'] },
+  { name: 'Signature', items: ['logo', 'dive', 'shatter', 'bolt', 'blink', 'ink', 'burn', 'slash', 'tear', 'punch', 'shadow', 'warp', 'roll', 'shutter', 'wash', 'light_leak', 'light_sweep', 'heat'] },
+  { name: '3D and physical', items: ['cube_left', 'cube_right', 'cube_up', 'cube_down', 'flip_h', 'flip_v', 'slices', 'blinds', 'wiper'] },
+  { name: 'Distort', items: ['ripple', 'swirl', 'kaleido', 'pixelate', 'datamosh'] },
   { name: 'Motion', items: ['whip_left', 'whip_right', 'whip_up', 'whip_down', 'push_left', 'push_right', 'push_up', 'push_down', 'slide_left', 'slide_right', 'slide_up', 'slide_down', 'zoom_in', 'zoom_out', 'spin'] },
   { name: 'Reveal', items: ['iris', 'wipe_left', 'wipe_right', 'wipe_up', 'wipe_down', 'glitch'] },
   { name: 'Soft', items: ['crossfade', 'blur', 'dip_black', 'dip_white', 'flash'] },
@@ -236,11 +358,16 @@ export function defaultTransitionDur(t: TransitionType): number {
   if (t === 'punch' || t === 'glitch' || t.startsWith('whip') || t === 'slash') return 0.35;
   if (t === 'blink' || t === 'shadow' || t === 'ink' || t === 'burn') return 0.7;
   if (t === 'bolt') return 0.55;
+  if (t === 'dive') return 0.8;
+  if (t === 'shatter' || t === 'ripple' || t === 'heat') return 0.7;
+  if (t.startsWith('cube') || t === 'slices' || t === 'blinds' || t === 'swirl' || t === 'kaleido' || t === 'light_sweep') return 0.6;
+  if (t === 'pixelate' || t === 'wash') return 0.4;
+  if (t === 'datamosh') return 0.35;
   return 0.5;
 }
 
 /** Transitions that count as a flash for the flash-rate rule. */
-export const FLASHY = new Set<TransitionType>(['flash', 'dip_white', 'punch', 'glitch', 'warp', 'bolt']);
+export const FLASHY = new Set<TransitionType>(['flash', 'dip_white', 'punch', 'glitch', 'warp', 'bolt', 'wash']);
 
 /** Library moves that read as template filler when they carry an edit (the house rule: at most a quarter of the joins). */
-export const GENERIC = new Set<TransitionType>(['crossfade', 'dip_black', 'dip_white', 'flash', 'slide_left', 'slide_right', 'slide_up', 'slide_down', 'push_left', 'push_right', 'push_up', 'push_down', 'wipe_left', 'wipe_right', 'wipe_up', 'wipe_down', 'iris', 'zoom_in', 'zoom_out', 'spin', 'blur', 'glitch']);
+export const GENERIC = new Set<TransitionType>(['crossfade', 'dip_black', 'dip_white', 'flash', 'slide_left', 'slide_right', 'slide_up', 'slide_down', 'push_left', 'push_right', 'push_up', 'push_down', 'wipe_left', 'wipe_right', 'wipe_up', 'wipe_down', 'iris', 'zoom_in', 'zoom_out', 'spin', 'blur', 'glitch', 'ripple', 'swirl', 'pixelate', 'kaleido', 'datamosh']);

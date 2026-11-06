@@ -18,10 +18,12 @@ export const SFX_INFO: Record<SfxType, { label: string; dur: number; hint: strin
   tick: { label: 'Tick', dur: 0.08, hint: 'Small click: text and UI beats' },
   tapestop: { label: 'Tape stop', dur: 0.9, hint: 'Pitch slows to a stop: endings' },
   zap: { label: 'Electric zap', dur: 0.75, hint: 'Lightning crack and crackle: bolts, Speed Force hits' },
+  glass: { label: 'Glass', dur: 1.2, hint: 'A crack, then shards tinkling: shatter, a lens breaking' },
+  rip: { label: 'Rip', dur: 0.55, hint: 'Plastic or paper tearing: tears, plastic wrap' },
 };
 
 /** Seconds from a sound's start to its loudest point (a riser or reverse peaks at its end). */
-export const SFX_PEAK: Record<SfxType, number> = { whoosh: 0.56, swish: 0.17, impact: 0.03, hit: 0.02, boom: 0.05, riser: 2.0, subdrop: 0.02, reverse: 1.18, glitch: 0.1, shutter: 0.12, tick: 0, tapestop: 0.1, zap: 0.08 };
+export const SFX_PEAK: Record<SfxType, number> = { whoosh: 0.56, swish: 0.17, impact: 0.03, hit: 0.02, boom: 0.05, riser: 2.0, subdrop: 0.02, reverse: 1.18, glitch: 0.1, shutter: 0.12, tick: 0, tapestop: 0.1, zap: 0.08, glass: 0.01, rip: 0.12 };
 /** Timeline time where a sound effect clip peaks. */
 export const sfxPeakAt = (c: { start: number; in?: number; sfx?: SfxType }) => c.start - (c.in ?? 0) + (c.sfx ? SFX_PEAK[c.sfx] : 0);
 
@@ -130,6 +132,28 @@ export function sfxData(type: SfxType): { L: Float32Array; R: Float32Array } {
         l = r = v * 0.8;
         break;
       }
+      case 'glass': {
+        // a sharp crack, then bright resonant shards scattered over the tail
+        let tink = 0;
+        for (let k = 0; k < 14; k++) {
+          const t0 = 0.012 + k * 0.034 + ((k * 7919) % 13) * 0.009;
+          if (t < t0) continue;
+          const dt = t - t0;
+          tink += Math.sin(2 * Math.PI * (2600 + ((k * 1931) % 23) * 260) * dt) * Math.exp(-dt * (28 + (k % 5) * 9)) * (1 - k / 18);
+        }
+        const v = fl(rnd(), 6500, 0.5).high * Math.exp(-t * 55) * 1.6 + tink * 0.35 + rnd() * Math.exp(-t * 18) * 0.22;
+        l = v * (0.9 + 0.1 * Math.sin(t * 40)); r = v * (0.9 - 0.1 * Math.sin(t * 37));
+        break;
+      }
+      case 'rip': {
+        // a tear: noise stuttering through a rising band filter
+        const stutter = 0.55 + 0.45 * Math.sign(Math.sin(2 * Math.PI * (38 + 30 * u) * t));
+        const env = Math.min(1, t / 0.02) * Math.exp(-Math.max(0, u - 0.6) * 9);
+        const fc = 900 + 3200 * u;
+        l = fl(rnd(), fc, 0.8).band * stutter * env * 1.4;
+        r = fr(rnd(), fc * 1.1, 0.8).band * stutter * env * 1.4;
+        break;
+      }
       case 'tapestop': {
         const rate = Math.max(0, 1 - u) ** 1.6;
         const ph = 2 * Math.PI * 180 * (t - (t * u) / 2);
@@ -198,5 +222,15 @@ export function soundsForTransition(type: string, dur: number): [SfxType, number
   if (type === 'ink') return [['reverse', -0.9], ['hit', 0]];
   if (type === 'warp' || type.startsWith('zoom')) return [['whoosh', -0.56], ['subdrop', 0]];
   if (type === 'light_leak') return [['reverse', -0.8]];
+  if (type.startsWith('cube')) return [['whoosh', -0.56], ['hit', h - 0.05]];
+  if (type.startsWith('flip') || type === 'slices' || type === 'wiper' || type === 'light_sweep') return [['swish', -0.17]];
+  if (type === 'shatter') return [['impact', -h + 0.28 * dur - 0.03], ['glass', -h + 0.28 * dur - 0.01]];
+  if (type === 'blinds' || type === 'shutter') return [['shutter', -0.12]];
+  if (type === 'ripple' || type === 'kaleido' || type === 'heat') return [['reverse', -1.0]];
+  if (type === 'swirl') return [['whoosh', -0.56]];
+  if (type === 'pixelate' || type === 'datamosh') return [['glitch', -0.25]];
+  if (type === 'tear') return [['rip', -0.12]];
+  if (type === 'dive') return [['whoosh', -0.56], ['subdrop', 0]];
+  if (type === 'wash') return [['impact', -0.03]];
   return [['swish', -0.17]];
 }

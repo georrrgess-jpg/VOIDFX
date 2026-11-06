@@ -1,6 +1,6 @@
 // Evaluates the timeline at one instant: which layers are visible (bottom to top) and what each
 // audio-bearing clip contributes. Preview, export and the Opus review renderer all use this.
-import { Clip, ColorAdjust, MediaInfo, Project, Transform } from '../state/types';
+import { Clip, ColorAdjust, MediaInfo, Project, Transform, TransitionSpec } from '../state/types';
 import { clamp, clipEnd, colorOf, EPS, speedAt, srcAt, transformAt, volumeAt } from '../state/util';
 import { LayerFx, NO_FX, logoLayerFx, transitionFx } from './transitions';
 import { revealFx } from './custom';
@@ -25,7 +25,7 @@ export interface AudioVoice {
 
 export interface Evaluation { layers: VisualLayer[]; audio: AudioVoice[]; sfx: { clip: Clip; lt: number; gain: number }[] }
 
-export interface Window { clip: Clip; from: number; to: number; tin?: { dur: number; type: any }; tout?: { dur: number; type: any } }
+export interface Window { clip: Clip; from: number; to: number; tin?: TransitionSpec; tout?: TransitionSpec }
 
 /** Visible span of each clip on a track, including the half-transition overlaps into neighbours. */
 export function trackWindows(p: Project, trackId: string): Window[] {
@@ -148,12 +148,12 @@ export function evaluate(p: Project, media: Record<string, MediaInfo>, t: number
       let logoP = -1;
       if (w.tin && t < c.start + w.tin.dur / 2) {
         const pr = (t - (c.start - w.tin.dur / 2)) / w.tin.dur;
-        fx = { ...NO_FX, ...transitionFx(w.tin.type, pr, 'in') };
+        fx = { ...NO_FX, ...transitionFx(w.tin.type, pr, 'in', w.tin) };
         tGain = Math.sin(clamp(pr, 0, 1) * Math.PI / 2);
         if (w.tin.type === 'logo') logoP = pr;
       } else if (w.tout && t >= clipEnd(c) - w.tout.dur / 2) {
         const pr = (t - (clipEnd(c) - w.tout.dur / 2)) / w.tout.dur;
-        fx = { ...NO_FX, ...transitionFx(w.tout.type, pr, 'out') };
+        fx = { ...NO_FX, ...transitionFx(w.tout.type, pr, 'out', w.tout) };
         tGain = Math.cos(clamp(pr, 0, 1) * Math.PI / 2);
       }
       const m = c.media ? media[c.media] : undefined;
@@ -192,6 +192,14 @@ export function evaluate(p: Project, media: Record<string, MediaInfo>, t: number
     // an outgoing layer that splits apart (slash) is drawn above the incoming one
     const mine = layers.splice(trackStart);
     layers.push(...mine.filter(L => !L.fx.top), ...mine.filter(L => L.fx.top));
+  }
+  // the voidfx logo is never graded or restyled: it is drawn above every look and effect, under the text
+  const logos = layers.filter(L => L.kind === 'logo');
+  if (logos.length) {
+    const rest = layers.filter(L => L.kind !== 'logo');
+    const firstText = rest.findIndex(L => L.kind === 'text');
+    rest.splice(firstText < 0 ? rest.length : firstText, 0, ...logos);
+    return { layers: rest, audio, sfx };
   }
   return { layers, audio, sfx };
 }

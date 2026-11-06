@@ -9,6 +9,8 @@ import { migrateLegacy, openProject } from './state/projects';
 import { applyOps } from './state/ops';
 import { compileError, customIssues } from './engine/custom';
 import { FX_PRESETS } from './engine/fxlibrary';
+import { FX_LIBRARY, fxCode, fxParams } from './engine/fxlib';
+import { renderStills } from './engine/exporter';
 import { requestPersistence } from './state/storage';
 import { store } from './state/store';
 import { App } from './ui/App';
@@ -32,4 +34,4 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 window.addEventListener('pagehide', () => store.flushSave());
 
 // test hook for the automated smoke test (harmless in production)
-(window as any).__voidfx = { store, player, runtime, open: openProject, applyOps, customIssues, compileError, FX_PRESETS };
+(window as any).__voidfx = { store, player, runtime, open: openProject, applyOps, customIssues, compileError, FX_PRESETS, FX_LIBRARY, fxCode, fxParams, renderStills };

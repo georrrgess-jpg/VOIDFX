@@ -5,7 +5,7 @@ import { MediaInfo, Project } from '../state/types';
 import { Compositor, fitSize } from './compositor';
 import { VisualLayer } from './evaluate';
 import { renderText } from './text';
-import { graphicCanvas, musicAt, rasterWidthFor, svgSize } from './custom';
+import { graphicCanvas, knockoutCode, musicAt, rasterWidthFor, svgSize } from './custom';
 
 const seedOf = (id: string) => { let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973; return h / 97.3; };
 
@@ -43,6 +43,19 @@ export function drawLayers(
         opacity: L.transform.opacity * L.fx.opacity, scale: L.transform.scale, rot: (L.transform.rotation * Math.PI) / 180,
         pos: [0.5 + L.transform.x, 0.5 + L.transform.y], seed: seedOf(c.id),
       }, c.name ? `${c.id} (${c.name})` : c.id);
+      continue;
+    }
+    if (L.kind === 'text' && c.style?.knockout) {
+      // footage-in-letters: the text raster is a stencil for an effect over the whole frame
+      const r = renderText(c, L.lt, W, H, slot, true);
+      if (!r) continue;
+      const sc = L.transform.scale * L.fx.scale * r.scale;
+      const t = c.start + L.lt;
+      const mu = musicAt(p, media, t);
+      comp.drawShader(knockoutCode(c.style.knockDark ?? 0.82), 'normal', {
+        t: L.lt, p: Math.max(0, Math.min(1, L.lt / Math.max(1e-3, c.dur))), dur: c.dur, time: t, beat: mu.beat, beatAge: mu.beatAge, energy: mu.energy,
+        opacity: L.transform.opacity * L.fx.opacity * r.opacity, scale: 1, rot: 0, pos: [0.5, 0.5], seed: seedOf(c.id),
+      }, `${c.id} (knockout text)`, { key: `${c.id}#knock`, version: r.version, source: r.canvas as any, cx: W / 2 + (L.transform.x + L.fx.dx + r.dx) * W, cy: H / 2 + (L.transform.y + L.fx.dy) * H, w: r.w * sc, h: r.h * sc });
       continue;
     }
     if (L.kind === 'text') {

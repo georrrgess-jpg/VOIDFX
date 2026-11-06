@@ -35,8 +35,10 @@ uniform int uMask; uniform vec2 uMaskDir; uniform float uMaskP; uniform float uM
 uniform vec2 uMaskCenter; uniform vec2 uMaskSize;
 uniform vec3 uEdge; uniform float uEdgeW;
 uniform vec3 uFlashColor; uniform float uFlash; uniform float uInvert;
-uniform float uLeak; uniform float uLeakPos;
+uniform float uLeak; uniform float uLeakPos; uniform vec3 uLeakColor;
 uniform int uPremul; uniform int uGrade;
+uniform int uWarp; uniform float uWarpP; uniform float uWarpA; uniform vec2 uWarpC; uniform vec4 uRect; uniform int uSrcRotF;
+uniform vec2 uRadC; uniform vec2 uIris; uniform float uExpo;
 out vec4 outColor;
 
 vec4 tap(vec2 uv) { return texture(uTex, clamp(uv, vec2(0.0), vec2(1.0))); }
@@ -52,32 +54,115 @@ float vnoise(vec2 p) {
   return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
 }
 float fbm(vec2 p) { float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { v += a * vnoise(p); p *= 2.03; a *= 0.5; } return v; }
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+// nearest cell of a jittered grid: offset to its site (xy), its random id (z), distance to its edge (w)
+vec4 cells(vec2 x) {
+  vec2 n = floor(x), f = fract(x); vec2 mg = vec2(0.0), mr = vec2(0.0); float md = 8.0;
+  for (int k = 0; k < 9; k++) { vec2 g = vec2(float(k - (k / 3) * 3) - 1.0, float(k / 3) - 1.0); vec2 o = vec2(hash(n + g), hash(n + g + 19.7)) * 0.9 + 0.05; vec2 r = g + o - f; float d = dot(r, r); if (d < md) { md = d; mr = r; mg = g; } }
+  float me = 8.0;
+  for (int k = 0; k < 9; k++) { vec2 g = mg + vec2(float(k - (k / 3) * 3) - 1.0, float(k / 3) - 1.0); vec2 o = vec2(hash(n + g), hash(n + g + 19.7)) * 0.9 + 0.05; vec2 r = g + o - f;
+    if (dot(mr - r, mr - r) > 1e-5) me = min(me, dot(0.5 * (mr + r), normalize(r - mr))); }
+  return vec4(mr, hash(n + mg + 3.3), me);
+}
 
 void main() {
   vec4 col;
+  vec2 uv0 = vUv;
+  float inside = 1.0, shade = 1.0, glint = 0.0;
+  if (uWarp > 0) {
+    // screen-space warps: the quad covers the frame; map each pixel back onto the layer's own rectangle
+    vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+    vec2 C = uWarpC * uRes;
+    if (uWarp == 1 || uWarp == 2) {
+      // the layer as a plane turning about a vertical (1) or horizontal (2) axis at depth uWarpA x its size
+      bool vert = uWarp == 2;
+      vec2 rel = px - uRect.xy;
+      float xs = vert ? rel.y : rel.x, ys = vert ? rel.x : rel.y, size = vert ? uRect.w : uRect.z;
+      float D = 2.2 * uRes.y, zp = uWarpA * size, th = uWarpP;
+      float den = D * cos(th) - xs * sin(th);
+      if (den <= 1.0) inside = 0.0;
+      float u = (xs * (D + zp * (1.0 - cos(th))) - zp * D * sin(th)) / max(den, 1.0);
+      float Z = zp + u * sin(th) - zp * cos(th);
+      float v = ys * (D + Z) / D;
+      px = uRect.xy + (vert ? vec2(v, u) : vec2(u, v));
+      shade = 0.5 + 0.5 * cos(th);
+    } else if (uWarp == 3) {
+      // shatter: radial fracture round the impact C (fine near it, long wedges further out); cracks spread
+      // from C first (uWarpA), then the shards fly outward and toward the lens over the next shot
+      vec2 q = (px - C) / uRes.y;
+      float pe = uWarpP, s = 1.0 + pe * pe * 5.0;
+      vec2 qs = q / s;
+      float r = max(length(qs), 1e-3);
+      vec2 cs = vec2(log(r) * 2.4, atan(qs.y, qs.x) * 2.4);
+      vec4 v = cells(cs);
+      vec2 sc = cs + v.xy;
+      vec2 site = vec2(cos(sc.y / 2.4), sin(sc.y / 2.4)) * exp(sc.x / 2.4);
+      vec2 loc = rot((v.z - 0.5) * 3.0 * pe * pe) * (qs - site) / (1.0 + pe * (0.4 + v.z));
+      px = C + (site + loc) * uRes.y;
+      float em = v.w * r / 2.4;
+      float broken = step(0.001, pe);
+      inside = mix(1.0, smoothstep(0.0, 0.002, em - pe * 0.012) * (1.0 - smoothstep(0.55, 1.0, pe + v.z * 0.35)), broken);
+      shade = mix(1.0, 0.8 + 0.4 * v.z, smoothstep(0.0, 0.15, pe));
+      glint = (1.0 - smoothstep(0.0, 0.0022, em)) * step(r, uWarpA * 1.4) * min(1.0, uWarpA * 3.0);
+    } else if (uWarp == 4) {
+      // slices: vertical strips slide away in alternating directions, staggered (uWarpA strips; negative reverses)
+      float N = abs(uWarpA), i = floor(px.x / uRes.x * N);
+      float delay = mod(i, 2.0) == 0.0 ? i / N * 0.35 : (N - 1.0 - i) / N * 0.35;
+      float pe = clamp((uWarpP - delay) / 0.65, 0.0, 1.0);
+      pe = pe * pe * (3.0 - 2.0 * pe);
+      px.y -= (mod(i, 2.0) == 0.0 ? 1.0 : -1.0) * sign(uWarpA) * pe * uRes.y * 1.05;
+    } else if (uWarp == 5) {
+      vec2 d = px - C; float r = length(d) / uRes.y;
+      px += normalize(d + 1e-4) * sin(r * 60.0 - uWarpP * 18.0) * uWarpA * 0.03 * exp(-r * 2.0) * uRes.y;
+    } else if (uWarp == 6) {
+      vec2 d = px - C; float r = length(d) / uRes.y;
+      px = C + rot(uWarpA * (1.0 - smoothstep(0.0, 0.7, r))) * d;
+    } else if (uWarp == 7) {
+      float b = max(1.0, uWarpA);
+      px = (floor(px / b) + 0.5) * b;
+    } else if (uWarp == 8) {
+      vec2 d = px - C; float r = length(d), seg = 6.2832 / 6.0;
+      float af = abs(mod(atan(d.y, d.x) + uWarpP, seg) - seg * 0.5);
+      px = mix(px, C + vec2(cos(af), sin(af)) * r, uWarpA);
+    } else if (uWarp == 9) {
+      float k = uWarpA * px.y / uRes.y;
+      px.x += sin(px.y * 0.025 + uWarpP * 20.0) * 18.0 * k + (vnoise(px * 0.02 + vec2(0.0, uWarpP * 8.0)) - 0.5) * 30.0 * k;
+    } else if (uWarp == 10) {
+      vec2 blk = floor(px / vec2(uRes.x / 8.0, uRes.y / 14.0));
+      float f = floor(uWarpP * 18.0), on = step(0.7, hash(blk + f)) * uWarpA;
+      px += (vec2(hash(blk + f + 1.0), hash(blk + f + 2.0)) - 0.5) * vec2(uRes.x * 0.15, uRes.y * 0.05) * on;
+    }
+    vec2 l = (px - uRect.xy) / uRect.zw + 0.5;
+    // geometric moves cut off at the picture's edge; distortions keep their edge pixels
+    if (uWarp <= 4) { if (l.x < 0.0 || l.y < 0.0 || l.x > 1.0 || l.y > 1.0) inside = 0.0; } else l = clamp(l, 0.0, 1.0);
+    uv0 = l;
+    if (uSrcRotF == 1) uv0 = vec2(l.y, 1.0 - l.x);
+    else if (uSrcRotF == 2) uv0 = vec2(1.0 - l.x, 1.0 - l.y);
+    else if (uSrcRotF == 3) uv0 = vec2(1.0 - l.y, l.x);
+  }
   if (uDir.x != 0.0 || uDir.y != 0.0) {
     col = vec4(0.0);
-    for (int i = -8; i <= 8; i++) col += tap(vUv + uDir * (float(i) / 8.0));
+    for (int i = -8; i <= 8; i++) col += tap(uv0 + uDir * (float(i) / 8.0));
     col /= 17.0;
   } else if (uRadial > 0.0) {
     col = vec4(0.0);
-    vec2 d = (vec2(0.5) - vUv) * uRadial * 0.32;
-    for (int i = 0; i < 14; i++) col += tap(vUv + d * (float(i) / 13.0));
+    vec2 d = (uRadC - uv0) * uRadial * 0.32;
+    for (int i = 0; i < 14; i++) col += tap(uv0 + d * (float(i) / 13.0));
     col /= 14.0;
   } else if (uBlur > 0.5) {
     col = vec4(0.0);
     for (int i = 0; i < 24; i++) {
       float r = sqrt((float(i) + 0.5) / 24.0);
       float a = float(i) * 2.39996323;
-      col += tap(vUv + vec2(cos(a), sin(a)) * r * uBlur * uTexel);
+      col += tap(uv0 + vec2(cos(a), sin(a)) * r * uBlur * uTexel);
     }
     col /= 24.0;
   } else {
-    col = tap(vUv);
+    col = tap(uv0);
   }
   if (uChroma > 0.0) {
-    col.r = tap(vUv + vec2(uChroma, 0.0)).r;
-    col.b = tap(vUv - vec2(uChroma, 0.0)).b;
+    col.r = tap(uv0 + vec2(uChroma, 0.0)).r;
+    col.b = tap(uv0 - vec2(uChroma, 0.0)).b;
   }
   float a = col.a;
   vec3 c = col.rgb;
@@ -99,10 +184,13 @@ void main() {
     c = clamp(c, 0.0, 1.0);
   }
   if (uInvert > 0.0) c = mix(c, 1.0 - c, uInvert);
+  c *= shade;
+  if (uExpo > 0.0) c = clamp(c * (1.0 + 4.0 * uExpo), 0.0, 1.0);
+  c += glint * vec3(0.9, 0.95, 1.0);
   vec2 sp = vec2(gl_FragCoord.x / uRes.x, 1.0 - gl_FragCoord.y / uRes.y);
   if (uLeak > 0.0) {
     float s = dot(sp, normalize(vec2(1.0, 0.45))) - uLeakPos * 1.25;
-    vec3 lc = vec3(1.0, 0.58, 0.22) * uLeak * (exp(-s * s / 0.028) + 0.18);
+    vec3 lc = uLeakColor * uLeak * (exp(-s * s / 0.028) + 0.18);
     c = 1.0 - (1.0 - c) * (1.0 - clamp(lc, 0.0, 1.0));
   }
   c = mix(c, uFlashColor, uFlash);
@@ -112,9 +200,8 @@ void main() {
     float proj = dot(sp - 0.5, uMaskDir) + 0.5;
     m = 1.0 - smoothstep(uMaskP - uMaskSoft, uMaskP + uMaskSoft, proj);
   } else if (uMask == 2) {
-    vec2 q = gl_FragCoord.xy / uRes - 0.5;
-    q.x *= uRes.x / uRes.y;
-    float d = length(q) / length(vec2(0.5 * uRes.x / uRes.y, 0.5));
+    vec2 ar = vec2(uRes.x / uRes.y, 1.0);
+    float d = length((sp - uIris) * ar) / length(max(uIris, 1.0 - uIris) * ar);
     m = 1.0 - smoothstep(uMaskP - 0.03, uMaskP + 0.001, d);
   } else if (uMask == 3) {
     vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
@@ -152,8 +239,32 @@ void main() {
   } else if (uMask == 6) {
     float th = 1.0 - uMaskP * 1.2;
     m = smoothstep(th, th + 0.22, lum0);
+  } else if (uMask == 8) {
+    // a jagged tear across the frame along uMaskDir; the torn edge catches the light (uEdge)
+    float x = dot(sp - 0.5, uMaskDir) + 0.5 + (vnoise(sp * 42.0) - 0.5) * 0.045 + (fbm(sp * 5.0) - 0.5) * 0.07;
+    m = 1.0 - smoothstep(uMaskP - 0.003, uMaskP + 0.003, x);
+    c = mix(c, uEdge, (1.0 - smoothstep(0.0, uEdgeW, abs(x - uMaskP))) * 0.85 * m);
+  } else if (uMask == 9) {
+    // a six-blade camera aperture at uIris that turns as it opens
+    vec2 q = (sp - uIris) * vec2(uRes.x / uRes.y, 1.0);
+    float seg = 6.2832 / 6.0;
+    float hd = length(q) * cos(mod(atan(q.y, q.x) + uMaskP * 2.2, seg) - seg * 0.5);
+    m = 1.0 - smoothstep(uMaskP - 0.004, uMaskP + 0.002, hd);
+    c *= 1.0 - 0.6 * (1.0 - smoothstep(0.0, 0.025, uMaskP - hd)) * m;
+  } else if (uMask == 10) {
+    // a windscreen wiper arm sweeping round a pivot below the frame
+    vec2 q = (sp - vec2(0.5, 1.15)) * vec2(uRes.x / uRes.y, 1.0);
+    float ang = atan(q.x, -q.y), th = mix(-1.35, 1.35, uMaskP);
+    m = 1.0 - smoothstep(th - 0.015, th + 0.015, ang);
+    c = mix(c, uEdge, (1.0 - smoothstep(0.0, uEdgeW, abs(ang - th))) * m);
+  } else if (uMask == 11) {
+    // venetian blinds: backlit slats open from the top down
+    float N = 12.0, row = floor(sp.y * N), f = fract(sp.y * N);
+    float o = clamp(uMaskP * 1.45 - row / N * 0.45, 0.0, 1.0);
+    m = step(abs(f - 0.5), o * 0.5);
+    c += uEdge * uEdgeW * (1.0 - smoothstep(0.0, 0.08, abs(abs(f - 0.5) - o * 0.5))) * step(0.001, o) * (1.0 - smoothstep(0.8, 1.0, o));
   }
-  float alpha = a * uOpacity * m;
+  float alpha = a * uOpacity * m * inside;
   outColor = vec4(c * alpha + bolt * uOpacity, alpha);
 }`;
 
@@ -185,7 +296,10 @@ export interface ShaderUniforms {
 }
 
 type FxProgram = { prog: WebGLProgram; u: Record<string, WebGLUniformLocation | null> } | { error: string };
-const FX_UNIFORMS = ['uRes', 'uT', 'uP', 'uDur', 'uTime', 'uBeat', 'uBeatAge', 'uEnergy', 'uOpacity', 'uScale', 'uRot', 'uAspect', 'uSeed', 'uPos', 'uFrame'];
+const FX_UNIFORMS = ['uRes', 'uT', 'uP', 'uDur', 'uTime', 'uBeat', 'uBeatAge', 'uEnergy', 'uOpacity', 'uScale', 'uRot', 'uAspect', 'uSeed', 'uPos', 'uFrame', 'uTextMask', 'uTextRect'];
+
+/** A texture an effect reads as a stencil (knockout text), placed at a rectangle of the frame (px, centre and size). */
+export interface ShaderMask { key: string; version: unknown; source: TexImageSource; cx: number; cy: number; w: number; h: number }
 
 export interface Quad { cx: number; cy: number; w: number; h: number; rot: number }
 
@@ -236,7 +350,8 @@ export class Compositor {
     this.prog = prog;
     gl.useProgram(prog);
     const names = ['uCenter', 'uSize', 'uRot', 'uRes', 'uSrcRot', 'uTex', 'uMaskTex', 'uTexel', 'uOpacity', 'uBright', 'uContrast', 'uSat', 'uTemp', 'uTint', 'uHue', 'uVignette',
-      'uBlur', 'uDir', 'uRadial', 'uChroma', 'uMask', 'uMaskDir', 'uMaskP', 'uMaskSoft', 'uMaskCenter', 'uMaskSize', 'uEdge', 'uEdgeW', 'uFlashColor', 'uFlash', 'uInvert', 'uLeak', 'uLeakPos', 'uPremul', 'uGrade'];
+      'uBlur', 'uDir', 'uRadial', 'uChroma', 'uMask', 'uMaskDir', 'uMaskP', 'uMaskSoft', 'uMaskCenter', 'uMaskSize', 'uEdge', 'uEdgeW', 'uFlashColor', 'uFlash', 'uInvert', 'uLeak', 'uLeakPos', 'uPremul', 'uGrade',
+      'uLeakColor', 'uWarp', 'uWarpP', 'uWarpA', 'uWarpC', 'uRect', 'uSrcRotF', 'uRadC', 'uIris', 'uExpo'];
     for (const n of names) this.u[n] = gl.getUniformLocation(prog, n);
     this.vao = gl.createVertexArray()!;
     gl.bindVertexArray(this.vao);
@@ -279,6 +394,8 @@ export class Compositor {
     const gl = this.gl;
     let e = this.textures.get(key);
     if (source && (!e || e.version !== version)) {
+      // uploads always go through unit 0, so a new texture never replaces what another unit holds
+      gl.activeTexture(gl.TEXTURE0);
       if (!e) {
         const tex = gl.createTexture()!;
         gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -387,7 +504,7 @@ export class Compositor {
   }
 
   /** Run an effect over the whole frame. Returns the compiler's message when it cannot run (it is then skipped). */
-  drawShader(code: string, blend: BlendMode, v: ShaderUniforms, name = ''): string | null {
+  drawShader(code: string, blend: BlendMode, v: ShaderUniforms, name = '', mask?: ShaderMask): string | null {
     const gl = this.gl;
     if (this.lost) return 'the graphics context was lost';
     this.lastShader = name;
@@ -403,7 +520,18 @@ export class Compositor {
     }
     if ('error' in entry) return entry.error;
     if (v.opacity <= 0.001) return null;
+    const u = entry.u;
+    let maskOn = false;
+    if (mask) {
+      const me = this.texture(mask.key, mask.version, mask.source, true);
+      if (me) {
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, me.tex);
+        maskOn = true;
+      }
+    }
     if (readsFrame(code)) {
+      gl.activeTexture(gl.TEXTURE2);
       if (!this.frameTex) {
         this.frameTex = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.frameTex);
@@ -416,8 +544,9 @@ export class Compositor {
       gl.bindTexture(gl.TEXTURE_2D, this.frameTex);
       gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGB, 0, 0, this.width, this.height, 0);
     }
-    const u = entry.u;
     gl.useProgram(entry.prog);
+    gl.uniform1i(u.uTextMask, 3);
+    gl.uniform4f(u.uTextRect, mask && maskOn ? mask.cx - mask.w / 2 : -10, mask && maskOn ? mask.cy - mask.h / 2 : -10, mask && maskOn ? mask.w : 1, mask && maskOn ? mask.h : 1);
     gl.uniform2f(u.uRes, this.width, this.height);
     gl.uniform1f(u.uT, v.t); gl.uniform1f(u.uP, v.p); gl.uniform1f(u.uDur, v.dur); gl.uniform1f(u.uTime, v.time);
     gl.uniform1f(u.uBeat, v.beat); gl.uniform1f(u.uBeatAge, v.beatAge); gl.uniform1f(u.uEnergy, v.energy);
@@ -438,10 +567,23 @@ export class Compositor {
     const H = this.height, W = this.width;
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, e.tex);
-    gl.uniform2f(this.u.uCenter, cx, cy);
-    gl.uniform2f(this.u.uSize, w, h);
-    gl.uniform1f(this.u.uRot, (rot * Math.PI) / 180);
-    gl.uniform1i(this.u.uSrcRot, srcRot);
+    const warp = fx.warp || 0;
+    // a warped layer is drawn as a full-frame quad and mapped back onto its own rectangle per pixel
+    gl.uniform2f(this.u.uCenter, warp ? W / 2 : cx, warp ? H / 2 : cy);
+    gl.uniform2f(this.u.uSize, warp ? W : w, warp ? H : h);
+    gl.uniform1f(this.u.uRot, warp ? 0 : (rot * Math.PI) / 180);
+    gl.uniform1i(this.u.uSrcRot, warp ? 0 : srcRot);
+    gl.uniform1i(this.u.uWarp, warp);
+    gl.uniform1f(this.u.uWarpP, fx.warpP || 0);
+    gl.uniform1f(this.u.uWarpA, fx.warpA || 0);
+    gl.uniform2f(this.u.uWarpC, fx.warpC?.[0] ?? 0.5, fx.warpC?.[1] ?? 0.5);
+    gl.uniform4f(this.u.uRect, cx, cy, w, h);
+    gl.uniform1i(this.u.uSrcRotF, srcRot);
+    gl.uniform2f(this.u.uRadC, fx.radC?.[0] ?? 0.5, fx.radC?.[1] ?? 0.5);
+    gl.uniform2f(this.u.uIris, fx.iris?.[0] ?? 0.5, fx.iris?.[1] ?? 0.5);
+    gl.uniform1f(this.u.uExpo, fx.expo || 0);
+    const lc = fx.leakColor || [1, 0.58, 0.22];
+    gl.uniform3f(this.u.uLeakColor, lc[0], lc[1], lc[2]);
     gl.uniform2f(this.u.uTexel, 1 / e.w, 1 / e.h);
     gl.uniform1f(this.u.uOpacity, opacity);
     gl.uniform1i(this.u.uGrade, c ? 1 : 0);

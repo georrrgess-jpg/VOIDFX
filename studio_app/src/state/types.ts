@@ -13,6 +13,8 @@ export interface Track {
   muted?: boolean;
   hidden?: boolean;
   locked?: boolean;
+  /** 'look': the grade over every video track (under the text); 'over': effects drawn above the look. */
+  role?: 'look' | 'over';
 }
 
 export type Ease = 'linear' | 'in' | 'out' | 'inOut' | 'hold';
@@ -53,12 +55,21 @@ export const TRANSITIONS = [
   'iris', 'zoom_in', 'zoom_out', 'whip_left', 'whip_right', 'whip_up', 'whip_down',
   'spin', 'blur', 'glitch', 'bolt',
   'logo', 'blink', 'ink', 'burn', 'slash', 'punch', 'light_leak', 'roll', 'shadow', 'warp',
+  'cube_left', 'cube_right', 'cube_up', 'cube_down', 'flip_h', 'flip_v', 'shatter', 'slices', 'blinds', 'ripple', 'swirl', 'pixelate', 'kaleido',
+  'heat', 'datamosh', 'tear', 'shutter', 'wiper', 'dive', 'light_sweep', 'wash',
 ] as const;
 export type TransitionType = typeof TRANSITIONS[number];
-export interface TransitionSpec { type: TransitionType; dur: number }
+export interface TransitionSpec {
+  type: TransitionType;
+  dur: number;
+  /** Anchor on the outgoing picture (frame coordinates 0..1): where a dive, iris, burst or ripple centres. */
+  at?: { x: number; y: number };
+  /** Anchor on the incoming picture: where it emerges from (an eye, a light). */
+  to?: { x: number; y: number };
+}
 
-export const TEXT_ANIMS_IN = ['none', 'fade', 'rise', 'drop', 'pop', 'blur', 'typewriter', 'words', 'letters', 'slide_left', 'slide_right'] as const;
-export const TEXT_ANIMS_OUT = ['none', 'fade', 'sink', 'lift', 'shrink', 'blur', 'words', 'scatter', 'fall', 'slide_left', 'slide_right'] as const;
+export const TEXT_ANIMS_IN = ['none', 'fade', 'rise', 'drop', 'pop', 'blur', 'typewriter', 'words', 'letters', 'bloom', 'slam', 'fly', 'stamp', 'sweep', 'mask', 'track', 'flicker', 'slide_left', 'slide_right'] as const;
+export const TEXT_ANIMS_OUT = ['none', 'fade', 'cap', 'sink', 'lift', 'shrink', 'blur', 'words', 'scatter', 'blowaway', 'streak', 'zoom', 'fall', 'slide_left', 'slide_right'] as const;
 export type TextAnimIn = typeof TEXT_ANIMS_IN[number];
 export type TextAnimOut = typeof TEXT_ANIMS_OUT[number];
 
@@ -92,6 +103,14 @@ export interface TextStyle {
   scrim: number;
   /** Size multiplier per line (lines split by \n), e.g. [1, 1.3]. */
   lineScales?: number[];
+  /** Shrink each line to fit maxWidth instead of wrapping (the v9 caption rule: a line never wraps). */
+  fit?: boolean;
+  /** Footage-in-letters: the words become windows onto the picture, the rest of the frame darkens. */
+  knockout?: boolean;
+  /** How dark the frame goes around knockout letters, 0..1. */
+  knockDark?: number;
+  /** Particles thrown by the blow-away exit: the edit's own motif. */
+  motif?: 'blood' | 'ash' | 'glass' | 'sparks' | 'petals';
 }
 
 export interface TextAnim { in: TextAnimIn; out: TextAnimOut; inDur: number; outDur: number }
@@ -145,6 +164,11 @@ export interface Clip {
   reveal?: Partial<GraphicReveal>;
   /** Effect: GLSL ES 3.0 source that defines `vec4 effect(vec2 uv, float t, float p)`. */
   code?: string;
+  /** Effect from the studio's library: its id and parameters (the code is generated from them). */
+  preset?: string;
+  params?: Record<string, number | string>;
+  /** 'all': the layer covers the edit from its start to the end, following its length (looks). */
+  span?: 'all';
 }
 
 export type BlendMode = 'normal' | 'add' | 'screen';
@@ -187,7 +211,7 @@ export interface BeatCamera {
   to?: number;
 }
 
-export const SFX = ['whoosh', 'swish', 'impact', 'hit', 'boom', 'riser', 'subdrop', 'reverse', 'glitch', 'shutter', 'tick', 'tapestop', 'zap'] as const;
+export const SFX = ['whoosh', 'swish', 'impact', 'hit', 'boom', 'riser', 'subdrop', 'reverse', 'glitch', 'shutter', 'tick', 'tapestop', 'zap', 'glass', 'rip'] as const;
 export type SfxType = typeof SFX[number];
 
 export interface AudioAnalysis {
@@ -253,8 +277,8 @@ export const DEFAULT_TEXT_STYLE: TextStyle = {
 };
 /** The approved caption construction (v9 NIGHT BLOOM): heavy caps, keyline, soft shadow, red emphasis. */
 export const STANDARD_CAPTION: Partial<TextStyle> = {
-  font: 'Inter', weight: 900, uppercase: true, size: 0.046, lineScales: [1, 1.3], stroke: 0.07, strokeColor: '#0a0a0a',
-  shadow: 0.65, scrim: 0.35, emphColor: '#ff2b3a', emphGlow: 0.7, lineHeight: 1.05, maxWidth: 0.86,
+  font: 'Inter', weight: 900, uppercase: true, size: 0.046, lineScales: [1, 1.3], stroke: 0.035, strokeColor: '#080506', color: '#f5f7f7',
+  shadow: 1, scrim: 0.34, emphColor: '#ff2b33', emphGlow: 0.7, lineHeight: 1.14, maxWidth: 0.87, fit: true, tracking: 0.01,
 };
 export const DEFAULT_CAMERA: BeatCamera = { on: true, every: 'beat', punch: 0.055, kick: 1.0, decay: 0.16 };
 export const DEFAULT_TEXT_ANIM: TextAnim = { in: 'fade', out: 'fade', inDur: 0.3, outDur: 0.25 };
