@@ -110,6 +110,8 @@ seconds are bare footage with no graphic or effect. Further gates catch:
 
 The reviews and the critic also get the measured brightness of the rendered frames, since dark grey is mud on a phone.
 
+**Auto exposure and the loop.** House-style edits lift dim shots toward a readable brightness automatically. Each shot's mean is read on the GPU; shadows and mids are raised and highlights kept, before the shot's grade and the look. It can be turned off per project or per clip. `{"op":"loop"}` lands the last frame on frame 0's exact source frame and framing, and the loop-seam gate judges the wrap against a normal frame-to-frame step.
+
 **Lessons from the critic.** Every critique's critical and major findings are remembered (House rules page) and sent with every later direction and review, so the studio does not repeat what was marked down.
 
 The song analysis takes the half tempo when busy hi-hats double it. It finds drops where the bass returns, and snaps them onto the downbeat. For each suggested window it lists where the bars and the drop fall on the timeline. A long video added straight to a project is split into shots like a database pack, with a cut detector that also works on black-and-white and night footage.

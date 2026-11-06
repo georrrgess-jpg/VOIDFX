@@ -404,6 +404,10 @@ if (on('units')) {
       { op: 'fx', preset: 'impact_frame', start: 2, dur: 0.2 }, { op: 'fx', preset: 'exposure_wash', start: 1.95, dur: 0.4 }], media);
     const checks = runChecks(r.project, media, { houseRules: true, duration: [20, 26], fps: 60 });
     out.gates = Object.fromEntries(['repeats', 'flash-stack', 'loop-sound', 'layers'].map(id => [id, checks.find(c => c.id === id)?.status || 'none']));
+    // the loop operation lands the last frame on frame 0's source frame and framing
+    r = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', id: 'f', media: vid, track: 'V1', in: 0.8, dur: 1, focus: { x: 0.4, y: 0.4 }, color: { brightness: 0.1 } }, { op: 'add', media: vid, track: 'V1', in: 2.5, dur: 1 }, { op: 'loop', dur: 0.4 }], media);
+    const tw = r.project.clips.find(c => c.name === 'loop twin');
+    out.loop = tw && { end: +(tw.start + tw.dur).toFixed(3), srcEnd: +((tw.in ?? 0) + tw.dur * (tw.speed ?? 1)).toFixed(3), focus: tw.focus, color: tw.color, issues: r.issues };
     // a velocity ramp bursts on the clip's own cut
     r = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', id: 'm', media: mus, track: 'A1', start: 0, in: 0, dur: 6 }, { op: 'add', id: 'v', media: vid, track: 'V1', in: 0, dur: 1, ramp: { fast: 2, slow: 0.5 } }], media);
     out.ramp = r.project.clips.find(c => c.id === 'v').kf?.speed?.[0];
@@ -417,6 +421,7 @@ if (on('units')) {
   check('a reused id goes to the new clip and is reported', u.alias.lookUntouched && u.alias.dustSet && u.alias.reported && u.alias.autoId, JSON.stringify(u.alias));
   check('beat camera sections', u.sections?.length === 2 && u.sections[1].punch === 0.03 && u.sections[1].every === 'half', JSON.stringify(u.sections));
   check('gates: repeated shots, stacked flashes, loop in sound', u.gates.repeats === 'warn' && u.gates['flash-stack'] === 'warn' && u.gates['loop-sound'] === 'warn', JSON.stringify(u.gates));
+  check('the loop operation lands on frame 0', u.loop && Math.abs(u.loop.end - 2) < 0.01 && Math.abs(u.loop.srcEnd - 0.8) < 0.01 && u.loop.focus?.x === 0.4 && u.loop.color?.brightness === 0.1, JSON.stringify(u.loop));
   check('velocity ramps burst on the cut', u.ramp && u.ramp.t < 0.03 && u.ramp.v >= 1.5, JSON.stringify(u.ramp));
   check('critic lessons are remembered for later edits', /white card/.test(u.lessons) && /Delete the wash/.test(u.lessons), u.lessons);
 }

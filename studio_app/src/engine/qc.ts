@@ -10,7 +10,7 @@ import { customIssues } from './custom';
 import { getFx } from './fxlib';
 
 export interface Check { id: string; label: string; status: 'pass' | 'warn' | 'fail' | 'info'; detail: string; at?: number[]; /** A one-click fix the panel can offer. */ action?: 'thin-sfx' | 'add-sfx' }
-export interface CheckOptions { houseRules: boolean; duration?: [number, number]; fps?: number; seam?: number | null }
+export interface CheckOptions { houseRules: boolean; duration?: [number, number]; fps?: number; seam?: number | { seam: number; step: number } | null }
 
 const f2 = (t: number) => t.toFixed(2);
 
@@ -170,7 +170,7 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   // nothing drawn over his face: an anchored overlay effect in the face zone (with focus set, the face
   // sits near (0.5, 0.42) of the frame) breaks the house rule
   if (o.houseRules) {
-    const OVER_FACE = new Set(['lens_flare', 'sparks_burst', 'glass_burst', 'shockwave', 'blood_lens', 'lightning_arc']);
+    const OVER_FACE = new Set(['lens_flare', 'sparks_burst', 'glass_burst', 'shockwave', 'blood_lens', 'lightning_arc', 'light_rays', 'flashlight', 'spotlight']);
     const mainT = p.tracks.find(t => t.main)?.id;
     const onFace = p.clips.filter(c => {
       if (c.kind !== 'shader' && c.kind !== 'graphic') return false;
@@ -282,17 +282,21 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   });
   if (zoomed.length) out.push({ id: 'zoom', label: 'Zoom on 720p', status: 'warn', detail: `${zoomed.length} clip${zoomed.length > 1 ? 's' : ''} zoom past 1.1x on 720p footage and may look soft.`, at: zoomed.map(c => c.start) });
   // loop seam (measured on rendered frames)
-  if (o.seam !== undefined && o.seam !== null) {
+  const seamM = o.seam === undefined || o.seam === null ? null : typeof o.seam === 'number' ? { seam: o.seam, step: 0 } : o.seam;
+  if (seamM) {
+    // the wrap is invisible when its jump is no bigger than a normal frame step here (grain and moving
+    // layers change every frame anyway)
+    const ok = seamM.seam <= 1 || seamM.seam <= seamM.step * 1.5 + 0.3;
     // say why when it can: the shots on both sides of the wrap and the source times they show
     let why = '';
     const first = mainClips[0], last = mainClips[mainClips.length - 1];
     if (first && last) {
       const srcEnd = (last.in ?? 0) + last.dur * (last.speed ?? 1), src0 = first.in ?? 0;
       why = first.media && first.media === last.media
-        ? ` The last shot ends on source ${f2(srcEnd)} s of the same file frame 0 shows at ${f2(src0)} s${Math.abs(srcEnd - src0) > 0.1 ? ': land the end on that source time (or put a twin of the first shot on top for the last frames)' : ''}; check its scale, position, colour and the layers on either side.`
-        : ` Frame 0 is ${first.media || 'a'} at ${f2(src0)} s and the last frame is ${last.media || 'another shot'}: an exact twin of the first shot over the last frames, the same scale, position, colour and layers, closes it.`;
+        ? ` The last shot ends on source ${f2(srcEnd)} s of the same file frame 0 shows at ${f2(src0)} s${Math.abs(srcEnd - src0) > 0.05 ? ' (a different frame)' : ''}${JSON.stringify([first.focus, first.transform?.scale ?? 1, first.color]) !== JSON.stringify([last.focus, last.transform?.scale ?? 1, last.color]) ? '; its focus, scale or colour differ from the first shot' : ''}: {"op":"loop"} lands it exactly, then keep the layers over the last frames the same as over frame 0.`
+        : ` Frame 0 is ${first.media || 'a'} at ${f2(src0)} s and the last frame is ${last.media || 'another shot'}: {"op":"loop"} dissolves a twin of the first shot in over the last frames; keep the layers there the same as over frame 0.`;
     }
-    out.push({ id: 'loop', label: 'Loop seam', status: o.seam <= 1 ? 'pass' : o.seam <= 8 ? 'warn' : 'fail', detail: `Last frame vs frame 0 differ by ${o.seam.toFixed(1)} (house standard <= 1; blurred mean difference).${o.seam > 1 ? why : ''}` });
+    out.push({ id: 'loop', label: 'Loop seam', status: ok ? 'pass' : seamM.seam <= 8 ? 'warn' : 'fail', detail: `Last frame vs frame 0 differ by ${seamM.seam.toFixed(1)}${seamM.step ? `; a normal frame step here is ${seamM.step.toFixed(1)}` : ''} (blurred mean difference; the wrap is invisible at 1 or less, or when it is no bigger than one and a half normal steps): ${ok ? 'the loop is seamless.' : `the wrap jumps.${why}`}` });
   }
   else if (o.houseRules) out.push({ id: 'loop', label: 'Loop seam', status: 'info', detail: 'Measured when Opus reviews, or press Measure.' });
   out.push({ id: 'eyes', label: 'Needs eyes', status: 'info', detail: 'Faces centred and uncut, set-piece quality and anything that looks drawn are checked by the review on rendered frames.' });

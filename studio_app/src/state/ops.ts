@@ -639,9 +639,15 @@ export function pruneSfx(p: Project): number {
     const order = [...second.filter(auto), ...left.filter(c => auto(c) && !second.includes(c)), ...second.filter(c => !auto(c)).sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1))];
     for (const c of order.slice(0, left.length - maxClips)) drop.add(c.id);
   }
-  if (drop.size) p.clips = p.clips.filter(c => !drop.has(c.id));
+  if (drop.size) {
+    pruned = p.clips.filter(c => drop.has(c.id)).map(c => `${c.sfx || 'sound'} at ${c.start.toFixed(2)} s (${c.id})`);
+    p.clips = p.clips.filter(c => !drop.has(c.id));
+  } else pruned = [];
   return drop.size;
 }
+/** The sounds the last pruneSfx removed, for the report. */
+let pruned: string[] = [];
+export const lastPruned = () => pruned;
 
 /**
  * Put main-track cuts exactly on the music's beats when they are within `tol` seconds of one, and
@@ -973,6 +979,36 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           claim(c);
           if (op.dur !== undefined) c.dur = num(op.dur, 0.02, c.dur, c.dur);
           touched.push(c.id);
+          applied++;
+          break;
+        }
+        case 'loop': {
+          // land the loop: a twin of the first shot (same file, framing, colour) dissolves in over the last
+          // seconds and ends on exactly the source frame frame 0 opens on
+          normalize(p, media, { resolveOverlaps: false });
+          const mainT = p.tracks.find(t => t.main);
+          const shots = p.clips.filter(c => c.track === mainT?.id).sort((a, b) => a.start - b.start);
+          const first = shots[0];
+          const m = first?.media ? media[first.media] : undefined;
+          if (!first || !m || first.kind !== 'video' && first.kind !== 'image') { issues.push(`${tag}: the loop needs a video or image shot first on the main track`); return; }
+          const end = projectDuration(p);
+          const d = num(op.dur, 0.1, 2, 0.4);
+          p.clips = p.clips.filter(c => c.name !== 'loop twin');
+          const tr = freeTrack(p, 'video', end - d, d);
+          const tw = makeMediaClip(p, m, round(end - d, 4), tr.id);
+          tw.dur = round(d, 4);
+          tw.name = 'loop twin';
+          const s1 = first.speed ?? 1, in0 = first.in ?? 0;
+          if (first.kind === 'video') {
+            const sp = in0 >= d * s1 ? s1 : Math.max(0.1, in0 / d);
+            tw.speed = round(sp, 4);
+            tw.in = round(Math.max(0, in0 - d * sp), 4);
+            tw.muted = true;
+          }
+          for (const k of ['focus', 'fit', 'transform', 'color', 'autoExposure'] as const) if (first[k] !== undefined) (tw as any)[k] = deepClone(first[k]);
+          tw.kf = { opacity: [{ t: 0, v: 0, e: 'inOut' }, { t: round(d, 4), v: 1 }] };
+          p.clips.push(tw);
+          touched.push(tw.id);
           applied++;
           break;
         }

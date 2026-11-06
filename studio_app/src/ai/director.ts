@@ -16,7 +16,7 @@ import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
 import { getPreset, lessonsText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
-import { addTransitionSounds, applyOps as applyOpsRaw, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
+import { addTransitionSounds, applyOps as applyOpsRaw, lastPruned, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
 import { customIssues } from '../engine/custom';
 import { store } from '../state/store';
 import { ASPECTS, Effort, Job, JobStep, MediaInfo, NoteCheck, Project, Round } from '../state/types';
@@ -38,7 +38,7 @@ function applyOps(base: Project, ops: unknown, media: Record<string, MediaInfo>)
   normalize(res.project, media);
   const notes: string[] = [];
   if (snapped) notes.push(`the studio moved ${snapped} cut${snapped > 1 ? 's' : ''} (by up to 90 ms) exactly onto the beat`);
-  if (pruned) notes.push(`the studio removed ${pruned} sound effect${pruned > 1 ? 's' : ''} (stacked within 0.3 s of another, more than two in a second, or over the budget of about three every four seconds)`);
+  if (pruned) notes.push(`the studio removed ${pruned} sound effect${pruned > 1 ? 's' : ''}: ${lastPruned().slice(0, 8).join(', ')} (stacked within 0.3 s of another, more than two layers or two moments in a second, or over the budget of about three every four seconds); layer one hit instead of stacking near-simultaneous sounds`);
   const bad = customIssues(res.project);
   return { ...res, issues: [...res.issues, ...notes, ...bad] };
 }

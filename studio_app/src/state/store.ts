@@ -61,7 +61,7 @@ export interface AppState {
   /** Latest automated checkpoint for the open project. */
   checks: import('../engine/qc').Check[];
   /** Loop seam difference (0-255 scale), measured on rendered frames. */
-  seam: number | null;
+  seam: { seam: number; step: number } | null;
   /** Background Opus jobs (builds, revisions, critiques), newest last. */
   jobs: Job[];
   /** Opus rounds of the open project. */

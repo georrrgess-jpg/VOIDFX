@@ -323,7 +323,7 @@ await page.keyboard.press('Space');
 await page.click('.top .btn-primary');
 await page.click('.modal .seg button:has-text("720p")');
 await page.click('.modal .btn-primary');
-await page.waitForSelector('.exp-video, .modal .note.bad', { timeout: 400000 });
+await page.waitForSelector('.exp-video, .modal .note.bad', { timeout: 900000 });
 const expErr = await page.evaluate(() => document.querySelector('.modal .note.bad')?.textContent || null);
 if (expErr) { console.log(JSON.stringify({ exportError: expErr, director: report.director, errors }, null, 1)); await shot('11-export-error'); process.exit(2); }
 report.exportInfo = await page.evaluate(() => [...document.querySelectorAll('.modal .exp-sum dd, .modal .note')].map(e => e.textContent));

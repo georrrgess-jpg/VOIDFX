@@ -471,21 +471,25 @@ export function clipsUsingMedia(p: Project, id: string): Clip[] { return p.clips
 
 export { BufferTarget };
 
-/** Loop seam: blurred mean difference (0-255) between frame 0 and the last frame. */
-export async function measureLoopSeam(p: Project, media: Record<string, MediaInfo> = store.state.media): Promise<number | null> {
+/**
+ * Loop seam: blurred mean difference (0-255) between frame 0 and the last frame, and the size of a normal
+ * frame-to-frame step on either side of the wrap (grain and moving layers change every frame anyway), so
+ * the jump can be judged against what the eye already accepts.
+ */
+export async function measureLoopSeam(p: Project, media: Record<string, MediaInfo> = store.state.media): Promise<{ seam: number; step: number } | null> {
   const dur = projectDuration(p);
   if (dur <= 0.2) return null;
-  const [a, b] = await renderStills(p, [0, Math.max(0, dur - 1 / p.fps)], 96, undefined, media);
+  const f = 1 / p.fps;
+  const [a, a1, b0, b] = await renderStills(p, [0, f, Math.max(0, dur - 2 * f), Math.max(0, dur - f)], 96, undefined, media);
   if (!a || !b) return null;
   const w = 18, h = Math.max(8, Math.round((18 * p.height) / p.width));
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const g = c.getContext('2d', { willReadFrequently: true })!;
-  g.drawImage(a, 0, 0, w, h);
-  const da = g.getImageData(0, 0, w, h).data;
-  g.drawImage(b, 0, 0, w, h);
-  const db = g.getImageData(0, 0, w, h).data;
-  let s = 0;
-  for (let i = 0; i < da.length; i += 4) s += (Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) + Math.abs(da[i + 2] - db[i + 2])) / 3;
-  return s / (w * h);
+  const px = (im: HTMLCanvasElement) => { g.drawImage(im, 0, 0, w, h); return g.getImageData(0, 0, w, h).data; };
+  const diff = (x: Uint8ClampedArray, y: Uint8ClampedArray) => { let s = 0; for (let i = 0; i < x.length; i += 4) s += (Math.abs(x[i] - y[i]) + Math.abs(x[i + 1] - y[i + 1]) + Math.abs(x[i + 2] - y[i + 2])) / 3; return s / (w * h); };
+  const da = px(a), db = px(b);
+  const seam = diff(da, db);
+  const step = Math.max(a1 ? diff(da, px(a1)) : 0, b0 ? diff(px(b0), db) : 0);
+  return { seam, step };
 }

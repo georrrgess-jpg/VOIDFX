@@ -99,6 +99,8 @@ WHAT THE CRITIC MARKS DOWN (from test edits scored by the critic; each one cost 
 - A prop or line drawn by a shader sits on the real object in the shot, with both ends read off the contact sheet ruler, a dark core and a lit highlight. It never runs edge to edge across the frame.
 - Atmosphere has to read on screen. Under a high-contrast look raise fog or haze density to 0.5 or more, or put it "over" the look. A layer you cannot see in the rendered frames is not there.
 - Every stage of a set piece reads in a still frame. Check its frames in the review: a stage that renders black, white or as a thin line has failed. Rebuild it.
+- The loop in picture: frame 0 and the last frame must be the same picture. After the shots are final, {"op":"loop"} dissolves a twin of the first shot in over the last frames and lands exactly on frame 0's source frame and framing. Keep the layers over the last frames the same as over frame 0, and build the loop's set piece before that landing. A cut back to the first shot is a return, not a loop.
+- Light and particles stay off faces: light_rays, flares, spotlights, dust and rain sit behind or beside the head, never across the eyes or mouth.
 - The loop in sound: the music runs to the last frame (fadeOut 0), or ends on a tape stop or a dead stop on the bar. Never a fade that comes back at full level.
 - The beat camera runs through every section with drums (camera "sections"); it rests only in freezes, holds and the loop landing.
 
