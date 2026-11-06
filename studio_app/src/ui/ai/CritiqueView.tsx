@@ -41,7 +41,7 @@ export function CritiqueView(props: {
         <div class="crit-hl">
           <span class={`verdict-pill v-${crit.verdict.replace(' ', '-')}`}>{VERDICT[crit.verdict]}</span>
           <h3>{crit.headline}</h3>
-          <p class="muted">Round {crit.round} · {crit.duration.toFixed(1)} s edit · {timeAgo(crit.at)}{crit.model ? ` · ${crit.model}` : ''}</p>
+          <p class="muted">Round {crit.round} · {crit.duration.toFixed(1)} s edit · {timeAgo(crit.at)}{crit.model ? ` · ${crit.model}` : ''}{crit.prevScore !== undefined ? ` · ${crit.score - crit.prevScore >= 0 ? '+' : ''}${(crit.score - crit.prevScore).toFixed(1)} on the last round` : ''}</p>
         </div>
       </header>
 
@@ -59,6 +59,17 @@ export function CritiqueView(props: {
           })}
         </div>
       )}
+
+      {crit.followUp?.length ? (
+        <section class="crit-sec">
+          <h4>{crit.round > 1 ? 'What this round was asked to fix' : 'The notes of the brief'} ({crit.followUp.filter(f => f.status === 'fixed').length}/{crit.followUp.length} done)</h4>
+          <ul class="crit-follow">
+            {crit.followUp.map(f => (
+              <li><span class={`rn-chip s-${f.status}`}>{f.id} {f.status === 'fixed' ? 'done' : f.status === 'partly' ? 'partly' : 'not done'}</span><span>{f.text ? `${f.text.slice(0, 140)}${f.text.length > 140 ? '…' : ''} ` : ''}{f.comment && <em>{f.comment}</em>}</span></li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {crit.strengths.length > 0 && (
         <section class="crit-sec">

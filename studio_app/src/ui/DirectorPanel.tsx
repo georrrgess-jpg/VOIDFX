@@ -5,7 +5,7 @@ import { activeJobFor } from '../ai/jobs';
 import { normalize } from '../state/ops';
 import { store, useStore } from '../state/store';
 import { deepClone } from '../state/util';
-import { Round } from '../state/types';
+import { NoteCheck, Round } from '../state/types';
 import { Icon } from './controls';
 import { openComposer, sendToCritic } from './ai/actions';
 import { JobCard } from './ai/Activity';
@@ -20,6 +20,55 @@ function restore(r: Round) {
   store.toast(`Restored the timeline from round ${r.n}. Undo (Ctrl+Z) brings the newer version back.`, 'ok', 6000);
 }
 
+const ST_LABEL: Record<string, string> = { done: 'done', partial: 'partly', not: 'not done', fixed: 'done', partly: 'partly' };
+
+/** Each numbered note of a round: how Opus planned it, how many operations carried it, its own check and the critic's. */
+function NotesList({ notes, follow }: { notes: NoteCheck[]; follow?: { id: string; status: string; comment: string }[] }) {
+  const crit = new Map((follow || []).map(f => [f.id, f]));
+  const done = notes.filter(n => (crit.get(n.id)?.status ?? n.status) === (crit.has(n.id) ? 'fixed' : 'done')).length;
+  return (
+    <details class="rnd-notes">
+      <summary><span>{notes.length} note{notes.length > 1 ? 's' : ''}</span><b>{done}/{notes.length} done{crit.size ? ', per the critic' : ', per Opus'}</b></summary>
+      <ol>
+        {notes.map(n => {
+          const f = crit.get(n.id);
+          return (
+            <li>
+              <p class="rn-t"><span class="rn-id">{n.id}</span><span class={`rn-from f-${n.from}`}>{n.from}{n.at !== undefined ? ` @ ${n.at.toFixed(2)}s` : ''}</span>{n.text.length > 180 ? `${n.text.slice(0, 180)}…` : n.text}</p>
+              <p class="rn-s">
+                <span class="rn-chip">{n.ops ? `${n.ops} op${n.ops > 1 ? 's' : ''}` : 'no ops'}</span>
+                {n.status && <span class={`rn-chip s-${n.status}`} title={n.check}>Opus: {ST_LABEL[n.status]}</span>}
+                {f && <span class={`rn-chip s-${f.status}`} title={f.comment}>Critic: {ST_LABEL[f.status] || f.status}</span>}
+              </p>
+              {n.plan && <p class="rn-plan">{n.plan}</p>}
+            </li>
+          );
+        })}
+      </ol>
+    </details>
+  );
+}
+
+/** The critic's score across rounds. */
+function ScoreHistory({ rounds }: { rounds: Round[] }) {
+  const pts = rounds.filter(r => r.critique).map(r => ({ n: r.n, s: r.critique!.score }));
+  if (pts.length < 1) return null;
+  const first = pts[0].s, last = pts[pts.length - 1].s;
+  return (
+    <div class="score-hist" aria-label="Critic score by round">
+      <p class="sh-h"><b>Critic score</b><span>{pts.length > 1 ? `${first.toFixed(1)} → ${last.toFixed(1)} (${last - first >= 0 ? '+' : ''}${(last - first).toFixed(1)})` : `${last.toFixed(1)}/10`}</span></p>
+      <div class="sh-bars">
+        {pts.map(p => (
+          <div class="sh-bar" title={`Round ${p.n}: ${p.s}/10`}>
+            <i style={{ height: `${Math.max(4, p.s * 10)}%`, background: p.s >= 8.5 ? 'var(--ok, #4ade80)' : p.s >= 7 ? '#ffb357' : '#ff4d5e' }} />
+            <span>R{p.n}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RoundItem({ r, projectId, latest }: { r: Round; projectId: string; latest: boolean }) {
   const c = r.critique;
   return (
@@ -31,10 +80,11 @@ function RoundItem({ r, projectId, latest }: { r: Round; projectId: string; late
           <p class="rnd-ask"><em>You:</em> {r.brief ? r.brief.slice(0, 220) + (r.brief.length > 220 ? '…' : '') : ''}{r.fromCritic?.length ? <span class="rnd-tag">{r.fromCritic.length} critic point{r.fromCritic.length > 1 ? 's' : ''}</span> : null}</p>
         )}
         {r.summary && <p class="rnd-say"><em>Opus:</em> {r.summary}</p>}
+        {r.notes?.length ? <NotesList notes={r.notes} follow={c?.followUp} /> : null}
         {c && (
           <button type="button" class="rnd-crit" onClick={() => store.set({ critique: { projectId, round: r.n } })}>
             <ScoreRing score={c.score} size={40} />
-            <span><b>Critic</b> {c.headline}</span>
+            <span><b>Critic{c.prevScore !== undefined ? ` ${c.score - c.prevScore >= 0 ? '+' : ''}${(c.score - c.prevScore).toFixed(1)}` : ''}</b> {c.headline}</span>
             <span class="rnd-go" aria-hidden="true">{Icon.chevR}</span>
           </button>
         )}
@@ -74,6 +124,7 @@ export function DirectorPanel() {
       <div class="dir-log">
         {job && <JobCard job={job} />}
         {recent && <JobCard job={recent} />}
+        {rounds.some(r => r.critique) && <ScoreHistory rounds={rounds} />}
         {rounds.length > 0 ? (
           <ol class="rounds">{[...rounds].reverse().map((r, i) => <RoundItem r={r} projectId={pid!} latest={i === 0} />)}</ol>
         ) : !job && (

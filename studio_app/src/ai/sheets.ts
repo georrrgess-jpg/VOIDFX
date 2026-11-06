@@ -135,6 +135,17 @@ export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet
     if (alloc[i] <= 1) break;
     alloc[i]--; over--;
   }
+  // never more sheets than a file has distinct frames to fill (a short clip on four near-empty sheets
+  // costs four images and shows nothing more); the freed images go to the files with more shots
+  const cap = (m: MediaInfo) => Math.max(1, Math.ceil((m.shots && m.shots.length > 2 ? m.shots.length : Math.max(2, Math.ceil(m.duration / 0.35))) / cellsPerSheet));
+  for (let i = 0; i < vids.length; i++) alloc[i] = Math.min(alloc[i], cap(vids[i]));
+  let spare = budget - alloc.reduce((a, b) => a + b, 0);
+  while (spare > 0) {
+    let best = -1, bw = 0;
+    for (let i = 0; i < vids.length; i++) if (alloc[i] < cap(vids[i])) { const w = weight(vids[i]) / (alloc[i] + 1); if (w > bw) { bw = w; best = i; } }
+    if (best < 0) break;
+    alloc[best]++; spare--;
+  }
   const pooled: (Cell & { aspect: number })[] = [];
   for (let vi = 0; vi < vids.length; vi++) {
     if (signal?.aborted) break;

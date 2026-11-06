@@ -300,6 +300,25 @@ export interface JobStep { id: string; label: string; state: 'wait' | 'run' | 'd
 /** One issue the critic found. `at` is timeline seconds when the issue is at a moment. */
 export interface CritiqueIssue { severity: 'critical' | 'major' | 'minor'; at?: number; area: string; problem: string; fix: string }
 
+/** One numbered note of a round (an owner instruction or a critic point) and how it was carried out. */
+export interface NoteCheck {
+  id: string;
+  text: string;
+  from: 'owner' | 'critic';
+  /** Timeline time the note is about, when it names one. */
+  at?: number;
+  /** Opus's plan for it. */
+  plan?: string;
+  /** Operations Opus tagged with it that the studio applied. */
+  ops?: number;
+  /** Opus's own check of the rendered frames after the round. */
+  status?: 'done' | 'partial' | 'not';
+  check?: string;
+}
+
+/** The critic's check of an earlier point. */
+export interface FollowUp { id: string; text?: string; status: 'fixed' | 'partly' | 'not'; comment: string }
+
 /** The critic's assessment of one round of an edit. */
 export interface Critique {
   at: number;
@@ -316,6 +335,10 @@ export interface Critique {
   versus: string;
   /** The critic's write-up for Opus: what the next round must do. */
   brief: string;
+  /** How each point of the previous round was carried out, as the critic saw it. */
+  followUp?: FollowUp[];
+  /** The previous round's score, for the change. */
+  prevScore?: number;
   /** Edit length and round the critique looked at. */
   duration: number;
   round: number;
@@ -337,6 +360,10 @@ export interface Round {
   summary?: string;
   applied?: number;
   model?: string;
+  /** The numbered notes of this round and how each was carried out. */
+  notes?: NoteCheck[];
+  /** Opus's own scorecard of the result (0-10 per critic area), from its last review. */
+  selfScores?: Record<string, number>;
   /** The critic's assessment of the result of this round. */
   critique?: Critique;
   /** The timeline as this round left it, so it can be restored. */

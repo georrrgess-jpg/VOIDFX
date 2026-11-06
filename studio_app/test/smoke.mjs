@@ -47,7 +47,8 @@ await ctx.addInitScript(() => {
     for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
     return btoa(s);
   };
-  const TRANS = ['logo', 'ink', 'blink', 'slash', 'punch', 'light_leak', 'roll', 'shadow', 'warp', 'burn', 'whip_left'];
+  const TRANS = ['logo', 'ink', 'dive', 'shatter', 'blink', 'slash', 'cube_left', 'punch', 'light_leak', 'shadow', 'tear', 'burn', 'whip_left'];
+  const PICTURE = new Set(['clear', 'project', 'add', 'look', 'track']);
   function planFrom(text) {
     const media = [...text.matchAll(/^(m[a-z0-9]+) (video|audio|image) "([^"]+)" ([\d.]+s|still image)/gm)].map(m => ({ id: m[1], kind: m[2], dur: m[4] === 'still image' ? 3 : parseFloat(m[4]) }));
     const ops = [{ op: 'clear' }, { op: 'project', camera: { on: true, every: 'beat', punch: 0.055, kick: 1 } }];
@@ -58,6 +59,8 @@ await ctx.addInitScript(() => {
       const dur = 1.6;
       const op = { op: 'add', id: `v${k}`, media: m.id, track: 'V1', in: m.kind === 'image' ? 0 : Math.min(Math.max(0, m.dur - dur - 0.6), round * 1.2 + 0.3), dur };
       if (k > 0) op.transition = { type: TRANS[(k - 1) % TRANS.length] };
+      if (op.transition?.type === 'dive') op.transition = { type: 'dive', at: { x: 0.5, y: 0.4 }, to: { x: 0.52, y: 0.42 } };
+      if (op.transition?.type === 'shatter') op.transition = { type: 'shatter', at: { x: 0.6, y: 0.7 } };
       if (k === 1) op.ramp = { fast: 2, slow: 0.5 };
       if (k === 2) op.focus = { x: 0.62, y: 0.38 };
       ops.push(op); t += dur; k++;
@@ -65,7 +68,12 @@ await ctx.addInitScript(() => {
     const music = media.find(m => m.kind === 'audio');
     if (music) ops.push({ op: 'add', id: 'mus', media: music.id, track: 'A1', start: 0, in: 0, dur: Math.min(music.dur, t) });
     ops.push({ op: 'text', id: 'cap', track: 'T1', start: 0.3, dur: 2.4, text: 'COULD IT BE\n*HIM*', words: [0, 0.25, 0.5, 0.9], style: { font: 'Inter', weight: 900, uppercase: true, size: 0.046, lineScales: [1, 1.3], stroke: 0.07, shadow: 0.65, scrim: 0.35, emphColor: '#ff2b3a' }, anim: { in: 'words', out: 'fade' }, transform: { y: 0.25 } });
-    ops.push({ op: 'text', id: 'hero', track: 'T1', start: 4.0, dur: 1.8, text: 'ALONG', style: { font: 'Inter', weight: 900, size: 0.085, uppercase: true, stroke: 0.06 }, anim: { in: 'letters', out: 'scatter', inDur: 0.8, outDur: 0.5 }, transform: { y: 0.27 } });
+    ops.push({ op: 'text', id: 'hero', track: 'T1', start: 4.0, dur: 1.8, text: '*ALONG*', style: { font: 'Inter', weight: 900, size: 0.085, uppercase: true, stroke: 0.06, motif: 'blood' }, anim: { in: 'bloom', out: 'blowaway', inDur: 0.9, outDur: 0.7 }, transform: { y: 0.27 } });
+    ops.push({ op: 'text', id: 'knock', start: 6.2, dur: 1.4, text: 'BAY HARBOR\nBUTCHER', style: { font: 'Inter', weight: 900, size: 0.09, uppercase: true, knockout: true, fit: true }, anim: { in: 'slam', out: 'zoom', inDur: 0.4, outDur: 0.35 } });
+    ops.push({ op: 'look', preset: 'noir_red', params: { keep: '#c70f14' } });
+    ops.push({ op: 'fx', id: 'rays', preset: 'light_rays', start: 0.2, dur: 2.4, at: { x: 0.62, y: 0.18 } });
+    ops.push({ op: 'fx', id: 'wash', preset: 'exposure_wash', start: 3.0, dur: 0.45, over: true });
+    ops.push({ op: 'fx', id: 'bl', preset: 'blood_lens', start: 7.0, dur: 1.4, params: { size: 1.2, nope: 3 } });
     ops.push({ op: 'graphic', id: 'emb', start: 0.4, dur: 1.2, gw: 0.45, glow: 0.6, reveal: { in: 'pop', out: 'fade' }, transform: { y: -0.12 },
       svg: '<svg viewBox="0 0 400 400"><circle cx="200" cy="200" r="170" fill="none" stroke="#ffd23f" stroke-width="16"/><path d="M230 40 L120 220 L195 220 L160 360 L290 160 L210 160 Z" fill="#ffd23f" stroke="#fff" stroke-width="5"/></svg>' });
     ops.push({ op: 'shader', id: 'arc', start: 3.0, dur: 0.6, blend: 'add', code: 'vec4 effect(vec2 uv, float t, float p) { vec2 q = aspectUv(uv); float d = boltDist(q, vec2(-0.18, -0.42), vec2(0.12, 0.35), floor(t * 14.0), 0.3); float core = glow(d - 0.002, 0.003), halo = glow(d, 0.035) * 0.55; float a = (core + halo) * (0.55 + 0.45 * uBeat) * smoothstep(0.0, 0.08, p) * smoothstep(1.0, 0.75, p); return vec4(mix(vec3(1.0, 0.72, 0.18), vec3(1.0), core), a); }' });
@@ -102,20 +110,35 @@ await ctx.addInitScript(() => {
               ],
               versus: 'Below the v7 and v10 benchmarks: fewer set pieces and no motion pass on the montage.',
               brief: '1. Rebuild the first second around a hit.\n2. Snap every cut to the beat grid.\n3. Close the loop on frame 0.',
+              ...(full.includes('WHAT THIS ROUND WAS ASKED TO FIX') ? { followUp: [...full.matchAll(/^(N\d+)(?: @ [\d.]+s)?: /gm)].map((m, i) => ({ id: m[1], status: i % 2 ? 'partly' : 'fixed', comment: 'checked in the frames' })) } : {}),
             });
+            window.__critics = [...(window.__critics || []), { follow: full.includes('WHAT THIS ROUND WAS ASKED TO FIX'), anchored: full.includes('SCORING AGAINST THE LAST ROUND'), tools: full.includes("THE STUDIO'S TOOLS"), exemplars: full.includes('WORKED EXAMPLES') }];
+          } else if (last.includes('NOTES WITH NO APPLIED OPERATIONS')) {
+            const ids = [...last.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
+            window.__filledNotes = (window.__filledNotes || 0) + 1;
+            reply = JSON.stringify({ message: `Carried ${ids.join(', ')}.`, notes: ids.map(id => ({ id, plan: 'dust in the light' })), ops: [{ op: 'fx', preset: 'dust', start: 0.5, dur: 2, note: ids }] });
+          } else if (last.includes('STEP 2 OF 2, PART A') || last.includes('STEP 2 OF 2, PART B')) {
+            const a = last.includes('PART A');
+            window.__parts = [...(window.__parts || []), a ? 'A' : 'B'];
+            const plan = planFrom(full);
+            reply = JSON.stringify({ message: plan.message, ops: plan.ops.filter(o => PICTURE.has(o.op) === a) });
           } else if (last.includes('STEP 1 OF 2')) {
             // the first direction call comes back empty, as it did for the owner: the studio must retry lighter
             if (!window.__failedOnce) { window.__failedOnce = true; window.__calls[window.__calls.length - 1].failed = 'empty_completion'; throw { code: 'empty_completion', message: 'no text' }; }
             reply = JSON.stringify({ message: 'Concept: the evidence points back at him.', direction: 'CONCEPT: the evidence points back at him. SHOTS: every file twice, logo dive on the first downbeat.' });
           } else if (last.includes('STEP 2 OF 2') && /ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full)) {
             reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
-          } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && !full.includes('REVIEW 1 of')) {
+          } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && !/REVIEW \d OF/.test(last)) {
             reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
-          } else if (last.includes('REVIEW 1 of') && last.includes('effect oops does not compile')) {
-            window.__sawCompileError = true;
-            reply = JSON.stringify({ message: 'Removed the effect that did not compile.', ops: [{ op: 'remove', id: 'oops' }] });
-          } else if (full.includes('REVIEW 1 of') || full.includes('REVIEW 2 of')) {
-            reply = JSON.stringify({ message: 'Reviewed: the checkpoint is clean enough; approved.', ops: [] });
+          } else if (/REVIEW \d OF/.test(last)) {
+            const ids = [...last.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
+            window.__reviews = [...(window.__reviews || []), last.slice(0, 60)];
+            const notes = ids.map(id => ({ id, status: 'done', check: 'visible in its frames' }));
+            const scores = { hook: 7, rhythm: 7.5, transitions: 8, motion: 7, text: 8, sound: 7, concept: 7.5, picture: 7.5, loop: 6 };
+            if (last.includes('effect oops does not compile')) {
+              window.__sawCompileError = true;
+              reply = JSON.stringify({ message: 'Removed the effect that did not compile.', scores, notes, ops: [{ op: 'remove', id: 'oops' }] });
+            } else reply = JSON.stringify({ message: 'Reviewed: the checkpoint is clean enough; approved.', scores, notes, ops: [] });
           } else {
             reply = JSON.stringify(planFrom(full));
           }
@@ -246,6 +269,14 @@ report.director = await page.evaluate(() => {
     opusSawLyrics: window.__calls.some(c => c.full.includes('TIMED LYRICS') && c.full.includes('L2 2.10')),
     opusSawWindows: window.__calls.some(c => c.full.includes('best windows for a ~23 s edit')),
     camera: s.project.camera,
+    parts: window.__parts || [],
+    reviews: window.__reviews || [],
+    filledNotes: window.__filledNotes || 0,
+    critics: window.__critics || [],
+    notes: s.rounds.map(r => `R${r.n}: ${(r.notes || []).map(n => `${n.id}[${n.from}] ops=${n.ops || 0} ${n.status || '-'}`).join('; ')} self=${r.selfScores ? Object.values(r.selfScores).join('/') : '-'} follow=${r.critique?.followUp ? r.critique.followUp.map(f => `${f.id}:${f.status}`).join(',') : '-'} prev=${r.critique?.prevScore ?? '-'}`),
+    looks: s.project.clips.filter(c => c.preset).map(c => `${c.id}:${c.preset}:${c.track}${c.span ? ':' + c.span : ''}`),
+    tracks: s.project.tracks.map(t => `${t.id}:${t.kind}${t.role ? ':' + t.role : ''}${t.main ? ':main' : ''}`),
+    knowledge: { exemplars: window.__calls.some(c => c.full.includes('WORKED EXAMPLES')), cookbook: window.__calls.some(c => c.full.includes('PLAYBOOK: THE APPROVED SET PIECES')), canon: window.__calls.some(c => c.full.includes('HOW THE EDIT WILL BE JUDGED')), fxCatalog: window.__calls.some(c => c.full.includes('LOOKS AND THE EFFECT LIBRARY')), maxChars: Math.max(...window.__calls.map(c => c.full.length)) },
   };
 });
 await page.click('.rp-tabs button:has-text("Opus")').catch(() => {});
@@ -271,6 +302,14 @@ await shot('08-transitions-panel');
 await page.click('.rail-b:has-text("Text")');
 await page.waitForTimeout(1200);
 await shot('09-text-panel');
+await page.click('.rail-b:has-text("Looks")');
+await page.waitForTimeout(2500);
+await shot('09b-looks-panel');
+await page.click('.rail-b:has-text("Effects")');
+await page.waitForTimeout(3000);
+await shot('09c-effects-panel');
+const lookId = await page.evaluate(() => window.__voidfx.store.state.project.clips.find(c => c.preset === 'noir_red')?.id);
+if (lookId) { await page.evaluate(id => window.__voidfx.store.set({ selection: [id], rightTab: 'inspector' }), lookId); await page.waitForTimeout(600); await shot('09d-look-inspector'); }
 await page.click('.rp-tabs button:has-text("Checks")');
 await page.waitForTimeout(800);
 await shot('10-checks');

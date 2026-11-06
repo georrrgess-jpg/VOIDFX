@@ -2,7 +2,10 @@ import { TRANSITION_LABELS } from '../engine/transitions';
 import { store, useStore } from '../state/store';
 import { AnimProp, ASPECTS, Clip, ColorAdjust, FONTS, MediaInfo, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TextAnimIn, TextAnimOut, TRANSITIONS, TransitionType } from '../state/types';
 import { clamp, clipEnd, colorOf, propValue, textAnimOf, textStyleOf, trackClips } from '../state/util';
-import { deleteSelected, jumpKeyframe, rampSelected, setAnimProp, toggleKeyframe, updateClip, wordsOnBeats } from './actions';
+import { deleteSelected, jumpKeyframe, rampSelected, setAnimProp, setFxParam, toggleKeyframe, updateClip, wordsOnBeats } from './actions';
+import { getFx, isColorParam } from '../engine/fxlib';
+import { IN_LABEL, OUT_LABEL } from './LeftPanel';
+import { STANDARD_CAPTION } from '../state/types';
 import { SFX_INFO } from '../engine/sfx';
 import { DEFAULT_CAMERA, SFX, SfxType } from '../state/types';
 import { hasRamp } from '../state/util';
@@ -108,7 +111,8 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
   const visual = c.kind !== 'audio' && c.kind !== 'sfx';
   const hasSound = isMedia && !!m?.hasAudio;
   const color = colorOf(c);
-  const kindLabel = c.kind === 'text' ? 'Text' : c.kind === 'audio' ? 'Audio' : c.kind === 'image' ? 'Image' : c.kind === 'sfx' ? 'Sound' : c.kind === 'graphic' ? 'Graphic' : c.kind === 'shader' ? 'Effect' : 'Video';
+  const onLook = store.state.project.tracks.find(t => t.id === c.track)?.role === 'look';
+  const kindLabel = c.kind === 'text' ? 'Text' : c.kind === 'audio' ? 'Audio' : c.kind === 'image' ? 'Image' : c.kind === 'sfx' ? 'Sound' : c.kind === 'graphic' ? 'Graphic' : c.kind === 'shader' ? (onLook ? 'Look' : 'Effect') : 'Video';
   const custom = c.kind === 'graphic' || c.kind === 'shader';
   return (
     <div class="insp">
@@ -264,11 +268,21 @@ function GraphicProps({ c }: { c: Clip }) {
 
 function EffectProps({ c }: { c: Clip }) {
   const err = c.code ? compileError(c.code) : 'no code';
+  const def = c.preset ? getFx(c.preset) : undefined;
+  const isLook = useStore(s => s.project.tracks.find(t => t.id === c.track)?.role === 'look');
   return (
-    <Section title="Effect">
+    <Section title={def ? (isLook ? 'Look' : 'Library effect') : 'Effect'}>
       <p class={`fx-status ${err ? 'bad' : 'ok'}`}>{err ? `Skipped: ${err}` : 'Compiles and renders in the preview, the export and Opus\'s review frames.'}</p>
+      {def && <p class="hint"><b>{def.name}</b>: {def.hint}{isLook ? ' It grades every shot, graphic and effect under the text.' : def.anchor ? ' Position moves its anchor (the light, the impact point).' : ''}</p>}
+      {def && def.params.map(prm => {
+        const v = c.params?.[prm.id];
+        if (isColorParam(prm)) return <ColorField id={`fxp-${prm.id}`} label={prm.label} value={typeof v === 'string' ? v : prm.color} onChange={x => setFxParam(c.id, prm.id, x)} />;
+        const range = prm.max - prm.min;
+        const step = range <= 2 ? 0.01 : range <= 20 ? 0.1 : 1;
+        return <Slider id={`fxp-${prm.id}`} label={prm.label} min={prm.min} max={prm.max} step={step} fmt={x => (step < 0.1 ? x.toFixed(2) : step < 1 ? x.toFixed(1) : String(Math.round(x)))} value={typeof v === 'number' ? v : prm.def} onStart={begin} onEnd={end} onInput={x => setFxParam(c.id, prm.id, x)} dflt={prm.def} />;
+      })}
       <div class="fld fld-wide"><span class="fld-l">Blend</span><Seg value={c.blend || 'normal'} onChange={v => updateClip(c.id, { blend: v })} options={BLEND_MODES.map(b => ({ value: b, label: b === 'add' ? 'Add light' : b === 'screen' ? 'Screen' : 'Normal' }))} /></div>
-      <CodeBox id="e-code" label="Edit the effect code (GLSL)" value={c.code || ''} rows={14} hint="vec4 effect(vec2 uv, float t, float p): see the Effects panel for the helpers." apply={v => updateClip(c.id, { code: v })} />
+      <CodeBox id="e-code" label={def ? 'Edit the code (detaches it from the library preset)' : 'Edit the effect code (GLSL)'} value={c.code || ''} rows={def ? 8 : 14} hint="vec4 effect(vec2 uv, float t, float p): see the Effects panel for the helpers." apply={v => updateClip(c.id, { code: v })} />
     </Section>
   );
 }
@@ -286,7 +300,7 @@ function TextProps({ c }: { c: Clip }) {
           onInput={e => updateClip(c.id, { text: (e.target as HTMLTextAreaElement).value }, true)} />
         <p class="hint">*Asterisks* mark emphasis words (drawn in the emphasis colour with a glow). A new line starts the second line.</p>
         <div class="chips-row">
-          <button type="button" class="chipbtn" onClick={() => updateClip(c.id, { style: { font: 'Inter', weight: 900, uppercase: true, size: 0.046, lineScales: [1, 1.3], stroke: 0.07, strokeColor: '#0a0a0a', shadow: 0.65, scrim: 0.35, emphColor: s.emphColor || '#ff2b3a', emphGlow: 0.7, lineHeight: 1.05 }, anim: { in: 'words' }, transform: { y: 0.25 } })}>House caption style</button>
+          <button type="button" class="chipbtn" onClick={() => updateClip(c.id, { style: { ...STANDARD_CAPTION, emphColor: s.emphColor || STANDARD_CAPTION.emphColor }, anim: { in: 'words', out: 'cap', inDur: 0.6, outDur: 0.28 }, transform: { y: 0.25 } })}>House caption style</button>
           <button type="button" class="chipbtn" onClick={wordsOnBeats}>Words on the beats</button>
           {c.words?.length ? <button type="button" class="chipbtn" onClick={() => updateClip(c.id, { words: null })}>Clear word times</button> : null}
         </div>
@@ -313,6 +327,10 @@ function TextProps({ c }: { c: Clip }) {
         <Slider id="ttrack" label="Letter spacing" min={-0.1} max={0.6} step={0.005} fmt={v => v.toFixed(2)} value={s.tracking} onStart={begin} onEnd={end} onInput={v => live({ tracking: v })} dflt={0} />
         <Slider id="tlh" label="Line height" min={0.7} max={2} step={0.01} fmt={v => v.toFixed(2)} value={s.lineHeight} onStart={begin} onEnd={end} onInput={v => live({ lineHeight: v })} dflt={1.12} />
         <Slider id="tmw" label="Wrap width" min={0.2} max={1} step={0.01} fmt={v => `${Math.round(v * 100)}%`} parse={x => parseFloat(x) / 100} value={s.maxWidth} onStart={begin} onEnd={end} onInput={v => live({ maxWidth: v })} dflt={0.86} />
+        <Toggle id="tfit" label="Shrink lines to fit" checked={!!s.fit} onChange={v => set({ fit: v })} />
+        <Toggle id="tknock" label="Footage in the letters (knockout)" checked={!!s.knockout} onChange={v => set({ knockout: v })} />
+        {s.knockout && <Slider id="tknockd" label="Darken the rest" min={0} max={1} step={0.01} fmt={v => `${Math.round(v * 100)}`} parse={x => parseFloat(x) / 100} value={s.knockDark ?? 0.82} onStart={begin} onEnd={end} onInput={v => live({ knockDark: v })} dflt={0.82} />}
+        <Select id="tmotif" label="Blow-away particles" value={s.motif || 'ash'} onChange={v => set({ motif: v })} options={['ash', 'blood', 'glass', 'sparks', 'petals'].map(m => ({ value: m, label: m[0].toUpperCase() + m.slice(1) }))} />
       </Section>
       <Section title="Animation">
         <Select<TextAnimIn> id="tain" label="In" value={a.in} onChange={v => updateClip(c.id, { anim: { in: v } })} options={TEXT_ANIMS_IN.map(x => ({ value: x, label: animLabel(x) }))} />
@@ -325,7 +343,5 @@ function TextProps({ c }: { c: Clip }) {
 }
 
 function animLabel(x: string) {
-  const map: Record<string, string> = { none: 'None', fade: 'Fade', rise: 'Rise', drop: 'Drop', pop: 'Pop', blur: 'Blur', typewriter: 'Typewriter', words: 'Word by word', letters: 'Letter build', scatter: 'Scatter', fall: 'Fall', slide_left: 'Slide left', slide_right: 'Slide right', sink: 'Sink', lift: 'Lift', shrink: 'Shrink' };
-  return map[x] || x;
+  return IN_LABEL[x] || OUT_LABEL[x] || x;
 }
-

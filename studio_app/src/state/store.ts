@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef } from 'preact/hooks';
 import { MediaInfo, Project, ASPECTS, Effort, Job, JobStep, Round } from './types';
 import { deepClone, uid } from './util';
 
-export type LeftTab = 'media' | 'text' | 'transitions' | 'effects' | 'sounds';
+export type LeftTab = 'media' | 'text' | 'transitions' | 'looks' | 'effects' | 'sounds';
 export type RightTab = 'director' | 'inspector' | 'checks';
 export type HomeTab = 'home' | 'projects' | 'create' | 'presets' | 'library' | 'standards' | 'rules';
 

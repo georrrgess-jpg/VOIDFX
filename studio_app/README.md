@@ -1,6 +1,6 @@
 # VOIDFX Studio
 
-A browser video editor in the style of CapCut, published as a claude.ai artifact, where **Opus 5.5
+A browser video editor in the style of CapCut, published as a claude.ai artifact, where **Opus
 can build the whole edit** to the voidfx standard, a critic can tear it apart, and Opus revises it round by
 round in the background. Stages 1 to 3 of [`PLAN.md`](PLAN.md).
 
@@ -23,7 +23,13 @@ The studio opens on the **main menu**:
   are stored in this browser and read on demand.
 - **Standards**: your approved benchmarks and any reference edits you add, for all edits or for
   chosen presets.
-- **House rules**: what Opus is told about the voidfx style, plus your own additions.
+- **House rules**: what Opus knows about the voidfx style and where it comes from, plus your own
+  additions. Every editing file the owner provided (CLAUDE.md, the studio handbook, the spec and
+  handoff, preferences and edit history, the toolkit, the scene-pack notes, the TikTok editing guide
+  and the v2-v11 edit archive) is distilled into the house rules, a playbook of every approved set
+  piece rebuilt from studio operations, beat-by-beat worked examples of the approved edits, and notes
+  on 16 scene packs and 10 songs. A pack or song is recognised when it is used, by name or by its
+  length, size and frame rate, and Opus gets its proven shots, dialogue timecodes and what to avoid.
 
 **The critic and the revision stage.** The critic judges an edit against your standards, your house
 rules and the best TikTok edits of its kind, and writes a scored assessment with timed issues and a
@@ -31,6 +37,35 @@ write-up for Opus. In the round composer you write the next round's instructions
 points go in, and start the round; it runs in the background and the editor shows it live (read-only
 until it finishes). Every round is kept with its brief, Opus's summary, the critic's score and a
 snapshot you can restore. **Ctrl/⌘+K** jumps to any section, project or action.
+
+**Looks and effects.** The **Looks** panel holds 21 grades that sit over the whole edit, above every
+shot, graphic and effect and under the text and the logo. They include black-and-white noir, noir with
+one colour kept, crimson monochrome, duotone, film stocks, VHS, CCTV, thermal and X-ray. The **Effects**
+panel holds 44 tested effects:
+
+- finishes (film grain and halation, bloom, anamorphic streaks, CRT);
+- light (light rays, lens flare, a streetlight sweep, spotlight, flashlight, police lights, neon spill);
+- atmosphere and particles (fog, rain on glass, heat haze, embers, dust, ash, snow, bokeh, spark and glass bursts);
+- camera and impact (shake, zoom blur, glitch, an exposure wash, an impact frame, a freeze);
+- beat moments (pulse, remnants, edge pulse);
+- themed set pieces (aperture open and close, tape static, TV power-off, plastic wrap, blood on the lens, luminol, lightning arcs, the Speed Force, speed streaks, a shockwave).
+
+Every tile previews on a frame of your own footage. The inspector has a slider or colour for each
+parameter. Opus uses them by name with an operation each.
+
+There are 21 new transitions:
+
+- dive into an eye or any anchored point;
+- radial glass shatter;
+- cube turns and card flips;
+- tear, aperture shutter, slices, blinds, wiper;
+- streetlight sweep, exposure wash, heat haze;
+- ripple, swirl, kaleidoscope, pixelate, datamosh.
+
+Captions use the approved v9 construction. The new title animations are hero bloom, slam,
+fly-from-camera, stamp, light-sweep write-on, rise-from-box, tracking and neon flicker. Exits include
+blow-away particles (blood, ash, glass, sparks or petals), speed streak and past-the-camera, plus
+knockout type with the footage inside the letters.
 
 **Custom graphics and effects.** Opus is not limited to the built-in library: for each edit it can
 draw its own vector graphics (emblems, bolts, marks) and write its own GPU effects (lightning, speed
@@ -47,9 +82,25 @@ to -13 LUFS and reports what it measured; **Save** hands the file to your device
 
 Opus never hears audio: the studio measures tempo, beats, downbeats, hits, level rises and quiet parts
 and passes those numbers, plus labelled contact sheets of every video. Every Opus change is validated
-and lands as one undo step. **Effort**: Low, Medium and High set Opus's thinking effort; **Extra** uses
-High plus more footage per call and two review passes in which Opus checks frames rendered from its
-own edit and the checkpoint results.
+and lands as one undo step. **Effort**: Low and Medium plan in one pass; Medium adds the worked
+examples.
+
+- **High** directs first: concept, look, shots, set pieces and a scorecard against the critic's canon,
+  redesigning anything under 8. The picture and the layers are then written by two calls at the same
+  time, and one deep review checks frames rendered from the edit and the checkpoint.
+- **Extra** adds more footage per call and a second deep review that raises the ceiling: it rebuilds
+  the three weakest moments.
+
+**Notes are followed one by one.** Every owner instruction and every critic point is numbered (N1,
+N2, …). Opus plans each note and tags the operations that carry it out. The studio counts them and
+asks again for any note left without an operation. The review checks each note in frames rendered
+at its moment. The round shows each note's plan, operations and checks. The critic then checks every
+point again, credits real fixes against the last round's score, and writes its fixes in the studio's
+own terms (the transition, effect or look by name, with times and values). The Opus tab charts the
+critic's score across rounds.
+
+The checkpoint also gates the **look and layers**: whether the edit has its own look, and which
+seconds are bare footage with no graphic or effect.
 
 Everything (projects, media, database, presets, standards, rounds, critiques) is stored in this
 browser's storage for the artifact. It does not sync to other devices, and clearing site data removes
@@ -90,8 +141,8 @@ its index at the end and reports time-to-ready, JS heap and export time.
 | --- | --- |
 | `src/state/` | Project model (`types.ts`), store with undo/redo and autosave, validated edit operations shared by the UI and Opus (`ops.ts`), IndexedDB storage, projects, presets, standards and the database (`catalog.ts`) |
 | `src/media/` | Import and probing through Mediabunny, filmstrips, waveforms, streaming audio analysis |
-| `src/engine/` | Timeline evaluation, WebGL2 compositor, text renderer, transitions, logo, sound effects, loudness, checkpoint, previews, preview player, WebCodecs fallback, audio mix, exporter |
-| `src/ai/` | Opus Director: house rules and benchmarks (`knowledge.ts`), contact sheets, prompt, build and revision (`director.ts`), the critic (`critic.ts`), background jobs (`jobs.ts`, `workspace.ts`) |
+| `src/engine/` | Timeline evaluation, WebGL2 compositor (with the warp stage for 3D, shatter and distortion transitions), text renderer, transitions, the looks and effects library (`fxlib.ts`), logo, sound effects, loudness, checkpoint, previews, preview player, WebCodecs fallback, audio mix, exporter |
+| `src/ai/` | Opus Director: house rules and benchmarks (`knowledge.ts`), the set-piece playbook (`playbook.ts`), worked examples of the approved edits (`exemplars.ts`), scene packs and songs (`sources.ts`), the critic's canon (`canon.ts`), contact sheets, prompt, build and revision with numbered notes (`director.ts`), the critic (`critic.ts`), background jobs (`jobs.ts`, `workspace.ts`) |
 | `src/ui/` | Preact components; `src/ui/home/` holds the main menu, `src/ui/ai/` the activity list, the critique and the round composer |
 | `assets/` | The voidfx logo, used as supplied |
 

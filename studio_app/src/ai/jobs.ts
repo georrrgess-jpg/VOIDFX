@@ -263,10 +263,10 @@ function followUp(job: Job, ws: Workspace) {
   if (job.kind === 'critique' && f.autoRounds > 0) {
     const crit = (ws.rec.rounds || []).find(r => r.n === job.round)?.critique;
     if (!crit) return;
-    const points = crit.issues.filter(i => i.severity !== 'minor').map(issueLine);
+    // every point, minor ones too: each fix the critic can see moves the score
     void enqueue({
       kind: 'revise', projectId: job.projectId, round: job.round + 1, effort: job.effort, presetId: job.presetId,
-      brief: `Automatic round: apply the critic's write-up.\n${crit.brief}`, fromCritic: points.length ? points : crit.issues.map(issueLine),
+      brief: `Automatic round: apply the critic's write-up.\n${crit.brief}`, fromCritic: crit.issues.map(issueLine),
       follow: { critic: f.critic, autoRounds: f.autoRounds - 1 },
     });
   }

@@ -3,47 +3,24 @@
 // It sees frames rendered from the edit (a dense filmstrip plus every transition), measured timing,
 // the checkpoint and the owner's brief, and writes an assessment plus a write-up for the next round.
 import { BENCHMARK_TEXT, HOUSE_RULES } from './knowledge';
+import { EXEMPLARS } from './exemplars';
 import { checksText, runChecks } from '../engine/qc';
 import { cutTimes, timelineBeats } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { TRANSITION_LABELS } from '../engine/transitions';
+import { FX_LIBRARY } from '../engine/fxlib';
+import { SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { whenMediaIdle } from '../media/library';
 import { getPreset } from '../state/catalog';
-import { Critique, CritiqueIssue, Effort, Job } from '../state/types';
+import { Critique, CritiqueIssue, Effort, FollowUp, Job } from '../state/types';
 import { projectDuration } from '../state/util';
 import { askSafe, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
 import { standardSheets, timelineSheets } from './sheets';
 import type { Workspace } from './workspace';
 
-export const CRITIC_AREAS: { id: string; label: string }[] = [
-  { id: 'hook', label: 'Hook' },
-  { id: 'rhythm', label: 'Rhythm & sync' },
-  { id: 'transitions', label: 'Transitions' },
-  { id: 'motion', label: 'Motion' },
-  { id: 'text', label: 'Text' },
-  { id: 'sound', label: 'Sound' },
-  { id: 'concept', label: 'Concept & story' },
-  { id: 'picture', label: 'Picture & framing' },
-  { id: 'loop', label: 'Ending & loop' },
-];
-
-/** What separates the edits that travel on TikTok from the ones that get scrolled past. */
-export const CRITIC_CANON = `THE TIKTOK EDIT CANON (what the top fan edits in the edit community do, and what gets scrolled past)
-1. HOOK (0-1 s). The first frame is already striking and something hits within half a second: no fade in from black, no logo first, no slow establishing shot, no dead air. Viewers decide in about a second; a weak first second caps the whole edit.
-2. THE SONG CUT. The strongest 15-30 s of the song (the drop, the chorus, the recognisable line), entered on a phrase and left on a phrase end or a hard stop that loops. A cut that starts mid-phrase or wanders through a verse reads as careless.
-3. SYNC. Every cut and every effect sits on the beat grid; accents (snare, vocal chop, bass hit, riser peak) each get a visual event. Cuts drifting a few frames off the beat are the fastest tell of an amateur edit.
-4. PACING. Contrast: build and release, a held breath before the drop, a burst on it; never one uniform pace. In a hype edit no shot sits for more than about a second without something happening in it.
-5. MOTION. Velocity: speed ramps (burst on the hit, smooth slow motion between), shake and zoom punches on hits, motion blur. Static shots laid on a beat are the number-one mark of a weak edit; "smooth" does not mean slow.
-6. TRANSITIONS. Purposeful, varied and tied to the content (match cuts on shape, movement or colour; whips matched in direction; objects that wipe the frame; going through something). The same preset transition repeated, or generic flash and glitch spam, looks like a template.
-7. CLIP CHOICE. The most iconic, expressive moments of the character; faces readable and centred for 9:16; no soft, blocky or upscaled-looking clips, no burned-in subtitles, watermarks or black bars; consistent quality across sources.
-8. COLOUR AND FINISH. One cohesive grade with real contrast; no flicker; sharp; sources matched; overlays and light leaks used sparingly and with intent.
-9. TEXT. Few words, timed to the vocal or the line, readable at phone size, clear of faces and TikTok's interface, designed with intent; never paragraphs, default fonts, typos or text that pops on.
-10. CONCEPT. The edit says something about the character (an arc, a rivalry, a turn) and has a moment people would comment on ("the transition at 0:07"). Without a concept it is a montage.
-11. ENDING AND LOOP. It ends on its strongest image or hit and loops seamlessly in picture and sound, so the rewatch is invisible; no outro card, no fade to black that kills the loop.
-12. SOUND DESIGN. The music leads; effects are punctuation: a riser and impact into the drop, hits on the set pieces, a whoosh only where a move needs one. A whoosh on every cut or stacked effects clutter the mix and read as amateur. Clean, loud, unclipped; dialogue clear when used.
-13. ORIGINALITY. A signature move; nothing that looks like a trend template or an earlier edit's look.
-SCORING. 9-10: could stand with the best edits in its niche (viral calibre). 7-8: strong, needs polish. 5-6: competent but forgettable. Below 5: amateur flaws. Most edits honestly land between 4 and 7. Never inflate. Any critical issue caps the score at 6.5.`;
+export { CRITIC_AREAS, CRITIC_CANON } from './canon';
+import { CRITIC_AREAS, CRITIC_CANON } from './canon';
 
 function fmtT(t: number) { return `${t.toFixed(2)}s`; }
 
@@ -65,6 +42,13 @@ export function editMetrics(ws: Workspace): string {
   const sfx = p.clips.filter(c => c.kind === 'sfx');
   const ramps = p.clips.filter(c => c.kf?.speed?.length);
   const music = p.clips.filter(c => c.kind === 'audio' && c.media && media[c.media]?.analysis?.bpm);
+  const lookTrackIds = new Set(p.tracks.filter(t => t.role === 'look').map(t => t.id));
+  const looks = p.clips.filter(c => c.kind === 'shader' && lookTrackIds.has(c.track));
+  const libFx = p.clips.filter(c => c.kind === 'shader' && c.preset && !lookTrackIds.has(c.track));
+  const custom = p.clips.filter(c => (c.kind === 'graphic' || c.kind === 'shader') && !c.preset && !lookTrackIds.has(c.track));
+  const layered = p.clips.filter(c => (c.kind === 'graphic' || c.kind === 'shader') && !lookTrackIds.has(c.track));
+  const bare: string[] = [];
+  for (let s0 = 0; s0 < Math.floor(dur); s0++) if (!layered.some(c => c.start < s0 + 1 && c.start + c.dur > s0)) bare.push(`${s0}-${s0 + 1}s`);
   const hookEvents = [
     ...cuts.filter(t => t < 1).map(t => `cut ${fmtT(t)}`),
     ...trans.filter(c => c.start < 1).map(c => `${c.transition!.type} ${fmtT(c.start)}`),
@@ -83,20 +67,25 @@ export function editMetrics(ws: Workspace): string {
     `Transitions (${trans.length}): ${trans.map(c => `${fmtT(c.start)} ${TRANSITION_LABELS[c.transition!.type] || c.transition!.type}`).join(', ') || 'none'}.`,
     `Text (${texts.length}): ${texts.map(c => `${fmtT(c.start)}-${fmtT(c.start + c.dur)} "${(c.text || '').replace(/\s+/g, ' ').slice(0, 60)}" (${c.anim?.in || 'none'} in)`).join('; ') || 'none'}.`,
     `Sound effects: ${sfx.length}. Speed-ramped clips: ${ramps.length}. Beat camera: ${p.camera?.on ? `on (punch ${p.camera.punch}, kick ${p.camera.kick})` : 'off'}.`,
-    `Custom graphics and effects designed for this edit (${p.clips.filter(c => c.kind === 'graphic' || c.kind === 'shader').length}): ${p.clips.filter(c => c.kind === 'graphic' || c.kind === 'shader').map(c => `${fmtT(c.start)}-${fmtT(c.start + c.dur)} ${c.kind === 'shader' ? 'effect' : 'graphic'} ${c.id}${c.blend && c.blend !== 'normal' ? ` (${c.blend})` : ''}`).join(', ') || 'none'}. Judge in the frames whether each looks designed, attached to the action and lit like the shot, or drawn on top.`,
+    `Look: ${looks.map(c => `${c.preset}${c.span === 'all' ? ' over the whole edit' : ` ${fmtT(c.start)}-${fmtT(c.start + c.dur)}`}`).join(', ') || 'none (no library look: the footage keeps its own grade)'}.`,
+    `Library effects (${libFx.length}): ${libFx.map(c => `${fmtT(c.start)}-${fmtT(c.start + c.dur)} ${c.preset}`).join(', ') || 'none'}.`,
+    `Custom graphics and effects designed for this edit (${custom.length}): ${custom.map(c => `${fmtT(c.start)}-${fmtT(c.start + c.dur)} ${c.kind === 'shader' ? 'effect' : 'graphic'} ${c.id}${c.name ? ` "${c.name}"` : ''}${c.blend && c.blend !== 'normal' ? ` (${c.blend})` : ''}`).join(', ') || 'none'}. Judge in the frames whether each looks designed, attached to the action and lit like the shot, or drawn on top.`,
+    `Seconds with no graphic or effect layer at all: ${bare.length ? bare.join(', ') : 'none'}.`,
     `In the first second: ${hookEvents.join(', ') || 'nothing but the opening shot'}.`,
   ].filter(Boolean).join('\n');
 }
 
 /** Frame times for the critic: a dense sweep plus three frames around every transition. */
-function filmstrip(ws: Workspace, maxFrames: number) {
+function filmstrip(ws: Workspace, maxFrames: number, follow: { id: string; at: number }[] = []) {
   const p = ws.project, dur = projectDuration(p);
   const step = Math.max(1 / 3, dur / maxFrames);
   const sweep: number[] = [];
   for (let t = 0; t < dur - 1e-3; t += step) sweep.push(+t.toFixed(3));
   sweep.push(+Math.max(0, dur - 1 / p.fps).toFixed(3));
-  const trans = p.clips.filter(c => c.transition).sort((a, b) => a.start - b.start).slice(0, 10);
   const close: { t: number; label: string }[] = [];
+  // the moments earlier points were about, so the critic can see whether they were fixed
+  for (const f of follow.slice(0, 8)) { const t = Math.min(dur - 0.01, Math.max(0, f.at)); close.push({ t, label: `${f.id} ${t.toFixed(2)}s` }); }
+  const trans = p.clips.filter(c => c.transition).sort((a, b) => a.start - b.start).slice(0, Math.floor((30 - close.length) / 3));
   for (const c of trans) {
     const d = c.transition!.dur || 0.4;
     const name = (TRANSITION_LABELS[c.transition!.type] || c.transition!.type).slice(0, 14);
@@ -110,7 +99,7 @@ function filmstrip(ws: Workspace, maxFrames: number) {
 
 function clampScore(v: any, d = 5) { const n = Number(v); return Number.isFinite(n) ? Math.max(0, Math.min(10, Math.round(n * 10) / 10)) : d; }
 
-export function parseCritique(text: string, round: number, duration: number, model?: string): Critique | null {
+export function parseCritique(text: string, round: number, duration: number, model?: string, prev?: { id: string; text: string }[], prevScore?: number): Critique | null {
   const v = parseJson(text);
   if (!v || typeof v !== 'object') return null;
   const scores: Record<string, number> = {};
@@ -125,16 +114,35 @@ export function parseCritique(text: string, round: number, duration: number, mod
   let score = clampScore(v.score);
   if (issues.some(i => i.severity === 'critical')) score = Math.min(score, 6.5);
   const verdict = v.verdict === 'ready' || v.verdict === 'close' || v.verdict === 'not ready' ? v.verdict : score >= 8.5 ? 'ready' : score >= 7 ? 'close' : 'not ready';
+  const st = (x: any): FollowUp['status'] => { const k = String(x || '').toLowerCase(); return k.startsWith('fix') || k === 'done' ? 'fixed' : k.startsWith('part') ? 'partly' : 'not'; };
+  const followUp: FollowUp[] = (Array.isArray(v.followUp) ? v.followUp : []).slice(0, 30).map((x: any) => ({
+    id: String(x?.id || '').trim().toUpperCase(), status: st(x?.status), comment: String(x?.comment || '').trim(),
+  })).filter((x: FollowUp) => x.id);
+  if (prev) for (const f of followUp) f.text = prev.find(q => q.id === f.id)?.text;
   return {
     at: Date.now(), model, score, verdict, headline: String(v.headline || '').trim() || 'No headline.', scores,
     strengths: (Array.isArray(v.strengths) ? v.strengths : []).map(String).filter(Boolean).slice(0, 8),
     issues, versus: String(v.versus || '').trim(), brief: String(v.brief || '').trim(), duration, round,
+    ...(followUp.length ? { followUp } : {}), ...(prevScore !== undefined ? { prevScore } : {}),
   };
 }
 
 /** One line per issue, as it is handed to Opus in a revision. */
 export function issueLine(i: CritiqueIssue): string {
   return `[${i.severity}${i.at !== undefined ? ` @ ${i.at.toFixed(2)}s` : ''}, ${i.area}] ${i.problem}${i.fix ? ` Fix: ${i.fix}` : ''}`;
+}
+
+/** The studio's vocabulary, so every fix the critic writes is one the editor can carry out exactly. */
+export function toolsLine(): string {
+  const groups = new Map<string, string[]>();
+  for (const d of FX_LIBRARY) groups.set(d.group, [...(groups.get(d.group) || []), d.id]);
+  return `THE STUDIO'S TOOLS (write every fix in these terms)
+- Transitions: ${TRANSITIONS.join(', ')} (dive, shatter, shutter, iris, ripple, swirl take anchors "at"/"to").
+- Library looks (one grade over the edit or a section): ${(groups.get('look') || []).join(', ')}.
+- Library effects: ${[...groups.entries()].filter(([g]) => g !== 'look').map(([g, ids]) => `${g}: ${ids.join(', ')}`).join('; ')}.
+- Text animations in: ${TEXT_ANIMS_IN.join(', ')}; out: ${TEXT_ANIMS_OUT.join(', ')}; knockout type, motif particles, the house caption style, timed lyric captions.
+- Sounds: ${SFX.join(', ')}.
+- Also: velocity ramps, freezes (speed keys to 0.05), the beat camera (punch, kick), focus framing, push-ins (scale keys), custom GLSL effects and SVG graphics written for the edit.`;
 }
 
 export function criticSteps(): Job['steps'] {
@@ -160,15 +168,23 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
   if (!ws.project.clips.length) throw { code: 'no_edit' };
   io.step('media', { state: 'done', detail: `${ws.ready().length} files` });
 
+  const rounds = ws.rec.rounds || [];
+  const last = rounds.find(r => r.n === job.round) || rounds[rounds.length - 1];
+  const prevCrit = [...rounds].filter(r => r.critique && r.n < (last?.n ?? job.round)).sort((a, b) => b.n - a.n)[0]?.critique;
+  // what this round was asked to fix: its numbered notes, else the last critique's points
+  const follow: { id: string; text: string; at?: number; plan?: string; check?: string }[] = last?.notes?.length
+    ? last.notes.map(n => ({ id: n.id, text: n.text, at: n.at, plan: n.plan, check: n.status ? `${n.status}${n.check ? `: ${n.check}` : ''}` : undefined }))
+    : prevCrit ? prevCrit.issues.map((i, k) => ({ id: `P${k + 1}`, text: issueLine(i), at: i.at })) : [];
+
   io.step('render', { state: 'run' });
   const maxImg = Math.max(0, Math.min(maxImagesFor('extra'), 9));
   const stdImgs = maxImg >= 6 ? await standardSheets(standards.filter(s => s.kind === 'video' && s.state === 'ready'), 2) : [];
   const budget = Math.max(0, maxImg - stdImgs.length);
-  const { sweep, close } = filmstrip(ws, Math.max(20, (budget - 1) * 20));
+  const { sweep, close } = filmstrip(ws, Math.max(20, (budget - 1) * 20), follow.filter(f => f.at !== undefined).map(f => ({ id: f.id, at: f.at! })));
   const p = ws.project;
   const sweepSheets = budget ? await timelineSheets(p, ws.media(), sweep, 20, Math.max(1, budget - (close.length ? 1 : 0)), io.signal) : [];
   const closeSheets = budget > 1 && close.length ? await timelineSheets(p, ws.media(), close.map(c => c.t), 30, 1, io.signal, p.width / p.height < 1 ? 300 : 220, close.map(c => c.label)) : [];
-  if (closeSheets[0]) closeSheets[0].caption = 'every transition as three frames (a: just before, b: the middle, c: just after), labelled with the transition name and timeline time';
+  if (closeSheets[0]) closeSheets[0].caption = `${close.some(c => /^[NP]\d/.test(c.label)) ? 'the moments of the points this round was asked to fix (labelled with their ids), then ' : ''}every transition as three frames (a: just before, b: the middle, c: just after), labelled with the transition name and timeline time`;
   const images = [...sweepSheets, ...closeSheets, ...stdImgs];
   io.step('render', { state: images.length ? 'done' : 'skip', detail: images.length ? `${sweep.length + close.length} frames on ${images.length} sheets` : 'images not available here' });
 
@@ -179,42 +195,46 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
   io.step('measure', { state: 'done', detail: `${checks.filter(c => c.status === 'fail').length} gates failing` });
 
   io.step('critic', { state: 'run', detail: 'watching…' });
-  const rounds = ws.rec.rounds || [];
-  const last = rounds[rounds.length - 1];
   const music = ws.order().map(id => ws.media()[id]).filter(m => m?.kind === 'audio' || (m?.hasAudio && m.analysis?.bpm));
   const prompt = [
     'You are the critic for VOIDFX Studio: the harshest, most knowledgeable judge in TikTok\'s edit community. You have studied thousands of fan edits (velocity edits, character edits, movie and TV edits, AMV-style and After Effects or CapCut work) and you know exactly why the top ones travel and the rest get scrolled past. Your job is not to encourage: it is to find everything that keeps this edit from being one of the best in its niche, say it plainly, and say how to fix it. Judge only what you can see in the frames and the measurements; you cannot hear the audio, so judge sound from the timing data and the sound effects placed.',
     CRITIC_CANON,
     preset.houseRules ? `THE OWNER'S TASTE (their house rules: an edit that breaks these fails, however good it looks)\n${HOUSE_RULES}` : '',
     preset.houseRules ? `THE OWNER'S APPROVED BENCHMARKS (the bar this edit must clear)\n${BENCHMARK_TEXT}` : '',
+    preset.houseRules ? EXEMPLARS : '',
     standards.length ? `REFERENCE EDITS THE OWNER ADDED AS STANDARDS\n${standardsText(standards)}` : '',
     `PRESET "${preset.name}": ${preset.prompt || preset.description}`,
     last ? `WHAT THE OWNER ASKED FOR IN ROUND ${last.n}: ${last.brief || '(no extra notes)'}${last.fromCritic?.length ? `\nCritic points passed on for that round:\n- ${last.fromCritic.join('\n- ')}` : ''}${last.summary ? `\nTHE EDITOR (Opus) SAYS IT DID: ${last.summary}` : ''}` : '',
-    rounds.filter(r => r.critique).length ? `EARLIER CRITIQUES (check whether their points were fixed)\n${rounds.filter(r => r.critique).map(r => `Round ${r.n}: ${r.critique!.score}/10, "${r.critique!.headline}"; issues: ${r.critique!.issues.slice(0, 8).map(i => i.problem).join(' | ')}`).join('\n')}` : '',
+    rounds.filter(r => r.critique && r.n !== last?.n).length ? `EARLIER CRITIQUES\n${rounds.filter(r => r.critique && r.n !== last?.n).map(r => `Round ${r.n}: ${r.critique!.score}/10, "${r.critique!.headline}"`).join('\n')}` : '',
+    follow.length ? `WHAT THIS ROUND WAS ASKED TO FIX (check every item in the frames and the timeline; frames labelled with an item's id show its moment)\n${follow.map(f => `${f.id}${f.at !== undefined ? ` @ ${f.at.toFixed(2)}s` : ''}: ${f.text.slice(0, 320)}${f.plan ? ` | the editor's plan: ${f.plan.slice(0, 200)}` : ''}${f.check ? ` | the editor's own check: ${f.check.slice(0, 160)}` : ''}`).join('\n')}\nGive each item's status in "followUp": fixed (the frames or timeline show it done in full), partly, or not.` : '',
+    prevCrit ? `SCORING AGAINST THE LAST ROUND: the last critique scored the edit ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). Score the edit as it is now, starting from that score: every point that is really fixed raises its area and the total (a critical point fixed is worth about +0.6 to +1.0, a major one +0.3 to +0.5, a minor one +0.1 to +0.2); every remaining or new problem holds it down or lowers it. Do not re-judge fixed points from scratch and never ignore a real fix; never inflate either: a fix you cannot see in the frames or the timeline does not count.` : '',
     p.lyrics?.lines.length ? `THE SONG'S LYRICS (from the owner${p.lyrics.timed ? '; song times' : ', untimed'}): check that every caption is a sung line on its time, never invented words\n${p.lyrics.lines.slice(0, 80).map((l, i) => `${p.lyrics!.timed ? `L${i + 1} ${l.t.toFixed(2)} ` : ''}${l.text}`).join('\n')}` : 'NO LYRICS WERE SUPPLIED: any caption that claims to be a sung line is a guess; flag captions that do not read as dialogue, a designed title or a likely sung hook.',
     `MEASURED\n${metrics}`,
     `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
     music.length ? `MUSIC\n${music.map(m => `${m.id} "${m.name}" ${m.analysis?.bpm ? `${m.analysis.bpm} BPM` : ''}`).join('\n')}` : '',
     `THE TIMELINE (what the studio will render)\n${timelineJson(p).slice(0, 24000)}`,
     images.length ? `IMAGES (attached, in this order)\n${images.map((x, i) => `${i + 1}. ${x.caption}`).join('\n')}` : 'IMAGES: none attached; judge from the timeline and the measurements, and say that you could not see the picture.',
-    `Write the assessment. Be specific: name the time, the shot, the transition. Every fix must be something the studio can do (re-cut on the beat, swap a shot, speed ramp, beat camera, a named transition, text timing or style, a sound, the loop). Reply with only JSON:
+    toolsLine(),
+    `Write the assessment. Be specific: name the time, the shot, the transition. Every fix must be something the studio can do, named in its terms above, with the time and the values (for example: "transition dive at 7.80 with at (0.50, 0.41) and to (0.50, 0.43), sound whoosh + subdrop", "fx light_rays 0-2.4 s anchored at (0.62, 0.18)", "look noir_red with keep #c70f14"). Reply with only JSON:
 {"score": 0-10 with one decimal,
  "verdict": "not ready" | "close" | "ready",
  "headline": "one blunt sentence: the verdict in plain words",
  "scores": {${CRITIC_AREAS.map(a => `"${a.id}": 0-10`).join(', ')}},
  "strengths": ["what genuinely works (at most 4; empty if nothing does)"],
  "issues": [{"severity": "critical" | "major" | "minor", "at": seconds or null, "area": one of ${CRITIC_AREAS.map(a => a.id).join('/')}, "problem": "what is wrong and why it hurts the edit", "fix": "exactly what to change"}],
- "versus": "two or three sentences: how it stands against the owner's benchmarks and the best TikTok edits of this kind",
- "brief": "the write-up for the editor's next round: numbered, imperative instructions in priority order, ready to paste"}
+ "versus": "two or three sentences: how it stands against the owner's benchmarks and the best TikTok edits of this kind",${follow.length ? `
+ "followUp": [{"id": "${follow[0].id}", "status": "fixed" | "partly" | "not", "comment": "what the frames show"}],` : ''}
+ "brief": "the write-up for the editor's next round: numbered, imperative instructions in priority order, each with its time and the studio tool that does it, ready to paste"}
 Order issues by severity. Up to 14 issues.`,
   ].filter(Boolean).join('\n\n');
   const r = await askSafe(io2, prompt, images, effort, 'critic', t => {
     const n = (t.match(/"problem"\s*:/g) || []).length;
     return n ? `writing… ${n} issue${n > 1 ? 's' : ''} so far` : 'writing…';
   });
-  const crit = parseCritique(r.text, job.round, projectDuration(p), model);
+  const crit = parseCritique(r.text, job.round, projectDuration(p), model, follow.map(f => ({ id: f.id, text: f.text })), prevCrit?.score);
   if (!crit) throw { code: 'invalid_json' };
-  io.step('critic', { state: 'done', detail: `${crit.score}/10 · ${crit.issues.length} issues` });
+  const fixed = crit.followUp?.filter(f => f.status === 'fixed').length || 0;
+  io.step('critic', { state: 'done', detail: `${crit.score}/10${prevCrit ? ` (was ${prevCrit.score})` : ''} · ${crit.issues.length} issues${crit.followUp?.length ? ` · ${fixed}/${crit.followUp.length} points fixed` : ''}` });
 
   await ws.save(rec => {
     const rs = rec.rounds || [];

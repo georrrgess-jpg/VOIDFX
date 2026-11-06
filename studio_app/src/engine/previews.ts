@@ -7,6 +7,7 @@ import { renderText } from './text';
 import { logoLayerFx, NO_FX, transitionFx } from './transitions';
 import { graphicCanvas, revealFx, svgSize } from './custom';
 import type { FxPreset } from './fxlibrary';
+import { FxDef, fxCode, fxParams } from './fxlib';
 
 export const PW = 144, PH = 256;
 let comp: Compositor | null = null;
@@ -135,5 +136,51 @@ export function drawFxPreview(target: HTMLCanvasElement, fx: FxPreset, u: number
       C.draw({ key: clip.id, version: 1, source: cv, srcW: cv.width, srcH: cv.height, srcRot: 0, baseW: gw, baseH: bh, transform: { ...base, y: -0.05 }, fx: lfx, premultiplied: true, blend: fx.blend });
     }
   }
+  blit(target);
+}
+
+// ---------- library looks and effects, previewed on the owner's own footage when there is some ----------
+
+let photo: HTMLCanvasElement | null = null;
+let photoUrl = '';
+const photoWatchers = new Set<() => void>();
+
+/** Use a frame of the owner's footage (a poster data URL) as the backdrop of the look and effect previews. */
+export function setPreviewPhoto(url?: string | null) {
+  const u = url || '';
+  if (u === photoUrl) return;
+  photoUrl = u;
+  if (!u) { photo = null; photoWatchers.forEach(f => f()); return; }
+  const img = new Image();
+  img.onload = () => {
+    if (photoUrl !== u) return;
+    // cover-crop to the tile's 9:16, centred a little above the middle where faces usually sit
+    const c = document.createElement('canvas');
+    c.width = PW * 2; c.height = PH * 2;
+    const g = c.getContext('2d')!;
+    const s = Math.max(c.width / img.width, c.height / img.height);
+    const w = img.width * s, h = img.height * s;
+    g.drawImage(img, (c.width - w) / 2, Math.min(0, Math.max(c.height - h, (c.height - h) * 0.42)), w, h);
+    photo = c;
+    photoWatchers.forEach(f => f());
+  };
+  img.src = u;
+}
+
+export function onPreviewPhoto(cb: () => void) { photoWatchers.add(cb); return () => { photoWatchers.delete(cb); }; }
+
+/** Draw a library look or effect at progress u (0..1) over the backdrop. */
+export function drawLibPreview(target: HTMLCanvasElement, def: FxDef, u: number, params?: Record<string, number | string>) {
+  const C = ensure();
+  if (!C || !shotA || !shotB) return;
+  C.resize(PW, PH);
+  C.begin('#000000');
+  const shot = photo || (def.group === 'look' || def.group === 'finish' ? shotB : shotA);
+  C.draw({ key: photo ? `__ph${photoUrl.length}` : shot === shotA ? '__pa' : '__pb', version: photoUrl, source: shot, srcW: shot.width, srcH: shot.height, srcRot: 0, baseW: PW, baseH: PH, transform: base, fx: NO_FX });
+  const dur = def.group === 'look' ? 2 : def.dur;
+  const t = u * dur;
+  const beatAge = t % 0.5;
+  const anchor: [number, number] = def.anchor ? [0.5, 0.36] : [0.5, 0.5];
+  C.drawShader(fxCode(def, fxParams(def, params)), def.blend, { t, p: def.group === 'look' ? 0.5 : u, dur, time: t, beat: Math.exp(-beatAge / 0.14), beatAge, energy: 0.6, opacity: 1, scale: 1, rot: 0, pos: anchor, seed: 3.1 }, `preview ${def.id}`);
   blit(target);
 }

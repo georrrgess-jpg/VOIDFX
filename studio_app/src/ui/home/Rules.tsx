@@ -1,5 +1,9 @@
 import { useState } from 'preact/hooks';
 import { HOUSE_RULES } from '../../ai/knowledge';
+import { KNOWLEDGE_SOURCES } from '../../ai/playbook';
+import { PACKS, SONGS } from '../../ai/sources';
+import { FX_LIBRARY } from '../../engine/fxlib';
+import { TRANSITIONS } from '../../state/types';
 import { saveKnowledge } from '../../state/catalog';
 import { useStore } from '../../state/store';
 import { SectionHead } from './common';
@@ -14,6 +18,13 @@ export function RulesSection() {
   return (
     <div class="hs">
       <SectionHead eyebrow="House rules" title="What Opus knows about your style" text="Distilled from your handbook, preferences, edit history and the two studio specs, and translated into this studio's tools. Presets that use the house rules send all of this with every edit." />
+      <section class="glass rules-src">
+        <h2>Where it comes from</h2>
+        <p class="muted">Every editing file you provided, read and turned into what Opus works from on each call: the house rules below, a playbook of every approved set piece built from studio operations, beat-by-beat worked examples of the approved edits, the critic's canon, and notes on {PACKS.length} scene packs and {SONGS.length} songs (recognised automatically when you use them, with their proven shots and timecodes). The studio itself has {FX_LIBRARY.filter(d => d.group === 'look').length} looks, {FX_LIBRARY.length - FX_LIBRARY.filter(d => d.group === 'look').length} effects and {TRANSITIONS.length} transitions for Opus to use by name.</p>
+        <ul class="src-list">
+          {KNOWLEDGE_SOURCES.map(k => <li><b>{k.name}</b><span>{k.what}</span></li>)}
+        </ul>
+      </section>
       <div class="rules">
         {blocks.map((b, i) => (
           <section class="rule glass" style={{ '--i': i } as any}>

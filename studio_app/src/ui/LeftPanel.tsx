@@ -1,4 +1,4 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { attachLibraryItem, importFiles, removeMedia, runtime } from '../media/library';
 import { defaultTransitionDur, TRANSITION_GROUPS, TRANSITION_LABELS } from '../engine/transitions';
 import { SFX_INFO, sfxBuffer } from '../engine/sfx';
@@ -8,7 +8,9 @@ import { addSfx, addTransitionSounds, normalize } from '../state/ops';
 import { LeftTab, store, useStore } from '../state/store';
 import { MediaInfo, SFX, SfxType, STANDARD_CAPTION, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TextAnimIn, TextAnimOut } from '../state/types';
 import { fmtBytes, fmtTime } from '../state/util';
-import { addCustom, addMediaClip, addText, applyTransition, selectedClips, TEXT_PRESETS, updateClip } from './actions';
+import { addCustom, addLibraryFx, addMediaClip, addText, applyLook, applyTransition, selectedClips, TEXT_PRESETS, updateClip } from './actions';
+import { FX_LIBRARY, FxGroup } from '../engine/fxlib';
+import { setPreviewPhoto } from '../engine/previews';
 import { FX_PRESETS } from '../engine/fxlibrary';
 import { Btn, Icon } from './controls';
 import { EffectTile } from './EffectTile';
@@ -20,6 +22,7 @@ export function Rail() {
     { id: 'media', label: 'Media', icon: Icon.media },
     { id: 'text', label: 'Text', icon: Icon.text },
     { id: 'transitions', label: 'Transitions', icon: Icon.transition },
+    { id: 'looks', label: 'Looks', icon: Icon.spark },
     { id: 'effects', label: 'Effects', icon: Icon.bolt },
     { id: 'sounds', label: 'Sounds', icon: Icon.vol },
   ];
@@ -41,6 +44,7 @@ export function LeftPanel() {
       {tab === 'media' && <MediaPanel />}
       {tab === 'text' && <TextPanel />}
       {tab === 'transitions' && <TransitionsPanel />}
+      {tab === 'looks' && <LooksPanel />}
       {tab === 'effects' && <EffectsPanel />}
       {tab === 'sounds' && <SoundsPanel />}
     </aside>
@@ -121,8 +125,17 @@ function MediaCard({ m }: { m: MediaInfo }) {
   );
 }
 
-const IN_LABEL: Record<string, string> = { none: 'None', fade: 'Fade', rise: 'Rise', drop: 'Drop', pop: 'Pop', blur: 'Blur', typewriter: 'Typewriter', words: 'Word by word', letters: 'Letter build', slide_left: 'Slide left', slide_right: 'Slide right' };
-const OUT_LABEL: Record<string, string> = { none: 'None', fade: 'Fade', sink: 'Sink', lift: 'Lift', shrink: 'Shrink', blur: 'Blur', words: 'Word by word', scatter: 'Scatter', fall: 'Fall', slide_left: 'Slide left', slide_right: 'Slide right' };
+const IN_LABEL: Record<string, string> = {
+  none: 'None', fade: 'Fade', rise: 'Rise', drop: 'Drop', pop: 'Pop', blur: 'Blur', typewriter: 'Typewriter', words: 'Word by word', letters: 'Letter build',
+  bloom: 'Hero bloom', slam: 'Slam', fly: 'Fly from camera', stamp: 'Stamp', sweep: 'Light sweep', mask: 'Rise from box', track: 'Tracking close', flicker: 'Neon flicker',
+  slide_left: 'Slide left', slide_right: 'Slide right',
+};
+const OUT_LABEL: Record<string, string> = {
+  none: 'None', fade: 'Fade', cap: 'Caption exit', sink: 'Sink', lift: 'Lift', shrink: 'Shrink', blur: 'Blur', words: 'Word by word', scatter: 'Scatter',
+  blowaway: 'Blow away', streak: 'Speed streak', zoom: 'Past the camera', fall: 'Fall', slide_left: 'Slide left', slide_right: 'Slide right',
+};
+const IN_DUR: Record<string, number> = { letters: 0.8, words: 0.6, bloom: 0.9, sweep: 0.7, track: 0.6, typewriter: 0.8, mask: 0.45 };
+const OUT_DUR: Record<string, number> = { scatter: 0.6, fall: 0.6, blowaway: 0.7, streak: 0.4, zoom: 0.4, cap: 0.28 };
 export { IN_LABEL, OUT_LABEL };
 
 function TextPanel() {
@@ -134,11 +147,14 @@ function TextPanel() {
       <header class="panel-h"><h2>Text</h2></header>
       <p class="note">Adds text at the playhead. Wrap a word in *asterisks* to emphasise it.</p>
       <div class="tgrid">
-        <button type="button" class="tcard tcard-house" onClick={() => addText(STANDARD_CAPTION, 'COULD IT BE\n*HIM*', { in: 'words', out: 'fade', inDur: 0.6, outDur: 0.25 })}>
+        <button type="button" class="tcard tcard-house" onClick={() => addText(STANDARD_CAPTION, 'COULD IT BE\n*HIM*', { in: 'words', out: 'cap', inDur: 0.6, outDur: 0.28 })}>
           <span class="tcard-s" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 900, fontSize: '13px', lineHeight: 1.05, textAlign: 'center', textShadow: '0 0 2px #000, 0 1px 3px #000' }}>COULD IT BE<br /><b style={{ color: '#ff2b3a', fontSize: '17px', textShadow: '0 0 8px rgba(255,43,58,.6)' }}>HIM</b></span><em>house caption</em>
         </button>
-        <button type="button" class="tcard tcard-house" onClick={() => addText({ ...STANDARD_CAPTION, size: 0.085, lineScales: [1], scrim: 0.2 }, 'BOP', { in: 'letters', out: 'scatter', inDur: 0.8, outDur: 0.5 })}>
-          <span class="tcard-s" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 900, fontSize: '20px' }}>HERO</span><em>letter build</em>
+        <button type="button" class="tcard tcard-house" onClick={() => addText({ ...STANDARD_CAPTION, size: 0.085, lineScales: [1], scrim: 0.2, motif: 'blood' }, '*ALONG*', { in: 'bloom', out: 'blowaway', inDur: 0.9, outDur: 0.7 })}>
+          <span class="tcard-s" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 900, fontSize: '20px', color: '#ff2b3a', textShadow: '0 0 10px rgba(255,43,58,.55)' }}>HERO</span><em>bloom, blow away</em>
+        </button>
+        <button type="button" class="tcard tcard-house" onClick={() => addText({ ...STANDARD_CAPTION, size: 0.095, lineScales: [1, 1], scrim: 0, knockout: true, knockDark: 0.82 }, 'BAY HARBOR\nBUTCHER', { in: 'slam', out: 'zoom', inDur: 0.45, outDur: 0.35 }, { y: 0 })}>
+          <span class="tcard-s" style={{ fontFamily: '"Inter", sans-serif', fontWeight: 900, fontSize: '15px', lineHeight: 1, background: 'linear-gradient(135deg,#9cc8ff,#ff9c6b 60%,#fff3d6)', WebkitBackgroundClip: 'text', color: 'transparent' }}>KNOCK<br />OUT</span><em>footage in letters</em>
         </button>
         {TEXT_PRESETS.map(p => (
           <button type="button" class="tcard" onClick={() => addText(p.style, p.text, p.anim)}>
@@ -155,14 +171,14 @@ function TextPanel() {
       <div class="etgrid">
         {TEXT_ANIMS_IN.filter(a => a !== 'none').map(a => (
           <EffectTile kind="text" anim={{ in: a as TextAnimIn }} label={IN_LABEL[a]} active={textClip?.anim?.in === a}
-            onPick={() => textClip ? updateClip(textClip.id, { anim: { in: a, inDur: a === 'letters' ? 0.8 : a === 'words' ? 0.6 : 0.35 } }) : addText(STANDARD_CAPTION, 'COULD IT BE\n*HIM*', { in: a as TextAnimIn, out: 'fade', inDur: 0.6, outDur: 0.25 })} />
+            onPick={() => textClip ? updateClip(textClip.id, { anim: { in: a, inDur: IN_DUR[a] ?? 0.35 } }) : addText(STANDARD_CAPTION, 'COULD IT BE\n*HIM*', { in: a as TextAnimIn, out: 'cap', inDur: IN_DUR[a] ?? 0.6, outDur: 0.28 })} />
         ))}
       </div>
       <h3 class="panel-sub">Animation out</h3>
       <div class="etgrid">
         {TEXT_ANIMS_OUT.filter(a => a !== 'none').map(a => (
           <EffectTile kind="text" anim={{ out: a as TextAnimOut }} label={OUT_LABEL[a]} active={textClip?.anim?.out === a}
-            onPick={() => textClip ? updateClip(textClip.id, { anim: { out: a, outDur: a === 'scatter' || a === 'fall' ? 0.6 : 0.3 } }) : store.toast('Select a text clip first.')} />
+            onPick={() => textClip ? updateClip(textClip.id, { anim: { out: a, outDur: OUT_DUR[a] ?? 0.3 } }) : store.toast('Select a text clip first.')} />
         ))}
       </div>
     </div>
@@ -220,14 +236,59 @@ const BLANK_EFFECT = {
 }`,
 };
 
+/** The first poster of the project's footage, so the look and effect tiles preview on the owner's own shots. */
+function usePreviewPhoto() {
+  const order = useStore(s => s.mediaOrder);
+  const media = useStore(s => s.media);
+  const poster = order.map(id => media[id]).find(m => m && (m.kind === 'video' || m.kind === 'image') && m.poster)?.poster;
+  useEffect(() => { setPreviewPhoto(poster); }, [poster]);
+  return !!poster;
+}
+
+function LooksPanel() {
+  const own = usePreviewPhoto();
+  const project = useStore(s => s.project);
+  const lookIds = new Set(project.tracks.filter(t => t.role === 'look').map(t => t.id));
+  const current = new Set(project.clips.filter(c => lookIds.has(c.track)).map(c => c.preset));
+  return (
+    <div class="panel">
+      <header class="panel-h"><h2>Looks</h2></header>
+      <p class="note">One grade over the whole edit: it sits above every shot, graphic and effect and under the text and the logo. Click a look to apply it; tune it in the inspector. {own ? 'Previews use a frame of your footage.' : 'Add footage to preview on your own shots.'} Hover to play.</p>
+      <div class="etgrid">
+        {FX_LIBRARY.filter(d => d.group === 'look').map(d => (
+          <EffectTile kind="lib" def={d} label={d.name} hint={d.hint} active={current.has(d.id)} onPick={() => applyLook(d)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const FX_GROUPS: { id: FxGroup; name: string }[] = [
+  { id: 'finish', name: 'Finish' }, { id: 'light', name: 'Light' }, { id: 'atmosphere', name: 'Atmosphere' }, { id: 'particles', name: 'Particles' },
+  { id: 'camera', name: 'Camera and impact' }, { id: 'beat', name: 'Beat moments' }, { id: 'themed', name: 'Themed set pieces' },
+];
+
 function EffectsPanel() {
+  usePreviewPhoto();
   const shaders = FX_PRESETS.filter(f => f.kind === 'shader');
   const graphics = FX_PRESETS.filter(f => f.kind === 'graphic');
+  const sel = useStore(s => s.selection);
+  const project = useStore(s => s.project);
+  const cur = sel.length === 1 ? project.clips.find(c => c.id === sel[0] && c.kind === 'shader')?.preset : undefined;
   return (
     <div class="panel">
       <header class="panel-h"><h2>Effects</h2></header>
-      <p class="note">Opus designs its own effects and graphics for every edit. These starters show what the tools do: add one at the playhead, then tune it or edit its code in the Edit tab. Hover to play.</p>
-      <p class="tgroup">GPU effects</p>
+      <p class="note">Tested GPU effects: light, atmosphere, particles, impacts, beat moments and themed set pieces. Click to add one at the playhead (with a library effect selected, a tile from the same group swaps it); tune it in the inspector. Hover to play.</p>
+      {FX_GROUPS.map(g => (
+        <section>
+          <h3 class="panel-sub">{g.name}</h3>
+          <div class="etgrid">
+            {FX_LIBRARY.filter(d => d.group === g.id).map(d => <EffectTile kind="lib" def={d} label={d.name} hint={d.hint} active={cur === d.id} onPick={() => addLibraryFx(d)} />)}
+          </div>
+        </section>
+      ))}
+      <h3 class="panel-sub">Write your own</h3>
+      <p class="note">Opus writes its own effects and graphics for the signature moments. These starters show the tools: add one, then edit its code in the inspector.</p>
       <div class="etgrid">
         {shaders.map(f => <EffectTile kind="fx" fx={f} label={f.name} hint={f.hint} onPick={() => addCustom(f)} />)}
       </div>

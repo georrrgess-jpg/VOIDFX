@@ -3,7 +3,7 @@
 // background, so this screen closes as soon as the round starts.
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { issueLine } from '../../ai/critic';
-import { EFFORTS } from '../../ai/director';
+import { EFFORTS, roundNotes } from '../../ai/director';
 import { activeJobFor, enqueue } from '../../ai/jobs';
 import { listPresets, Preset } from '../../state/catalog';
 import { getRecord, openProject, ProjectRecord, updateRecord } from '../../state/projects';
@@ -148,11 +148,12 @@ export function Composer() {
     }
   };
 
+  const notes = mode === 'revise' ? roundNotes(text.trim(), fromCritic) : [];
   const preview = mode === 'revise' ? [
     `ROUND ${nextRound} INSTRUCTIONS FROM THE OWNER`,
     text.trim() || '(no extra words: work through the critic\'s points)',
-    fromCritic.length ? `THE CRITIC'S POINTS THE OWNER PASSED ON (fix every one)\n${fromCritic.map((x, i) => `${i + 1}. ${x}`).join('\n')}` : '',
-    'Plus: the house rules, the standards, the current timeline, frames rendered from the edit, contact sheets of the media and the checkpoint.',
+    notes.length ? `NOTES TO CARRY OUT (numbered: Opus plans each one, tags the operations that carry it out and checks it in frames rendered at its moment; the critic checks every one again)\n${notes.map(n => `${n.id} [${n.from}${n.at !== undefined ? ` @ ${n.at.toFixed(2)}s` : ''}] ${n.text}`).join('\n')}` : '',
+    'Plus: the house rules, the playbook and worked examples, the standards, the critic\'s last scores, the current timeline, frames rendered from the edit, contact sheets of the media and the checkpoint.',
   ].filter(Boolean).join('\n\n') : '';
 
   return (

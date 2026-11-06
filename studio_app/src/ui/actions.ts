@@ -2,6 +2,8 @@
 import { player } from '../engine/player';
 import { addMediaToTimeline, deleteClips, duplicateClip, freeTrack, fxTrack, mainTrack, newClipId, normalize, patchClip, splitClipAt, velocityRamp } from '../state/ops';
 import type { FxPreset } from '../engine/fxlibrary';
+import { FxDef, fxCode, fxParams, getFx } from '../engine/fxlib';
+import { applyOps } from '../state/ops';
 import { timelineBeats } from '../engine/evaluate';
 import { store } from '../state/store';
 import { AnimProp, Clip, DEFAULT_TEXT_STYLE, Project, TextStyle, TransitionType } from '../state/types';
@@ -206,5 +208,54 @@ export function addCustom(fx: FxPreset) {
     id = c.id;
   });
   store.set({ selection: [id], rightTab: 'inspector' });
+  player.seek(store.state.time + 0.0001);
+}
+
+/** A library look over the whole edit (replacing the current look), or over the selected section's span. */
+export function applyLook(def: FxDef) {
+  const p0 = store.state.project;
+  if (!p0.clips.length) { store.toast('Add some footage first: a look grades the whole edit.'); return; }
+  const res = applyOps(p0, [{ op: 'look', preset: def.id }], store.state.media);
+  const id = res.touched[0];
+  store.commit(() => res.project);
+  if (id) store.set({ selection: [id], rightTab: 'inspector' });
+  store.toast(`${def.name} now grades the whole edit. Tune it in the inspector.`, 'ok');
+  player.seek(store.state.time + 0.0001);
+}
+
+/** A library effect at the playhead on an overlay track, or the selected effect switched to this preset. */
+export function addLibraryFx(def: FxDef) {
+  const sel = store.state.selection;
+  const cur = sel.length === 1 ? store.state.project.clips.find(c => c.id === sel[0] && c.kind === 'shader' && c.preset) : undefined;
+  if (cur && getFx(cur.preset!)?.group === def.group && cur.preset !== def.id) {
+    commitNorm(p => {
+      const c = p.clips.find(x => x.id === cur.id);
+      if (!c) return;
+      c.preset = def.id; c.name = def.name; c.blend = def.blend;
+      c.params = fxParams(def, c.params);
+      c.code = fxCode(def, c.params);
+    });
+    player.seek(store.state.time + 0.0001);
+    return;
+  }
+  const t = store.state.time;
+  const end = projectDuration(store.state.project);
+  const dur = end > 0 && t + def.dur > end ? Math.max(0.2, end - t) : def.dur;
+  const res = applyOps(store.state.project, [{ op: 'fx', preset: def.id, start: round(t, 4), dur: round(dur, 4) }], store.state.media);
+  const id = res.touched[0];
+  store.commit(() => res.project);
+  if (id) store.set({ selection: [id], rightTab: 'inspector' });
+  player.seek(store.state.time + 0.0001);
+}
+
+/** Change one parameter of a library look or effect (the code is rebuilt from the preset). */
+export function setFxParam(clipId: string, key: string, value: number | string) {
+  commitNorm(p => {
+    const c = p.clips.find(x => x.id === clipId);
+    const def = c?.preset ? getFx(c.preset) : undefined;
+    if (!c || !def) return;
+    c.params = fxParams(def, { ...(c.params || {}), [key]: value });
+    c.code = fxCode(def, c.params);
+  });
   player.seek(store.state.time + 0.0001);
 }

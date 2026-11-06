@@ -752,7 +752,7 @@ function placeLyrics(p: Project, media: Record<string, MediaInfo>, op: any, tag:
       : Array.from({ length: nWords }, (_, k) => round(lead + k * Math.min(0.11, ((end - start) * 0.45) / Math.max(1, nWords)), 3));
     const c: Clip = {
       id, track: track.id, kind: 'text', start: round(start, 4), dur: round(end - start, 4), text, words, name: `lyric L${i}`,
-      style: { ...STANDARD_CAPTION }, anim: { in: 'words', out: 'fade', inDur: 0.3, outDur: 0.16 }, transform: { x: 0, y: 0.25, scale: 1, rotation: 0, opacity: 1 },
+      style: { ...STANDARD_CAPTION }, anim: { in: 'words', out: 'cap', inDur: 0.3, outDur: 0.24 }, transform: { x: 0, y: 0.25, scale: 1, rotation: 0, opacity: 1 },
     };
     patchClip(c, { ...(op.style ? { style: op.style } : {}), ...(op.anim ? { anim: op.anim } : {}), ...(op.transform ? { transform: op.transform } : {}) }, issues, p);
     if (!isFree(p, c.track, c.start, c.dur, c.id)) c.track = freeTrack(p, 'text', c.start, c.dur, track.id, c.id).id;
@@ -766,7 +766,7 @@ function placeLyrics(p: Project, media: Record<string, MediaInfo>, op: any, tag:
 
 // ---------- Opus operations ----------
 
-export interface OpsResult { project: Project; applied: number; issues: string[]; touched: string[] }
+export interface OpsResult { project: Project; applied: number; issues: string[]; touched: string[]; /** applied operations per note id they were tagged with */ notes?: Record<string, number> }
 
 /** Apply a list of edit operations (the format Opus writes). Invalid operations are skipped and reported. */
 export function applyOps(base: Project, rawOps: unknown, media: Record<string, MediaInfo>): OpsResult {
@@ -777,9 +777,19 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
   const ops = Array.isArray(rawOps) ? rawOps : [];
   const pendingRamps: [string, any][] = [];
   if (!Array.isArray(rawOps)) issues.push('ops must be an array');
+  const noteOps: Record<string, number> = {};
   ops.slice(0, 2000).forEach((op: any, i: number) => {
     const tag = `op ${i + 1}`;
     if (!op || typeof op !== 'object' || typeof op.op !== 'string') { issues.push(`${tag}: not an operation`); return; }
+    // "note": which of the round's numbered notes this operation serves (counted, not applied)
+    let noteIds: string[] = [];
+    if ('note' in op) {
+      const raw = Array.isArray(op.note) ? op.note : [op.note];
+      noteIds = raw.map((x: unknown) => String(x ?? '').trim().toUpperCase()).filter((x: string) => /^[A-Z]{1,2}\d{1,3}[A-Z]?$/.test(x)).slice(0, 6);
+      const { note: _n, ...rest } = op;
+      op = rest;
+    }
+    const before = applied;
     try {
       switch (op.op) {
         case 'clear': {
@@ -969,6 +979,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
     } catch (e: any) {
       issues.push(`${tag}: ${e?.message || 'failed'}`);
     }
+    if (applied > before && noteIds.length) for (const n of noteIds) noteOps[n] = (noteOps[n] || 0) + 1;
   });
   if (ops.length > 2000) issues.push('only the first 2000 operations were applied');
   normalize(p, media, { pruneTracks: true, resolveOverlaps: false });
@@ -982,5 +993,5 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
     if (!ok) issues.push(`clip ${id}: no music beats fall inside it, so the velocity ramp was skipped (add a music clip on an audio track first)`);
   }
   normalize(p, media, { pruneTracks: true });
-  return { project: p, applied, issues, touched };
+  return { project: p, applied, issues, touched, notes: noteOps };
 }

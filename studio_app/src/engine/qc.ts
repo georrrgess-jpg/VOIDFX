@@ -132,6 +132,27 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   // logo
   const logos = trans.filter(c => c.transition!.type === 'logo');
   if (o.houseRules) out.push({ id: 'logo', label: 'voidfx logo', status: logos.length === 1 ? 'pass' : logos.length > 1 ? 'fail' : 'warn', detail: logos.length === 1 ? `Once, as a transition at ${f2(logos[0].start)} s.` : logos.length ? `${logos.length} times; the rule is exactly once.` : 'Not used yet; the rule is exactly once, as a transition.', at: logos.map(c => c.start) });
+  // look and layers: one grade over the edit and depth in every section (bare footage reads flat)
+  if (o.houseRules && dur > 2) {
+    const lookIds = new Set(p.tracks.filter(t => t.role === 'look').map(t => t.id));
+    const looks = p.clips.filter(c => lookIds.has(c.track));
+    const shots = p.clips.filter(c => (c.kind === 'video' || c.kind === 'image') && p.tracks.find(t => t.id === c.track)?.main);
+    const graded = shots.filter(c => c.color && Object.values(c.color).some(v => Math.abs(Number(v) || 0) > 0.02)).length;
+    const layers = p.clips.filter(c => (c.kind === 'graphic' || c.kind === 'shader') && !lookIds.has(c.track));
+    const secs = Math.floor(dur);
+    const bare: number[] = [];
+    for (let s0 = 0; s0 < secs; s0++) if (!layers.some(c => c.start < s0 + 1 && c.start + c.dur > s0)) bare.push(s0);
+    let run = 0, longest = 0;
+    for (let s0 = 0; s0 < secs; s0++) { run = bare.includes(s0) ? run + 1 : 0; longest = Math.max(longest, run); }
+    const share = secs ? bare.length / secs : 0;
+    const noLook = !looks.length && graded < shots.length / 2;
+    const lib = layers.filter(c => c.preset).length;
+    out.push({
+      id: 'layers', label: 'Look and layers', status: noLook && share > 0.7 ? 'fail' : noLook || share > 0.4 || longest >= 4 ? 'warn' : 'pass',
+      detail: `${looks.length ? `Look: ${[...new Set(looks.map(c => c.preset || c.name || 'custom'))].join(', ')}` : graded ? `No library look; ${graded} of ${shots.length} shots graded by hand` : 'No look: the footage keeps its own grade (give the edit its own look)'}; ${lib} library effect${lib === 1 ? '' : 's'} and ${layers.length - lib} custom graphic${layers.length - lib === 1 ? '' : 's'} or effect${layers.length - lib === 1 ? '' : 's'}; ${bare.length} of ${secs} seconds have no graphic or effect layer${longest >= 3 ? ` (longest bare stretch ${longest} s)` : ''}.`,
+      at: bare.map(x => x + 0.5),
+    });
+  }
   // text
   const texts = p.clips.filter(c => c.kind === 'text');
   const pops = texts.filter(c => (c.anim?.in ?? 'fade') === 'none');
@@ -142,7 +163,8 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
     const tr = transformAt(c, Math.min(c.dur, 0.5));
     const h = textBlockHeight(c, p.width, p.height);
     const top = (0.5 + tr.y - h / 2) * 1920, bot = (0.5 + tr.y + h / 2) * 1920;
-    if (o.houseRules && (top < 1240 - 40 || bot > 1640 + 40) && !(c.anim?.in === 'letters')) outBand.push(c.start);
+    // the knockout title (footage in the letters) is the one deliberate mid-frame exception
+    if (o.houseRules && (top < 1240 - 40 || bot > 1640 + 40) && !(c.anim?.in === 'letters') && !s.knockout) outBand.push(c.start);
     if (s.size * 1920 * Math.max(1, ...(s.lineScales || [1])) < 56) small.push(c.start);
   }
   if (texts.length) {

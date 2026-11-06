@@ -43,7 +43,7 @@ export function Home() {
         </div>
         <ActivityButton variant="nav" />
         <button type="button" class="home-k" onClick={openPalette} title="Jump to anything (Ctrl+K)">{Icon.search}<span>Jump to…</span><kbd>Ctrl K</kbd></button>
-        <p class="home-foot">Opus 5.5 director · everything stays in this browser</p>
+        <p class="home-foot">Opus director · everything stays in this browser</p>
       </nav>
       <main class="home-main" key={tab}>
         {tab === 'home' && <Dashboard />}
