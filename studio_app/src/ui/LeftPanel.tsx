@@ -245,9 +245,9 @@ function SoundsPanel() {
   return (
     <div class="panel">
       <header class="panel-h"><h2>Sounds</h2></header>
-      <p class="note">Generated sound effects: every transition gets its own sound. Click the name to hear it; + adds it at the playhead on an SFX track.</p>
-      <Btn kind="solid" class="w100" disabled={!trans} onClick={() => { store.commit(p => { addTransitionSounds(p); normalize(p, store.state.media); }); store.toast(`Matched sounds added to ${trans} transition${trans === 1 ? '' : 's'}.`, 'ok'); }}>
-        {Icon.vol}<span>Sound every transition</span>
+      <p class="note">Generated sound effects. Keep them as punctuation: the drop, set pieces and hard hits, not every cut. Click the name to hear it; + adds it at the playhead on an SFX track.</p>
+      <Btn kind="solid" class="w100" disabled={!trans} onClick={() => { let n = 0; store.commit(p => { n = addTransitionSounds(p); normalize(p, store.state.media); }); store.toast(n ? `${n} matched sounds on the designed transitions; soft joins stay silent.` : 'No designed transitions with room for a sound.', 'ok'); }}>
+        {Icon.vol}<span>Sound the designed transitions</span>
       </Btn>
       <ul class="sfxlist">
         {SFX.map(t => (

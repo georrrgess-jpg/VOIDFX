@@ -41,7 +41,7 @@ export const CRITIC_CANON = `THE TIKTOK EDIT CANON (what the top fan edits in th
 9. TEXT. Few words, timed to the vocal or the line, readable at phone size, clear of faces and TikTok's interface, designed with intent; never paragraphs, default fonts, typos or text that pops on.
 10. CONCEPT. The edit says something about the character (an arc, a rivalry, a turn) and has a moment people would comment on ("the transition at 0:07"). Without a concept it is a montage.
 11. ENDING AND LOOP. It ends on its strongest image or hit and loops seamlessly in picture and sound, so the rewatch is invisible; no outro card, no fade to black that kills the loop.
-12. SOUND DESIGN. Whooshes, impacts, risers and reverses placed exactly on the transitions; a clean, loud, unclipped mix; dialogue clear when used.
+12. SOUND DESIGN. The music leads; effects are punctuation: a riser and impact into the drop, hits on the set pieces, a whoosh only where a move needs one. A whoosh on every cut or stacked effects clutter the mix and read as amateur. Clean, loud, unclipped; dialogue clear when used.
 13. ORIGINALITY. A signature move; nothing that looks like a trend template or an earlier edit's look.
 SCORING. 9-10: could stand with the best edits in its niche (viral calibre). 7-8: strong, needs polish. 5-6: competent but forgettable. Below 5: amateur flaws. Most edits honestly land between 4 and 7. Never inflate. Any critical issue caps the score at 6.5.`;
 
@@ -191,6 +191,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     `PRESET "${preset.name}": ${preset.prompt || preset.description}`,
     last ? `WHAT THE OWNER ASKED FOR IN ROUND ${last.n}: ${last.brief || '(no extra notes)'}${last.fromCritic?.length ? `\nCritic points passed on for that round:\n- ${last.fromCritic.join('\n- ')}` : ''}${last.summary ? `\nTHE EDITOR (Opus) SAYS IT DID: ${last.summary}` : ''}` : '',
     rounds.filter(r => r.critique).length ? `EARLIER CRITIQUES (check whether their points were fixed)\n${rounds.filter(r => r.critique).map(r => `Round ${r.n}: ${r.critique!.score}/10, "${r.critique!.headline}"; issues: ${r.critique!.issues.slice(0, 8).map(i => i.problem).join(' | ')}`).join('\n')}` : '',
+    p.lyrics?.lines.length ? `THE SONG'S LYRICS (from the owner${p.lyrics.timed ? '; song times' : ', untimed'}): check that every caption is a sung line on its time, never invented words\n${p.lyrics.lines.slice(0, 80).map((l, i) => `${p.lyrics!.timed ? `L${i + 1} ${l.t.toFixed(2)} ` : ''}${l.text}`).join('\n')}` : 'NO LYRICS WERE SUPPLIED: any caption that claims to be a sung line is a guess; flag captions that do not read as dialogue, a designed title or a likely sung hook.',
     `MEASURED\n${metrics}`,
     `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
     music.length ? `MUSIC\n${music.map(m => `${m.id} "${m.name}" ${m.analysis?.bpm ? `${m.analysis.bpm} BPM` : ''}`).join('\n')}` : '',

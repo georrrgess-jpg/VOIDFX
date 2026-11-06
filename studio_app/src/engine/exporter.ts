@@ -223,7 +223,10 @@ export async function exportVideo(
   if (total > 3600) throw new Error(`The edit is ${Math.round(total)} s long; something sits far down the timeline. Check the last clips.`);
   const { width: W, height: H, fps } = settings;
   const missing = p.clips.filter(c => c.media && !runtime.has(c.media));
-  if (missing.length) throw new Error(`Re-link ${new Set(missing.map(c => media[c.media!]?.name)).size} offline media file(s) in the Media panel first.`);
+  if (missing.length) {
+    const names = [...new Set(missing.map(c => media[c.media!]?.name || c.media!))];
+    throw new Error(`${names.length} media file${names.length > 1 ? 's are' : ' is'} offline: ${names.slice(0, 4).join(', ')}${names.length > 4 ? '…' : ''}. This browser no longer has ${names.length > 1 ? 'these files' : 'this file'} (storage was full or cleared). Re-import ${names.length > 1 ? 'them' : 'it'} in the Media panel (the clips re-link by name), or remove the clips that use ${names.length > 1 ? 'them' : 'it'}, then export again.`);
+  }
 
   onProgress('prepare', 0);
   await loadFonts(p, W);
@@ -291,6 +294,7 @@ export async function exportVideo(
   }
   type Cursor = { it: AsyncGenerator<VideoSample | null>; };
   const cursors = new Map<string, Cursor>();
+  const failedDecode = new Set<string>();
   const sc = new SampleCanvas();
   const elFrames = new ElementFrames();
   const maxLong = Math.round(Math.max(W, H) * 1.5);
@@ -312,31 +316,44 @@ export async function exportVideo(
   };
 
   const t0 = performance.now();
+  let phaseNow = 'rendering frames', frameNow = 0;
   try {
     for (let n = 0; n < nFrames; n++) {
       if (signal.aborted) throw abortErr();
       const t = n / fps;
+      frameNow = n + 1;
       await pushAudioUntil(t + 1);
       const ev = evaluate(p, media, t, { audio: false });
+      if (comp.lost) throw new Error(`the graphics card stopped responding at ${t.toFixed(2)} s${comp.lastShader ? ` while drawing effect ${comp.lastShader}` : ''}. That effect is too heavy for this computer: turn it off or simplify it (Edit tab), then export again`);
       await drawOffline(comp, p, media, ev.layers, async L => {
         const c = L.clip;
-        const pl = plans.get(c.id);
+        const pl = failedDecode.has(c.id) ? undefined : plans.get(c.id);
         if (pl) {
-          let cur = cursors.get(c.id);
-          if (!cur) {
-            const sinkV = new VideoSampleSink(runtime.get(c.media!)!.video!);
-            cur = { it: sinkV.samplesAtTimestamps(pl.times) };
-            cursors.set(c.id, cur);
+          try {
+            let cur = cursors.get(c.id);
+            if (!cur) {
+              const sinkV = new VideoSampleSink(runtime.get(c.media!)!.video!);
+              cur = { it: sinkV.samplesAtTimestamps(pl.times) };
+              cursors.set(c.id, cur);
+            }
+            const r = await cur.it.next();
+            const sample = r.done ? null : r.value;
+            if (n >= pl.last) { void cur.it.return(undefined); cursors.delete(c.id); }
+            if (sample) {
+              const out = sc.get(c.id, sample, maxLong);
+              sample.close();
+              return { src: out.canvas as any, w: out.w, h: out.h };
+            }
+          } catch (e) {
+            // a file the decoder chokes on: finish the clip by seeking a media element instead
+            console.warn('decode failed, falling back', c.id, e);
+            failedDecode.add(c.id);
+            const cur = cursors.get(c.id);
+            if (cur) { void cur.it.return(undefined).catch(() => undefined); cursors.delete(c.id); }
+            warnings.push(`${media[c.media!]?.name || c.media} could not be decoded directly from ${t.toFixed(2)} s; those frames were taken from the browser's player instead.`);
           }
-          const r = await cur.it.next();
-          const sample = r.done ? null : r.value;
-          if (n >= pl.last) { void cur.it.return(undefined); cursors.delete(c.id); }
-          if (!sample) return null;
-          const out = sc.get(c.id, sample, maxLong);
-          sample.close();
-          return { src: out.canvas as any, w: out.w, h: out.h };
         }
-        const el = await elFrames.get(c.media!, L.srcTime);
+        const el = await elFrames.get(c.media!, L.srcTime).catch(() => null);
         return el ? { src: el, w: el.videoWidth, h: el.videoHeight } : null;
       }, 'x', n);
       await videoSource.add(t, 1 / fps);
@@ -346,12 +363,16 @@ export async function exportVideo(
         onProgress('video', (n + 1) / nFrames, Number.isFinite(eta) ? `${Math.ceil(eta)} s left` : undefined);
       }
     }
+    phaseNow = 'writing the audio';
     await pushAudioUntil(total + 1);
     onProgress('finish', 1);
+    phaseNow = 'finishing the file';
     await output.finalize();
-  } catch (e) {
+  } catch (e: any) {
     await output.cancel().catch(() => {});
-    throw e;
+    if (e?.name === 'AbortError') throw e;
+    const msg = String(e?.message || e);
+    throw new Error(/^the graphics card|offline/.test(msg) ? msg : `${msg} (while ${phaseNow}; frame ${frameNow} of ${nFrames})`);
   } finally {
     for (const c of cursors.values()) void c.it.return(undefined);
     elFrames.dispose();

@@ -25,15 +25,18 @@ OPERATIONS
 {"op":"remove","id":"c1"}  or  {"op":"remove","ids":["c1","c2"]}
 {"op":"split","id":"c1","at":3.2,"newId":"c1b"}  split at timeline time "at"
 {"op":"sfx","sound":"whoosh","start":2.1,"volume":0.35}  a generated sound effect on an SFX track; start may be before the cut so the sound peaks on it. Sounds: ${SFX.join(', ')} (lengths: whoosh 0.9 s peaking at 0.56 s, swish 0.35 s, impact 1.4 s, hit 0.45 s, boom 2.6 s, riser 2.0 s ending on its peak, subdrop 1.3 s, reverse 1.2 s ending on its peak, glitch 0.5 s, shutter 0.25 s, tick 0.08 s, tapestop 0.9 s)
-{"op":"sounds","volume":0.35}  give every transition its own matched sound (replaces earlier automatic sounds)
+{"op":"sounds","volume":0.3}  matched sounds for the designed transitions only (soft joins such as crossfades, dips, slides, pushes and wipes stay silent; at most one every ~0.9 s; replaces earlier automatic sounds). Prefer placing the few sounds that matter yourself.
+{"op":"lyrics","lines":[4,5,6],"text":{"5":"YOU WANTED ME\\nTO *BE*"},"style":{"emphColor":"#ff2b3a"},"transform":{"y":0.25}}  captions for TIMED LYRICS lines (numbered L1, L2… in the lyrics list), each placed on its sung time through the music clip: it maps song time to timeline time, shows the line until the next one (at most ~3.6 s), eases every word in on its own time, uses the house caption style (override with style/anim/transform) and splits the line over two lines (override per line with "text", same words, *emphasis* allowed). Also "from":4,"to":9 instead of "lines"; "music": the music clip id if there are several; "shift": seconds to nudge every line. Running it again for a line replaces that caption. Only available when the owner supplied timed lyrics.
 {"op":"project","camera":{"on":true,"every":"beat","punch":0.055,"kick":1,"decay":0.16,"from":0,"to":24}}  the beat camera: zoom punch and rotation kick on the music's beats ("beat", "half" = every other beat, "downbeat"); video layers only, text stays clean
 Ids you give must be new and unique (letters, digits, - or _).
+After your operations the studio runs two finishing passes and reports them back: every main-track cut within 90 ms of a music beat is moved exactly onto the beat (the text, effects and sounds over it move with it; lyric captions stay on the song), and sound effects are thinned (no two moments within 0.3 s, at most two layers per moment and two moments per second, about three every four seconds overall; automatic sounds go first).
 
 CLIP FIELDS (all optional)
 speed 0.1-10 (default 1); keepPitch true|false (default true)
 ramp {"fast":2.2,"slow":0.45,"burst":0.18}: a velocity ramp synced to the music: a speed burst on every beat inside the clip, slow motion between (needs a music clip under it; the studio fits it to the source length). Or keyframe "speed" yourself. "ramp": null removes it
 volume 0-4 (1 = as recorded); fadeIn, fadeOut (seconds); muted true|false
 fit "cover" (fills the frame, crops; default) | "contain" (whole picture, may leave bars)
+focus {"x":0.62,"y":0.34}: the subject's point in the SOURCE picture (0..1 from its top-left: read it off the cyan ruler on the contact sheets, x ticks .1-.9 across, y ticks .25/.5/.75 down). With cover fit the studio crops around it so the face sits centred in the 9:16 window (at about 44% of the height) at any scale, clamped to the picture's edges; transform x/y add to it. Set it on every shot from a landscape source, otherwise the crop takes the middle of the source. "focus": null removes it.
 transform {x, y, scale, rotation, opacity}: x and y offset the centre in frame widths and heights (0,0 = centred); scale 1 = fitted size; rotation in degrees clockwise; opacity 0-1
 kf {"scale": [[t, value, ease], ...], ...}: keyframes for x, y, scale, rotation, opacity, volume, speed; t is seconds from the clip's start; ease is linear|in|out|inOut|hold (default inOut) and shapes the move to the next key
 color {brightness, contrast, saturation, temperature, tint: -1..1; hue: -180..180; vignette, blur: 0..1}
@@ -57,13 +60,15 @@ They go on overlay video tracks (never the main track) above the footage, and re
   uv: frame position, 0..1, (0,0) top-left. t: seconds since the clip started; p: 0..1 through the clip.
   Uniforms: uRes (pixels), uAspect (width/height), uDur, uTime (timeline seconds), uBeat (1.0 on each music beat, decaying over ~0.14 s), uBeatAge (seconds since the last beat), uEnergy (music loudness 0..1 now), uPos (anchor in uv from transform/kf x,y: 0.5+x, 0.5+y), uScale, uRot (radians), uOpacity (applied for you), uSeed, PI.
   Helpers: frame(uv) the picture under this layer (rgb) for distortions, ghosts, chromatic splits and relighting (return vec4(colour, 1.0) to replace the picture); aspectUv(uv) square coordinates centred on the frame (x in -0.28..0.28 for 9:16, y in -0.5..0.5); toLocal(uv) square coordinates around uPos with uScale/uRot applied; hash11, hash21, noise, fbm, rot2(angle), sdCircle, sdBox, sdSegment, glow(dist, width) = soft falloff, boltDist(p, a, b, seed, jag) = distance to a jagged lightning path from a to b (jag ~0.2-0.4; change seed every few frames, e.g. floor(t*12.0), to make it flicker), luma(rgb).
-  Rules: no #directives, uniform/in/out declarations, texture() (use frame), main(), while or do loops; for loops only as "for (int i = 0; i < N; i++)" with a literal N up to 64, at most 4 loops; up to 8000 characters. An effect that fails to compile is skipped and reported back to you with the compiler's message, so keep the code plain.
+  Rules: smoothstep needs its first edge below the second (write 1.0 - smoothstep(a, b, x) for a falling edge); no #directives, uniform/in/out declarations, texture() (use frame), main(), while or do loops; for loops only as "for (int i = 0; i < N; i++)" with a literal N up to 64, at most 4 loops; up to 8000 characters. An effect that fails to compile is skipped and reported back to you with the compiler's message, so keep the code plain.
   Use effects for what the footage and the beat call for: a lightning arc from the hand that throws it (anchor uPos on it from the contact sheet and keyframe x/y to follow its movement), speed streaks along the running direction, a Speed Force tunnel that warps the picture on the drop, an energy ring on a beat, a freeze-frame glow, a custom transition across a cut (place the effect over the cut, often over a plain cut or a short crossfade). Keep them attached to the action, lit like the scene and brief; vary them.
   Example, a beat-pulsed lightning arc between two points (blend add):
-  vec4 effect(vec2 uv, float t, float p) { vec2 q = aspectUv(uv); float d = boltDist(q, vec2(-0.18, -0.42), vec2(0.12, 0.35), floor(t * 14.0), 0.3); float core = glow(d - 0.002, 0.003), halo = glow(d, 0.035) * 0.55; float a = (core + halo) * (0.55 + 0.45 * uBeat) * smoothstep(0.0, 0.08, p) * smoothstep(1.0, 0.75, p); return vec4(mix(vec3(1.0, 0.72, 0.18), vec3(1.0), core), a); }
+  vec4 effect(vec2 uv, float t, float p) { vec2 q = aspectUv(uv); float d = boltDist(q, vec2(-0.18, -0.42), vec2(0.12, 0.35), floor(t * 14.0), 0.3); float core = glow(d - 0.002, 0.003), halo = glow(d, 0.035) * 0.55; float a = (core + halo) * (0.55 + 0.45 * uBeat) * smoothstep(0.0, 0.08, p) * (1.0 - smoothstep(0.75, 1.0, p)); return vec4(mix(vec3(1.0, 0.72, 0.18), vec3(1.0), core), a); }
   Example, a Speed Force pull that warps the picture toward the anchor (blend normal, reads the frame):
   vec4 effect(vec2 uv, float t, float p) { vec2 d = uv - uPos; float r = length(d * vec2(uAspect, 1.0)); float k = 0.5 * sin(p * PI); vec3 col = vec3(0.0); for (int i = 0; i < 12; i++) { float f = float(i) / 11.0; col += frame(uPos + d * (1.0 - k * f * 0.35)); } col /= 12.0; float streak = fbm(vec2(atan(d.y, d.x) * 4.0, r * 6.0 - t * 9.0)); col += vec3(1.0, 0.78, 0.3) * smoothstep(0.55, 0.9, streak) * k * 0.8; return vec4(col, 1.0); }
-  Example, speed streaks along the running direction (blend add): vec4 effect(vec2 uv, float t, float p) { vec2 q = rot2(-0.35) * aspectUv(uv); float lane = floor(q.y * 70.0); float s = fract(q.x * 1.5 - t * (3.0 + hash11(lane) * 4.0) + hash11(lane + 3.0)); float line = smoothstep(0.0, 0.02, s) * smoothstep(0.35, 0.0, s) * step(0.82, hash11(lane + 7.0)); return vec4(vec3(1.0, 0.85, 0.5), line * 0.7 * sin(p * PI)); }`;
+  Example, Dexter's plastic sheeting wiping across a cut (blend normal, reads the frame; centre a ~0.7 s effect on the cut: the sheet slides in over the outgoing shot, the cut happens under it, it slides off the new one):
+  vec4 effect(vec2 uv, float t, float p) { vec2 q = aspectUv(uv); float w = (fbm(vec2(q.y * 7.0, t * 0.7)) - 0.5) * 0.06; float x = q.x + w; float front = mix(-0.36, 0.36, smoothstep(0.0, 0.5, p)); float back = mix(-0.36, 0.36, smoothstep(0.5, 1.0, p)); float cover = (1.0 - smoothstep(front - 0.012, front + 0.012, x)) * smoothstep(back - 0.012, back + 0.012, x); vec2 g = vec2(fbm(q * 8.0 + 1.7), fbm(q * 8.0 + 5.3)) - 0.5; vec3 pic = frame(uv + g * 0.05 * cover); float crease = smoothstep(0.62, 0.9, fbm(q * vec2(4.0, 13.0) + 2.0)); vec3 col = mix(pic, pic * 0.7 + vec3(0.2, 0.23, 0.24), 0.5 * cover) + vec3(0.9, 0.95, 1.0) * crease * cover * 0.55; return vec4(col, 1.0); }
+  Example, speed streaks along the running direction (blend add): vec4 effect(vec2 uv, float t, float p) { vec2 q = rot2(-0.35) * aspectUv(uv); float lane = floor(q.y * 70.0); float s = fract(q.x * 1.5 - t * (3.0 + hash11(lane) * 4.0) + hash11(lane + 3.0)); float line = smoothstep(0.0, 0.02, s) * (1.0 - smoothstep(0.0, 0.35, s)) * step(0.82, hash11(lane + 7.0)); return vec4(vec3(1.0, 0.85, 0.5), line * 0.7 * sin(p * PI)); }`;
 }
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
@@ -94,6 +99,40 @@ function soundLine(a: AudioAnalysis): string {
   return parts.join('\n    ');
 }
 
+/**
+ * The strongest stretches of a song for a ~23 s edit: a sharp rise (the drop) about 40% in, entered on
+ * a downbeat, scored by how much the level jumps and how full the mix stays after it.
+ */
+export function songWindows(a: AudioAnalysis, dur: number, len = 23): { in: number; out: number; drop: number; score: number }[] {
+  const E = a.energy, R = a.energyRate || 1;
+  if (!E.length || dur < len + 2) return [];
+  const mean = (s: number, e: number) => {
+    let t = 0, n = 0;
+    for (let i = Math.max(0, Math.floor(s * R)); i < Math.min(E.length, Math.ceil(e * R)); i++) { t += E[i]; n++; }
+    return n ? t / n : 0;
+  };
+  const near = (list: number[], t: number, before: boolean) => {
+    let best = t, bd = Infinity;
+    for (const d of list) { if (before && d > t + 0.3) break; const k = Math.abs(d - t); if (k < bd) { bd = k; best = d; } }
+    return bd < 2.5 ? best : t;
+  };
+  const cands = [...new Set([...a.rises, ...a.hits.slice(0, 10)].map(x => +x.toFixed(2)))];
+  const all: { in: number; out: number; drop: number; score: number }[] = [];
+  for (const r of cands) {
+    let s = Math.max(0, r - 0.4 * len);
+    if (a.downbeats.length) s = Math.max(0, near(a.downbeats, s, true));
+    let e = s + len;
+    if (a.downbeats.length) e = near(a.downbeats, e, false);
+    if (e > dur - 0.05 || e - s < len - 3) continue;
+    const after = mean(r, r + len * 0.45), before = mean(Math.max(0, r - 3), r);
+    all.push({ in: s, out: e, drop: r, score: after * 0.7 + Math.max(0, after - before) * 0.9 + mean(s, e) * 0.3 });
+  }
+  all.sort((x, y) => y.score - x.score);
+  const out: typeof all = [];
+  for (const w of all) if (!out.some(o => Math.abs(o.drop - w.drop) < 6)) out.push(w);
+  return out.slice(0, 3);
+}
+
 export function mediaCatalog(media: Record<string, MediaInfo>, order: string[]): string {
   const rows: string[] = [];
   for (const id of order) {
@@ -106,7 +145,11 @@ export function mediaCatalog(media: Record<string, MediaInfo>, order: string[]):
     rows.push(`${m.id} ${m.kind} "${m.name}" ${len}${dims}${fps}${snd}`);
     if (m.shots && m.shots.length > 1) rows.push(`    shots (${m.shots.length}): ${m.shots.slice(0, 220).map(([a, b], i) => `#${i + 1} ${r2(a)}-${r2(b)}`).join(', ')}${m.shots.length > 220 ? ' …' : ''}`);
     if (m.tags?.length) rows.push(`    tags: ${m.tags.join(', ')}`);
-    if (m.analysis && m.hasAudio) rows.push(`    ${soundLine(m.analysis)}`);
+    if (m.analysis && m.hasAudio) {
+      rows.push(`    ${soundLine(m.analysis)}`);
+      const wins = m.analysis.bpm ? songWindows(m.analysis, m.duration) : [];
+      if (wins.length) rows.push(`    best windows for a ~23 s edit (song in -> out, the drop; strongest first): ${wins.map(w => `${r2(w.in)} -> ${r2(w.out)} (drop at ${r2(w.drop)}, ${Math.round(((w.drop - w.in) / (w.out - w.in)) * 100)}% in)`).join('; ')}`);
+    }
     else if (m.hasAudio && m.analysisState !== 'done') rows.push('    (sound not analysed)');
   }
   return rows.length ? rows.join('\n') : '(the library is empty)';

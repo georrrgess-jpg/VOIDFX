@@ -4,10 +4,11 @@ import { Clip, MediaInfo, Project } from '../state/types';
 import { clipEnd, projectDuration, textStyleOf, transformAt } from '../state/util';
 import { timelineBeats } from './evaluate';
 import { textBlockHeight } from './text';
-import { FLASHY, TRANSITION_LABELS } from './transitions';
+import { FLASHY, GENERIC, TRANSITION_LABELS } from './transitions';
+import { QUIET_TRANSITIONS, sfxBudget, sfxEvents } from '../state/ops';
 import { customIssues } from './custom';
 
-export interface Check { id: string; label: string; status: 'pass' | 'warn' | 'fail' | 'info'; detail: string; at?: number[] }
+export interface Check { id: string; label: string; status: 'pass' | 'warn' | 'fail' | 'info'; detail: string; at?: number[]; /** A one-click fix the panel can offer. */ action?: 'thin-sfx' | 'add-sfx' }
 export interface CheckOptions { houseRules: boolean; duration?: [number, number]; fps?: number; seam?: number | null }
 
 const f2 = (t: number) => t.toFixed(2);
@@ -20,6 +21,7 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   const trans = p.clips.filter(c => c.transition);
   const main = p.tracks.find(t => t.main);
   const mainClips = p.clips.filter(c => c.track === main?.id).sort((a, b) => a.start - b.start);
+  const music = p.clips.filter(c => c.kind === 'audio' && c.media && media[c.media]?.analysis);
 
   // format
   if (o.houseRules) {
@@ -43,6 +45,51 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
     id: 'density', label: 'Designed transitions', status: designed >= target ? 'pass' : designed >= 15 || !o.houseRules ? 'warn' : 'fail',
     detail: `${designed} in ${f2(dur)} s, ${types.size + (customCuts ? 1 : 0)} different${customCuts ? ` (${customCuts} are custom effects over a cut)` : ''} (target about ${target}: one per second)`,
   });
+  // variety: generic library moves are filler, and the same move twice in a row reads as a template
+  if (o.houseRules && designed >= 4) {
+    const generic = trans.filter(c => GENERIC.has(c.transition!.type));
+    const seq = mainClips.filter(c => c.transition);
+    const repeats: number[] = [];
+    for (let i = 1; i < seq.length; i++) if (seq[i].transition!.type === seq[i - 1].transition!.type && seq[i].transition!.type !== 'logo') repeats.push(seq[i].start);
+    const share = generic.length / designed;
+    out.push({
+      id: 'variety', label: 'Transition variety', status: share > 0.4 ? 'fail' : share > 0.25 || repeats.length > 1 ? 'warn' : 'pass',
+      detail: `${generic.length} of ${designed} joins are generic library moves (${Math.round(share * 100)}%; house limit a quarter: signature transitions, custom effects over the cut and motion-matched cuts carry the edit)${repeats.length ? `; the same move twice in a row ${repeats.length} time${repeats.length > 1 ? 's' : ''}` : ''}.`,
+      at: [...generic.map(c => c.start), ...repeats].sort((a, b) => a - b),
+    });
+  }
+  // framing: a wide source without a focus point crops to its middle, which is rarely where the face is
+  if (p.height > p.width) {
+    const unframed = p.clips.filter(c => {
+      if ((c.kind !== 'video' && c.kind !== 'image') || !c.media || c.focus || (c.fit ?? 'cover') !== 'cover') return false;
+      if (p.tracks.find(t => t.id === c.track)?.kind !== 'video') return false;
+      const m = media[c.media];
+      if (!m?.width || !m.height || m.width / m.height < (p.width / p.height) * 1.3) return false;
+      return Math.abs(c.transform?.x ?? 0) < 0.005 && !(c.kf?.x?.length);
+    });
+    out.push({
+      id: 'framing', label: 'Framing', status: unframed.length ? 'warn' : 'pass',
+      detail: unframed.length ? `${unframed.length} shot${unframed.length > 1 ? 's' : ''} from wide sources have no focus point, so they crop to the middle of the source: set "focus" on the face (read it off the cyan ruler on the contact sheets).` : 'Every shot from a wide source is framed on its subject.',
+      at: unframed.map(c => c.start),
+    });
+  }
+  // pacing: an arc, not one uniform pace; flash cuts only as a burst on the drop
+  if (o.houseRules && mainClips.length >= 4) {
+    const shots = mainClips.map(c => c.dur);
+    const avg = shots.reduce((a, b) => a + b, 0) / shots.length;
+    const sd = Math.sqrt(shots.reduce((a, b) => a + (b - avg) ** 2, 0) / shots.length);
+    const drops = music.flatMap(c => (media[c.media!].analysis!.rises || []).map(r => c.start + (r - (c.in ?? 0)) / (c.speed ?? 1))).filter(t => t > dur * 0.2 && t < dur * 0.75);
+    const drop = drops[0];
+    const flash = mainClips.filter(c => c.dur < 0.3);
+    const stray = flash.filter(c => drop === undefined || c.start < drop - 0.6 || c.start > drop + 3.5);
+    const lo = Math.round(dur * 0.8), hi = Math.round(dur * 1.55);
+    const uniform = shots.length >= 10 && sd / avg < 0.22;
+    const bad = flash.length > 4 || stray.length > 0 || shots.length < lo || shots.length > hi || uniform;
+    const parts = [`${shots.length} shots, average ${avg.toFixed(2)} s (house range about ${lo}-${hi} for ${f2(dur)} s)`];
+    if (flash.length) parts.push(`${flash.length} flash cut${flash.length > 1 ? 's' : ''} under 0.3 s${stray.length ? `, ${stray.length} outside the drop burst` : ''} (limit 4, on the drop only)`);
+    if (uniform) parts.push('one uniform pace: hold the cold open and a breath after the drop, tighten into the drop');
+    out.push({ id: 'pacing', label: 'Pacing', status: bad ? 'warn' : 'pass', detail: parts.join('; ') + '.', at: stray.length ? stray.map(c => c.start) : flash.map(c => c.start) });
+  }
   // custom graphics and effects
   if (custom.length || o.houseRules) {
     const broken = customIssues(p);
@@ -55,7 +102,6 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   // plain cuts
   const plain: number[] = [];
   for (let i = 1; i < mainClips.length; i++) if (!mainClips[i].transition && !overCut(mainClips[i].start)) plain.push(mainClips[i].start);
-  const music = p.clips.filter(c => c.kind === 'audio' && c.media && media[c.media]?.analysis);
   const quietAt = (t: number) => music.every(c => {
     const a = media[c.media!].analysis!;
     if (t < c.start || t > clipEnd(c)) return true;
@@ -107,10 +153,26 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
     if (small.length) parts.push(`${small.length} may be too small to read on a phone`);
     out.push({ id: 'text', label: 'Text', status: st, detail: parts.join('; ') + '.', at: [...pops.map(c => c.start), ...outBand, ...small] });
   }
-  // sounds for transitions
-  const sfx = p.clips.filter(c => c.kind === 'sfx');
-  const silent = trans.filter(c => !sfx.some(s => s.start >= c.start - 2.2 && s.start <= c.start + 0.4));
-  if (trans.length) out.push({ id: 'sound', label: 'Transition sounds', status: silent.length ? (o.houseRules ? 'warn' : 'info') : 'pass', detail: silent.length ? `${silent.length} of ${trans.length} transitions have no sound effect (rule: every transition has its own sound).` : `All ${trans.length} transitions have a sound.`, at: silent.map(c => c.start) });
+  // sound design: punctuation, not a click on every cut
+  const ev = sfxEvents(p);
+  const hard = trans.filter(c => !QUIET_TRANSITIONS.has(c.transition!.type));
+  if (ev.length || hard.length) {
+    const stacked = ev.filter((e, i) => i > 0 && e.t - ev[i - 1].t < 0.3).map(e => e.t);
+    const thick = ev.filter(e => e.clips.length > 2).map(e => e.t);
+    let peak = 0, peakAt = 0;
+    for (const e of ev) { const n = ev.filter(x => x.t >= e.t && x.t < e.t + 1).length; if (n > peak) { peak = n; peakAt = e.t; } }
+    const budget = sfxBudget(dur);
+    const tooMany = ev.length > budget || stacked.length > 0 || thick.length > 0 || peak > 2;
+    const none = !ev.length && hard.length > 0;
+    out.push({
+      id: 'sound', label: 'Sound effects',
+      status: tooMany ? 'warn' : none ? (o.houseRules ? 'warn' : 'info') : 'pass',
+      detail: none ? `No sound effects yet: the drop wants a riser and an impact, and the hard hits (${hard.length}) a sound where they land.`
+        : `${ev.length} sound moments in ${f2(dur)} s (budget ${budget}: punctuation on the drop, set pieces and hard hits, never a sound on every cut)${stacked.length ? `; ${stacked.length} within 0.3 s of another` : ''}${thick.length ? `; ${thick.length} with more than two layers` : ''}${peak > 2 ? `; ${peak} within one second at ${f2(peakAt)} s` : ''}.`,
+      at: tooMany ? [...stacked, ...thick, ...(peak > 2 ? [peakAt] : [])].sort((a, b) => a - b) : [],
+      action: tooMany ? 'thin-sfx' : none ? 'add-sfx' : undefined,
+    });
+  }
   // flashes
   const flashes = trans.filter(c => FLASHY.has(c.transition!.type)).map(c => c.start).sort((a, b) => a - b);
   let worst = 0, worstAt = 0;

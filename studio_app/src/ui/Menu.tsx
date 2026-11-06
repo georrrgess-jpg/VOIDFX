@@ -1,8 +1,61 @@
 // A "⋮" menu: one button that opens a short list of actions. Keyboard friendly (arrows, Escape),
 // closes on outside click, and asks for a second click on destructive actions.
 import { ComponentChildren } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { createPortal } from 'preact/compat';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Icon } from './controls';
+
+/**
+ * A layer that floats above the whole page (rendered into <body>), anchored to an element. It opens
+ * below or above (or beside) the anchor, whichever fits, is clamped inside the window, scrolls when
+ * taller than the space, and follows the anchor on scroll and resize, so it can never hide behind
+ * another card or run off the screen.
+ */
+export function Floating(props: {
+  anchor: HTMLElement | null; place?: 'below' | 'beside'; align?: 'start' | 'end';
+  class?: string; role?: string; label?: string; children: ComponentChildren; popRef?: { current: HTMLDivElement | null };
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number; maxH: number } | null>(null);
+  const place = () => {
+    const a = props.anchor, el = ref.current;
+    if (!a || !el) return;
+    const r = a.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight, m = 8, gap = 6;
+    const w = Math.min(el.offsetWidth, vw - m * 2);
+    const h = el.scrollHeight;
+    let left: number, top: number, maxH: number;
+    if (props.place === 'beside') {
+      left = r.right + 10;
+      if (left + w > vw - m) left = r.left - w - 10;
+      if (left < m) left = Math.max(m, Math.min(vw - w - m, r.left));
+      maxH = vh - m * 2;
+      top = Math.max(m, Math.min(r.top, vh - Math.min(h, maxH) - m));
+    } else {
+      const below = vh - r.bottom - gap - m, above = r.top - gap - m;
+      const down = h <= below || below >= above;
+      maxH = Math.max(120, down ? below : above);
+      top = down ? r.bottom + gap : Math.max(m, r.top - gap - Math.min(h, maxH));
+      left = props.align === 'start' ? r.left : r.right - w;
+      left = Math.max(m, Math.min(left, vw - w - m));
+    }
+    setPos(p => (p && p.left === left && p.top === top && p.maxH === maxH ? p : { left, top, maxH }));
+  };
+  useLayoutEffect(place);
+  useEffect(() => {
+    const on = () => place();
+    window.addEventListener('resize', on);
+    window.addEventListener('scroll', on, true);
+    return () => { window.removeEventListener('resize', on); window.removeEventListener('scroll', on, true); };
+  }, [props.anchor]);
+  return createPortal(
+    <div ref={el => { (ref as any).current = el; if (props.popRef) props.popRef.current = el; }} class={`floating ${props.class || ''}`} role={props.role as any} aria-label={props.label}
+      style={pos ? { left: `${pos.left}px`, top: `${pos.top}px`, maxHeight: `${pos.maxH}px` } : { left: '-9999px', top: '0px' }}>
+      {props.children}
+    </div>,
+    document.body,
+  );
+}
 
 export interface MenuItem {
   label: string;
@@ -19,19 +72,13 @@ export interface MenuItem {
 export function KebabMenu(props: { items: MenuItem[]; label?: string; class?: string; align?: 'left' | 'right' }) {
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState<number | null>(null);
-  const [up, setUp] = useState(false);
-  const [left, setLeft] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
-  const pop = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) { setArmed(null); return; }
-    const r = wrap.current?.getBoundingClientRect();
-    setUp(!!r && window.innerHeight - r.bottom < 60 + props.items.length * 38);
-    // open to the right when a right-aligned menu would run past the scroll area's left edge
-    const box = wrap.current?.closest('.home-main, .rp-body, .app')?.getBoundingClientRect();
-    setLeft(props.align === 'left' || (!!r && r.right - 240 < (box?.left ?? 0) + 4));
-    const outside = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    const outside = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node) && !pop.current?.contains(e.target as Node)) setOpen(false); };
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); wrap.current?.querySelector<HTMLButtonElement>('.kebab-b')?.focus(); }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -50,9 +97,9 @@ export function KebabMenu(props: { items: MenuItem[]; label?: string; class?: st
   const stop = (e: Event) => e.stopPropagation();
   return (
     <div ref={wrap} class={`kebab${open ? ' is-open' : ''} ${props.class || ''}`} onClick={stop} onKeyDown={stop as any} onPointerDown={stop as any}>
-      <button type="button" class="kebab-b" aria-haspopup="menu" aria-expanded={open} aria-label={props.label || 'More actions'} title={props.label || 'More actions'} onClick={() => setOpen(!open)}>{Icon.dots}</button>
+      <button ref={btn} type="button" class="kebab-b" aria-haspopup="menu" aria-expanded={open} aria-label={props.label || 'More actions'} title={props.label || 'More actions'} onClick={() => setOpen(!open)}>{Icon.dots}</button>
       {open && (
-        <div ref={pop} class={`kebab-pop${up ? ' up' : ''}${left ? ' left' : ''}`} role="menu">
+        <Floating anchor={btn.current} align={props.align === 'left' ? 'start' : 'end'} class="kebab-pop" role="menu" popRef={pop}>
           {props.items.map((it, i) => (
             <>
               {it.sep && <hr />}
@@ -67,7 +114,7 @@ export function KebabMenu(props: { items: MenuItem[]; label?: string; class?: st
               </button>
             </>
           ))}
-        </div>
+        </Floating>
       )}
     </div>
   );

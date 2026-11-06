@@ -14,8 +14,19 @@ import { buildEdit, errText, HIDE, JobIO, reviseEdit, stepsFor } from './directo
 import { Workspace } from './workspace';
 
 const files = new Map<string, File[]>();
-let current: { id: string; ctl: AbortController } | null = null;
-let pumping = false;
+/** Jobs running now (one per project at most), with their stop handles. */
+const running = new Map<string, AbortController>();
+
+/** How many jobs may run at once (different projects only). Kept in this browser. */
+export function parallelLimit(): number {
+  try { const v = Number(localStorage.getItem('voidfx.parallel')); if (v >= 1 && v <= 3) return v; } catch { /* storage blocked */ }
+  return 2;
+}
+export function setParallelLimit(n: number) {
+  try { localStorage.setItem('voidfx.parallel', String(Math.max(1, Math.min(3, Math.round(n))))); } catch { /* storage blocked */ }
+  store.set(s => ({ catalogRev: s.catalogRev + 1 }));
+  pump();
+}
 
 const LABEL: Record<JobKind, string> = { create: 'Build', revise: 'Revision', critique: 'Critique' };
 export function jobTitle(j: Job) {
@@ -83,6 +94,7 @@ export interface QueueOpts {
   request?: Job['request'];
   brief?: string;
   fromCritic?: string[];
+  lyrics?: string;
   follow?: Job['follow'];
   files?: File[];
 }
@@ -95,12 +107,12 @@ export async function enqueue(o: QueueOpts): Promise<Job | null> {
   const round = o.round ?? (o.kind === 'critique' ? Math.max(1, lastRound) : o.kind === 'create' ? 1 : lastRound + 1);
   const job: Job = {
     id: uid('J'), kind: o.kind, projectId: o.projectId, projectName: rec.name, state: 'queued', steps: [], created: Date.now(), round,
-    effort: o.effort, presetId: o.presetId, request: o.request, brief: o.brief, fromCritic: o.fromCritic, follow: o.follow,
+    effort: o.effort, presetId: o.presetId, request: o.request, brief: o.brief, fromCritic: o.fromCritic, follow: o.follow, ...(o.lyrics ? { lyrics: o.lyrics } : {}),
   };
   if (o.files?.length) files.set(job.id, o.files);
   job.steps = job.kind === 'critique' ? criticSteps() : stepsFor(job, !!o.files?.length);
   setJobs([...store.state.jobs, job]);
-  void pump();
+  pump();
   return job;
 }
 
@@ -116,7 +128,7 @@ export function stopJob(id: string) {
   const j = store.state.jobs.find(x => x.id === id);
   if (!j) return;
   if (j.state === 'queued') { patchJob(id, { state: 'stopped', finished: Date.now() }); files.delete(id); return; }
-  if (current?.id === id) current.ctl.abort();
+  running.get(id)?.abort();
 }
 
 const LOWER: Record<Effort, Effort> = { extra: 'high', high: 'medium', medium: 'low', low: 'low' };
@@ -128,7 +140,7 @@ export function resumeJob(id: string, opts: { lighter?: boolean } = {}) {
   const effort = opts.lighter ? LOWER[j.effort] : j.effort;
   const fresh = j.kind === 'critique' ? criticSteps() : stepsFor({ ...j, effort }, files.has(j.id));
   patchJob(id, { state: 'queued', error: undefined, steps: fresh, started: undefined, finished: undefined, effort });
-  void pump();
+  pump();
 }
 
 export function dismissJob(id: string) {
@@ -149,26 +161,32 @@ export const activeJobFor = (projectId: string) => store.state.jobs.find(j => j.
 
 // ---------- running ----------
 
-async function pump() {
-  if (pumping) return;
-  pumping = true;
-  try {
-    for (;;) {
-      const next = store.state.jobs.find(j => j.state === 'queued');
-      if (!next) break;
-      await run(next);
-    }
-  } finally {
-    pumping = false;
+/**
+ * Start queued jobs while there is room: up to the parallel limit, never two on the same project
+ * (a project's rounds stay in order). Each finished job pumps again.
+ */
+function pump() {
+  const limit = parallelLimit();
+  for (;;) {
+    if (running.size >= limit) return;
+    const busy = new Set(store.state.jobs.filter(j => running.has(j.id)).map(j => j.projectId));
+    const next = store.state.jobs.find(j => j.state === 'queued' && !busy.has(j.projectId));
+    if (!next) return;
+    const ctl = new AbortController();
+    running.set(next.id, ctl);
+    void run(next, ctl).finally(() => { running.delete(next.id); pump(); });
   }
 }
 
-async function run(job: Job) {
-  const ctl = new AbortController();
-  current = { id: job.id, ctl };
+async function run(job: Job, ctl: AbortController) {
   patchJob(job.id, { state: 'running', started: Date.now() });
   const step = (sid: string, patch: Partial<JobStep>) => patchJob(job.id, j => ({
-    steps: j.steps.map(s => (s.id === sid ? { ...s, ...patch, ...(patch.state === 'run' ? { t0: Date.now() } : {}), ...(patch.state && patch.state !== 'run' && patch.state !== 'wait' ? { t1: Date.now() } : {}) } : s)),
+    steps: j.steps.map(s => (s.id === sid ? {
+      ...s, ...patch,
+      // the clock starts when a step starts (not again if it is re-announced) and stops when it ends
+      ...(patch.state === 'run' && s.state !== 'run' ? { t0: Date.now(), t1: undefined } : {}),
+      ...(patch.state && patch.state !== 'run' && patch.state !== 'wait' ? { t1: Date.now() } : {}),
+    } : s)),
   }));
   let lastStream = 0;
   const io: JobIO = {
@@ -216,7 +234,6 @@ async function run(job: Job) {
     if (HIDE.has(code)) store.setDirector({ available: 'no', unavailableReason: text });
   } finally {
     ws?.dispose();
-    current = null;
     syncLock();
     store.set(s => ({ catalogRev: s.catalogRev + 1 }));
   }

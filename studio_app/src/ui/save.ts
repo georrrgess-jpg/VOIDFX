@@ -15,9 +15,11 @@ export async function initDownloads() {
 
 const MSG: Record<string, string> = {
   declined: 'Save cancelled.',
-  rate_limited: 'A save prompt is already open. Try again in a moment.',
+  rate_limited: 'A save prompt is already open. Close it or wait a moment, then press Save again.',
   rejected_extension: 'This file type cannot be saved here.',
-  too_large: 'The file is too large for this app. Export at a lower resolution or quality.',
+  too_large: 'The file is too large for this app (the Android app saves up to 200 MB). Export at 720p or Standard quality, or save from claude.ai on a computer.',
+  unavailable: 'Saving files is not available in this view. Open the studio in claude.ai on a computer and save from there.',
+  bad_request: 'The save was refused as malformed. Rename the project to plain letters and numbers, then save again.',
 };
 
 export async function saveFile(filename: string, data: Blob | string) {
@@ -25,9 +27,11 @@ export async function saveFile(filename: string, data: Blob | string) {
     try {
       await downloads.save({ filename, data });
       store.toast(`Saved ${filename}`, 'ok');
+      return true;
     } catch (e: any) {
       const code = e?.code;
-      store.toast(MSG[code] || 'Could not save the file here.', code === 'declined' ? 'info' : 'error');
+      store.toast(MSG[code] || `Could not save the file${code ? ` (${code}${e?.message ? `: ${e.message}` : ''})` : e?.message ? `: ${e.message}` : ''}.`, code === 'declined' ? 'info' : 'error', 9000);
+      return false;
     }
     return;
   }

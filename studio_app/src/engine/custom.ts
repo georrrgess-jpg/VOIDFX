@@ -192,11 +192,26 @@ export function checkShaderCode(raw: unknown): { code: string; issues: string[] 
   for (const [re, msg] of banned) if (re.test(code)) issues.push(msg);
   const loops = [...code.matchAll(/\bfor\s*\(([^;]*);([^;]*);/g)];
   if (loops.length > 4) issues.push('at most 4 for loops');
+  // each loop: its bound and the span of its body, to limit nested work (a GPU that takes too long
+  // on one frame is reset by the browser, which would stop the preview or an export)
+  const spans: { a: number; b: number; n: number }[] = [];
   for (const m of loops) {
     const init = m[1].trim(), cond = m[2].trim();
     const im = init.match(/^int\s+(\w+)\s*=\s*-?\d+$/);
     const cm = cond.match(/^(\w+)\s*<=?\s*(\d+)$/);
-    if (!im || !cm || cm[1] !== im[1] || +cm[2] > 64) { issues.push(`loop "for (${init}; ${cond}; …)" must be "for (int i = 0; i < N; i++)" with a literal N up to 64`); }
+    if (!im || !cm || cm[1] !== im[1] || +cm[2] > 64) { issues.push(`loop "for (${init}; ${cond}; …)" must be "for (int i = 0; i < N; i++)" with a literal N up to 64`); continue; }
+    const head = code.indexOf(')', (m.index ?? 0) + m[0].length);
+    let i = head + 1;
+    while (i < code.length && /\s/.test(code[i])) i++;
+    let end = i;
+    if (code[i] === '{') { let d = 0; for (; end < code.length; end++) { if (code[end] === '{') d++; else if (code[end] === '}' && --d === 0) break; } }
+    else end = code.indexOf(';', i);
+    spans.push({ a: m.index ?? 0, b: end, n: +cm[2] });
+  }
+  for (const s1 of spans) {
+    const inner = spans.filter(s2 => s2 !== s1 && s2.a > s1.a && s2.b <= s1.b);
+    if (inner.some(s2 => spans.some(s3 => s3 !== s2 && s3 !== s1 && s3.a > s2.a && s3.b <= s2.b))) issues.push('loops may nest at most two deep');
+    for (const s2 of inner) if (s1.n * s2.n > 256) issues.push(`nested loops run ${s1.n * s2.n} times per pixel; keep them at 256 or fewer`);
   }
   return { code, issues };
 }

@@ -4,7 +4,7 @@ import { updateRecord, saveCurrent } from '../state/projects';
 import { openComposer } from './ai/actions';
 import { refreshChecks } from '../ai/checkrunner';
 import { player } from '../engine/player';
-import { addTransitionSounds, normalize } from '../state/ops';
+import { addTransitionSounds, normalize, pruneSfx } from '../state/ops';
 import { store, useStore } from '../state/store';
 import { Btn, Icon } from './controls';
 
@@ -29,7 +29,7 @@ export function ChecksPanel() {
   const [measuring, setMeasuring] = useState(false);
   const fails = checks.filter(c => c.status === 'fail').length, warns = checks.filter(c => c.status === 'warn').length;
   const ship = checks.length > 1 && !fails && !warns;
-  const silent = checks.find(c => c.id === 'sound' && c.status !== 'pass');
+  const sound = checks.find(c => c.id === 'sound' && c.status !== 'pass');
   return (
     <div class="insp checks">
       <header class="insp-h"><h2>Ship checkpoint</h2><span class={`verdict ${ship ? 'ok' : fails ? 'bad' : 'warn'}`}>{ship ? 'Ready to ship' : fails ? `${fails} failing` : `${warns} to look at`}</span></header>
@@ -48,7 +48,8 @@ export function ChecksPanel() {
       </ul>
       <div class="chk-acts">
         <Btn kind="solid" disabled={measuring} onClick={async () => { setMeasuring(true); await refreshChecks({ seam: true }); setMeasuring(false); }}>{measuring ? 'Measuring…' : 'Measure the loop seam'}</Btn>
-        {silent && <Btn kind="solid" onClick={() => { store.commit(p => { addTransitionSounds(p); normalize(p, store.state.media); }); store.toast('Every transition now has its own sound.', 'ok'); }}>{Icon.vol}<span>Add transition sounds</span></Btn>}
+        {sound?.action === 'add-sfx' && <Btn kind="solid" onClick={() => { let n = 0; store.commit(p => { n = addTransitionSounds(p); normalize(p, store.state.media); }); store.toast(n ? `${n} sounds added to the designed transitions (soft joins stay silent).` : 'There was no room for more sounds.', 'ok'); }}>{Icon.vol}<span>Sound the hard hits</span></Btn>}
+        {sound?.action === 'thin-sfx' && <Btn kind="solid" onClick={() => { let n = 0; store.commit(p => { n = pruneSfx(p); normalize(p, store.state.media); }); store.toast(n ? `Removed ${n} stacked or extra sound effect${n > 1 ? 's' : ''}.` : 'Nothing to thin out.', 'ok'); }}>{Icon.vol}<span>Thin out sounds</span></Btn>}
         {opus && (fails > 0 || warns > 0) && <Btn kind="opus" disabled={running} onClick={() => void fixWithOpus(checks)}>{Icon.spark}<span>Fix with Opus</span></Btn>}
       </div>
     </div>

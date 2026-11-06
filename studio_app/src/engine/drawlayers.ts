@@ -42,7 +42,7 @@ export function drawLayers(
         t: L.lt, p: Math.max(0, Math.min(1, L.lt / Math.max(1e-3, c.dur))), dur: c.dur, time: t, beat: mu.beat, beatAge: mu.beatAge, energy: mu.energy,
         opacity: L.transform.opacity * L.fx.opacity, scale: L.transform.scale, rot: (L.transform.rotation * Math.PI) / 180,
         pos: [0.5 + L.transform.x, 0.5 + L.transform.y], seed: seedOf(c.id),
-      });
+      }, c.name ? `${c.id} (${c.name})` : c.id);
       continue;
     }
     if (L.kind === 'text') {

@@ -10,7 +10,7 @@ import { Job } from '../../state/types';
 import { Icon } from '../controls';
 import { KebabMenu } from '../Menu';
 import { openComposer, projectMenu, sendToCritic } from '../ai/actions';
-import { elapsed } from '../ai/Activity';
+import { jobClock, useNow } from '../ai/Activity';
 import { fmtDur, timeAgo, useCatalog } from './common';
 import { SECTIONS } from './Home';
 
@@ -51,6 +51,7 @@ function Pipeline({ rec, job }: { rec: ProjectRecord; job?: Job }) {
 function Featured({ rec }: { rec: ProjectRecord }) {
   useStore(s => s.jobs);
   const job = activeJobFor(rec.id);
+  const now = useNow(job?.state === 'running');
   const rounds = rec.rounds || [];
   const last = rounds[rounds.length - 1];
   const cur = job?.steps.find(s => s.state === 'run');
@@ -68,6 +69,7 @@ function Featured({ rec }: { rec: ProjectRecord }) {
         <p class="desk-eyebrow">Featured project</p>
         <FeaturedTitle name={rec.name} />
         <p class="feat-sub">{sub}</p>
+        {job?.state === 'running' && <p class="feat-clock">{jobClock(job, now)}</p>}
         <button type="button" class="feat-go" onClick={open}>{Icon.play}<span>Continue editing</span><span class="feat-arrow" aria-hidden="true">{Icon.arrowR}</span></button>
         <Pipeline rec={rec} job={job} />
       </div>
@@ -77,10 +79,11 @@ function Featured({ rec }: { rec: ProjectRecord }) {
 
 function JobRow({ job }: { job: Job }) {
   const running = job.state === 'running';
+  const now = useNow(running);
   const cur = job.steps.find(s => s.state === 'run');
   const label = { queued: 'Waiting', running: 'Working', done: 'Ready', error: 'Failed', stopped: 'Stopped', interrupted: 'Interrupted' }[job.state];
   const msg = job.state === 'error' || job.state === 'interrupted' ? job.error || 'The studio was closed while this ran.'
-    : running ? `${cur?.label || 'Starting'}${cur?.t0 ? ` · ${elapsed(Date.now() - cur.t0)}` : ''}`
+    : running ? `${cur?.label || 'Starting'}${cur?.detail ? ` · ${cur.detail}` : ''}`
     : job.state === 'queued' ? 'Waits for the job before it.' : job.summary || '';
   const action = job.state === 'error' || job.state === 'interrupted' || job.state === 'stopped'
     ? <button type="button" class="jr-act" onClick={() => resumeJob(job.id)}>{Icon.retry}<span>{job.state === 'error' ? 'Retry' : 'Resume'}</span></button>
@@ -94,6 +97,7 @@ function JobRow({ job }: { job: Job }) {
       <span class={`job-state s-${job.state}`}>{label}</span>
       {action}
       {msg && <p class="jr-msg">{msg}</p>}
+      {running && <p class="jr-clock">{jobClock(job, now)}</p>}
       {running && <div class="jr-bar" aria-hidden="true"><i style={{ width: `${Math.max(5, (job.steps.filter(s => s.state === 'done' || s.state === 'skip').length / Math.max(1, job.steps.length)) * 100)}%` }} /></div>}
     </div>
   );

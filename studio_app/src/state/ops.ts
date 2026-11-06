@@ -1,12 +1,13 @@
 // Edit operations shared by the UI and the Opus Director. Every change is validated here so the
 // timeline can never hold out-of-range values, overlapping clips or dangling references.
 import {
-  ANIM_PROPS, AnimProp, BLEND_MODES, Clip, ClipKind, DEFAULT_CAMERA, Ease, FONTS, Keyframe, MediaInfo, Project, REVEALS_IN, REVEALS_OUT, SFX, SfxType, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
+  ANIM_PROPS, AnimProp, BLEND_MODES, Clip, ClipKind, DEFAULT_CAMERA, Ease, FONTS, Keyframe, MediaInfo, Project, REVEALS_IN, REVEALS_OUT, SFX, SfxType, STANDARD_CAPTION, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
   Track, TrackKind, TRANSITIONS, TransitionType,
 } from './types';
-import { clamp, clipEnd, clipIn, clipSpeed, deepClone, EPS, hasRamp, num, round, shortId, srcAt, trackClips } from './util';
+import { twoLines } from './lyrics';
+import { clamp, clipEnd, clipIn, clipSpeed, deepClone, EPS, hasRamp, num, projectDuration, round, shortId, srcAt, trackClips } from './util';
 
-import { SFX_INFO, soundsForTransition } from '../engine/sfx';
+import { SFX_INFO, SFX_PEAK, sfxPeakAt, soundsForTransition } from '../engine/sfx';
 import { timelineBeats } from '../engine/evaluate';
 import { defaultTransitionDur } from '../engine/transitions';
 import { checkShaderCode, sanitizeSvg } from '../engine/custom';
@@ -401,6 +402,12 @@ export function patchClip(c: Clip, props: Record<string, any>, issues: string[],
         break;
       }
       case 'media': break; // fixed after creation
+      case 'focus': {
+        if (v === null) { delete c.focus; break; }
+        if (!v || typeof v !== 'object' || c.kind === 'text' || c.kind === 'audio' || c.kind === 'sfx') break;
+        c.focus = { x: round(num(v.x, 0, 1, 0.5), 3), y: round(num(v.y, 0, 1, 0.4), 3) };
+        break;
+      }
       case 'svg': {
         if (c.kind !== 'graphic') break;
         const r = sanitizeSvg(v);
@@ -467,18 +474,142 @@ export function addSfx(p: Project, type: SfxType, start: number, opts: { volume?
   return c;
 }
 
-/** Give every transition its own layered sound. Earlier automatic sounds are replaced. */
-export function addTransitionSounds(p: Project, volume = 0.35): number {
+/** Joins that do not get a sound of their own: soft or plain moves that should stay invisible. */
+export const QUIET_TRANSITIONS = new Set<string>(['crossfade', 'dip_black', 'dip_white', 'blur', 'slide_left', 'slide_right', 'slide_up', 'slide_down', 'push_left', 'push_right', 'push_up', 'push_down', 'wipe_left', 'wipe_right', 'wipe_up', 'wipe_down']);
+
+/** The sound budget for an edit of `dur` seconds: about three effects every four seconds at most. */
+export const sfxBudget = (dur: number) => Math.max(6, Math.ceil(dur * 0.75));
+
+/**
+ * Sounds for the designed transitions only (signature moves, whips, impacts), placed so they peak on
+ * the cut, at most one every ~0.9 s and never stacked: sound design that supports the music rather
+ * than clicking on every cut. Earlier automatic sounds are replaced.
+ */
+export function addTransitionSounds(p: Project, volume = 0.3): number {
   p.clips = p.clips.filter(c => !(c.kind === 'sfx' && c.name?.startsWith('auto:')));
+  const taken = p.clips.filter(c => c.kind === 'sfx').map(sfxPeakAt);
+  const free = (t: number, gap: number) => !taken.some(x => Math.abs(x - t) < gap);
   let n = 0;
-  for (const c of [...p.clips]) {
-    if (!c.transition) continue;
-    for (const [type, off] of soundsForTransition(c.transition.type, c.transition.dur)) {
+  const trans = p.clips.filter(c => c.transition && !QUIET_TRANSITIONS.has(c.transition.type)).sort((a, b) => a.start - b.start);
+  for (const c of trans) {
+    const set = soundsForTransition(c.transition!.type, c.transition!.dur);
+    // the main hit of the transition decides whether there is room for its sound
+    const main = set[set.length - 1];
+    if (!main || !free(c.start + main[1] + SFX_PEAK[main[0]], 0.9)) continue;
+    for (const [type, off] of set) {
+      const peak = c.start + off + SFX_PEAK[type];
+      if (!free(peak, 0.35)) continue;
       addSfx(p, type, c.start + off, { volume: type === 'boom' || type === 'impact' || type === 'subdrop' ? volume * 1.15 : volume, name: `auto:${c.id}` });
+      taken.push(peak);
       n++;
     }
   }
   return n;
+}
+
+/** Sound effects grouped by when they peak: sounds peaking within 60 ms of each other are one layered event. */
+export function sfxEvents(p: Project): { t: number; clips: Clip[] }[] {
+  const list = p.clips.filter(c => c.kind === 'sfx' && c.sfx).map(c => ({ c, t: sfxPeakAt(c) })).sort((a, b) => a.t - b.t);
+  const ev: { t: number; clips: Clip[] }[] = [];
+  for (const x of list) {
+    const last = ev[ev.length - 1];
+    if (last && x.t - last.t < 0.06) last.clips.push(x.c); else ev.push({ t: x.t, clips: [x.c] });
+  }
+  return ev;
+}
+
+/**
+ * Thin out sound effects: at most two layers per moment, no two moments within 0.3 s of each other,
+ * and no more than the budget for the edit's length (automatic sounds go first, then the quietest).
+ */
+export function pruneSfx(p: Project): number {
+  const drop = new Set<string>();
+  const auto = (c: Clip) => !!c.name?.startsWith('auto:');
+  const rank = (a: Clip, b: Clip) => Number(auto(a)) - Number(auto(b)) || (b.volume ?? 1) - (a.volume ?? 1);
+  const kept: { t: number; clips: Clip[] }[] = [];
+  for (const e of sfxEvents(p)) {
+    const layers = [...e.clips].sort(rank);
+    for (const c of layers.slice(2)) drop.add(c.id);
+    const ev = { t: e.t, clips: layers.slice(0, 2) };
+    const prev = kept[kept.length - 1];
+    if (prev && ev.t - prev.t < 0.3) {
+      // keep the owner's or Opus's own sound over an automatic one, else the earlier
+      const prevAuto = prev.clips.every(auto), evAuto = ev.clips.every(auto);
+      if (prevAuto && !evAuto) { for (const c of prev.clips) drop.add(c.id); kept[kept.length - 1] = ev; }
+      else for (const c of ev.clips) drop.add(c.id);
+      continue;
+    }
+    // at most two moments in any second
+    const prev2 = kept[kept.length - 2];
+    if (prev2 && ev.t - prev2.t < 1) {
+      const evAuto = ev.clips.every(auto), midAuto = prev!.clips.every(auto);
+      if (midAuto && !evAuto) { for (const c of prev!.clips) drop.add(c.id); kept[kept.length - 1] = ev; }
+      else for (const c of ev.clips) drop.add(c.id);
+      continue;
+    }
+    kept.push(ev);
+  }
+  const cap = sfxBudget(projectDuration(p));
+  if (kept.length > cap) {
+    const order = [...kept].sort((a, b) => Number(b.clips.every(auto)) - Number(a.clips.every(auto)) || Math.max(...a.clips.map(c => c.volume ?? 1)) - Math.max(...b.clips.map(c => c.volume ?? 1)));
+    for (const e of order.slice(0, kept.length - cap)) for (const c of e.clips) drop.add(c.id);
+  }
+  // layers count too: about one sound per second of edit in total
+  const left = kept.flatMap(e => e.clips).filter(c => !drop.has(c.id));
+  const maxClips = Math.max(8, Math.ceil(projectDuration(p) * 0.9));
+  if (left.length > maxClips) {
+    const second = kept.filter(e => e.clips.length > 1).map(e => [...e.clips].sort(rank)[1]).filter(c => !drop.has(c.id));
+    const order = [...second.filter(auto), ...left.filter(c => auto(c) && !second.includes(c)), ...second.filter(c => !auto(c)).sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1))];
+    for (const c of order.slice(0, left.length - maxClips)) drop.add(c.id);
+  }
+  if (drop.size) p.clips = p.clips.filter(c => !drop.has(c.id));
+  return drop.size;
+}
+
+/**
+ * Put main-track cuts exactly on the music's beats when they are within `tol` seconds of one, and
+ * carry text, effects, graphics, overlays and sounds along with the cuts they belong to.
+ */
+export function snapToBeats(p: Project, media: Record<string, MediaInfo>, tol = 0.09): number {
+  const beats = timelineBeats(p, media).map(b => b.t);
+  const main = mainTrack(p);
+  if (beats.length < 4 || !main) return 0;
+  const list = trackClips(p, main.id);
+  if (list.length < 2) return 0;
+  const minDur = 2 / (p.fps || 30);
+  const oldB: number[] = [list[0].start], newB: number[] = [list[0].start];
+  let t = list[0].start, moved = 0;
+  for (let i = 0; i < list.length; i++) {
+    const c = list[i];
+    const oldEnd = c.start + c.dur;
+    let end = t + c.dur;
+    if (i < list.length - 1) {
+      let best = Infinity, bt = end;
+      for (const b of beats) { const d = Math.abs(b - end); if (d < best) { best = d; bt = b; } }
+      if (best > 0.004 && best <= tol && bt - t >= minDur && bt - t <= mediaLimit(c, media) + 1e-6) { end = bt; moved++; }
+    }
+    c.start = round(t, 4);
+    c.dur = round(end - t, 4);
+    t = end;
+    oldB.push(oldEnd); newB.push(end);
+  }
+  if (!moved) return 0;
+  const map = (x: number) => {
+    if (x <= oldB[0]) return x + (newB[0] - oldB[0]);
+    for (let k = 1; k < oldB.length; k++) {
+      if (x <= oldB[k]) { const a = oldB[k - 1], b = oldB[k]; const f = b > a ? (x - a) / (b - a) : 0; return newB[k - 1] + f * (newB[k] - newB[k - 1]); }
+    }
+    return x + (newB[newB.length - 1] - oldB[oldB.length - 1]);
+  };
+  for (const c of p.clips) {
+    // lyric captions belong to the song, which does not move
+    if (c.track === main.id || c.kind === 'audio' || c.name?.startsWith('lyric L')) continue;
+    if (c.kind === 'video' && p.tracks.find(t => t.id === c.track)?.kind === 'audio') continue;
+    const s0 = map(c.start);
+    if (c.kind !== 'sfx') c.dur = round(Math.max(minDur, map(c.start + c.dur) - s0), 4);
+    c.start = round(Math.max(0, s0), 4);
+  }
+  return moved;
 }
 
 /** Speed ramp synced to the music: a burst on every beat, slow motion between (the v10 motion pass). */
@@ -505,6 +636,71 @@ export function velocityRamp(p: Project, media: Record<string, MediaInfo>, c: Cl
   }
   c.kf = kf;
   return true;
+}
+
+/** The song bed: the longest clip on an audio track whose file has a sound analysis. */
+export function musicClip(p: Project, media: Record<string, MediaInfo>): Clip | undefined {
+  const audioTracks = new Set(p.tracks.filter(t => t.kind === 'audio').map(t => t.id));
+  return p.clips.filter(c => (c.kind === 'audio' || (c.kind === 'video' && audioTracks.has(c.track))) && c.media && media[c.media]?.analysis)
+    .sort((a, b) => b.dur - a.dur)[0];
+}
+
+/**
+ * Captions for timed lyric lines, each on its sung time through the music clip (song time → timeline
+ * time), in the house caption style. Re-running a line replaces its caption.
+ */
+function placeLyrics(p: Project, media: Record<string, MediaInfo>, op: any, tag: string, issues: string[], touched: string[]): boolean {
+  const L = p.lyrics;
+  if (!L?.lines.length) { issues.push(`${tag}: this project has no lyrics (the owner pastes them when creating the edit)`); return false; }
+  if (!L.timed) { issues.push(`${tag}: the lyrics have no times, so lines cannot be placed on their sung time; caption nothing, or use a designed title on an obvious hit`); return false; }
+  const mus = (typeof op.music === 'string' ? p.clips.find(c => c.id === op.music) : undefined) || musicClip(p, media);
+  if (!mus) { issues.push(`${tag}: add the music clip before placing lyrics`); return false; }
+  const n = L.lines.length;
+  let idx: number[] = Array.isArray(op.lines) ? op.lines.map((x: any) => Math.round(+x)) : [];
+  if (!idx.length) {
+    const a = Math.round(num(op.from, 1, n, 1)), b = Math.round(num(op.to, a, n, n));
+    for (let i = a; i <= b; i++) idx.push(i);
+  }
+  const missing = idx.filter(i => !(i >= 1 && i <= n));
+  if (missing.length) issues.push(`${tag}: there is no lyric line ${missing.join(', ')} (lines run L1-L${n})`);
+  idx = [...new Set(idx)].filter(i => i >= 1 && i <= n).sort((a, b) => a - b).slice(0, 60);
+  const rate = num(op.rate, 0.25, 4, 1), shift = num(op.shift, -30, 30, 0);
+  const sp = clipSpeed(mus), mIn = clipIn(mus), mEnd = clipEnd(mus);
+  const toTl = (s: number) => mus.start + (s / rate + shift - mIn) / sp;
+  const lead = num(op.lead, 0, 0.5, 0.06), hold = num(op.hold, 0.6, 8, 3.6);
+  const texts = op.text && typeof op.text === 'object' ? op.text : {};
+  let track = op.track ? p.tracks.find(t => t.id === op.track && t.kind === 'text') : p.tracks.find(t => t.kind === 'text');
+  if (!track) track = addTrack(p, 'text');
+  const outside: number[] = [];
+  let placed = 0;
+  for (const i of idx) {
+    const line = L.lines[i - 1];
+    const t0 = toTl(line.t);
+    if (t0 < mus.start - 0.01 || t0 > mEnd - 0.3) { outside.push(i); continue; }
+    const nextT = L.lines[i] ? toTl(L.lines[i].t) : Infinity;
+    const lineEnd = line.end !== undefined ? toTl(line.end) : nextT;
+    const start = Math.max(0, t0 - lead);
+    let end = Math.min(lineEnd + 0.15, nextT - 0.04, t0 + hold, mEnd);
+    if (end - start < 0.45) end = Math.min(start + 0.45, mEnd);
+    const id = `ly${i}`;
+    p.clips = p.clips.filter(c => c.id !== id);
+    const text = typeof texts[i] === 'string' && texts[i].trim() ? String(texts[i]).slice(0, 300) : twoLines(line.text);
+    const nWords = text.split(/\s+/).filter(Boolean).length;
+    const words = line.words && line.words.length === nWords
+      ? line.words.map(w => round(Math.max(0, toTl(w) - start), 3))
+      : Array.from({ length: nWords }, (_, k) => round(lead + k * Math.min(0.11, ((end - start) * 0.45) / Math.max(1, nWords)), 3));
+    const c: Clip = {
+      id, track: track.id, kind: 'text', start: round(start, 4), dur: round(end - start, 4), text, words, name: `lyric L${i}`,
+      style: { ...STANDARD_CAPTION }, anim: { in: 'words', out: 'fade', inDur: 0.3, outDur: 0.16 }, transform: { x: 0, y: 0.25, scale: 1, rotation: 0, opacity: 1 },
+    };
+    patchClip(c, { ...(op.style ? { style: op.style } : {}), ...(op.anim ? { anim: op.anim } : {}), ...(op.transform ? { transform: op.transform } : {}) }, issues, p);
+    if (!isFree(p, c.track, c.start, c.dur, c.id)) c.track = freeTrack(p, 'text', c.start, c.dur, track.id, c.id).id;
+    p.clips.push(c);
+    touched.push(c.id);
+    placed++;
+  }
+  if (outside.length) issues.push(`${tag}: lines ${outside.join(', ')} are sung outside the part of the song on the timeline (music clip ${mus.id} plays song ${mIn.toFixed(2)}-${(mIn + mus.dur * sp).toFixed(2)} s), so they were not placed`);
+  return placed > 0;
 }
 
 // ---------- Opus operations ----------
@@ -649,6 +845,12 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           const n = addTransitionSounds(p, op.volume !== undefined ? num(op.volume, 0, 2, 0.35) : 0.35);
           if (!n) issues.push(`${tag}: there are no transitions to give sounds to yet`);
           applied++;
+          break;
+        }
+        case 'lyrics': {
+          // pack the main track first so captions sit on the final song position
+          normalize(p, media, { resolveOverlaps: false });
+          if (placeLyrics(p, media, op, tag, issues, touched)) applied++;
           break;
         }
         case 'remove': {

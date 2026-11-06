@@ -8,7 +8,8 @@ import { activeJobFor, enqueue } from '../../ai/jobs';
 import { listPresets, Preset } from '../../state/catalog';
 import { getRecord, openProject, ProjectRecord, updateRecord } from '../../state/projects';
 import { store, useStore } from '../../state/store';
-import { Effort } from '../../state/types';
+import { Effort, Lyrics } from '../../state/types';
+import { parseLyrics } from '../../state/lyrics';
 import { Icon } from '../controls';
 import { useCatalog } from '../home/common';
 import { sendToCritic } from './actions';
@@ -136,7 +137,7 @@ export function Composer() {
       const follow = { critic, autoRounds: critic ? auto : 0 };
       const job = mode === 'create'
         ? await enqueue({ kind: 'create', projectId: rec.id, effort, presetId, request: { notes: text, lyrics, library: { mode: useDb ? 'auto' : 'none', ids: [] } }, follow })
-        : await enqueue({ kind: 'revise', projectId: rec.id, effort, presetId, brief: text.trim(), fromCritic, follow });
+        : await enqueue({ kind: 'revise', projectId: rec.id, effort, presetId, brief: text.trim(), fromCritic, follow, lyrics: lyrics.trim() || undefined });
       if (job) {
         await updateRecord(rec.id, r => { r.draft = ''; });
         store.set({ composer: null });
@@ -206,11 +207,16 @@ export function Composer() {
               </div>
               {mode === 'create' && (
                 <>
-                  <textarea class="ta" rows={3} value={lyrics} onInput={e => setLyrics((e.target as HTMLTextAreaElement).value)} placeholder="Lyrics for captions (optional)" aria-label="Lyrics" />
+                  <LyricsField value={lyrics} onChange={setLyrics} />
                   <label class={`toggle${useDb ? ' on' : ''}`}><input type="checkbox" checked={useDb} onChange={() => setUseDb(!useDb)} /><span class="toggle-t" aria-hidden="true" /><span><b>Let Opus add material from the database</b><em>{hasMedia ? 'Opus picks extra packs, clips or the song from the database.' : 'This project has no media yet: import files in the editor, or turn this on.'}</em></span></label>
                 </>
               )}
             </div>
+            {mode === 'revise' && (
+              <div class="cblock">
+                <LyricsField value={lyrics} onChange={setLyrics} current={rec.project.lyrics} />
+              </div>
+            )}
             {mode === 'revise' && (
               <div class="cblock">
                 <h3><span class="cnum">2</span>From the critic</h3>
@@ -276,6 +282,22 @@ export function CritiqueModal() {
           <button type="button" class="cta cta-opus" onClick={() => store.set({ critique: null, composer: { projectId: rec.id, mode: 'revise' } })}>{Icon.pen}<span>Write round {c.round + 1} with this</span></button>
         </footer>
       </div>
+    </div>
+  );
+}
+
+/** Lyrics box: synced LRC puts captions on the sung words; plain lyrics only inform the concept. */
+export function LyricsField({ value, onChange, current }: { value: string; onChange: (v: string) => void; current?: Lyrics }) {
+  const [open, setOpen] = useState(!!value);
+  const parsed = useMemo(() => (value.trim() ? parseLyrics(value) : null), [value]);
+  const status = parsed
+    ? parsed.timed ? `${parsed.lines.length} timed lines: captions land on the sung words.` : `${parsed.lines.length} lines without times: Opus will not caption them line by line. Paste synced lyrics ([mm:ss.xx] before each line) for timed captions.`
+    : current?.lines.length ? `This project has ${current.lines.length} ${current.timed ? 'timed' : 'untimed'} lyric lines. Paste new ones to replace them.` : 'Optional. Synced lyrics (LRC) put every caption on its sung time.';
+  return (
+    <div class="lyr">
+      <button type="button" class="linkbtn" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? '▾' : '▸'} Song lyrics{current?.lines.length && !value ? ` (${current.lines.length} lines on this project)` : ''}</button>
+      {open && <textarea class="ta" rows={4} value={value} onInput={e => onChange((e.target as HTMLTextAreaElement).value)} aria-label="Song lyrics" placeholder={'[00:51.20] I could never be the one\n[00:54.80] you wanted me to be\n…  (synced LRC times must match your song file)'} />}
+      <p class={`muted small lyr-st${parsed && !parsed.timed ? ' warn' : ''}`}>{status}</p>
     </div>
   );
 }

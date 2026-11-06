@@ -10,7 +10,7 @@ import { Btn, Icon } from './controls';
 import { DirectorPanel } from './DirectorPanel';
 import { ChecksPanel } from './ChecksPanel';
 import { Composer, CritiqueModal } from './ai/Composer';
-import { ActivityButton } from './ai/Activity';
+import { ActivityButton, jobClock, useNow } from './ai/Activity';
 import { KebabMenu } from './Menu';
 import { Palette } from './Palette';
 import { projectMenu } from './ai/actions';
@@ -146,14 +146,15 @@ function LockBanner() {
   const lock = useStore(s => s.lock);
   const pid = useStore(s => s.projectId);
   const jobs = useStore(s => s.jobs);
+  const job = pid ? activeJobFor(pid) : undefined;
+  const now = useNow(!!lock && job?.state === 'running');
   if (!lock || !pid) return null;
-  const job = activeJobFor(pid);
   const cur = job?.steps.find(x => x.state === 'run');
   const done = job ? job.steps.filter(x => x.state === 'done' || x.state === 'skip').length : 0;
   return (
     <div class="lockbar" role="status">
       <span class="lock-spin" aria-hidden="true" />
-      <div class="lock-t"><b>{lock}</b><span>{cur ? `${cur.label}${cur.detail ? ` · ${cur.detail}` : ''}` : 'Starting…'} · step {Math.min(done + 1, job?.steps.length || 1)} of {job?.steps.length || 1}. The timeline updates as it works; editing unlocks when it finishes.</span></div>
+      <div class="lock-t"><b>{lock}</b><span>{cur ? `${cur.label}${cur.detail ? ` · ${cur.detail}` : ''}` : 'Starting…'} · step {Math.min(done + 1, job?.steps.length || 1)} of {job?.steps.length || 1}{job ? ` · ${jobClock(job, now)}` : ''}. The timeline updates as it works; editing unlocks when it finishes.</span></div>
       <button type="button" class="chipbtn" onClick={() => store.set({ rightTab: 'director' })}>Progress</button>
       {job && <button type="button" class="chipbtn" onClick={() => stopJob(job.id)}>{Icon.stop}<span>Stop</span></button>}
       <span hidden>{jobs.length}</span>

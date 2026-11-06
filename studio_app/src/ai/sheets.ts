@@ -28,7 +28,7 @@ function gridFor(n: number, aspect: number) {
   return { cols: best.cols, rows: best.rows, cw: Math.floor(best.cw), ch: Math.floor(best.ch) };
 }
 
-interface Cell { img: CanvasImageSource | null; w: number; h: number; label: string; guide?: number }
+interface Cell { img: CanvasImageSource | null; w: number; h: number; label: string; guide?: number; ruler?: boolean }
 
 async function compose(cells: Cell[], aspect: number): Promise<Blob> {
   const { cols, rows, cw, ch } = gridFor(cells.length, aspect);
@@ -49,6 +49,33 @@ async function compose(cells: Cell[], aspect: number): Promise<Blob> {
       const s = Math.min(cw / cell.w, ch / cell.h);
       dw = cell.w * s; dh = cell.h * s; dx = x + (cw - dw) / 2; dy = y + (ch - dh) / 2;
       g.drawImage(cell.img, dx, dy, dw, dh);
+    }
+    if (cell.ruler && cell.img) {
+      // a 0..1 ruler on the source picture, so Opus can read the subject's position for "focus"
+      g.save();
+      const tf = Math.max(9, Math.round(fs * 0.62));
+      g.font = `700 ${tf}px "Geist Mono", ui-monospace, Menlo, monospace`;
+      g.textBaseline = 'top';
+      for (let k = 1; k < 10; k++) {
+        const x = dx + (dw * k) / 10, major = k % 5 === 0 || k === 2 || k === 8;
+        g.strokeStyle = 'rgba(0,229,255,0.9)';
+        g.lineWidth = major ? 2 : 1;
+        g.beginPath(); g.moveTo(x, dy); g.lineTo(x, dy + (major ? 12 : 7)); g.stroke();
+        if (k % 2 === 0) {
+          const t = `.${k}`;
+          g.fillStyle = 'rgba(0,0,0,0.7)';
+          g.fillRect(x - tf * 0.9, dy + 13, tf * 1.8, tf + 2);
+          g.fillStyle = '#00e5ff';
+          g.fillText(t, x - g.measureText(t).width / 2, dy + 14);
+        }
+      }
+      for (let k = 1; k < 4; k++) {
+        const y = dy + (dh * k) / 4;
+        g.strokeStyle = 'rgba(0,229,255,0.9)';
+        g.lineWidth = 1.5;
+        g.beginPath(); g.moveTo(dx, y); g.lineTo(dx + 8, y); g.stroke();
+      }
+      g.restore();
     }
     if (cell.guide && cell.img) {
       // the centred crop window of the project frame, for framing landscape footage
@@ -119,7 +146,7 @@ export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet
     if (nSheets <= 0) {
       const ts = timesFor(m, 3);
       const frames = await grabFrames(m.id, ts.map(x => x.t), 320, signal);
-      frames.forEach((f, k) => pooled.push({ img: f.img, w: f.w, h: f.h, label: ts[k].label, guide, aspect }));
+      frames.forEach((f, k) => pooled.push({ img: f.img, w: f.w, h: f.h, label: ts[k].label, guide, aspect, ruler: true }));
       continue;
     }
     const ts = timesFor(m, nSheets * cellsPerSheet);
@@ -130,9 +157,9 @@ export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet
       const part = frames.slice(k * per, (k + 1) * per);
       const labels = ts.slice(k * per, (k + 1) * per);
       if (!part.length) continue;
-      const blob = await compose(part.map((f, j) => ({ img: f.img, w: f.w, h: f.h, label: labels[j].label, guide })), aspect);
+      const blob = await compose(part.map((f, j) => ({ img: f.img, w: f.w, h: f.h, label: labels[j].label, guide, ruler: true })), aspect);
       const shotsNote = m.shots && m.shots.length > 2 ? 'one frame per shot, labelled with media id, shot number and its source range' : 'labelled with media id and source time';
-      sheets.push({ blob, caption: `contact sheet of ${m.id} ("${m.name}"), ${part.length} frames, ${shotsNote}${guide ? '; the dashed yellow box is the centred 9:16 crop' : ''}` });
+      sheets.push({ blob, caption: `contact sheet of ${m.id} ("${m.name}"), ${part.length} frames, ${shotsNote}${guide ? '; the dashed yellow box is the centred 9:16 crop' : ''}; cyan ticks along the top mark x = .1 to .9 and on the left y = .25/.5/.75, for reading each subject's focus point` });
     }
   }
   for (const m of stills) {

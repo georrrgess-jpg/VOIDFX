@@ -59,6 +59,7 @@ await ctx.addInitScript(() => {
       const op = { op: 'add', id: `v${k}`, media: m.id, track: 'V1', in: m.kind === 'image' ? 0 : Math.min(Math.max(0, m.dur - dur - 0.6), round * 1.2 + 0.3), dur };
       if (k > 0) op.transition = { type: TRANS[(k - 1) % TRANS.length] };
       if (k === 1) op.ramp = { fast: 2, slow: 0.5 };
+      if (k === 2) op.focus = { x: 0.62, y: 0.38 };
       ops.push(op); t += dur; k++;
     }
     const music = media.find(m => m.kind === 'audio');
@@ -69,6 +70,7 @@ await ctx.addInitScript(() => {
       svg: '<svg viewBox="0 0 400 400"><circle cx="200" cy="200" r="170" fill="none" stroke="#ffd23f" stroke-width="16"/><path d="M230 40 L120 220 L195 220 L160 360 L290 160 L210 160 Z" fill="#ffd23f" stroke="#fff" stroke-width="5"/></svg>' });
     ops.push({ op: 'shader', id: 'arc', start: 3.0, dur: 0.6, blend: 'add', code: 'vec4 effect(vec2 uv, float t, float p) { vec2 q = aspectUv(uv); float d = boltDist(q, vec2(-0.18, -0.42), vec2(0.12, 0.35), floor(t * 14.0), 0.3); float core = glow(d - 0.002, 0.003), halo = glow(d, 0.035) * 0.55; float a = (core + halo) * (0.55 + 0.45 * uBeat) * smoothstep(0.0, 0.08, p) * smoothstep(1.0, 0.75, p); return vec4(mix(vec3(1.0, 0.72, 0.18), vec3(1.0), core), a); }' });
     ops.push({ op: 'shader', id: 'oops', start: 5.0, dur: 0.4, code: 'vec4 effect(vec2 uv, float t, float p) { return vec4(nope(uv), 1.0); }' });
+    if (text.includes('TIMED LYRICS')) ops.push({ op: 'lyrics', from: 1, to: 3, text: { 2: 'THE EVIDENCE\nPOINTS *BACK*' } });
     ops.push({ op: 'sounds', volume: 0.35 });
     ops.push({ op: 'sfx', sound: 'riser', start: 1.4, volume: 0.3 });
     return { message: 'Concept: the evidence points back at him. Set pieces: the logo dive, the blood bloom, the blink.', ops };
@@ -166,6 +168,8 @@ await page.waitForSelector('.preset-card');
 await page.click('.preset-card:has-text("VOIDFX · Dexter")');
 await page.fill('#c-notes', 'Smoke test: the evidence points back at him.');
 await page.click('.seg-big button:has-text("Both")');
+await page.click('.linkbtn:has-text("Lyrics for captions")');
+await page.fill('#c-lyrics', '[00:00.50] Could it be him\n[00:02.10] The evidence points back\n[00:04.00] All along\n[00:06.00]');
 await page.setInputFiles('.cdrop input[type=file]', [join(MEDIA, 'portrait.mp4'), join(MEDIA, 'rotated.mp4'), join(MEDIA, 'still.png')]);
 await page.waitForTimeout(400);
 await shot('06-create');
@@ -236,6 +240,11 @@ report.director = await page.evaluate(() => {
     transitions: s.project.clips.filter(c => c.transition).map(c => c.transition.type),
     sfx: s.project.clips.filter(c => c.kind === 'sfx').length,
     ramp: s.project.clips.filter(c => c.kf?.speed?.length).map(c => `${c.id}:${c.kf.speed.length} keys`),
+    lyrics: s.project.lyrics ? `${s.project.lyrics.timed ? 'timed' : 'plain'} ${s.project.lyrics.lines.length} lines` : null,
+    lyricClips: s.project.clips.filter(c => c.name?.startsWith('lyric')).map(c => `${c.id} ${c.start.toFixed(2)}+${c.dur.toFixed(2)} ${JSON.stringify(c.text)} words=${(c.words || []).length}`),
+    focus: s.project.clips.filter(c => c.focus).map(c => `${c.id}:${c.focus.x},${c.focus.y}`),
+    opusSawLyrics: window.__calls.some(c => c.full.includes('TIMED LYRICS') && c.full.includes('L2 2.10')),
+    opusSawWindows: window.__calls.some(c => c.full.includes('best windows for a ~23 s edit')),
     camera: s.project.camera,
   };
 });

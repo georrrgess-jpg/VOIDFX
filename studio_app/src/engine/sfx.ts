@@ -20,6 +20,11 @@ export const SFX_INFO: Record<SfxType, { label: string; dur: number; hint: strin
   zap: { label: 'Electric zap', dur: 0.75, hint: 'Lightning crack and crackle: bolts, Speed Force hits' },
 };
 
+/** Seconds from a sound's start to its loudest point (a riser or reverse peaks at its end). */
+export const SFX_PEAK: Record<SfxType, number> = { whoosh: 0.56, swish: 0.17, impact: 0.03, hit: 0.02, boom: 0.05, riser: 2.0, subdrop: 0.02, reverse: 1.18, glitch: 0.1, shutter: 0.12, tick: 0, tapestop: 0.1, zap: 0.08 };
+/** Timeline time where a sound effect clip peaks. */
+export const sfxPeakAt = (c: { start: number; in?: number; sfx?: SfxType }) => c.start - (c.in ?? 0) + (c.sfx ? SFX_PEAK[c.sfx] : 0);
+
 function rng(seed: number) {
   let s = seed >>> 0;
   return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296 * 2 - 1; };

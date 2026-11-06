@@ -1,4 +1,5 @@
-import { useRef, useState } from 'preact/hooks';
+import { useMemo, useRef, useState } from 'preact/hooks';
+import { parseLyrics } from '../../state/lyrics';
 import { startAiEdit } from '../../ai/jobs';
 import { detectKind, importFiles } from '../../media/library';
 import { LibraryItem, listLibrary, listPresets, listStandards, Preset, Standard } from '../../state/catalog';
@@ -119,7 +120,10 @@ export function CreateSection() {
           <input id="c-title" class="search" type="text" value={title} onInput={e => setTitle((e.target as HTMLInputElement).value)} placeholder="Project name (optional)" aria-label="Project name" />
           <button type="button" class="linkbtn" onClick={() => setShowLyrics(!showLyrics)} aria-expanded={showLyrics}>{showLyrics ? '▾' : '▸'} Lyrics for captions</button>
         </div>
-        {showLyrics && <textarea id="c-lyrics" class="ta" rows={4} value={lyrics} onInput={e => setLyrics((e.target as HTMLTextAreaElement).value)} placeholder="Paste the published lyrics of the section. Opus only captions words that are sung, placed on the music's onsets." />}
+        {showLyrics && <>
+          <textarea id="c-lyrics" class="ta" rows={4} value={lyrics} onInput={e => setLyrics((e.target as HTMLTextAreaElement).value)} placeholder={'Synced lyrics (LRC) put each caption on its sung time:\n[00:51.20] I could never be the one\n[00:54.80] you wanted me to be\nThe times must match your song file (a sped-up or slowed version needs its own).'} />
+          {lyrics.trim() && <LyricsStatus text={lyrics} />}
+        </>}
       </section>
 
       <section class="cstep">
@@ -219,4 +223,9 @@ export function CreateSection() {
       </section>
     </div>
   );
+}
+
+function LyricsStatus({ text }: { text: string }) {
+  const l = useMemo(() => parseLyrics(text), [text]);
+  return <p class={`muted small lyr-st${l.timed ? '' : ' warn'}`}>{l.timed ? `${l.lines.length} timed lines: captions land on the sung words.` : `${l.lines.length} lines without times: Opus uses them for the concept and at most two titles, not line-by-line captions. Paste synced lyrics for timed captions.`}</p>;
 }

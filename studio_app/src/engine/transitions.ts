@@ -241,3 +241,6 @@ export function defaultTransitionDur(t: TransitionType): number {
 
 /** Transitions that count as a flash for the flash-rate rule. */
 export const FLASHY = new Set<TransitionType>(['flash', 'dip_white', 'punch', 'glitch', 'warp', 'bolt']);
+
+/** Library moves that read as template filler when they carry an edit (the house rule: at most a quarter of the joins). */
+export const GENERIC = new Set<TransitionType>(['crossfade', 'dip_black', 'dip_white', 'flash', 'slide_left', 'slide_right', 'slide_up', 'slide_down', 'push_left', 'push_right', 'push_up', 'push_down', 'wipe_left', 'wipe_right', 'wipe_up', 'wipe_down', 'iris', 'zoom_in', 'zoom_out', 'spin', 'blur', 'glitch']);

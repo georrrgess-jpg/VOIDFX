@@ -206,6 +206,10 @@ export class Compositor {
   /** Where each clip was drawn in the last frame (output pixels). */
   quads = new Map<string, Quad>();
   private aPosLoc = 0;
+  /** The GPU dropped this context (a driver reset, often from an effect that is too heavy). */
+  lost = false;
+  /** The last effect drawn, to name it when the GPU gives up. */
+  lastShader = '';
   private fxProgs = new Map<string, FxProgram>();
   private frameTex: WebGLTexture | null = null;
 
@@ -216,6 +220,7 @@ export class Compositor {
     }) as WebGL2RenderingContext | null;
     if (!gl) throw new Error('WebGL2 is not available in this browser.');
     this.gl = gl;
+    (canvas as any).addEventListener?.('webglcontextlost', (e: Event) => { e.preventDefault(); this.lost = true; });
     const sh = (type: number, src: string) => {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, src);
@@ -382,8 +387,10 @@ export class Compositor {
   }
 
   /** Run an effect over the whole frame. Returns the compiler's message when it cannot run (it is then skipped). */
-  drawShader(code: string, blend: BlendMode, v: ShaderUniforms): string | null {
+  drawShader(code: string, blend: BlendMode, v: ShaderUniforms, name = ''): string | null {
     const gl = this.gl;
+    if (this.lost) return 'the graphics context was lost';
+    this.lastShader = name;
     let entry = this.fxProgs.get(code);
     if (!entry) {
       entry = this.buildFx(code);

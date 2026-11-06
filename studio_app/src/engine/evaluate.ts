@@ -112,6 +112,22 @@ function applyCamera(tr: Transform, fx: LayerFx, cam: { zoom: number; rot: numbe
   return [t2, f2];
 }
 
+/**
+ * Offset (in frame fractions) that centres a clip's focus point in the frame for a filled ("cover")
+ * picture at the given scale, without ever showing past the picture's edges.
+ */
+export function focusOffset(c: Clip, m: MediaInfo | undefined, p: Project, scale: number): { x: number; y: number } {
+  if (!c.focus || !m || !m.width || !m.height || (c.fit || 'cover') !== 'cover') return { x: 0, y: 0 };
+  const W = p.width, H = p.height;
+  const k = Math.max(W / m.width, H / m.height) * Math.max(0.05, scale);
+  const dw = m.width * k, dh = m.height * k;
+  const sx = (clamp(c.focus.x, 0, 1) - 0.5) * dw, sy = (clamp(c.focus.y, 0, 1) - 0.5) * dh;
+  const mx = Math.max(0, (dw - W) / 2), my = Math.max(0, (dh - H) / 2);
+  // faces sit a little above centre in 9:16, leaving room for captions below
+  const targetY = H > W ? -0.06 * H : 0;
+  return { x: clamp(-sx, -mx, mx) / W, y: clamp(targetY - sy, -my, my) / H };
+}
+
 export function evaluate(p: Project, media: Record<string, MediaInfo>, t: number, opts: { audio?: boolean; camera?: boolean } = {}): Evaluation {
   const layers: VisualLayer[] = [];
   const audio: AudioVoice[] = [];
@@ -145,6 +161,7 @@ export function evaluate(p: Project, media: Record<string, MediaInfo>, t: number
       if (tr.kind !== 'audio' && !tr.hidden && fx.visible) {
         if (c.kind === 'video' || c.kind === 'image' || c.kind === 'text') {
           let transform = transformAt(c, ltc);
+          if (c.focus && c.kind !== 'text') { const f = focusOffset(c, m, p, transform.scale); transform = { ...transform, x: transform.x + f.x, y: transform.y + f.y }; }
           let lfx = fx;
           if (cam && c.kind !== 'text') [transform, lfx] = applyCamera(transform, fx, cam, aspect);
           layers.push({ clip: c, kind: c.kind, lt, srcTime: c.kind === 'video' ? sourceTime(c, t, m) : 0, transform, color: colorOf(c), fx: lfx });

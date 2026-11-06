@@ -10,7 +10,7 @@ import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
 import { getPreset, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
-import { addTransitionSounds, applyOps as applyOpsRaw, normalize, OpsResult } from '../state/ops';
+import { addTransitionSounds, applyOps as applyOpsRaw, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
 import { customIssues } from '../engine/custom';
 import { store } from '../state/store';
 import { ASPECTS, Effort, Job, JobStep, MediaInfo, Project, Round } from '../state/types';
@@ -18,14 +18,23 @@ import { deepClone, projectDuration } from '../state/util';
 import { ContextExtras, contextBlock, parseJson, parseReply } from './prompt';
 import { libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
 import type { Workspace } from './workspace';
+import { lyricsText, parseLyrics } from '../state/lyrics';
+import type { Lyrics } from '../state/types';
 
 export const MODEL = 'claude-opus-5-5';
 
 /** Apply Opus's operations and report custom effects that will not compile, so the review can fix them. */
 function applyOps(base: Project, ops: unknown, media: Record<string, MediaInfo>): OpsResult {
   const res = applyOpsRaw(base, ops, media);
+  // the studio's own finishing passes: cuts exactly on the beat, sparse sound design
+  const snapped = snapToBeats(res.project, media);
+  const pruned = pruneSfx(res.project);
+  normalize(res.project, media);
+  const notes: string[] = [];
+  if (snapped) notes.push(`the studio moved ${snapped} cut${snapped > 1 ? 's' : ''} (by up to 90 ms) exactly onto the beat`);
+  if (pruned) notes.push(`the studio removed ${pruned} sound effect${pruned > 1 ? 's' : ''} (stacked within 0.3 s of another, more than two in a second, or over the budget of about three every four seconds)`);
   const bad = customIssues(res.project);
-  return bad.length ? { ...res, issues: [...res.issues, ...bad] } : res;
+  return { ...res, issues: [...res.issues, ...notes, ...bad] };
 }
 
 type SampleFn = ((input: any, opts?: any) => Promise<{ text: string; truncated: boolean; modelTierApplied: string; modelApplied?: string }>) & {
@@ -34,11 +43,16 @@ type SampleFn = ((input: any, opts?: any) => Promise<{ text: string; truncated: 
 
 let sample: SampleFn | null = null;
 
-export const EFFORTS: Record<Effort, { label: string; effort: 'low' | 'medium' | 'high'; reviews: number; images: number; cells: number; hint: string }> = {
-  low: { label: 'Low', effort: 'low', reviews: 0, images: 4, cells: 12, hint: 'Fastest. One planning pass with light thinking.' },
-  medium: { label: 'Medium', effort: 'medium', reviews: 0, images: 8, cells: 16, hint: 'One planning pass with more thinking.' },
-  high: { label: 'High', effort: 'high', reviews: 1, images: 12, cells: 16, hint: 'Deep thinking, then Opus reviews rendered frames of its edit and the checkpoint once.' },
-  extra: { label: 'Extra', effort: 'high', reviews: 2, images: 16, cells: 20, hint: 'Deepest: the most footage per call and two review passes on rendered frames and the checkpoint.' },
+/**
+ * Each level: how hard Opus thinks on the direction, how many times it reviews rendered frames and at
+ * what depth, and how much footage it sees. The deep thinking goes where it pays (the direction);
+ * writing operations, casting and checking work run lighter so a round finishes sooner.
+ */
+export const EFFORTS: Record<Effort, { label: string; effort: 'low' | 'medium' | 'high'; reviews: number; review: Effort; images: number; cells: number; hint: string }> = {
+  low: { label: 'Low', effort: 'low', reviews: 0, review: 'low', images: 4, cells: 12, hint: 'Fastest. One planning pass with light thinking.' },
+  medium: { label: 'Medium', effort: 'medium', reviews: 0, review: 'medium', images: 8, cells: 16, hint: 'One planning pass with more thinking.' },
+  high: { label: 'High', effort: 'high', reviews: 1, review: 'medium', images: 12, cells: 16, hint: 'Deep thinking on the direction, then one quick review of rendered frames and the checkpoint.' },
+  extra: { label: 'Extra', effort: 'high', reviews: 1, review: 'high', images: 16, cells: 20, hint: 'Deepest: the most footage per call, and deep thinking on both the direction and the review of rendered frames.' },
 };
 
 export const ERR: Record<string, string> = {
@@ -145,7 +159,7 @@ export const twoStage = (effort: Effort) => effort === 'high' || effort === 'ext
  * only, short text, with the images), then writes the operations for exactly that direction (lighter
  * thinking, no images). Returns the operations, Opus's message to the owner and the turns so far.
  */
-async function directThenBuild(io: JobIO, o: { ctx: string; ctxNoImages: string; history: Turn[]; request: string; images: Sheet[]; effort: Effort; revision: boolean }) {
+async function directThenBuild(io: JobIO, o: { ctx: string; ctxNoImages: string; history: Turn[]; request: string; images: Sheet[]; effort: Effort; revision: boolean; directEffort?: Effort }) {
   const step1 = o.revision
     ? 'STEP 1 OF 2: DECIDE THE CHANGES. Do not write operations yet. For every instruction and critic point, write down exactly what you will change: the time, the clip, the new shot or value, the transition and its sound, the text. Add anything else the edit needs to clear the standards. Be compact.'
     : 'STEP 1 OF 2: DIRECT THE EDIT. Do not write operations yet. Decide everything and write it down compactly: CONCEPT (one sentence); SONG (media id, source in and out, where the drop or hook lands on the timeline); STRUCTURE (sections with timeline times); SHOTS in order ("t0-t1 media id, shot number, source in -> what it shows, framing, speed or ramp"); TRANSITIONS ("time, type, why, its sound"); SET PIECES (each step by step); TEXT ("t0-t1 words, animation in and out, style"); CAMERA; SOUNDS; LOOP.';
@@ -154,7 +168,7 @@ async function directThenBuild(io: JobIO, o: { ctx: string; ctxNoImages: string;
 ${step1}
 Reply with only JSON: {"message": "${o.revision ? 'what will change, for the owner' : 'the concept sentence and the set pieces, for the owner'}", "direction": "the full plan as compact text"}` }];
   io.step('direct', { state: 'run', detail: 'thinking…' });
-  const a = await askSafe(io, t1, o.images, o.effort, 'direct', t => `writing the direction… ${t.length} characters`);
+  const a = await askSafe(io, t1, o.images, o.directEffort || o.effort, 'direct', t => `writing the direction… ${t.length} characters`);
   const av: any = parseJson(a.text);
   const direction = typeof av?.direction === 'string' && av.direction.trim() ? av.direction : a.text;
   const note = typeof av?.message === 'string' ? av.message : '';
@@ -162,7 +176,7 @@ Reply with only JSON: {"message": "${o.revision ? 'what will change, for the own
 
   const step2 = o.revision
     ? 'STEP 2 OF 2: Write the operations for exactly the changes you decided, against the CURRENT TIMELINE. Keep everything else. Reply with only JSON: {"message": "what you changed", "ops": [...]}.'
-    : 'STEP 2 OF 2: BUILD IT. Turn your direction into operations exactly, in the studio\'s operation format. Start with {"op":"clear"}. Reply with only JSON: {"message": "the concept sentence and the set pieces", "ops": [...]}.';
+    : 'STEP 2 OF 2: BUILD IT. Turn your direction into operations exactly, in the studio\'s operation format. Start with {"op":"clear"}. Reply with only JSON: {"message": "the concept sentence and the set pieces", "ops": [...]}, written compactly (no indentation or blank lines) so it finishes quickly.';
   const t2: Turn[] = [{ role: 'user', content: o.ctxNoImages }, ...o.history, { role: 'user', content: `${o.request}
 
 ${step1}` }, { role: 'assistant', content: a.text }, { role: 'user', content: step2 }];
@@ -250,14 +264,15 @@ async function castFromLibrary(io: JobIO, req: NonNullable<Job['request']>, pres
     mosaic ? 'The attached image shows each item\'s poster frame, labelled with its id.' : '',
     'Pick one music item (unless the notes or attached files already supply the song) and the scene packs or clips with the strongest material for this concept; at most 6 items in total. Reply with only JSON: {"items": [{"id": "...", "why": "..."}], "message": "one sentence on the choice"}',
   ].filter(Boolean).join('\n\n');
-  const r = await askSafe(io, prompt, mosaic ? [mosaic] : [], effort === 'extra' || effort === 'high' ? 'medium' : effort, 'cast');
+  // picking up to six items from a labelled list needs little thinking
+  const r = await askSafe(io, prompt, mosaic ? [mosaic] : [], 'low', 'cast');
   const raw: any = parseJson(r.text);
   const ids: string[] = Array.isArray(raw?.items) ? raw.items.map((x: any) => String(x?.id ?? x)) : [];
   const chosen = pool.filter(i => ids.includes(i.id)).slice(0, 6);
   return { items: chosen.length ? chosen : pool.slice(0, 4), note: typeof raw?.message === 'string' ? raw.message : undefined };
 }
 
-/** Every transition gets its own sound: add matched sounds where Opus left every transition silent. */
+/** When Opus placed no sound effects at all, sound the designed transitions (soft joins stay silent). */
 function withSounds(p: Project, media: Record<string, MediaInfo>): Project {
   const trans = p.clips.filter(c => c.transition);
   const sfx = p.clips.filter(c => c.kind === 'sfx');
@@ -284,6 +299,17 @@ async function readMedia(ws: Workspace, io: JobIO) {
   io.step('media', { state: 'done', detail: `${n} file${n > 1 ? 's' : ''}` });
 }
 
+/** How Opus should use the owner's lyrics: timed lines go through the "lyrics" operation; plain ones only inform. */
+export function lyricsBrief(l?: Lyrics): string {
+  if (!l?.lines.length) return '';
+  if (l.timed) return `TIMED LYRICS (synced lyrics from the owner; times are SONG times, seconds into the song file, not timeline times)
+Caption sung lines with the "lyrics" operation only: it puts each line on its sung time through the music clip, in the house caption style, each word easing in on its own time, and keeps them there when cuts move. Caption the lines that fall inside your song window and carry the concept (not necessarily every line); add *emphasis* with "text" overrides; never type sung words as plain text clips. Designed titles (a hero word that acts out its meaning) still go on sung words: take their time from these lines.
+${lyricsText(l)}`;
+  return `LYRICS WITHOUT TIMES (the owner pasted plain lyrics)
+You cannot hear when each line is sung, so do not caption them line by line. Use them for the concept, and at most two designed titles on words you can place with confidence (the hook word on the drop's downbeat). Say in one line of "message" that pasting synced lyrics (LRC: "[mm:ss.xx] line", from a lyrics site or app) puts captions on the sung words.
+${l.lines.map(x => x.text).join('\n').slice(0, 3000)}`;
+}
+
 const REVIEW_NOTE = 'Contact sheets of the media were attached to the first request and are not repeated. The images attached to the latest message are frames rendered from the edit as it stands now, labelled with timeline time.';
 
 /** Opus looks at frames rendered from its own edit and the checkpoint, and fixes or raises it. */
@@ -306,13 +332,13 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
       issuesText,
       `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
       rSheets.length ? `IMAGES attached to this message: ${rSheets.map((x, i) => `${i + 1}. ${x.caption}`).join('; ')}` : 'No rendered frames are attached.',
-      'The CURRENT TIMELINE in the first message is the edit after your operations. Fix every failed gate, then look at the frames: is any face cut off or off-centre, any text over a face, any shot weak, any moment flat? Ask what would make each set piece unforgettable. Reply with operations that fix or raise the edit, or {"message": "...", "ops": []} if it is ready. Do not start with clear unless you are rebuilding everything.',
+      'The CURRENT TIMELINE in the first message is the edit after your operations. Fix every failed or warning gate, then look at the frames in this order: FRAMING (a face cut off or off-centre: set or correct "focus"); TEXT (every caption a sung or spoken line on its time, never invented words; nothing over a face); FLOW (does movement, position and light carry across each cut, or do shots feel shuffled? reorder or swap shots); TRANSITIONS (replace generic library moves with signature transitions or a custom effect over the cut); SOUND (only the moments that matter); then ask what would make each set piece unforgettable. Reply with operations that fix or raise the edit, or {"message": "...", "ops": []} if it is ready. Write compact JSON. Do not start with clear unless you are rebuilding everything.',
     ].join('\n\n');
     opts.turns.push({ role: 'user', content: reviewMsg });
     const ctxNow = contextBlock(ws.ctx, [], opts.mediaImages ? REVIEW_NOTE : undefined, extrasFor(opts.preset, opts.standards));
     let rk: { text: string; truncated: boolean };
     try {
-      rk = await askSafe(io, [{ role: 'user', content: ctxNow }, ...opts.turns.slice(1)], rSheets, opts.effort, id);
+      rk = await askSafe(io, [{ role: 'user', content: ctxNow }, ...opts.turns.slice(1)], rSheets, cfg.review, id);
     } catch (e: any) {
       if (e?.code === 'cancelled' || io.signal.aborted || e?.code === 'not_granted' || e?.code === 'rate_limited') throw e;
       // the edit is already built: a review that fails is skipped, not fatal
@@ -390,6 +416,7 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   // the preset sets the format before anything is planned
   const [w, h] = ASPECTS[preset.aspect] || ASPECTS['9:16'];
   if (ws.project.width !== w || ws.project.height !== h || ws.project.fps !== preset.fps) ws.setProject({ ...ws.project, width: w, height: h, fps: preset.fps });
+  if (req.lyrics?.trim()) ws.setProject({ ...ws.project, lyrics: parseLyrics(req.lyrics) });
 
   let castNote = '';
   if (req.library.mode !== 'none') {
@@ -424,7 +451,7 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
     'OWNER\'S REQUEST FOR THIS EDIT (round 1: the build)',
     req.notes || 'No extra notes: make the best edit you can from this material.',
     castNote ? `MATERIAL CHOSEN FROM THE DATABASE: ${castNote}` : '',
-    req.lyrics ? `LYRICS (the owner supplied them; caption only what is sung, on its time)\n${req.lyrics}` : '',
+    lyricsBrief(ws.project.lyrics),
   ].filter(Boolean).join('\n\n');
   let plan: { message: string; ops: unknown[] };
   let turns: Turn[];
@@ -470,6 +497,7 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   const io2: JobIO = { ...io, model: m => { model = m; io.model(m); } };
   await readMedia(ws, io);
   if (!ws.project.clips.length) throw { code: 'no_edit' };
+  if (job.lyrics?.trim()) ws.setProject({ ...ws.project, lyrics: parseLyrics(job.lyrics) });
 
   io.step('look', { state: 'run' });
   const maxImg = maxImagesFor(effort);
@@ -491,13 +519,16 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
     job.brief?.trim() || '(no extra words: work through the critic\'s points)',
     fromCritic,
     past ? `EARLIER ROUNDS\n${past}` : '',
+    lyricsBrief(ws.project.lyrics),
     'Change the current timeline to do all of this. Keep what already works unless the instructions say otherwise; rebuild a section completely when that is what it takes. The first images are frames rendered from the edit as it stands; the rest are contact sheets of the media for finding better shots.',
   ].filter(Boolean).join('\n\n');
   let plan: { message: string; ops: unknown[] };
   let turns: Turn[];
   if (twoStage(effort)) {
     const ctxNoImages = contextBlock(ws.ctx, [], sheets.length ? 'The rendered frames and contact sheets were attached in step 1 and are not repeated: use the times, media ids and shots from your decisions.' : undefined, extras);
-    ({ plan, turns } = await directThenBuild(io2, { ctx, ctxNoImages, history, request: instruction, images: sheets, effort, revision: true }));
+    // with the critic's points in hand the analysis is done: High decides the changes with medium thinking
+    const directEffort: Effort = job.fromCritic?.length && effort === 'high' ? 'medium' : effort;
+    ({ plan, turns } = await directThenBuild(io2, { ctx, ctxNoImages, history, request: instruction, images: sheets, effort, revision: true, directEffort }));
   } else {
     io.step('plan', { state: 'run', detail: 'thinking…' });
     turns = [{ role: 'user', content: ctx }, ...history, { role: 'user', content: `${instruction}\n\nPut what you changed, point by point, in "message".` }];

@@ -117,6 +117,9 @@ export interface Clip {
   muted?: boolean;
   fit?: 'cover' | 'contain';
   transform?: Partial<Transform>;
+  /** Where the subject (usually the face) is in the source picture, 0..1 from the top-left. The studio
+   * crops the frame around it at any zoom, so it stays centred. */
+  focus?: { x: number; y: number };
   color?: Partial<ColorAdjust>;
   /** Transition from the previous adjacent clip on the same track into this one. */
   transition?: TransitionSpec | null;
@@ -162,7 +165,12 @@ export interface Project {
   clips: Clip[];
   /** Camera that punches and kicks on the music's beats (video layers only; text stays clean). */
   camera?: BeatCamera;
+  /** The song's lyrics as the owner supplied them (song times when timed). */
+  lyrics?: Lyrics;
 }
+
+export interface LyricLine { t: number; text: string; end?: number; words?: number[] }
+export interface Lyrics { timed: boolean; lines: LyricLine[]; raw: string }
 
 export interface BeatCamera {
   on: boolean;
@@ -332,6 +340,8 @@ export interface Job {
   /** Revisions: the owner's instructions and the critic points passed on. */
   brief?: string;
   fromCritic?: string[];
+  /** Revisions: lyrics pasted in the revision stage (replace the project's lyrics). */
+  lyrics?: string;
   /** What happens after this job: send to the critic, then revise automatically this many more times. */
   follow?: { critic: boolean; autoRounds: number };
   summary?: string;

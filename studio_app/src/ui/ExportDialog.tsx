@@ -66,7 +66,7 @@ export function ExportDialog() {
   };
 
   const close = () => { if (busy) return; store.set({ exportOpen: false }); };
-  const fileName = `${(p.name || 'voidfx-edit').replace(/[^\w\- ]+/g, '').trim() || 'voidfx-edit'}.${result?.ext || 'mp4'}`;
+  const fileName = `${(p.name || 'voidfx-edit').normalize('NFKD').replace(/[^\w\- ]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'voidfx-edit'}.${result?.ext || 'mp4'}`;
   const label: Record<string, string> = { prepare: 'Preparing', audio: 'Mixing audio', video: 'Rendering frames', finish: 'Finishing file' };
 
   return (

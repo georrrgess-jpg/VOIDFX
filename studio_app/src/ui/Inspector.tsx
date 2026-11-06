@@ -144,6 +144,16 @@ function ClipProps({ clip: c, m, time }: { clip: Clip; m?: MediaInfo; time: numb
               <Seg value={c.fit || 'cover'} onChange={v => updateClip(c.id, { fit: v })} options={[{ value: 'cover', label: 'Fill frame' }, { value: 'contain', label: 'Whole picture' }]} />
             </div>
           )}
+          {(c.kind === 'video' || c.kind === 'image') && (c.fit || 'cover') === 'cover' && (
+            <>
+              <Toggle id="foc-on" label="Keep the subject in frame" checked={!!c.focus} onChange={v => updateClip(c.id, { focus: v ? { x: 0.5, y: 0.4 } : null })} />
+              {c.focus && <>
+                <Slider id="foc-x" label="Subject across" min={0} max={1} step={0.005} fmt={v => `${Math.round(v * 100)}%`} parse={s => parseFloat(s) / 100} dflt={0.5} value={c.focus.x} onStart={begin} onEnd={end} onInput={v => live({ focus: { x: v, y: c.focus!.y } })} />
+                <Slider id="foc-y" label="Subject down" min={0} max={1} step={0.005} fmt={v => `${Math.round(v * 100)}%`} parse={s => parseFloat(s) / 100} dflt={0.4} value={c.focus.y} onStart={begin} onEnd={end} onInput={v => live({ focus: { x: c.focus!.x, y: v } })} />
+                <p class="hint">Where the face is in the source picture. The crop follows it at any zoom.</p>
+              </>}
+            </>
+          )}
           <p class="hint">{c.kind === 'shader' ? 'Position, scale and rotation move the effect\'s anchor (uPos, uScale, uRot); keyframe them to follow the action.' : 'Drag the box on the preview to move; drag a corner to scale. ◆ adds a keyframe at the playhead.'}</p>
         </Section>
       )}
