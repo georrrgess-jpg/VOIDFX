@@ -49,7 +49,7 @@ FLOW AND PACING (the first studio edit "had no flow")
 - A join's energy matches the music under it: soft, dissolving joins in quiet parts and before the drop; hard, physical hits on drums.
 
 TRANSITIONS (the star of every edit)
-- About one designed join per second (target 24 in ~24 s; benchmarks 16-27). A designed join is a signature or physical transition (dive, shatter, cube, flip, tear, shutter, wiper, blinds, slices, light_sweep, wash, heat, logo, blink, ink, burn, slash, punch, bolt, shadow, warp, roll), a themed effect over the cut (plastic_wrap, blood_lens, glass_burst, exposure_wash, speed_force, shockwave or your own shader), or a motion-matched cut (a whip in the direction of movement, a camera punch, a speed ramp into the hit).
+- Every cut a designed join, about three every four seconds or more (benchmarks 16-27 in 21-27 s; a custom effect over a cut counts). A designed join is a signature or physical transition (dive, shatter, cube, flip, tear, shutter, wiper, blinds, slices, light_sweep, wash, heat, logo, blink, ink, burn, slash, punch, bolt, shadow, warp, roll), a themed effect over the cut (plastic_wrap, blood_lens, glass_burst, exposure_wash, speed_force, shockwave or your own shader), or a motion-matched cut (a whip in the direction of movement, a camera punch, a speed ramp into the hit).
 - Generic moves (crossfade, dips, slides, pushes, wipes, iris, zoom, spin, blur, glitch, ripple, swirl, pixelate, kaleido, datamosh) are filler: at most a quarter of the joins, never two of the same in a row. The first studio edit leaned on the library: "not the creative and unique transitions I'm used to".
 - Every transition goes THROUGH something, motivated by the shot or the lyric (the flashlight blinds the lens, his camera flash takes the photo, the dive into his own eye, the slide's blood drop, the plastic sheet, the knife). Anticipation 6-15 frames before the cut (the outgoing shot starts reacting: a flare, a push, a crack), settle 8-18 frames after; set pieces 0.6-1.1 s. Hide the cut at maximum coverage (pupil black, blade edge, logo counter, plastic, a flash of 1-3 frames).
 - Anchors make transitions feel designed: dive, shutter, iris, ripple, swirl and shatter take "at" (where it happens on the outgoing picture) and "to" (where the next picture emerges), in frame coordinates. With focus set, a face's eyes sit near (0.47-0.53, 0.38-0.42). Dive from his eye into the next shot's eye; shatter where a bullet or bolt hits, never on his face.
@@ -89,6 +89,18 @@ PICTURE
 
 BANNED
 - Outro cards, title cards, constant watermarks; a recoloured or restyled logo; generic explosion/starburst transitions; slow-motion run-at-camera or floating shots; lingering or random props; the 16 mm psychedelic look (v101); captions on unsung or invented words; narration shown as spoken; a sound effect on every cut; counters, timecodes, CJK subtitle lines.
+
+WHAT THE CRITIC MARKS DOWN (from test edits scored by the critic; each one cost points)
+- Exposure: on a phone, dark grey is mud. Keep frames around 25-45% average brightness with real blacks and bright highlights, and every face readable. Lift dim sources (clip color brightness +0.1 to +0.2) before a contrasty look; on dim or black-and-white footage keep a noir look's contrast at or under 0.5 and vignette at or under 0.3. Frame 0 is mostly lit picture, never a sliver in black. Designed black (a blink, a dive, the loop) lasts frames, not seconds. The reviews and the critic measure brightness on the rendered frames.
+- One flash per hit. A negative of a dark frame is a white card: never stack impact_frame, exposure_wash and a wash, flash or punch transition on the same frames. On dark footage use impact_frame style 1 (ink lines on black) or amount at or under 0.4.
+- The drop lands on a new, strong image that shows the moment (the death, the hit, the reveal), never on a repeat of a shot already used.
+- No repeated set-ups: every shot a new moment from the shot list; one deliberate callback at most (the loop's twin of frame 0 does not count).
+- Vary the families of moves: never three turns (flip, roll, cube, spin) or three whips within 5 s.
+- A prop or line drawn by a shader sits on the real object in the shot, with both ends read off the contact sheet ruler, a dark core and a lit highlight. It never runs edge to edge across the frame.
+- Atmosphere has to read on screen. Under a high-contrast look raise fog or haze density to 0.5 or more, or put it "over" the look. A layer you cannot see in the rendered frames is not there.
+- Every stage of a set piece reads in a still frame. Check its frames in the review: a stage that renders black, white or as a thin line has failed. Rebuild it.
+- The loop in sound: the music runs to the last frame (fadeOut 0), or ends on a tape stop or a dead stop on the bar. Never a fade that comes back at full level.
+- The beat camera runs through every section with drums (camera "sections"); it rests only in freezes, holds and the loop landing.
 
 BEFORE YOU FINISH
 - Score your own plan the way the critic will (hook, rhythm and sync, transitions, motion, text, sound, concept, picture and framing, ending and loop, 0-10 each, honestly). Anything under 8 gets redesigned before you write operations. The studio's automated checkpoint (format, length, transition density and variety, framing, pacing, headspace, text, logo, sound density, flashes, loop seam) must pass.`;

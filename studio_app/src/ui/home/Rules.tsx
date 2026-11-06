@@ -4,12 +4,13 @@ import { KNOWLEDGE_SOURCES } from '../../ai/playbook';
 import { PACKS, SONGS } from '../../ai/sources';
 import { FX_LIBRARY } from '../../engine/fxlib';
 import { TRANSITIONS } from '../../state/types';
-import { saveKnowledge } from '../../state/catalog';
+import { clearLessons, saveKnowledge } from '../../state/catalog';
 import { useStore } from '../../state/store';
 import { SectionHead } from './common';
 
 export function RulesSection() {
   const knowledge = useStore(s => s.director.knowledge);
+  const lessons = useStore(s => s.director.lessons);
   const [draft, setDraft] = useState(knowledge);
   const blocks = HOUSE_RULES.split('\n\n').slice(1).map(b => {
     const [head, ...rest] = b.split('\n');
@@ -33,6 +34,18 @@ export function RulesSection() {
           </section>
         ))}
       </div>
+      <section class="glass rules-src">
+        <h2>Lessons from the critic</h2>
+        <p class="muted">Every critique's critical and major findings are remembered here and given to Opus with every direction and review, so an edit does not repeat what the critic marked down before. {lessons.length ? `${lessons.length} remembered (the latest per area are sent).` : 'None yet: they appear after the first critique.'}</p>
+        {lessons.length > 0 && (
+          <>
+            <ul class="src-list">
+              {lessons.slice(0, 12).map(l => <li><b>{l.area}{l.severity === 'critical' ? ' · critical' : ''}</b><span>{l.problem.length > 200 ? `${l.problem.slice(0, 200)}…` : l.problem}</span></li>)}
+            </ul>
+            <div class="row-end"><button type="button" class="cta" onClick={() => void clearLessons()}>Forget the lessons</button></div>
+          </>
+        )}
+      </section>
       <section class="glass rules-own">
         <h2>Your additions</h2>
         <p class="muted">Anything else Opus should always follow. Sent with every request, with or without the house rules.</p>

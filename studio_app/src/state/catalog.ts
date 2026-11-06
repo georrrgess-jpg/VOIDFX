@@ -1,7 +1,7 @@
 // Presets, standards and the AI database: stored in this browser and read by the Opus Director.
 import { BENCHMARKS } from '../ai/knowledge';
 import { analyseAudioBlob, detectKind, detectShots, probeBlob } from '../media/library';
-import { Effort, store } from './store';
+import { Effort, Lesson, store } from './store';
 import { idbAll, idbDel, idbGet, idbPut, saveBlob, collectGarbage, blobKeyFor } from './storage';
 import { MediaKind } from './types';
 import { uid } from './util';
@@ -306,4 +306,41 @@ export async function loadKnowledge() {
 export async function saveKnowledge(text: string) {
   store.setDirector({ knowledge: text });
   await idbPut('kv', 'knowledge', text).catch(() => {});
+}
+
+// ---------- lessons: the critic's critical and major findings, remembered across edits ----------
+
+export async function loadLessons() {
+  const l = await idbGet<Lesson[]>('kv', 'lessons').catch(() => undefined);
+  if (Array.isArray(l)) store.setDirector({ lessons: l });
+}
+
+/** Remember a critique's serious findings (newest first, at most 40 kept). */
+export async function addLessons(items: Omit<Lesson, 'at'>[]) {
+  const now = Date.now();
+  const fresh = items.map(x => ({ ...x, at: now, problem: x.problem.slice(0, 400), fix: x.fix.slice(0, 400) }));
+  const all = [...fresh, ...store.state.director.lessons].slice(0, 40);
+  store.setDirector({ lessons: all });
+  await idbPut('kv', 'lessons', all).catch(() => {});
+}
+
+export async function clearLessons() {
+  store.setDirector({ lessons: [] });
+  await idbPut('kv', 'lessons', []).catch(() => {});
+}
+
+/** The lessons as Opus reads them: the most recent per area, short. */
+export function lessonsText(max = 14): string {
+  const ls = store.state.director.lessons;
+  if (!ls.length) return '';
+  const seen = new Map<string, number>();
+  const pick: Lesson[] = [];
+  for (const l of ls) {
+    const n = seen.get(l.area) || 0;
+    if (n >= 3) continue;
+    seen.set(l.area, n + 1);
+    pick.push(l);
+    if (pick.length >= max) break;
+  }
+  return pick.map(l => `- [${l.area}${l.severity === 'critical' ? ', critical' : ''}] ${l.problem.split(/(?<=[.!?])\s/)[0]} Fix pattern: ${l.fix.split(/(?<=[.!?])\s/)[0]}`).join('\n');
 }

@@ -23,6 +23,8 @@ export class AudioAnalyzer {
   private peakSize: number;
   flux: number[] = [];
   rms: number[] = [];
+  /** Energy below ~160 Hz per frame: where the bass and kick come back is where a drop lands. */
+  low: number[] = [];
   peaks: number[] = [];
   private totalSq = 0;
   private totalN = 0;
@@ -79,15 +81,19 @@ export class AudioAnalyzer {
     const re = this.re, im = this.im;
     for (let i = 0; i < n; i++) { re[i] = this.ring[i] * this.win[i]; im[i] = 0; }
     fft(re, im);
-    let flux = 0;
+    let flux = 0, low = 0;
     const half = n / 2;
+    const lowBins = Math.max(2, Math.round((160 * n) / this.sr));
     for (let k = 1; k < half; k++) {
-      const mag = Math.log1p(100 * Math.sqrt(re[k] * re[k] + im[k] * im[k]));
+      const p2 = re[k] * re[k] + im[k] * im[k];
+      if (k <= lowBins) low += p2;
+      const mag = Math.log1p(100 * Math.sqrt(p2));
       const d = mag - this.prevMag[k];
       if (d > 0) flux += d;
       this.prevMag[k] = mag;
     }
     this.flux.push(flux);
+    this.low.push(low);
     this.rms.push(Math.sqrt(this.rmsAcc / Math.max(1, this.rmsCount)));
     this.rmsAcc = 0;
     this.rmsCount = 0;
@@ -96,7 +102,7 @@ export class AudioAnalyzer {
   finish(): { analysis: AudioAnalysis; peaks: Float32Array } {
     if (this.peakCount) this.peaks.push(this.peakAcc);
     const peaks = Float32Array.from(this.peaks);
-    return { analysis: analyze(this.flux, this.rms, this.frameRate, this.totalSq / Math.max(1, this.totalN)), peaks };
+    return { analysis: analyze(this.flux, this.rms, this.frameRate, this.totalSq / Math.max(1, this.totalN), this.low), peaks };
   }
 }
 
@@ -141,7 +147,7 @@ function movingAvg(x: Float32Array, radius: number): Float32Array {
   return out;
 }
 
-export function analyze(fluxArr: number[], rmsArr: number[], fr: number, meanSq: number): AudioAnalysis {
+export function analyze(fluxArr: number[], rmsArr: number[], fr: number, meanSq: number, lowArr: number[] = []): AudioAnalysis {
   const N = fluxArr.length;
   const empty: AudioAnalysis = { bpm: null, pulse: 0, beats: [], downbeats: [], hits: [], energy: [], energyRate: 4, rises: [], quiet: [], rmsDb: -120 };
   if (N < fr * 1.5) return empty;
@@ -197,6 +203,9 @@ export function analyze(fluxArr: number[], rmsArr: number[], fr: number, meanSq:
     if (den < 0) lagF = bestLag + (0.5 * (a - c)) / den;
   }
   const pulse = ac0 > 0 ? Math.max(0, Math.min(1, (ac[bestLag] / (ac0 / seg.length)) * 1.5)) : 0;
+  // edits are cut to the felt beat: above 170 BPM the winner is almost always the eighth-note pulse of
+  // busy hi-hats, so take the half tempo whenever it also correlates
+  while ((60 * fr) / lagF > 170 && bestLag * 2 <= maxLag + 1 && ac[bestLag * 2] > 0.2 * ac[bestLag]) { bestLag *= 2; lagF *= 2; }
   let bpm: number | null = (60 * fr) / lagF;
   const steady = pulse > 0.08;
 
@@ -266,11 +275,24 @@ export function analyze(fluxArr: number[], rmsArr: number[], fr: number, meanSq:
   const hi = sorted[sorted.length - 1] ?? 0;
   const energy = db.map(v => r3(Math.max(0, Math.min(1, (v - lo) / Math.max(6, hi - lo)))));
   const sm = movingAvg(Float32Array.from(energy), 2);
+  // the same envelope for the low end (bass and kick), so a drop that is mastered no louder than its
+  // build is still found where the bass returns
+  const lowDb: number[] = [];
+  if (lowArr.length >= N * 0.9) for (let i = 0; i < N; i += per) {
+    let s = 0, c = 0;
+    for (let j = i; j < Math.min(N, i + per); j++) { s += lowArr[j]; c++; }
+    lowDb.push(10 * Math.log10(s / Math.max(1, c) + 1e-12));
+  }
+  const lsorted = [...lowDb].sort((a, b) => a - b);
+  const llo = lsorted[Math.floor(lsorted.length * 0.05)] ?? -60, lhi = lsorted[lsorted.length - 1] ?? 0;
+  const lowSm = lowDb.length ? movingAvg(Float32Array.from(lowDb.map(v => Math.max(0, Math.min(1, (v - llo) / Math.max(6, lhi - llo))))), 2) : null;
   const rises: [number, number][] = [];
   const w = eRate; // compare 1 s before vs 1 s after
   for (let i = w; i < sm.length - w; i++) {
     const d = sm[i + w - 1] - sm[i - w];
-    if (d > 0.22) rises.push([i, d]);
+    const dl = lowSm && i + w - 1 < lowSm.length ? lowSm[i + w - 1] - lowSm[i - w] : 0;
+    const score = Math.max(d, 0.85 * dl) + 0.35 * Math.min(d, dl);
+    if (score > 0.22) rises.push([i, score]);
   }
   rises.sort((a, b) => b[1] - a[1]);
   const riseTimes: number[] = [];
@@ -279,7 +301,15 @@ export function analyze(fluxArr: number[], rmsArr: number[], fr: number, meanSq:
     if (riseTimes.every(x => Math.abs(x - t) > 2)) riseTimes.push(r3(t));
     if (riseTimes.length >= 8) break;
   }
+  // a drop lands on a downbeat: the smoothed envelope peaks a little before it, so move each rise to the
+  // downbeat just after it (or just before) when there is one close by
+  for (let k = 0; k < riseTimes.length; k++) {
+    const t = riseTimes[k];
+    const db = downbeats.filter(d => d >= t - 0.45 && d <= t + 1.3).sort((a, b) => Math.abs(a - t - 0.4) - Math.abs(b - t - 0.4))[0];
+    if (db !== undefined) riseTimes[k] = db;
+  }
   riseTimes.sort((a, b) => a - b);
+  for (let k = riseTimes.length - 1; k > 0; k--) if (riseTimes[k] - riseTimes[k - 1] < 0.05) riseTimes.splice(k, 1);
   // quiet: below -45 dBFS or 28 dB under the loud level
   const thr = Math.max(-45, hi - 28);
   const quiet: [number, number][] = [];

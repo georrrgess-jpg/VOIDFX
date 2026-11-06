@@ -2,7 +2,7 @@
 // timeline can never hold out-of-range values, overlapping clips or dangling references.
 import {
   ANIM_PROPS, AnimProp, BLEND_MODES, Clip, ClipKind, DEFAULT_CAMERA, Ease, FONTS, Keyframe, MediaInfo, Project, REVEALS_IN, REVEALS_OUT, SFX, SfxType, STANDARD_CAPTION, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
-  Track, TrackKind, TRANSITIONS, TransitionType,
+  Track, TrackKind, TRANSITIONS, TransitionType, BeatCamera,
 } from './types';
 import { twoLines } from './lyrics';
 import { clamp, clipEnd, clipIn, clipSpeed, deepClone, EPS, hasRamp, num, projectDuration, round, shortId, srcAt, trackClips } from './util';
@@ -46,8 +46,9 @@ export function allIds(p: Project): Set<string> {
   return new Set([...p.clips.map(c => c.id), ...p.tracks.map(t => t.id)]);
 }
 
+/** Ids the studio makes up itself: a form Opus does not use for its own ids (c1, t1, e1, fx2), so they never collide. */
 export function newClipId(p: Project, kind: ClipKind): string {
-  return shortId(kind === 'text' ? 't' : kind === 'audio' ? 'a' : kind === 'graphic' ? 'g' : kind === 'shader' ? 'e' : 'c', allIds(p));
+  return shortId(kind === 'text' ? 'T_' : kind === 'audio' ? 'A_' : kind === 'sfx' ? 'S_' : kind === 'graphic' ? 'G_' : kind === 'shader' ? 'X_' : 'C_', allIds(p));
 }
 
 export function newTrackId(p: Project, kind: TrackKind): string {
@@ -515,6 +516,20 @@ export function sanitizeCamera(v: any, issues: string[]): Project['camera'] {
   if ('decay' in v) cam.decay = round(num(v.decay, 0.03, 1, DEFAULT_CAMERA.decay), 3);
   if ('from' in v && v.from !== null) cam.from = round(num(v.from, 0, 36000, 0), 3);
   if ('to' in v && v.to !== null) cam.to = round(num(v.to, 0, 36000, 0), 3);
+  if (Array.isArray(v.sections)) {
+    const secs: NonNullable<BeatCamera['sections']> = [];
+    for (const x of v.sections.slice(0, 12)) {
+      if (!x || typeof x !== 'object') continue;
+      const from = round(num(x.from, 0, 36000, 0), 3), to = round(num(x.to, 0, 36000, 0), 3);
+      if (to <= from) { issues.push(`camera section ${from}-${to}: "to" must be after "from"`); continue; }
+      const sec: NonNullable<BeatCamera['sections']>[number] = { from, to };
+      if ('punch' in x) sec.punch = round(num(x.punch, 0, 0.3, cam.punch), 4);
+      if ('kick' in x) sec.kick = round(num(x.kick, 0, 10, cam.kick), 3);
+      if (['beat', 'half', 'downbeat'].includes(x.every)) sec.every = x.every;
+      secs.push(sec);
+    }
+    if (secs.length) cam.sections = secs.sort((a, b) => a.from - b.from);
+  } else if (v.sections === null) delete cam.sections;
   return cam;
 }
 
@@ -677,10 +692,13 @@ export function snapToBeats(p: Project, media: Record<string, MediaInfo>, tol = 
 export function velocityRamp(p: Project, media: Record<string, MediaInfo>, c: Clip, opts: { fast?: number; slow?: number; burst?: number } = {}): boolean {
   if (c.kind !== 'video') return false;
   const fast = opts.fast ?? 2.2, slow = opts.slow ?? 0.45, burst = opts.burst ?? 0.18;
-  const beats = timelineBeats(p, media).map(b => b.t - c.start).filter(lt => lt > 0.02 && lt < c.dur - 0.05);
+  // the beat the clip is cut on counts too: a short shot between two beats bursts on its own cut
+  const beats = timelineBeats(p, media).map(b => b.t - c.start).filter(lt => lt > -0.03 && lt < c.dur - 0.05);
   if (!beats.length) return false;
-  const keys: { t: number; v: number; e?: 'out' | 'hold' }[] = [{ t: 0, v: slow, e: 'hold' }];
-  for (const lb of beats) {
+  const onCut = beats[0] <= 0.02;
+  const keys: { t: number; v: number; e?: 'out' | 'hold' }[] = onCut ? [] : [{ t: 0, v: slow, e: 'hold' }];
+  for (const lb0 of beats) {
+    const lb = Math.max(0, lb0);
     keys.push({ t: round(lb, 4), v: fast, e: 'out' });
     keys.push({ t: round(Math.min(c.dur, lb + burst), 4), v: slow, e: 'hold' });
   }
@@ -778,10 +796,22 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
   const pendingRamps: [string, any][] = [];
   if (!Array.isArray(rawOps)) issues.push('ops must be an array');
   const noteOps: Record<string, number> = {};
+  const alias = new Map<string, string>();
   ops.slice(0, 2000).forEach((op: any, i: number) => {
     const tag = `op ${i + 1}`;
     if (!op || typeof op !== 'object' || typeof op.op !== 'string') { issues.push(`${tag}: not an operation`); return; }
     // "note": which of the round's numbered notes this operation serves (counted, not applied)
+    // an id the reply asks for that is already taken: the new clip gets another one, and later operations in
+    // this reply that name it go to the new clip (they mean the one they just made)
+    const claim = (c: Clip) => {
+      if (typeof op.id !== 'string' || !/^[A-Za-z][\w-]{0,23}$/.test(op.id)) return;
+      if (!allIds(p).has(op.id)) { c.id = op.id; return; }
+      const other = p.clips.find(x => x.id === op.id);
+      alias.set(op.id, c.id);
+      issues.push(`${tag}: id "${op.id}" already belongs to ${other ? `the ${other.kind} clip at ${other.start.toFixed(2)} s` : 'a track'}, so this new ${c.kind} clip is "${c.id}"; later operations in this reply that name "${op.id}" were applied to it`);
+    };
+    if ((op.op === 'set' || op.op === 'remove' || op.op === 'split') && typeof op.id === 'string' && alias.has(op.id)) op = { ...op, id: alias.get(op.id) };
+    if (op.op === 'remove' && Array.isArray(op.ids)) op = { ...op, ids: op.ids.map((x: unknown) => alias.get(String(x)) ?? x) };
     let noteIds: string[] = [];
     if ('note' in op) {
       const raw = Array.isArray(op.note) ? op.note : [op.note];
@@ -840,8 +870,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           if (track.kind === 'text') { issues.push(`${tag}: media cannot go on text track ${track.id}`); return; }
           if (m.kind === 'audio' && track.kind !== 'audio') { issues.push(`${tag}: audio media must go on an audio track`); return; }
           const c = makeMediaClip(p, m, 0, track.id, asAudio);
-          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
-          else if (op.id) issues.push(`${tag}: id "${op.id}" is taken or invalid, used ${c.id}`);
+          claim(c);
           c.start = 'start' in op ? num(op.start, 0, 36000, 0) : (track.main ? 1e6 : 0);
           c.in = num(op.in, 0, Math.max(0, m.duration - 0.01), 0);
           const sp = 'speed' in op ? num(op.speed, 0.1, 10, 1) : 1;
@@ -862,7 +891,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           let track = op.track ? p.tracks.find(t => t.id === op.track) : p.tracks.find(t => t.kind === 'text');
           if (!track || track.kind !== 'text') { issues.push(`${tag}: "${op.track}" is not a text track`); return; }
           const c: Clip = { id: newClipId(p, 'text'), track: track.id, kind: 'text', start: num(op.start, 0, 36000, 0), dur: num(op.dur, 1 / p.fps, 36000, 2), text: '' };
-          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
+          claim(c);
           const { op: _o, track: _t, start: _s, dur: _d, id: _id, ...rest } = op;
           patchClip(c, rest, issues, p);
           if (!c.text) { issues.push(`${tag}: text clip without text was skipped`); return; }
@@ -887,7 +916,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           } else track = fxTrack(p, start, dur, typeof op.track === 'string' ? op.track : undefined, undefined, op.over === true);
           const c: Clip = { id: newClipId(p, 'shader'), track: track.id, kind: 'shader', start, dur, blend: def.blend, preset: def.id, name: def.name };
           if (whole) c.span = 'all';
-          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
+          claim(c);
           c.params = fxParams(def, op.params && typeof op.params === 'object' ? op.params : undefined);
           if (op.params && typeof op.params === 'object') {
             const unknown = Object.keys(op.params).filter(k => !def.params.some(q => q.id === k));
@@ -909,7 +938,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           if (pref && (!prefT || prefT.kind !== 'video' || prefT.main)) issues.push(`${tag}: ${kind}s go on an overlay video track; used a free one instead of "${pref}"`);
           const track = fxTrack(p, start, dur, prefT && prefT.kind === 'video' && !prefT.main ? prefT.id : undefined);
           const c: Clip = { id: newClipId(p, kind), track: track.id, kind, start, dur };
-          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
+          claim(c);
           if (kind === 'graphic') { c.gw = 0.6; c.blend = 'normal'; } else c.blend = 'normal';
           const { op: _o, track: _t, start: _s, dur: _d, id: _id, ...rest } = op;
           patchClip(c, rest, issues, p);
@@ -934,7 +963,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           const type = op.sound ?? op.sfx;
           if (!(SFX as readonly string[]).includes(type)) { issues.push(`${tag}: unknown sound "${type}" (use ${SFX.join(', ')})`); return; }
           const c = addSfx(p, type, num(op.start, -10, 36000, 0), { volume: op.volume !== undefined ? num(op.volume, 0, 4, 0.35) : undefined, track: op.track });
-          if (typeof op.id === 'string' && /^[A-Za-z][\w-]{0,23}$/.test(op.id) && !allIds(p).has(op.id)) c.id = op.id;
+          claim(c);
           if (op.dur !== undefined) c.dur = num(op.dur, 0.02, c.dur, c.dur);
           touched.push(c.id);
           applied++;

@@ -357,6 +357,18 @@ async function probe(id: string, file: Blob, kind: MediaKind, haveAnalysis: bool
   if ([...rt.users].some(k => bays.get(k)?.thumbs)) queue(() => buildThumbs(id));
   else if (!cur?.poster && finalKind === 'video') queue(() => buildPoster(id));
   if (patch.hasAudio && !(analysisKnown && rt.peaks)) queue(() => buildAudio(id));
+  // a long video dropped straight into a project is usually a scene pack: find its shots too, so its
+  // contact sheets show one frame per shot and Opus gets the shot list (database items have it already)
+  if (finalKind === 'video' && (patch.duration || 0) >= 30 && !(cur?.shots ?? der?.shots)) queue(() => buildShots(id));
+}
+
+async function buildShots(id: string) {
+  const rt = runtime.get(id);
+  if (!rt?.file || rt.meta?.shots) return;
+  const shots = await detectShots(rt.file).catch(() => [] as [number, number][]);
+  if (shots.length < 3) return;
+  patchMedia(id, { shots });
+  void saveDerived(rt.blobId, { shots });
 }
 
 // ---------- background queue (one heavy job at a time keeps the UI responsive) ----------
@@ -571,32 +583,47 @@ export async function detectShots(blob: Blob, onProgress?: (f: number) => void, 
     const scratch = document.createElement('canvas');
     scratch.width = W; scratch.height = H;
     const g = scratch.getContext('2d', { willReadFrequently: true })!;
-    let prev: Float32Array | null = null;
-    const diffs: number[] = [];
+    let prev: Float32Array | null = null, prevZ: Float32Array | null = null;
+    const diffs: number[] = [], zdiffs: number[] = [];
     let k = 0;
     for await (const wc of sink.canvasesAtTimestamps(times)) {
       if (signal?.aborted) break;
       k++;
-      if (!wc) { diffs.push(0); continue; }
+      if (!wc) { diffs.push(0); zdiffs.push(0); continue; }
       g.drawImage(wc.canvas as CanvasImageSource, 0, 0);
       const d = g.getImageData(0, 0, W, H).data;
       const cur = new Float32Array(W * H);
-      for (let i = 0; i < W * H; i++) cur[i] = (d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114) / 255;
-      if (prev) {
-        let s = 0;
-        for (let i = 0; i < cur.length; i++) s += Math.abs(cur[i] - prev[i]);
+      let mu = 0;
+      for (let i = 0; i < W * H; i++) { cur[i] = (d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114) / 255; mu += cur[i]; }
+      mu /= cur.length;
+      let sd = 0;
+      for (let i = 0; i < cur.length; i++) sd += (cur[i] - mu) ** 2;
+      sd = Math.sqrt(sd / cur.length) + 0.03;
+      // the same picture with its exposure taken out: a cut between two shots of similar tone (black-and-
+      // white film, night scenes) still changes the composition
+      const z = new Float32Array(cur.length);
+      for (let i = 0; i < cur.length; i++) z[i] = (cur[i] - mu) / sd;
+      if (prev && prevZ) {
+        let s = 0, sz = 0;
+        for (let i = 0; i < cur.length; i++) { s += Math.abs(cur[i] - prev[i]); sz += Math.abs(z[i] - prevZ[i]); }
         diffs.push(s / cur.length);
-      } else diffs.push(0);
+        zdiffs.push(sz / cur.length);
+      } else { diffs.push(0); zdiffs.push(0); }
       prev = cur;
+      prevZ = z;
       if (onProgress && k % 25 === 0) onProgress(k / times.length);
     }
     const cuts: number[] = [];
-    for (let i = 1; i < diffs.length; i++) {
-      const lo = Math.max(1, i - 8), hi = Math.min(diffs.length - 1, i + 8);
+    const localMean = (arr: number[], i: number) => {
+      const lo = Math.max(1, i - 8), hi = Math.min(arr.length - 1, i + 8);
       let mean = 0, cnt = 0;
-      for (let j = lo; j <= hi; j++) if (j !== i) { mean += diffs[j]; cnt++; }
-      mean /= Math.max(1, cnt);
-      if (diffs[i] > 0.09 && diffs[i] > mean * 3 + 0.02 && (!cuts.length || times[i] - cuts[cuts.length - 1] > 0.4)) cuts.push(times[i] - step / 2);
+      for (let j = lo; j <= hi; j++) if (j !== i) { mean += arr[j]; cnt++; }
+      return mean / Math.max(1, cnt);
+    };
+    for (let i = 1; i < diffs.length; i++) {
+      const byLuma = diffs[i] > 0.09 && diffs[i] > localMean(diffs, i) * 3 + 0.02;
+      const byShape = zdiffs[i] > 0.5 && zdiffs[i] > localMean(zdiffs, i) * 2.5 + 0.05;
+      if ((byLuma || byShape) && (!cuts.length || times[i] - step / 2 - cuts[cuts.length - 1] > 0.4)) cuts.push(times[i] - step / 2);
     }
     const shots: [number, number][] = [];
     let s0 = 0;

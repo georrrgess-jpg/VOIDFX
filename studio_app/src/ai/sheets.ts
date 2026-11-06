@@ -7,7 +7,7 @@ import { renderStills } from '../engine/exporter';
 import { getBlob } from '../state/storage';
 import type { LibraryItem, Standard } from '../state/catalog';
 
-export interface Sheet { blob: Blob; caption: string }
+export interface Sheet { blob: Blob; caption: string; /** Mean brightness (0-1) of each rendered frame on it, with its time. */ lumas?: [number, number][] }
 
 const TARGET_PX = 1_150_000;
 
@@ -104,7 +104,22 @@ const fmt = (t: number) => (t < 100 ? t.toFixed(1) : t.toFixed(0));
 function timesFor(m: MediaInfo, n: number): { t: number; label: string }[] {
   if (m.shots && m.shots.length > 2) {
     const shots = m.shots;
-    const pick = shots.length <= n ? shots.map((s, i) => i) : Array.from({ length: n }, (_, k) => Math.floor((k * shots.length) / n));
+    if (shots.length <= n) {
+      // room to spare: long takes get more frames (about one every 2.5 s), so a 30 s shot is not one still
+      const extra = shots.map(([a, b]) => Math.max(0, Math.floor((b - a) / 2.5) - 1));
+      const spare = n - shots.length, want = extra.reduce((x, y) => x + y, 0);
+      const scale = want > spare ? spare / want : 1;
+      const out: { t: number; label: string }[] = [];
+      shots.forEach(([a, b], i) => {
+        const k = 1 + Math.floor(extra[i] * scale);
+        for (let j = 0; j < k; j++) {
+          const t = a + ((j + 0.5) / k) * (b - a);
+          out.push({ t, label: k > 1 ? `${m.id} #${i + 1} ${fmt(a)}-${fmt(b)}s @${fmt(t)}` : `${m.id} #${i + 1} ${fmt(a)}-${fmt(b)}s` });
+        }
+      });
+      return out;
+    }
+    const pick = Array.from({ length: n }, (_, k) => Math.floor((k * shots.length) / n));
     return pick.map(i => ({ t: (shots[i][0] + shots[i][1]) / 2, label: `${m.id} #${i + 1} ${fmt(shots[i][0])}-${fmt(shots[i][1])}s` }));
   }
   const k = Math.max(2, Math.min(n, Math.ceil(m.duration / 0.35)));
@@ -137,7 +152,8 @@ export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet
   }
   // never more sheets than a file has distinct frames to fill (a short clip on four near-empty sheets
   // costs four images and shows nothing more); the freed images go to the files with more shots
-  const cap = (m: MediaInfo) => Math.max(1, Math.ceil((m.shots && m.shots.length > 2 ? m.shots.length : Math.max(2, Math.ceil(m.duration / 0.35))) / cellsPerSheet));
+  const frames = (m: MediaInfo) => m.shots && m.shots.length > 2 ? m.shots.reduce((a, [s0, s1]) => a + Math.max(1, Math.floor((s1 - s0) / 2.5)), 0) : Math.max(2, Math.ceil(m.duration / 0.35));
+  const cap = (m: MediaInfo) => Math.max(1, Math.ceil(frames(m) / cellsPerSheet));
   for (let i = 0; i < vids.length; i++) alloc[i] = Math.min(alloc[i], cap(vids[i]));
   let spare = budget - alloc.reduce((a, b) => a + b, 0);
   while (spare > 0) {
@@ -169,7 +185,7 @@ export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet
       const labels = ts.slice(k * per, (k + 1) * per);
       if (!part.length) continue;
       const blob = await compose(part.map((f, j) => ({ img: f.img, w: f.w, h: f.h, label: labels[j].label, guide, ruler: true })), aspect);
-      const shotsNote = m.shots && m.shots.length > 2 ? 'one frame per shot, labelled with media id, shot number and its source range' : 'labelled with media id and source time';
+      const shotsNote = m.shots && m.shots.length > 2 ? 'one frame per shot (long takes get several, marked @ with the frame\'s source time), labelled with media id, shot number and its source range' : 'labelled with media id and source time';
       sheets.push({ blob, caption: `contact sheet of ${m.id} ("${m.name}"), ${part.length} frames, ${shotsNote}${guide ? '; the dashed yellow box is the centred 9:16 crop' : ''}; cyan ticks along the top mark x = .1 to .9 and on the left y = .25/.5/.75, for reading each subject's focus point` });
     }
   }
@@ -192,6 +208,18 @@ export async function timelineSheets(p: Project, media: Record<string, MediaInfo
   const aspect = p.width / p.height;
   const list = times.slice(0, perSheet * maxImages);
   const stills = await renderStills(p, list, cellH, signal, media);
+  const lumaOf = (c: HTMLCanvasElement | null) => {
+    if (!c) return -1;
+    const s = document.createElement('canvas');
+    s.width = 16; s.height = 16;
+    const g = s.getContext('2d', { willReadFrequently: true })!;
+    g.drawImage(c, 0, 0, 16, 16);
+    const d = g.getImageData(0, 0, 16, 16).data;
+    let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += (d[i] * 0.2126 + d[i + 1] * 0.7152 + d[i + 2] * 0.0722) / 255;
+    return sum / 256;
+  };
+  const lum = stills.map(lumaOf);
   const sheets: Sheet[] = [];
   for (let i = 0; i < list.length; i += perSheet) {
     const part = list.slice(i, i + perSheet);
@@ -199,7 +227,7 @@ export async function timelineSheets(p: Project, media: Record<string, MediaInfo
       const c = stills[i + k];
       return { img: c, w: c?.width || 0, h: c?.height || 0, label: labels?.[i + k] || `T ${t.toFixed(2)}s` };
     }), aspect);
-    sheets.push({ blob, caption: `frames of the current edit rendered by the studio at timeline times ${part[0].toFixed(2)}s to ${part[part.length - 1].toFixed(2)}s` });
+    sheets.push({ blob, caption: `frames of the current edit rendered by the studio at timeline times ${part[0].toFixed(2)}s to ${part[part.length - 1].toFixed(2)}s`, lumas: part.map((t, k) => [t, lum[i + k]] as [number, number]).filter(x => x[1] >= 0) });
   }
   return sheets;
 }

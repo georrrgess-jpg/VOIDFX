@@ -7,6 +7,7 @@ import { textBlockHeight } from './text';
 import { FLASHY, GENERIC, TRANSITION_LABELS } from './transitions';
 import { QUIET_TRANSITIONS, sfxBudget, sfxEvents } from '../state/ops';
 import { customIssues } from './custom';
+import { getFx } from './fxlib';
 
 export interface Check { id: string; label: string; status: 'pass' | 'warn' | 'fail' | 'info'; detail: string; at?: number[]; /** A one-click fix the panel can offer. */ action?: 'thin-sfx' | 'add-sfx' }
 export interface CheckOptions { houseRules: boolean; duration?: [number, number]; fps?: number; seam?: number | null }
@@ -39,11 +40,12 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   const overCut = (t: number) => custom.some(c => c.start <= t + 0.02 && c.start + c.dur >= t - 0.02);
   const customCuts = mainClips.slice(1).filter(c => !c.transition && overCut(c.start)).length;
   const designed = trans.length + customCuts;
-  const target = Math.max(15, Math.round(dur));
+  // the benchmarks: 16-27 designed joins in 21-27 s, i.e. about three for every four seconds or more
+  const target = Math.max(15, Math.round(dur * 0.72));
   const types = new Set(trans.map(c => c.transition!.type));
   out.push({
     id: 'density', label: 'Designed transitions', status: designed >= target ? 'pass' : designed >= 15 || !o.houseRules ? 'warn' : 'fail',
-    detail: `${designed} in ${f2(dur)} s, ${types.size + (customCuts ? 1 : 0)} different${customCuts ? ` (${customCuts} are custom effects over a cut)` : ''} (target about ${target}: one per second)`,
+    detail: `${designed} in ${f2(dur)} s, ${types.size + (customCuts ? 1 : 0)} different${customCuts ? ` (${customCuts} are custom effects over a cut)` : ''} (target ${target} or more: the benchmarks have 16-27 in 21-27 s)`,
   });
   // variety: generic library moves are filler, and the same move twice in a row reads as a template
   if (o.houseRules && designed >= 4) {
@@ -82,7 +84,7 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
     const drop = drops[0];
     const flash = mainClips.filter(c => c.dur < 0.3);
     const stray = flash.filter(c => drop === undefined || c.start < drop - 0.6 || c.start > drop + 3.5);
-    const lo = Math.round(dur * 0.8), hi = Math.round(dur * 1.55);
+    const lo = Math.round(dur * 0.68), hi = Math.round(dur * 1.55);
     const uniform = shots.length >= 10 && sd / avg < 0.22;
     const bad = flash.length > 4 || stray.length > 0 || shots.length < lo || shots.length > hi || uniform;
     const parts = [`${shots.length} shots, average ${avg.toFixed(2)} s (house range about ${lo}-${hi} for ${f2(dur)} s)`];
@@ -121,14 +123,26 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
     events.push(c.start);
     if (c.kind === 'shader' || c.kind === 'graphic') events.push(c.start + c.dur);
     if (c.transition) events.push(c.start);
-    for (const keys of Object.values(c.kf || {})) for (const k of keys || []) if (c.kind !== 'text' || true) events.push(c.start + k.t);
+    for (const [prop, keys] of Object.entries(c.kf || {})) {
+      if (!keys?.length) continue;
+      for (const k of keys) events.push(c.start + k.t);
+      // a keyframed move (push-in, drift, ramp) is happening all the way between its keys
+      if (['scale', 'x', 'y', 'rotation', 'speed'].includes(prop)) for (let i = 1; i < keys.length; i++) {
+        if (keys[i - 1].e === 'hold' || Math.abs(keys[i].v - keys[i - 1].v) < (prop === 'scale' ? 0.02 : prop === 'rotation' ? 1 : prop === 'speed' ? 0.15 : 0.01)) continue;
+        for (let t = keys[i - 1].t + 0.5; t < keys[i].t; t += 0.5) events.push(c.start + t);
+      }
+    }
     if (c.kind === 'text' && c.words) for (const w of c.words) events.push(c.start + w);
   }
-  if (p.camera?.on) for (const b of timelineBeats(p, media)) if ((p.camera.from ?? 0) <= b.t && b.t <= (p.camera.to ?? Infinity)) events.push(b.t);
+  const beatsAll = timelineBeats(p, media);
+  // effects that react to the beat are a beat moment on every beat they span
+  for (const c of p.clips) if (c.kind === 'shader' && c.preset && getFx(c.preset)?.beat) for (const b of beatsAll) if (b.t >= c.start && b.t <= c.start + c.dur) events.push(b.t);
+  const camOn = (t: number) => !!p.camera?.on && (p.camera.from ?? 0) <= t && t <= (p.camera.to ?? Infinity) && (!p.camera.sections?.length || p.camera.sections.some(x => t >= x.from && t <= x.to));
+  for (const b of beatsAll) if (camOn(b.t)) events.push(b.t);
   events.sort((a, b) => a - b);
   const gaps: number[] = [];
   for (let i = 1; i < events.length; i++) if (events[i] - events[i - 1] > 1.1) gaps.push(events[i - 1]);
-  out.push({ id: 'headspace', label: 'Headspace', status: gaps.length ? 'warn' : 'pass', detail: gaps.length ? `${gaps.length} span${gaps.length > 1 ? 's' : ''} longer than 1.1 s with no cut, transition, text beat or camera move` : 'Something happens at least every 1.1 s.', at: gaps });
+  out.push({ id: 'headspace', label: 'Headspace', status: gaps.length ? 'warn' : 'pass', detail: gaps.length ? `${gaps.length} span${gaps.length > 1 ? 's' : ''} longer than 1.1 s with no cut, transition, text beat, camera move, keyframed move or beat effect` : 'Something happens at least every 1.1 s.', at: gaps });
   // logo
   const logos = trans.filter(c => c.transition!.type === 'logo');
   if (o.houseRules) out.push({ id: 'logo', label: 'voidfx logo', status: logos.length === 1 ? 'pass' : logos.length > 1 ? 'fail' : 'warn', detail: logos.length === 1 ? `Once, as a transition at ${f2(logos[0].start)} s.` : logos.length ? `${logos.length} times; the rule is exactly once.` : 'Not used yet; the rule is exactly once, as a transition.', at: logos.map(c => c.start) });
@@ -152,6 +166,23 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
       detail: `${looks.length ? `Look: ${[...new Set(looks.map(c => c.preset || c.name || 'custom'))].join(', ')}` : graded ? `No library look; ${graded} of ${shots.length} shots graded by hand` : 'No look: the footage keeps its own grade (give the edit its own look)'}; ${lib} library effect${lib === 1 ? '' : 's'} and ${layers.length - lib} custom graphic${layers.length - lib === 1 ? '' : 's'} or effect${layers.length - lib === 1 ? '' : 's'}; ${bare.length} of ${secs} seconds have no graphic or effect layer${longest >= 3 ? ` (longest bare stretch ${longest} s)` : ''}.`,
       at: bare.map(x => x + 0.5),
     });
+  }
+  // nothing drawn over his face: an anchored overlay effect in the face zone (with focus set, the face
+  // sits near (0.5, 0.42) of the frame) breaks the house rule
+  if (o.houseRules) {
+    const OVER_FACE = new Set(['lens_flare', 'sparks_burst', 'glass_burst', 'shockwave', 'blood_lens', 'lightning_arc']);
+    const mainT = p.tracks.find(t => t.main)?.id;
+    const onFace = p.clips.filter(c => {
+      if (c.kind !== 'shader' && c.kind !== 'graphic') return false;
+      if (c.kind === 'shader' && !(c.preset && OVER_FACE.has(c.preset))) return false;
+      const tr = transformAt(c, Math.min(c.dur, 0.2));
+      const x = 0.5 + (tr.x ?? 0), y = 0.5 + (tr.y ?? 0);
+      if (c.kind === 'graphic' && (c.gw ?? 0.6) > 0.7) return false; // frames and full-width marks
+      // only over shots framed on a face (focus set)
+      const under = p.clips.find(m => m.track === mainT && m.start <= c.start + 0.05 && m.start + m.dur > c.start + 0.05);
+      return !!under?.focus && x > 0.36 && x < 0.64 && y > 0.28 && y < 0.56;
+    });
+    if (onFace.length) out.push({ id: 'face', label: 'Over the face', status: 'warn', detail: `${onFace.length} overlay${onFace.length > 1 ? 's' : ''} anchored where the face sits (${onFace.map(c => `${c.preset || c.kind} ${f2(c.start)} s`).join(', ')}): move ${onFace.length > 1 ? 'them' : 'it'} off the face (to the light source, the impact point or a corner); the house rule is nothing drawn over his face.`, at: onFace.map(c => c.start) });
   }
   // text
   const texts = p.clips.filter(c => c.kind === 'text');
@@ -195,14 +226,46 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
       action: tooMany ? 'thin-sfx' : none ? 'add-sfx' : undefined,
     });
   }
-  // flashes
-  const flashes = trans.filter(c => FLASHY.has(c.transition!.type)).map(c => c.start).sort((a, b) => a - b);
+  // flashes: flash-type transitions and the library's flash effects
+  const FLASH_FX = new Set(['exposure_wash', 'impact_frame', 'flash']);
+  const flashFx = p.clips.filter(c => c.kind === 'shader' && c.preset && FLASH_FX.has(c.preset));
+  const flashes = [...trans.filter(c => FLASHY.has(c.transition!.type)).map(c => c.start), ...flashFx.map(c => c.start)].sort((a, b) => a - b);
+  // two flash moves on the same frames add up to a white card (a negative of a dark frame is already white)
+  const stackedFlash = flashFx.filter(c => flashFx.some(d => d !== c && d.start < c.start + c.dur && c.start < d.start + d.dur) || trans.some(x => FLASHY.has(x.transition!.type) && Math.abs(x.start - c.start) < Math.max(0.2, (x.transition!.dur || 0.4) / 2)));
+  if (stackedFlash.length) out.push({ id: 'flash-stack', label: 'Stacked flashes', status: 'warn', detail: `${stackedFlash.map(c => `${c.preset} ${f2(c.start)} s`).join(', ')} overlap${stackedFlash.length === 1 ? 's' : ''} another flash move: together they blow the hit out to a white card and hide the transition and the title. Keep one flash per hit, its peak readable (the ink style of impact_frame on dark footage).`, at: stackedFlash.map(c => c.start) });
   let worst = 0, worstAt = 0;
   for (let i = 0; i < flashes.length; i++) {
     const n = flashes.filter(t => t >= flashes[i] && t < flashes[i] + 1).length;
     if (n > worst) { worst = n; worstAt = flashes[i]; }
   }
   out.push({ id: 'flash', label: 'Flash rate', status: worst > 3 ? 'fail' : 'pass', detail: worst > 3 ? `${worst} flash-type hits within one second at ${f2(worstAt)} s (limit 3).` : `At most ${worst} flash-type hit${worst === 1 ? '' : 's'} in any second.`, at: worst > 3 ? [worstAt] : [] });
+  // the same set-up used again: a montage of a handful of images on rotation
+  if (o.houseRules && mainClips.length >= 6) {
+    const repeats: number[] = [];
+    mainClips.forEach((c, i) => {
+      if (!c.media) return;
+      const a0 = c.in ?? 0, a1 = a0 + c.dur * (c.speed ?? 1);
+      const twin = mainClips.slice(0, i).find(d => d.media === c.media && Math.max(a0, d.in ?? 0) < Math.min(a1, (d.in ?? 0) + d.dur * (d.speed ?? 1)) + 2.5 && Math.abs(a0 - (d.in ?? 0)) < 6);
+      if (twin) repeats.push(c.start);
+    });
+    out.push({ id: 'repeats', label: 'Repeated shots', status: repeats.length > 1 ? 'warn' : 'pass', detail: repeats.length ? `${repeats.length} shot${repeats.length > 1 ? 's' : ''} reuse a set-up already shown (${repeats.map(f2).join(', ')} s): one deliberate callback is fine; more reads as a few images on rotation. Find new moments in the shot list.` : 'Every shot is a new set-up.', at: repeats });
+    // the same family of moves crowded together reads as a template
+    const FAMILY: Record<string, string> = { flip_h: 'turn', flip_v: 'turn', roll: 'turn', spin: 'turn', cube_left: 'turn', cube_right: 'turn', cube_up: 'turn', cube_down: 'turn', whip_left: 'whip', whip_right: 'whip', whip_up: 'whip', whip_down: 'whip', slide_left: 'slide', slide_right: 'slide', push_left: 'slide', push_right: 'slide' };
+    const fam = trans.filter(c => FAMILY[c.transition!.type]).sort((a, b) => a.start - b.start);
+    const crowd = fam.filter(c => fam.filter(d => FAMILY[d.transition!.type] === FAMILY[c.transition!.type] && d.start >= c.start && d.start < c.start + 5).length >= 3).map(c => c.start);
+    if (crowd.length) out.push({ id: 'family', label: 'Move families', status: 'warn', detail: `Three or more ${[...new Set(fam.filter(c => crowd.includes(c.start)).map(c => FAMILY[c.transition!.type]))].join('/')} moves within 5 s from ${crowd.map(f2).join(', ')} s: vary them (a slash, a burn, a dive, a light sweep).`, at: crowd });
+  }
+  // the loop in sound: the song runs to the last frame (a tape stop or a dead stop on the bar is fine; a fade is not)
+  if (o.houseRules) {
+    const bed = p.clips.filter(c => c.kind === 'audio' && c.media && media[c.media]?.analysis).sort((a, b) => b.dur - a.dur)[0];
+    if (bed) {
+      const endsAtEnd = Math.abs(clipEnd(bed) - dur) < 0.1;
+      const stop = p.clips.some(c => c.kind === 'sfx' && c.sfx === 'tapestop' && c.start > dur - 1.5);
+      const fades = (bed.fadeOut ?? 0) > 0.05 && endsAtEnd && !stop;
+      const short = clipEnd(bed) < dur - 0.1;
+      if (fades || short) out.push({ id: 'loop-sound', label: 'Loop in sound', status: 'warn', detail: fades ? `The music fades out over its last ${f2(bed.fadeOut!)} s and comes back at full level on the wrap: let it run to the last frame (fadeOut 0), or end on a tape stop or a dead stop on the bar.` : `The music ends at ${f2(clipEnd(bed))} s, before the edit does (${f2(dur)} s): the loop drops out of the song.`, at: [Math.max(0, dur - 0.5)] });
+    }
+  }
   // music coverage
   const audioSpans = p.clips.filter(c => c.kind === 'audio').map(c => [c.start, clipEnd(c)] as [number, number]).sort((a, b) => a[0] - b[0]);
   let covered = 0, cur = 0;

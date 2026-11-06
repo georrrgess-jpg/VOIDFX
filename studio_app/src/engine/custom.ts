@@ -264,6 +264,7 @@ vec3 glowFrame(vec2 uv, float r, float th) { vec3 s = vec3(0.0); for (int i = 0;
   vec3 c = frame(uv + vec2(cos(a) / uAspect, sin(a)) * sqrt(f) * r); s += c * smoothstep(th, th + 0.25, luma(c)) * (1.0 - 0.6 * f); } return s / 11.2; }
 vec3 sharpenFrame(vec2 uv, float k) { vec2 px = 1.5 / uRes; vec3 c = frame(uv); if (k <= 0.0) return c;
   vec3 b = (frame(uv + vec2(px.x, 0.0)) + frame(uv - vec2(px.x, 0.0)) + frame(uv + vec2(0.0, px.y)) + frame(uv - vec2(0.0, px.y))) * 0.25; return c + (c - b) * k * 1.6; }
+vec3 liftExposure(vec3 c, float e) { return clamp(c * exp2(e * 2.2), 0.0, 1.0); }
 vec3 lookFinish(vec3 c, vec2 uv, float t, float grain, float vig, float halo, vec3 haloTint) {
   if (halo > 0.0) c = screen3(c, vec3(luma(glowFrame(uv, 0.02, 0.6))) * haloTint * halo * 1.5);
   c *= vignette(uv, vig);

@@ -568,16 +568,16 @@ export const FX_LIBRARY: FxDef[] = [
   {
     id: 'ash', name: 'Falling ash', group: 'particles', blend: 'normal', dur: 3,
     hint: 'Grey flakes of ash tumbling down.',
-    params: [n('amount', 'Amount', 0.7), n('density', 'Density', 0.7), col('color', 'Colour', '#9a958e')],
+    params: [n('amount', 'Amount', 0.8), n('density', 'Density', 0.8), col('color', 'Colour', '#a7a29a')],
     code: `vec4 effect(vec2 uv, float t, float p) {
   vec2 q = aspectUv(uv);
   float a = 0.0;
-  for (int i = 0; i < 40; i++) {
+  for (int i = 0; i < 60; i++) {
     float f = float(i), depth = 0.4 + hash11(f * 2.3) * 0.6;
     float y = fract(hash11(f + 1.0) + t * 0.07 * depth) * 1.2 - 0.6;
     vec2 pos = vec2((hash11(f) - 0.5) * 0.62 + sin(t * 1.3 + f) * 0.02, y);
     vec2 d = rot2(t * 2.0 + f) * (q - pos);
-    a += smoothstep(0.004, 0.0, sdBox(d, vec2(0.006, 0.0025) * (0.6 + depth))) * step(hash11(f + 9.0), $density) * depth;
+    a += smoothstep(0.004, 0.0, sdBox(d, vec2(0.008, 0.0035) * (0.6 + depth))) * step(hash11(f + 9.0), $density) * depth;
   }
   return vec4($color, clamp(a, 0.0, 1.0) * $amount);
 }`,
@@ -585,14 +585,14 @@ export const FX_LIBRARY: FxDef[] = [
   {
     id: 'snow', name: 'Snow', group: 'particles', blend: 'add', dur: 3,
     hint: 'Soft snow drifting down in two depths.',
-    params: [n('amount', 'Amount', 0.7), n('density', 'Density', 0.7)],
+    params: [n('amount', 'Amount', 0.8), n('density', 'Density', 0.85)],
     code: `vec4 effect(vec2 uv, float t, float p) {
   vec2 q = aspectUv(uv);
   float a = 0.0;
-  for (int i = 0; i < 48; i++) {
+  for (int i = 0; i < 64; i++) {
     float f = float(i), depth = 0.35 + hash11(f * 4.1) * 0.65;
     vec2 pos = vec2((hash11(f) - 0.5) * 0.62 + sin(t * 0.8 + f) * 0.03, fract(hash11(f + 2.0) + t * 0.1 * depth) * 1.2 - 0.6);
-    float sz = 0.002 + 0.004 * depth;
+    float sz = 0.003 + 0.007 * depth * depth;
     a += smoothstep(sz, sz * 0.3, length(q - pos)) * depth * step(hash11(f + 7.0), $density);
   }
   return vec4(vec3(0.95, 0.97, 1.0) * clamp(a, 0.0, 1.0), $amount);
@@ -610,8 +610,10 @@ export const FX_LIBRARY: FxDef[] = [
     vec2 pos = vec2((hash11(f) - 0.5) * 0.7 + sin(t * 0.15 + f) * 0.05, (hash11(f + 4.0) - 0.5) * 1.1 + cos(t * 0.12 + f * 2.0) * 0.05);
     float r = (0.02 + 0.05 * hash11(f + 8.0)) * (0.5 + $size);
     float d = length(q - pos);
-    float disc = smoothstep(r, r * 0.92, d) * (0.35 + 0.65 * smoothstep(r * 0.6, r * 0.95, d));
-    o += mix($color, $color2, step(0.5, hash11(f + 2.0))) * disc * (0.4 + 0.6 * hash11(f + 6.0));
+    // a photographic out-of-focus light: a soft-edged, nearly even disc with a faint rim and a halo,
+    // never a drawn ring
+    float disc = (1.0 - smoothstep(r * 0.7, r, d)) * (0.78 + 0.22 * smoothstep(r * 0.45, r * 0.85, d)) + 0.12 * exp(-d / r);
+    o += mix($color, $color2, step(0.5, hash11(f + 2.0))) * disc * (0.25 + 0.45 * hash11(f + 6.0));
   }
   return vec4(o, $amount);
 }`,
@@ -707,14 +709,17 @@ export const FX_LIBRARY: FxDef[] = [
   },
   {
     id: 'impact_frame', name: 'Impact frame', group: 'camera', blend: 'normal', dur: 0.2,
-    hint: 'Two frames of high-contrast negative with a zoom and colour split: the punch of a hit.',
-    params: [n('amount', 'Amount', 1)],
+    hint: 'Two frames of the hit with a zoom and colour split: style 0 a high-contrast negative (on dark footage a negative is a white card: use style 1), style 1 an ink frame (the subject\'s edges in white on black, manga style).',
+    params: [n('amount', 'Amount', 1), n('style', 'Style (0 negative, 1 ink)', 0, 0, 1)],
     code: `vec4 effect(vec2 uv, float t, float p) {
   float k = 1.0 - smoothstep(0.0, 1.0, p);
   vec2 z = (uv - 0.5) * (1.0 - 0.07 * k) + 0.5;
   vec3 c = vec3(frame(z + vec2(0.01 * k, 0.0)).r, frame(z).g, frame(z - vec2(0.01 * k, 0.0)).b);
   vec3 neg = vec3(1.0) - sCurve(vec3(luma(c)), 0.8);
-  return vec4(mix(c, neg, step(t, 2.0 / 60.0) * $amount), 1.0);
+  float e = smoothstep(0.05, 0.22, sobel(z, 1.5));
+  vec3 ink = vec3(e) + vec3(0.06) * luma(c);
+  vec3 hitc = mix(neg, ink, step(0.5, $style));
+  return vec4(mix(c, hitc, step(t, 2.0 / 60.0) * $amount), 1.0);
 }`,
   },
   {
@@ -929,6 +934,14 @@ vec4 effect(vec2 uv, float t, float p) {
 }`,
   },
 ];
+
+// every look gets an exposure control applied to the picture before its grade, so dim footage is lifted
+// inside the look rather than crushed by it
+for (const d of FX_LIBRARY) {
+  if (d.group !== 'look' || d.params.some(q => q.id === 'exposure') || !d.code.includes('sharpenFrame(uv, $sharpen)')) continue;
+  d.params.push(n('exposure', 'Exposure', 0, -0.3, 0.3));
+  d.code = d.code.replace('sharpenFrame(uv, $sharpen)', 'liftExposure(sharpenFrame(uv, $sharpen), $exposure)');
+}
 
 const BY_ID = new Map(FX_LIBRARY.map(d => [d.id, d]));
 export const getFx = (id: string) => BY_ID.get(id);

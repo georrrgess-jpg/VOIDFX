@@ -209,6 +209,8 @@ export interface BeatCamera {
   /** Optional active range on the timeline. */
   from?: number;
   to?: number;
+  /** Optional stretches where it runs, each with its own strength (it rests between them). */
+  sections?: { from: number; to: number; punch?: number; kick?: number; every?: 'beat' | 'half' | 'downbeat' }[];
 }
 
 export const SFX = ['whoosh', 'swish', 'impact', 'hit', 'boom', 'riser', 'subdrop', 'reverse', 'glitch', 'shutter', 'tick', 'tapestop', 'zap', 'glass', 'rip'] as const;

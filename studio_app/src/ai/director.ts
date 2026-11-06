@@ -15,7 +15,7 @@ import { checksText, runChecks, Check } from '../engine/qc';
 import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
-import { getPreset, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
+import { getPreset, lessonsText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
 import { addTransitionSounds, applyOps as applyOpsRaw, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
 import { customIssues } from '../engine/custom';
 import { store } from '../state/store';
@@ -301,7 +301,7 @@ const SCORE_FORMAT = `{${CRITIC_AREAS.map(a => `"${a.id}": 0-10`).join(', ')}}`;
 // ---------- the steps' instructions ----------
 
 function buildStep1(notes: NoteCheck[]) {
-  return `STEP 1 OF 2: DIRECT THE EDIT. Do not write operations yet. Clear the PRE-BUILD GATE, use the worked examples and the playbook, then decide everything and write it down compactly (short lines, timeline times in seconds), in this order:
+  return `STEP 1 OF 2: DIRECT THE EDIT. Do not write operations yet. Clear the PRE-BUILD GATE, use the worked examples and the playbook, then decide everything and write it down compactly (short lines, timeline times in seconds). Work fast where the studio already did the work: take every time from the song window's timeline grid in MEDIA (bars, the drop, the beat length; a beat is a bar time + k x the beat), never list or recompute beats, and take shots from the shot list and the pack notes. Keep the whole direction under about 10,000 characters: terse lines, no restating of the rules. In this order:
 CONCEPT: one sentence from the character's world and the song's words, and how picture, look, text, sound and the loop carry it.
 LOOK: the library look with its params (or your own grade), the accent colour for emphasis words and lights, and why it suits the concept. Be bold: black-and-white with one colour kept, a duotone, a film stock or a themed monochrome beats a neutral grade.
 SONG: media id, source in -> out, where the drop and the hook land on the timeline; SECTIONS with timeline times.
@@ -328,8 +328,8 @@ Reply with only JSON: {"message": "what will change, note by note, for the owner
 const TAG_NOTES = 'Tag every operation that carries out a numbered note with it: "note":"N2" (or "note":["N1","N3"]); leave it out on other operations.';
 
 const PARTS_BUILD = [
-  { key: 'a', label: 'picture', text: 'STEP 2 OF 2, PART A: THE PICTURE (part B writes the layers at the same time). Write exactly these operations from your direction: {"op":"clear"} first; "project" (name, camera); the music and any dialogue clips on audio tracks; every main-track shot in order with its media, in, dur, focus, speed, ramp or speed keys, transform and kf; every transition with its anchors; the look. Do not write text, lyrics, fx, graphic, shader or sfx operations.' },
-  { key: 'b', label: 'layers', text: 'STEP 2 OF 2, PART B: THE LAYERS (part A writes the clear, the shots, the music, the transitions and the look at the same time, exactly on the times in your direction). Write exactly these operations from your direction: every text and lyrics operation, every fx (library effect), graphic and shader operation, and every sfx, with any text or overlay "track" operations they need. Do not write clear, project, look or add operations, and do not change the shots. Start every id you create with "b" (bt1, bfx2).' },
+  { key: 'a', label: 'picture', text: 'STEP 2 OF 2, PART A: THE PICTURE (part B writes the layers at the same time). Write exactly these operations from your direction: {"op":"clear"} first; "project" (name, camera); the music and any dialogue clips on audio tracks; every main-track shot in order with its media, in, dur, focus, speed, ramp or speed keys, transform and kf; every other media clip (a copy of a shot on an overlay track for a polaroid, a mirror or the loop, dialogue); every transition with its anchors; the look. Do not write text, lyrics, fx, graphic, shader or sfx operations.' },
+  { key: 'b', label: 'layers', text: 'STEP 2 OF 2, PART B: THE LAYERS (part A writes the clear, the shots, the music, the transitions and the look at the same time, exactly on the times in your direction). Write exactly these operations from your direction: every text and lyrics operation, every fx (library effect), graphic and shader operation, and every sfx, with any text or overlay "track" operations they need. Do not write clear, project, look or add operations (part A writes every media clip), and do not change the shots. Start every id you create with "b" (bt1, bfx2).' },
 ];
 const PARTS_REVISE = [
   { key: 'a', label: 'picture', text: 'STEP 2 OF 2, PART A: THE PICTURE (part B writes the layer changes at the same time). Write the operations for exactly the changes you decided to the shots (order, timing, framing, speed, keyframes), the transitions, the music, the camera and the look, against the CURRENT TIMELINE. Do not change text, lyrics, effects, graphics, shaders or sound effects.' },
@@ -487,6 +487,7 @@ export function extrasFor(preset: Preset, standards: Standard[], checks?: string
     craft: preset.houseRules ? [CRAFT, COOKBOOK, EFFICIENT].join('\n\n') : [CRAFT, EFFICIENT].join('\n\n'),
     exemplars: o.exemplars && preset.houseRules ? EXEMPLARS : '',
     canon: o.canon ? CRITIC_CANON : '',
+    lessons: o.canon ? lessonsText() : '',
     presetName: preset.name,
     presetPrompt: preset.prompt,
     standards: standardsText(standards),
@@ -563,7 +564,7 @@ You cannot hear when each line is sung, so do not caption them line by line. Use
 ${l.lines.map(x => x.text).join('\n').slice(0, 3000)}`;
 }
 
-const REVIEW_NOTE = 'Contact sheets of the media were attached to the first request and are not repeated. The images attached to the latest message are frames rendered from the edit as it stands now, labelled with timeline time (and with the notes a frame checks).';
+const REVIEW_NOTE = 'The full contact sheets of the media were attached to the first request. The images attached to the latest message are frames rendered from the edit as it stands now, labelled with timeline time (and with the notes a frame checks), followed by a palette of the footage (one frame per shot) for choosing shots to swap in.';
 
 /** Notes that got no operations: one quick call writes them before anything is reviewed. */
 async function fillMissingNotes(ws: Workspace, io: JobIO, o: { preset: Preset; standards: Standard[]; turns: Turn[]; notes: NoteCheck[]; effort: Effort; mediaImages: boolean }): Promise<OpsResult | null> {
@@ -590,6 +591,17 @@ async function fillMissingNotes(ws: Workspace, io: JobIO, o: { preset: Preset; s
   }
 }
 
+/** Measured brightness of the rendered frames: an edit that reads as black on a phone is a mistake. */
+export function brightnessNote(sheets: Sheet[]): string {
+  const all = sheets.flatMap(s => s.lumas || []);
+  if (all.length < 6) return '';
+  const avg = all.reduce((a, [, l]) => a + l, 0) / all.length;
+  const dark = all.filter(([, l]) => l < 0.1).map(([t]) => t);
+  const bright = all.filter(([, l]) => l > 0.82).map(([t]) => t);
+  if (avg >= 0.2 && dark.length <= Math.max(1, all.length * 0.08) && !bright.length) return '';
+  return `MEASURED BRIGHTNESS of the rendered frames: average ${Math.round(avg * 100)}% (a strong edit sits around 25-45% with real blacks and bright highlights).${dark.length ? ` Near-black frames (under 10%): ${dark.slice(0, 16).map(t => `${t.toFixed(2)}s`).join(', ')}.` : ''}${bright.length ? ` Blown-out frames (over 82%): ${bright.slice(0, 10).map(t => `${t.toFixed(2)}s`).join(', ')}.` : ''} On a phone, a frame this dark or bright reads as a mistake unless it is a designed beat (the black of a blink, a dive or the loop; the peak of a wash). Lift dark shots (color brightness/contrast on the clip, or the look's params) and keep faces readable.`;
+}
+
 function reviewMessage(k: number, total: number, o: { issues: string[]; checks: Check[]; sheets: Sheet[]; notes: NoteCheck[]; revision: boolean; lost?: string[] }): string {
   const issuesText = o.issues.length ? `The studio adjusted or rejected these operations:\n- ${o.issues.slice(0, 40).join('\n- ')}` : 'All operations were applied without problems.';
   const raise = total > 1 && k === total;
@@ -602,6 +614,7 @@ function reviewMessage(k: number, total: number, o: { issues: string[]; checks: 
   return [
     head,
     o.lost?.length ? `The ${o.lost.join(' and ')} of your direction could not be written: write them now, in full, from your direction.` : '',
+    brightnessNote(o.sheets),
     issuesText,
     `AUTOMATED CHECKPOINT\n${checksText(o.checks)}`,
     o.sheets.length ? `IMAGES attached to this message: ${o.sheets.map((x, i) => `${i + 1}. ${x.caption}`).join('; ')}` : 'No rendered frames are attached.',
@@ -620,6 +633,12 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
   let total = 0, message = '';
   let scores: Record<string, number> | undefined;
   const issues: string[] = [];
+  // a compact palette of the footage (one frame per shot) so a review that swaps or adds shots sees them
+  let palette: Sheet[] = [];
+  if (cfg.reviews && maxImg >= 8) {
+    io.step('review1', { state: 'run', detail: 'a palette of the footage' });
+    palette = (await mediaSheets(ws.ctx, 2, 40, io.signal).catch(() => [] as Sheet[])).map(s => ({ ...s, caption: `${s.caption} (the footage palette, for swapping or adding shots)` }));
+  }
   for (let k = 1; k <= cfg.reviews; k++) {
     const id = `review${k}`;
     io.step(id, { state: 'run', detail: 'rendering frames' });
@@ -627,7 +646,8 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
     const nSheets = Math.min(4, Math.max(1, maxImg));
     const must = opts.notes.filter(n => n.at !== undefined).map(n => n.at!);
     const times = reviewTimes(p, nSheets * 20, must);
-    const rSheets = maxImg ? await timelineSheets(p, ws.media(), times, 20, nSheets, io.signal, undefined, frameLabels(times, opts.notes)) : [];
+    const frames = maxImg ? await timelineSheets(p, ws.media(), times, 20, nSheets, io.signal, undefined, frameLabels(times, opts.notes)) : [];
+    const rSheets = [...frames, ...palette.slice(0, Math.max(0, maxImg - frames.length))];
     io.step(id, { detail: 'thinking…' });
     const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined });
     const rest: Turn[] = [...opts.turns.slice(1), { role: 'user', content: msg }];

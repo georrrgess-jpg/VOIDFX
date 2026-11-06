@@ -10,6 +10,8 @@ export type DirectorStep = JobStep;
 export type { Effort };
 export interface DirectorMsg { id: string; role: 'user' | 'opus' | 'note'; text: string; applied?: number; issues?: string[]; model?: string; undoTo?: number }
 
+export interface Lesson { at: number; area: string; severity: 'critical' | 'major'; problem: string; fix: string; project: string }
+
 export interface DirectorState {
   available: 'checking' | 'yes' | 'no';
   unavailableReason?: string;
@@ -21,6 +23,8 @@ export interface DirectorState {
   effort: Effort;
   brief: string;
   knowledge: string;
+  /** What the critic keeps finding across edits, fed back into every direction and review. */
+  lessons: Lesson[];
   presetId: string;
   lastModel?: string;
   streamChars: number;
@@ -132,7 +136,7 @@ class Store {
       critique: null,
       director: {
         available: 'checking', images: false, maxImages: 0, running: false, steps: [], messages: [],
-        effort: 'extra', brief: '', knowledge: '', presetId: 'voidfx-dexter', streamChars: 0,
+        effort: 'extra', brief: '', knowledge: '', lessons: [], presetId: 'voidfx-dexter', streamChars: 0,
       },
     };
   }

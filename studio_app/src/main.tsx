@@ -1,11 +1,12 @@
 import { render } from 'preact';
 import { initDirector } from './ai/director';
-import { loadJobs } from './ai/jobs';
+import { enqueue, loadJobs, resumeJob, setParallelLimit, startAiEdit, stopJob } from './ai/jobs';
 import { loadLogo } from './engine/logo';
 import { player } from './engine/player';
 import { runtime } from './media/library';
-import { loadKnowledge } from './state/catalog';
-import { migrateLegacy, openProject } from './state/projects';
+import { addLessons, addToLibrary, blankPreset, clearLessons, getPreset, lessonsText, listLibrary, listPresets, loadKnowledge, loadLessons, savePreset } from './state/catalog';
+import { runChecks } from './engine/qc';
+import { createProject, getRecord, listProjects, migrateLegacy, openProject } from './state/projects';
 import { applyOps } from './state/ops';
 import { compileError, customIssues } from './engine/custom';
 import { FX_PRESETS } from './engine/fxlibrary';
@@ -24,6 +25,7 @@ void initDownloads();
 void (async () => {
   await migrateLegacy();
   await loadKnowledge();
+  await loadLessons();
   await loadJobs();
   store.set(s => ({ catalogRev: s.catalogRev + 1 }));
   void requestPersistence();
@@ -33,5 +35,9 @@ void (async () => {
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') store.flushSave(); });
 window.addEventListener('pagehide', () => store.flushSave());
 
-// test hook for the automated smoke test (harmless in production)
-(window as any).__voidfx = { store, player, runtime, open: openProject, applyOps, customIssues, compileError, FX_PRESETS, FX_LIBRARY, fxCode, fxParams, renderStills };
+// test hooks for the automated tests (harmless in production)
+(window as any).__voidfx = {
+  store, player, runtime, open: openProject, applyOps, customIssues, compileError, FX_PRESETS, FX_LIBRARY, fxCode, fxParams, renderStills,
+  enqueue, startAiEdit, stopJob, resumeJob, setParallelLimit, savePreset, blankPreset, getPreset, listPresets, getRecord, listProjects, createProject, addToLibrary, listLibrary,
+  runChecks, addLessons, clearLessons, lessonsText,
+};

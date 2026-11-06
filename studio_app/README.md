@@ -100,7 +100,19 @@ own terms (the transition, effect or look by name, with times and values). The O
 critic's score across rounds.
 
 The checkpoint also gates the **look and layers**: whether the edit has its own look, and which
-seconds are bare footage with no graphic or effect.
+seconds are bare footage with no graphic or effect. Further gates catch:
+
+- repeated set-ups;
+- three moves of the same family within 5 s;
+- stacked flashes that blow a hit out to a white card;
+- overlays anchored on a face;
+- music that fades at the loop wrap.
+
+The reviews and the critic also get the measured brightness of the rendered frames, since dark grey is mud on a phone.
+
+**Lessons from the critic.** Every critique's critical and major findings are remembered (House rules page) and sent with every later direction and review, so the studio does not repeat what was marked down.
+
+The song analysis takes the half tempo when busy hi-hats double it. It finds drops where the bass returns, and snaps them onto the downbeat. For each suggested window it lists where the bars and the drop fall on the timeline. A long video added straight to a project is split into shots like a database pack, with a cut detector that also works on black-and-white and night footage.
 
 Everything (projects, media, database, presets, standards, rounds, critiques) is stored in this
 browser's storage for the artifact. It does not sync to other devices, and clearing site data removes
@@ -134,6 +146,26 @@ critique, its write-up, the round 2 composer, the locked editor during the revis
 mastering, and reopening the project after a reload. It writes screenshots and
 the export to `test/out/`. `bigfile.mjs` imports a ~2 GB file with
 its index at the end and reports time-to-ready, JS heap and export time.
+
+```bash
+node test/suite.mjs
+```
+
+The suite has pass/fail checks and exits non-zero if any fail (`ONLY=build,revise,cancel,export,render,units,persist` runs a part). It covers:
+
+- four AI edits at once, one per effort level, while another project is edited;
+- the critic, a revision with numbered notes, an automatic round, and cancel and resume;
+- a layers call that fails twice;
+- an export decoded and measured with ffprobe/ffmpeg (codecs, length, loudness, true peak, picture);
+- every transition, look, effect and text animation rendering and changing the picture;
+- id handling, camera sections, the newer gates, velocity ramps and the critic's lessons;
+- persistence across a reload.
+
+```bash
+LIVE=/path/to/dir MEDIA="pack.mp4,song.wav" MODE=build node test/live.mjs
+```
+
+`live.mjs` runs a real AI edit with every Opus call answered from outside. Each request (its turns and images) is written to `LIVE/req-N.md`, and the reply is read from `LIVE/res-N.txt`, so an agent can stand in for Opus. `MODE=revise` continues with every critic point, and `MODE=export` renders the MP4. It saves the timeline, notes, critique, timings and a filmstrip per round.
 
 ## Layout
 

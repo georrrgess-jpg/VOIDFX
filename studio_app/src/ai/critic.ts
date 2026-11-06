@@ -11,10 +11,10 @@ import { TRANSITION_LABELS } from '../engine/transitions';
 import { FX_LIBRARY } from '../engine/fxlib';
 import { SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { whenMediaIdle } from '../media/library';
-import { getPreset } from '../state/catalog';
+import { addLessons, getPreset } from '../state/catalog';
 import { Critique, CritiqueIssue, Effort, FollowUp, Job } from '../state/types';
 import { projectDuration } from '../state/util';
-import { askSafe, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
+import { askSafe, brightnessNote, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
 import { standardSheets, timelineSheets } from './sheets';
 import type { Workspace } from './workspace';
@@ -209,7 +209,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     follow.length ? `WHAT THIS ROUND WAS ASKED TO FIX (check every item in the frames and the timeline; frames labelled with an item's id show its moment)\n${follow.map(f => `${f.id}${f.at !== undefined ? ` @ ${f.at.toFixed(2)}s` : ''}: ${f.text.slice(0, 320)}${f.plan ? ` | the editor's plan: ${f.plan.slice(0, 200)}` : ''}${f.check ? ` | the editor's own check: ${f.check.slice(0, 160)}` : ''}`).join('\n')}\nGive each item's status in "followUp": fixed (the frames or timeline show it done in full), partly, or not.` : '',
     prevCrit ? `SCORING AGAINST THE LAST ROUND: the last critique scored the edit ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). Score the edit as it is now, starting from that score: every point that is really fixed raises its area and the total (a critical point fixed is worth about +0.6 to +1.0, a major one +0.3 to +0.5, a minor one +0.1 to +0.2); every remaining or new problem holds it down or lowers it. Do not re-judge fixed points from scratch and never ignore a real fix; never inflate either: a fix you cannot see in the frames or the timeline does not count.` : '',
     p.lyrics?.lines.length ? `THE SONG'S LYRICS (from the owner${p.lyrics.timed ? '; song times' : ', untimed'}): check that every caption is a sung line on its time, never invented words\n${p.lyrics.lines.slice(0, 80).map((l, i) => `${p.lyrics!.timed ? `L${i + 1} ${l.t.toFixed(2)} ` : ''}${l.text}`).join('\n')}` : 'NO LYRICS WERE SUPPLIED: any caption that claims to be a sung line is a guess; flag captions that do not read as dialogue, a designed title or a likely sung hook.',
-    `MEASURED\n${metrics}`,
+    `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '')}` : ''}`,
     `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
     music.length ? `MUSIC\n${music.map(m => `${m.id} "${m.name}" ${m.analysis?.bpm ? `${m.analysis.bpm} BPM` : ''}`).join('\n')}` : '',
     `THE TIMELINE (what the studio will render)\n${timelineJson(p).slice(0, 24000)}`,
@@ -233,6 +233,8 @@ Order issues by severity. Up to 14 issues.`,
   });
   const crit = parseCritique(r.text, job.round, projectDuration(p), model, follow.map(f => ({ id: f.id, text: f.text })), prevCrit?.score);
   if (!crit) throw { code: 'invalid_json' };
+  // the studio learns from it: serious findings go into the lessons every later edit is directed with
+  void addLessons(crit.issues.filter(i => i.severity !== 'minor').slice(0, 8).map(i => ({ area: i.area, severity: i.severity as 'critical' | 'major', problem: i.problem, fix: i.fix, project: ws.rec.name })));
   const fixed = crit.followUp?.filter(f => f.status === 'fixed').length || 0;
   io.step('critic', { state: 'done', detail: `${crit.score}/10${prevCrit ? ` (was ${prevCrit.score})` : ''} · ${crit.issues.length} issues${crit.followUp?.length ? ` · ${fixed}/${crit.followUp.length} points fixed` : ''}` });
 

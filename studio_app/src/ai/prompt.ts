@@ -23,13 +23,13 @@ OPERATIONS
 {"op":"track","id":"V3","kind":"video|audio|text","name":".."}  add a track; on an existing id it can set "name", "muted", "hidden"
 {"op":"add","id":"c1","media":"m1","track":"V1","start":0,"in":12.5,"dur":2.0, ...clip fields}
 {"op":"text","id":"t1","track":"T1","start":0.5,"dur":2.0,"text":"..", ...text fields}
-{"op":"set","id":"c1", ...fields to change}  (start, dur, in, track and any clip or text field)
+{"op":"set","id":"c1", ...fields to change}  (start, dur, in, track and any clip or text field). Objects merge: transform, color, style, anim and an effect's params change only the keys you give; kf replaces only the properties you give ("kf":{"scale":null} removes one); "preset" swaps a library effect for another, keeping its timing and params that still apply
 {"op":"remove","id":"c1"}  or  {"op":"remove","ids":["c1","c2"]}
 {"op":"split","id":"c1","at":3.2,"newId":"c1b"}  split at timeline time "at"
 {"op":"sfx","sound":"whoosh","start":2.1,"volume":0.35}  a generated sound effect on an SFX track; start may be before the cut so the sound peaks on it. Sounds: ${SFX.join(', ')} (lengths: whoosh 0.9 s peaking at 0.56 s, swish 0.35 s, impact 1.4 s, hit 0.45 s, boom 2.6 s, riser 2.0 s ending on its peak, subdrop 1.3 s, reverse 1.2 s ending on its peak, glitch 0.5 s, shutter 0.25 s, tick 0.08 s, tapestop 0.9 s, zap 0.75 s, glass 1.2 s (the crack is at its start, the shards ring after), rip 0.55 s peaking at 0.12 s). Materials: glass for a shatter or a lens breaking, rip for a tear, plastic or a zipper, shutter for apertures and blinds, zap for lightning
 {"op":"sounds","volume":0.3}  matched sounds for the designed transitions only (soft joins such as crossfades, dips, slides, pushes and wipes stay silent; at most one every ~0.9 s; replaces earlier automatic sounds). Prefer placing the few sounds that matter yourself.
 {"op":"lyrics","lines":[4,5,6],"text":{"5":"YOU WANTED ME\\nTO *BE*"},"style":{"emphColor":"#ff2b3a"},"transform":{"y":0.25}}  captions for TIMED LYRICS lines (numbered L1, L2… in the lyrics list), each placed on its sung time through the music clip: it maps song time to timeline time, shows the line until the next one (at most ~3.6 s), eases every word in on its own time, uses the house caption style (override with style/anim/transform) and splits the line over two lines (override per line with "text", same words, *emphasis* allowed). Also "from":4,"to":9 instead of "lines"; "music": the music clip id if there are several; "shift": seconds to nudge every line. Running it again for a line replaces that caption. Only available when the owner supplied timed lyrics.
-{"op":"project","camera":{"on":true,"every":"beat","punch":0.055,"kick":1,"decay":0.16,"from":0,"to":24}}  the beat camera: zoom punch and rotation kick on the music's beats ("beat", "half" = every other beat, "downbeat"); video layers only, text stays clean
+{"op":"project","camera":{"on":true,"every":"beat","punch":0.055,"kick":1,"decay":0.16,"sections":[{"from":9,"to":16.8},{"from":18.6,"to":22.8,"punch":0.04,"kick":0.7,"every":"half"}]}}  the beat camera: zoom punch and rotation kick on the music's beats ("beat", "half" = every other beat, "downbeat"); video layers only, text stays clean. "sections" runs it only in those stretches, each with its own punch, kick and every (it rests in holds, freezes and the loop landing between them); or "from"/"to" for one stretch
 Ids you give must be new and unique (letters, digits, - or _).
 After your operations the studio runs two finishing passes and reports them back: every main-track cut within 90 ms of a music beat is moved exactly onto the beat (the text, effects and sounds over it move with it; lyric captions stay on the song), and sound effects are thinned (no two moments within 0.3 s, at most two layers per moment and two moments per second, about three every four seconds overall; automatic sounds go first).
 
@@ -163,6 +163,14 @@ export function mediaCatalog(media: Record<string, MediaInfo>, order: string[]):
       rows.push(`    ${soundLine(m.analysis)}`);
       const wins = m.analysis.bpm ? songWindows(m.analysis, m.duration) : [];
       if (wins.length) rows.push(`    best windows for a ~23 s edit (song in -> out, the drop; strongest first): ${wins.map(w => `${r2(w.in)} -> ${r2(w.out)} (drop at ${r2(w.drop)}, ${Math.round(((w.drop - w.in) / (w.out - w.in)) * 100)}% in)`).join('; ')}`);
+      // the same windows on the timeline, so the plan needs no beat arithmetic: place the music clip with
+      // in = the window's start at timeline 0 and these are where the bars and the drop fall
+      const a = m.analysis;
+      for (const [k, w] of wins.slice(0, 2).entries()) {
+        const bars = a.downbeats.filter(d => d >= w.in - 0.01 && d <= w.out + 0.01).map(d => r2(d - w.in));
+        const beat = a.bpm ? 60 / a.bpm : 0;
+        rows.push(`    window ${k + 1} on the timeline (music clip in=${r2(w.in)} at start 0, dur ${r2(w.out - w.in)}): the drop at ${r2(w.drop - w.in)}; bars (downbeats) at ${bars.join(', ')}${beat ? `; a beat every ${beat.toFixed(3)} s, a half-beat every ${(beat / 2).toFixed(3)} s` : ''}`);
+      }
     }
     else if (m.hasAudio && m.analysisState !== 'done') rows.push('    (sound not analysed)');
   }
@@ -195,6 +203,8 @@ export interface ContextExtras {
   exemplars?: string;
   /** How the critic will judge the edit (for the calls that direct it). */
   canon?: string;
+  /** What the critic kept finding on recent edits. */
+  lessons?: string;
   presetName: string;
   presetPrompt: string;
   standards: string;
@@ -211,6 +221,7 @@ export function contextBlock(ctx: { project: Project; media: Record<string, Medi
     x.exemplars || '',
     x.craft || '',
     x.canon ? `HOW THE EDIT WILL BE JUDGED (the critic scores every round against this; plan to score 8 or more in every area)\n${x.canon}` : '',
+    x.lessons ? `LESSONS FROM THE CRITIC ON RECENT EDITS (its critical and major findings; make sure this edit does not repeat them)\n${x.lessons}` : '',
     x.standards ? `REFERENCE EDITS THE OWNER ADDED AS STANDARDS\n${x.standards}` : '',
     x.knowledge.trim() ? `STUDIO KNOWLEDGE (from the owner; follow it)\n${x.knowledge.trim()}` : '',
     x.presetPrompt.trim() ? `PRESET "${x.presetName}" (the standing brief for this edit)\n${x.presetPrompt.trim()}` : '',

@@ -89,7 +89,11 @@ export function cameraAt(p: Project, media: Record<string, MediaInfo>, t: number
   const cam = p.camera;
   if (!cam?.on) return null;
   if ((cam.from !== undefined && t < cam.from) || (cam.to !== undefined && t > cam.to)) return null;
-  const beats = timelineBeats(p, media).filter(b => cam.every === 'downbeat' ? b.down : cam.every === 'half' ? b.i % 2 === 0 : true);
+  // sections: the camera runs only inside them, each with its own strength
+  const sec = cam.sections?.length ? cam.sections.find(x => t >= x.from && t <= x.to) : undefined;
+  if (cam.sections?.length && !sec) return null;
+  const every = sec?.every || cam.every, punch = sec?.punch ?? cam.punch, kick = sec?.kick ?? cam.kick;
+  const beats = timelineBeats(p, media).filter(b => (!sec || b.t >= sec.from - 1e-6) && (every === 'downbeat' ? b.down : every === 'half' ? b.i % 2 === 0 : true));
   if (!beats.length) return null;
   let lo = 0, hi = beats.length - 1, k = -1;
   while (lo <= hi) { const mid = (lo + hi) >> 1; if (beats[mid].t <= t + 1e-6) { k = mid; lo = mid + 1; } else hi = mid - 1; }
@@ -99,7 +103,7 @@ export function cameraAt(p: Project, media: Record<string, MediaInfo>, t: number
   if (age > decay * 5) return null;
   const amt = Math.exp(-age / decay);
   const sign = k % 2 === 0 ? 1 : -1;
-  return { zoom: 1 + cam.punch * amt, rot: cam.kick * amt * sign, hit: age < 1.5 / p.fps ? 1 : 0 };
+  return { zoom: 1 + punch * amt, rot: kick * amt * sign, hit: age < 1.5 / p.fps ? 1 : 0 };
 }
 
 function applyCamera(tr: Transform, fx: LayerFx, cam: { zoom: number; rot: number; hit: number }, aspect: number): [Transform, LayerFx] {
