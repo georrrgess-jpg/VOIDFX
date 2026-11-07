@@ -96,7 +96,7 @@
 
 **Rules from Studio 1's standards (every edit, both studios):**
 1. **A motion pass on every hook shot** (v10): speed ramps on every hook and montage shot (a burst on each beat, then about 0.3–0.6× flow slow motion between, over the same source range); a camera that moves with the music (about a 5–6% zoom punch and a ±1° rotation kick per beat, with zoom blur and a slight colour split on the hit frames, type kept clean on top); light that reacts to the footage. Plan the speed curve and the camera with the shot list. Flow only where it stays clean (the owner's v104 brief: no visible interpolation artefacts; Dexter edits otherwise hold the source cadence).
-2. **Restore the 720p source** (v10): Studio 1's `tools/sr_prep.py` + `tools/srnet.py`. They run a Real-ESRGAN compact model through ONNX Runtime on the CPU, 2×, on only the band each frame is cropped from, in the background after prep.
+2. **Restore the 720p source** (v10): Studio 1's `tools/sr_prep.py` + `tools/srnet.py` (about 3 s per source frame on the CPU, run in the background after prep). They run a Real-ESRGAN compact model through ONNX Runtime on the CPU, 2×, on only the band each frame is cropped from, in the background after prep.
    - **It is also the fix for the owner's v105 clip-quality note.** Studio 2's v105 note said an AI upscaler needed a GPU; that held for the large model tried, not for this compact one.
    - After the merge, run it on every edit as well as checking `tools/sharpness.py`.
 3. **Lyrics on their sung onsets** (v10): check every word on the isolated vocal (pitch and onsets), not just Whisper, which was up to 1 s off in v10. Studio 2's `tools/lyrics.py` snaps word starts to the vocal envelope; also check pitch onsets by ear.
@@ -112,15 +112,22 @@
     - Studio 2's `qcN.py` now reports it in section 7b: every white-out run (mean luma ≥ 200) and the most flashes in any second, and it fails above 3 flashes a second.
     - v105 measured two white-outs: the torch blind-out (frames 687–692, peak 236) and the loop flare (1360–1372, peak 223). At most 2 flashes a second.
 11. **When the lyrics are explicit, use only a couple of designed titles** (v11: LET'S GO, BOP), not captions.
+**Next Dexter edit, from the Flash studio's notes for us:**
+- Run the motion pass on the montage: speed ramps with flow in-betweens on restored frames, not only the held source cadence.
+- Close the loop seam: make the last frame exactly frame 0's image (in the REVERSE loop, the inside of the disc *is* frame 0, scaled to 1.0 on the last frame).
+- Try the coin flip on a real prop: a Miami Metro badge flipping to a blood slide.
+
 12. **Nothing on faces** (v10, v11, confirmed): lightning, seams, particles, streaks and wipe edges are routed around a face/head box. Particles in front of faces are masked off.
 13. **Packs labelled 4K are usually 720p** (v11, confirmed by Studio 2): check the specs; frame inside insets; keep watermarks out of the crop.
 14. **"Lacklustre" means motion and polish are missing,** not that more overlays are needed (v10, confirmed).
-15. **Props and overlays must land** (v10, confirmed): no glass webs over the frame or the face (v10 rev 4 replaced its glass shatter, as v103 did).
+15. **Transform the picture itself; don't solve a moment with an overlay sitting on the frame** (v10, changed: it widens 'props must land'). No glass webs or hanging shards over the frame or face: v10 rev 4 replaced its glass shatter with TIME PARTICLES (the picture breaks into its own pixels), as v103 replaced its glass with the eye dive.
+16. **Treat any pack's labels as unknown until probed** (v11): check the resolution, cadence and bitrate; frame inside insets; keep watermarks out of the crop.
+17. **Flash discipline means both limits** (v11): flare peaks about 110 mean luma or less, **and** no white-out runs.
 
 **Engines after the merge:** the two studios' scaffolds start from different engines.
 - **Studio 1:** `tools/new_edit.py` copies the v11 engine (v4–v11, 91 transitions plus the audio builder). Its EDL template adds v11's three timing settings: `E_BEAT` (where the beat drops in), `E_DIP` (the dip before the drop) and `E_LOOP` (where the loop set piece starts). Its setup check confirms v11 loads.
 - **Studio 2:** starts from v105 (the v4–v9 engine plus the v103, v104 and v105 toolkits).
-- **The decision:** the engines are separate files and can live side by side. Which one `new_edit.py` uses is the owner's call at merge time; one option is Flash edits from v11 and Dexter edits from v105.
+- **Agreed by both studios (2026-11-07):** Dexter edits start from v105, Flash edits from v11, and shared effects are ported between them through the edit reports. At the merge, `tools/new_edit.py` needs to support both bases.
 
 - **Smooth slow motion vs. interpolation artefacts:** the owner also asked (v104 brief) to *"avoid introducing visible interpolation artifacts."* Use flow-interpolated slow motion only where it stays clean, and check those frames one by one. On fast motion or occlusions, prefer a held 24p cadence, a speed ramp that stays at 1x or faster, or a cut.
 
