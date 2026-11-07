@@ -1403,3 +1403,18 @@ kbd { font: 600 10.5px var(--font-mono); padding: 2px 6px; border-radius: 5px; b
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- editor panels: tiles that lift, section rules, live hints ---------- */
+.panel-sub, .tgroup h3 { position: relative; display: flex; align-items: center; gap: 10px; }
+.panel-sub::after, .tgroup h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-2), transparent); }
+.etile, .tcard, .mcard { transition: transform 0.25s var(--ease-spring), border-color 0.2s, box-shadow 0.25s, background 0.2s; }
+.etile:hover, .tcard:hover, .mcard:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(127, 211, 255, 0.45), 0 0 22px rgba(127, 211, 255, 0.12); }
+.etile:active, .tcard:active, .mcard:active { transform: translateY(-1px) scale(0.98); }
+.etile.is-on { box-shadow: 0 0 0 1px var(--tungsten), 0 0 22px rgba(255, 179, 87, 0.25); }
+.etile canvas { transition: filter 0.25s; }
+.etile:hover canvas { filter: saturate(1.15) brightness(1.08); }
+.top .btn-primary { box-shadow: 0 0 0 1px rgba(184, 236, 255, 0.4), 0 6px 22px rgba(127, 211, 255, 0.3); }
+.th.is-main { background: linear-gradient(90deg, rgba(127, 211, 255, 0.08), transparent); }
+.tl-row.is-main { background: linear-gradient(180deg, rgba(127, 211, 255, 0.045), rgba(127, 211, 255, 0.02)); }
+.clip-label { font-weight: 600; letter-spacing: 0.01em; }
+.insp section, .insp .sec { border-radius: 10px; }
