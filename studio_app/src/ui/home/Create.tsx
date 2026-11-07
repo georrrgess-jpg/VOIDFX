@@ -98,6 +98,8 @@ export function CreateSection() {
         </div>
       )}
 
+      <div class="create-grid">
+      <div class="create-steps">
       <section class="cstep">
         <h2><span class="cstep-n">1</span>Preset</h2>
         <div class="preset-row">
@@ -201,7 +203,7 @@ export function CreateSection() {
           <label class={`toggle${critic ? ' on' : ''}`}>
             <input type="checkbox" checked={critic} onChange={() => { setCritic(!critic); if (critic) setAuto(0); }} />
             <span class="toggle-t" aria-hidden="true" />
-            <span><b>Send it to the critic automatically</b><em>A harsh review against your standards and the best TikTok edits, with a write-up for the next round.</em></span>
+            <span><b>Send it to the critic automatically</b><em>An exacting review against your standards and the best TikTok edits, with a write-up for the next round that never contradicts your own notes.</em></span>
           </label>
           <div class={`after-auto${critic ? '' : ' off'}`}>
             <span class="fld-l">Then</span>
@@ -221,9 +223,56 @@ export function CreateSection() {
         <p class="muted">Runs in the background on your Claude usage. Opus sees contact sheets and the sound analysis; closing the studio stops the job (you can resume it).</p>
         <button type="button" class="cta cta-opus cta-xl" disabled={!canGo} onClick={() => void go()}>{Icon.spark}<span>{busy ? 'Starting…' : opusOk ? 'Create edit in the background' : 'Create the project'}</span></button>
       </section>
+      </div>
+      <Summary preset={preset} notes={notes} lyrics={lyrics} files={files.length} bytes={totalBytes} lib={useLib ? (libMode === 'auto' ? readyLib.length : picked.length) : 0} libAuto={libMode === 'auto'} std={stdIds.length}
+        effort={effort} critic={critic} auto={critic ? auto : 0} canGo={canGo} busy={busy} opusOk={opusOk} go={() => void go()} />
+      </div>
     </div>
   );
 }
+
+const ETA: Record<Effort, [number, number]> = { low: [3, 5], medium: [7, 10], high: [12, 18], extra: [20, 30] };
+
+/** Your edit at a glance: what is ready, what is missing, how long it will take, and the start button. */
+function Summary(o: { preset?: Preset; notes: string; lyrics: string; files: number; bytes: number; lib: number; libAuto: boolean; std: number; effort: Effort; critic: boolean; auto: number; canGo: boolean; busy: boolean; opusOk: boolean; go: () => void }) {
+  const ly = useMemo(() => (o.lyrics.trim() ? parseLyrics(o.lyrics) : null), [o.lyrics]);
+  const [a, b] = ETA[o.effort];
+  const extra = (o.critic ? 4 : 0) + o.auto * 14;
+  const items: { ok: boolean | 'warn'; label: string; sub: string }[] = [
+    { ok: !!o.preset, label: o.preset ? o.preset.name : 'No preset', sub: o.preset ? `${o.preset.houseRules ? 'House rules' : 'Open brief'} · ${o.preset.duration[0]}–${o.preset.duration[1]} s` : 'Pick one' },
+    { ok: o.notes.trim().length > 20 ? true : 'warn', label: o.notes.trim() ? 'Your notes' : 'No notes yet', sub: o.notes.trim() ? `${o.notes.trim().split(/\s+/).length} words` : 'The concept, the moments you want: the more you say, the closer the first draft' },
+    { ok: o.files + o.lib > 0, label: 'Material', sub: o.files || o.lib ? `${o.files ? `${o.files} file${o.files > 1 ? 's' : ''} (${fmtBytes(o.bytes)})` : ''}${o.files && o.lib ? ' + ' : ''}${o.lib ? (o.libAuto ? `Opus picks from ${o.lib} database items` : `${o.lib} picked from the database`) : ''}` : 'Attach files or use the database' },
+    { ok: ly ? (ly.timed ? true : 'warn') : 'warn', label: ly ? (ly.timed ? 'Synced lyrics' : 'Lyrics without times') : 'No lyrics', sub: ly ? (ly.timed ? `${ly.lines.length} timed lines: captions on the sung words, checked word for word` : 'Titles only; paste LRC for timed captions') : 'No sung captions; titles of one or two words only' },
+    { ok: true, label: `${o.std} standard${o.std === 1 ? '' : 's'} to beat`, sub: 'Plus the approved voidfx benchmarks' },
+  ];
+  return (
+    <aside class="create-sum glass spot" aria-label="Your edit">
+      <p class="desk-eyebrow">Your edit</p>
+      <ul class="csum-list">
+        {items.map(x => (
+          <li class={x.ok === true ? 'ok' : x.ok === 'warn' ? 'warn' : 'bad'}>
+            <span class="csum-ic" aria-hidden="true">{x.ok === true ? Icon.check : x.ok === 'warn' ? '!' : '×'}</span>
+            <span><b>{x.label}</b><em>{x.sub}</em></span>
+          </li>
+        ))}
+      </ul>
+      <div class="csum-eta">
+        <span class="stat-k">Estimated time</span>
+        <span class="csum-eta-v">{a + extra}–{b + extra}<small> min</small></span>
+        <span class="muted small">{EFFORT_STEPS[o.effort]}{o.critic ? ' · then the critic' : ''}{o.auto ? ` · ${o.auto} automatic revision${o.auto > 1 ? 's' : ''}` : ''}</span>
+      </div>
+      <button type="button" class="cta cta-opus csum-go" disabled={!o.canGo} onClick={o.go}>{Icon.spark}<span>{o.busy ? 'Starting…' : o.opusOk ? 'Create edit' : 'Create the project'}</span></button>
+      {!o.canGo && !o.busy && <p class="muted small">{!o.preset ? 'Pick a preset.' : 'Add material to start.'}</p>}
+    </aside>
+  );
+}
+
+const EFFORT_STEPS: Record<Effort, string> = {
+  low: 'One planning pass',
+  medium: 'The cut, then the design on its storyboard',
+  high: 'Cut, design, workshop on the custom elements, a deep review',
+  extra: 'Cut, design, two workshop passes, two deep reviews',
+};
 
 function LyricsStatus({ text }: { text: string }) {
   const l = useMemo(() => parseLyrics(text), [text]);

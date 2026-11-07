@@ -162,6 +162,11 @@ await ctx.addInitScript(() => {
             ops.push({ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } });
             return reply(JSON.stringify({ message: `Revised ${ids.join(', ')}.`, notes: ids.map(id => ({ id, plan: 'do it' })), ops }), opts);
           }
+          if (last.includes('YOUR CUSTOM ELEMENTS, RENDERED')) {
+            const els = [...last.matchAll(/^ELEMENT (\S+) \(/gm)].map(m => m[1]);
+            window.__workshop = [...(window.__workshop || []), { els, images: call.images, effort: opts.effort, standard: last.includes('THE CRAFT STANDARD') }];
+            return reply(JSON.stringify({ message: 'Rebuilt the emblem with layers.', elements: els.map(id => ({ id, score: 6, frames: 'flat' })), ops: els.filter(id => /emb/.test(id)).map(id => ({ op: 'set', id, glow: 0.5 })) }), opts);
+          }
           if (/REVIEW \d OF/.test(last)) {
             const ids = [...last.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
             window.__reviews = [...(window.__reviews || []), last.slice(0, 40)];
@@ -250,6 +255,8 @@ if (on('build')) {
   check('the design is told which shots have nothing on them', calls.design.some(d => d.idle));
   check('the design runs at the job effort', calls.design.every(d => d.effort !== 'low'), JSON.stringify(calls.design.map(d => d.effort)));
   check('the reviews measure every transition and see the close-ups', calls.measured && calls.close);
+  const wk = await S(() => window.__workshop || []);
+  check('the workshop shows Opus its custom elements rendered large, against the craft standard', wk.length >= 2 && wk.every(w => w.standard && w.images >= 1 && w.els.length >= 1 && w.effort !== 'low'), JSON.stringify(wk));
   check('a broken custom effect is fixed by the review', calls.compile);
   check('prompts stay under the limit', calls.maxChars < 250 * 1024, `${calls.maxChars} chars`);
   writeFileSync(join(OUT, 'suite-build-jobs.json'), JSON.stringify(jobs, null, 1));
@@ -420,6 +427,27 @@ if (on('render')) {
 
 // ---------- 5b. operations and gates added from the live test edit ----------
 if (on('units')) {
+  // the chat-quality example elements in Opus's reference compile and render
+  const refSrc = readFileSync(join(ROOT, 'src/ai/prompt.ts'), 'utf8');
+  const examples = ['A stamped emblem', 'Blood running down the glass', 'A luminol sweep'].map(k => { const line = refSrc.split('\n').find(l => l.includes(k)) || ''; return { k, code: line.slice(line.indexOf('vec4 effect')).trim() }; });
+  const ex = await page.evaluate(async examples => {
+    const { store, applyOps, customIssues, renderStills } = window.__voidfx;
+    const media = store.state.media, ids = store.state.mediaOrder;
+    const vid = ids.find(id => media[id].kind === 'video');
+    const out = [];
+    const cv = document.createElement('canvas'); const W = 203, H = 360; cv.width = W * 4; cv.height = H * examples.length; const g = cv.getContext('2d');
+    for (let r = 0; r < examples.length; r++) {
+      const e = examples[r];
+      const res = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', media: vid, track: 'V1', in: 0, dur: 3, focus: { x: 0.5, y: 0.42 } }, { op: 'shader', id: 'ex', start: 0.5, dur: 1.6, code: e.code, at: { x: 0.5, y: 0.72 } }], media);
+      const bad = customIssues(res.project);
+      const frames = await renderStills(res.project, [0.6, 0.85, 1.2, 1.8], H, undefined, media);
+      frames.forEach((f, c) => { if (f) g.drawImage(f, c * W, r * H, W, H); });
+      out.push({ k: e.k, len: e.code.length, bad });
+    }
+    return { out, sheet: cv.toDataURL('image/jpeg', 0.8) };
+  }, examples);
+  writeFileSync(join(OUT, 'examples.jpg'), Buffer.from(ex.sheet.split(',')[1], 'base64'));
+  check('the example elements in the reference compile', ex.out.every(x => x.len > 200 && !x.bad.length), JSON.stringify(ex.out));
   const u = await page.evaluate(async () => {
     const { store, applyOps, runChecks, idleShots, transitionReport, layerReport, renderStills, lyricGuard, parseLyrics, addLessons, clearLessons, lessonsText } = window.__voidfx;
     const media = store.state.media;

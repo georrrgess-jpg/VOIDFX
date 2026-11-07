@@ -12,6 +12,8 @@ export function LibrarySection() {
   const [est, setEst] = useState<{ used: number; quota: number } | null>(null);
   const [role, setRole] = useState<LibraryRole | ''>('');
   const [tag, setTag] = useState('');
+  const [q, setQ] = useState('');
+  const [sort, setSort] = useState<'new' | 'name' | 'long' | 'big'>('new');
   const [defRole, setDefRole] = useState<LibraryRole | 'auto'>('auto');
   const [defTags, setDefTags] = useState('');
   const [drag, setDrag] = useState(false);
@@ -24,7 +26,10 @@ export function LibrarySection() {
     return () => clearInterval(t);
   }, [items]);
   const tags = [...new Set(items.flatMap(i => i.tags))].sort();
-  const shown = items.filter(i => (!role || i.role === role) && (!tag || i.tags.includes(tag)));
+  const needle = q.trim().toLowerCase();
+  const shown = items.filter(i => (!role || i.role === role) && (!tag || i.tags.includes(tag)) && (!needle || i.name.toLowerCase().includes(needle) || i.tags.some(t => t.includes(needle))))
+    .sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'long' ? b.duration - a.duration : sort === 'big' ? b.size - a.size : (b.added || 0) - (a.added || 0));
+  const totals = { packs: items.filter(i => i.role === 'pack').length, shots: items.reduce((n, i) => n + (i.shots || 0), 0), music: items.filter(i => i.role === 'music').length, mins: items.reduce((n, i) => n + (i.role !== 'music' ? i.duration : 0), 0) / 60 };
   const add = (files: FileList | File[]) => {
     void requestPersistence();
     void addToLibrary(files, { role: defRole === 'auto' ? undefined : defRole, tags: defTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) });
@@ -44,10 +49,22 @@ export function LibrarySection() {
         </div>
         <p class="muted">Drop files here. Names with Dexter or Flash words are tagged automatically.</p>
       </div>
+      {items.length > 0 && (
+        <div class="lstats">
+          <div class="stat spot" style={{ '--c': 'var(--ice)' } as any}><span class="stat-k">Scene packs</span><span class="stat-v">{totals.packs}<small>{totals.shots} shots</small></span></div>
+          <div class="stat spot" style={{ '--c': '#52d6a0' } as any}><span class="stat-k">Footage</span><span class="stat-v">{totals.mins.toFixed(totals.mins < 10 ? 1 : 0)}<small>minutes</small></span></div>
+          <div class="stat spot" style={{ '--c': 'var(--tungsten)' } as any}><span class="stat-k">Songs</span><span class="stat-v">{totals.music}<small>analysed</small></span></div>
+        </div>
+      )}
       <div class="toolbar-row">
+        <label class="lsearch">{Icon.search}<input type="search" value={q} placeholder="Search names and tags" aria-label="Search the database" onInput={e => setQ((e.target as HTMLInputElement).value)} /></label>
+        <select class="lsort" aria-label="Sort" value={sort} onChange={e => setSort((e.target as HTMLSelectElement).value as any)}>
+          <option value="new">Newest first</option><option value="name">Name</option><option value="long">Longest</option><option value="big">Largest</option>
+        </select>
         <Seg value={role} onChange={setRole} small options={ROLES.map(r => ({ value: r.value, label: `${r.label}${r.value ? ` ${items.filter(i => i.role === r.value).length}` : ` ${items.length}`}` }))} />
         {tags.length > 0 && <div class="chips-row">{['', ...tags].map(t => <button type="button" class={`chipbtn${tag === t ? ' is-on' : ''}`} onClick={() => setTag(t)}>{t || 'All tags'}</button>)}</div>}
       </div>
+      {items.length > 0 && !shown.length && <p class="muted">Nothing matches{needle ? ` “${q}”` : ''}.</p>}
       {!items.length && <div class="empty glass"><p class="empty-t">The database is empty</p><p>Add the scene packs and songs you edit with. Opus can then build edits from them without you attaching files each time.</p></div>}
       <div class="lgrid">
         {shown.map((it, i) => (

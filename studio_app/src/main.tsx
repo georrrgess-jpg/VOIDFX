@@ -4,7 +4,7 @@ import { enqueue, loadJobs, resumeJob, setParallelLimit, startAiEdit, stopJob } 
 import { loadLogo } from './engine/logo';
 import { player } from './engine/player';
 import { runtime } from './media/library';
-import { addLessons, addToLibrary, blankPreset, clearLessons, getPreset, lessonsText, listLibrary, listPresets, loadKnowledge, loadLessons, savePreset } from './state/catalog';
+import { addLessons, addToLibrary, blankPreset, clearLessons, getPreset, lessonsText, listLibrary, listPresets, loadKnowledge, loadLessons, loadTaste, savePreset } from './state/catalog';
 import { idleShots, runChecks } from './engine/qc';
 import { lyricGuard } from './engine/lyricguard';
 import { parseLyrics } from './state/lyrics';
@@ -29,6 +29,7 @@ void (async () => {
   await migrateLegacy();
   await loadKnowledge();
   await loadLessons();
+  await loadTaste();
   await loadJobs();
   store.set(s => ({ catalogRev: s.catalogRev + 1 }));
   void requestPersistence();

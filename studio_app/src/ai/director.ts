@@ -20,7 +20,7 @@ import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { TRANSITION_LABELS } from '../engine/transitions';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
-import { getPreset, lessonsText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
+import { addTaste, getPreset, lessonsText, tasteText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
 import { addTransitionSounds, applyOps as applyOpsRaw, lastPruned, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
 import { customIssues } from '../engine/custom';
 import { finishPass } from '../engine/finish';
@@ -29,7 +29,7 @@ import { store } from '../state/store';
 import { ASPECTS, Effort, Job, JobStep, MediaInfo, NoteCheck, Project, Round, TransitionType } from '../state/types';
 import { deepClone, projectDuration } from '../state/util';
 import { ContextExtras, contextBlock, parseJson, parseReply } from './prompt';
-import { FrameStat, libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
+import { elementSheet, FrameStat, libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
 import { layerReport, storyboardTimes, transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 import { lyricsText, parseLyrics } from '../state/lyrics';
@@ -289,6 +289,80 @@ export function roundNotes(brief: string, fromCritic?: string[]): NoteCheck[] {
   return notes.slice(0, 24);
 }
 
+/** Every instruction the owner wrote, round by round: binding on the director and the critic. */
+export function ownerLedger(rounds: Round[], extra?: { n: number; brief: string }): string {
+  const own = (b?: string) => !!b && !!b.trim() && !/^\s*Automatic round/i.test(b) && b !== '(edited by hand)';
+  const items = rounds.filter(r => own(r.brief) && r.n !== extra?.n).map(r => `R${r.n} (${r.kind === 'create' ? 'the brief' : 'revision'}): ${r.brief.replace(/\s*\n\s*/g, ' ').slice(0, 900)}`);
+  if (extra && own(extra.brief)) items.push(`R${extra.n} (this round): ${extra.brief.replace(/\s*\n\s*/g, ' ').slice(0, 900)}`);
+  return items.length ? `THE OWNER'S DECISIONS ACROSS ROUNDS (binding: every round keeps them; where two conflict, the later one wins; a critic point that would undo or contradict one of them is not carried out)\n${items.join('\n')}` : '';
+}
+
+/** What every custom element must reach: how the owner's chat edits built theirs. */
+export const CRAFT_STANDARD = `THE CRAFT STANDARD FOR CUSTOM ELEMENTS (how the owner's chat edits built theirs; every element here must meet it)
+- LAYERED, never one flat shape: a core, a soft glow or bloom around it, texture inside it (noise, grain, fibres, scratches, refraction), and its effect on the picture around it (light spill on frame() near it, a shadow, a ripple or refraction of the frame under it).
+- LIT LIKE THE SHOT: colours taken from the frame and the look's palette; highlights that roll off; "add" blend for anything that emits light; no flat fills, no pure saturated primaries, no clip-art.
+- ANIMATED WITH INTENT: anticipation (a small wind-up), the main move landing on the beat with an eased curve (easeOutBack, easeOutExpo, easeInOutCubic; never linear), then follow-through and settle; secondary motion trailing the main move (particles, debris, drips, flicker, a decaying glow); alive for its whole life, nothing frozen between keys.
+- PLACED FOR A PHONE: big enough to read at 9:16, anchored on the real object in the shot (read off the ruler), never over a face.
+- FINISHED: antialiased edges (smoothstep across 0.002-0.004 in aspectUv units), smear or motion blur on fast moves, grain matched to the look, it reads in under half a second and leaves before it outstays the moment.
+A score of 8 means it would sit in one of the owner's chat edits (v6 WARMPOP, v7 HIM ALL ALONG, v10 LET IT HAPPEN) without looking cheaper than the rest.`;
+
+/** The custom elements worth a workshop: Opus's own effects and graphics, longest and most central first. */
+function workshopPick(p: Project, max: number, only?: Set<string>): Project['clips'] {
+  const lookIds = new Set(p.tracks.filter(t => t.role === 'look').map(t => t.id));
+  return p.clips.filter(c => ((c.kind === 'shader' && !c.preset && c.code) || (c.kind === 'graphic' && c.svg)) && !lookIds.has(c.track) && c.span !== 'all' && c.dur >= 0.2 && (!only || only.has(c.id)))
+    .sort((a, b) => b.dur - a.dur).slice(0, max);
+}
+
+/**
+ * The chat loop inside the studio: each signature custom element rendered large through its whole
+ * life next to the shot without it; Opus scores it against the craft standard and rebuilds anything
+ * under 8 (Extra looks twice). This is where the custom animations stop being first drafts.
+ */
+async function workshop(ws: Workspace, io: JobIO, o: { preset: Preset; standards: Standard[]; effort: Effort; turns: Turn[]; only?: Set<string> }): Promise<{ applied: number; issues: string[] }> {
+  const cfg = EFFORTS[o.effort];
+  const passes = o.effort === 'extra' ? 2 : 1;
+  let applied = 0;
+  const issues: string[] = [];
+  let only = o.only;
+  for (let k = 1; k <= passes; k++) {
+    const els = workshopPick(ws.project, o.effort === 'extra' ? 4 : 3, only);
+    if (!els.length) { io.step('workshop', { state: k === 1 ? 'skip' : 'done', detail: k === 1 ? 'no custom elements to refine' : `${applied} changes` }); break; }
+    io.step('workshop', { state: 'run', detail: `rendering ${els.length} element${els.length > 1 ? 's' : ''} large${passes > 1 ? ` (pass ${k}/${passes})` : ''}` });
+    const sheets: Sheet[] = [];
+    for (const c of els) { const sh = await elementSheet(ws.project, ws.media(), c.id, io.signal).catch(() => null); if (sh) sheets.push(sh); }
+    const listing = els.map(c => {
+      const body = c.kind === 'shader' ? `code: ${c.code}` : (c.svg || '').length > 7000 ? `svg (${(c.svg || '').length} chars; rewrite it from scratch if it needs work)` : `svg: ${c.svg}`;
+      return `ELEMENT ${c.id} (${c.kind}, ${f2(c.start)}-${f2(c.start + c.dur)} s, blend ${c.blend || 'normal'}${c.transform ? `, transform ${JSON.stringify(c.transform)}` : ''}${c.kf ? `, kf ${JSON.stringify(c.kf).slice(0, 300)}` : ''}${c.reveal ? `, reveal ${JSON.stringify(c.reveal)}` : ''})\nunder it: ${clipsAt(ws.project, c.start + c.dur / 2)}\n${body}`;
+    }).join('\n\n');
+    const msg = `WORKSHOP${passes > 1 ? ` ${k} OF ${passes}` : ''}: YOUR CUSTOM ELEMENTS, RENDERED. Each image is one element rendered large through its life and the same moment without it. Judge each one the way you would in a chat edit, on the rendered frames, not on what the code intends.
+${CRAFT_STANDARD}
+For each element: score it 0-10 against the standard and name what the frames show (flat, static, too small, unreadable, drawn-looking, on the face, clutter, does not show, wrong colour, ends abruptly). Rebuild every element under 8 with "set" (new code or svg, and kf, reveal, dur, transform, blend as needed) to a finished version that clears 8: more layers, a real light interaction with frame(), eased staged motion, secondary motion. If an element cannot carry its moment, remove it and build that moment with a {"op":"piece"} or a better element. Keep the timing on the music.
+${listing}
+Reply with only JSON, compact: {"message": "what you changed", "elements": [{"id": "e1", "score": 0-10, "frames": "what the frames show"}], "ops": [...]}`;
+    const rest: Turn[] = [...o.turns.slice(1), { role: 'user', content: msg }];
+    const ctx = fitContext(x => contextBlock(ws.ctx, sheets.map(s => s.caption), undefined, x), extrasFor(o.preset, o.standards), inputBytes(rest));
+    io.step('workshop', { detail: 'Opus is looking at its elements…' });
+    let r: { text: string };
+    try { r = await askSafe(io, [{ role: 'user', content: ctx }, ...rest], sheets, cfg.review, 'workshop', t => `rebuilding… ${countOps(t)} operations`); }
+    catch (e: any) { if (fatal(e, io)) throw e; io.step('workshop', { state: 'skip', detail: `could not run: ${errText(e).code}` }); break; }
+    const rep = parseReply(r.text);
+    const v: any = parseJson(r.text);
+    const scores: number[] = Array.isArray(v?.elements) ? v.elements.map((x: any) => Number(x?.score)).filter((n: number) => Number.isFinite(n)) : [];
+    o.turns.push({ role: 'user', content: msg.slice(0, 1500) + '…' }, { role: 'assistant', content: compactReply(r.text) });
+    if (rep?.ops.length) {
+      const res = applyOps(ws.project, rep.ops, ws.media());
+      ws.setProject(o.preset.houseRules ? withSounds(res.project, ws.media()) : res.project);
+      await ws.save();
+      applied += res.applied;
+      issues.push(...res.issues);
+      only = new Set(res.touched);
+    }
+    io.step('workshop', { state: k === passes || !rep?.ops.length ? 'done' : 'run', detail: `${applied} changes${scores.length ? ` · elements scored ${scores.map(n => n.toFixed(0)).join(', ')} before the rebuild` : ''}` });
+    if (!rep?.ops.length || (scores.length && Math.min(...scores) >= 8)) break;
+  }
+  return { applied, issues };
+}
+
 /** What is on screen at t: the shot, the transition into it, and every layer over it (for rebuilding a moment). */
 function clipsAt(p: Project, t: number): string {
   const main = p.tracks.find(x => x.main)?.id;
@@ -532,6 +606,7 @@ export function extrasFor(preset: Preset, standards: Standard[], checks?: string
     exemplars: o.exemplars && preset.houseRules ? EXEMPLARS : '',
     canon: o.canon ? CRITIC_CANON : '',
     lessons: o.canon ? lessonsText() : '',
+    taste: tasteText(),
     presetName: preset.name,
     presetPrompt: preset.prompt,
     standards: standardsText(standards),
@@ -858,6 +933,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
       ...(twoStage(job.effort) ? [{ id: 'cut', label: 'Opus directs and cuts: concept, look, song, shots, plan', state: 'wait' as const }, { id: 'board', label: 'Render a storyboard of the cut', state: 'wait' as const }, { id: 'design', label: 'Opus designs on the frames: transitions, set pieces, text, effects, sound', state: 'wait' as const }] : [{ id: 'plan', label: 'Opus plans the edit', state: 'wait' as const }]),
       { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
       { id: 'check', label: 'Run the checkpoint', state: 'wait' },
+      ...(reviews ? [{ id: 'workshop', label: 'Workshop: Opus refines its custom elements, rendered large', state: 'wait' as const }] : []),
       ...rev,
     ];
   }
@@ -867,6 +943,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
     { id: 'plan', label: `Opus works through every note of round ${job.round}`, state: 'wait' as const },
     { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
     { id: 'check', label: 'Run the checkpoint', state: 'wait' },
+    ...(reviews ? [{ id: 'workshop', label: 'Workshop: Opus refines the elements it changed', state: 'wait' as const }] : []),
     ...rev,
   ];
 }
@@ -885,6 +962,7 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   let model: string | undefined;
   const io2: JobIO = { ...io, model: m => { model = m; io.model(m); } };
   const notes = roundNotes(req.notes || '');
+  void addTaste(req.notes || '', ws.rec.name, 'create');
 
   // the preset sets the format before anything is planned
   const [w, h] = ASPECTS[preset.aspect] || ASPECTS['9:16'];
@@ -997,6 +1075,10 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   let checks = await checkpoint(ws, preset, true);
   const failing = checks.filter(c => c.status === 'fail' || c.status === 'warn').length;
   io.step('check', { state: 'done', detail: failing ? `${failing} to look at` : 'all gates pass' });
+  if (cfg.reviews) {
+    const wk = await workshop(ws, io2, { preset, standards, effort, turns });
+    if (wk.applied) { adjusted.push(...wk.issues); checks = await checkpoint(ws, preset, true); }
+  }
 
   const rv = await reviewPasses(ws, io2, { preset, standards, effort, turns, res: { ...res, issues: adjusted }, checks, mediaImages: images.length > 0, notes, revision: false, lost });
   checks = rv.checks;
@@ -1020,6 +1102,7 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   if (job.lyrics?.trim()) ws.setProject({ ...ws.project, lyrics: parseLyrics(job.lyrics) });
   const brief = job.brief?.trim() || '';
   const notes = roundNotes(brief, job.fromCritic);
+  void addTaste(brief, ws.rec.name, 'revise');
 
   io.step('look', { state: 'run' });
   const maxImg = maxImagesFor(effort);
@@ -1055,6 +1138,8 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
     auto && lastCrit?.brief ? `THE CRITIC'S WRITE-UP (context for the notes)\n${lastCrit.brief}` : '',
     lastCrit ? `THE CRITIC'S LAST SCORE: ${lastCrit.score}/10 ("${lastCrit.headline}"); areas from weakest: ${weakest}. Raise the weakest areas with real changes; the critic checks every note again and scores the result.` : '',
     past ? `EARLIER ROUNDS\n${past}` : '',
+    ownerLedger(rounds),
+    'WHEN A CRITIC NOTE CONFLICTS WITH THE OWNER: the owner wins. Write no operations for that note, give it the plan "skipped: conflicts with the owner\'s R# note" and keep what the owner asked for.',
     lyricsBrief(ws.project.lyrics),
     'REBUILD, DO NOT PATCH. For every note about a moment, remove what makes it weak (the transition, the layers, the text listed at its time) and build the moment again properly; a layer added on top of a broken or pointless moment is not a fix, and a weak transition is replaced with a different designed move (or a clean cut on the beat), never kept and dressed up. A note about a whole area (the hook, the look, the motion, the loop) gets a change big enough to move that area\'s score by a point. Keep what the critic called a strength. The studio renders every note\'s moment after your changes and checks that the frame changed. The first images are frames rendered from the edit as it stands (frames labelled with a note id show that note\'s moment); the rest are contact sheets of the media for finding better shots.',
   ].filter(Boolean).join('\n\n');
@@ -1083,6 +1168,10 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   let checks = await checkpoint(ws, preset, true);
   const failing = checks.filter(c => c.status === 'fail' || c.status === 'warn').length;
   io.step('check', { state: 'done', detail: failing ? `${failing} to look at` : 'all gates pass' });
+  if (cfg.reviews && res.touched.length) {
+    const wk = await workshop(ws, io2, { preset, standards, effort, turns, only: new Set(res.touched) });
+    if (wk.applied) { adjusted.push(...wk.issues); checks = await checkpoint(ws, preset, true); }
+  } else if (cfg.reviews) io.step('workshop', { state: 'skip', detail: 'no elements changed this round' });
 
   const rv = await reviewPasses(ws, io2, { preset, standards, effort, turns, res: { ...res, issues: adjusted }, checks, mediaImages: footage.length > 0, notes, revision: true, lost });
   checks = rv.checks;

@@ -151,6 +151,33 @@ The checkpoint also flags clutter (more than four layers starting within half a 
 graphic and shader is rendered with and without itself. A layer that does not show, or that turns a lit
 frame into a white or black card, is listed for the review and the critic.
 
+**The element workshop.** This is the chat loop, inside the studio. After the design, each of Opus's
+own effects and graphics is rendered large through its whole life (six frames), next to the same
+moment without it. Opus scores each against a craft standard:
+
+- layered, not flat;
+- lit like the shot;
+- anticipation, an eased main move and follow-through;
+- secondary motion;
+- placed for a phone;
+- finished edges.
+
+It rebuilds every element under 8. High runs one pass, Extra two, and revisions workshop the elements
+they changed.
+
+**The animation toolkit.** Custom effects get staged timing (`stage`, `envelope`), easing with
+overshoot (`easeOutBack`, `easeOutExpo`, `easeOutElastic`), antialiased shapes and strokes, `sparks`,
+`smoke`, `lightSpill` and `refractFrame`. Opus also gets three complete example elements built to the
+chat edits' standard, each compiled and rendered by the tests: a stamped emblem, blood running down the
+glass, and a luminol sweep.
+
+**Your notes are binding and remembered.** Every instruction you write in any round is listed for
+every later round, and for the critic, as a binding decision. The critic never writes a point that
+contradicts one. When a critic point conflicts with you, Opus follows you and marks the point
+skipped. The critic also sees its own points from the last round, so it does not flip-flop. Every note
+you write, in any project, is remembered and sent with every later edit as your taste in your own
+words.
+
 **The lyric guard.** After every Opus pass, each caption Opus wrote is checked against the owner's
 lyrics:
 

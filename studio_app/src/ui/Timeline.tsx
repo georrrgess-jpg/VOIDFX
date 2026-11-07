@@ -341,6 +341,7 @@ export function Timeline() {
         </div>
         <div class="tl-ruler" onPointerDown={e => { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); player.seek(timeAt(e.clientX)); gesture.current = { kind: 'scrub', started: true }; }} onPointerMove={onPointerMove as any} onPointerUp={onPointerUp}>
           <canvas ref={rulerRef} />
+          <CriticMarks zoom={zoom} left={view.left} />
           <PlayheadHead zoom={zoom} left={view.left} />
         </div>
         <div class="tl-heads">
@@ -533,3 +534,19 @@ function ClipArt({ clip: c, zoom, h, view, m, rev }: { clip: Clip; zoom: number;
   return <canvas ref={ref} class="clip-art" style={{ left: `${visL}px`, width: `${w}px`, height: `${h}px` }} />;
 }
 
+/** The latest critique's points as markers on the ruler: hover for the point, click to jump there. */
+function CriticMarks({ zoom, left }: { zoom: number; left: number }) {
+  const rounds = useStore(s => s.rounds);
+  const crit = [...rounds].reverse().find(r => r.critique)?.critique;
+  if (!crit) return null;
+  const marks = crit.issues.filter(i => i.at !== undefined).slice(0, 24);
+  return (
+    <>
+      {marks.map(i => (
+        <button type="button" class={`cmark s-${i.severity}`} style={{ left: `${i.at! * zoom - left}px` }} title={`Critic (${i.severity}, ${i.area}) at ${i.at!.toFixed(2)} s: ${i.problem}${i.fix ? `\nFix: ${i.fix}` : ''}`}
+          aria-label={`Critic point at ${i.at!.toFixed(2)} seconds: ${i.problem}`}
+          onPointerDown={e => { e.stopPropagation(); player.seek(i.at!); }} />
+      ))}
+    </>
+  );
+}

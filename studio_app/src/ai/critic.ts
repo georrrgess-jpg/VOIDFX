@@ -11,10 +11,10 @@ import { TRANSITION_LABELS } from '../engine/transitions';
 import { FX_LIBRARY } from '../engine/fxlib';
 import { SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { whenMediaIdle } from '../media/library';
-import { addLessons, getPreset } from '../state/catalog';
+import { addLessons, getPreset, tasteText } from '../state/catalog';
 import { Critique, CritiqueIssue, Effort, FollowUp, Job } from '../state/types';
 import { projectDuration } from '../state/util';
-import { askSafe, brightnessNote, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
+import { askSafe, brightnessNote, JobIO, maxImagesFor, ownerLedger, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
 import { standardSheets, timelineSheets } from './sheets';
 import { PIECES } from '../state/pieces';
@@ -209,6 +209,9 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     standards.length ? `REFERENCE EDITS THE OWNER ADDED AS STANDARDS\n${standardsText(standards)}` : '',
     `PRESET "${preset.name}": ${preset.prompt || preset.description}`,
     last ? `WHAT THE OWNER ASKED FOR IN ROUND ${last.n}: ${last.brief || '(no extra notes)'}${last.fromCritic?.length ? `\nCritic points passed on for that round:\n- ${last.fromCritic.join('\n- ')}` : ''}${last.summary ? `\nTHE EDITOR (Opus) SAYS IT DID: ${last.summary}` : ''}` : '',
+    ownerLedger(rounds) ? `${ownerLedger(rounds)}\nNever write an issue or a fix that undoes or contradicts these; where the owner chose something (a song section, a look, a shot, a text style), judge how well it is done, not whether it was chosen. A point that conflicts with them is left out.` : '',
+    tasteText() ? `THE OWNER'S OWN NOTES ON RECENT EDITS (their taste, across projects)\n${tasteText(3000)}` : '',
+    prevCrit?.issues?.length ? `YOUR POINTS LAST ROUND (stay consistent: never ask for the opposite of a point that was carried out, and do not move the goalposts on a point that is now fixed)\n${prevCrit.issues.slice(0, 12).map(i => `- [${i.severity}${i.at !== undefined ? ` @ ${i.at.toFixed(2)}s` : ''}] ${i.problem.slice(0, 160)} Fix: ${i.fix.slice(0, 140)}`).join('\n')}` : '',
     rounds.filter(r => r.critique && r.n !== last?.n).length ? `EARLIER CRITIQUES\n${rounds.filter(r => r.critique && r.n !== last?.n).map(r => `Round ${r.n}: ${r.critique!.score}/10, "${r.critique!.headline}"`).join('\n')}` : '',
     follow.length ? `WHAT THIS ROUND WAS ASKED TO FIX (check every item in the frames and the timeline; frames labelled with an item's id show its moment)\n${follow.map(f => `${f.id}${f.at !== undefined ? ` @ ${f.at.toFixed(2)}s` : ''}: ${f.text.slice(0, 320)}${f.plan ? ` | the editor's plan: ${f.plan.slice(0, 200)}` : ''}${f.check ? ` | the editor's own check: ${f.check.slice(0, 160)}` : ''}`).join('\n')}\nGive each item's status in "followUp": fixed (the frames or timeline show it done in full), partly, or not.` : '',
     prevCrit ? `SCORING AGAINST THE LAST ROUND: the last critique scored the edit ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). Score the edit as it is now, starting from that score: every point that is really fixed raises its area and the total (a critical point fixed is worth about +0.6 to +1.0, a major one +0.3 to +0.5, a minor one +0.1 to +0.2); every remaining or new problem holds it down or lowers it. Do not re-judge fixed points from scratch and never ignore a real fix; never inflate either: a fix you cannot see in the frames or the timeline does not count.` : '',

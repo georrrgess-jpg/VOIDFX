@@ -345,3 +345,39 @@ export function lessonsText(max = 14): string {
   // a general rule when the critic wrote one; otherwise the first sentence of the problem and its fix
   return pick.map(l => `- [${l.area}${l.severity === 'critical' ? ', critical' : ''}] ${l.fix ? `${l.problem.split(/(?<=[.!?])\s/)[0]} Fix pattern: ${l.fix.split(/(?<=[.!?])\s/)[0]}` : l.problem}`).join('\n');
 }
+
+// ---------- the owner's taste: every note they write, remembered across projects ----------
+
+export interface TasteNote { at: number; text: string; project: string; kind: 'create' | 'revise' }
+let taste: TasteNote[] = [];
+let tasteLoaded = false;
+
+export async function loadTaste() {
+  const t = await idbGet<TasteNote[]>('kv', 'taste').catch(() => undefined);
+  if (Array.isArray(t)) taste = t;
+  tasteLoaded = true;
+}
+
+/** Remember what the owner asked for (their own words; automatic rounds are not theirs). */
+export async function addTaste(text: string, project: string, kind: TasteNote['kind']) {
+  const t = text.trim();
+  if (!t || /^\s*Automatic round/i.test(t)) return;
+  if (!tasteLoaded) await loadTaste();
+  if (taste.some(x => x.text === t.slice(0, 1200))) return;
+  taste = [{ at: Date.now(), text: t.slice(0, 1200), project, kind }, ...taste].slice(0, 60);
+  await idbPut('kv', 'taste', taste).catch(() => {});
+}
+
+export function tasteNotes(): TasteNote[] { return taste; }
+export async function clearTaste() { taste = []; await idbPut('kv', 'taste', []).catch(() => {}); }
+
+/** The owner's notes on recent edits, newest first, as Opus and the critic read them (about 5 KB). */
+export function tasteText(maxChars = 5000): string {
+  let out = '', n = 0;
+  for (const x of taste) {
+    const line = `- (${x.project}, ${x.kind === 'create' ? 'brief' : 'revision note'}) ${x.text.replace(/\s*\n\s*/g, ' ')}\n`;
+    if (out.length + line.length > maxChars) break;
+    out += line; n++;
+  }
+  return n ? out.trim() : '';
+}

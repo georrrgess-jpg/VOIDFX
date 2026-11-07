@@ -277,6 +277,29 @@ vec4 voronoi(vec2 x, float seed) { vec2 n = floor(x), f = fract(x); vec2 mg = ve
   return vec4(mr, hash21(n + mg + seed + 3.3), me); }
 float textMask(vec2 uv) { vec2 t = (uv * uRes - uTextRect.xy) / max(uTextRect.zw, vec2(1.0));
   if (t.x < 0.0 || t.y < 0.0 || t.x > 1.0 || t.y > 1.0) return 0.0; return texture(uTextMask, t).a; }
+float clamp01(float x) { return clamp(x, 0.0, 1.0); }
+float stage(float p, float a, float b) { return clamp((p - a) / max(b - a, 1e-4), 0.0, 1.0); }
+float envelope(float p, float a, float b, float c, float d) { return stage(p, a, b) * (1.0 - stage(p, c, d)); }
+float easeOutCubic(float x) { float y = 1.0 - clamp01(x); return 1.0 - y * y * y; }
+float easeInCubic(float x) { x = clamp01(x); return x * x * x; }
+float easeInOutCubic(float x) { x = clamp01(x); float y = -2.0 * x + 2.0; return x < 0.5 ? 4.0 * x * x * x : 1.0 - y * y * y * 0.5; }
+float easeOutExpo(float x) { x = clamp01(x); return x >= 1.0 ? 1.0 : 1.0 - exp2(-10.0 * x); }
+float easeOutBack(float x) { x = clamp01(x); float y = x - 1.0; return 1.0 + 2.70158 * y * y * y + 1.70158 * y * y; }
+float easeOutElastic(float x) { x = clamp01(x); if (x <= 0.0 || x >= 1.0) return x; return exp2(-10.0 * x) * sin((x * 10.0 - 0.75) * 2.0943951) + 1.0; }
+float fillAA(float d) { return 1.0 - smoothstep(-0.0016, 0.0016, d); }
+float strokeAA(float d, float w) { return 1.0 - smoothstep(w - 0.0016, w + 0.0016, abs(d)); }
+float sdRoundBox(vec2 p, vec2 b, float r) { return sdBox(p, b - vec2(r)) - r; }
+float sdRing(vec2 p, float r, float w) { return abs(length(p) - r) - w; }
+float sdTri(vec2 p, float r) { const float k = 1.7320508; p.x = abs(p.x) - r; p.y = p.y + r / k; if (p.x + k * p.y > 0.0) p = vec2(p.x - k * p.y, -k * p.x - p.y) / 2.0; p.x -= clamp(p.x, -2.0 * r, 0.0); return -length(p) * sign(p.y); }
+float sdStar(vec2 p, float r, float inner) { float a = atan(p.x, -p.y) + PI; float seg = 2.0 * PI / 5.0; float f = mod(a, seg) - seg * 0.5; float rr = mix(r * inner, r, smoothstep(seg * 0.5, 0.0, abs(f))); return length(p) - rr; }
+float smoke(vec2 q, float t) { return fbm(q * 3.0 + vec2(0.0, -t * 0.6) + vec2(fbm(q * 2.0 - t * 0.3), 0.0)); }
+vec3 lightSpill(vec2 uv, vec2 pos, vec3 col, float r) { vec2 d = (uv - pos) * vec2(uAspect, 1.0); float f = exp(-dot(d, d) / max(r * r, 1e-5)); vec3 pic = frame(uv); return pic * col * f * 1.6 + col * f * 0.12; }
+vec3 refractFrame(vec2 uv, vec2 n, float k) { return frame(uv + n * k); }
+vec4 sparks(vec2 q, vec2 o, float t, float seed, float spread, vec3 col) { float a = 0.0;
+  for (int i = 0; i < 28; i++) { float fi = float(i); float ang = hash11(fi + seed) * 6.2831853; float sp = (0.25 + hash11(fi * 1.7 + seed) * 0.75) * spread;
+    vec2 v = vec2(cos(ang), sin(ang)) * sp; vec2 pos = o + v * t + vec2(0.0, 0.35 * t * t); float life = 1.0 - smoothstep(0.15, 0.55 + 0.35 * hash11(fi + 9.0 + seed), t);
+    vec2 dir = normalize(v + vec2(0.0, 0.7 * t) + 1e-4); a += glow(sdSegment(q, pos, pos - dir * (0.012 + 0.03 * sp)), 0.0022) * life; }
+  return vec4(mix(col, vec3(1.0), clamp(a - 0.6, 0.0, 1.0)), clamp(a, 0.0, 1.0)); }
 float sobel(vec2 uv, float w) { vec2 px = w / uRes; float gx = luma(frame(uv + vec2(px.x, 0.0))) - luma(frame(uv - vec2(px.x, 0.0)));
   float gy = luma(frame(uv + vec2(0.0, px.y))) - luma(frame(uv - vec2(0.0, px.y))); return length(vec2(gx, gy)); }
 `;

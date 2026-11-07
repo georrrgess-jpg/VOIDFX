@@ -303,3 +303,25 @@ export async function libraryMosaic(items: LibraryItem[]): Promise<Sheet | null>
   }
   return { blob: await compose(cells, 16 / 10), caption: 'posters of the database items, labelled with their ids' };
 }
+
+/**
+ * One custom element, large: six frames through its life (labelled with its progress) and the same
+ * moment without it, so Opus judges it the way it would in a chat: rendered, full size, against the shot.
+ */
+export async function elementSheet(p: Project, media: Record<string, MediaInfo>, clipId: string, signal?: AbortSignal): Promise<Sheet | null> {
+  const c = p.clips.find(x => x.id === clipId);
+  if (!c) return null;
+  const aspect = p.width / p.height;
+  const H = aspect < 1 ? 640 : 380;
+  const fr = [0.06, 0.22, 0.38, 0.54, 0.7, 0.88];
+  const times = fr.map(f => +(c.start + f * c.dur).toFixed(3));
+  const withIt = await renderStills(p, times, H, signal, media);
+  const q: Project = { ...p, clips: p.clips.filter(x => x.id !== clipId) };
+  const without = await renderStills(q, [times[3]], H, signal, media);
+  const cells: Cell[] = [
+    ...withIt.map((img, k) => ({ img, w: img?.width || 0, h: img?.height || 0, label: `${c.id} ${Math.round(fr[k] * 100)}% ${times[k].toFixed(2)}s`, ruler: k === 0 })),
+    { img: without[0], w: without[0]?.width || 0, h: without[0]?.height || 0, label: `without it ${times[3].toFixed(2)}s` },
+  ];
+  const blob = await compose(cells, aspect);
+  return { blob, caption: `${c.kind === 'graphic' ? 'graphic' : 'effect'} ${c.id} (${c.start.toFixed(2)}-${(c.start + c.dur).toFixed(2)} s) rendered large through its life (6 frames, labelled with its progress; the first carries the frame ruler), and the same moment without it` };
+}

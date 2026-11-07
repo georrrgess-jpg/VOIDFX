@@ -129,6 +129,9 @@ await ctx.addInitScript(() => {
             reply = JSON.stringify({ message: 'Designed the transitions, titles and light.', ops: plan.ops.filter(o => !PICTURE.has(o.op)) });
           } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && !/REVIEW \d OF/.test(last)) {
             reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
+          } else if (last.includes('YOUR CUSTOM ELEMENTS, RENDERED')) {
+            const els = [...last.matchAll(/^ELEMENT (\S+) \(/gm)].map(m => m[1]);
+            reply = JSON.stringify({ message: 'Workshop: the elements read.', elements: els.map(id => ({ id, score: 8, frames: 'fine' })), ops: [] });
           } else if (/REVIEW \d OF/.test(last)) {
             const ids = [...last.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
             window.__reviews = [...(window.__reviews || []), last.slice(0, 60)];
