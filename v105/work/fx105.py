@@ -1314,8 +1314,7 @@ def dusk_u(s, f):
 
 def grade(img, s, f):
     g, gains = correction(s)
-    x = np.clip(img * gains, 0, 1) ** g
-    if s.get("ev"): x = np.clip(x * 2 ** s["ev"], 0, 1)                                 # per-shot exposure (dark night sources)
+    x = pre_grade(img, gains, g, s.get("ev"))           # clip(img * gains, 0, 1) ** g, then the per-shot exposure, by table (WP2)
     look = s.get("look", "night")
     if look == "day": o = day_grade(x)
     elif look == "night": o = night_grade(x, s)

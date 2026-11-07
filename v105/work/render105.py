@@ -6151,7 +6151,7 @@ def main():
         cuts = [sh["f0"] for sh in SHOTS[1:]]
         for si in range(0, len(cuts), 6):
             frames = [min(E.DUR_F - 1, max(0, c + o)) for c in cuts[si:si + 6] for o in offs]
-            with Pool(4) as pool: rend = pool.map(render, frames, chunksize=2)
+            with Pool(4) as pool: rend = pool.map(render, frames, chunksize=3)   # each side of a cut shares its edge frame (WP2)
             ims = []
             for f, r in zip(frames, rend):
                 im = cv2.resize(r, (216, 384), interpolation=cv2.INTER_AREA)
@@ -6171,7 +6171,7 @@ def main():
                "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", *(["-c:a", "aac", "-b:a", "160k", "-shortest"] if aud else []), out]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
-            for fr in pool.imap(render, frames, chunksize=4):
+            for fr in imap_blocks(pool, frames):                           # contiguous blocks (WP2)
                 p.stdin.write(cv2.resize(fr, (W // 2, H // 2), interpolation=cv2.INTER_AREA).tobytes())
         p.stdin.close(); p.wait(); print(out); return
     if mode == "full":
@@ -6191,69 +6191,10 @@ def main():
                *tags, "-c:a", "pcm_s24le", "-ar", "48000", f"{outdir}/{E.SLUG}_voidfx_9x16_master.mov"]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
-            for i, fr in enumerate(pool.imap(render, range(E.DUR_F), chunksize=4)):
+            for i, fr in enumerate(imap_blocks(pool, range(E.DUR_F))):    # contiguous blocks (WP2)
                 p.stdin.write(fr.tobytes())
                 if i % 150 == 0: print(f"frame {i}/{E.DUR_F}", flush=True)
         p.stdin.close(); p.wait(); print("done", outdir, flush=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # >>> v105 section (generated from fx105.py by splice.py)
 # ============================================================================ v105 — DRACULA — Dexter × Tame Impala: toolkit from the v104 standard (restyle it)
@@ -7572,8 +7513,7 @@ def dusk_u(s, f):
 
 def grade(img, s, f):
     g, gains = correction(s)
-    x = np.clip(img * gains, 0, 1) ** g
-    if s.get("ev"): x = np.clip(x * 2 ** s["ev"], 0, 1)                                 # per-shot exposure (dark night sources)
+    x = pre_grade(img, gains, g, s.get("ev"))           # clip(img * gains, 0, 1) ** g, then the per-shot exposure, by table (WP2)
     look = s.get("look", "night")
     if look == "day": o = day_grade(x)
     elif look == "night": o = night_grade(x, s)
@@ -8376,6 +8316,133 @@ def init_hits():
     for k_, a in ((32, 22), (48, 12), (64, 18), (12, 6), (60, 8)): HITS.append((E.fh(k_), a, 4.0))
 
 # <<< v105 section
+
+# >>> pipeline v2 · WP2 render speed (shared by every engine; KEEP THIS SECTION LAST: splice.py inserts edit sections above it)
+# 1. pre_grade(): gains, gamma, exposure (and a look's tone curve) are one function per channel, tabulated on 65,536 levels.
+#    The grid holds every 8-bit level exactly (65,535 = 255 x 257), so frames graded from 8-bit sources come out bit-identical;
+#    blended / flow in-between inputs use the nearest level plus slope x remainder (first order: within ~1e-6 of np.interp).
+#    Two gathers replace np.interp (~100-330 ms per band -> ~30 ms).
+#    Inputs outside [0, 1] take the exact path.
+# 2. imap_blocks(): workers render blocks of consecutive frames (cut where a shot starts; smaller blocks at the end so the
+#    workers finish together) instead of pool.imap(chunksize=4), so the per-worker caches below hit.
+# 3. render_shot cache: an LRU of unshaken render_shot results (picture + matte) per (shot, frame), so afterimages and ghost
+#    trails re-use frames this worker has just rendered. Shaken renders are not kept (nothing asks for them again; edge
+#    frames have their own caches). Hits return copies, so callers may write into what they get. ROI_CACHE holds an engine's
+#    shake-independent graded crops per (shot, frame), for render_shot implementations that use it (v11).
+# All three are exact: a frame renders the same whichever worker renders it and in whatever order (tools/golden.py --cachetest).
+import collections, itertools
+LUT_N = 65536
+RS_LRU = int(os.environ.get("VFX_RS_LRU", "12"))         # unshaken shot renders kept per worker (~33 MB each with the matte)
+ROI_LRU = int(os.environ.get("VFX_ROI_LRU", "8"))        # graded crops kept per worker (~15 MB each)
+BLOCK = int(os.environ.get("VFX_BLOCK", "32"))           # frames per scheduling block (a block's frames travel back together: ~200 MB)
+
+class LRU:
+    def __init__(self, n): self.n, self.d, self.hits, self.miss = n, collections.OrderedDict(), 0, 0
+    def get(self, k):
+        v = self.d.get(k)
+        if v is None: self.miss += 1
+        else: self.hits += 1; self.d.move_to_end(k)
+        return v
+    def put(self, k, v):
+        if self.n <= 0: return
+        self.d[k] = v; self.d.move_to_end(k)
+        while len(self.d) > self.n: self.d.popitem(last=False)
+
+# ---- 1. the grade by lookup ------------------------------------------------------------------------------------
+_PRE = {}
+def pre_table(gains, g, ev=None, ck=None, curve=None):
+    """(3, LUT_N) table: the exact expression of the grade's first stage, evaluated on the 65,536-level grid."""
+    ga = np.asarray(gains)
+    key = (tuple(ga.ravel().tolist()), ga.dtype.str, float(g), type(g).__name__, ev or None, ck)
+    T = _PRE.get(key)
+    if T is None:
+        v = (np.arange(LUT_N, dtype=np.float64) / (LUT_N - 1)).astype(np.float32)
+        x = np.repeat(v[:, None, None], 3, axis=2)                                    # (N, 1, 3): the same operand shapes and types
+        x = np.clip(x * gains, 0, 1) ** g
+        if ev: x = np.clip(x * 2 ** ev, 0, 1)
+        if curve is not None: x = np.interp(x, curve[0], curve[1]).astype(np.float32)
+        T = np.ascontiguousarray(x[:, 0, :].T)
+        D = np.empty_like(T); D[:, 1:-1] = (T[:, 2:] - T[:, :-2]) * 0.5; D[:, 0] = T[:, 1] - T[:, 0]; D[:, -1] = T[:, -1] - T[:, -2]
+        if len(_PRE) > 64: _PRE.clear()
+        T = _PRE[key] = (T, D)                                                         # values and slopes (per grid step)
+    return T
+
+def pre_grade(img, gains, g, ev=None, ck=None, curve=None, planes=False):
+    """= np.interp(clip(clip(clip(img * gains, 0, 1) ** g * 2 ** ev, 0, 1), *curve) (each step only when given), by table.
+    planes=True returns the three channels as contiguous planes (B, G, R)."""
+    if img.dtype != np.float32 or img.ndim != 3 or img.shape[2] != 3 or img.min() < 0 or img.max() > 1:
+        x = np.clip(img * gains, 0, 1) ** g                                            # the exact path
+        if ev: x = np.clip(x * 2 ** ev, 0, 1)
+        if curve is not None: x = np.interp(x, curve[0], curve[1]).astype(np.float32)
+        return tuple(np.ascontiguousarray(x[..., c]) for c in range(3)) if planes else x
+    T, D = pre_table(gains, g, ev, ck, curve); out = []
+    for c, P in enumerate(cv2.split(img)):                                            # contiguous planes: gathers run ~2x faster
+        q = P * np.float32(LUT_N - 1); i = (q + 0.5).astype(np.int32); q -= i         # nearest level + the remainder (in steps)
+        y = np.take(D[c], i); y *= q; y += np.take(T[c], i); out.append(y)            # first order; remainder 0 on 8-bit inputs
+    return tuple(out) if planes else cv2.merge(out)
+
+# ---- 2. contiguous scheduling ----------------------------------------------------------------------------------
+def plan_blocks(frames, size=None, workers=4):
+    """consecutive runs of `frames` (kept in order), cut where a shot starts and every `size` frames; blocks in the last
+    workers * size frames are split in four so the workers finish together."""
+    size = size or BLOCK; frames = list(frames); blocks, cur = [], []
+    for f in frames:
+        if cur and (len(cur) >= size or shot_at(f) is not shot_at(cur[-1])): blocks.append(cur); cur = []
+        cur.append(f)
+    if cur: blocks.append(cur)
+    tail = len(frames) - workers * size; out = []; seen = 0
+    for b in blocks:
+        if seen >= tail and len(b) > 8:
+            q = max(4, -(-len(b) // 4)); out += [b[i:i + q] for i in range(0, len(b), q)]
+        else: out.append(b)
+        seen += len(b)
+    return out
+
+def _render_block(fs): return [render(f) for f in fs]
+
+def imap_blocks(pool, frames, size=None, ahead=None):
+    """pool.imap(render, frames) in order, scheduled as contiguous blocks. At most `ahead` blocks are in flight (default:
+    workers + 2), so finished frames do not pile up in memory when the encoder is the slower side (pool.imap queues
+    every task at once: a full v11 render peaked at 12.1 GB that way)."""
+    it = iter(plan_blocks(frames, size)); ahead = ahead or getattr(pool, "_processes", 4) + 2
+    pend = collections.deque(pool.apply_async(_render_block, (b,)) for b in itertools.islice(it, ahead))
+    while pend:
+        blk = pend.popleft().get()
+        nb = next(it, None)
+        if nb is not None: pend.append(pool.apply_async(_render_block, (nb,)))
+        yield from blk
+
+# ---- 3. the shot-render cache ----------------------------------------------------------------------------------
+_SHOT_IX = {}
+def shot_index(s):
+    """the index of s in SHOTS when s is one of the edit's own shot dicts (a modified copy is never cached)."""
+    i = _SHOT_IX.get(id(s))
+    if i is not None and i < len(SHOTS) and SHOTS[i] is s: return i
+    for j, x in enumerate(SHOTS):
+        if x is s: _SHOT_IX[id(s)] = j; return j
+    return None
+
+ROI_CACHE = LRU(ROI_LRU)
+RS_CACHE = LRU(RS_LRU)
+_render_shot_uncached = render_shot
+def render_shot(s, f, with_shake=True, want_mask=False):
+    i = shot_index(s)
+    if i is None or RS_LRU <= 0 or (with_shake and any(shake(f))):                  # shaken renders are not kept
+        return _render_shot_uncached(s, f, with_shake, want_mask)
+    sr = globals().get("SR_USED")
+    e = RS_CACHE.get((i, f))
+    if e is not None and (e[1] is not None or not want_mask):
+        if sr is not None and e[2] is not None: sr[0] = e[2]
+        return (e[0].copy(), e[1].copy()) if want_mask else e[0].copy()
+    r = _render_shot_uncached(s, f, with_shake, want_mask)
+    if want_mask:
+        if isinstance(r, tuple) and len(r) == 2: img, m = r
+        else: return r
+    else: img, m = r, None
+    if isinstance(img, np.ndarray):
+        RS_CACHE.put((i, f), (img.copy(), None if m is None else m.copy(), sr[0] if sr is not None else None))
+    return r
+# <<< pipeline v2 · WP2
 
 if __name__ == "__main__":
     main()
