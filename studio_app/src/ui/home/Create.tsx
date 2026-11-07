@@ -21,7 +21,7 @@ export function CreateSection() {
   const [presetId, setPresetId] = useState(director.presetId);
   const [notes, setNotes] = useState('');
   const [lyrics, setLyrics] = useState('');
-  const [showLyrics, setShowLyrics] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(true);
   const [title, setTitle] = useState('');
   const [source, setSource] = useState<Source>('files');
   const [files, setFiles] = useState<File[]>([]);
@@ -122,7 +122,7 @@ export function CreateSection() {
         </div>
         {showLyrics && <>
           <textarea id="c-lyrics" class="ta" rows={4} value={lyrics} onInput={e => setLyrics((e.target as HTMLTextAreaElement).value)} placeholder={'Synced lyrics (LRC) put each caption on its sung time:\n[00:51.20] I could never be the one\n[00:54.80] you wanted me to be\nThe times must match your song file (a sped-up or slowed version needs its own).'} />
-          {lyrics.trim() && <LyricsStatus text={lyrics} />}
+          {lyrics.trim() ? <LyricsStatus text={lyrics} /> : <p class="muted small lyr-st warn">No lyrics: Opus will not caption sung words (it cannot hear the song, and the studio removes any caption it cannot check). Paste synced lyrics (LRC, e.g. from lrclib.net or a lyrics app) for captions on the sung words.</p>}
         </>}
       </section>
 
@@ -227,5 +227,5 @@ export function CreateSection() {
 
 function LyricsStatus({ text }: { text: string }) {
   const l = useMemo(() => parseLyrics(text), [text]);
-  return <p class={`muted small lyr-st${l.timed ? '' : ' warn'}`}>{l.timed ? `${l.lines.length} timed lines: captions land on the sung words.` : `${l.lines.length} lines without times: Opus uses them for the concept and at most two titles, not line-by-line captions. Paste synced lyrics for timed captions.`}</p>;
+  return <p class={`muted small lyr-st${l.timed ? '' : ' warn'}`}>{l.timed ? `${l.lines.length} timed lines: captions land on the sung words.` : `${l.lines.length} lines without times: Opus uses them for the concept and titles, and every caption is checked word for word against them. Paste synced lyrics so captions land on the sung time.`}</p>;
 }

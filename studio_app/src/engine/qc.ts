@@ -40,13 +40,17 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   const custom = p.clips.filter(c => c.kind === 'shader' || c.kind === 'graphic');
   const overCut = (t: number) => custom.some(c => c.start <= t + 0.02 && c.start + c.dur >= t - 0.02);
   const customCuts = mainClips.slice(1).filter(c => !c.transition && overCut(c.start)).length;
-  const designed = trans.length + customCuts;
-  // the benchmarks: 16-27 designed joins in 21-27 s, i.e. about three for every four seconds or more
-  const target = Math.max(15, Math.round(dur * 0.72));
+  // a clean cut on the beat with the camera punching is a designed join too (a transition with no reason is not)
+  const beatT = timelineBeats(p, media).map(b => b.t);
+  const camAt = (t: number) => !!p.camera?.on && (p.camera.from ?? 0) <= t && t <= (p.camera.to ?? Infinity) && (!p.camera.sections?.length || p.camera.sections.some(x => t >= x.from && t <= x.to));
+  const beatCuts = mainClips.slice(1).filter(c => !c.transition && !overCut(c.start) && camAt(c.start) && beatT.some(b => Math.abs(b - c.start) < 0.05)).length;
+  const designed = trans.length + customCuts + beatCuts;
+  // the benchmarks: 16-27 joins in 21-27 s; every one needs a reason, so a punch cut on the beat counts
+  const target = Math.max(12, Math.round(dur * 0.6));
   const types = new Set(trans.map(c => c.transition!.type));
   out.push({
-    id: 'density', label: 'Designed transitions', status: designed >= target ? 'pass' : designed >= 15 || !o.houseRules ? 'warn' : 'fail',
-    detail: `${designed} in ${f2(dur)} s, ${types.size + (customCuts ? 1 : 0)} different${customCuts ? ` (${customCuts} are custom effects over a cut)` : ''} (target ${target} or more: the benchmarks have 16-27 in 21-27 s)`,
+    id: 'density', label: 'Designed transitions', status: designed >= target ? 'pass' : designed >= 10 || !o.houseRules ? 'warn' : 'fail',
+    detail: `${designed} designed joins in ${f2(dur)} s: ${trans.length} transitions${customCuts ? `, ${customCuts} custom effects over a cut` : ''}${beatCuts ? `, ${beatCuts} punch cuts on the beat` : ''}; ${types.size} different (target ${target} or more). Every transition needs a reason (what it goes through, the motion it carries on); where there is none, a clean cut on the beat with the camera punch is better than a filler move.`,
   });
   // variety: generic library moves are filler, and the same move twice in a row reads as a template
   if (o.houseRules && designed >= 4) {

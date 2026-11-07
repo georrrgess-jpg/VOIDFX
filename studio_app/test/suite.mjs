@@ -421,7 +421,7 @@ if (on('render')) {
 // ---------- 5b. operations and gates added from the live test edit ----------
 if (on('units')) {
   const u = await page.evaluate(async () => {
-    const { store, applyOps, runChecks, idleShots, transitionReport, layerReport, renderStills, addLessons, clearLessons, lessonsText } = window.__voidfx;
+    const { store, applyOps, runChecks, idleShots, transitionReport, layerReport, renderStills, lyricGuard, parseLyrics, addLessons, clearLessons, lessonsText } = window.__voidfx;
     const media = store.state.media;
     const ids = store.state.mediaOrder;
     const vid = ids.find(id => media[id].kind === 'video'), mus = ids.find(id => media[id].kind === 'audio');
@@ -479,6 +479,17 @@ if (on('units')) {
     const g = cv.getContext('2d');
     sheets.forEach((sh, r) => sh.frames.forEach((f, c) => { if (f) g.drawImage(f, c * W, r * H, W, H); g.fillStyle = '#000a'; g.fillRect(c * W, r * H, W, 22); g.fillStyle = '#fff'; g.font = '14px monospace'; g.fillText(sh.kind, c * W + 4, r * H + 16); }));
     out.pieceSheet = cv.toDataURL('image/jpeg', 0.8);
+    // the lyric guard: wrong words corrected, captions moved onto the sung time, invented lines removed
+    r = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', media: vid, track: 'V1', in: 0, dur: 6 }, { op: 'add', id: 'mus', media: mus, track: 'A1', start: 0, in: 0, dur: 6 },
+      { op: 'text', id: 'wrong', start: 0.4, dur: 1.2, text: 'you were always\nby *my* side' }, { op: 'text', id: 'made', start: 3.0, dur: 1.2, text: 'the night is young tonight' },
+      { op: 'text', id: 'title', start: 4.5, dur: 1, text: 'BUTCHER' }, { op: 'text', id: 'late', start: 1.0, dur: 1, text: 'I never left' }], media);
+    const lp = { ...r.project, lyrics: parseLyrics('[00:02.00] you were always by my side\n[00:04.00] dark rivers run\n[00:30.00] I never left') };
+    const lnotes = lyricGuard(lp, media);
+    const tx = id => lp.clips.find(c => c.id === id);
+    out.lyr = { wrongStart: tx('wrong')?.start, wrongText: tx('wrong')?.text, made: !!tx('made'), title: !!tx('title'), late: !!tx('late'), notes: lnotes };
+    const np = { ...r.project, lyrics: undefined };
+    lyricGuard(np, media);
+    out.lyrNone = np.clips.filter(c => c.kind === 'text').map(c => c.id);
     // lessons from the critic are remembered and read back
     await clearLessons();
     await addLessons([{ area: 'picture', severity: 'critical', problem: 'The drop is a white card. More words.', fix: 'Delete the wash. More.', project: 'x' }]);
@@ -496,6 +507,8 @@ if (on('units')) {
   writeFileSync(join(OUT, 'pieces.jpg'), Buffer.from(u.pieceSheet.split(',')[1], 'base64'));
   delete u.pieceSheet;
   check('every set piece expands into its build with no problems', Object.values(u.pieces).every(x => x.added >= 1 && !x.bad.length), JSON.stringify(u.pieces));
+    check('lyric guard: a caption is the real line on its sung time; invented or unsung lines are removed', Math.abs(u.lyr.wrongStart - 1.94) < 0.02 && /by \*my\* side/.test(u.lyr.wrongText) && !u.lyr.made && u.lyr.title && !u.lyr.late, JSON.stringify(u.lyr));
+  check('lyric guard: with no lyrics only short titles stay', JSON.stringify(u.lyrNone) === '["title"]', JSON.stringify(u.lyrNone));
     check('critic lessons are remembered for later edits', /white card/.test(u.lessons) && /Delete the wash/.test(u.lessons), u.lessons);
 }
 

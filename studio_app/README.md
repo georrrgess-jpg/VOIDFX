@@ -151,6 +151,26 @@ The checkpoint also flags clutter (more than four layers starting within half a 
 graphic and shader is rendered with and without itself. A layer that does not show, or that turns a lit
 frame into a white or black card, is listed for the review and the critic.
 
+**The lyric guard.** After every Opus pass, each caption Opus wrote is checked against the owner's
+lyrics:
+
+- a sung caption must be the real line, word for word, so wrong words are corrected to the line;
+- a caption off its sung time is moved onto it;
+- a line that is not sung in this part of the song, or words that are not in the lyrics, are removed;
+- with no lyrics supplied, only one- or two-word titles and the character's own dialogue may stand.
+
+**Transitions with a reason.** A clean cut on the beat with the camera punch counts as a designed
+join, so cuts are not filled with moves that have no reason. After the last review the studio measures
+every transition once more. Any that is still empty, invisible, a plain crossfade or a third repeat is
+replaced with a tested move that differs from its neighbours. A replacement that also fails becomes a
+clean cut.
+
+**Revisions rebuild.** Each note about a moment lists what is on screen there now (the shot, the
+transition, the layers, the text). The revision call also gets the measured transitions and layers,
+and is told to remove and rebuild weak moments rather than add on top. After the changes the studio
+renders every note's moment again. A note whose frame looks the same is marked not done, and the review
+writes it.
+
 **The critic's scale.** Scores are calibrated to the owner's approved benchmarks (an edit at their
 level is an 8). The overall score stays within half a point of the weighted area scores. "Critical" is
 kept for defects that break the edit on the first watch, and caps the score at 7 while it remains.

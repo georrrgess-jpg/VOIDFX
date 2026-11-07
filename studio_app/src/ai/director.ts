@@ -18,16 +18,18 @@ import { CRITIC_AREAS, CRITIC_CANON } from './canon';
 import { checksText, idleShots, runChecks, Check } from '../engine/qc';
 import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
+import { TRANSITION_LABELS } from '../engine/transitions';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
 import { getPreset, lessonsText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
 import { addTransitionSounds, applyOps as applyOpsRaw, lastPruned, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
 import { customIssues } from '../engine/custom';
 import { finishPass } from '../engine/finish';
+import { lyricGuard } from '../engine/lyricguard';
 import { store } from '../state/store';
-import { ASPECTS, Effort, Job, JobStep, MediaInfo, NoteCheck, Project, Round } from '../state/types';
+import { ASPECTS, Effort, Job, JobStep, MediaInfo, NoteCheck, Project, Round, TransitionType } from '../state/types';
 import { deepClone, projectDuration } from '../state/util';
 import { ContextExtras, contextBlock, parseJson, parseReply } from './prompt';
-import { libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
+import { FrameStat, libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
 import { layerReport, storyboardTimes, transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 import { lyricsText, parseLyrics } from '../state/lyrics';
@@ -42,7 +44,7 @@ function applyOps(base: Project, ops: unknown, media: Record<string, MediaInfo>)
   const snapped = snapToBeats(res.project, media);
   const pruned = pruneSfx(res.project);
   normalize(res.project, media);
-  const finished = finishPass(res.project);
+  const finished = [...finishPass(res.project), ...lyricGuard(res.project, media, new Set(res.touched))];
   const notes: string[] = [];
   if (snapped) notes.push(`the studio moved ${snapped} cut${snapped > 1 ? 's' : ''} (by up to 90 ms) exactly onto the beat`);
   if (pruned) notes.push(`the studio removed ${pruned} sound effect${pruned > 1 ? 's' : ''}: ${lastPruned().slice(0, 8).join(', ')} (stacked within 0.3 s of another, more than two layers or two moments in a second, or over the budget of about three every four seconds); layer one hit instead of stacking near-simultaneous sounds`);
@@ -285,6 +287,15 @@ export function roundNotes(brief: string, fromCritic?: string[]): NoteCheck[] {
   for (const t of auto ? [] : ownerAsks(brief)) notes.push({ id: `N${notes.length + 1}`, text: t.slice(0, 3000), from: 'owner', at: timeIn(t) });
   for (const t of fromCritic || []) notes.push({ id: `N${notes.length + 1}`, text: t.replace(/\s*\n\s*/g, ' ').slice(0, 3000), from: 'critic', at: timeIn(t) });
   return notes.slice(0, 24);
+}
+
+/** What is on screen at t: the shot, the transition into it, and every layer over it (for rebuilding a moment). */
+function clipsAt(p: Project, t: number): string {
+  const main = p.tracks.find(x => x.main)?.id;
+  const on = p.clips.filter(c => c.kind !== 'audio' && c.start <= t + 0.25 && c.start + c.dur >= t - 0.25 && !(c.span === 'all'));
+  const desc = (c: typeof on[number]) => c.track === main ? `shot ${c.id} (${c.media} src ${(c.in ?? 0).toFixed(2)})${c.transition && Math.abs(c.start - t) < 0.6 ? ` with transition ${c.transition.type} into it` : ''}`
+    : c.kind === 'text' ? `text ${c.id} "${(c.text || '').replace(/\s+/g, ' ').slice(0, 30)}"` : c.kind === 'sfx' ? `sfx ${c.id} ${c.sfx}` : `${c.kind} ${c.id}${c.preset ? ` ${c.preset}` : ''}`;
+  return on.slice(0, 12).map(desc).join('; ');
 }
 
 function notesBlock(notes: NoteCheck[], heading = 'NOTES TO CARRY OUT'): string {
@@ -570,6 +581,95 @@ function withSounds(p: Project, media: Record<string, MediaInfo>): Project {
   return normalize(q, media);
 }
 
+/** Tested moves that render well on any footage: the replacements for a transition that failed its measurement. */
+const SAFE_MOVES: TransitionType[] = ['light_sweep', 'ink', 'burn', 'slash', 'shadow', 'tear', 'warp', 'light_leak', 'heat', 'shutter'];
+
+/**
+ * The last word on transitions, after the final review: every transition is measured on its three
+ * frames; one that is still empty, invisible, a plain crossfade or a third repeat of its type is
+ * replaced with a tested move that differs from its neighbours, and a replacement that still fails is
+ * taken out (a clean cut on the beat). Nothing broken or unfinished reaches the owner.
+ */
+async function repairTransitions(ws: Workspace, io: JobIO, step: string): Promise<string[]> {
+  const measure = async () => {
+    const p = ws.project;
+    const tf = transitionTimes(p, 90);
+    if (!tf.length) return { weak: [] as string[], p };
+    const sheets = await timelineSheets(p, ws.media(), tf.map(x => x.t), 30, 3, io.signal, 160, tf.map(x => x.label));
+    const rep = transitionReport(p, tf, sheets);
+    const weak = p.clips.filter(c => c.transition && rep.weak.some(t => Math.abs(t - c.start) < 1e-3)).map(c => c.id);
+    return { weak, p };
+  };
+  io.step(step, { detail: 'measuring every transition one last time' });
+  const first = await measure().catch(() => ({ weak: [] as string[], p: ws.project }));
+  const p = deepClone(ws.project);
+  const main = p.tracks.find(t => t.main)?.id;
+  const seq = p.clips.filter(c => c.track === main && c.transition).sort((a, b) => a.start - b.start);
+  // a type used three or more times keeps its first two
+  const seen = new Map<string, number>();
+  const extra = seq.filter(c => { const k = c.transition!.type; if (k === 'logo') return false; seen.set(k, (seen.get(k) || 0) + 1); return seen.get(k)! > 2; }).map(c => c.id);
+  const fix = [...new Set([...first.weak, ...extra])];
+  if (!fix.length) return [];
+  const count = new Map<string, number>();
+  for (const c of seq) count.set(c.transition!.type, (count.get(c.transition!.type) || 0) + 1);
+  const swapped: string[] = [];
+  for (const id of fix) {
+    const c = p.clips.find(x => x.id === id);
+    if (!c?.transition || c.transition.type === 'logo') continue;
+    const i = seq.indexOf(c);
+    const near = new Set([seq[i - 1]?.transition?.type, seq[i + 1]?.transition?.type, c.transition.type]);
+    const pick = [...SAFE_MOVES].sort((a, b) => (count.get(a) || 0) - (count.get(b) || 0)).find(t => !near.has(t) && (count.get(t) || 0) < 2);
+    if (!pick) continue;
+    swapped.push(`${TRANSITION_LABELS[c.transition.type] || c.transition.type} at ${f2(c.start)} s → ${TRANSITION_LABELS[pick]}`);
+    count.set(c.transition.type, (count.get(c.transition.type) || 1) - 1);
+    count.set(pick, (count.get(pick) || 0) + 1);
+    c.transition = { type: pick, dur: Math.min(0.6, Math.max(0.3, c.transition.dur || 0.45)) };
+  }
+  if (!swapped.length) return [];
+  ws.setProject(p);
+  // the replacements are measured too; one that still fails becomes a clean cut
+  const again = await measure().catch(() => ({ weak: [] as string[], p: ws.project }));
+  const swappedIds = new Set(fix);
+  const still = again.weak.filter(id => swappedIds.has(id));
+  if (still.length) {
+    const q = deepClone(ws.project);
+    for (const c of q.clips) if (still.includes(c.id)) delete c.transition;
+    ws.setProject(q);
+  }
+  await ws.save();
+  return [`the studio replaced ${swapped.length} transition${swapped.length > 1 ? 's' : ''} that measured empty, invisible, like a plain crossfade or a third repeat: ${swapped.join('; ')}${still.length ? `; ${still.length} that still failed became clean cuts` : ''}`];
+}
+
+/** After the last review: the transitions measured and repaired, the loop landed. */
+async function finalRepair(ws: Workspace, io: JobIO, preset: Preset, effort: Effort): Promise<string[]> {
+  if (!maxImagesFor(effort) && !preset.houseRules) return [];
+  const step = EFFORTS[effort].reviews ? `review${EFFORTS[effort].reviews}` : 'check';
+  const out = await repairTransitions(ws, io, step).catch(() => [] as string[]);
+  out.push(...(await landLoop(ws, preset)));
+  return out;
+}
+
+/** Notes whose moment renders the same after the round's changes: they were not really carried out. */
+async function unchangedNotes(ws: Workspace, io: JobIO, notes: NoteCheck[], before: Map<string, FrameStat | undefined>): Promise<string[]> {
+  const timed = notes.filter(n => n.at !== undefined && before.get(n.id));
+  if (!timed.length) return [];
+  const sh = await timelineSheets(ws.project, ws.media(), timed.map(n => before.get(n.id)!.t), 30, 1, io.signal).catch(() => [] as Sheet[]);
+  const after = sh.flatMap(x => x.stats || []);
+  const out: string[] = [];
+  for (const n of timed) {
+    const a = before.get(n.id)!, b = after.find(x => Math.abs(x.t - a.t) < 1e-3);
+    if (!b) continue;
+    let d = 0;
+    for (let i = 0; i < 256; i++) d += Math.abs(a.px[i] - b.px[i]);
+    if (d / 256 < 0.012) {
+      n.status = 'not';
+      n.check = 'the studio rendered this moment again after the changes and it looks the same as before: the note is not carried out yet';
+      out.push(n.id);
+    }
+  }
+  return out;
+}
+
 /** The loop lands on frame 0: when the wrap still jumps and Opus did not land it, the studio does ({"op":"loop"}). */
 async function landLoop(ws: Workspace, preset: Preset): Promise<string[]> {
   if (!preset.houseRules || ws.project.clips.some(c => c.name === 'loop twin')) return [];
@@ -600,9 +700,10 @@ async function readMedia(ws: Workspace, io: JobIO) {
 
 /** How Opus should use the owner's lyrics: timed lines go through the "lyrics" operation; plain ones only inform. */
 export function lyricsBrief(l?: Lyrics): string {
-  if (!l?.lines.length) return '';
+  if (!l?.lines.length) return `NO LYRICS WERE SUPPLIED
+Never write the song's words from memory: you cannot hear the song, and a misremembered line on screen is the worst mistake an edit can make. The studio removes any caption of three or more words that is not the character's own dialogue. Use designed titles of one or two words (a name, the concept word), the character's dialogue, or no text. Say in one line of "message" that pasting synced lyrics (LRC) puts captions on the sung words.`;
   if (l.timed) return `TIMED LYRICS (synced lyrics from the owner; times are SONG times, seconds into the song file, not timeline times)
-Caption sung lines with the "lyrics" operation only: it puts each line on its sung time through the music clip, in the house caption style, each word easing in on its own time, and keeps them there when cuts move. Caption the lines that fall inside your song window and carry the concept (not necessarily every line); add *emphasis* with "text" overrides; never type sung words as plain text clips. Designed titles (a hero word that acts out its meaning) still go on sung words: take their time from these lines.
+Caption sung lines with the "lyrics" operation only (the studio checks every caption against these lines, word for word and on its sung time, and removes or corrects any that are not): it puts each line on its sung time through the music clip, in the house caption style, each word easing in on its own time, and keeps them there when cuts move. Caption the lines that fall inside your song window and carry the concept (not necessarily every line); add *emphasis* with "text" overrides; never type sung words as plain text clips. Designed titles (a hero word that acts out its meaning) still go on sung words: take their time from these lines.
 ${lyricsText(l)}`;
   return `LYRICS WITHOUT TIMES (the owner pasted plain lyrics)
 You cannot hear when each line is sung, so do not caption them line by line. Use them for the concept, and at most two designed titles on words you can place with confidence (the hook word on the drop's downbeat). Say in one line of "message" that pasting synced lyrics (LRC: "[mm:ss.xx] line", from a lyrics site or app) puts captions on the sung words.
@@ -899,6 +1000,8 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
 
   const rv = await reviewPasses(ws, io2, { preset, standards, effort, turns, res: { ...res, issues: adjusted }, checks, mediaImages: images.length > 0, notes, revision: false, lost });
   checks = rv.checks;
+  const repaired = await finalRepair(ws, io2, preset, effort);
+  if (repaired.length) { rv.issues.push(...repaired); checks = await checkpoint(ws, preset, true); }
   const summary = rv.message || summary0 || 'The edit is on the timeline.';
   await finishRound(ws, job, { summary, applied: applied + rv.applied, model, notes, scores: rv.scores }, turns);
   return { summary, applied: applied + rv.applied, issues: [...adjusted, ...rv.issues], model, checks };
@@ -927,6 +1030,13 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   const timeSheets = maxImg ? await timelineSheets(p, ws.media(), times, 20, nLook, io.signal, undefined, frameLabels(times, notes)) : [];
   const footage = maxImg > timeSheets.length ? await mediaSheets(ws.ctx, Math.max(1, Math.floor((maxImg - timeSheets.length) * 0.7)), cfg.cells, io.signal, msg => io.step('look', { detail: msg })) : [];
   const sheets = [...timeSheets, ...footage];
+  // the measured state of the edit, so the changes start from the facts
+  io.step('look', { detail: 'measuring transitions and layers' });
+  const tfx = transitionTimes(p, 60);
+  const tsh = tfx.length && maxImg ? await timelineSheets(p, ws.media(), tfx.map(x => x.t), 30, 2, io.signal, 160, tfx.map(x => x.label)).catch(() => [] as Sheet[]) : [];
+  const lrep0 = await layerReport(p, ws.media(), io.signal).catch(() => ({ text: '' }));
+  const measured = [tsh.length ? transitionReport(p, tfx, tsh).text : '', lrep0.text].filter(Boolean).join('\n\n');
+  const before = new Map(notes.filter(n => n.at !== undefined).map(n => [n.id, timeSheets.flatMap(sh => sh.stats || []).filter(x => Math.abs(x.t - n.at!) < 0.03)[0]]));
   io.step('look', { state: sheets.length ? 'done' : 'skip', detail: sheets.length ? `${sheets.length} image${sheets.length > 1 ? 's' : ''}` : 'no images' });
 
   const checks0 = await checkpoint(ws, preset, true);
@@ -940,11 +1050,13 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
     `ROUND ${job.round} INSTRUCTIONS FROM THE OWNER`,
     auto ? 'Automatic round: carry out every critic point below.' : brief || '(no extra words: work through the critic\'s points)',
     notesBlock(notes),
+    notes.some(n => n.at !== undefined) ? `WHAT IS AT EACH NOTE'S MOMENT NOW (rebuild from these: remove what makes the moment weak, then build it again)\n${notes.filter(n => n.at !== undefined).map(n => `${n.id} @ ${n.at!.toFixed(2)}s: ${clipsAt(p, n.at!)}`).join('\n')}` : '',
+    measured,
     auto && lastCrit?.brief ? `THE CRITIC'S WRITE-UP (context for the notes)\n${lastCrit.brief}` : '',
     lastCrit ? `THE CRITIC'S LAST SCORE: ${lastCrit.score}/10 ("${lastCrit.headline}"); areas from weakest: ${weakest}. Raise the weakest areas with real changes; the critic checks every note again and scores the result.` : '',
     past ? `EARLIER ROUNDS\n${past}` : '',
     lyricsBrief(ws.project.lyrics),
-    'Change the current timeline to do all of this. Keep what already works unless the instructions say otherwise; rebuild a section completely when that is what it takes. The first images are frames rendered from the edit as it stands (frames labelled with a note id show that note\'s moment); the rest are contact sheets of the media for finding better shots.',
+    'REBUILD, DO NOT PATCH. For every note about a moment, remove what makes it weak (the transition, the layers, the text listed at its time) and build the moment again properly; a layer added on top of a broken or pointless moment is not a fix, and a weak transition is replaced with a different designed move (or a clean cut on the beat), never kept and dressed up. A note about a whole area (the hook, the look, the motion, the loop) gets a change big enough to move that area\'s score by a point. Keep what the critic called a strength. The studio renders every note\'s moment after your changes and checks that the frame changed. The first images are frames rendered from the edit as it stands (frames labelled with a note id show that note\'s moment); the rest are contact sheets of the media for finding better shots.',
   ].filter(Boolean).join('\n\n');
   const reserve = bytes(instruction) + history.reduce((n, t) => n + bytes(t.content), 0) + 6000;
   const ctx = fitContext(x => contextBlock(ws.ctx, sheets.map(x2 => x2.caption), undefined, x), extrasFor(preset, standards, checksText(checks0), { canon: true, exemplars: effort === 'extra' }), reserve);
@@ -963,7 +1075,9 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   const extra = await fillMissingNotes(ws, io2, { preset, standards, turns, notes, effort, mediaImages: footage.length > 0 });
   const applied = res.applied + (extra?.applied || 0);
   const adjusted = [...res.issues, ...(extra?.issues || []), ...(await landLoop(ws, preset))];
-  io.step('apply', { state: 'done', detail: `${applied} applied${adjusted.length ? `, ${adjusted.length} adjusted` : ''}${notes.length ? ` · ${notes.filter(n => n.ops).length}/${notes.length} notes carried` : ''}` });
+  // a note is carried only when its moment looks different: render each note's frame again and compare
+  const unchanged = await unchangedNotes(ws, io, notes, before);
+  io.step('apply', { state: 'done', detail: `${applied} applied${adjusted.length ? `, ${adjusted.length} adjusted` : ''}${notes.length ? ` · ${notes.filter(n => n.ops).length}/${notes.length} notes carried` : ''}${unchanged.length ? ` · ${unchanged.length} moment${unchanged.length > 1 ? 's' : ''} unchanged` : ''}` });
 
   io.step('check', { state: 'run' });
   let checks = await checkpoint(ws, preset, true);
@@ -972,6 +1086,8 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
 
   const rv = await reviewPasses(ws, io2, { preset, standards, effort, turns, res: { ...res, issues: adjusted }, checks, mediaImages: footage.length > 0, notes, revision: true, lost });
   checks = rv.checks;
+  const repaired = await finalRepair(ws, io2, preset, effort);
+  if (repaired.length) { rv.issues.push(...repaired); checks = await checkpoint(ws, preset, true); }
   const summary = rv.message || rp.replies.map(x => x.message).filter(Boolean).join(' ') || (nOps ? 'Done.' : 'No changes were needed.');
   await finishRound(ws, job, { summary, applied: applied + rv.applied, model, notes, scores: rv.scores }, turns);
   return { summary, applied: applied + rv.applied, issues: [...adjusted, ...rv.issues], model, checks };
