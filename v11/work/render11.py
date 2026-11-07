@@ -9680,8 +9680,12 @@ def _render_block(fs): return [render(f) for f in fs]
 
 def render_blocks(pool, frames, size=36):
     """yield (frame, image) in the order given, each block rendered by one worker."""
-    for fs, ims in zip(frame_blocks(frames, size), pool.imap(_render_block, frame_blocks(frames, size), chunksize=1)):
-        yield from zip(fs, ims)
+    from collections import deque
+    bl = frame_blocks(frames, size); q = deque()
+    for fs in bl:                                                                           # at most 6 blocks in flight
+        q.append((fs, pool.apply_async(_render_block, (fs,))))
+        if len(q) >= 6: fs_, r = q.popleft(); yield from zip(fs_, r.get())
+    while q: fs_, r = q.popleft(); yield from zip(fs_, r.get())
 
 
 def main():

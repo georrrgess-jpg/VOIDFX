@@ -80,7 +80,7 @@ def _block(fs): return [R.render(f) for f in fs]
 
 def render_iter(pool, frames, size=36):
     bl = blocks(frames, size)
-    for fs, ims in zip(bl, pool.imap(_block, bl, chunksize=1)):
+    for fs, ims in zip(bl, edit_env.bounded_imap(pool, _block, bl)):
         yield from zip(fs, ims)
 
 # ---- encoders ----------------------------------------------------------------------------------------------------

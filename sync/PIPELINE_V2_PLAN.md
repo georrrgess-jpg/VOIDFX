@@ -9,9 +9,9 @@
 
 | Package | State | Result |
 |---|---|---|
-| WP0 one shared code base | **open** | Needs the owner's approval and the Dexter branch pushed to `georrrgess-jpg/voidfx`. The Flash work is on `claude/gallant-planck-pqpczp` (the only branch this studio may push to). |
-| WP1 golden frames + metrics | **done** | `tools/golden.py` (references for v10 and v11 from the shipped engines); `tools/metrics.py`, and `build.sh` logs every step. |
-| WP2 render speed | **done** (target not fully met) | v11 full render **427 s** (was 786–914 s); render work per frame 1.30× faster, all frames within the gate. The 6-minute target is out of reach without touching the upload encode (preset slow is ~2.3 min of 4-core time; guardrail 1 keeps it). |
+| WP0 one shared code base | **done** (Dexter studio) | `dev/pipeline-v2` = both studios merged at `2c694dc` (owner-approved). The Flash Phase 1 is still on `claude/gallant-planck-pqpczp`; merge plan in `sync/handoffs/2026-11-07_flash_DEV_review-WP0-WP2.md` (PRs A–E). |
+| WP1 golden frames + metrics | **done twice** (in parallel) | Dexter: `golden.py` (37 frames, `--cachetest`, tags), `metrics.py` (events, verdicts) on `dev/pipeline-v2`. Flash: `golden.py` (103/112 frames, `--diff`), `metrics.py`. To merge: theirs + our `--dense` list and `--diff`. |
+| WP2 render speed | **done** (target not fully met; two complementary halves) | Dexter PR #1 (items 1–3, approved): 0.95 s/frame. Flash: 0.77 s/frame on the same blocks (shipped 1.11). Flash full render of v11 **427 s** (was 786–914 s) with the master moved off the critical path; the 6-minute target is out of reach without touching the upload encode (preset slow, ~2.3 min of 4-core time, kept by guardrail 1). |
 | WP3 render server | **done** | `tools/rsrv.py`: a 24-frame sheet in 7.6 s warm (target ≤ 12 s). |
 | WP4 verified partial re-render | **done** (target close) | `tools/vrender.py`: one shot in 227 s (target ≤ 3 min; the upload re-encode is ~2.5 min of it); the EDL round trip was bit-identical; an injected global change was caught on 32 of 32 check frames. |
 | WP8 effects over faces | **done** (as a list, not a gate) | `tools/faceqc.py`: on the shipped v11 it flags the light sweeps and bolts across his face and the title on his chin. |

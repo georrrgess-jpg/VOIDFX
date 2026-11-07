@@ -91,7 +91,7 @@
   7. review every run in the faces-vs-effects list (`vN/frames/faceqc.jpg`), then `deliver` (waits for the background master);
   8. at the verdict, `python3 tools/vrender.py N clean` (the frame cache is ~2.2 GB).
   - Check the pitfalls list there before building transitions.
-  - **Engine changes:** run `bash tools/build.sh 11 golden` and `bash tools/build.sh 10 golden` before and after. A change that moves any reference frame by more than 2/255 (or the mean by 0.2/255) is a look change, not a speed-up. The upgrade plan and its status: `sync/PIPELINE_V2_PLAN.md`.
+  - **Engine changes:** run `bash tools/build.sh 11 golden` and `bash tools/build.sh 10 golden` before and after. A change that moves any reference frame by more than 2/255 (or the mean by 0.2/255) is a look change, not a speed-up. The upgrade plan and its status: `sync/PIPELINE_V2_PLAN.md`. The shared development branch is `dev/pipeline-v2` (the Dexter studio leads; the Flash Phase 1 tools are being merged into it as PRs A–E, see `sync/handoffs/2026-11-07_flash_DEV_review-WP0-WP2.md`). Until then Flash edits use this branch's tools. In `render11.py` and its copies, **add an edit's own sections above the pipeline v2 speed section** (a `render_shot` or `grade` defined below it bypasses the caches and the fast grade: still correct, only slower).
 - **Honesty:** you cannot watch or listen. Report what was verified by frames and measurement, and ask the user to watch once with sound.
 - **Communication:** short progress updates; no long code in chat.
 

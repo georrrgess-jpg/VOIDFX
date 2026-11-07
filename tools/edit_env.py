@@ -27,3 +27,14 @@ def edl(n):
     wd = work_dir(n)
     if wd not in sys.path: sys.path.insert(0, wd)
     return importlib.import_module(f"edl{n}")
+
+def bounded_imap(pool, fn, items, ahead=6):
+    """pool.imap in order, with at most `ahead` tasks in flight. pool.imap queues every task at once, and when the
+    consumer (the encoder) is slower, finished frames pile up in memory: 12.1 GB on v11 in the Dexter studio's test
+    (DEV handoff WP2-1). workers + 2 keeps every worker busy."""
+    from collections import deque
+    q = deque()
+    for x in items:
+        q.append(pool.apply_async(fn, (x,)))
+        if len(q) >= ahead: yield q.popleft().get()
+    while q: yield q.popleft().get()

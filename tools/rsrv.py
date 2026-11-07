@@ -43,7 +43,7 @@ def blocks(frames, size=24):
 def render_many(frames):
     """render frames on the warm pool: contiguous runs as blocks, scattered frames one per task."""
     bl = blocks(frames); res = {}
-    for fs, ims in zip(bl, POOL.imap(_block, bl, chunksize=1)):
+    for fs, ims in zip(bl, edit_env.bounded_imap(POOL, _block, bl)):
         res.update(zip(fs, ims))
     return [res[f] for f in frames]
 
@@ -79,7 +79,7 @@ def handle(n, req):
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", *(["-c:a", "aac", "-b:a", "160k", "-shortest"] if aud else []), out]
         pr = subprocess.Popen(cmd_, stdin=subprocess.PIPE)
         bl = blocks(fs)
-        for ims in POOL.imap(_block, bl, chunksize=1):
+        for ims in edit_env.bounded_imap(POOL, _block, bl):
             for im in ims: pr.stdin.write(cv2.resize(im, (E.W // 2, E.H // 2), interpolation=cv2.INTER_AREA).tobytes())
         pr.stdin.close(); pr.wait(); return [out]
     if cmd == "auto":
