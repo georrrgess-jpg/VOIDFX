@@ -202,9 +202,10 @@
    "engine_base": true
   },
   {
-   "edit": "DRACULA (Studio 2)",
-   "folder": "Studio 2's branch (not merged here)",
-   "reference_for": "Studio 2's standard; source-sharpness rule"
+   "edit": "v105 DRACULA (Dexter studio)",
+   "folder": "v105/ on claude/beautiful-volta-wjki7k (not merged here)",
+   "reference_for": "concept from the lyric × the character's double life; light behind the subject; the loop as the most creative transition; Dexter scaffold base",
+   "quote": "I like this edit and would like for you to make it a standard. The only gripe I have is the quality of some of the clips."
   },
   {
    "edit": "v10 LET IT HAPPEN",
@@ -297,6 +298,11 @@
    "edit": "DRACULA (Studio 2)",
    "what": "soft shots (sunrise walk zoomed ~3.5x, palms, lollipop, ice cream, hood, pink wall)",
    "rule": "sharpness check; zoom <= 10 % on 720p; close-ups on the least-compressed packs"
+  },
+  {
+   "edit": "v105 (Dexter studio)",
+   "what": "the sun drawn over the whole frame burned away the top of his head; soft clips at the verdict",
+   "rule": "light behind the subject; clip-quality ranking"
   }
  ],
  "qc_gates": [
@@ -383,6 +389,55 @@
    "check": "frames from the encoded file around every transition, title, the drop and the loop look right",
    "tool": "contact sheets",
    "auto": false
+  }
+ ],
+ "engine_bases": {
+  "flash": "v11",
+  "dexter": "v105",
+  "note": "agreed between the studios 2026-11-07; shared effects ported through handoffs"
+ },
+ "rules_from_handoffs": [
+  {
+   "from": "v105 DRACULA",
+   "rule": "Light sources go behind the subject: the person matte, light only from the background, a light wrap on the near edge.",
+   "evidence": "what happened with the sun and the top right part of dexters head? (v105 rev 1)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "Clip quality: restore 720p; rank sources before choosing (sharpness.py N --src) and on the render; zoom <= 1.1; hero shots on high-bitrate packs; ask for 1080p/4K packs for hero moments.",
+   "evidence": "The only gripe I have is the quality of some of the clips (v105 verdict)",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "The loop is the most creative transition in the edit: a set piece paying off the concept, landing in frame 0's own image.",
+   "evidence": "make it a more creative and unique transition (v105 rev 2-3)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "Restyle library transitions before reusing them.",
+   "evidence": "v105 rev 3 review (v6 cube grid, v9 jasmine)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "When a burn/dissolve removes the subject, remove him before drawing scene light; fill the hole with plausible background.",
+   "evidence": "v105 rev 3 review",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "'Add transitions, graphics and animations wherever possible' = replace generic connectors with themed ones and add new cuts with new transitions.",
+   "evidence": "v105 rev 2 and 3",
+   "applies_to": "all",
+   "check": "plan"
   }
  ]
 }

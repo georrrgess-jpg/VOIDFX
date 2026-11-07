@@ -159,6 +159,21 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 15. **A 720p pack cropped to 9:16 is a 2.7× blow-up.** Run `tools/sr_prep.py` (restoration + 2× from the network) instead of cubic + unsharp mask; the renderer drops the unsharp mask to 0.16 on restored frames.
 16. **Soft shots (Studio 2, DRACULA):** check every shot with `tools/sharpness.py` while picking and on the finished video; zoom ≤ 10 % on 720p; close-ups on the least-compressed packs. The detail score is per-tile (80th percentile), so a shallow depth-of-field background doesn't read as soft, but motion blur and restoration-smoothed skin do.
 
+## 5c. Port candidates from the Dexter studio (v105 DRACULA)
+
+These live in `v105/work/fx105.py` / `qc105.py` on the Dexter studio's branch; port them when the branches merge.
+
+| Asset | What it does | Flash restyle |
+|---|---|---|
+| `sun_fx(..., m)` | A light source behind the subject: rays from the sky only, light wrap on the near edge, lens ghosts dimmed by how much of the source he covers | The lightning glow / Speed Force light behind Barry (fixes rule 13 for our `light_rays`) |
+| ASHES TO SUN: `ash_setup`, `ash_body`, `ashes_fx`, `clean_plate`, `seam_out` | The subject burns away like paper (burn-order map: edge distance + direction to the light + noise), 3,000 embers spiral into frame 0's focal point; the hole filled row by row | Barry disintegrates into lightning sparks that fly into the emblem |
+| `eclipse_tr` | A disc wipe with corona and diamond ring | The emblem as the eclipsing disc |
+| `bat_burst`, `bat_swarm`, `bat_pass_tr`, `bat_sprite` | A 3D flock with depth projection and depth blur | Debris, sparks or shards in depth |
+| `coffin_lid` | A height-map-lit prop (normals, diffuse, specular) | Emblems, the cowl, a S.T.A.R. Labs door |
+| `moon_tex`, `bloodmoon_fx` | A procedural moon behind a matte | A planet or a singularity behind Barry |
+| `mist_tr`, `cape_tr`, `card_flip`, `palm_sweep` | Smoke dissolve, cape sweep, card flip, foliage sweep | Speed-wind sweep, a card-flip of a photo |
+| QC §7b flash measurement | Flags white-out runs and flash rate on the encoded file | Drop into `qcN.py` (we measure flashes by hand today) |
+
 ## 5b. What made v11 the standard (carry the principles, not the look)
 
 - **A concept found in the material:** the song's spoken "Harrison" became the whole edit (the Reverse-Flash rivalry): a second grade for the rival, red against gold at the drop (the bolt split), the gold winning on the punch (the clash), the red taking the symbol at the end (REVERSE).

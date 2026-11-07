@@ -3,6 +3,8 @@
   python3 tools/sharpness.py packs          # every pack in src/: resolution, fps, bitrate, bits per pixel, native detail
   python3 tools/sharpness.py N              # edit vN: per shot, the enlargement (from the EDL) and, if the encoded MP4
                                             # exists, the measured sharpness of the finished shot; flags the soft ones
+  python3 tools/sharpness.py N --src        # before rendering: each shot's source frames, cropped to its 9:16 window and
+                                            # enlarged like the edit will, ranked; flags the soft ones (pick replacements)
 
 Why: every pack is 720p (including the ones labelled 4K). A 9:16 window uses about 405x720 source pixels, so every shot is
 enlarged ~2.67x before any zoom; z adds to it (z 1.10 -> 2.93x, z 1.30 -> 3.47x). Heavy compression (low bits per pixel)
@@ -100,6 +102,42 @@ def edit(n):
     print("flagged:", soft if soft else "none")
 
 
+def src_rank(n):
+    """rank the EDL's shots by the in-focus detail of their source frames, cropped and enlarged as the edit will be."""
+    sys.path.insert(0, f"{ROOT}/v{n}/work"); sys.argv = [sys.argv[0]]
+    E = importlib.import_module(f"edl{n}"); res = []; caps = {}
+    for s in E.SHOTS:
+        src = s.get("src")
+        if not src or src not in E.SRC: continue
+        path, fps, sw, sh = E.SRC[src]
+        cap = caps.setdefault(src, cv2.VideoCapture(path))
+        ks = s["tmap"]; ts = [ks[int(len(ks) * q)][1] if len(ks) > 2 else ks[0][1] + (ks[-1][1] - ks[0][1]) * q for q in (0.25, 0.5, 0.75)]
+        zmax = max(v for _, v in s.get("z", [(0, 1.0)])); ch = sh / zmax; cw = ch * 9 / 16
+        cx = float(np.mean(s["cx"])) if s.get("cx") else sw / 2
+        x0 = int(max(0, min(sw - cw, cx - cw / 2))); y0 = int((sh - ch) / 2)
+        ds = []
+        for t in ts:
+            cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000); ok, fr = cap.read()
+            if not ok: continue
+            crop = fr[y0:y0 + int(ch), x0:x0 + int(cw)]
+            up = cv2.resize(crop, (1080, 1920), interpolation=cv2.INTER_CUBIC)
+            g = cv2.cvtColor(up, cv2.COLOR_BGR2GRAY)
+            if g.mean() > 20:
+                d_ = detail(g[int(1920 * 0.08):int(1920 * 0.68), int(1080 * 0.15):int(1080 * 0.85)])
+                if d_ == d_: ds.append(d_)
+        res.append(dict(n=s["n"], src=src, zmax=zmax, enlarge=1920.0 / sh * zmax, detail=float(np.median(ds)) if ds else None))
+    med = float(np.median([r["detail"] for r in res if r["detail"] is not None]))
+    print(f"{'shot':10s} {'src':4s} {'enlarge':>8s} {'detail':>7s} {'vs median':>9s}  flags   (source frames, cubic-enlarged; face-centred crops use the frame centre unless cx is set)")
+    for r in sorted(res, key=lambda r: r["detail"] if r["detail"] is not None else 9):
+        rel = r["detail"] / med if r["detail"] is not None else None; r["rel"] = rel
+        fl = (["SOFT"] if rel is not None and rel < 0.80 else []) + ([f"zoom {100 * (r['zmax'] - 1):.0f}%"] if r["enlarge"] > 2.95 else [])
+        r["flags"] = fl
+        print(f"{r['n']:10s} {r['src']:4s} {r['enlarge']:7.2f}x " + (f"{r['detail']:7.3f} {rel:8.2f}x" if rel else "      -         -") + "  " + ", ".join(fl))
+    json.dump(dict(median=med, shots=res), open(f"{ROOT}/v{n}/work/sharpness_src.json", "w"), indent=1)
+
+
 if __name__ == "__main__":
     a = sys.argv[1] if len(sys.argv) > 1 else "packs"
-    packs() if a == "packs" else edit(a.lstrip("v"))
+    if a == "packs": packs()
+    elif "--src" in sys.argv: src_rank(a.lstrip("v"))
+    else: edit(a.lstrip("v"))

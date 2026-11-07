@@ -15,6 +15,7 @@ This is the starting point for building a fully autonomous and manual editing st
 | `studio/VOIDFX_STUDIO.md` | The handbook: benchmarks with quotes, non-negotiables, likes with evidence, the rejected list, craft lessons, pre-build gate, ship checkpoint, style bank, songs used | Why each rule exists |
 | `studio/SCENE_PACKS.md` | Every source pack and song: specs, measured quality, proven shots with timecodes, dialogue lines, what to avoid | Shot selection |
 | `studio/src_manifest.json` | The 30 media files the library needs (names, sizes, SHA-256, original upload names) | Rebuilding `src/` |
+| `sync/` | **The two-studio sync:** workflow (`README.md`), the shared `HANDOFF_TEMPLATE.md`, `RECEIVE_PROMPT.md`, `LEDGER.md`, and every handoff sent and received (`handoffs/`) | Keeping both studios learning at the same pace |
 | `studio/START_PROMPT.md` | The one-message brief for a new edit, plus the feedback template | Starting edits; the intake form |
 | `studio/NEW_STUDIO_SETUP.md` | How to stand up a second studio session | Parallel studios |
 | `docs/TOOLKIT.md` | The engine: pipeline timings, the transition and graphics catalogue (91 transitions registered in the v11 engine), pitfalls, what made each standard | Building and extending the engine |
@@ -123,7 +124,7 @@ The full rules with the owner's own words are in `CLAUDE.md` and the handbook; `
 | v10 LET IT HAPPEN | Flash × Let It Happen | prism speed | 5 revisions ("lacklustre" twice), then **standard** | the motion pass; restored source; onset-timed lyrics; loop as a set piece; the props rule |
 | v11 BOP | Flash × BOP | voltage / rival | 4 revisions, then **standard** | concept from the material; one focal set piece; detailed physical assets; beat moments; exact loop; flash discipline |
 | FOREVER (Studio 2) | Dexter | — | props lingered, were random, looked drawn, didn't land | the props rule |
-| DRACULA (Studio 2) | Dexter | — | **standard** (Studio 2); some shots soft | the sharpness rule |
+| v105 DRACULA (Dexter studio) | Dexter × Tame Impala "Dracula" | SUNDOWN (day postcard / moonlit night) | 3 revisions, **standard**; gripe: clip quality | light behind the subject; the loop as the most creative transition; restyle library moves; the sharpness rule |
 
 The pattern across eleven edits: the owner keeps asking for **more designed transitions, animations, graphics and sound effects**, for **character-specific physical ideas**, and for **polish** (no soft shots, no white-outs, no effects on faces). Approval came when the edit had a clear concept, a focal piece, and motion on every beat.
 
