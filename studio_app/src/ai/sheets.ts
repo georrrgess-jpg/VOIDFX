@@ -7,7 +7,14 @@ import { renderStills } from '../engine/exporter';
 import { getBlob } from '../state/storage';
 import type { LibraryItem, Standard } from '../state/catalog';
 
-export interface Sheet { blob: Blob; caption: string; /** Mean brightness (0-1) of each rendered frame on it, with its time. */ lumas?: [number, number][] }
+export interface Sheet {
+  blob: Blob; caption: string;
+  /** Mean brightness (0-1) of each rendered frame on it, with its time. */
+  lumas?: [number, number][];
+  /** Each rendered frame measured: its time, mean brightness, contrast (sd) and a 16x16 brightness grid. */
+  stats?: FrameStat[];
+}
+export interface FrameStat { t: number; luma: number; sd: number; px: Float32Array }
 
 const TARGET_PX = 1_150_000;
 
@@ -203,31 +210,42 @@ export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet
   return sheets.slice(0, maxImages);
 }
 
-/** Frames of the edit itself (rendered by the studio), labelled with timeline time. */
-export async function timelineSheets(p: Project, media: Record<string, MediaInfo>, times: number[], perSheet: number, maxImages: number, signal?: AbortSignal, cellH = p.width / p.height < 1 ? 420 : 300, labels?: string[]): Promise<Sheet[]> {
+/** Frames of the edit itself (rendered by the studio), labelled with timeline time. With `ruler`, each
+ * frame carries the cyan 0..1 ruler of the output frame, for reading anchor and layer positions. */
+export async function timelineSheets(p: Project, media: Record<string, MediaInfo>, times: number[], perSheet: number, maxImages: number, signal?: AbortSignal, cellH = p.width / p.height < 1 ? 420 : 300, labels?: string[], opts: { ruler?: boolean } = {}): Promise<Sheet[]> {
   const aspect = p.width / p.height;
   const list = times.slice(0, perSheet * maxImages);
   const stills = await renderStills(p, list, cellH, signal, media);
-  const lumaOf = (c: HTMLCanvasElement | null) => {
-    if (!c) return -1;
+  const statOf = (c: HTMLCanvasElement | null, t: number): FrameStat | null => {
+    if (!c) return null;
     const s = document.createElement('canvas');
     s.width = 16; s.height = 16;
     const g = s.getContext('2d', { willReadFrequently: true })!;
     g.drawImage(c, 0, 0, 16, 16);
     const d = g.getImageData(0, 0, 16, 16).data;
+    const px = new Float32Array(256);
     let sum = 0;
-    for (let i = 0; i < d.length; i += 4) sum += (d[i] * 0.2126 + d[i + 1] * 0.7152 + d[i + 2] * 0.0722) / 255;
-    return sum / 256;
+    for (let i = 0; i < 256; i++) { px[i] = (d[i * 4] * 0.2126 + d[i * 4 + 1] * 0.7152 + d[i * 4 + 2] * 0.0722) / 255; sum += px[i]; }
+    const luma = sum / 256;
+    let v = 0;
+    for (let i = 0; i < 256; i++) v += (px[i] - luma) ** 2;
+    return { t, luma, sd: Math.sqrt(v / 256), px };
   };
-  const lum = stills.map(lumaOf);
+  const stats = stills.map((c, i) => statOf(c, list[i]));
   const sheets: Sheet[] = [];
   for (let i = 0; i < list.length; i += perSheet) {
     const part = list.slice(i, i + perSheet);
     const blob = await compose(part.map((t, k) => {
       const c = stills[i + k];
-      return { img: c, w: c?.width || 0, h: c?.height || 0, label: labels?.[i + k] || `T ${t.toFixed(2)}s` };
+      return { img: c, w: c?.width || 0, h: c?.height || 0, label: labels?.[i + k] || `T ${t.toFixed(2)}s`, ruler: opts.ruler };
     }), aspect);
-    sheets.push({ blob, caption: `frames of the current edit rendered by the studio at timeline times ${part[0].toFixed(2)}s to ${part[part.length - 1].toFixed(2)}s`, lumas: part.map((t, k) => [t, lum[i + k]] as [number, number]).filter(x => x[1] >= 0) });
+    const st = part.map((_, k) => stats[i + k]).filter((x): x is FrameStat => !!x);
+    sheets.push({
+      blob,
+      caption: `frames of the current edit rendered by the studio at timeline times ${part[0].toFixed(2)}s to ${part[part.length - 1].toFixed(2)}s${opts.ruler ? '; cyan ticks along the top mark x = .1 to .9 of the frame and on the left y = .25/.5/.75, for placing anchors and layers' : ''}`,
+      lumas: st.map(x => [x.t, x.luma] as [number, number]),
+      stats: st,
+    });
   }
   return sheets;
 }

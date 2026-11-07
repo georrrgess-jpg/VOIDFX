@@ -117,17 +117,16 @@ await ctx.addInitScript(() => {
             const ids = [...last.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
             window.__filledNotes = (window.__filledNotes || 0) + 1;
             reply = JSON.stringify({ message: `Carried ${ids.join(', ')}.`, notes: ids.map(id => ({ id, plan: 'dust in the light' })), ops: [{ op: 'fx', preset: 'dust', start: 0.5, dur: 2, note: ids }] });
-          } else if (last.includes('STEP 2 OF 2, PART A') || last.includes('STEP 2 OF 2, PART B')) {
-            const a = last.includes('PART A');
-            window.__parts = [...(window.__parts || []), a ? 'A' : 'B'];
-            const plan = planFrom(full);
-            reply = JSON.stringify({ message: plan.message, ops: plan.ops.filter(o => PICTURE.has(o.op) === a) });
-          } else if (last.includes('STEP 1 OF 2')) {
-            // the first direction call comes back empty, as it did for the owner: the studio must retry lighter
+          } else if (last.includes('CALL 1 OF 2: THE CUT')) {
+            // the first cut call comes back empty, as it did for the owner: the studio must ask again at the same effort
             if (!window.__failedOnce) { window.__failedOnce = true; window.__calls[window.__calls.length - 1].failed = 'empty_completion'; throw { code: 'empty_completion', message: 'no text' }; }
-            reply = JSON.stringify({ message: 'Concept: the evidence points back at him.', direction: 'CONCEPT: the evidence points back at him. SHOTS: every file twice, logo dive on the first downbeat.' });
-          } else if (last.includes('STEP 2 OF 2') && /ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full)) {
-            reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
+            window.__parts = [...(window.__parts || []), 'cut'];
+            const plan = planFrom(full);
+            reply = JSON.stringify({ message: plan.message, design: 'CONCEPT: the evidence points back at him. Logo dive on the first downbeat.', ops: plan.ops.filter(o => PICTURE.has(o.op)) });
+          } else if (last.includes('CALL 2 OF 2: THE DESIGN')) {
+            window.__parts = [...(window.__parts || []), 'design'];
+            const plan = planFrom(full);
+            reply = JSON.stringify({ message: 'Designed the transitions, titles and light.', ops: plan.ops.filter(o => !PICTURE.has(o.op)) });
           } else if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && !/REVIEW \d OF/.test(last)) {
             reply = JSON.stringify({ message: 'Round 2: re-cut the opening on the downbeat and closed the loop.', ops: [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } }] });
           } else if (/REVIEW \d OF/.test(last)) {

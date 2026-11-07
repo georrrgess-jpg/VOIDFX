@@ -48,7 +48,7 @@ const server = http.createServer(async (req, res) => {
       return f;
     });
     const kind = /You are the critic/.test(q.turns[0].content) ? 'critic' : /You are casting material/.test(q.turns[0].content) ? 'cast'
-      : (q.turns[q.turns.length - 1].content.match(/REVIEW \d OF \d|STEP 1 OF 2|STEP 2 OF 2, PART [AB]|STEP 2 OF 2|NOTES WITH NO APPLIED OPERATIONS/) || ['plan'])[0];
+      : (q.turns[q.turns.length - 1].content.match(/REVIEW \d OF \d|CALL 1 OF 2: THE CUT|CALL 2 OF 2: THE DESIGN|THIS CALL CARRIES OUT|NOTES WITH NO APPLIED OPERATIONS/) || ['plan'])[0];
     const md = [
       `# VOIDFX Studio request ${n} (${kind}; effort ${q.opts.effort || '-'})`,
       imgs.length ? `Attached images, in order:\n${imgs.map((f, k) => `${k + 1}. ${f}`).join('\n')}` : 'No images attached.',

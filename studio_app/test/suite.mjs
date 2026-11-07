@@ -130,25 +130,44 @@ await ctx.addInitScript(() => {
             window.__filled = (window.__filled || 0) + 1;
             return reply(JSON.stringify({ message: `Carried ${ids.join(', ')}.`, ops: [{ op: 'fx', preset: 'dust', start: 0.5, dur: 2, note: ids }] }), opts);
           }
-          if (last.includes('STEP 2 OF 2, PART')) {
-            const a = last.includes('PART A');
-            window.__parts.push(a ? 'A' : 'B');
-            if (!a && window.__breakB > 0) { window.__breakB--; return reply('this is not json', opts); }
-            const rev = /ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full);
-            if (rev) return reply(JSON.stringify({ message: a ? 'Re-cut the opening.' : 'Bigger title.', ops: a ? [{ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 }, note: 'N1' }] : [{ op: 'set', id: 'knock', style: { size: 0.11 }, note: 'N2' }] }), opts);
-            const plan = planFrom(full);
-            return reply(JSON.stringify({ message: plan.message, ops: plan.ops.filter(o => PICTURE.has(o.op) === a) }), opts);
-          }
-          if (last.includes('STEP 1 OF 2')) {
+          if (last.includes('CALL 1 OF 2: THE CUT')) {
+            const tight = last.includes('Your last attempt used its whole time');
+            window.__cutCalls = [...(window.__cutCalls || []), { effort: opts.effort, tight, images: call.images }];
             if (!window.__failedOnce) { window.__failedOnce = true; call.failed = 'empty_completion'; throw { code: 'empty_completion', message: 'no text' }; }
+            window.__parts.push('cut');
             const ids = [...full.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
-            // a long direction makes a revision use the two-part writer too
-            return reply(JSON.stringify({ message: 'Concept: the evidence points back at him.', direction: 'CONCEPT: the evidence points back at him. ' + 'SHOT '.repeat(window.__longDirection ? 600 : 10), notes: ids.map(id => ({ id, plan: 'do it' })) }), opts);
+            const plan = planFrom(full);
+            const ops = plan.ops.filter(o => PICTURE.has(o.op)).map((o, i) => (o.op === 'look' ? { ...o, note: 'N2' } : o.op === 'add' && i === 2 ? { ...o, note: 'N1' } : o));
+            return reply(JSON.stringify({ message: plan.message, design: 'CONCEPT: the evidence points back at him. SET PIECES: dive 1.5, shatter 3.0. TEXT: COULD IT BE HIM 0.3.', notes: ids.map(id => ({ id, plan: 'do it' })), ops }), opts);
+          }
+          if (last.includes('CALL 2 OF 2: THE DESIGN')) {
+            const half = last.match(/THIS CALL DESIGNS ([\d.]+)-([\d.]+) s ONLY/);
+            window.__designCalls = [...(window.__designCalls || []), { effort: opts.effort, images: call.images, board: full.includes('STORYBOARD of your cut') && full.includes('cyan ticks'), idle: last.includes('SHOTS WITH NOTHING ON THEM YET'), half: half ? half[0] : null }];
+            if (!half && window.__breakDesign > 0) { window.__breakDesign--; call.failed = 'empty_completion'; throw { code: 'empty_completion', message: 'no text' }; }
+            if (half && +half[1] > 0 && window.__breakHalf2 > 0) { window.__breakHalf2--; return reply('this is not json', opts); }
+            window.__parts.push(half ? `half@${half[1]}` : 'design');
+            const plan = planFrom(full);
+            let ops = plan.ops.filter(o => !PICTURE.has(o.op));
+            if (half) { const a = +half[1], b = +half[2]; ops = ops.filter(o => o.start === undefined || (o.start >= a && o.start < b)).map(o => (o.id ? { ...o, id: `${a > 0 ? 'e' : 'd'}${o.id}` } : o)); }
+            return reply(JSON.stringify({ message: 'Designed the transitions, titles and light.', ops }), opts);
+          }
+          if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && last.includes('Work through')) {
+            const part = last.match(/THIS CALL CARRIES OUT (N\d+)(?:-(N\d+))? ONLY/);
+            window.__reviseCalls = [...(window.__reviseCalls || []), { effort: opts.effort, images: call.images, part: part ? part[0] : null }];
+            if (!part && window.__breakRevise > 0) { window.__breakRevise--; call.failed = 'empty_completion'; throw { code: 'empty_completion', message: 'no text' }; }
+            const all = [...full.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
+            let ids = [...new Set(all)];
+            if (part) { const a = +part[1].slice(1), b = +(part[2] || part[1]).slice(1); ids = ids.filter(id => +id.slice(1) >= a && +id.slice(1) <= b); }
+            const ops = ids.map((id, i) => ({ op: 'fx', id: `${part ? (part[1] === 'N1' ? 'r' : 's') : ''}fx${i}`, preset: 'dust', start: 0.5 + i, dur: 1, note: id }));
+            ops.push({ op: 'project', camera: { on: true, every: 'beat', punch: 0.07, kick: 1.2 } });
+            return reply(JSON.stringify({ message: `Revised ${ids.join(', ')}.`, notes: ids.map(id => ({ id, plan: 'do it' })), ops }), opts);
           }
           if (/REVIEW \d OF/.test(last)) {
             const ids = [...last.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
             window.__reviews = [...(window.__reviews || []), last.slice(0, 40)];
             if (last.includes('could not be written')) window.__sawLost = true;
+            if (last.includes('MEASURED TRANSITIONS')) window.__sawMeasured = true;
+            if (/transition close-ups/.test(full)) window.__sawClose = true;
             const scores = { hook: 7, rhythm: 7.5, transitions: 8, motion: 7, text: 8, sound: 7, concept: 7.5, picture: 7.5, loop: 6 };
             const notes = ids.map(id => ({ id, status: 'done', check: 'visible' }));
             if (last.includes('effect oops does not compile')) { window.__sawCompile = true; return reply(JSON.stringify({ message: 'Removed oops.', scores, notes, ops: [{ op: 'remove', id: 'oops' }] }), opts); }
@@ -223,9 +242,14 @@ if (on('build')) {
     if (e === 'high' || e === 'extra') check(`${e}: self-scores recorded`, !!rec.self && Object.keys(rec.self).length === 9);
     if (e === 'extra') check('extra: critic ran after the build', typeof rec.crit === 'number', String(rec.crit));
   }
-  const calls = await S(() => ({ parts: window.__parts, compile: !!window.__sawCompile, retried: window.__calls.some(c => c.failed === 'empty_completion'), filled: window.__filled || 0, maxChars: Math.max(...window.__calls.map(c => c.chars)) }));
-  check('high/extra write picture and layers in two calls', calls.parts.filter(p => p === 'A').length >= 2 && calls.parts.filter(p => p === 'B').length >= 2, calls.parts.join(''));
-  check('an empty reply is retried lighter', calls.retried);
+  const calls = await S(() => ({ parts: window.__parts, cut: window.__cutCalls || [], design: window.__designCalls || [], measured: !!window.__sawMeasured, close: !!window.__sawClose, compile: !!window.__sawCompile, filled: window.__filled || 0, maxChars: Math.max(...window.__calls.map(c => c.chars)) }));
+  check('medium/high/extra: the cut, then the design', calls.parts.filter(p => p === 'cut').length >= 3 && calls.parts.filter(p => p === 'design').length >= 3, calls.parts.join(' '));
+  const retry = calls.cut.find(c => c.tight);
+  check('a call that runs out of time is asked again at the same effort', !!retry && calls.cut.filter(c => !c.tight).some(c => c.effort === retry.effort) && retry.images <= Math.ceil(calls.cut[0].images / 2), JSON.stringify(calls.cut));
+  check('the design sees a storyboard with the frame ruler', calls.design.length >= 3 && calls.design.every(d => d.board && d.images > 0), JSON.stringify(calls.design));
+  check('the design is told which shots have nothing on them', calls.design.some(d => d.idle));
+  check('the design runs at the job effort', calls.design.every(d => d.effort !== 'low'), JSON.stringify(calls.design.map(d => d.effort)));
+  check('the reviews measure every transition and see the close-ups', calls.measured && calls.close);
   check('a broken custom effect is fixed by the review', calls.compile);
   check('prompts stay under the limit', calls.maxChars < 250 * 1024, `${calls.maxChars} chars`);
   writeFileSync(join(OUT, 'suite-build-jobs.json'), JSON.stringify(jobs, null, 1));
@@ -234,7 +258,7 @@ if (on('build')) {
 // ---------- 2. revision with numbered notes, then an automatic round ----------
 if (on('build') && on('revise')) {
   const pid = await S(() => window.__voidfx.store.state.jobs.find(j => j.kind === 'create' && j.effort === 'extra').projectId);
-  await S(() => { window.__longDirection = true; });
+  await S(() => { window.__breakRevise = 2; });
   const jid = await page.evaluate(async pid => {
     const v = window.__voidfx;
     const r = await v.getRecord(pid);
@@ -253,14 +277,15 @@ if (on('build') && on('revise')) {
   check('critic: scores against the last round', r2?.crit?.prev === 6.2 && r2.crit.score === 7.1, JSON.stringify(r2?.crit));
   check('critic: follows up every note', r2?.crit?.follow?.length === 5, JSON.stringify(r2?.crit?.follow?.map(f => f.id)));
   check('automatic round ran after the critique', !!r3 && r3.kind === 'revise' && r3.notes?.every(n => n.from === 'critic') && !!r3.crit, JSON.stringify(r3 && { notes: r3.notes?.length, crit: r3.crit?.score }));
-  await S(() => { window.__longDirection = false; });
+  const rc = await S(() => window.__reviseCalls || []);
+  check('revision: one call writes every note; when it runs out of time two calls share the notes at the same effort', rc.filter(c => c.part).length === 2 && rc.every(c => c.effort === 'high'), JSON.stringify(rc));
 }
 
 // ---------- 3. cancel and resume; a layers call that fails twice ----------
 if (on('cancel')) {
   await S(() => { window.__slow = 2500; });
   const id = await startEdit('high', { tag: ' cancel' });
-  await page.waitForFunction(id => { const j = window.__voidfx.store.state.jobs.find(x => x.id === id); return j && j.steps.some(s => s.id === 'direct' && s.state === 'run'); }, id, { timeout: 120000 });
+  await page.waitForFunction(id => { const j = window.__voidfx.store.state.jobs.find(x => x.id === id); return j && j.steps.some(s => s.id === 'cut' && s.state === 'run'); }, id, { timeout: 120000 });
   await S(() => { window.__slow = 120; });
   await page.evaluate(id => window.__voidfx.stopJob(id), id);
   await page.waitForFunction(id => ['stopped', 'error'].includes(window.__voidfx.store.state.jobs.find(x => x.id === id).state), id, { timeout: 30000 });
@@ -269,12 +294,14 @@ if (on('cancel')) {
   await page.waitForFunction(id => ['done', 'error'].includes(window.__voidfx.store.state.jobs.find(x => x.id === id).state), id, { timeout: 300000 });
   check('a stopped build resumes and finishes', await page.evaluate(id => window.__voidfx.store.state.jobs.find(x => x.id === id).state === 'done', id));
 
-  await S(() => { window.__breakB = 2; window.__sawLost = false; });
+  await S(() => { window.__breakDesign = 2; window.__breakHalf2 = 2; window.__sawLost = false; window.__designCalls = []; });
   const id2 = await startEdit('high', { tag: ' lost layers' });
   await page.waitForFunction(id => ['done', 'error'].includes(window.__voidfx.store.state.jobs.find(x => x.id === id).state), id2, { timeout: 300000 });
   const j2 = await page.evaluate(id => window.__voidfx.store.state.jobs.find(x => x.id === id), id2);
-  check('a lost layers call does not stop the build', j2.state === 'done', j2.error || '');
-  check('the review is told to write the lost layers', await S(() => window.__sawLost) && /could not be written/.test(j2.steps.find(s => s.id === 'plan')?.detail || ''), j2.steps.find(s => s.id === 'plan')?.detail);
+  const dc = await S(() => window.__designCalls);
+  check('a design that runs out of time is split in two halves at the same effort', dc.filter(d => d.half).length >= 2 && dc.every(d => d.effort === 'high'), JSON.stringify(dc));
+  check('a lost half does not stop the build', j2.state === 'done', j2.error || '');
+  check('the review is told to write the lost half', await S(() => window.__sawLost) && /could not be written/.test(j2.steps.find(s => s.id === 'design')?.detail || ''), j2.steps.find(s => s.id === 'design')?.detail);
 }
 
 // ---------- 4. export: decode and measure ----------
@@ -284,6 +311,14 @@ if (on('build') && on('export')) {
   await page.waitForSelector('.app');
   await page.waitForFunction(() => { const s = window.__voidfx.store.state; return s.mediaOrder.length && s.mediaOrder.every(id => ['ready', 'error'].includes(s.media[id].status)); }, null, { timeout: 120000 });
   const dur = await S(() => { const p = window.__voidfx.store.state.project; return p.clips.reduce((a, c) => Math.max(a, c.start + c.dur), 0); });
+  // behave like Windows' AAC encoder, which refuses anything above 192 kbps (the owner's export failure)
+  await S(() => {
+    const orig = AudioEncoder.isConfigSupported.bind(AudioEncoder);
+    AudioEncoder.isConfigSupported = async c => (String(c.codec).startsWith('mp4a') && (c.bitrate || 0) > 192000 ? { supported: false, config: c } : orig(c));
+    const Orig = window.AudioEncoder;
+    window.AudioEncoder = class extends Orig { configure(c) { if (String(c.codec).startsWith('mp4a') && (c.bitrate || 0) > 192000) throw new DOMException('Unsupported configuration', 'NotSupportedError'); return super.configure(c); } };
+    window.AudioEncoder.isConfigSupported = AudioEncoder.isConfigSupported;
+  });
   await page.click('.top .btn-primary');
   await page.click('.modal .seg button:has-text("720p")');
   const te = Date.now();
@@ -299,7 +334,7 @@ if (on('build') && on('export')) {
     writeFileSync(file, Buffer.from(saved.b64, 'base64'));
     const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=codec_type,codec_name,width,height,avg_frame_rate', '-of', 'json', file]).toString());
     const v = probe.streams.find(s => s.codec_type === 'video'), a = probe.streams.find(s => s.codec_type === 'audio');
-    check('export: H.264 video and AAC audio', v?.codec_name === 'h264' && a?.codec_name === 'aac', `${v?.codec_name} ${v?.width}x${v?.height} ${v?.avg_frame_rate} + ${a?.codec_name}`);
+    check('export: H.264 video and AAC audio, even where AAC tops out at 192 kbps', v?.codec_name === 'h264' && a?.codec_name === 'aac', `${v?.codec_name} ${v?.width}x${v?.height} ${v?.avg_frame_rate} + ${a?.codec_name}`);
     check('export: length matches the edit', Math.abs(+probe.format.duration - dur) < 0.15, `${(+probe.format.duration).toFixed(3)} s vs ${dur.toFixed(3)} s`);
     const stderr = execFileSync('bash', ['-c', `ffmpeg -hide_banner -nostats -i '${file}' -af ebur128=peak=true -f null - 2>&1`]).toString();
     const I = +(stderr.match(/I:\s+(-?[\d.]+) LUFS/g)?.pop()?.match(/-?[\d.]+/)?.[0] ?? NaN);
@@ -386,7 +421,7 @@ if (on('render')) {
 // ---------- 5b. operations and gates added from the live test edit ----------
 if (on('units')) {
   const u = await page.evaluate(async () => {
-    const { store, applyOps, runChecks, addLessons, clearLessons, lessonsText } = window.__voidfx;
+    const { store, applyOps, runChecks, idleShots, transitionReport, addLessons, clearLessons, lessonsText } = window.__voidfx;
     const media = store.state.media;
     const ids = store.state.mediaOrder;
     const vid = ids.find(id => media[id].kind === 'video'), mus = ids.find(id => media[id].kind === 'audio');
@@ -411,6 +446,20 @@ if (on('units')) {
     // a velocity ramp bursts on the clip's own cut
     r = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', id: 'm', media: mus, track: 'A1', start: 0, in: 0, dur: 6 }, { op: 'add', id: 'v', media: vid, track: 'V1', in: 0, dur: 1, ramp: { fast: 2, slow: 0.5 } }], media);
     out.ramp = r.project.clips.find(c => c.id === 'v').kf?.speed?.[0];
+    // shots with nothing designed on them: a push-in or a title over it gives a shot its reason
+    r = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', id: 'p1', media: vid, track: 'V1', in: 0, dur: 1.2, kf: { scale: [{ t: 0, v: 1 }, { t: 1.2, v: 1.12 }] } }, { op: 'add', id: 'p2', media: vid, track: 'V1', in: 1.5, dur: 1.2 }, { op: 'add', id: 'p3', media: vid, track: 'V1', in: 3, dur: 1.2 }, { op: 'add', id: 'p4', media: vid, track: 'V1', in: 4.5, dur: 0.5 },
+      { op: 'text', start: 1.3, dur: 1.2, text: 'WORD', anim: { in: 'words' } }], media);
+    out.idle = idleShots(r.project).map(c => c.id);
+    out.idleGate = runChecks(r.project, media, { houseRules: true }).find(c => c.id === 'idle')?.status;
+    // transitions measured on their three frames: an empty middle and a type used three times are flagged
+    const grid = (f) => Float32Array.from({ length: 256 }, (_, i) => f(i));
+    const A = grid(i => (i % 16) / 16), C = grid(i => Math.floor(i / 16) / 16), B = grid(() => 0.02);
+    const st = (t, px) => { const m = px.reduce((a, b) => a + b, 0) / 256; return { t, luma: m, sd: Math.sqrt(px.reduce((a, b) => a + (b - m) ** 2, 0) / 256), px }; };
+    r = applyOps(store.state.project, [{ op: 'clear' }, ...[0, 1, 2, 3].map(k => ({ op: 'add', id: `q${k}`, media: vid, track: 'V1', in: k, dur: 1, ...(k ? { transition: { type: 'whip_left', dur: 0.4 } } : {}) }))], media);
+    const q1 = r.project.clips.find(c => c.id === 'q1');
+    const fr = [['a', q1.start - 0.18], ['b', q1.start], ['c', q1.start + 0.18]].map(([k, t]) => ({ t, k, clip: 'q1', label: k }));
+    const rep = transitionReport(r.project, fr, [{ blob: null, caption: '', stats: [st(fr[0].t, A), st(fr[1].t, B), st(fr[2].t, C)] }]);
+    out.trans = { text: rep.text, weak: rep.weak };
     // lessons from the critic are remembered and read back
     await clearLessons();
     await addLessons([{ area: 'picture', severity: 'critical', problem: 'The drop is a white card. More words.', fix: 'Delete the wash. More.', project: 'x' }]);
@@ -423,6 +472,8 @@ if (on('units')) {
   check('gates: repeated shots, stacked flashes, loop in sound', u.gates.repeats === 'warn' && u.gates['flash-stack'] === 'warn' && u.gates['loop-sound'] === 'warn', JSON.stringify(u.gates));
   check('the loop operation lands on frame 0', u.loop && Math.abs(u.loop.end - 2) < 0.01 && Math.abs(u.loop.srcEnd - 0.8) < 0.01 && u.loop.focus?.x === 0.4 && u.loop.color?.brightness === 0.1, JSON.stringify(u.loop));
   check('velocity ramps burst on the cut', u.ramp && u.ramp.t < 0.03 && u.ramp.v >= 1.5, JSON.stringify(u.ramp));
+  check('idle shots: only the shot with nothing on it is flagged', JSON.stringify(u.idle) === '["p3"]' && u.idleGate === 'warn', JSON.stringify({ idle: u.idle, gate: u.idleGate }));
+  check('transitions measured: an empty middle and a type used three times are flagged', u.trans.weak.length === 1 && /empty black frame/.test(u.trans.text) && /used 3 times/.test(u.trans.text), u.trans.text);
   check('critic lessons are remembered for later edits', /white card/.test(u.lessons) && /Delete the wash/.test(u.lessons), u.lessons);
 }
 

@@ -17,6 +17,7 @@ import { projectDuration } from '../state/util';
 import { askSafe, brightnessNote, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
 import { standardSheets, timelineSheets } from './sheets';
+import { transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 
 export { CRITIC_AREAS, CRITIC_CANON } from './canon';
@@ -85,16 +86,9 @@ function filmstrip(ws: Workspace, maxFrames: number, follow: { id: string; at: n
   const close: { t: number; label: string }[] = [];
   // the moments earlier points were about, so the critic can see whether they were fixed
   for (const f of follow.slice(0, 8)) { const t = Math.min(dur - 0.01, Math.max(0, f.at)); close.push({ t, label: `${f.id} ${t.toFixed(2)}s` }); }
-  const trans = p.clips.filter(c => c.transition).sort((a, b) => a.start - b.start).slice(0, Math.floor((30 - close.length) / 3));
-  for (const c of trans) {
-    const d = c.transition!.dur || 0.4;
-    const name = (TRANSITION_LABELS[c.transition!.type] || c.transition!.type).slice(0, 14);
-    for (const [k, dt] of [['a', -d * 0.45], ['b', 0], ['c', d * 0.45]] as [string, number][]) {
-      const t = Math.min(dur - 0.01, Math.max(0, c.start + dt));
-      close.push({ t, label: `${name} ${k} ${t.toFixed(2)}s` });
-    }
-  }
-  return { sweep, close };
+  const tframes = transitionTimes(p, 30 - close.length);
+  for (const f of tframes) close.push({ t: f.t, label: f.label });
+  return { sweep, close, tframes };
 }
 
 function clampScore(v: any, d = 5) { const n = Number(v); return Number.isFinite(n) ? Math.max(0, Math.min(10, Math.round(n * 10) / 10)) : d; }
@@ -180,7 +174,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
   const maxImg = Math.max(0, Math.min(maxImagesFor('extra'), 9));
   const stdImgs = maxImg >= 6 ? await standardSheets(standards.filter(s => s.kind === 'video' && s.state === 'ready'), 2) : [];
   const budget = Math.max(0, maxImg - stdImgs.length);
-  const { sweep, close } = filmstrip(ws, Math.max(20, (budget - 1) * 20), follow.filter(f => f.at !== undefined).map(f => ({ id: f.id, at: f.at! })));
+  const { sweep, close, tframes } = filmstrip(ws, Math.max(20, (budget - 1) * 20), follow.filter(f => f.at !== undefined).map(f => ({ id: f.id, at: f.at! })));
   const p = ws.project;
   const sweepSheets = budget ? await timelineSheets(p, ws.media(), sweep, 20, Math.max(1, budget - (close.length ? 1 : 0)), io.signal) : [];
   const closeSheets = budget > 1 && close.length ? await timelineSheets(p, ws.media(), close.map(c => c.t), 30, 1, io.signal, p.width / p.height < 1 ? 300 : 220, close.map(c => c.label)) : [];
@@ -209,13 +203,13 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     follow.length ? `WHAT THIS ROUND WAS ASKED TO FIX (check every item in the frames and the timeline; frames labelled with an item's id show its moment)\n${follow.map(f => `${f.id}${f.at !== undefined ? ` @ ${f.at.toFixed(2)}s` : ''}: ${f.text.slice(0, 320)}${f.plan ? ` | the editor's plan: ${f.plan.slice(0, 200)}` : ''}${f.check ? ` | the editor's own check: ${f.check.slice(0, 160)}` : ''}`).join('\n')}\nGive each item's status in "followUp": fixed (the frames or timeline show it done in full), partly, or not.` : '',
     prevCrit ? `SCORING AGAINST THE LAST ROUND: the last critique scored the edit ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). Score the edit as it is now, starting from that score: every point that is really fixed raises its area and the total (a critical point fixed is worth about +0.6 to +1.0, a major one +0.3 to +0.5, a minor one +0.1 to +0.2); every remaining or new problem holds it down or lowers it. Do not re-judge fixed points from scratch and never ignore a real fix; never inflate either: a fix you cannot see in the frames or the timeline does not count.` : '',
     p.lyrics?.lines.length ? `THE SONG'S LYRICS (from the owner${p.lyrics.timed ? '; song times' : ', untimed'}): check that every caption is a sung line on its time, never invented words\n${p.lyrics.lines.slice(0, 80).map((l, i) => `${p.lyrics!.timed ? `L${i + 1} ${l.t.toFixed(2)} ` : ''}${l.text}`).join('\n')}` : 'NO LYRICS WERE SUPPLIED: any caption that claims to be a sung line is a guess; flag captions that do not read as dialogue, a designed title or a likely sung hook.',
-    `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '').replace(/: fine\.$/, '.')}` : ''}`,
+    `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '').replace(/: fine\.$/, '.')}` : ''}${closeSheets.length ? `\n${transitionReport(p, tframes, closeSheets).text}` : ''}`,
     `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
     music.length ? `MUSIC\n${music.map(m => `${m.id} "${m.name}" ${m.analysis?.bpm ? `${m.analysis.bpm} BPM` : ''}`).join('\n')}` : '',
     `THE TIMELINE (what the studio will render)\n${timelineJson(p).slice(0, 24000)}`,
     images.length ? `IMAGES (attached, in this order)\n${images.map((x, i) => `${i + 1}. ${x.caption}`).join('\n')}` : 'IMAGES: none attached; judge from the timeline and the measurements, and say that you could not see the picture.',
     toolsLine(),
-    `Write the assessment. Be specific: name the time, the shot, the transition. Every fix must be something the studio can do, named in its terms above, with the time and the values (for example: "transition dive at 7.80 with at (0.50, 0.41) and to (0.50, 0.43), sound whoosh + subdrop", "fx light_rays 0-2.4 s anchored at (0.62, 0.18)", "look noir_red with keep #c70f14"). Reply with only JSON:
+    `Write the assessment. Be specific: name the time, the shot, the transition. Look hard at the animation itself: name every transition or animation that is weak (empty or invisible in its close-up, badly timed, looks drawn on), repetitive (the same move, effect or title animation again, or the same family crowded together) or generic (a stock library move where the shot offers something to go through), and give each its replacement: a different designed move in studio terms with its anchor and sound, never "make it better". Name every shot that just sits there with nothing designed on it (the checkpoint lists them) and the moment to add there. Every fix must be something the studio can do, named in its terms above, with the time and the values (for example: "transition dive at 7.80 with at (0.50, 0.41) and to (0.50, 0.43), sound whoosh + subdrop", "fx light_rays 0-2.4 s anchored at (0.62, 0.18)", "look noir_red with keep #c70f14"). Reply with only JSON:
 {"score": 0-10 with one decimal,
  "verdict": "not ready" | "close" | "ready",
  "headline": "one blunt sentence: the verdict in plain words",

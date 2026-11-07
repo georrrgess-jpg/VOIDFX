@@ -82,14 +82,31 @@ to -13 LUFS and reports what it measured; **Save** hands the file to your device
 
 Opus never hears audio: the studio measures tempo, beats, downbeats, hits, level rises and quiet parts
 and passes those numbers, plus labelled contact sheets of every video. Every Opus change is validated
-and lands as one undo step. **Effort**: Low and Medium plan in one pass; Medium adds the worked
-examples.
+and lands as one undo step.
 
-- **High** directs first: concept, look, shots, set pieces and a scorecard against the critic's canon,
-  redesigning anything under 8. The picture and the layers are then written by two calls at the same
-  time, and one deep review checks frames rendered from the edit and the checkpoint.
+**How an edit is built.** Medium, High and Extra build in two calls, so each call fits the time the
+runtime allows per call:
+
+1. **The cut.** Opus directs the whole edit (concept, look, song window, set pieces) and writes the
+   picture as operations: the song, every shot with its focus, ramps and moves, the beat camera and
+   the look. It also writes the plan for the design.
+2. **The storyboard.** The studio applies the cut and renders each shot's first, middle and last
+   frame, labelled with clip ids and times, with a 0..1 frame ruler for placing anchors.
+3. **The design.** Opus writes the transitions, set pieces, text, effects and sound against those
+   real frames. Shots that have nothing on them yet are listed, so each one gets a reason.
+
+Every call runs at the job's effort. A call that runs out of time is asked again at the same effort
+with a tighter brief and half the images. A design that still does not fit is written as two halves
+at the same time. Low plans in one pass.
+
+- **High** then runs one deep review of frames rendered from the edit, every transition's close-ups
+  and the checkpoint.
 - **Extra** adds more footage per call and a second deep review that raises the ceiling: it rebuilds
   the three weakest moments.
+
+**Revisions** are one call that sees the rendered frames and writes the operations for every note.
+With more than 8 notes, or when one call runs out of time, two calls share the notes at the same
+effort.
 
 **Notes are followed one by one.** Every owner instruction and every critic point is numbered (N1,
 N2, …). Opus plans each note and tags the operations that carry it out. The studio counts them and
@@ -106,9 +123,19 @@ seconds are bare footage with no graphic or effect. Further gates catch:
 - three moves of the same family within 5 s;
 - stacked flashes that blow a hit out to a white card;
 - overlays anchored on a face;
-- music that fades at the loop wrap.
+- music that fades at the loop wrap;
+- shots of 0.9 s or more with nothing designed on them (no move, ramp or freeze, no text, graphic,
+  effect or overlay), which feel purposeless.
 
-The reviews and the critic also get the measured brightness of the rendered frames, since dark grey is mud on a phone.
+The reviews and the critic also get the measured brightness of the rendered frames, since dark grey
+is mud on a phone. They also get every transition measured on its three frames (before, middle,
+after): a middle that is an empty card, a move that is invisible, a plain crossfade, or a type used
+three or more times is flagged for replacement with a different designed move.
+
+**Export on every machine.** The exporter asks the browser which audio settings it can encode
+(Windows' AAC encoder stops at 192 kbps) and steps down the bitrate. If platform AAC is unavailable
+it falls back to the bundled AAC encoder, then to Opus audio. If an encoder still refuses mid-render,
+the export retries once at safe settings.
 
 **Auto exposure and the loop.** House-style edits lift dim shots toward a readable brightness automatically. Each shot's mean is read on the GPU; shadows and mids are raised and highlights kept, before the shot's grade and the look. It can be turned off per project or per clip. `{"op":"loop"}` lands the last frame on frame 0's exact source frame and framing, and the loop-seam gate judges the wrap against a normal frame-to-frame step.
 

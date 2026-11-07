@@ -103,9 +103,11 @@ WHAT THE CRITIC MARKS DOWN (from test edits scored by the critic; each one cost 
 - Light and particles stay off faces: light_rays, flares, spotlights, dust and rain sit behind or beside the head, never across the eyes or mouth.
 - The loop in sound: the music runs to the last frame (fadeOut 0), or ends on a tape stop or a dead stop on the bar. Never a fade that comes back at full level.
 - The beat camera runs through every section with drums (camera "sections"); it rests only in freezes, holds and the loop landing.
+- Every shot has a reason. A shot held 0.9 s or more with nothing designed on it (no push-in, ramp or freeze, no text, graphic, effect or overlay) feels purposeless: give it a moment tied to what it shows (a themed graphic, a light that reacts, a title, a ramp on its action), or cut it. The checkpoint lists these shots.
+- No repeated animation. The same transition type three times, the same title animation on every caption, or one effect preset on every hit reads as a template. Each signature move appears once; vary the rest. The reviews measure every transition on its three frames: one whose middle is an empty card, invisible or a plain crossfade is rebuilt as a different designed move.
 
 BEFORE YOU FINISH
-- Score your own plan the way the critic will (hook, rhythm and sync, transitions, motion, text, sound, concept, picture and framing, ending and loop, 0-10 each, honestly). Anything under 8 gets redesigned before you write operations. The studio's automated checkpoint (format, length, transition density and variety, framing, pacing, headspace, text, logo, sound density, flashes, loop seam) must pass.`;
+- Score your own plan the way the critic will (hook, rhythm and sync, transitions, motion, text, sound, concept, picture and framing, ending and loop, 0-10 each, honestly). Anything under 8 gets redesigned before you write operations. The studio's automated checkpoint (format, length, transition density and variety, framing, pacing, headspace, shots with a reason, text, logo, sound density, flashes, loop seam) must pass.`;
 
 export interface Benchmark { id: string; title: string; show: string; song: string; verdict: string; referenceFor: string; quote?: string; lessons?: string }
 

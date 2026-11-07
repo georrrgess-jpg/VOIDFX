@@ -143,6 +143,17 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   const gaps: number[] = [];
   for (let i = 1; i < events.length; i++) if (events[i] - events[i - 1] > 1.1) gaps.push(events[i - 1]);
   out.push({ id: 'headspace', label: 'Headspace', status: gaps.length ? 'warn' : 'pass', detail: gaps.length ? `${gaps.length} span${gaps.length > 1 ? 's' : ''} longer than 1.1 s with no cut, transition, text beat, camera move, keyframed move or beat effect` : 'Something happens at least every 1.1 s.', at: gaps });
+  // idle shots: a shot held with nothing designed on it reads as filler, however good the cut around it is
+  if (mainClips.length >= 3) {
+    const idle = idleShots(p);
+    out.push({
+      id: 'idle', label: 'Shots with a reason', status: idle.length ? 'warn' : 'pass',
+      detail: idle.length
+        ? `${idle.length} shot${idle.length > 1 ? 's' : ''} of 0.9 s or more play with nothing designed on ${idle.length > 1 ? 'them' : 'it'} (no push-in, ramp or freeze, no text, no graphic, effect or overlay): ${idle.slice(0, 10).map(c => `${c.id} ${f2(c.start)}-${f2(clipEnd(c))} s`).join(', ')}. Shots like these feel purposeless: give each a reason tied to what it shows (a push-in or ramp on its action, a themed graphic or effect, a light, a title) or cut it.`
+        : 'Every shot of 0.9 s or more has a move or a designed layer on it.',
+      at: idle.map(c => c.start),
+    });
+  }
   // logo
   const logos = trans.filter(c => c.transition!.type === 'logo');
   if (o.houseRules) out.push({ id: 'logo', label: 'voidfx logo', status: logos.length === 1 ? 'pass' : logos.length > 1 ? 'fail' : 'warn', detail: logos.length === 1 ? `Once, as a transition at ${f2(logos[0].start)} s.` : logos.length ? `${logos.length} times; the rule is exactly once.` : 'Not used yet; the rule is exactly once, as a transition.', at: logos.map(c => c.start) });
@@ -301,6 +312,23 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
   else if (o.houseRules) out.push({ id: 'loop', label: 'Loop seam', status: 'info', detail: 'Measured when Opus reviews, or press Measure.' });
   out.push({ id: 'eyes', label: 'Needs eyes', status: 'info', detail: 'Faces centred and uncut, set-piece quality and anything that looks drawn are checked by the review on rendered frames.' });
   return out;
+}
+
+const MOVES: Record<string, number> = { scale: 0.02, x: 0.01, y: 0.01, rotation: 1, speed: 0.15 };
+
+/** Main-track shots of 0.9 s or more with nothing designed on them: no keyframed move, ramp, freeze or
+ * slow motion, and no text, graphic, effect or overlay clip over at least a third of the shot. */
+export function idleShots(p: Project): Clip[] {
+  const main = p.tracks.find(t => t.main)?.id;
+  const lookIds = new Set(p.tracks.filter(t => t.role === 'look').map(t => t.id));
+  const overlays = p.clips.filter(c => c.track !== main && !lookIds.has(c.track) && c.span !== 'all' && (c.kind === 'text' || c.kind === 'graphic' || c.kind === 'shader' || c.kind === 'video' || c.kind === 'image'));
+  return p.clips.filter(c => {
+    if (c.track !== main || (c.kind !== 'video' && c.kind !== 'image') || c.dur < 0.9) return false;
+    const moves = Object.entries(c.kf || {}).some(([prop, keys]) => MOVES[prop] !== undefined && (keys || []).some((k, i, a) => i > 0 && Math.abs(k.v - a[i - 1].v) >= MOVES[prop]));
+    if (moves || (c.speed ?? 1) <= 0.7) return false;
+    const covered = overlays.reduce((n, o) => n + Math.max(0, Math.min(c.start + c.dur, o.start + o.dur) - Math.max(c.start, o.start)), 0);
+    return covered < c.dur / 3;
+  });
 }
 
 export function checksText(checks: Check[]): string {

@@ -100,28 +100,42 @@ async function loadFonts(p: Project, frameW = p.width) {
   await Promise.all(waits);
 }
 
-/** Video + audio codec choice for this browser. */
-export async function pickCodecs(w: number, h: number, bitrate: number, needAudio: boolean) {
+/**
+ * Video + audio codec choice for this browser, with an audio bitrate its encoder really accepts.
+ * Platform AAC encoders differ: Windows' Media Foundation encoder takes only 96-192 kbps, so asking for
+ * 256 kbps failed every export on frame 1. Each candidate is checked with the exact settings the export
+ * will use (48 kHz stereo at that bitrate), best first: the platform's AAC, the bundled AAC encoder, Opus.
+ */
+export async function pickCodecs(w: number, h: number, bitrate: number, needAudio: boolean, audioBitrate = 192000) {
   let video: 'avc' | 'vp9' | null = null;
   if (typeof VideoEncoder !== 'undefined') {
     if (await canEncodeVideo('avc', { width: w, height: h, bitrate }).catch(() => false)) video = 'avc';
     else if (await canEncodeVideo('vp9', { width: w, height: h, bitrate }).catch(() => false)) video = 'vp9';
   }
   let audio: 'aac' | 'opus' | null = null;
+  let abr = audioBitrate;
   // Encoder delay in samples. The bundled WASM AAC encoder (FFmpeg's) primes with 1024 samples and does
   // not report it, so the export feeds audio from -1024 samples and the MP4 edit list trims the priming:
   // audio and video then start together and end at the same frame (the loop needs both).
   let priming = 0;
+  const rates = [...new Set([audioBitrate, 192000, 160000, 128000, 96000].filter(r => r <= Math.max(audioBitrate, 96000)))].sort((a, b) => b - a);
+  const fits = async (codec: 'aac' | 'opus', br: number) => {
+    try { return !!(await canEncodeAudio(codec, { numberOfChannels: 2, sampleRate: MIX_RATE, bitrate: br })); } catch { return false; }
+  };
+  const nativeAac = async (br: number) => {
+    try { return typeof AudioEncoder !== 'undefined' && !!(await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: MIX_RATE, numberOfChannels: 2, bitrate: br })).supported; } catch { return false; }
+  };
   if (needAudio && video) {
-    let nativeAac = false;
-    try {
-      nativeAac = typeof AudioEncoder !== 'undefined' && !!(await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: MIX_RATE, numberOfChannels: 2, bitrate: 192000 })).supported;
-    } catch { nativeAac = false; }
-    if (video === 'avc' && nativeAac) audio = 'aac';
-    else if (video === 'avc' && wasmAllowed() && (registerAacEncoder(), await canEncodeAudio('aac').catch(() => false))) { audio = 'aac'; priming = 1024; }
-    else if (await canEncodeAudio('opus').catch(() => false)) audio = 'opus';
+    if (video === 'avc') {
+      for (const br of rates) if (await nativeAac(br) && await fits('aac', br)) { audio = 'aac'; abr = br; break; }
+      if (!audio && wasmAllowed()) {
+        registerAacEncoder();
+        for (const br of rates) if (await fits('aac', br)) { audio = 'aac'; abr = br; priming = 1024; break; }
+      }
+    }
+    if (!audio) for (const br of rates) if (await fits('opus', br)) { audio = 'opus'; abr = br; break; }
   }
-  return { video, audio, priming };
+  return { video, audio, priming, audioBitrate: abr };
 }
 
 function wasmAllowed(): boolean {
@@ -215,6 +229,23 @@ export async function exportVideo(
   onProgress: (phase: ExportPhase, frac: number, note?: string) => void,
   signal: AbortSignal,
 ): Promise<ExportResult> {
+  try {
+    return await exportOnce(settings, onProgress, signal);
+  } catch (e: any) {
+    // an encoder that turns down its configuration after the checks passed: once more with the most
+    // widely supported settings (128 kbps audio, a moderate video bitrate)
+    if (signal.aborted || !/not supported|configuration|NotSupportedError/i.test(String(e?.message || e))) throw e;
+    const r = await exportOnce({ ...settings, audioBitrate: 128000, bitrate: Math.min(settings.bitrate, 8_000_000) }, onProgress, signal);
+    r.warnings.unshift(`The first encoder settings were refused by this browser (${String(e?.message || e).slice(0, 120)}), so it was exported with 128 kbps audio${settings.bitrate > 8_000_000 ? ' and an 8 Mbps video bitrate' : ''}.`);
+    return r;
+  }
+}
+
+async function exportOnce(
+  settings: ExportSettings,
+  onProgress: (phase: ExportPhase, frac: number, note?: string) => void,
+  signal: AbortSignal,
+): Promise<ExportResult> {
   const p: Project = deepClone(store.state.project);
   const media = store.state.media;
   const warnings: string[] = [];
@@ -231,7 +262,7 @@ export async function exportVideo(
   onProgress('prepare', 0);
   await loadFonts(p, W);
   const needAudio = p.clips.some(c => (c.kind === 'video' || c.kind === 'audio') && c.media && media[c.media]?.hasAudio && !c.muted);
-  const codecs = await pickCodecs(W, H, settings.bitrate, needAudio);
+  const codecs = await pickCodecs(W, H, settings.bitrate, needAudio, settings.audioBitrate);
   if (!codecs.video) throw new Error('NO_WEBCODECS');
   if (needAudio && !codecs.audio) warnings.push('This browser cannot encode audio, so the export is silent.');
   if (codecs.audio === 'opus' && codecs.video === 'avc') warnings.push('AAC audio is not available in this browser, so the MP4 uses Opus audio. Some apps may not play it; Chrome on Mac or Windows exports AAC.');
@@ -272,7 +303,7 @@ export async function exportVideo(
   output.addVideoTrack(videoSource, { frameRate: fps });
   let audioSource: AudioSampleSource | null = null;
   if (codecs.audio && mix) {
-    audioSource = new AudioSampleSource({ codec: codecs.audio, bitrate: settings.audioBitrate });
+    audioSource = new AudioSampleSource({ codec: codecs.audio, bitrate: codecs.audioBitrate });
     output.addAudioTrack(audioSource);
   }
   await output.start();

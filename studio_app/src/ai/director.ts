@@ -2,16 +2,20 @@
 // capability. It runs inside a background job on the job's own workspace, so the owner can leave
 // the editor, open other projects or queue more edits while it works.
 // Build: preset + notes + standards → (cast from the database) → read the media → contact sheets →
-// Opus directs (concept, look, shots, set pieces, a scorecard against the critic's canon) → two calls
-// write the picture and the layers at the same time → the studio applies, validates and adds missing
-// sounds → checkpoint → rendered frames → Opus reviews: quality first, then raising the ceiling.
+// call 1, the cut: Opus directs the whole edit and writes the picture (song, shots, focus, ramps,
+// camera, look) plus the plan for the design → the studio applies it and renders a storyboard (each
+// shot's first, middle and last frame, with a frame ruler) → call 2, the design: transitions, set
+// pieces, text, effects and sound written against the real frames → the studio validates and adds
+// missing sounds → checkpoint → rendered frames and every transition measured → Opus reviews.
+// Each call does half the work of one big call, so it fits the runtime's time per call; a call that
+// still runs out of time is retried at the same effort with a tighter brief, then split in two.
 // Every owner note and critic point is numbered, planned, tagged on the operations that carry it out
 // and checked in rendered frames, so nothing the owner asked for is dropped.
 import { BENCHMARK_TEXT, HOUSE_RULES } from './knowledge';
 import { COOKBOOK, CRAFT, EFFICIENT } from './playbook';
 import { EXEMPLARS } from './exemplars';
 import { CRITIC_AREAS, CRITIC_CANON } from './canon';
-import { checksText, runChecks, Check } from '../engine/qc';
+import { checksText, idleShots, runChecks, Check } from '../engine/qc';
 import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
@@ -23,6 +27,7 @@ import { ASPECTS, Effort, Job, JobStep, MediaInfo, NoteCheck, Project, Round } f
 import { deepClone, projectDuration } from '../state/util';
 import { ContextExtras, contextBlock, parseJson, parseReply } from './prompt';
 import { libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
+import { storyboardTimes, transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 import { lyricsText, parseLyrics } from '../state/lyrics';
 import type { Lyrics } from '../state/types';
@@ -52,15 +57,14 @@ let sample: SampleFn | null = null;
 let promptLimit = 240 * 1024;
 
 /**
- * Each level: how hard Opus thinks on the direction, how many times it reviews rendered frames and at
- * what depth, and how much footage it sees. High and Extra review at full depth: the first review
- * fixes and scores the edit, Extra's second raises it.
+ * Each level: how hard Opus thinks on every call, how many times it reviews rendered frames, and how
+ * much footage it sees. Every call of a job runs at the job's effort; a retry never quietly lowers it.
  */
 export const EFFORTS: Record<Effort, { label: string; effort: 'low' | 'medium' | 'high'; reviews: number; review: Effort; images: number; cells: number; hint: string }> = {
   low: { label: 'Low', effort: 'low', reviews: 0, review: 'low', images: 4, cells: 12, hint: 'Fastest. One planning pass with light thinking.' },
-  medium: { label: 'Medium', effort: 'medium', reviews: 0, review: 'medium', images: 8, cells: 16, hint: 'One planning pass with more thinking and the worked examples.' },
-  high: { label: 'High', effort: 'high', reviews: 1, review: 'high', images: 12, cells: 16, hint: 'Deep thinking on the direction, then a deep review of rendered frames and the checkpoint.' },
-  extra: { label: 'Extra', effort: 'high', reviews: 2, review: 'high', images: 16, cells: 20, hint: 'Deepest: the most footage per call, deep thinking on the direction and two deep reviews of rendered frames (quality, then raising the ceiling).' },
+  medium: { label: 'Medium', effort: 'medium', reviews: 0, review: 'medium', images: 8, cells: 16, hint: 'Two calls: the cut, then the design written against a storyboard of it.' },
+  high: { label: 'High', effort: 'high', reviews: 1, review: 'high', images: 12, cells: 16, hint: 'Deep thinking: the cut, the design against its storyboard, then a deep review of rendered frames, every transition and the checkpoint.' },
+  extra: { label: 'Extra', effort: 'high', reviews: 2, review: 'high', images: 16, cells: 20, hint: 'Deepest: the most footage per call, the cut and the design at deep thinking, and two deep reviews of rendered frames (quality, then raising the ceiling).' },
 };
 
 export const ERR: Record<string, string> = {
@@ -129,6 +133,7 @@ export function compactReply(text: string): string {
   if (!r || !r.ops.length) return text.length > 8000 ? `${text.slice(0, 8000)}…` : text;
   const v: any = parseJson(text);
   const keep: Record<string, unknown> = { message: r.message };
+  if (v && typeof v.design === 'string') keep.design = v.design;
   if (v && Array.isArray(v.notes)) keep.notes = v.notes;
   if (v && v.scores && typeof v.scores === 'object') keep.scores = v.scores;
   return JSON.stringify({ ...keep, ops: `(${r.ops.length} operations, applied: the CURRENT TIMELINE shows the result)` });
@@ -192,32 +197,51 @@ export async function ask(io: JobIO, input: string | Turn[], images: Sheet[], ef
 }
 
 const LIGHTER: Record<Effort, Effort> = { extra: 'medium', high: 'medium', medium: 'low', low: 'low' };
-const ANSWER_NOW = '\n\n(Answer now: keep your thinking short and write the reply as compact JSON, no extra whitespace.)';
+const TIGHT = '\n\n(Your last attempt used its whole time thinking and wrote nothing. Everything you need is above: decide this one step quickly, keep your thinking short and focused on it, and start writing the JSON straight away, compactly.)';
+const withTail = (input: string | Turn[], tail: string): string | Turn[] => typeof input === 'string'
+  ? input + tail
+  : [...input.slice(0, -1), { role: 'user' as const, content: input[input.length - 1].content + tail }];
 
 /**
- * `ask`, with one lighter second attempt when Opus writes nothing (it ran out of time thinking) or the
- * connection drops: less effort, half the images, and a request to answer straight away. Never more
- * than one retry; anything else is thrown as it came.
+ * `ask`, kept at full effort when a call fails. Opus writing nothing means it ran out of time thinking:
+ * it is asked again at the SAME effort with a tighter brief and half the images. Only when that fails
+ * too, and the caller allows it, a last try thinks less (callers that can split the work instead pass
+ * lighter: false and split it). A dropped connection is retried as it was.
  */
-export async function askSafe(io: JobIO, input: string | Turn[], images: Sheet[], effort: Effort, label: string, describe?: (text: string) => string) {
-  try {
-    return await ask(io, input, images, effort, label, describe);
-  } catch (e: any) {
-    const code = e?.code;
-    if ((code !== 'empty_completion' && code !== 'upstream_error') || io.signal.aborted) throw e;
-    const empty = code === 'empty_completion';
-    io.step(label, { detail: empty ? 'Opus ran out of time thinking; asking again, lighter' : 'the connection dropped; asking again' });
-    const next = typeof input === 'string'
-      ? input + (empty ? ANSWER_NOW : '')
-      : [...input.slice(0, -1), { role: 'user' as const, content: input[input.length - 1].content + (empty ? ANSWER_NOW : '') }];
-    return await ask(io, next, empty ? images.slice(0, Math.ceil(images.length / 2)) : images, empty ? LIGHTER[effort] : effort, label, describe);
+export async function askSafe(io: JobIO, input: string | Turn[], images: Sheet[], effort: Effort, label: string, describe?: (text: string) => string, o: { lighter?: boolean } = {}) {
+  let tries = 0;
+  let cur = input, imgs = images, eff = effort;
+  for (;;) {
+    try {
+      return await ask(io, cur, imgs, eff, label, describe);
+    } catch (e: any) {
+      const code = e?.code;
+      if ((code !== 'empty_completion' && code !== 'upstream_error') || io.signal.aborted) throw e;
+      tries++;
+      if (code === 'upstream_error') {
+        if (tries > 2) throw e;
+        io.step(label, { detail: 'the connection dropped; asking again' });
+        continue;
+      }
+      if (tries === 1) {
+        io.step(label, { detail: 'Opus needed more time than one call allows; asking again at the same effort with a tighter brief' });
+        imgs = images.slice(0, Math.ceil(images.length / 2));
+        cur = withTail(input, TIGHT + (imgs.length < images.length ? ` (Only the first ${imgs.length} of the ${images.length} images listed are attached this time.)` : ''));
+        continue;
+      }
+      if (tries === 2 && o.lighter !== false && LIGHTER[effort] !== effort) {
+        io.step(label, { detail: 'one last try with shorter thinking' });
+        eff = LIGHTER[effort];
+        continue;
+      }
+      throw e;
+    }
   }
 }
 
-/** High and Extra split a pass in two steps: direct (with the images), then write the operations. */
-export const twoStage = (effort: Effort) => effort === 'high' || effort === 'extra';
-/** The thinking used to turn a finished direction into operations. */
-const writeEffort = (effort: Effort): Effort => (twoStage(effort) ? 'medium' : effort);
+/** Medium, High and Extra build in two calls (the cut, then the design against a storyboard of it). */
+export const twoStage = (effort: Effort) => effort !== 'low';
+const fatal = (e: any, io: JobIO) => e?.code === 'cancelled' || e?.name === 'AbortError' || io.signal.aborted || e?.code === 'not_granted' || e?.code === 'session_expired' || e?.code === 'rate_limited';
 
 // ---------- numbered notes ----------
 
@@ -301,126 +325,132 @@ const SCORE_FORMAT = `{${CRITIC_AREAS.map(a => `"${a.id}": 0-10`).join(', ')}}`;
 
 // ---------- the steps' instructions ----------
 
-function buildStep1(notes: NoteCheck[]) {
-  return `STEP 1 OF 2: DIRECT THE EDIT. Do not write operations yet. Clear the PRE-BUILD GATE, use the worked examples and the playbook, then decide everything and write it down compactly (short lines, timeline times in seconds). Work fast where the studio already did the work: take every time from the song window's timeline grid in MEDIA (bars, the drop, the beat length; a beat is a bar time + k x the beat), never list or recompute beats, and take shots from the shot list and the pack notes. Keep the whole direction under about 10,000 characters: terse lines, no restating of the rules. In this order:
-CONCEPT: one sentence from the character's world and the song's words, and how picture, look, text, sound and the loop carry it.
-LOOK: the library look with its params (or your own grade), the accent colour for emphasis words and lights, and why it suits the concept. Be bold: black-and-white with one colour kept, a duotone, a film stock or a themed monochrome beats a neutral grade.
-SONG: media id, source in -> out, where the drop and the hook land on the timeline; SECTIONS with timeline times.
-SHOTS in order: "t0-t1 media #shot source-in: what it shows | focus x,y | speed, ramp or freeze | move".
-TRANSITIONS, one per cut: "time type (at x,y -> to x,y): what it goes through and why | sound".
-SET PIECES (three or more multi-stage, plus the focal one the owner will point to): each as anticipation -> action -> payoff with times and every layer: ramp or freeze, camera, the transition, fx presets with params and anchors, your own shader or SVG graphic where no preset fits, the title, the sound.
-TEXT: "t0-t1 words | anim in/out | style | position" (captions only on sung or spoken words; two or more designed titles that act out their meaning).
-GRAPHICS AND EFFECTS per section: light, atmosphere, particles, themed overlays and beat moments (fx presets with params and anchors, your own shaders or graphics), so no section is bare footage.
-CAMERA: the beat camera (every, punch, kick, from, to).
-SOUND: every effect with its time (8-16 moments; the material sound for each set piece).
-LOOP: how the last frame lands on frame 0, in picture and sound.${notes.length ? '\nNOTES: for each N#, how the plan carries it out.' : ''}
-SCORECARD: score this plan 0-10 in each area the critic scores (hook, rhythm, transitions, motion, text, sound, concept, picture, loop), one line each, against the benchmarks and the worked examples. Redesign anything under 8 before you finish, then give the final scores.
-Reply with only JSON: {"message": "the concept sentence and the set pieces, for the owner", "direction": "the full plan as compact text"${notes.length ? ', "notes": [{"id": "N1", "plan": "one line"}]' : ''}}`;
-}
-
-function reviseStep1(notes: NoteCheck[]) {
-  return `STEP 1 OF 2: DECIDE THE CHANGES. Do not write operations yet.${notes.length ? `
-For EVERY note N1-${notes[notes.length - 1].id}, write "N#: the exact change" with the time, the clip ids, the new shot or value, the transition with its anchors and sound, the library effect with its params, the text and its animation, and what the frame will show after it. Do each note the way the owner or critic meant it, in full; when a note names a problem without a fix, choose the strongest fix the studio has.` : ''}
-Then anything else the edit needs to clear the standards, and a SCORECARD of the edit after these changes (each critic area 0-10, one line each); raise any area under 8 with further changes.
-Keep what already works. Be compact.
-Reply with only JSON: {"message": "what will change, note by note, for the owner", "direction": "the full decisions as compact text"${notes.length ? ', "notes": [{"id": "N1", "plan": "one line"}]' : ''}}`;
-}
-
 const TAG_NOTES = 'Tag every operation that carries out a numbered note with it: "note":"N2" (or "note":["N1","N3"]); leave it out on other operations.';
+const f2 = (t: number) => t.toFixed(2);
+const countOps = (t: string) => (t.match(/"op"\s*:/g) || []).length;
 
-const PARTS_BUILD = [
-  { key: 'a', label: 'picture', text: 'STEP 2 OF 2, PART A: THE PICTURE (part B writes the layers at the same time). Write exactly these operations from your direction: {"op":"clear"} first; "project" (name, camera); the music and any dialogue clips on audio tracks; every main-track shot in order with its media, in, dur, focus, speed, ramp or speed keys, transform and kf; every other media clip (a copy of a shot on an overlay track for a polaroid, a mirror or the loop, dialogue); every transition with its anchors; the look. Do not write text, lyrics, fx, graphic, shader or sfx operations.' },
-  { key: 'b', label: 'layers', text: 'STEP 2 OF 2, PART B: THE LAYERS (part A writes the clear, the shots, the music, the transitions and the look at the same time, exactly on the times in your direction). Write exactly these operations from your direction: every text and lyrics operation, every fx (library effect), graphic and shader operation, and every sfx, with any text or overlay "track" operations they need. Do not write clear, project, look or add operations (part A writes every media clip), and do not change the shots. Start every id you create with "b" (bt1, bfx2).' },
-];
-const PARTS_REVISE = [
-  { key: 'a', label: 'picture', text: 'STEP 2 OF 2, PART A: THE PICTURE (part B writes the layer changes at the same time). Write the operations for exactly the changes you decided to the shots (order, timing, framing, speed, keyframes), the transitions, the music, the camera and the look, against the CURRENT TIMELINE. Do not change text, lyrics, effects, graphics, shaders or sound effects.' },
-  { key: 'b', label: 'layers', text: 'STEP 2 OF 2, PART B: THE LAYERS (part A changes the shots, transitions, music, camera and look at the same time, to the times in your decisions). Write the operations for exactly the changes you decided to text and lyrics, library effects, graphics, shaders and sound effects, against the CURRENT TIMELINE. Do not write clear, and do not change the shots, transitions or look. Start every id you create with "b".' },
-];
-const PART_TAIL = `${TAG_NOTES} Reply with only JSON: {"message": "what this part does", "ops": [...]}, written compactly (no indentation or blank lines).`;
+function cutStep(notes: NoteCheck[]) {
+  return `CALL 1 OF 2: THE CUT. Direct the whole edit in your thinking, clearing the PRE-BUILD GATE with the worked examples and the playbook: the concept from the character's world and the song's words; a bold look; the song window and the drop; three or more multi-stage set pieces plus the focal one; the shot list; a designed transition for every cut; the titles; graphics in every section; the loop. Work fast where the studio already did the work: take every time from the song window's timeline grid in MEDIA (bars, the drop, the beat), never list or recompute beats, and take shots from the shot list and the pack notes.
+Write only the PICTURE as operations now: {"op":"clear"}; "project" (name; the beat camera with its sections); the music and any dialogue on audio tracks; every main-track shot in order (media, in, dur, focus read off the cyan ruler, speed, ramp or freeze, transform, push-in or drift kf); any overlay copy of a shot a set piece needs (a polaroid, a mirror, a ghost); the look with its params. Every shot is there for a reason: what it adds to the concept, or the set piece it belongs to. Do not write transitions, text, lyrics, fx, graphics, shaders or sfx yet.
+Call 2 sees a storyboard rendered from your cut (each shot's first, middle and last frame, with a ruler) and writes the design against the real frames. Write its plan in "design", compact, one line each: the concept; every set piece as anticipation -> action -> payoff with its times and layers; the transition on every cut (time, type, what it goes through, sound); every caption and designed title (time, words, animation); graphics and effects per section; the loop. Keep "design" under about 6,000 characters.${notes.length ? '\nFor every note N#, a one-line plan in "notes", and tag the operations that carry it out.' : ''}
+Reply with only JSON, compact (no indentation or blank lines): {"message": "the concept sentence and the set pieces, for the owner", "design": "the plan for call 2"${notes.length ? ', "notes": [{"id": "N1", "plan": "one line"}]' : ''}, "ops": [...]}`;
+}
+
+interface Part { from: number; to: number; other: string; last: boolean; prefix: string }
+
+function designStep(idle: string, part?: Part) {
+  const scope = part ? `\nTHIS CALL DESIGNS ${f2(part.from)}-${f2(part.to)} s ONLY (a second call designs ${part.other} at the same time): write operations only for the cuts, shots and layers that start in this span${part.last ? ', plus {"op":"loop"}' : ''}, and start every id you create with "${part.prefix}".` : '';
+  return `CALL 2 OF 2: THE DESIGN. The studio applied your cut: the CURRENT TIMELINE in the first message shows it with every clip id and time, and the attached images are its STORYBOARD (each shot's first, middle and last frame, labelled with the clip id and timeline time, with a cyan 0..1 ruler of the frame: x along the top, y down the left). Design against these real frames: read off the ruler where each thing is (a light, the impact point, an eye, a window, a barrel, a door) and anchor the transitions and layers on it.
+Write every remaining operation from your plan, improved by what the frames show:
+- a designed transition on every cut ("set" on the incoming clip: transition {type, dur, at, to}), each going through something in the shot; vary them: no type twice in a row, no move family three times in 5 s, generic library moves only as filler between signature ones;
+- the set pieces in all their layers (fx presets with params and anchors, your own shader or SVG graphic where no preset fits; change a freeze or ramp with "set" where a frame shows a better moment);
+- the captions and two or more designed titles that act out their meaning, clear of faces;
+- light, atmosphere, particles and themed graphics in every section, the drop on its biggest move;
+- the sound for each set piece and hard hit (punctuation, not a sound on every cut);
+- {"op":"loop"} so the last frame lands on frame 0.
+${idle ? `SHOTS WITH NOTHING ON THEM YET (measured on the cut; a shot held with nothing designed on it feels purposeless): ${idle}. Give each one a reason tied to what it shows (a themed graphic or effect, a light, a title, or a push-in or ramp with "set"), or say in "message" why it holds.\n` : ''}Do not write clear and do not remove shots.${scope} ${TAG_NOTES} Reply with only JSON, compact (no indentation or blank lines): {"message": "what the design does, for the owner", "ops": [...]}`;
+}
+
+function reviseStep(notes: NoteCheck[], part?: { ids: NoteCheck[]; rest: NoteCheck[]; prefix: string }) {
+  const range = (n: NoteCheck[]) => n.length > 1 ? `${n[0].id}-${n[n.length - 1].id}` : n[0]?.id || '';
+  const scope = part ? `\nTHIS CALL CARRIES OUT ${range(part.ids)} ONLY (a second call carries out ${range(part.rest)} at the same time: leave those notes, and the clips they name, alone). Start every id you create with "${part.prefix}".` : '';
+  return `Work through ${notes.length ? 'every note' : 'the instructions'} in your thinking: what exactly changes, where, with which clip ids, values, anchors and sounds, and how the frame will look after it. Do each note the way the owner or critic meant it, in full; when a note names a problem without a fix, choose the strongest fix the studio has; a weak, repeated or generic transition or animation is replaced with a different designed one, not tweaked. Then anything else the edit needs to clear the standards. Keep what already works. Write the operations for all of it against the CURRENT TIMELINE.${scope} ${TAG_NOTES} Reply with only JSON, compact (no indentation or blank lines): {"message": "what you changed, note by note, for the owner"${notes.length ? ', "notes": [{"id": "N1", "plan": "one line"}]' : ''}, "ops": [...]}`;
+}
+
+type Reply = { name: string; message: string; ops: unknown[]; text: string; salvaged: boolean };
 
 /**
- * Turn a finished direction into operations: the picture and the layers are written by two calls at
- * the same time (each half the length, so the round finishes sooner and neither runs out of time). A
- * part that fails is asked again on its own; the picture is required, the layers are reported if lost.
+ * Calls that run at the same time, each writing its own share of the operations (at the same effort).
+ * An unreadable reply is asked for once more; a part that still fails is reported as lost.
  */
-async function writeOps(io: JobIO, base: Turn[], parts: { key: string; label: string; text: string }[], effort: Effort, revision: boolean) {
-  const prog: Record<string, { ops: number; chars: number }> = {};
-  for (const p of parts) prog[p.key] = { ops: 0, chars: 0 };
-  const detail = () => `writing operations… ${parts.map(p => `${p.label} ${prog[p.key].ops}`).join(' · ')}`;
-  const run = (p: typeof parts[number]) => {
-    const pio: JobIO = { ...io, stream: n => { prog[p.key].chars = n; io.stream(Object.values(prog).reduce((s, x) => s + x.chars, 0)); } };
-    return askSafe(pio, [...base, { role: 'user', content: `${p.text}\n${PART_TAIL}` }], [], effort, 'plan', t => { prog[p.key].ops = (t.match(/"op"\s*:/g) || []).length; return detail(); });
+async function runParts(io: JobIO, label: string, parts: { name: string; input: Turn[]; images: Sheet[] }[], effort: Effort, lighter: boolean): Promise<{ replies: Reply[]; lost: string[]; errors: any[] }> {
+  const prog = parts.map(() => ({ ops: 0, chars: 0 }));
+  const detail = () => parts.length > 1 ? `writing… ${parts.map((p, i) => `${p.name} ${prog[i].ops}`).join(' · ')} operations` : `writing… ${prog[0].ops} operations so far`;
+  const run = (i: number) => {
+    const pio: JobIO = { ...io, stream: n => { prog[i].chars = n; io.stream(prog.reduce((s, x) => s + x.chars, 0)); } };
+    return askSafe(pio, parts[i].input, parts[i].images, effort, label, t => { prog[i].ops = countOps(t); return detail(); }, { lighter });
   };
-  const fatal = (e: any) => e?.code === 'cancelled' || e?.name === 'AbortError' || io.signal.aborted || e?.code === 'not_granted' || e?.code === 'session_expired';
-  const settled = await Promise.allSettled(parts.map(run));
-  const out: { key: string; message: string; ops: unknown[]; salvaged: boolean }[] = [];
-  const lost: string[] = [];
+  const settled = await Promise.allSettled(parts.map((_, i) => run(i)));
+  const replies: Reply[] = [], lost: string[] = [], errors: any[] = [];
   for (let i = 0; i < parts.length; i++) {
-    const p = parts[i];
-    let s: PromiseSettledResult<{ text: string; truncated: boolean }> = settled[i];
-    let reply = s.status === 'fulfilled' ? parseReply(s.value.text) : null;
-    if (s.status === 'rejected' && fatal(s.reason)) throw s.reason;
-    // a revision part may rightly change nothing; a build needs its picture
-    const needsOps = !revision && p.key === 'a';
-    if (!reply || (needsOps && !reply.ops.length)) {
-      // once more on its own (a rate limit or a dropped reply on one of two parallel calls)
-      io.step('plan', { detail: `asking again for the ${p.label}` });
-      try { s = { status: 'fulfilled', value: await run(p) }; reply = parseReply(s.value.text); } catch (e: any) { if (fatal(e)) throw e; s = { status: 'rejected', reason: e }; reply = null; }
+    const s = settled[i];
+    if (s.status === 'rejected') { if (fatal(s.reason, io)) throw s.reason; lost.push(parts[i].name); errors.push(s.reason); continue; }
+    let text = s.value.text;
+    let rep = parseReply(text);
+    if (!rep) {
+      io.step(label, { detail: `the ${parts[i].name} reply could not be read; asking again` });
+      try { text = (await run(i)).text; rep = parseReply(text); } catch (e: any) { if (fatal(e, io)) throw e; errors.push(e); }
     }
-    if (!reply || (needsOps && !reply.ops.length)) {
-      if (p.key === 'a') throw s.status === 'rejected' ? s.reason : { code: 'invalid_json' };
-      lost.push(p.label);
-      continue;
-    }
-    const ops = p.key === 'a' ? reply.ops : reply.ops.filter((o: any) => o?.op !== 'clear');
-    out.push({ key: p.key, message: reply.message, ops, salvaged: !!(reply as any).salvaged });
+    if (!rep) { lost.push(parts[i].name); if (!errors.length) errors.push({ code: 'invalid_json' }); continue; }
+    replies.push({ name: parts[i].name, message: rep.message, ops: rep.ops, text, salvaged: !!(rep as any).salvaged });
   }
-  return {
-    ops: out.flatMap(x => x.ops),
-    message: out.find(x => x.message)?.message || '',
-    salvaged: out.some(x => x.salvaged),
-    lost,
-  };
+  return { replies, lost, errors };
+}
+
+/** Apply several replies in turn (each on its own, so ids each reply makes stay its own). */
+function applyReplies(ws: Workspace, preset: Preset, lists: unknown[][], notes: NoteCheck[], sounds = true): OpsResult {
+  let applied = 0;
+  const issues: string[] = [], touched: string[] = [];
+  for (const ops of lists) {
+    if (!Array.isArray(ops) || !ops.length) continue;
+    const r = applyOps(ws.project, ops, ws.media());
+    addCounts(notes, r.notes);
+    ws.setProject(r.project);
+    applied += r.applied; issues.push(...r.issues); touched.push(...r.touched);
+  }
+  if (sounds && preset.houseRules) ws.setProject(withSounds(ws.project, ws.media()));
+  return { project: ws.project, applied, issues, touched };
+}
+
+/** The cut time nearest the middle, where a design can be split in two halves. */
+function middleCut(p: Project): number {
+  const dur = projectDuration(p);
+  const main = p.tracks.find(t => t.main)?.id;
+  const cuts = p.clips.filter(c => c.track === main && c.start > dur * 0.3 && c.start < dur * 0.7).map(c => c.start);
+  return cuts.length ? cuts.reduce((a, b) => (Math.abs(b - dur / 2) < Math.abs(a - dur / 2) ? b : a)) : dur / 2;
 }
 
 /**
- * Two steps instead of one long call: Opus directs the pass (decisions only, with the images), then
- * the operations are written for exactly that direction (lighter thinking, no images).
+ * Call 2: the design, against the storyboard of the cut. When one call runs out of time even with a
+ * tighter brief, the edit is designed in two halves at the same time, at the same effort.
  */
-async function directThenBuild(io: JobIO, o: { ctx: string; ctxNoImages: string; history: Turn[]; request: string; images: Sheet[]; effort: Effort; revision: boolean; notes: NoteCheck[] }) {
-  const step1 = o.revision ? reviseStep1(o.notes) : buildStep1(o.notes);
-  const ask1 = `${o.request}\n\n${step1}`;
-  const t1: Turn[] = [{ role: 'user', content: o.ctx }, ...o.history, { role: 'user', content: ask1 }];
-  io.step('direct', { state: 'run', detail: 'thinking…' });
-  const a = await askSafe(io, t1, o.images, o.effort, 'direct', t => `writing the direction… ${t.length} characters`);
-  const av: any = parseJson(a.text);
-  const direction = typeof av?.direction === 'string' && av.direction.trim() ? av.direction : a.text;
-  const note = typeof av?.message === 'string' ? av.message : '';
-  readNotes(o.notes, av, 'plan');
-  io.step('direct', { state: 'done', detail: `${direction.length} characters${a.truncated ? ' (cut short)' : ''}` });
+async function designPass(ws: Workspace, io: JobIO, o: { ctx: string; history: Turn[]; board: Sheet[]; effort: Effort; idle: string }): Promise<{ replies: Reply[]; lost: string[]; step: string }> {
+  const step = designStep(o.idle);
+  const one = await runParts(io, 'design', [{ name: 'design', input: [{ role: 'user', content: o.ctx }, ...o.history, { role: 'user', content: step }], images: o.board }], o.effort, false);
+  const noClear = (r: Reply[]) => r.map(x => ({ ...x, ops: x.ops.filter((op: any) => op?.op !== 'clear') }));
+  if (one.replies.length && one.replies[0].ops.length) return { replies: noClear(one.replies), lost: [], step };
+  if (one.errors.some(e => e?.code && !['empty_completion', 'invalid_json', 'upstream_error'].includes(e.code))) throw one.errors[0];
+  const dur = projectDuration(ws.project), mid = middleCut(ws.project);
+  io.step('design', { detail: 'the whole design did not fit one call: designing both halves at the same time, same effort' });
+  const halves: Part[] = [
+    { from: 0, to: mid, other: `${f2(mid)}-${f2(dur)} s`, last: false, prefix: 'd' },
+    { from: mid, to: dur, other: `0-${f2(mid)} s`, last: true, prefix: 'e' },
+  ];
+  const boardFor = (h: Part) => o.board.filter(s => { const ts = (s.stats || []).map(x => x.t); return !ts.length || ts.some(t => t >= h.from - 0.3 && t <= h.to + 0.3); });
+  const two = await runParts(io, 'design', halves.map((h, i) => ({ name: i ? 'second half' : 'first half', input: [{ role: 'user' as const, content: o.ctx }, ...o.history, { role: 'user' as const, content: designStep(o.idle, h) }], images: boardFor(h) })), o.effort, true);
+  if (!two.replies.length) throw two.errors[0] || { code: 'empty_completion' };
+  return { replies: noClear(two.replies), lost: two.lost, step: designStep(o.idle, halves[0]).replace(/\nTHIS CALL DESIGNS[^\n]*/, ' (written in two halves at the same time)') };
+}
 
-  const base: Turn[] = [{ role: 'user', content: o.ctxNoImages }, ...o.history, { role: 'user', content: ask1 }, { role: 'assistant', content: a.text }];
-  io.step('plan', { state: 'run', detail: 'writing operations…' });
-  const split = !o.revision || direction.length > 2400;
-  let message: string, ops: unknown[], salvaged = false, lost: string[] = [];
-  if (split) {
-    ({ message, ops, salvaged, lost } = await writeOps(io, base, o.revision ? PARTS_REVISE : PARTS_BUILD, writeEffort(o.effort), o.revision));
-  } else {
-    const step2 = `STEP 2 OF 2: Write the operations for exactly the changes you decided, against the CURRENT TIMELINE. Keep everything else. ${TAG_NOTES} Reply with only JSON: {"message": "what you changed, note by note", "ops": [...]}, written compactly.`;
-    const b = await askSafe(io, [...base, { role: 'user', content: step2 }], [], writeEffort(o.effort), 'plan');
-    const plan = parseReply(b.text);
-    if (!plan) throw { code: b.truncated ? 'empty_completion' : 'invalid_json' };
-    ({ message, ops } = plan);
-    salvaged = !!(plan as any).salvaged;
-  }
-  if (!ops.length && !o.revision) throw { code: 'invalid_json' };
-  io.step('plan', { state: 'done', detail: `${ops.length} operations${split ? ' (picture and layers written together)' : ''}${salvaged ? ' (kept what was written before it was cut short)' : ''}${lost.length ? `; the ${lost.join(' and ')} could not be written, the review adds them` : ''}` });
-  const reply = JSON.stringify({ message: message || note, ops: `(${ops.length} operations, applied: the CURRENT TIMELINE shows the result)` });
-  return {
-    plan: { message: message || note, ops },
-    lost,
-    turns: [...base, { role: 'user' as const, content: 'STEP 2 OF 2: write the operations for exactly this direction.' }, { role: 'assistant' as const, content: reply }],
+/** One call writes the operations for every note; with more than 8 notes (or when one call runs out of time) two calls share them. */
+async function revisePass(io: JobIO, o: { ctx: string; history: Turn[]; instruction: string; images: Sheet[]; effort: Effort; notes: NoteCheck[] }): Promise<{ replies: Reply[]; lost: string[]; step: string }> {
+  const n = o.notes;
+  const halves = (): { ids: NoteCheck[]; rest: NoteCheck[]; prefix: string }[] => {
+    const k = Math.ceil(n.length / 2);
+    return [{ ids: n.slice(0, k), rest: n.slice(k), prefix: 'r' }, { ids: n.slice(k), rest: n.slice(0, k), prefix: 's' }];
   };
+  const input = (step: string): Turn[] => [{ role: 'user', content: o.ctx }, ...o.history, { role: 'user', content: `${o.instruction}\n\n${step}` }];
+  if (n.length <= 8) {
+    const step = reviseStep(n);
+    const one = await runParts(io, 'plan', [{ name: 'changes', input: input(step), images: o.images }], o.effort, n.length < 2);
+    if (one.replies.length) return { replies: one.replies, lost: [], step };
+    if (n.length < 2 || one.errors.some(e => e?.code && !['empty_completion', 'invalid_json', 'upstream_error'].includes(e.code))) throw one.errors[0] || { code: 'invalid_json' };
+    io.step('plan', { detail: 'the notes did not fit one call: two calls share them, same effort' });
+  }
+  const parts = halves();
+  const two = await runParts(io, 'plan', parts.map(h => ({ name: `${h.ids[0].id}-${h.ids[h.ids.length - 1].id}`, input: input(reviseStep(n, h)), images: o.images })), o.effort, true);
+  if (!two.replies.length) throw two.errors[0] || { code: 'invalid_json' };
+  return { replies: two.replies.map(x => ({ ...x, ops: x.ops.filter((op: any) => op?.op !== 'clear') })), lost: two.lost, step: reviseStep(n) };
 }
 
 export function maxImagesFor(effort: Effort) {
@@ -576,7 +606,7 @@ async function fillMissingNotes(ws: Workspace, io: JobIO, o: { preset: Preset; s
   const rest: Turn[] = [...o.turns.slice(1), { role: 'user', content: msg }];
   const ctx = fitContext(x => contextBlock(ws.ctx, [], o.mediaImages ? REVIEW_NOTE : undefined, x), extrasFor(o.preset, o.standards), inputBytes(rest));
   try {
-    const r = await askSafe(io, [{ role: 'user', content: ctx }, ...rest], [], writeEffort(o.effort), 'apply');
+    const r = await askSafe(io, [{ role: 'user', content: ctx }, ...rest], [], o.effort, 'apply');
     const rep = parseReply(r.text);
     readNotes(o.notes, parseJson(r.text), 'plan');
     o.turns.push({ role: 'user', content: msg }, { role: 'assistant', content: compactReply(r.text) });
@@ -603,19 +633,20 @@ export function brightnessNote(sheets: Sheet[]): string {
   return `MEASURED BRIGHTNESS of the rendered frames: average ${Math.round(avg * 100)}% (a strong edit sits around 25-45% with real blacks and bright highlights).${dark.length ? ` Near-black frames (under 10%): ${dark.slice(0, 16).map(t => `${t.toFixed(2)}s`).join(', ')}.` : ''}${bright.length ? ` Blown-out frames (over 82%): ${bright.slice(0, 10).map(t => `${t.toFixed(2)}s`).join(', ')}.` : ''} On a phone, a frame this dark or bright reads as a mistake unless it is a designed beat (the black of a blink, a dive or the loop; the peak of a wash). Lift dark shots (color brightness/contrast on the clip, or the look's params) and keep faces readable.`;
 }
 
-function reviewMessage(k: number, total: number, o: { issues: string[]; checks: Check[]; sheets: Sheet[]; notes: NoteCheck[]; revision: boolean; lost?: string[] }): string {
+function reviewMessage(k: number, total: number, o: { issues: string[]; checks: Check[]; sheets: Sheet[]; notes: NoteCheck[]; revision: boolean; lost?: string[]; transitions?: string }): string {
   const issuesText = o.issues.length ? `The studio adjusted or rejected these operations:\n- ${o.issues.slice(0, 40).join('\n- ')}` : 'All operations were applied without problems.';
   const raise = total > 1 && k === total;
   const head = raise
-    ? `REVIEW ${k} OF ${total}: RAISE THE CEILING. The edit works; now make it one the owner calls the best so far. Look at the frames as the critic will and find the three weakest moments: a set piece that is only one move; a section of bare footage (no look, light, atmosphere, graphics or beat moments); a generic transition where a designed one belongs; a held shot with no motion; a title that does not act out its meaning; a weak loop. Rebuild those moments in layers (a ramp or freeze, the camera, a designed transition with anchors, library effects, your own shader or graphic, the title, a sound), then check the rest again. Keep everything that already works.`
+    ? `REVIEW ${k} OF ${total}: RAISE THE CEILING. The edit works; now make it one the owner calls the best so far. Look at the frames as the critic will and find the three weakest moments: a set piece that is only one move; a section of bare footage (no look, light, atmosphere, graphics or beat moments); a weak, repeated or generic transition (see the measurements and the close-ups); a shot held with nothing designed on it; a title that does not act out its meaning; a weak loop. Rebuild those moments in layers (a ramp or freeze, the camera, a designed transition with anchors, library effects, your own shader or graphic, the title, a sound), then check the rest again. Keep everything that already works.`
     : o.revision
       ? `REVIEW ${k} OF ${total}: CHECK EVERY NOTE, THEN THE QUALITY. Look at each note's frames (labelled with its id): a note is done only when the frame visibly shows the change the owner or critic asked for, in full. For every note that is partly done or not done, write its operations now. Then fix every failed or warning gate and check the frames as below.`
       : `REVIEW ${k} OF ${total}: QUALITY. Fix every failed or warning gate, then check the frames in this order.`;
-  const checklist = 'FRAMING (a face cut off or off-centre: set or correct "focus"); TEXT (every caption a sung or spoken line on its time, never invented words; readable; nothing over a face); FLOW (does movement, position and light carry across each cut, or do shots feel shuffled? reorder or swap shots); TRANSITIONS (generic library moves replaced with designed ones that go through something, with anchors); MOTION (ramps, freezes, the beat camera, push-ins: no static stretch); LOOK AND LAYERS (the look reads in every frame; each section has its light, atmosphere, graphics or beat moments; nothing looks drawn on, nothing sits on a face); SOUND (only the moments that matter, each set piece with its material sound); the LOOP.';
+  const checklist = 'FRAMING (a face cut off or off-centre: set or correct "focus"); TEXT (every caption a sung or spoken line on its time, never invented words; readable; nothing over a face); FLOW (does movement, position and light carry across each cut, or do shots feel shuffled? reorder or swap shots); TRANSITIONS (in the close-ups: every weak, repeated or generic one measured above or seen there is replaced with a different designed move that goes through something in the shot, with its anchor read off the ruler and its sound; never the same fix twice); MOTION (ramps, freezes, the beat camera, push-ins: no static stretch); SHOTS WITH A REASON (every shot the checkpoint lists as having nothing on it gets a designed moment tied to what it shows, or is cut); LOOK AND LAYERS (the look reads in every frame; each section has its light, atmosphere, graphics or beat moments; nothing looks drawn on, nothing sits on a face); SOUND (only the moments that matter, each set piece with its material sound); the LOOP.';
   return [
     head,
-    o.lost?.length ? `The ${o.lost.join(' and ')} of your direction could not be written: write them now, in full, from your direction.` : '',
+    o.lost?.length ? `Part of the work (${o.lost.join(' and ')}) could not be written in the first pass: write it now, in full, from your plan.` : '',
     brightnessNote(o.sheets),
+    o.transitions || '',
     issuesText,
     `AUTOMATED CHECKPOINT\n${checksText(o.checks)}`,
     o.sheets.length ? `IMAGES attached to this message: ${o.sheets.map((x, i) => `${i + 1}. ${x.caption}`).join('; ')}` : 'No rendered frames are attached.',
@@ -648,9 +679,16 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
     const must = opts.notes.filter(n => n.at !== undefined).map(n => n.at!);
     const times = reviewTimes(p, nSheets * 20, must);
     const frames = maxImg ? await timelineSheets(p, ws.media(), times, 20, nSheets, io.signal, undefined, frameLabels(times, opts.notes)) : [];
-    const rSheets = [...frames, ...palette.slice(0, Math.max(0, maxImg - frames.length))];
+    // every transition as three frames, measured: an empty middle, an invisible move, a plain crossfade, a type used too often
+    io.step(id, { detail: 'measuring every transition' });
+    const tf = transitionTimes(p, 60);
+    const closeN = maxImg >= 6 ? 2 : maxImg >= 3 ? 1 : 0;
+    const close = closeN && tf.length ? await timelineSheets(p, ws.media(), tf.map(x => x.t), 30, closeN, io.signal, p.width / p.height < 1 ? 300 : 220, tf.map(x => x.label), { ruler: true }) : [];
+    for (const c of close) c.caption = `transition close-ups: each transition as three frames (a just before, b the middle, c just after), labelled with its name and timeline time, with the frame ruler`;
+    const trep = transitionReport(p, tf, close);
+    const rSheets = [...frames, ...close, ...palette.slice(0, Math.max(0, maxImg - frames.length - close.length))];
     io.step(id, { detail: 'thinking…' });
-    const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined });
+    const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined, transitions: trep.text });
     const rest: Turn[] = [...opts.turns.slice(1), { role: 'user', content: msg }];
     const ctxNow = fitContext(x => contextBlock(ws.ctx, [], opts.mediaImages ? REVIEW_NOTE : undefined, x), extrasFor(opts.preset, opts.standards, undefined, { canon: true, exemplars: cfg.reviews > 1 && k === cfg.reviews }), inputBytes(rest));
     let rk: { text: string; truncated: boolean };
@@ -700,7 +738,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
       ...(job.request && job.request.library.mode !== 'none' ? [{ id: 'cast', label: 'Pick material from the database', state: 'wait' as const }] : []),
       { id: 'media', label: 'Read the media', state: 'wait' },
       { id: 'sheets', label: 'Make contact sheets', state: 'wait' },
-      ...(twoStage(job.effort) ? [{ id: 'direct', label: 'Opus directs: concept, look, shots, set pieces, scorecard', state: 'wait' as const }, { id: 'plan', label: 'Opus writes the picture and the layers', state: 'wait' as const }] : [{ id: 'plan', label: 'Opus plans the edit', state: 'wait' as const }]),
+      ...(twoStage(job.effort) ? [{ id: 'cut', label: 'Opus directs and cuts: concept, look, song, shots, plan', state: 'wait' as const }, { id: 'board', label: 'Render a storyboard of the cut', state: 'wait' as const }, { id: 'design', label: 'Opus designs on the frames: transitions, set pieces, text, effects, sound', state: 'wait' as const }] : [{ id: 'plan', label: 'Opus plans the edit', state: 'wait' as const }]),
       { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
       { id: 'check', label: 'Run the checkpoint', state: 'wait' },
       ...rev,
@@ -709,7 +747,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
   return [
     { id: 'media', label: 'Read the media', state: 'wait' },
     { id: 'look', label: 'Render the current edit', state: 'wait' },
-    ...(twoStage(job.effort) ? [{ id: 'direct', label: `Opus plans every note of round ${job.round}`, state: 'wait' as const }, { id: 'plan', label: 'Opus writes the operations', state: 'wait' as const }] : [{ id: 'plan', label: `Opus works on round ${job.round}`, state: 'wait' as const }]),
+    { id: 'plan', label: `Opus works through every note of round ${job.round}`, state: 'wait' as const },
     { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
     { id: 'check', label: 'Run the checkpoint', state: 'wait' },
     ...rev,
@@ -762,7 +800,8 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   const stdVideos = standards.filter(x => x.kind === 'video' && x.state === 'ready');
   const stdImgs = maxImg > 4 ? await standardSheets(stdVideos, Math.min(3, Math.floor(maxImg / 4))) : [];
   const sheets = maxImg ? await mediaSheets(ws.ctx, maxImg - stdImgs.length, cfg.cells, io.signal, msg => io.step('sheets', { detail: msg })) : [];
-  const images = [...stdImgs, ...sheets];
+  // the footage first: a retry that halves the images keeps the contact sheets
+  const images = [...sheets, ...stdImgs];
   io.step('sheets', { state: images.length ? 'done' : 'skip', detail: images.length ? `${images.length} image${images.length > 1 ? 's' : ''}` : 'images not available here' });
 
   const request = [
@@ -774,27 +813,63 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   ].filter(Boolean).join('\n\n');
   const reserve = bytes(request) + 6000;
   const ctx = fitContext(x => contextBlock(ws.ctx, images.map(s => s.caption), undefined, x), extrasFor(preset, standards, undefined, { exemplars: effort !== 'low', canon: true }), reserve);
-  let plan: { message: string; ops: unknown[] };
+  let summary0 = '';
   let turns: Turn[];
   let lost: string[] = [];
+  let res: OpsResult;
   if (twoStage(effort)) {
-    const ctxNoImages = fitContext(x => contextBlock(ws.ctx, [], images.length ? 'Contact sheets of the media were attached in step 1 and are not repeated: use the media ids, shots and source times from your direction.' : undefined, x), extrasFor(preset, standards), reserve + 16000);
-    ({ plan, turns, lost } = await directThenBuild(io2, { ctx, ctxNoImages, history: [], request, images, effort, revision: false, notes }));
+    // CALL 1: the cut, written as operations, with the plan for the design
+    io.step('cut', { state: 'run', detail: 'thinking…' });
+    const cutAsk = `${request}\n\n${cutStep(notes)}`;
+    turns = [{ role: 'user', content: ctx }, { role: 'user', content: cutAsk }];
+    const cut = await runParts(io2, 'cut', [{ name: 'cut', input: turns, images }], effort, true);
+    const c1 = cut.replies[0];
+    if (!c1 || !c1.ops.some((o: any) => o?.op === 'add')) throw cut.errors[0] || { code: 'invalid_json' };
+    const v1: any = parseJson(c1.text);
+    const design = typeof v1?.design === 'string' ? v1.design : '';
+    readNotes(notes, v1, 'plan');
+    // the cut keeps its clear (call 1 builds from nothing)
+    const r1 = applyReplies(ws, preset, [c1.ops], notes, false);
+    await ws.save();
+    const nShots = ws.project.clips.filter(c => c.track === ws.project.tracks.find(t => t.main)?.id).length;
+    io.step('cut', { state: 'done', detail: `${nShots} shots · ${r1.applied} operations${c1.salvaged ? ' (kept what was written before it was cut short)' : ''}` });
+    turns.push({ role: 'assistant', content: compactReply(c1.text) });
+    summary0 = c1.message;
+
+    // the storyboard of the cut, with the frame ruler for anchors
+    io.step('board', { state: 'run', detail: 'rendering the cut' });
+    const boardN = Math.max(1, Math.min(5, maxImg));
+    const sb = storyboardTimes(ws.project, boardN * 18);
+    const board = maxImg ? await timelineSheets(ws.project, ws.media(), sb.times, 18, boardN, io.signal, undefined, sb.labels, { ruler: true }) : [];
+    for (const sh of board) sh.caption = `STORYBOARD of your cut, ${sh.caption.replace(/^frames of the current edit rendered by the studio at /, '')}: each shot's first (in), middle (mid) and last (out) frame, labelled with its clip id and timeline time`;
+    io.step('board', { state: board.length ? 'done' : 'skip', detail: board.length ? `${sb.times.length} frames on ${board.length} sheet${board.length > 1 ? 's' : ''}` : 'images not available here' });
+
+    // CALL 2: the design against the real frames
+    io.step('design', { state: 'run', detail: 'thinking…' });
+    const idle = idleShots(ws.project).slice(0, 16).map(c => `${c.id} ${f2(c.start)}-${f2(c.start + c.dur)} s`).join(', ');
+    const history = turns.slice(1);
+    const dctx = fitContext(x => contextBlock(ws.ctx, board.map(b => b.caption), undefined, x), extrasFor(preset, standards, undefined, { exemplars: true, canon: true }), inputBytes(history) + 9000);
+    const d = await designPass(ws, io2, { ctx: dctx, history, board, effort, idle });
+    const r2 = applyReplies(ws, preset, d.replies.map(x => x.ops), notes);
+    await ws.save();
+    lost = d.lost;
+    io.step('design', { state: 'done', detail: `${d.replies.reduce((n, x) => n + x.ops.length, 0)} operations${d.replies.length > 1 ? ' (two halves written at the same time)' : ''}${lost.length ? `; the ${lost.join(' and ')} could not be written, the review adds it` : ''}` });
+    turns.push({ role: 'user', content: d.step }, { role: 'assistant', content: JSON.stringify({ message: d.replies.map(x => x.message).filter(Boolean).join(' '), ops: `(${d.replies.reduce((n, x) => n + x.ops.length, 0)} operations, applied: the CURRENT TIMELINE shows the result)` }) });
+    summary0 = [summary0, ...d.replies.map(x => x.message)].filter(Boolean).join(' ');
+    res = { project: ws.project, applied: r1.applied + r2.applied, issues: [...r1.issues, ...r2.issues], touched: [...r1.touched, ...r2.touched] };
+    io.step('apply', { state: 'run' });
   } else {
     io.step('plan', { state: 'run', detail: 'thinking…' });
     turns = [{ role: 'user', content: ctx }, { role: 'user', content: `${request}\n\n${SINGLE_BUILD}` }];
     const r1 = await askSafe(io2, turns, images, effort, 'plan');
     const p1 = parseReply(r1.text);
     if (!p1 || !p1.ops.length) throw { code: 'invalid_json' };
-    plan = p1;
     turns.push({ role: 'assistant', content: compactReply(r1.text) });
-    io.step('plan', { state: 'done', detail: `${plan.ops.length} operations${(p1 as any).salvaged ? ' (kept what was written before it was cut short)' : r1.truncated ? ' (cut short)' : ''}` });
+    io.step('plan', { state: 'done', detail: `${p1.ops.length} operations${(p1 as any).salvaged ? ' (kept what was written before it was cut short)' : r1.truncated ? ' (cut short)' : ''}` });
+    summary0 = p1.message;
+    io.step('apply', { state: 'run' });
+    res = applyReplies(ws, preset, [p1.ops], notes);
   }
-
-  io.step('apply', { state: 'run' });
-  const res = applyOps(ws.project, plan.ops, ws.media());
-  addCounts(notes, res.notes);
-  ws.setProject(preset.houseRules ? withSounds(res.project, ws.media()) : res.project);
   await ws.save();
   const extra = await fillMissingNotes(ws, io2, { preset, standards, turns, notes, effort, mediaImages: images.length > 0 });
   const applied = res.applied + (extra?.applied || 0);
@@ -808,7 +883,7 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
 
   const rv = await reviewPasses(ws, io2, { preset, standards, effort, turns, res: { ...res, issues: adjusted }, checks, mediaImages: images.length > 0, notes, revision: false, lost });
   checks = rv.checks;
-  const summary = rv.message || plan.message || 'The edit is on the timeline.';
+  const summary = rv.message || summary0 || 'The edit is on the timeline.';
   await finishRound(ws, job, { summary, applied: applied + rv.applied, model, notes, scores: rv.scores }, turns);
   return { summary, applied: applied + rv.applied, issues: [...adjusted, ...rv.issues], model, checks };
 }
@@ -857,27 +932,17 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   ].filter(Boolean).join('\n\n');
   const reserve = bytes(instruction) + history.reduce((n, t) => n + bytes(t.content), 0) + 6000;
   const ctx = fitContext(x => contextBlock(ws.ctx, sheets.map(x2 => x2.caption), undefined, x), extrasFor(preset, standards, checksText(checks0), { canon: true, exemplars: effort === 'extra' }), reserve);
-  let plan: { message: string; ops: unknown[] };
-  let turns: Turn[];
-  let lost: string[] = [];
-  if (twoStage(effort)) {
-    const ctxNoImages = fitContext(x => contextBlock(ws.ctx, [], sheets.length ? 'The rendered frames and contact sheets were attached in step 1 and are not repeated: use the times, media ids and shots from your decisions.' : undefined, x), extrasFor(preset, standards, checksText(checks0)), reserve + 16000);
-    ({ plan, turns, lost } = await directThenBuild(io2, { ctx, ctxNoImages, history, request: instruction, images: sheets, effort, revision: true, notes }));
-  } else {
-    io.step('plan', { state: 'run', detail: 'thinking…' });
-    turns = [{ role: 'user', content: ctx }, ...history, { role: 'user', content: `${instruction}\n\nWork through the notes one by one in your thinking (what exactly changes, where, and how the frame will look), then write the operations. ${TAG_NOTES} Put what you changed, note by note, in "message".` }];
-    const r = await askSafe(io2, turns, sheets, effort, 'plan');
-    const p1 = parseReply(r.text);
-    if (!p1) throw { code: 'invalid_json' };
-    plan = p1;
-    turns.push({ role: 'assistant', content: compactReply(r.text) });
-    io.step('plan', { state: 'done', detail: `${plan.ops.length} operations${(p1 as any).salvaged ? ' (kept what was written before it was cut short)' : r.truncated ? ' (cut short)' : ''}` });
-  }
+  // one call writes the operations for every note, seeing the frames (two calls share many notes)
+  io.step('plan', { state: 'run', detail: 'thinking…' });
+  const rp = await revisePass(io2, { ctx, history, instruction, images: sheets, effort, notes });
+  const lost = rp.lost;
+  const turns: Turn[] = [{ role: 'user', content: ctx }, ...history, { role: 'user', content: `${instruction}\n\n${rp.step}` }, { role: 'assistant', content: JSON.stringify({ message: rp.replies.map(x => x.message).filter(Boolean).join(' '), notes: rp.replies.flatMap(x => (parseJson(x.text) as any)?.notes || []), ops: `(${rp.replies.reduce((n, x) => n + x.ops.length, 0)} operations, applied: the CURRENT TIMELINE shows the result)` }) }];
+  for (const x of rp.replies) readNotes(notes, parseJson(x.text), 'plan');
+  const nOps = rp.replies.reduce((n, x) => n + x.ops.length, 0);
+  io.step('plan', { state: 'done', detail: `${nOps} operations${rp.replies.length > 1 ? ' (two calls shared the notes)' : ''}${rp.replies.some(x => x.salvaged) ? ' (kept what was written before it was cut short)' : ''}${lost.length ? `; ${lost.join(' and ')} could not be written, the review adds them` : ''}` });
 
   io.step('apply', { state: 'run' });
-  const res = applyOps(ws.project, plan.ops, ws.media());
-  addCounts(notes, res.notes);
-  if (plan.ops.length) ws.setProject(preset.houseRules ? withSounds(res.project, ws.media()) : res.project);
+  const res = applyReplies(ws, preset, rp.replies.map(x => x.ops), notes, nOps > 0);
   await ws.save();
   const extra = await fillMissingNotes(ws, io2, { preset, standards, turns, notes, effort, mediaImages: footage.length > 0 });
   const applied = res.applied + (extra?.applied || 0);
@@ -891,7 +956,7 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
 
   const rv = await reviewPasses(ws, io2, { preset, standards, effort, turns, res: { ...res, issues: adjusted }, checks, mediaImages: footage.length > 0, notes, revision: true, lost });
   checks = rv.checks;
-  const summary = rv.message || plan.message || (plan.ops.length ? 'Done.' : 'No changes were needed.');
+  const summary = rv.message || rp.replies.map(x => x.message).filter(Boolean).join(' ') || (nOps ? 'Done.' : 'No changes were needed.');
   await finishRound(ws, job, { summary, applied: applied + rv.applied, model, notes, scores: rv.scores }, turns);
   return { summary, applied: applied + rv.applied, issues: [...adjusted, ...rv.issues], model, checks };
 }

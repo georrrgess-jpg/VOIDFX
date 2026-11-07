@@ -5,7 +5,8 @@ import { loadLogo } from './engine/logo';
 import { player } from './engine/player';
 import { runtime } from './media/library';
 import { addLessons, addToLibrary, blankPreset, clearLessons, getPreset, lessonsText, listLibrary, listPresets, loadKnowledge, loadLessons, savePreset } from './state/catalog';
-import { runChecks } from './engine/qc';
+import { idleShots, runChecks } from './engine/qc';
+import { transitionReport } from './ai/measure';
 import { createProject, getRecord, listProjects, migrateLegacy, openProject } from './state/projects';
 import { applyOps } from './state/ops';
 import { compileError, customIssues } from './engine/custom';
@@ -39,5 +40,5 @@ window.addEventListener('pagehide', () => store.flushSave());
 (window as any).__voidfx = {
   store, player, runtime, open: openProject, applyOps, customIssues, compileError, FX_PRESETS, FX_LIBRARY, fxCode, fxParams, renderStills,
   enqueue, startAiEdit, stopJob, resumeJob, setParallelLimit, savePreset, blankPreset, getPreset, listPresets, getRecord, listProjects, createProject, addToLibrary, listLibrary,
-  runChecks, addLessons, clearLessons, lessonsText,
+  runChecks, idleShots, transitionReport, addLessons, clearLessons, lessonsText,
 };
