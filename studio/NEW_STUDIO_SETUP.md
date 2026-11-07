@@ -40,6 +40,8 @@ Paste the filled-in prompt from `studio/START_PROMPT.md`. The studio reads the h
 
 ## 4. Keep both studios improving
 
+- **The exchange (current workflow):** each studio writes an edit report on every verdict and the owner forwards it to the other chat; see `studio/STUDIO_EXCHANGE.md`. Studio 1 is the Flash studio.
+
 - When you approve an edit as a standard, tell that studio: it updates `studio/VOIDFX_STUDIO.md` (likes, the benchmark table) and `CLAUDE.md`.
 - New transitions go into that edit's renderer and are listed in `docs/TOOLKIT.md`.
 - Merge each studio's branch into `main` (via a PR) after a shipped edit, so the other studio picks up the new transitions, rules and pitfalls on its next pull.
