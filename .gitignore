@@ -100,3 +100,9 @@ v11/work/*.npy
 handoff/
 */work/golden/
 */work/metrics.json.lock
+# pipeline v2: golden frames, frame caches, metrics scratch (regenerable, large)
+v*/work/golden/
+v*/work/cache/
+v*/work/*.log
+v*/sr/
+library/

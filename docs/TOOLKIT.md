@@ -22,23 +22,69 @@ Timings were measured on this 4-core box for a 26 s edit.
 | Tracks and mattes | `bash tools/build.sh N prep` | ~35 s |
 | **Sharpness check** (Studio 2 rule) | `python3 tools/sharpness.py packs` before picking; `python3 tools/sharpness.py N` on the finished video (flags zoom > 10 % on 720p and shots under 0.80× the edit's median in-focus detail) | packs ~1 min; an edit ~40 s |
 | **Source restoration** (v10 rev 3) | `nohup python3 tools/sr_prep.py N &` right after `prep`: Real-ESRGAN compact restores and 2× upscales only the band each frame is cropped from; the renderer uses it automatically | ~3 s per source frame (45 min for 900 frames, in the background while you build) |
-| **Every-cut review sheets** | `bash tools/build.sh N auto` → `vN/frames/cuts_*.jpg` | ~35 s |
-| Soundtrack | `bash tools/build.sh N audio` (circular, wrapped master, AAC-checked) | ~7 s |
-| **Motion check** | `bash tools/build.sh N clip:A:B` → small MP4 with sound | ~20 s |
+| **Every-cut review sheets** | `bash tools/build.sh N auto` → `vN/frames/cuts_*.jpg` (render server) | ~25 s |
+| **Stills / strips** (pipeline v2) | `bash tools/build.sh N sheet:NAME:f1,f2,…` · `strip:A:B` (every 2nd frame across a transition) | **7.6 s** for 24 full-quality frames once the server is warm (was 40–70 s) |
+| Soundtrack | `bash tools/build.sh N audio` (circular, wrapped master, AAC-checked) **+ the effects-vs-music table** (`tools/mixcheck.py`) | ~12 s |
+| **Motion check** | `bash tools/build.sh N clip:A:B` → small MP4 with sound (render server) | ~20 s |
 | Whole-edit preview | `bash tools/build.sh N preview` (30 fps, 540×960) | ~half the final render |
-| Final + checkpoint | `bash tools/build.sh N video qc` | ~15 min + 1 min |
+| **Final** (pipeline v2) | `bash tools/build.sh N video`: upload MP4 + lossless frame cache; the master encodes in the background | **7.1 min** for v11 (was 13–15) |
+| **Revision re-render** (pipeline v2) | `bash tools/build.sh N video` again: re-renders only the EDL's changed shots (verified); `video:A:B` for a code change you can bound | **3.8 min** for one shot (the upload re-encode is ~2.5 min of it) |
+| Checkpoint | `bash tools/build.sh N qc` (qcN + the faces-vs-effects list) · `deliver` (waits for and checks the master) | ~2 min · 0–4 min |
+| **Engine check** | `bash tools/build.sh N golden` (103 frames vs the reference; required after any engine change) | ~40 s |
 
-**Efficient loop:**
+**Efficient loop (pipeline v2):**
 1. Write the EDL.
 2. Run `prep auto`.
-3. Fix whatever the sheets show, using `stills` / `clip` on single moments.
-4. Run `audio`.
-5. Run **one** `video qc` per revision.
-6. Visual sign-off on frames pulled from the encoded MP4.
+3. Fix whatever the sheets show, using `sheet:` / `strip:` / `clip:` on single moments (the render server keeps the engine loaded and restarts itself when the code changes).
+4. Run `audio` and read the effects-vs-music table: no transition or set piece more than 12 dB under the music.
+5. Run **one** `video qc` per revision. In later revisions `video` re-renders only what changed.
+6. Look at every run in the faces-vs-effects list (`vN/frames/faceqc.jpg`) and fix the ones that aren't designed.
+7. Visual sign-off on frames pulled from the encoded MP4, then `deliver`.
+8. At the verdict: `python3 tools/vrender.py N clean` (the frame cache is ~2.2 GB).
 
 Never final-render to find out whether something works.
 
 **Choosing the song window:** `song_map` prints whole-bar windows of 20–27 s with the biggest section change (the "good part", where the full mix or bass comes back) at 33–47 % of the edit. For Warmpop it independently found the window used in v6 (h416→h496, drop at 10.67 s).
+
+## 1b. Pipeline v2: speed and checks (Phase 0–1, 2026-11-07; plan in `sync/PIPELINE_V2_PLAN.md`)
+
+| Tool | What it does |
+|---|---|
+| `tools/golden.py N --save / --check [--diff]` | Reference frames: frame 0, the last 3 frames, every cut at −6/0/+6, every shot's middle and every 32nd frame (103 for v11, 112 for v10). Gate: max 2/255 per pixel and mean < 0.2/255. **Run `--check` on v10 and v11 before and after any engine change.** The references are the shipped v10 rev 5 and v11 rev 4 engines (kept out of git). |
+| `tools/vrender.py N video [--only A:B] [--full] [--dry]` · `master [--wait]` · `status` · `clean` | Final renders. Workers render contiguous blocks that never cross a cut, so per-worker caches hit. Each full render writes `vN/work/cache/frames.mkv` (Ut Video, lossless) plus a SHA-1 per frame. The master is encoded from that cache in the background at low priority. A partial render needs a cache. It re-renders the declared range plus every shot whose EDL entry changed (±30 frames), then re-renders about 30 frames outside the range and requires a bit-exact match. On any mismatch it falls back to a full render, as it does when an EDL global, the cut points, the tracks, the mattes or the restored bands change. |
+| `tools/rsrv.py N stills / full / strip / clip / auto / stop` | A render server with 4 warm workers. It restarts itself when `renderN.py`, the EDL, the tracks, the mattes or the SR index change. |
+| `tools/faceqc.py N` | Effects over faces. It compares the final frame with the shot's own picture inside the face box (track, or the matte's head for `face=None`). A gain/offset fit removes grades and fades; a frame is flagged when more than 3 % of the box gains more than 0.10 luma. It writes a list and a sheet; it isn't a gate (designed set pieces and titles show up too). |
+| `tools/mixcheck.py N` | Effects vs music at every transition and `E.SET_PIECES` entry, from the stems the audio builder now writes (`stem_music.wav`, `stem_fx.wav`). FLAG: effects more than 12 dB under the music. |
+| `tools/metrics.py N …` | `vN/work/metrics.json`. `build.sh` logs every step. Log owner notes (`note CATEGORY "…"`) and by-eye catches (`catch CATEGORY "…"`) so the pilots can be compared. |
+| `tools/edit_env.py` | Loads an edit's renderer as a library (set up as its `main()` does). |
+
+**Measured on v11 (4 cores):**
+
+| | Before | After |
+|---|---|---|
+| Full render | 786–914 s | **427 s** (the master follows in the background, ~4 min at low priority) |
+| Render time per frame (contiguous blocks, profiled) | 1.37 s | 1.06 s |
+| One-shot revision | a full render | **227 s** |
+| 24-frame sheet | 40–70 s | **7.6 s** warm |
+
+Every frame of the v2 render matches the shipped engine within the gate (worst pixel 2/255 at the coin flip, mean 0.001/255). An EDL change rendered partially and then reverted gave a frame cache bit-identical to a full render. A deliberate global change (grain 0.012 → 0.0125) failed verification on 32 of 32 check frames.
+
+**Where the remaining time goes:** the upload encode at x264 preset slow is about 2.3 min of 4-core time and is kept by guardrail 1. Optical flow is ~88 ms a frame (a cross-revision flow cache is part of WP5). INTER_CUBIC warps of float frames are ~42 ms each.
+
+**Engine rules for speed (no change to the picture):**
+- Build grades on `tone_lut(key, gains, g, ev, lx, ly)` + `apply_lut3(img, tab)`. One 65,536-entry lookup per channel replaces gain → gamma → exposure → `np.interp` (~280 ms → ~25 ms a band).
+- In hot per-frame code, don't write `a[..., None] * colour` on full frames. It is ~3× slower than filling each channel (`mul3(a, col, k)`, or the per-channel loops in `light_rgb` / `finish11`).
+- Avoid full-resolution blurs with σ > 4 on masks you can build from 1-D profiles (`face_keepout`).
+- Cached unshaken shot renders (`render_shot(..., with_shake=False)`) are **read-only**. Copy before drawing on one.
+- Don't make an effect depend on the order frames are rendered in. Partial renders and blocks assume `render(f)` is a pure function of `f`.
+
+**First findings on the shipped v11 (for the next Flash edit):**
+- `mixcheck`: 12 of 17 transitions have effects 9–31 dB under the music (music −10.2 dBFS RMS, a loud master). The Dexter studio's rule 7 applies to Flash edits too: push effects about +9 dB and duck the music about 3 dB under the biggest hits.
+- `faceqc`: light over his face in 9 runs:
+  - diagonal light sweeps across the face (answer 378, smirk 830);
+  - lightning crossing the face edge (smile 552–574, fireclose 1020);
+  - LET'S GO on his chin (420);
+  - the designed red radiate in the REVERSE loop (1198–1216).
 
 ## 2. Transitions (`tin=` on the incoming shot)
 
@@ -289,7 +335,7 @@ Clip quality (the owner's v105 gripe): `tools/sharpness.py N --src` ranks the so
 7. **Faces wider than the 9:16 window** (big profiles, two-shots): check the YuNet width before picking a shot (`analyze.py` sheets print `w`) and reject anything over about 400 px of a 720p source.
 8. **Titles must end before the next transition starts.** MIAMI over the cube looked broken.
 9. **Quiet-section transitions and VO:** keep caption lines inside 1280–1640 px and keep them two-line, never one long line.
-10. **Never wait on a full render to test a transition**: use `auto`, `stills` and `clip`.
+10. **Never wait on a full render to test a transition**: use `auto`, `sheet:`, `strip:` and `clip:` (render server).
 12. **Packs hide cuts the shot detector misses** (a jump to a closer angle, the next scene starting a few frames early). Interpolating across them makes a ghost frame, and running a source range past the shot's end puts another actor on screen. The sampler now holds frames across hard cuts; `tools/check_sources.py N` (run automatically by `build.sh N prep`) now fails any shot whose source range leaks past a source cut (found twice on v7).
 13. **Text vs very tight close-ups:** a face box that fills the 9:16 frame leaves no text-safe band. Swap the shot (v7: the "Could it be him?" close-up → kill-room floor) rather than shrinking the type.
 11. **CJK subtitles and VHS counters read as clutter** to the user. Don't add them.

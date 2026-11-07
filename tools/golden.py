@@ -1,94 +1,110 @@
-"""Golden reference frames: the regression harness for engine changes (pipeline v2, WP1).
+"""Golden frames: the regression check every engine change must pass (pipeline v2, WP1).
 
-  python3 tools/golden.py N --save          render the reference frames of vN and store them in vN/work/golden/ (PNG, not in git)
-  python3 tools/golden.py N --check         render them again and compare with the stored set
-  python3 tools/golden.py N --check --frames 0,505,1350     only these frames
-  python3 tools/golden.py N --cachetest 454:520   cache equivalence: render the range warm (one worker, in order, as the
-                                            contiguous scheduler does) and cold (every frame in a fresh process); must match
-  options: --workers 4 (default), --tag NAME (store/compare a named set, e.g. --tag before)
+  python3 tools/golden.py N --save            # render the golden list and store it (vN/work/golden/, PNG, not in git)
+  python3 tools/golden.py N --check           # render again and compare; exit 1 on a failure
+  python3 tools/golden.py N --check --diff    # also write amplified difference sheets of the worst frames
+  python3 tools/golden.py N --list            # print the frame list
+  options: --frames a,b,c   (override the list)    --workers 4
 
-The frame list is fixed per edit, from its EDL: frame 0, the last 3 frames, every cut (the transition's centre), the middle
-of every shot, the drop, and any set-piece peaks the EDL lists in GOLDEN_EXTRA (a list of frame numbers). Rendering uses the edit's own renderer exactly as `renderN.py stills` does (tracks + mattes
-loaded), at full resolution, in a pool of workers (fork, so results don't depend on which worker renders which frame).
-
-Pass rule (guardrail §2.8 of the plan): every frame within max |diff| <= 2/255 and mean |diff| < 0.2/255; anything else fails
-and lists the frames. Exit code 0 = pass, 1 = fail. Writes vN/work/golden/report.json.
+The list: frame 0, the last 3 frames, every cut at -6 / 0 / +6, the middle of every shot, and every 32nd frame.
+Gate (guardrail 8 of sync/PIPELINE_V2_PLAN.md): every frame within 2/255 per pixel and a mean difference under 0.2/255.
+The check also reports render time, so it doubles as the speed benchmark.
 """
-import os, sys, json, time, importlib
-import numpy as np, cv2
+import os, sys, json, time, subprocess, argparse
 from multiprocessing import Pool
+import numpy as np, cv2
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ARGV = sys.argv[:]                                         # the renderer import replaces sys.argv below
-VALUED = ("--frames", "--workers", "--tag", "--cachetest")
-args = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and sys.argv[i - 1] not in VALUED]
-n = args[0].lstrip("v")
-def opt(k, d=None): return ARGV[ARGV.index(k) + 1] if k in ARGV else d
-SAVE, CHECK = "--save" in ARGV, "--check" in ARGV
-WORKERS = int(opt("--workers", 4)); TAG = opt("--tag", "golden")
-WORK = f"{ROOT}/v{n}/work"; GD = f"{WORK}/golden/{TAG}" if TAG != "golden" else f"{WORK}/golden"
-os.chdir(WORK); sys.path.insert(0, WORK)
-sys.argv = [sys.argv[0], "stills"]
-R = importlib.import_module(f"render{n}"); E = R.E
-R.load(); R.init_hits()
-R.RAW_TRK.update(json.load(open(f"{WORK}/tracks{n}.json")))
-if os.path.exists(f"{WORK}/seg{n}.npz"):
-    z = np.load(f"{WORK}/seg{n}.npz"); R.SEG.update({k: z[k] for k in z.files})
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import edit_env
 
-def frame_list():
-    N = E.DUR_F; fs = {0, N - 3, N - 2, N - 1}
-    for s in E.SHOTS:
-        fs.add(s["f0"]); fs.add((s["f0"] + s["f1"]) // 2)
-    for k in ("HDROP", "DROP_HB"):
-        if hasattr(E, k) and hasattr(E, "fh"):
-            try: fs.add(E.fh(getattr(E, k)))
-            except Exception: pass
-    fs.update(getattr(E, "GOLDEN_EXTRA", []))
-    return sorted(f for f in fs if 0 <= f < N)
+MAX_TOL, MEAN_TOL = 2, 0.2
+R = None
 
-def work(f):
-    return f, R.render(f)
+def frame_list(n):
+    E = edit_env.edl(n); D = E.DUR_F
+    fs = {0, D - 3, D - 2, D - 1}
+    shots = E.SHOTS
+    for i, s in enumerate(shots):
+        f1 = shots[i + 1]["f0"] if i + 1 < len(shots) else D
+        fs.add((s["f0"] + f1) // 2)
+        if i: fs.update(s["f0"] + o for o in (-6, 0, 6))
+    fs.update(range(0, D, 32))
+    return sorted(f for f in fs if 0 <= f < D)
 
-def work_block(fs):
-    return [(f, R.render(f)) for f in fs]
+def _job(f):
+    t = time.time(); im = R.render(f)
+    return f, im, time.time() - t
 
-def cachetest(a, b):
-    """warm (one worker renders a..b in order, caches filling) vs cold (each frame in a fresh fork, empty caches)."""
-    fs = list(range(a, b + 1)); t0 = time.time()
-    with Pool(1) as p: warm = dict(p.map(work_block, [fs])[0])
-    tw = time.time() - t0; t0 = time.time()
-    with Pool(WORKERS, maxtasksperchild=1) as p: cold = dict(p.map(work, fs, chunksize=1))
-    tc = time.time() - t0; worst = 0; bad = []
-    for f in fs:
-        d = np.abs(warm[f].astype(np.int16) - cold[f].astype(np.int16)); mx = int(d.max()); worst = max(worst, mx)
-        if mx > 2 or d.mean() >= 0.2: bad.append((f, mx, round(float(d.mean()), 3)))
-    print(f"v{n} cache test {a}..{b}: {len(fs)} frames; warm {tw:.1f} s (1 worker), cold {tc:.1f} s ({WORKERS} workers, fresh process each); "
-          f"worst max |diff| {worst}/255 -> " + ("PASS" if not bad else f"FAIL {bad[:8]}"))
+def render_all(n, frames, workers):
+    global R
+    t0 = time.time(); R = edit_env.load_edit(n); t_setup = time.time() - t0
+    out, times = {}, {}
+    t1 = time.time()
+    with Pool(workers) as pool:
+        for f, im, dt in pool.imap_unordered(_job, frames, chunksize=1):
+            out[f] = im; times[f] = dt
+    return out, times, t_setup, time.time() - t1
+
+def gdir(n): return f"{edit_env.work_dir(n)}/golden"
+
+def git_rev():
+    try: return subprocess.check_output(["git", "-C", edit_env.ROOT, "rev-parse", "--short", "HEAD"], text=True).strip()
+    except Exception: return "?"
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("n", type=int)
+    g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument("--save", action="store_true"); g.add_argument("--check", action="store_true"); g.add_argument("--list", action="store_true")
+    ap.add_argument("--frames"); ap.add_argument("--workers", type=int, default=4); ap.add_argument("--diff", action="store_true")
+    a = ap.parse_args()
+    d = gdir(a.n)
+    if a.frames: frames = [int(x) for x in a.frames.split(",")]
+    elif a.check and os.path.exists(f"{d}/index.json"): frames = json.load(open(f"{d}/index.json"))["frames"]
+    else: frames = frame_list(a.n)
+    if a.list: print(len(frames), "frames:", frames); return
+    ims, times, t_setup, t_render = render_all(a.n, frames, a.workers)
+    tsum = sum(times.values())
+    print(f"rendered {len(frames)} frames in {t_render:.1f} s on {a.workers} workers (set-up {t_setup:.1f} s; "
+          f"{tsum / len(frames):.2f} s per frame per worker)")
+    if a.save:
+        os.makedirs(d, exist_ok=True)
+        for f, im in ims.items(): cv2.imwrite(f"{d}/f{f:04d}.png", im, [cv2.IMWRITE_PNG_COMPRESSION, 3])
+        json.dump({"frames": frames, "rev": git_rev(), "saved": time.strftime("%Y-%m-%d %H:%M"),
+                   "render_s": round(t_render, 1), "per_frame_s": {str(k): round(v, 3) for k, v in sorted(times.items())}},
+                  open(f"{d}/index.json", "w"), indent=1)
+        print("saved", len(ims), "golden frames to", d); return
+    ref = json.load(open(f"{d}/index.json"))
+    rows, bad = [], []
+    for f in frames:
+        g_ = cv2.imread(f"{d}/f{f:04d}.png")
+        if g_ is None: bad.append(f); rows.append((f, 255, 255.0, 1.0)); continue
+        df = cv2.absdiff(ims[f], g_)
+        mx, mean, frac = int(df.max()), float(df.mean()), float((df > MAX_TOL).mean())
+        rows.append((f, mx, mean, frac))
+        if mx > MAX_TOL or mean >= MEAN_TOL: bad.append(f)
+    rows.sort(key=lambda r: (-r[1], -r[2]))
+    print(f"golden check v{a.n} against rev {ref.get('rev')} ({ref.get('saved')}); gate: max <= {MAX_TOL}, mean < {MEAN_TOL}")
+    print("  worst frames:  frame  max  mean    px>tol")
+    for f, mx, mean, frac in rows[:8]: print(f"               {f:5d}  {mx:3d}  {mean:.3f}  {frac * 100:.4f} %")
+    old = ref.get("render_s")
+    if old: print(f"  render time {t_render:.1f} s vs {old:.1f} s at save ({old / max(t_render, 1e-6):.2f}x)")
+    json.dump({"rev": git_rev(), "pass": not bad, "failed": bad, "render_s": round(t_render, 1),
+               "rows": [{"f": f, "max": mx, "mean": round(mean, 4), "frac_over": round(frac, 6)} for f, mx, mean, frac in rows]},
+              open(f"{d}/check.json", "w"), indent=1)
+    if a.diff and rows:
+        tiles = []
+        for f, mx, mean, frac in rows[:6]:
+            g_ = cv2.imread(f"{d}/f{f:04d}.png")
+            amp = np.clip(cv2.absdiff(ims[f], g_).astype(np.float32) * 40, 0, 255).astype(np.uint8)
+            t = np.hstack([cv2.resize(ims[f], (270, 480)), cv2.resize(amp, (270, 480), interpolation=cv2.INTER_AREA)])
+            cv2.putText(t, f"{f} max {mx} mean {mean:.3f}", (5, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1, cv2.LINE_AA)
+            tiles.append(t)
+        while len(tiles) % 3: tiles.append(np.zeros_like(tiles[0]))
+        p = f"{edit_env.ROOT}/v{a.n}/frames/golden_diff.jpg"
+        cv2.imwrite(p, np.vstack([np.hstack(tiles[i:i + 3]) for i in range(0, len(tiles), 3)]), [cv2.IMWRITE_JPEG_QUALITY, 88]); print("  diff sheet:", p)
+    print("PASS" if not bad else f"FAIL: {len(bad)} frames over the gate: {bad[:20]}")
     sys.exit(0 if not bad else 1)
 
 if __name__ == "__main__":
-    if opt("--cachetest"): cachetest(*[int(x) for x in opt("--cachetest").split(":")])
-    frames = [int(x) for x in opt("--frames").split(",")] if opt("--frames") else frame_list()
-    t0 = time.time()
-    with Pool(WORKERS) as p: out = dict(p.map(work, frames, chunksize=1))
-    dt = time.time() - t0
-    os.makedirs(GD, exist_ok=True)
-    if SAVE:
-        for f, im in out.items(): cv2.imwrite(f"{GD}/{f:05d}.png", im)
-        json.dump(dict(edit=f"v{n}", frames=frames, seconds=round(dt, 1), saved=time.strftime("%Y-%m-%d %H:%M")), open(f"{GD}/index.json", "w"), indent=1)
-        print(f"saved {len(frames)} golden frames of v{n} to {GD} in {dt:.1f} s ({dt / len(frames):.2f} s/frame on {WORKERS} workers)")
-        sys.exit(0)
-    bad = []; worst_max = 0; worst_mean = 0.0; rows = []
-    for f in frames:
-        ref = cv2.imread(f"{GD}/{f:05d}.png")
-        if ref is None: bad.append((f, "missing")); continue
-        d = np.abs(out[f].astype(np.int16) - ref.astype(np.int16))
-        mx, mn = int(d.max()), float(d.mean()); worst_max = max(worst_max, mx); worst_mean = max(worst_mean, mn)
-        rows.append(dict(frame=f, max=mx, mean=round(mn, 4)))
-        if mx > 2 or mn >= 0.2: bad.append((f, f"max {mx}, mean {mn:.3f}"))
-    ok = not bad
-    json.dump(dict(edit=f"v{n}", tag=TAG, frames=len(frames), seconds=round(dt, 1), worst_max=worst_max, worst_mean=round(worst_mean, 4),
-                   failed=bad, per_frame=rows), open(f"{GD}/report.json", "w"), indent=1)
-    print(f"v{n} golden check ({TAG}): {len(frames)} frames in {dt:.1f} s; worst max |diff| {worst_max}/255, worst mean {worst_mean:.4f}/255 -> "
-          + ("PASS" if ok else f"FAIL on {len(bad)} frames: {bad[:8]}"))
-    sys.exit(0 if ok else 1)
+    main()

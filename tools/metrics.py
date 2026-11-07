@@ -1,91 +1,62 @@
-"""Per-edit metrics log (pipeline v2, WP1): vN/work/metrics.json, one list of events, appended, never rewritten.
+"""Per-edit metrics (pipeline v2, WP1): vN/work/metrics.json, so the pilots can be compared with v10, v11 and v105.
 
-Written automatically by tools/build.sh after every step:
-  python3 tools/metrics.py N step NAME SECONDS STATUS [LOG]      (STATUS = exit code; LOG = the step's log, parsed for
-                                                                  QC failures / frame counts when present)
-Written by the studio during review (owner-note categories from plan §1.1, review catches from §1.2, rounds):
-  python3 tools/metrics.py N note CATEGORY "the owner's words"    e.g. motion, look, clip-quality, text, sound, loop, faces
-  python3 tools/metrics.py N catch CATEGORY "what was caught"     a problem found by eye before delivery (QC missed it)
-  python3 tools/metrics.py N round K                              revision round K delivered
-  python3 tools/metrics.py N verdict standard|rejected
-  python3 tools/metrics.py N show                                 totals per step, full renders, notes and catches
+  python3 tools/metrics.py N stage STEP SECONDS [--rc CODE]     # build.sh calls this after every step
+  python3 tools/metrics.py N round R                            # an owner round starts (1 = first delivery)
+  python3 tools/metrics.py N note CATEGORY "the owner's words"  # categorise each owner note (categories below)
+  python3 tools/metrics.py N catch CATEGORY "what review found" # a defect found by eye in a studio review
+  python3 tools/metrics.py N summary
 
-Every event carries: the time, the git commit (short) and whether the tree had uncommitted changes.
+Note categories (§1.1 of sync/PIPELINE_V2_PLAN.md): density, replace_shot, plain_effect, loop, quality, text, defect, other.
+Catch categories (§1.2): face_overlay, whiteout, seam, framing, text_face, mix, restyle, drawn_asset, other.
 """
-import os, sys, json, time, subprocess, fcntl, re
+import os, sys, json, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-def git(*a):
-    try:
-        return subprocess.run(["git", "-C", ROOT, *a], capture_output=True, text=True, timeout=10).stdout.strip()
-    except Exception:
-        return ""
-
+NOTES = {"density", "replace_shot", "plain_effect", "loop", "quality", "text", "defect", "other"}
+CATCHES = {"face_overlay", "whiteout", "seam", "framing", "text_face", "mix", "restyle", "drawn_asset", "other"}
 
 def path(n): return f"{ROOT}/v{n}/work/metrics.json"
 
-
-def append(n, ev):
-    p = path(n); os.makedirs(os.path.dirname(p), exist_ok=True)
-    ev = dict(at=time.strftime("%Y-%m-%d %H:%M:%S"), commit=git("rev-parse", "--short", "HEAD"),
-              dirty=bool(git("status", "--porcelain", "--untracked-files=no")), **ev)
-    with open(p + ".lock", "w") as lk:                       # build steps and the studio may write at the same time
-        fcntl.flock(lk, fcntl.LOCK_EX)
-        data = json.load(open(p)) if os.path.exists(p) else dict(edit=f"v{n}", events=[])
-        data["events"].append(ev)
-        tmp = p + ".tmp"; json.dump(data, open(tmp, "w"), indent=1); os.replace(tmp, p)
-    return ev
-
-
-def parse_log(step, log):
-    """pull what is worth keeping out of a step's log: QC failures, the frame count of a full render."""
-    if not log or not os.path.exists(log): return {}
-    txt = open(log, errors="replace").read(); out = {}
-    if step == "qc":
-        out["qc_failed"] = re.findall(r"\[FAIL\] (.+)", txt)
-        out["qc_passed"] = len(re.findall(r"\[PASS\]", txt))
-    if step == "video":
-        fr = re.findall(r"frame (\d+)/(\d+)", txt)
-        if fr: out["frames"] = int(fr[-1][1])
-        out["completed"] = "done" in txt.splitlines()[-1] if txt.strip() else False
-    return out
-
-
-def show(n):
+def load(n):
     p = path(n)
-    if not os.path.exists(p): print(f"no metrics for v{n} yet"); return
-    ev = json.load(open(p))["events"]; steps = {}
-    for e in ev:
-        if e["kind"] == "step": steps.setdefault(e["step"], []).append(e)
-    print(f"v{n}: {len(ev)} events")
-    for s, es in steps.items():
-        t = [e["seconds"] for e in es]
-        print(f"  {s:10s} runs {len(es):3d}  total {sum(t) / 60:7.1f} min  last {t[-1]:6.0f} s  min {min(t):6.0f} s")
-    fulls = [e for e in steps.get("video", []) if e.get("status") == 0]
-    if fulls: print(f"  full renders: {len(fulls)} (" + ", ".join(f"{e['seconds']:.0f} s" for e in fulls) + ")")
-    qc = steps.get("qc", [])
-    if qc: print(f"  last QC: {len(qc[-1].get('qc_failed', []))} failed " + str(qc[-1].get("qc_failed", [])))
-    for k in ("note", "catch"):
-        cats = {}
-        for e in ev:
-            if e["kind"] == k: cats[e["category"]] = cats.get(e["category"], 0) + 1
-        if cats: print(f"  {k}s by category: " + ", ".join(f"{c} {m}" for c, m in sorted(cats.items(), key=lambda x: -x[1])))
-    rounds = [e["round"] for e in ev if e["kind"] == "round"]
-    if rounds: print(f"  rounds delivered: {max(rounds)}")
-    vd = [e["verdict"] for e in ev if e["kind"] == "verdict"]
-    if vd: print(f"  verdict: {vd[-1]}")
+    if os.path.exists(p):
+        try: return json.load(open(p))
+        except Exception: pass
+    return {"edit": f"v{n}", "round": 1, "stages": [], "notes": [], "catches": []}
 
+def save(n, m):
+    tmp = path(n) + ".tmp"; json.dump(m, open(tmp, "w"), indent=1); os.replace(tmp, path(n))
+
+def now(): return time.strftime("%Y-%m-%d %H:%M:%S")
+
+def summary(m):
+    st = m["stages"]; by = {}
+    for e in st: by.setdefault(e["step"].split(":")[0], []).append(e["s"])
+    print(f"{m['edit']}: round {m['round']}")
+    for k, v in by.items(): print(f"  {k:10s} x{len(v):2d}  total {sum(v) / 60:6.1f} min  last {v[-1]:6.0f} s")
+    full = [e for e in st if e["step"] == "video"]
+    print(f"  full renders: {len(full)} ({len(full) / max(1, m['round']):.1f} per round)")
+    for kind in ("notes", "catches"):
+        c = {}
+        for e in m[kind]: c[e["cat"]] = c.get(e["cat"], 0) + 1
+        if c: print(f"  {kind}: " + ", ".join(f"{k} {v}" for k, v in sorted(c.items(), key=lambda kv: -kv[1])))
+
+def main():
+    if len(sys.argv) < 3: print(__doc__); sys.exit(1)
+    n, cmd, args = int(sys.argv[1]), sys.argv[2], sys.argv[3:]
+    if not os.path.isdir(f"{ROOT}/v{n}/work"): sys.exit(f"no v{n}/work")
+    m = load(n)
+    if cmd == "stage":
+        rc = int(args[args.index("--rc") + 1]) if "--rc" in args else 0
+        m["stages"].append({"t": now(), "round": m["round"], "step": args[0], "s": float(args[1]), "rc": rc})
+    elif cmd == "round": m["round"] = int(args[0]); m.setdefault("round_starts", {})[args[0]] = now()
+    elif cmd in ("note", "catch"):
+        cat, text = args[0], " ".join(args[1:])
+        if cat not in (NOTES if cmd == "note" else CATCHES): sys.exit(f"unknown category {cat}")
+        m["notes" if cmd == "note" else "catches"].append({"t": now(), "round": m["round"], "cat": cat, "text": text})
+    elif cmd == "summary": summary(m); return
+    else: print(__doc__); sys.exit(1)
+    save(n, m)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3: print(__doc__); sys.exit(1)
-    n, kind, rest = sys.argv[1].lstrip("v"), sys.argv[2], sys.argv[3:]
-    if kind == "step":
-        name, secs, status = rest[0], float(rest[1]), int(rest[2])
-        append(n, dict(kind="step", step=name, seconds=secs, status=status, **parse_log(name, rest[3] if len(rest) > 3 else None)))
-    elif kind in ("note", "catch"): append(n, dict(kind=kind, category=rest[0], text=" ".join(rest[1:])))
-    elif kind == "round": append(n, dict(kind="round", round=int(rest[0])))
-    elif kind == "verdict": append(n, dict(kind="verdict", verdict=rest[0]))
-    elif kind == "show": show(n)
-    else: print(__doc__); sys.exit(1)
+    main()

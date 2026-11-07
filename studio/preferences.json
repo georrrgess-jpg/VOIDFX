@@ -1,6 +1,6 @@
 {
  "schema": "voidfx-preferences/1",
- "updated": "2026-11-05",
+ "updated": "2026-11-07",
  "authoritative_prose": [
   "CLAUDE.md",
   "studio/VOIDFX_STUDIO.md",
@@ -166,11 +166,13 @@
    "EDL",
    "build.sh N prep auto",
    "sr_prep (background)",
-   "clip:A:B",
-   "audio",
-   "one video qc per revision",
+   "sheet:/strip:/clip: on the render server",
+   "audio (+ mixcheck table)",
+   "one video qc per revision (later revisions re-render only what changed)",
+   "review the faceqc list",
    "visual sign-off on the encoded file",
-   "deliver"
+   "deliver (waits for the master)",
+   "vrender.py N clean at the verdict"
   ],
   "review_gates": [
    "automated QC on the encoded MP4 (qcN.py)",
@@ -180,7 +182,24 @@
    "sharpness check on the finished video"
   ],
   "pre_build_gate": "compare the plan shot by shot with the benchmarks; redesign until it clearly beats them",
-  "efficiency": "one brief, one feedback message per revision, one full render per revision"
+  "efficiency": "one brief, one feedback message per revision, one full render per revision",
+  "pipeline_v2": {
+   "plan": "sync/PIPELINE_V2_PLAN.md",
+   "done": [
+    "WP1",
+    "WP2",
+    "WP3",
+    "WP4",
+    "WP8 face-overlay list",
+    "WP12 level table"
+   ],
+   "measured_v11": {
+    "full_render_s": 427,
+    "was_s": "786-914",
+    "one_shot_revision_s": 227,
+    "sheet_24_frames_s": 7.6
+   }
+  }
  },
  "communication": {
   "progress": "short lines, no long code in chat",
@@ -389,6 +408,30 @@
    "check": "frames from the encoded file around every transition, title, the drop and the loop look right",
    "tool": "contact sheets",
    "auto": false
+  },
+  {
+   "id": "golden",
+   "check": "after any engine change: golden frames of v10 and v11 within max 2/255 per pixel, mean < 0.2/255",
+   "tool": "tools/golden.py N --check",
+   "auto": true
+  },
+  {
+   "id": "partial_render",
+   "check": "a partial re-render is used only if ~30 frames outside its range re-render bit-exact against the frame cache; otherwise full render",
+   "tool": "tools/vrender.py N video",
+   "auto": true
+  },
+  {
+   "id": "face_overlay",
+   "check": "list runs where > 3 % of the face box gains > 0.10 luma (outside transitions); review each on the sheet; fix any that isn't a designed moment",
+   "tool": "tools/faceqc.py N",
+   "auto": true
+  },
+  {
+   "id": "fx_vs_music",
+   "check": "no transition or set piece with effects more than 12 dB under the music (loudest 50 ms of effects vs music RMS)",
+   "tool": "tools/mixcheck.py N",
+   "auto": true
   }
  ],
  "engine_bases": {

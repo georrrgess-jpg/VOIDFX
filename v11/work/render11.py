@@ -9432,6 +9432,258 @@ TR2["rift"] = (rift, 18, 26)
 
 
 
+# ============================================================================ pipeline v2: speed (WP2), same pictures
+# Nothing in this section changes the look. Every item is checked against the shipped v11 frames with
+# `python3 tools/golden.py 11 --check` (gate: max 2/255 per pixel, mean < 0.2/255). See sync/PIPELINE_V2_PLAN.md.
+#   1. TONE LUT    the per-channel gain -> gamma -> exposure -> tone-curve chain of a grade becomes one 65,536-entry
+#                  lookup per channel (np.interp on a full band cost ~280 ms; the lookup ~25 ms; error < 0.01/255).
+#                  New edits: build their grade on `tone_lut` / `apply_lut3` (docs/TOOLKIT.md, pipeline v2).
+#   2. STILL CACHE the unshaken shot renders that afterimages / time slices / transitions ask for are cached per worker
+#                  (read-only arrays, so an in-place change to a cached frame fails loudly instead of corrupting it).
+#   3. BLOCKS      workers render contiguous blocks that never cross a cut (render_blocks), so every per-worker cache
+#                  (restored bands, flow pairs, edge frames, the still cache) hits; output order is unchanged.
+_TLUT = {}
+def tone_lut(key, gains, g, ev, lx, ly):
+    """(3, 65536) table: clip(u * gain_c) ** g, then * 2 ** ev (clipped), then the tone curve (lx, ly); u = i / 65535."""
+    if key not in _TLUT:
+        if len(_TLUT) > 96: _TLUT.clear()
+        u = np.arange(65536, dtype=np.float32) / 65535; tabs = []
+        for c in range(3):
+            x = np.clip(u * gains[c], 0, 1) ** g
+            if ev: x = np.clip(x * 2 ** ev, 0, 1)
+            tabs.append(np.interp(x, lx, ly).astype(np.float32))
+        _TLUT[key] = np.stack(tabs)
+    return _TLUT[key]
+
+def apply_lut3(img, tab):
+    """per-channel lookup of a float image in [0, 1] (quantised to 1/65535 before the lookup)."""
+    q = np.clip(img, 0, 1); q *= 65535; q += 0.5; idx = q.astype(np.uint16)
+    out = np.empty(img.shape, np.float32)
+    for c in range(3): np.take(tab[c], idx[..., c], out=out[..., c])
+    return out
+
+def in_unit(img): return img.dtype == np.float32 and img.ndim == 3 and img.shape[2] == 3 and float(img.min()) >= 0.0 and float(img.max()) <= 1.0
+
+_grade_v11_ref = grade
+def grade(img, s, f):
+    lk = s.get("look")
+    if lk not in ("voltage", "rival") or not in_unit(img): return _grade_v11_ref(img, s, f)
+    g, gains = corr9(s); ev = s.get("ev") or 0
+    lx, ly = lut11(lk)
+    x = apply_lut3(img, tone_lut((lk, s["n"], ev, float(g), tuple(float(v) for v in gains)), gains, g, ev, lx, ly))
+    Bc, Gc, Rc = x[..., 0], x[..., 1], x[..., 2]                                         # from here: as the v11 grade
+    L = (Bc * 0.114 + Gc * 0.587 + Rc * 0.299)[..., None]
+    red = np.clip((Rc - np.maximum(Gc, Bc) * 1.25) * 3.0, 0, 1)[..., None]
+    light = np.clip((L - 0.62) * 3.0, 0, 1) * np.clip((Rc - Bc) * 3.0, 0, 1)[..., None]
+    hue = (Rc - Gc) / (Rc + 1e-3)
+    skin = (np.clip(1 - np.abs(hue - 0.22) / 0.22, 0, 1) * np.clip((Rc - Bc) * 6, 0, 1) * np.clip(L[..., 0] * 3, 0, 1))[..., None]
+    sat = 0.84 + 0.32 * red + 0.25 * light + 0.10 * skin
+    x = L + (x - L) * sat
+    sh = (1 - L) ** 2.6 * (1 - 0.7 * skin) * (1 - red)
+    hi = np.clip((L - 0.55) * 2.2, 0, 1) * (1 - skin * 0.6)
+    if lk == "voltage":
+        x = x + sh * TEALS + hi * np.array([-0.018, 0.010, 0.035], np.float32)
+    else:
+        x = x + sh * np.array([0.000, -0.006, 0.022], np.float32) + hi * np.array([-0.030, -0.018, 0.045], np.float32)
+        x = x * np.array([0.94, 0.95, 1.04], np.float32)
+    return np.clip(x, 0, 1)
+
+#   4. CHANNELS    numpy's `a[..., None] * colour` broadcast is ~3x slower than writing each channel; the hot effects
+#                  (light layers, finish, anamorphic streaks, motes, the grade's last stage) write channels directly.
+#   5. FACE MASK   motes11's blurred "nothing in front of his face" mask (a 78 ms full-frame blur, sigma 25, every frame)
+#                  is built from 1-D blurs: the mask is a column profile times a row profile plus a few ramp rows, and
+#                  a Gaussian blur of that is exact up to float rounding (max 7e-7).
+F32 = np.float32
+def mul3(a, col, k=1.0, out=None):
+    """(a[..., None] * col) * k as an HxWx3 array, channel by channel (same values, faster)."""
+    o = np.empty(a.shape + (3,), F32) if out is None else out
+    for c in range(3):
+        oc = o[..., c]; np.multiply(a, col[c], out=oc)
+        if k != 1.0: oc *= k
+    return o
+
+def light_rgb(cv, a, core, glow):
+    c = cv.astype(F32) / 255
+    sm = cv2.resize(c, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    g = cv2.resize(cv2.GaussianBlur(sm, (0, 0), 3) * 2.6 + cv2.GaussianBlur(sm, (0, 0), 11) * 3.4, (W, H), interpolation=cv2.INTER_LINEAR)
+    np.clip(g, 0, 1.6, out=g)
+    o = np.empty((H, W, 3), F32); t = np.empty((H, W), F32)
+    for ch in range(3):
+        np.multiply(g, glow[ch], out=t); t *= 0.85
+        oc = o[..., ch]; np.multiply(c, core[ch], out=oc); oc *= 1.15; oc += t; oc *= a
+    return o
+
+def light_from(cv, a=1.0, col=None):
+    c = cv.astype(F32) / 255
+    small = cv2.resize(c, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    glow = cv2.resize(cv2.GaussianBlur(small, (0, 0), 3) * 2.6 + cv2.GaussianBlur(small, (0, 0), 11) * 3.4, (W, H), interpolation=cv2.INTER_LINEAR)
+    col = GOLD2 if col is None else col
+    np.clip(glow, 0, 1.6, out=glow)
+    o = np.empty((H, W, 3), F32); t = np.empty((H, W), F32)
+    for ch in range(3):
+        np.multiply(glow, col[ch], out=t); t *= 0.85
+        oc = o[..., ch]; np.multiply(c, GOLDW[ch], out=oc); oc *= 1.15; oc += t; oc *= a
+    return o
+
+_ANA_COL = (GOLD * 0.6 + WHITE * 0.25)
+def anamorphic(out, amt=0.30):
+    small = cv2.resize(out, (W // 8, H // 8), interpolation=cv2.INTER_AREA)
+    hi = np.clip(small.max(2) - 0.80, 0, 1) * 4.0
+    if not hi.any(): return np.clip(out, 0, 1)                                              # no highlights: no streaks
+    st = cv2.GaussianBlur(hi, (0, 0), sigmaX=40, sigmaY=0.6)
+    st = cv2.resize(st, (W, H), interpolation=cv2.INTER_LINEAR)
+    o = np.empty(out.shape, F32); t = np.empty((H, W), F32)
+    for ch in range(3):
+        np.multiply(st, _ANA_COL[ch], out=t); t *= amt; np.add(out[..., ch], t, out=o[..., ch])
+    return np.clip(o, 0, 1, out=o)
+
+_FIN = {}
+def _fin_planes(f):
+    if "v3" not in _FIN:
+        grain(0, 0.012)
+        _FIN["v3"] = np.repeat(0.80 + 0.20 * VIG, 3, axis=2)
+    k = ("g", f % 6)
+    if k not in _FIN: _FIN[k] = np.repeat(grain(f, 0.012), 3, axis=2)
+    return _FIN["v3"], _FIN[k]
+
+def finish11(out, f, s):
+    rival = s is not None and is_rival(s)
+    small = cv2.resize(out, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    hi_ = np.clip(small.max(2) - 0.64, 0, 1)
+    b1 = cv2.GaussianBlur(hi_, (0, 0), 4); b2 = cv2.GaussianBlur(hi_, (0, 0), 16)
+    bl = cv2.resize(b1 * 0.45 + b2 * 0.55, (W, H))
+    col = RED2 if rival else GOLD2
+    o = np.empty(out.shape, F32); t = np.empty((H, W), F32)
+    for ch in range(3):
+        np.multiply(bl, col[ch], out=t); t *= 0.48; np.add(out[..., ch], t, out=o[..., ch])
+    o = anamorphic(o, 0.18)
+    np.maximum(o, 0.012, out=o)
+    v3, g3 = _fin_planes(f)
+    o *= v3; o += g3
+    return np.clip(o, 0, 1, out=o)
+
+_K25 = cv2.getGaussianKernel(201, 25, cv2.CV_32F); _K1 = np.ones((1, 1), F32)
+def _blur1(v, axis, k):
+    if axis == 1: return cv2.sepFilter2D(v[None, :], -1, k, _K1, borderType=cv2.BORDER_REFLECT_101)[0]
+    return cv2.sepFilter2D(v[:, None], -1, _K1, k, borderType=cv2.BORDER_REFLECT_101)[:, 0]
+
+def face_keepout(hb):
+    """GaussianBlur(sigma 25) of motes11's head mask clip(1 - max(|x - cx| / w, ramp(y)), 0, 1), from 1-D blurs."""
+    cxh, wh = (hb[0] + hb[1]) / 2, (hb[1] - hb[0]) / 2 + 40
+    gx = _GX[0]; gy = _GY[:, 0]
+    ax = np.abs(gx - cxh) / wh
+    by = np.clip((gy - hb[2]) / 60, 0, 1) * 9
+    A = np.clip(1 - ax, 0, 1).astype(F32)
+    S = (by <= 0).astype(F32)
+    out = _blur1(S, 0, _K25)[:, None] * _blur1(A, 1, _K25)[None, :]
+    for r in np.nonzero((by > 0) & (by < 1))[0]:
+        e = np.clip(1 - np.maximum(ax, by[r]), 0, 1).astype(F32)
+        d = np.zeros(H, F32); d[r] = 1
+        col = _blur1(d, 0, _K25); nz = np.nonzero(col)[0]
+        if len(nz): out[nz[0]:nz[-1] + 1] += col[nz[0]:nz[-1] + 1, None] * _blur1(e, 1, _K25)[None, :]
+    return out.astype(F32, copy=False)
+
+def motes11(out, f, person, dens, mode, rival=False, s=None):
+    """ember: rising embers; fire: denser orange embers; dust: slow gold dust; speed: streaks rushing past in depth."""
+    if dens <= 0.01: return out
+    t = f / FPS; back = np.zeros((H, W), np.float32); front = np.zeros((H, W), np.float32)
+    for p in pm11(mode):
+        if p["on"] > dens: continue
+        z = p["z"]; tgt = front if z > 0.62 else back
+        if mode in ("ember", "fire"):
+            sp = (110 + 300 * z) * p["v"] * (1.6 if mode == "fire" else 1.0)
+            x = (p["x0"] * W + 40 * math.sin(1.3 * t + p["ph"]) + 25 * z * math.sin(3.1 * t + p["ph"] * 2)) % W
+            y = (p["y0"] * (H + 200) - sp * t) % (H + 200) - 100
+            r = 1.2 + 4.2 * z; tw = 0.55 + 0.45 * math.sin(7 * t + p["ph"] * 3)
+            cv2.circle(tgt, (int(x), int(y)), max(1, int(r)), (0.55 + 0.45 * z) * tw, -1, cv2.LINE_AA)
+            if z > 0.5: cv2.line(tgt, (int(x), int(y)), (int(x), int(y + r * 5)), 0.35 * tw, max(1, int(r * 0.6)), cv2.LINE_AA)
+        elif mode == "dust":
+            x = (p["x0"] * (W + 200) + (25 + 70 * z) * t * p["v"] + 30 * math.sin(0.8 * t + p["ph"])) % (W + 200) - 100
+            y = (p["y0"] * (H + 200) - (15 + 40 * z) * t + 20 * math.sin(0.6 * t + p["ph"])) % (H + 200) - 100
+            r = 1.0 + 3.0 * z; tw = 0.5 + 0.5 * math.sin(5 * t + p["ph"] * 2)
+            cv2.circle(tgt, (int(x), int(y)), max(1, int(r)), (0.4 + 0.5 * z) * tw, -1, cv2.LINE_AA)
+        else:                                                                                  # speed
+            sp = (1400 + 3200 * z) * p["v"]; L_ = 80 + 520 * z
+            x = (p["x0"] * (W + 1200) + sp * t) % (W + 1200) - 600; y = p["y0"] * H
+            cv2.line(tgt, (int(x - L_), int(y)), (int(x), int(y)), 0.45 + 0.55 * z, max(1, int(1 + 3 * z)), cv2.LINE_AA)
+    if person is not None: back *= (1 - np.clip(person * 1.3, 0, 1))
+    hb = head_box(s, f, person) if s is not None else None
+    if hb is not None:                                                                      # nothing in front of his face
+        hm = face_keepout(hb)
+        front *= (1 - hm); back *= (1 - hm * (0.0 if person is not None else 1.0))
+    lay = back * 0.8 + cv2.GaussianBlur(front, (0, 0), 1.8 + (2.0 if mode == "speed" else 0.0)) * 1.25
+    glow = cv2.resize(cv2.GaussianBlur(cv2.resize(lay, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 3), (W, H))
+    if mode == "ember" and rival: core, gl = REDW, RED2
+    elif mode in ("ember", "fire"): core, gl = np.array([0.35, 0.75, 1.0], np.float32), EMBER2
+    else: core, gl = GOLDW, GOLD2
+    a = min(1.0, dens * 1.2) * (0.75 if mode == "dust" else 1.0)
+    o = np.empty(out.shape, F32); t1 = np.empty((H, W), F32); t2 = np.empty((H, W), F32)
+    for ch in range(3):
+        np.multiply(lay, core[ch], out=t1); t1 *= 0.9; np.multiply(glow, gl[ch], out=t2); t2 *= 1.5; t1 += t2; t1 *= a
+        np.add(out[..., ch], t1, out=o[..., ch])
+    return np.clip(o, 0, 1, out=o)
+
+_grade_v2a = grade
+def grade(img, s, f):
+    lk = s.get("look")
+    if lk not in ("voltage", "rival") or not in_unit(img): return _grade_v11_ref(img, s, f)
+    g, gains = corr9(s); ev = s.get("ev") or 0
+    lx, ly = lut11(lk)
+    x = apply_lut3(img, tone_lut((lk, s["n"], ev, float(g), tuple(float(v) for v in gains)), gains, g, ev, lx, ly))
+    Bc, Gc, Rc = (np.ascontiguousarray(x[..., c]) for c in range(3))
+    L = Bc * 0.114 + Gc * 0.587 + Rc * 0.299
+    red = np.clip((Rc - np.maximum(Gc, Bc) * 1.25) * 3.0, 0, 1)
+    d = Rc - Bc
+    light = np.clip((L - 0.62) * 3.0, 0, 1) * np.clip(d * 3.0, 0, 1)
+    hue = (Rc - Gc) / (Rc + 1e-3)
+    skin = np.clip(1 - np.abs(hue - 0.22) / 0.22, 0, 1) * np.clip(d * 6, 0, 1) * np.clip(L * 3, 0, 1)
+    sat = 0.84 + 0.32 * red + 0.25 * light + 0.10 * skin
+    sh = (1 - L) ** 2.6 * (1 - 0.7 * skin) * (1 - red)
+    hi = np.clip((L - 0.55) * 2.2, 0, 1) * (1 - skin * 0.6)
+    if lk == "voltage": ts, hs, ks = TEALS, np.array([-0.018, 0.010, 0.035], F32), None
+    else: ts, hs, ks = np.array([0.000, -0.006, 0.022], F32), np.array([-0.030, -0.018, 0.045], F32), np.array([0.94, 0.95, 1.04], F32)
+    o = np.empty(x.shape, F32)
+    for ch, P in enumerate((Bc, Gc, Rc)):
+        v = L + (P - L) * sat
+        v += sh * ts[ch]; v += hi * hs[ch]
+        if ks is not None: v *= ks[ch]
+        o[..., ch] = v
+    return np.clip(o, 0, 1, out=o)
+
+
+_STILL = {}
+STILL_MAX = 18                                                                              # ~33 MB each with a matte
+_render_shot_v2ref = render_shot
+def render_shot(s, f, with_shake=True, want_mask=False):
+    if with_shake: return _render_shot_v2ref(s, f, True, want_mask)
+    key = (s["n"], f, bool(want_mask))
+    hit = _STILL.pop(key, None)
+    if hit is None:
+        r = _render_shot_v2ref(s, f, False, want_mask)
+        for a_ in (r if isinstance(r, tuple) else (r,)): a_.flags.writeable = False
+        hit = (r, SR_USED[0])
+        while len(_STILL) >= STILL_MAX: _STILL.pop(next(iter(_STILL)))
+    _STILL[key] = hit                                                                       # most recent last
+    SR_USED[0] = hit[1]
+    return hit[0]
+
+def frame_blocks(frames, size=36):
+    """split a sorted frame list into contiguous runs that never cross a cut, at most `size` frames each."""
+    out, cur = [], []
+    for f in frames:
+        if cur and (f != cur[-1] + 1 or shot_at(f) is not shot_at(cur[-1]) or len(cur) >= size): out.append(cur); cur = []
+        cur.append(f)
+    if cur: out.append(cur)
+    return out
+
+def _render_block(fs): return [render(f) for f in fs]
+
+def render_blocks(pool, frames, size=36):
+    """yield (frame, image) in the order given, each block rendered by one worker."""
+    for fs, ims in zip(frame_blocks(frames, size), pool.imap(_render_block, frame_blocks(frames, size), chunksize=1)):
+        yield from zip(fs, ims)
+
+
 def main():
     mode = sys.argv[1]
     load(); init_hits()
@@ -9472,7 +9724,7 @@ def main():
                "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", *(["-c:a", "aac", "-b:a", "160k", "-shortest"] if aud else []), out]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
-            for fr in pool.imap(render, frames, chunksize=4):
+            for _, fr in render_blocks(pool, frames, 24):
                 p.stdin.write(cv2.resize(fr, (W // 2, H // 2), interpolation=cv2.INTER_AREA).tobytes())
         p.stdin.close(); p.wait(); print(out); return
     if mode == "full":
@@ -9492,7 +9744,7 @@ def main():
                *tags, "-c:a", "pcm_s24le", "-ar", "48000", f"{outdir}/{E.SLUG}_voidfx_9x16_master.mov"]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
-            for i, fr in enumerate(pool.imap(render, range(E.DUR_F), chunksize=4)):
+            for i, (_, fr) in enumerate(render_blocks(pool, list(range(E.DUR_F)))):
                 p.stdin.write(fr.tobytes())
                 if i % 150 == 0: print(f"frame {i}/{E.DUR_F}", flush=True)
         p.stdin.close(); p.wait(); print("done", outdir, flush=True)

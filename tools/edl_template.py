@@ -38,6 +38,7 @@ LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 
 VO = []                                    # dialogue: (stem, src_in, src_out, edit_at); [] = music-only
+SET_PIECES = []                            # pipeline v2 (mixcheck): (name, t0, t1) in edit seconds for each set piece
 VO_STEM = None; VO_STEM_T0 = 0.0
 
 def vel(e0, e1, a, b, lo=0.30, hi=3.2, tau=0.07, n=96):
