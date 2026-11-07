@@ -546,6 +546,8 @@ def main():
     chg = crackle(th(64) - th(60), -26, 2140, 0.8) * np.linspace(0.2, 1.0, I(th(64) - th(60))) ** 1.5
     place(fx, stereo(chg.astype(np.float32)), th(60))
     fx = np.tanh(fx * 1.2) / 1.2
+    wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))                        # pipeline v2: tools/mixcheck.py
+    wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
     full = mus + fx
     lead, mix = full[:PRE].copy(), full[PRE:].copy()
     th2 = np.linspace(0, np.pi / 2, PRE)[:, None]

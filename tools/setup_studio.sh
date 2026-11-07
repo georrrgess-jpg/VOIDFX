@@ -8,6 +8,7 @@ ok() { printf "  [ok]   %s\n" "$1"; }; bad() { printf "  [MISS] %s\n" "$1"; MISS
 
 echo "== tools"
 for t in ffmpeg ffprobe python3; do command -v $t >/dev/null && ok "$t" || bad "$t (install it: apt-get install -y ffmpeg python3)"; done
+ffmpeg -hide_banner -h encoder=utvideo 2>/dev/null | grep -q "utvideo" && ok "ffmpeg utvideo (pipeline v2 frame cache)" || bad "ffmpeg without the utvideo encoder (tools/vrender.py frame cache needs it)"
 
 echo "== python packages"
 for m in numpy scipy cv2 PIL onnxruntime onnx faster_whisper demucs; do

@@ -81,14 +81,17 @@
   - **Flash check is now in QC** (`qc11.py` §7b, from the Dexter studio's `qc105`): white-out runs (mean luma ≥ 200 for 2+ frames) and more than 3 flashes a second fail; every flash peaking over mean luma 110 is listed for a visual check. The loop-seam gate is now ≤ 1.
 - **No "gimmick on the face" effects** (e.g. lines converging on his face with a target ring). Transitions should be physical and themed (slide box, plastic burst, zipper, blood on the lens), not overlays on his face.
 - **Props and effects (Studio 2, after FOREVER):** blood slides and the knife across the screen are **no longer banned**. In FOREVER they failed because they lingered (slides drifting round the opening as a constant overlay), were random (drips, spatter and the knife pass on beats with no reason in the shot), looked drawn (flat red circles on grey glass), and didn't land (a glass-shatter web over his face, duct-tape strips that fell flat). Use blood, slides, knives, glass or tape only when they are motivated by the shot, lyric or story; brief; lit like real objects or taken from real footage (the S1 shot of him holding up a slide); in the edit's own look; and off his face. Check each on stills next to the footage and rebuild or cut anything that looks drawn. The v7 blood-slide box and blood on the lens worked. (v10 rev 4 applied this: the frozen-scene glass shatter was replaced.)
-- **Efficiency:** the user asks for quality *and* efficiency. Use the fast loop in `docs/TOOLKIT.md`:
+- **Efficiency:** the user asks for quality *and* efficiency. Use the fast loop in `docs/TOOLKIT.md` (pipeline v2, §1 and §1b):
   1. song map;
   2. EDL;
-  3. `build.sh N prep auto` (review sheets of every cut);
-  4. `clip:A:B` for motion;
-  5. `audio`;
-  6. **one** `video qc` per revision.
+  3. `build.sh N prep auto` (review sheets of every cut, from the render server);
+  4. `sheet:` / `strip:` / `clip:A:B` for stills and motion (warm server: a 24-frame sheet in ~8 s);
+  5. `audio`, which also prints the effects-vs-music table: no transition or set piece more than 12 dB under the music (the shipped v11 had 12 of 17 there, so the Dexter studio's rule 7 applies to Flash edits too);
+  6. **one** `video qc` per revision. A full render is ~7 min; in later revisions `video` re-renders only the changed shots, after verifying ~30 frames outside them bit-exact;
+  7. review every run in the faces-vs-effects list (`vN/frames/faceqc.jpg`), then `deliver` (waits for the background master);
+  8. at the verdict, `python3 tools/vrender.py N clean` (the frame cache is ~2.2 GB).
   - Check the pitfalls list there before building transitions.
+  - **Engine changes:** run `bash tools/build.sh 11 golden` and `bash tools/build.sh 10 golden` before and after. A change that moves any reference frame by more than 2/255 (or the mean by 0.2/255) is a look change, not a speed-up. The upgrade plan and its status: `sync/PIPELINE_V2_PLAN.md`.
 - **Honesty:** you cannot watch or listen. Report what was verified by frames and measurement, and ask the user to watch once with sound.
 - **Communication:** short progress updates; no long code in chat.
 
@@ -96,7 +99,7 @@
 
 - Sources go in `src/` (read-only copies). Each edit gets its own folder (`vN/work`, `vN/out`, ...).
 - One EDL file per edit holds every decision, and the renderer reads only that file. The EDL also sets `VER`, `SLUG` and `SONG`, plus the engine knobs (`DROP_TITLE`, `MONTAGE`, `VANISH_T0`, `VO_STEM`, `CAPS`, `END_CAP`); the template is `tools/edl_template.py`.
-- Tools: `tools/new_edit.py` (scaffold), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/transcribe.py` (word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / audio / clip / preview / video / qc), `tools/sr_prep.py` (restores and 2× upscales the 720p source bands an edit uses; run in the background after prep), `tools/sharpness.py` (pack quality table; `N --src` ranks each shot's source before rendering; `N` measures the finished edit; flags soft shots), `tools/setup_studio.sh` (deps, models, source-library check).
+- Tools: `tools/new_edit.py` (scaffold), `tools/song_map.py` (beat grid, drops, candidate windows), `tools/transcribe.py` (word times), `tools/check_sources.py` (source-range audit), `tools/build.sh` (prep / auto / sheet / strip / clip / audio / video / video:A:B / qc / deliver / golden; logs every step to `vN/work/metrics.json`), `tools/vrender.py` (final renders, frame cache, background master, verified partial re-renders), `tools/rsrv.py` (render server), `tools/golden.py` (engine regression frames), `tools/faceqc.py` (effects over faces), `tools/mixcheck.py` (effects vs music), `tools/metrics.py` (owner rounds, notes, catches), `tools/sr_prep.py` (restores and 2× upscales the 720p source bands an edit uses; run in the background after prep), `tools/sharpness.py` (pack quality table; `N --src` ranks each shot's source before rendering; `N` measures the finished edit; flags soft shots), `tools/setup_studio.sh` (deps, models, source-library check).
 - Two studios: each works on its own branch with its own version range (Studio 1 `v8+`, Studio 2 `v101+`); see `studio/NEW_STUDIO_SETUP.md`.
 - **This chat is the Flash studio (Studio 1):** it makes The Flash edits (next: `v12`; the Dexter studio uses `v106+`). **Engine bases (agreed with the Dexter studio):** Flash edits scaffold from v11, Dexter edits from v105; shared effects are ported through handoffs. On every verdict ("good / make it a standard" or "bad, because…"), in the same turn: write `sync/handoffs/YYYY-MM-DD_flash_vNN_TITLE_<standard|rejected>.md` from the shared `sync/HANDOFF_TEMPLATE.md`, adopt its rules here, add a `sync/LEDGER.md` line, commit, push, and send the owner the file. When the owner attaches a handoff from the Dexter studio, adopt it per `sync/README.md` step 7 and reply in a few lines (adopted, conflicts, what the next Flash edit will try).
 - Media (`src/`, audio, frames, outputs, models) stays out of git. Commit the code, EDL, transcripts, tracks and README, then push to the session's branch.

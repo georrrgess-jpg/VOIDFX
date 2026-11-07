@@ -1,8 +1,22 @@
 # voidfx pipeline v2: the quality and efficiency upgrade plan
 
-**From:** the Flash studio (Studio 1) · **For:** the Dexter studio (Studio 2), to lead development, with the Flash studio piloting and reviewing · **Date:** 2026-11-07 · **Status:** plan; nothing in it is built yet unless marked **done**.
+**From:** the Flash studio (Studio 1) · **For:** the Dexter studio (Studio 2), to lead development, with the Flash studio piloting and reviewing · **Date:** 2026-11-07 · **Status:** Phase 1 and most of Phase 0 **built and tested by the Flash studio** on 2026-11-07, at the owner's go-ahead ("You may begin the update"); WP0 (one shared branch) is still open. The rest is a plan. See the status table below and `sync/handoffs/2026-11-07_flash_DEV_phase0-1.md`.
 
 **How to use this document:** read §0 for the summary, §2 for the guardrails, and §5 for the build order. Each work package in §4 has its evidence, design, deliverables, acceptance tests and effort. Start with Phase 0 (§5). Code and data referenced here live on the Flash studio's branch `claude/gallant-planck-pqpczp` of `georrrgess-jpg/voidfx` (commit `0823636` or later) unless they're named as yours (`v105/…`).
+
+
+### Status (2026-11-07)
+
+| Package | State | Result |
+|---|---|---|
+| WP0 one shared code base | **open** | Needs the owner's approval and the Dexter branch pushed to `georrrgess-jpg/voidfx`. The Flash work is on `claude/gallant-planck-pqpczp` (the only branch this studio may push to). |
+| WP1 golden frames + metrics | **done** | `tools/golden.py` (references for v10 and v11 from the shipped engines); `tools/metrics.py`, and `build.sh` logs every step. |
+| WP2 render speed | **done** (target not fully met) | v11 full render **427 s** (was 786–914 s); render work per frame 1.30× faster, all frames within the gate. The 6-minute target is out of reach without touching the upload encode (preset slow is ~2.3 min of 4-core time; guardrail 1 keeps it). |
+| WP3 render server | **done** | `tools/rsrv.py`: a 24-frame sheet in 7.6 s warm (target ≤ 12 s). |
+| WP4 verified partial re-render | **done** (target close) | `tools/vrender.py`: one shot in 227 s (target ≤ 3 min; the upload re-encode is ~2.5 min of it); the EDL round trip was bit-identical; an injected global change was caught on 32 of 32 check frames. |
+| WP8 effects over faces | **done** (as a list, not a gate) | `tools/faceqc.py`: on the shipped v11 it flags the light sweeps and bolts across his face and the title on his chin. |
+| WP12 effects-vs-music table | **done** | `tools/mixcheck.py` + stems from the audio builder: v11 has 12 of 17 transitions more than 12 dB under the music. |
+| WP5–WP7, WP9–WP11, WP13, WP14 | planned | Next: WP7 plan check and WP9 critique pass (the owner rounds are still the biggest cost). |
 
 ---
 
@@ -378,10 +392,15 @@ Each experiment runs on golden shots, with a metric and a full-resolution side-b
 
 **Pilots:** after Phases 1–2, the Flash studio runs v12 and the Dexter studio runs v106 on the new pipeline. Compare `metrics.json` with v10, v11 and v105 (rounds, time to first delivery, render minutes, by-eye catches) and report through the sync.
 
-**First steps for the Dexter studio:**
+**First steps for the Dexter studio (updated 2026-11-07, after the Flash studio built Phase 1):**
 1. Ask the owner to approve WP0 (pushing your branch to `georrrgess-jpg/voidfx` and creating `dev/pipeline-v2` from both branches).
-2. Build WP1 (golden frames for v11 and v105) before changing any engine code.
-3. Do WP2 items 1–3 (LUT grade, contiguous chunks, afterimage cache) as the first PR, with before/after timings and golden results.
+2. Adopt the Phase 1 tools. They are engine-agnostic (any `renderN.py` with `render(f)` and `shot_at(f)`):
+   - copy them;
+   - `golden.py 105 --save` on your shipped v105 engine;
+   - port the v2 speed section of `render11.py` (§ "pipeline v2: speed") into `render105.py`, adapting the grade to `tone_lut` / `apply_lut3`;
+   - run `golden.py 105 --check`.
+   See `sync/handoffs/2026-11-07_flash_DEV_phase0-1.md`.
+3. Phase 2 next: WP7 (plan check) and WP9 (critique pass), split between the studios as agreed with the owner.
 
 ---
 

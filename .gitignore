@@ -68,3 +68,9 @@ v11/out/
 v11/work/*.npz
 v11/work/*.npy
 handoff/
+# pipeline v2: golden frames, frame caches, metrics scratch (regenerable, large)
+v*/work/golden/
+v*/work/cache/
+v*/work/*.log
+v*/sr/
+library/
