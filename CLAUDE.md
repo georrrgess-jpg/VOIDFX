@@ -53,6 +53,27 @@
   - the song window chosen so its lyrics are on screen;
   - every clearly sung line captioned on its words (`tools/lyrics.py`), with key moments landing on sung words.
 
+**Workflow from 2026-11-07: two voidfx chats as a coalition.**
+- **This chat is the Dexter studio.** Every Dexter edit is made here, numbered v106 onward; the other chat has its own range.
+- **The loop:**
+  - the owner sends the song (and maybe scene packs);
+  - the studio builds;
+  - review rounds follow (every note applied in one pass);
+  - then a verdict: "good / make it a standard", or "bad, because…".
+- **On every verdict, in the same turn, write a handoff.** It goes in Drift-Master `voidfx-studio-kit/sync/handoffs/YYYY-MM-DD_dexter_vNNN_TITLE_<standard|rejected>.md`, follows `sync/HANDOFF_TEMPLATE.md`, and covers:
+  - the verdict verbatim;
+  - the edit at a glance;
+  - the creative process;
+  - each revision (note, diagnosis, change, what failed);
+  - what made it good or weak;
+  - measurements;
+  - new rules with evidence;
+  - reusable assets;
+  - notes for the other studio.
+  Then add it to `data/edits.json`, `data/preferences.json` and `sync/LEDGER.md`, update the handbooks, commit and push, and send the owner the file.
+- **When the owner brings a handoff from the other chat:** adopt its rules (noting which apply to Dexter), file it, add it to the ledger, commit and push, and confirm briefly what was adopted.
+- **The full procedure** is in `voidfx-studio-kit/sync/README.md` (Drift-Master).
+
 **Studio 1's standards: `v11/` *BOP* (newest) and `v10/` *LET IT HAPPEN*.** These are recorded from the owner's notes and checked against Studio 1's branch (`claude/gallant-planck-pqpczp`, read at `122013b`), where the code lives. Studio 1's CLAUDE.md, handbook, toolkit and start prompt list BOP first and quote the owner's approval. Every edit must match or beat both, alongside v7, v6 and v4 and Studio 2's standards above.
 - **`v11/`, *BOP*** (The Flash × DaBaby "BOP", rev 4): *"I like this edit and would like for you to make it a standard."* It is Studio 1's newest benchmark and the base engine of its scaffold. It's the reference for:
   - **a concept found in the song itself:** the intro's "Harrison" becomes the Reverse-Flash rivalry, red against gold in two grades;
