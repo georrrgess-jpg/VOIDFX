@@ -1,0 +1,450 @@
+{
+ "schema": "voidfx-preferences/1",
+ "updated": "2026-11-05",
+ "authoritative_prose": [
+  "CLAUDE.md",
+  "studio/VOIDFX_STUDIO.md",
+  "docs/TOOLKIT.md",
+  "studio/SCENE_PACKS.md"
+ ],
+ "note": "Machine-readable mirror of the owner's preferences. If this file and CLAUDE.md disagree, CLAUDE.md wins. check: auto = measurable by a script; visual = needs a frame review; plan = decided before building; process = how the studio works.",
+ "format": {
+  "width": 1080,
+  "height": 1920,
+  "aspect": "9:16",
+  "fps": 60,
+  "duration_s": [
+   20,
+   26
+  ],
+  "upload": {
+   "video": "H.264 high, CRF 17, maxrate 26M, yuv420p bt709 tv-range, fast-start",
+   "audio": "AAC 256k 48 kHz stereo"
+  },
+  "master": {
+   "video": "H.264 CRF 11",
+   "audio": "PCM 24-bit 48 kHz"
+  }
+ },
+ "audio": {
+  "integrated_lufs": -13.0,
+  "lufs_window": [
+   -14.0,
+   -12.0
+  ],
+  "true_peak_max_dbtp": -2.5,
+  "true_peak_aim_dbtp": -3.0,
+  "measured_after": "AAC encode",
+  "loop": "built circularly; room tone/drone across the wrap; mastered on a wrapped copy; audio length == video length (<= 1 frame)",
+  "music": "edited on the half-beat grid; tape-stop or dead stop allowed as an ending; splices on the beat grid with 12 ms equal-power crossfade",
+  "dialogue": "Demucs vocal stem, cleaned, levelled, equal-power fades at every join",
+  "sfx": "every transition has its own layered sound (whoosh + impact + a material); no loud sound on every cut"
+ },
+ "picture": {
+  "face_centre_y_frac": 0.37,
+  "face_never_cut": true,
+  "max_face_width_src_px_720p": 400,
+  "max_zoom_720p": 1.1,
+  "source_restoration": "tools/sr_prep.py (always, background after prep)",
+  "sharpness_check": "tools/sharpness.py packs (while picking) and N (finished video): swap shots below 0.80x the edit median",
+  "flash_peak_mean_luma_max": 110,
+  "no_prolonged_strobing": true
+ },
+ "text": {
+  "band_y_px": [
+   1240,
+   1640
+  ],
+  "keep_clear_of": [
+   "faces",
+   "TikTok UI"
+  ],
+  "ease_in": "fade + rise + blur-to-sharp, ~0.17 s; nothing pops on",
+  "standard_style": "v9 NIGHT BLOOM construction (Inter Display Black caps, two lines ~88/114 px, dark keyline ~7 % of size, soft shadow, light scrim, emphasis colour with glow, word-timed)",
+  "hero_title": "per-letter build on a shared baseline, its own designed animation acting out the meaning",
+  "timing": "every lyric word on its sung onset, verified on the Demucs vocal stem (pitch + onsets), not Whisper alone",
+  "explicit_lyrics": "use two designed titles, not captions",
+  "never": [
+   "labels / name tags / speaker chips",
+   "counters or timecodes",
+   "foreign-language subtitle lines (CJK)",
+   "stamps on top of captions",
+   "thin wide-tracked editorial sans with serif-italic emphasis (v8)"
+  ]
+ },
+ "branding": {
+  "logo_file": "src/voidfx_logo.webp",
+  "appearances": 1,
+  "as": "a transition (slam in, fly through the 'o'): tin=logo_orig",
+  "never": [
+   "recolour",
+   "retheme",
+   "restyle",
+   "constant watermark",
+   "outro card"
+  ]
+ },
+ "loop": {
+  "required": true,
+  "picture_seam_blurred_diff_max": 1.0,
+  "method": "the last frames are built from frame 0's own image; the loop is a set piece from the character's world",
+  "never": [
+   "outro card",
+   "plain motion-blurred rewind"
+  ]
+ },
+ "structure": {
+  "cold_open_frac": [
+   0.35,
+   0.45
+  ],
+  "song_section": "the good part (song_map.py): the drop where the full mix or bass returns at ~33-47 % of the edit",
+  "biggest_transition_on": "the song's biggest moment",
+  "montage": "a designed transition every 2-4 half-beats",
+  "opening": "strong in the first 1-2 s; dialogue openings play as one continuous take (J-cuts, dissolves, matched-angle morph)"
+ },
+ "transitions": {
+  "min_designed": 15,
+  "plain_cuts": "none in quiet or dialogue sections",
+  "feel": "going through something; viewer asks 'how did they do that'",
+  "set_pieces_min": 3,
+  "set_pieces_where": [
+   "drop",
+   "hook",
+   "loop"
+  ],
+  "focal_set_piece": 1,
+  "anatomy": {
+   "pre_roll_frames": [
+    6,
+    15
+   ],
+   "post_roll_frames": [
+    8,
+    18
+   ]
+  },
+  "repeat": "never, except as a deliberate motif"
+ },
+ "dialogue": {
+  "max_lines": 2,
+  "rule": "one or two short lines that set up the song; let the visuals carry the ending"
+ },
+ "props": {
+  "allowed": [
+   "blood",
+   "slides",
+   "knives",
+   "glass",
+   "tape"
+  ],
+  "only_when": [
+   "motivated by shot/lyric/story",
+   "brief",
+   "lit like real objects or from real footage",
+   "in the edit's own look",
+   "off the face"
+  ],
+  "check": "stills next to the footage; rebuild or cut anything that looks drawn"
+ },
+ "motion": {
+  "velocity": "tmap=vel(...), lin=True, interp='flow' on every hook/montage shot (burst on the beat, flow slow motion between)",
+  "beat_camera": {
+   "zoom_punch": 0.055,
+   "rotation_kick_deg": 1.0,
+   "hit_frames": "zoom blur + colour split, type kept clean"
+  },
+  "beat_moments": "no shot only 'moves to the beat': give each a beat animation (aura, remnants, charge-up) with its own sound"
+ },
+ "concept": {
+  "rule": "one concept tying picture, sound, text and the loop; found in the material (the song's own words, the character's history); Dexter edits rooted in Dexter's world (kill room, plastic, slides, tools, the Code, the Dark Passenger, victims)",
+  "assets": "hero graphics detailed, lit to the shot, revealed physically on real tracked objects; checked at full resolution"
+ },
+ "workflow": {
+  "loop": [
+   "song_map",
+   "EDL",
+   "build.sh N prep auto",
+   "sr_prep (background)",
+   "clip:A:B",
+   "audio",
+   "one video qc per revision",
+   "visual sign-off on the encoded file",
+   "deliver"
+  ],
+  "review_gates": [
+   "automated QC on the encoded MP4 (qcN.py)",
+   "contact sheets around every transition and title",
+   "fix and re-render anything weak",
+   "final pull of key frames from the encoded file",
+   "sharpness check on the finished video"
+  ],
+  "pre_build_gate": "compare the plan shot by shot with the benchmarks; redesign until it clearly beats them",
+  "efficiency": "one brief, one feedback message per revision, one full render per revision"
+ },
+ "communication": {
+  "progress": "short lines, no long code in chat",
+  "final_message": [
+   "what the edit is",
+   "what changed",
+   "what review caught and fixed",
+   "measured checkpoint numbers",
+   "ask the owner to watch once with sound"
+  ],
+  "honesty": "cannot watch or listen: report what was verified by frames and measurement"
+ },
+ "benchmarks": [
+  {
+   "edit": "v11 BOP",
+   "folder": "v11/",
+   "reference_for": "concept from the material, one focal set piece, detailed physical hero assets, beat moments, exact loop landing",
+   "quote": "I like this edit and would like for you to make it a standard.",
+   "engine_base": true
+  },
+  {
+   "edit": "v105 DRACULA (Dexter studio)",
+   "folder": "v105/ on claude/beautiful-volta-wjki7k (not merged here)",
+   "reference_for": "concept from the lyric × the character's double life; light behind the subject; the loop as the most creative transition; Dexter scaffold base",
+   "quote": "I like this edit and would like for you to make it a standard. The only gripe I have is the quality of some of the clips."
+  },
+  {
+   "edit": "v10 LET IT HAPPEN",
+   "folder": "v10/",
+   "reference_for": "motion and professional finish",
+   "quote": "I like this edit and would like for you to make it a standard."
+  },
+  {
+   "edit": "v7 HIM ALL ALONG",
+   "folder": "v7/",
+   "reference_for": "creative, well-animated, character-themed transitions",
+   "quote": "The transitions were creative and well animated."
+  },
+  {
+   "edit": "v6 WARMPOP",
+   "folder": "v6/",
+   "reference_for": "amount and quality of transitions, animations, graphics; music-led structure; text",
+   "quote": "wonderful transitions, animations, graphics, while maintaining the style that I like… I like how the music correlates to the edit. I like the text."
+  },
+  {
+   "edit": "v4 SURPRISE",
+   "folder": "v4/",
+   "reference_for": "dialogue-led opening as one continuous take; barrel to scope; pupil to iris loop"
+  }
+ ],
+ "liked": [
+  "barrel to scope fly-through (v4)",
+  "logo fly-through the 'o' in its own colours (v4)",
+  "pupil dive / iris loop",
+  "CRT fly-through, cube, sun stripes, film strip (v6)",
+  "vapor-world tune-in, palm shadows, bokeh, neon spill, VHS pause (v6)",
+  "blood-slide box CLOSE, plastic burst, zipper, blood on the lens, M99 blink, magnifier (v7)",
+  "'Darling,' freeze into the falling blood drop; rear-view-mirror open and loop; streetlight sweep, wiper, whips, plastic wrap, impact frame, rain focus pull, lamp on (v8)",
+  "v9 text: 'it was perfect'",
+  "v10 motion pass (speed ramps, beat camera, light rays) and the Speed Force loop",
+  "v11 RIFT, REVERSE loop with the coin-flip emblem, beat moments"
+ ],
+ "rejected": [
+  {
+   "edit": "v3",
+   "what": "choppy dialogue opening ('Elmer's glue')",
+   "rule": "one continuous take"
+  },
+  {
+   "edit": "v3",
+   "what": "name labels; stamp under captions; text popping on; watermark; outro card",
+   "rule": "no labels; ease every word; logo once; no outro"
+  },
+  {
+   "edit": "v4",
+   "what": "BLEED IT unreadable; sloppy cut before a line",
+   "rule": "check text on stills; designed joins in dialogue"
+  },
+  {
+   "edit": "v5",
+   "what": "starburst/explosion transition; title card; slow-mo run-at-camera and floating shots; wrong lyric; weak falling letters",
+   "rule": "themed bursts only; no title cards; cut odd footage; verify lyrics on the stem; multi-stage text"
+  },
+  {
+   "edit": "v6",
+   "what": "Japanese subtitle lines; VHS 'SP' timer",
+   "rule": "no CJK lines; no counters"
+  },
+  {
+   "edit": "v7",
+   "what": "rapid single-word dialogue run; talking jar-of-blood shot; 'I'm a serial killer' ending; strings converging on his face with a target ring; blue (recoloured) logo; plain steel doors for CLOSE",
+   "rule": "1-2 lines; every shot earns its place; visuals carry the ending; no face gimmicks; never restyle the logo; themed detailed text moments"
+  },
+  {
+   "edit": "v8",
+   "what": "thin wide-tracked sans + serif-italic emphasis, letter-by-letter fades, underlines, extruded words behind his head",
+   "rule": "bold high-contrast two-line captions"
+  },
+  {
+   "edit": "v9",
+   "what": "lacklustre: concept from the song title (petals, moon), soft not dark; generic quick moves; one set piece; thin graphics",
+   "rule": "concept from the character's world; 3+ set pieces; graphics in every section"
+  },
+  {
+   "edit": "v10 r1-r4",
+   "what": "lacklustre twice; lit-up-eyes shot; frozen-scene glass shatter; whirlwind CARRY OFF exit; plain rewind loop",
+   "rule": "motion pass; props rule; loop as a set piece"
+  },
+  {
+   "edit": "FOREVER (Studio 2)",
+   "what": "blood slides lingering as an overlay; random drips/spatter/knife on beats; drawn-looking slides; glass web over his face; flat duct tape",
+   "rule": "props only when motivated, brief, real-looking, in the look, off the face"
+  },
+  {
+   "edit": "DRACULA (Studio 2)",
+   "what": "soft shots (sunrise walk zoomed ~3.5x, palms, lollipop, ice cream, hood, pink wall)",
+   "rule": "sharpness check; zoom <= 10 % on 720p; close-ups on the least-compressed packs"
+  },
+  {
+   "edit": "v105 (Dexter studio)",
+   "what": "the sun drawn over the whole frame burned away the top of his head; soft clips at the verdict",
+   "rule": "light behind the subject; clip-quality ranking"
+  }
+ ],
+ "qc_gates": [
+  {
+   "id": "format",
+   "check": "1080x1920, 60 fps, frame count == EDL",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "decode",
+   "check": "clean decode",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "loudness",
+   "check": "-14..-12 LUFS, TP <= -2.5 dBTP after AAC",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "frozen",
+   "check": "no unintended frozen runs >= 5 frames",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "faces",
+   "check": "every face centred, none cut by the frame edge",
+   "tool": "qcN.py (YuNet)",
+   "auto": true
+  },
+  {
+   "id": "text_vs_faces",
+   "check": "no face box inside an active text band (flags checked on frames)",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "clicks",
+   "check": "no audio clicks at any cut or the loop seam",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "seam",
+   "check": "loop seam picture blurred diff <= 1.0; audio continuous",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "av_length",
+   "check": "audio and video same length (<= 1 frame)",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "black",
+   "check": "near-black frames only where designed",
+   "tool": "qcN.py",
+   "auto": true
+  },
+  {
+   "id": "sharpness",
+   "check": "before rendering: sharpness.py N --src (SOFT < 0.80x median, zoom > 10 %, LOWBIT < 800 kb/s); after: sharpness.py N",
+   "tool": "tools/sharpness.py N",
+   "auto": true
+  },
+  {
+   "id": "flash",
+   "check": "no white-out runs (mean luma >= 200 for 2+ frames); <= 3 flashes a second; flashes peaking over 110 listed for a visual check",
+   "tool": "qcN.py §7b (from qc105)",
+   "auto": true
+  },
+  {
+   "id": "sources",
+   "check": "no source range leaks past a source cut",
+   "tool": "tools/check_sources.py (build.sh prep)",
+   "auto": true
+  },
+  {
+   "id": "visual_signoff",
+   "check": "frames from the encoded file around every transition, title, the drop and the loop look right",
+   "tool": "contact sheets",
+   "auto": false
+  }
+ ],
+ "engine_bases": {
+  "flash": "v11",
+  "dexter": "v105",
+  "note": "agreed between the studios 2026-11-07; shared effects ported through handoffs"
+ },
+ "rules_from_handoffs": [
+  {
+   "from": "v105 DRACULA",
+   "rule": "Light sources go behind the subject: the person matte, light only from the background, a light wrap on the near edge.",
+   "evidence": "what happened with the sun and the top right part of dexters head? (v105 rev 1)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "Clip quality: restore 720p; rank sources before choosing (sharpness.py N --src) and on the render; zoom <= 1.1; hero shots on high-bitrate packs; ask for 1080p/4K packs for hero moments.",
+   "evidence": "The only gripe I have is the quality of some of the clips (v105 verdict)",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "The loop is the most creative transition in the edit: a set piece paying off the concept, landing in frame 0's own image.",
+   "evidence": "make it a more creative and unique transition (v105 rev 2-3)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "Restyle library transitions before reusing them.",
+   "evidence": "v105 rev 3 review (v6 cube grid, v9 jasmine)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "When a burn/dissolve removes the subject, remove him before drawing scene light; fill the hole with plausible background.",
+   "evidence": "v105 rev 3 review",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v105 DRACULA",
+   "rule": "'Add transitions, graphics and animations wherever possible' = replace generic connectors with themed ones and add new cuts with new transitions.",
+   "evidence": "v105 rev 2 and 3",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "v105 DRACULA (report)",
+   "rule": "Mix effects against how loudly the song is mastered: measure at every set piece; on a loud master push effects ~+9 dB and duck the music ~3 dB under the biggest hits.",
+   "evidence": "v105 effects first sat 20-25 dB under the song (rev 1 review)",
+   "applies_to": "all",
+   "check": "auto"
+  }
+ ]
+}

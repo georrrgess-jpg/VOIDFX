@@ -10,7 +10,7 @@ echo "== tools"
 for t in ffmpeg ffprobe python3; do command -v $t >/dev/null && ok "$t" || bad "$t (install it: apt-get install -y ffmpeg python3)"; done
 
 echo "== python packages"
-for m in numpy scipy cv2 PIL onnxruntime faster_whisper demucs; do
+for m in numpy scipy cv2 PIL onnxruntime onnx faster_whisper demucs; do
   if python3 -c "import $m" 2>/dev/null; then ok "$m"
   elif [ $CHECK = 0 ]; then
     pkg=$m; [ $m = cv2 ] && pkg=opencv-python-headless; [ $m = PIL ] && pkg=pillow; [ $m = faster_whisper ] && pkg=faster-whisper
@@ -33,6 +33,12 @@ mkdir -p v3/models/modnet/onnx
 [ -s $YN ] || { [ $CHECK = 0 ] && curl -sSL -o $YN https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx; }
 [ -s $MN ] || { [ $CHECK = 0 ] && curl -sSL -o $MN https://huggingface.co/Xenova/modnet/resolve/main/onnx/model.onnx; }
 [ -s $YN ] && [ $(stat -c %s $YN) -gt 100000 ] && ok "YuNet" || bad "YuNet ($YN)"; [ -s $MN ] && ok "MODNet" || bad "MODNet ($MN)"
+# Real-ESRGAN compact weights for tools/sr_prep.py (BSD-3, xinntao/Real-ESRGAN v0.2.5.0); exported to ONNX on first use (needs torch once)
+for w in realesr-general-x4v3.pth realesr-general-wdn-x4v3.pth; do
+  [ -s v3/models/$w ] || { [ $CHECK = 0 ] && curl -sSL -o v3/models/$w https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/$w; }
+  [ -s v3/models/$w ] && ok "$w" || bad "$w (needed by tools/sr_prep.py)"
+done
+python3 -c "import torch" 2>/dev/null && ok "torch (for the one-time ONNX export of the upscaler)" || echo "  [warn] torch missing: tools/sr_prep.py needs it once to export v3/models/sr_dn05.onnx"
 echo "  (faster-whisper large-v3 and Demucs htdemucs download themselves on first use)"
 
 echo "== source library (src/ vs studio/src_manifest.json)"
@@ -50,5 +56,11 @@ EOF
 
 echo "== smoke test"
 python3 v7/work/edl7.py >/dev/null 2>&1 && ok "benchmark EDL (v7) loads" || bad "v7 EDL"
+python3 v10/work/edl10.py >/dev/null 2>&1 && ok "standard EDL (v10) loads" || bad "v10 EDL"
+(cd v10/work && python3 -c "import sys; sys.argv=['x']; import render10" >/dev/null 2>&1) && ok "standard engine (v10) imports" || bad "v10 engine"
+python3 v11/work/edl11.py >/dev/null 2>&1 && ok "standard EDL (v11) loads" || bad "v11 EDL"
+(cd v11/work && python3 -c "import sys; sys.argv=['x']; import render11" >/dev/null 2>&1) && ok "Flash standard engine (v11) imports" || bad "v11 engine"
+python3 v105/work/edl105.py >/dev/null 2>&1 && ok "Dexter standard EDL (v105) loads" || bad "v105 EDL"
+(cd v105/work && python3 -c "import sys; sys.argv=['x']; import render105" >/dev/null 2>&1) && ok "Dexter standard engine (v105) imports" || bad "v105 engine"
 [ -f src/pack8_s1.mp4 ] && { python3 tools/check_sources.py 7 | tail -1; } || echo "  (skip source audit: packs not uploaded yet)"
 [ $MISSING = 0 ] && echo "studio ready" || echo "some items missing (see [MISS] above)"

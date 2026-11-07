@@ -12,6 +12,29 @@ All times are **seconds in that file**. "w" is the YuNet face width in source pi
 
 ---
 
+## Pack quality (measured with `tools/sharpness.py packs`)
+
+Every pack is 1280×720 (some are labelled 4K), so a 9:16 crop is enlarged about 2.7× before any zoom. Bits per pixel = how much data each pixel gets (higher = less compressed). Detail = the in-focus detail score (higher = crisper; the Reverse-Flash pack scores high because it was pre-sharpened).
+
+| Pack | Mb/s | Bits/px | Detail | Use for close-ups? |
+|---|---|---|---|---|
+| `reverse_flash.mp4` | 1.25 | 0.023 | 1.18 | Yes (inside its 600×600 inset; pre-sharpened) |
+| `scenepack2_60fps.mp4` | 2.02 | 0.036 | 0.65 | Yes |
+| `scenepack3_24fps.mp4` | 1.95 | 0.088 | 0.63 | Yes |
+| `flash_b.mp4` | 1.18 | 0.021 | 0.60 | Yes |
+| `pack7_4k.mp4` ("4K", really 720p) | 2.10 | 0.038 | 0.59 | Yes |
+| `pack8_s1.mp4` (S1) | **0.43** | **0.008** | 0.58 | Detail looks fine on still frames, but it's the most compressed pack: blocks in dark and moving areas. Wide or static shots only |
+| `flash_a.mp4` | 1.78 | 0.076 | 0.58 | Yes |
+| `pack9_s4_best.mp4` | 0.69 | 0.013 | 0.55 | Static close-ups only |
+| `doakes.mp4` | 1.07 | 0.019 | 0.55 | OK |
+| `pack10_s4_24p.mp4` | 0.76 | 0.034 | 0.53 | OK |
+| `pack5_mixtape120.mp4` | 2.19 | 0.040 | 0.51 | OK |
+| `scenepack.mp4` | 1.03 | 0.020 | 0.50 | OK |
+| `trinity_goodbye.mp4` | 1.46 | 0.026 | 0.44 | Soft |
+| `pack6_s5.mp4` | 0.71 | 0.026 | 0.44 | Soft |
+| `flash_s4.mp4` | 1.08 | 0.020 | 0.39 | Soft: pick the crispest moments, keep zoom low |
+| `pack4_aesthetic.mp4` | 1.70 | 0.064 | 0.36 | Softest (filtered/graded): wide shots, not close-ups |
+
 ## Dexter scene packs
 
 ### `trinity_goodbye.mp4` (key `tg`): "Trinity Finds Out Who Dexter Is (Goodbye Dexter Morgan)", 1280×720, 60 fps, 1:49, 36 shots
@@ -304,6 +327,63 @@ More proven fb shots (v102; YuNet face widths):
 
 For a consistent Barry, avoid the other speedsters and suits: the yellow suit (124.8–127.5), purple and green lightning (129–148), and the black suit with the blue chest (42–53).
 
+More fb shots, verified in v10 (fb is 24p in a 60 fps container: use `interp="hold"`; `blend` only under afterimages):
+
+| Time | Shot | Notes |
+|---|---|---|
+| 38.57–42.32 | Barry, suited with the hood down, standing in the dark lab, emblem glowing | Calm opener (v10) |
+| 31.9–37.1 | Unmasked smile in the dark | v10 |
+| 116.5–119.38 | **Eyes full of lightning** | w353; the charge before a drop (v10) |
+| 83.8–85.08 | Lightning crawling over the suit; **chest emblem tracked at (731,462) → (745,632) source px** | v10 emblem dive |
+| 4.28–6.22 | Crouched take-off, lightning erupting behind | v10 drop shot |
+| **52.82–54.35** | **Masked Flash in the dark: his own gold lightning ignites along the suit, arcs across the shoulders** | w172; a real charge-up (v10 rev 2). The shot cuts at 54.35 to another speedster: stop at 54.30 |
+| 37.12–38.55 | Unmasked (hood), a hard look, blue bokeh | v10 rev 2 |
+| 136.43–138.97 | Masked close-up in the garage, calm, blue bokeh | w230 (v10 rev 2). 133.77–136.42 before it has purple/green lightning |
+| 147.32–150.72 | Masked profile in deep red light | Grades magenta, suit lenses glow green: off-palette for the gold look |
+| 124.38–124.78 | The lightning throw (bolt from his hand, bottom-left) | v10 |
+| 112.48–116.48 | Garage: lightning run, then lightning arm | Magnus Labs sign in frame (v10) |
+| 127.63–129.15 | The scream with lightning | v10 |
+| 56.05–58.32 | Masked grin (S1 suit) | v10 |
+| 109.68–112.47 | Masked, walking toward camera at night, centred | Hero-title plate (v10) |
+| 10.30–12.08 | Barry (civilian) struck by lightning in the office | v10 |
+| **12.10–22.55** | **Frozen time in the office:** the falling man frozen, Barry crouched with lightning at **x≈870** (w43: lock framing with `cx`) | v10 time freeze |
+| 27.77–31.88 | Frozen Joe in the foreground; Barry at **x≈960–1000** reaching through lightning | v10 |
+| 80.82–82.27 | **Sideways run, massive lightning trails** (dutch angle) | Face not detected: frame with `cx` (v10 finale) |
+| 124.8–127.48 | Reverse-Flash (yellow suit) by a "FAST TRACK LABS" sign | Different speedster: avoid unless the concept needs him |
+| 139.0–147.3, 129.2–130.6 | Purple/blue/green lightning; another speedster | Off-colour for Barry's gold: avoid or regrade |
+
+### `flash_s4.mp4` (key `s4`): "FLASH SEASON 4 SCENE PACK 4K 60FPS", really 1280×720, 60 fps container with **24p content**, 3:06, 97 shots (v11)
+
+Shots 0–12 are a CGI/fan-render city run plus a non-Flash face: skip them for live-action edits. Shot list: `v11/work/shots_s4.json`.
+
+| Time | Shot | Notes |
+|---|---|---|
+| 28.67–30.80 | Masked, yellow lenses, gold lightning streaming off him, white sky | v11 drop shot (`ev=-0.15`: the sky clips) |
+| 31.07–34.10 | **Grinning in the suit, swinging round** (S4 return) | v11 swagger shot |
+| 62.87–63.98 | **Masked smirk close-up**, blue-grey | v11 |
+| 79.75–80.42 | Barry in a tux disarming an Earth-X soldier, lightning on his chest; face at x≈760, y≈220 | v11 time freeze (`cx=760`) |
+| 73.55–75.95 | Tux run through the wedding with lightning | Very orange and blown out: avoid or grade hard |
+| 93.87–101.03 | Barry's intense close-ups facing Thawne (blue-grey), Thawne smirking in the Reverse-Flash suit, cowl down (95.47–96.75, 98.35–99.25); his **red streak** 99.27–99.70 | v11 cold open / the answer |
+| 122.90–125.48 | Running in the dark with lightning, a guard behind | v11 (mixed cadence, 45 unique fps) |
+| 137.18–138.60, 140.70–143.40 | **Low-angle lightning run** (the same S4E1 scene as fb 80.8) | v11 `cx=(500, 540)` |
+| 146.37–147.70 | Frontal close-up, bright, calm | v11 final stare |
+| 155.5–157.4 | Masked close-up in a bar, bokeh | v11 |
+| 171.73–178.95 | **Flying through an explosion of fire** (wide 171.73–173.25, close 173.27–178.95) | v11 Speed Force moment |
+| 178.97–185.93 | Standing in a burning street with a crowd | Not used yet |
+| 57.77–61.75, 85.60–89.17, 160–167 | Moody masked close-ups (blue, cortex, night) | Spare |
+
+### `reverse_flash.mp4` (key `rf`): "Reverse Flash CW Flash Scenepack Head Tracked Topazed 4K 60fps", really 1280×720, **true 60 fps**, 94 s, 56 shots (v11)
+
+Every clip is a ~600×600 inset (x≈340–940, y≈60–660) over a blurred, scan-lined copy, with "SCENEPACK LINK IN DESC" at y≈680–705 and "Intro Clip" cards (37.7–39.7, 64.9–67.3, 80.3–93.8 end card). Frame inside the inset: `face=None`, `cx` on the panel, `z ≥ 1.24` (no watermark).
+
+| Time | Shot | Notes |
+|---|---|---|
+| 13.00–13.98 | Harrison Wells (bruised), lit from the side, studded wall | v11 opener (`ev=0.55`: it's dark) |
+| 15.00–15.98 | **The Reverse-Flash mask, frontal** | v11 |
+| 33.97–34.95 | Eobard in the suit, cowl down, **red eyes**, smiling | v11 |
+| 4.0–11.98, 19–22, 52–53, 75–76.5 | Red-eyed masked shots | Dark and soft |
+| 18.00–18.98 | Wells with the glowing tachyon device | Spare |
+
 ---
 
 ### `flash_s4.mp4` (key `fs4`): "FLASH SEASON 4 SCENE PACK 4K 60FPS" (theflash_scenepacks), 1280×720, 60 fps, 3:06, 97 shots
@@ -326,6 +406,8 @@ Uploaded with the v105 brief, stored for future Flash edits. Shot list: `studio/
 
 | File | Uploaded as | Notes |
 |---|---|---|
+| `bop.mp3` | `Dababy_-_BOP_Official_Audio.mp3` | 2:40, 127.0 BPM, P=0.23622, offset 0.1890. Spoken intro "…they're like, **Harrison**" 9.60; **beat drops in 9.64 (+24.8 dB)**; dip 13.42 with "Let's go!" 14.34; **drop 15.31** (the verse). Explicit verse (no captions). Bridge 121–138 (bass out) → return 140.03 (v11) |
+| `let_it_happen.mp3` | `Tame_Impala_-_Let_It_Happen_Official_Video.mp3` | Radio edit, 4:16. 125.0 BPM, P=0.24003, offset 0.1920. Whirlwind breakdown 90.4–101.9 (no bass); **drop 101.94 (+26.5 dB)** "...when it happens"; "So let it happen" 107.7; **gated stutter 112.04–115.41** (silence every 4th half-beat); "All this running around" 115.24 (+15 dB) (v10) |
 | `night_blooming_jasmine.mp3` | `fakemink_-_Night__Blooming_Jasmine_._official_music_video.mp3` | 102.8 BPM, P=0.29185. The second half is on its own grid (HB_OFF 0.1673: h482 = the drop at 140.839). Filtered breakdown 112–137.8 s, build 137.78, **dead silence 139.38–140.83, drop 140.84 (+26 dB)**. The instrumental repeats on a 4-bar cycle (bar h506 = bar h634). Hook *"night bloom jasmine, second name Yasmin"* at 74.8 and 187.12 (v9) |
 | `paint_it_black.mp3` | `The_Rolling_Stones_-_Paint_It_Black_Official_Lyric_Video.mp3` | 160 BPM, P=0.18748, offset 0.0469. Sitar intro; **drums enter at 7.55 s (+22 dB)**; "I see a red door…" 14.0; bridge dip 87–96.5 → return 97.54; climax "painted, painted black" 157.4–175.7. Map and lyrics in `studio/songs/paint_it_black/` (not used yet) |
 | `wish_you_well_rec.wav` | extracted from the screen recording `wish_you_well_screenrec.mov` | Brent Faiyaz "Wish You Well", 36 s. 138.05 BPM, P=0.21731, offset 0.0489. Beat returns at 19.17 s; break 27.86; "Darling," 30.04; **drop 33.08**; hook "I don't wish you well" 34.16–35.12 (v8) |

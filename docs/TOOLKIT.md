@@ -1,5 +1,9 @@
 # voidfx toolkit: how an edit gets made (fast)
 
+<!-- Flash studio (Studio 1) -->
+The engine lives in the newest standard, `v11/work/` (BOP rev 4; `v10/`, `v7/`, `v6/` and `v4/` remain benchmarks). It contains every v4–v11 transition and graphic, the restored-source sampler, velocity with optical flow, the beat camera, the v9 text system and the v11 pieces (rival grade, red effects, bolt split, red eye dive, clash, rift, the procedural Reverse-Flash emblem and coin flip, the REVERSE loop, the beat moments). New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
+
+<!-- Dexter studio (Studio 2) -->
 The engine is the newest standard, `v104/work/` (THE PASSENGER; see the handbook §0). `render104.py` contains every v4–v9 transition and graphic, and the edit's own section is spliced in from `fx104.py` by `splice.py`. That section carries FOREVER's toolkit and THE PASSENGER's on top of it (the last definitions win, so that section owns the grade, the frame function, the text and the finish). New edits copy all of it, plus THE PASSENGER's EDL as the worked template, with `tools/new_edit.py`. Then they rewrite the EDL, restyle their `fxN.py` (grade, palette, set pieces, frame) and the sound design, and run `python3 vN/work/splice.py` after each `fxN.py` change. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
 
 ## 1. Pipeline and timings
@@ -16,6 +20,8 @@ Timings were measured on this 4-core box for a 26 s edit.
 | Edit-section change | edit `vN/work/fxN.py`, then `python3 vN/work/splice.py` | 1 s |
 | Voice under score | `python3 -m demucs -n htdemucs --two-stems=vocals -o vN/audio/sep CLIP.wav` | 15 s per 30 s clip |
 | Tracks and mattes | `bash tools/build.sh N prep` | ~35 s |
+| **Sharpness check** (Studio 2 rule) | `python3 tools/sharpness.py packs` before picking; `python3 tools/sharpness.py N` on the finished video (flags zoom > 10 % on 720p and shots under 0.80× the edit's median in-focus detail) | packs ~1 min; an edit ~40 s |
+| **Source restoration** (v10 rev 3) | `nohup python3 tools/sr_prep.py N &` right after `prep`: Real-ESRGAN compact restores and 2× upscales only the band each frame is cropped from; the renderer uses it automatically | ~3 s per source frame (45 min for 900 frames, in the background while you build) |
 | **Every-cut review sheets** | `bash tools/build.sh N auto` → `vN/frames/cuts_*.jpg` | ~35 s |
 | Soundtrack | `bash tools/build.sh N audio` (circular, wrapped master, AAC-checked) | ~7 s |
 | **Motion check** | `bash tools/build.sh N clip:A:B` → small MP4 with sound | ~20 s |
@@ -81,6 +87,32 @@ Each transition goes through something and has its own sound in `audioN.py` (`if
 | `projector_on`, `latex`, `frameslip`, `filmmelt`, `whip`, `hooddark`, `lavalamp`, `slidewipe`, `newsspin`, `papertear`, `oilwheel`, `tout="reel_end"` (v101, in `v101/work/fx101.py`) | 16 mm psych reel: projector strike-up and run-out (loop), a glove-stretch tear, a frame slip in the gate, a film burn-through (hero), a hood over the lens, lava-lamp blood blobs, a blood-slide glass wipe, a newspaper spin and tear, an oil-wheel light show. **v101's look was rejected; reuse transitions only if reworked** | — | Each has its own in `audio101.py` |
 | `rewind_in` + `tout="rewind_end"` (v102, in `v102/work/fx102.py`) | The loop as time travel: the last bar plays the whole edit backwards (35× at its peak, picture and sound together via `rew_pos`) and lands on frame 0, whose flash and smear settle into the first shot | — | The song runs backwards (band-limited), tape scrub, crackle |
 | `bolt_link`, `overcharge`, `strike`, `emblem`, `passby`, `smear` (light streaks), `impact`, `remnant` (soft) (v102) | A bolt out of the outgoing face's eye splits the frame; his own lightning floods the frame and the next shot burns in through gold; HERO strike (a frozen frame, a leader bolt, two impact frames, a shockwave); the emblem drawn in lightning, fly through the bolt; he passes the lens as a motion wipe; horizontal light streaks; a two-frame impact frame; converging time-remnants | Face track (`bolt_link`, `strike`); previous shot `freeze=True` (`strike`) | Zap / swell / thunder + time-stop / hum + whoosh / doppler / whoosh / hit / shimmer |
+| `phase` (v10 r3) | He vibrates through the frame: jittered chromatic copies, row shimmer, every edge lit gold; the next shot shows through for a few frames, then settles | — | Rising saw buzz, whoom |
+| `whirlwind` (v10 r3) | The frame twists into a spiral round the eye of a storm (angular blur, wind and debris torn round); the next shot unwinds out of it | — | Wind swirl circling the stereo field |
+| `lichtenberg` (v10 r3) | A branching lightning figure grows from his chest (stopping short of his face); the next shot opens inside the branches | — | Growing crackle, snap |
+| `lens_shatter` (v10 r3) | A bolt flies at the camera and hits the lens; electric cracks, then the glass bursts toward us in Voronoi shards | — | Whine, glass break, impact |
+| `perimeter` (v10 r3) | A lightning streak runs laps round the frame edge; the next shot fills in as a spiral wake closing on the centre | — | Swirl pass, crackle |
+| `frozen_shatter` (v10 r3) | In frozen time the frame cracks and the shards hang apart; the beat that restarts time blows them away | `frozen=True` shots | Dull crack, then a glass burst on the hit |
+| `time_particles` (v10 r4, replaces `frozen_shatter`) | The frozen moment comes apart into fragments of its own pixels (edges first, people last), they burst and hang in the stopped air, then swirl back together as the next moment from `pfocus` outward, landing on the hit | `pfocus=(x, y)` output px on the incoming shot | Disintegration grains, shimmer, reversed grains into an impact |
+| bullet time (v10 r4, automatic on `frozen=True` holds) | In each frozen hold the camera glides through the moment in 3-D: depth from the MODNet matte + a floor gradient drives a parallax remap, plus a dolly push | — | Soft panned air |
+| `carry` text (v10 r4) | A lightning runner streaks along the line and drops each word off on its onset; at the end it snatches the letters away (stretch + blur + gold trail) | — | Zips + crackle |
+| `rift` (v11 r4, focal point) | A rift tears across the frame (a diagonal path below the face): a crack grows from the centre, splits into a jagged lens with electric edges and light spill; the Speed Force (`speedforce_bg` + lightning) churns inside; the camera flies through; the next shot rushes out of the vanishing point | `rift_geom()` path | Crack, panned rip, reversed swell into a sub drop, roar and whine, arrival impact |
+| Reverse-Flash emblem + coin flip (v11 r4) | `rf_emblem(R)`: a procedural, bevelled, lit emblem sprite; `coin_flip()`: the real emblem flips on its axis (edge thickness, inpainted suit behind) to reveal it; flare at edge-on, shockwave and sparks on landing | emblem tracked by a circle fit in the source | Spin whir, sizzle, metal ring |
+| REVERSE loop (v11 r3) | `reverse_loop`: a red bolt strikes the tracked chest emblem (found in the source each frame: the cream disc, bolt bridged by a morphological close); the real emblem inverts in place (disc to glossy black, gold to red, shading kept); red radiates over the suit; the camera dives through the black disc, a portal onto frame 0, and lands exactly on it (seam diff 0.10) | `E_STRIKE/E_RADIATE/E_DIVE`, the first shot's `tin="loop_in"` | Thunder, reversed shimmer and boom, crackle and buzz, rush, landing impact |
+| `aura=`, `remnants=`, `charge=` (v11 r3) | Beat moments for shots where he only moves to the beat: silhouette rings pulsing out on each beat; time-remnant copies splitting sideways and snapping back; lightning and dust gathering into the chest emblem | per shot (`seg=True`) | Sub pulse and shimmer; doubled panned whoosh; rising hum and crackle |
+| `red_eye_dive` (v11 r2) | Dive into the rival's glowing red eye (auto-found: brightest red point) until the frame is red light, then pull out of Barry's eye (face-track landmarks) | — | Power-up whine, rush, sub drop |
+| `strobe_echo` (v11 r2) | The frame snaps sideways leaving gold stroboscopic afterimages; the next shot lands with its echoes collapsing | — | Stuttered passes, zap |
+| `bolt_trace` (v11 r2) | A zig-zag bolt crosses below the face; the next shot burns in along it (distance transform, ragged ember rim) | — | Panned crackle, fire whoosh |
+| `heat_haze` (v11 r2) | Heat rises up the frame (refraction), carrying the next shot in behind a glowing wall | — | Fire roar |
+| `clash` (v11 r2) | Red and gold bolts race in from opposite sides and collide; two-colour spark burst + refracting shockwave | — | Two zaps, impact, thunder |
+| `bolt_split` (v11) | A lightning-bolt seam cracks down beside the face; red vs gold halves; the seam sweeps across on the drop (tears the title) | — | Crackle build, impact, thunder, sub drop |
+| `red_phase`, `red_link`, `red_streak`, `dolly`, `whip`, `speedforce_in`, `emblem_flash` (v11) | The rival's red vibration / arc / streak; a focus-pull dolly; a whip pan; a radial Speed Force pull; the emblem drawn in light where the next shot's chest emblem is | — | each in `audio11.py` |
+| `ember=`, `fire=`, `dust=`, `speed=` (v11 r2) | Depth particles (`motes11`): behind the subject through the matte, front ones masked off the face | per shot | — |
+| velocity (v10 r5) | `tmap=vel(e0, e1, a, b, lo, hi, tau), lin=True, interp="flow"`: a speed burst on every beat, slow motion between; flow in-betweens run on the restored 2× bands (`sr_flow_part`) | EDL helper `vel()` | The music; optional swish per punch |
+| beat camera (v10 r5) | `beat_bounce` 6 % zoom punch + `shake` rotation kick per beat in the hook; `beat_fx` zoom blur + colour split on the hit frames | — | Quiet swish |
+| `rays=` (v10 r5) | Screen-space god rays from the brightest warm light (quarter res, 20 samples); scaled down when the frame is already bright | per shot | — |
+| `wave=True` (v10 r3) | After the drop: a refracting dark-matter ring rings out of the frame centre | on the drop shot | Sub drop |
+| `tunnel_in` + `graphic="tunnel"` (v10 r3 loop) | The letters of a lyric run a ring that opens into the Speed Force; panels of the edit's own moments fly past newest to oldest and frame 0 lands | `T_OPEN`, `TUN_PANELS` | Ring crackle, swirl, panel whooshes, the song rewinding (box-filtered) |
 
 The older v4/v5 transitions are still in the file and work as `tin` values: `kaleido`, `rewind`, `flash`, `tiles`, `neon_trace`, `ripple`, `pixel_sort`, `vhs_roll`. Add new transitions to `TR2` as `fn(A, B, j, f, sa, sb)` with `(fn, frames_before, frames_after)`:
 - `j < 0`: A is the live outgoing shot and B is the incoming shot's first frame.
@@ -261,6 +293,43 @@ Clip quality (the owner's v105 gripe): `tools/sharpness.py N --src` ranks the so
 12. **Packs hide cuts the shot detector misses** (a jump to a closer angle, the next scene starting a few frames early). Interpolating across them makes a ghost frame, and running a source range past the shot's end puts another actor on screen. The sampler now holds frames across hard cuts; `tools/check_sources.py N` (run automatically by `build.sh N prep`) now fails any shot whose source range leaks past a source cut (found twice on v7).
 13. **Text vs very tight close-ups:** a face box that fills the 9:16 frame leaves no text-safe band. Swap the shot (v7: the "Could it be him?" close-up → kill-room floor) rather than shrinking the type.
 11. **CJK subtitles and VHS counters read as clutter** to the user. Don't add them.
+14. **Whisper word times drift on sung, held notes** (v10: up to 1.1 s early on "All this running around", ~0.2 s late on others). Before captions go in, check every word against the Demucs vocal stem: a 30 ms RMS + pitch track shows where each syllable starts, and the line's parallel phrase (verse 1 vs verse 2) confirms it.
+15. **A 720p pack cropped to 9:16 is a 2.7× blow-up.** Run `tools/sr_prep.py` (restoration + 2× from the network) instead of cubic + unsharp mask; the renderer drops the unsharp mask to 0.16 on restored frames.
+16. **Soft shots (Studio 2, DRACULA):** check every shot with `tools/sharpness.py` while picking and on the finished video; zoom ≤ 10 % on 720p; close-ups on the least-compressed packs. The detail score is per-tile (80th percentile), so a shallow depth-of-field background doesn't read as soft, but motion blur and restoration-smoothed skin do.
+
+## 5c. Port candidates from the Dexter studio (v105 DRACULA)
+
+These live in `v105/work/fx105.py` / `qc105.py` on the Dexter studio's branch; port them when the branches merge.
+
+| Asset | What it does | Flash restyle |
+|---|---|---|
+| `sun_fx(..., m)` | A light source behind the subject: rays from the sky only, light wrap on the near edge, lens ghosts dimmed by how much of the source he covers | The lightning glow / Speed Force light behind Barry (fixes rule 13 for our `light_rays`) |
+| ASHES TO SUN: `ash_setup`, `ash_body`, `ashes_fx`, `clean_plate`, `seam_out` | The subject burns away like paper (burn-order map: edge distance + direction to the light + noise), 3,000 embers spiral into frame 0's focal point; the hole filled row by row | Barry disintegrates into lightning sparks that fly into the emblem |
+| `eclipse_tr` | A disc wipe with corona and diamond ring | The emblem as the eclipsing disc |
+| `bat_burst`, `bat_swarm`, `bat_pass_tr`, `bat_sprite` | A 3D flock with depth projection and depth blur | Debris, sparks or shards in depth |
+| `coffin_lid` | A height-map-lit prop (normals, diffuse, specular) | Emblems, the cowl, a S.T.A.R. Labs door |
+| `moon_tex`, `bloodmoon_fx` | A procedural moon behind a matte | A planet or a singularity behind Barry |
+| `mist_tr`, `cape_tr`, `card_flip`, `palm_sweep` | Smoke dissolve, cape sweep, card flip, foliage sweep | Speed-wind sweep, a card-flip of a photo |
+| QC §7b flash measurement | Flags white-out runs and flash rate on the encoded file | **Ported** into `v11/work/qc11.py` §7b (so every new Flash edit has it) |
+| Their `tools/sharpness.py` metric | detail = mean \|L − blur 1.2\| / mean \|L − blur 8\| over the middle of each shot; flags SOFT, ZOOM (> 3.1×), LOWBIT (< 800 kb/s); absolute scale, ≈0.30+ sharp | Ours scores relative to the edit's median and flags zoom at > 2.95× (z 1.10); LOWBIT adopted. Pick one tool at the merge |
+
+## 5b. What made v11 the standard (carry the principles, not the look)
+
+- **A concept found in the material:** the song's spoken "Harrison" became the whole edit (the Reverse-Flash rivalry): a second grade for the rival, red against gold at the drop (the bolt split), the gold winning on the punch (the clash), the red taking the symbol at the end (REVERSE).
+- **One focal set piece:** THE RIFT, on the bar line after the charge-up: a tear grows, opens with electric edges, the Speed Force inside, the camera flies through, the next shot rushes out of the vanishing point.
+- **Detailed hero assets on real objects:** the procedural Reverse-Flash emblem (bevel, brushed rim, groove, glossy disc, emissive bolt, light spill, matched to the shot) revealed by a coin flip of the tracked real emblem (circle-fit each frame, the suit inpainted behind it).
+- **Beat moments for "moving to the beat" shots:** aura rings, time remnants, a charge-up, each with a sound.
+- **A loop that lands:** the dive ends on frame 0's own image (seam 0.11), and the beat camera rests during it.
+- **Measured finish:** flash brightness measured in the encode, particles masked off faces, every new effect checked at full resolution.
+
+## 5a. What made v10 the standard (carry the principles, not the look)
+
+- **Motion first.** Velocity on every hook shot (`vel()`: a burst on each beat, ~0.3–0.6× flow slow motion between, the same source range), the beat camera (6 % punch, ±1.1° kick, zoom blur + colour split on the hit frames), bullet time in frozen holds. Without this, effects on static shots read as lacklustre.
+- **Quality.** `tools/sr_prep.py` restoration on every 720p pack; flow in-betweens run on the restored bands (`sr_flow_part`), so slow motion stays sharp.
+- **Set pieces from the character's world** on the drop (emblem dive + drop wave), the hook (lens shatter, perimeter lap), the freeze (time particles) and the loop (the AROUND ring → the Speed Force → frame 0), with signature moves between them (phase, whirlwind, lightning branches), each with its own layered sound.
+- **Type on the sung onsets**, every word verified on the vocal stem; each lyric moment acts out its meaning (runner drop-off and carry-off, the charge fill, the ring).
+- **Graphics with depth that react to the footage:** the matte-aware whirlwind and ribbons, light rays from the real lightning, edge arcs on the silhouette.
+- **Reviews:** stills of every transition at full size, the loop seam measured (blurred diff ≤ 1), QC flags checked visually and written into the README.
 
 ## 5. What made v6 the benchmark (carry the principles, not the look)
 

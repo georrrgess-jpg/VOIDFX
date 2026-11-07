@@ -9,6 +9,13 @@
    "uploaded_as": "Blood_Theme_Instrumental.mp3"
   },
   {
+   "file": "bop.mp3",
+   "bytes": 2760401,
+   "sha256": "b233da80fc02302d57f7e158fa6db4041c54bda8581a16e64e4ca429e870a099",
+   "duration": "159.921633",
+   "uploaded_as": "Dababy_-_BOP_Official_Audio.mp3"
+  },
+  {
    "file": "doakes.mp4",
    "bytes": 15049684,
    "sha256": "5cbb6b973037ec62d3a8ed9cc1d453363bc18170c1528dca9448a70fdddb519c",
@@ -77,6 +84,13 @@
    "sha256": "9783e00e34723df93e359550cbaf3839e379d7d98ed17464d3c270625ddf966e",
    "duration": "248.111020",
    "uploaded_as": "Ark_Patrol_-_Let_Go_Lyrics_ft._Veronika_Redd_and_now_you_wont_let_go.mp3"
+  },
+  {
+   "file": "let_it_happen.mp3",
+   "bytes": 6154168,
+   "sha256": "08c2c751632fd0d3f4f76ea96d7b30fc26ea7e5be15e186b93bdb7a8b19f01e9",
+   "duration": "256.391837",
+   "uploaded_as": "Tame_Impala_-_Let_It_Happen_Official_Video.mp3"
   },
   {
    "file": "matrix_funk_slowed.mp3",
