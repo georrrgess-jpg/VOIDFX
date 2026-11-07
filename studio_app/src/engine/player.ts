@@ -8,7 +8,7 @@ import { clamp, projectDuration, speedAt } from '../state/util';
 import { Compositor } from './compositor';
 import { FrameVoice, SoundVoice } from './decodevoice';
 import { Evaluation, evaluate, upcoming } from './evaluate';
-import { onGraphicReady } from './custom';
+import { onGraphicReady, preloadGraphics } from './custom';
 import { drawLayers } from './drawlayers';
 import { sfxBuffer } from './sfx';
 
@@ -139,6 +139,20 @@ export class Player {
     return v;
   }
 
+  private fallbacks = new Map<string, FrameVoice>();
+  /** A decoder that gives a still of a clip whose element is not ready yet (its first frames). */
+  private fallbackFor(c: Clip): FrameVoice | null {
+    let f = this.fallbacks.get(c.id);
+    if (f) return f;
+    const rt = runtime.get(c.media!);
+    if (!rt?.video || !rt.canDecodeVideo) return null;
+    const p = store.state.project;
+    f = new FrameVoice(rt.video, Math.max(p.width, p.height) / 2);
+    this.fallbacks.set(c.id, f);
+    if (this.fallbacks.size > 12) { const [k, old] = this.fallbacks.entries().next().value!; old.dispose(); this.fallbacks.delete(k); }
+    return f;
+  }
+
   private elementOk(c: Clip) { return runtime.get(c.media!)?.elementOk !== false; }
 
   private frameVoice(c: Clip): FrameVoice | null {
@@ -218,6 +232,8 @@ export class Player {
         waits.push(waitEvent(v.el, 'canplay', 1200));
       }
     }
+    // every graphic drawn before the first frame, so none appears late or not at all
+    if (this.comp) waits.push(preloadGraphics(p, this.comp.width).catch(() => {}));
     if (waits.length) await Promise.all(waits);
     if (!this.playing) return;
     this.clock0 = performance.now();
@@ -413,8 +429,9 @@ export class Player {
         waits.push(waitEvent(v.el, 'seeked', 2500));
       }
     }
-    // keep upcoming voices warm so pressing play is instant
+    // keep upcoming voices warm so pressing play is instant, and the graphics drawn
     for (const u of upcoming(p, s.media, this.time, 1.2)) keep.add(u.clip.id);
+    if (this.comp) void preloadGraphics(p, this.comp.width).catch(() => {});
     this.release(keep);
     this.draw(ev, p, s.media);
     if (waits.length) {
@@ -437,7 +454,13 @@ export class Player {
       const v = this.voices.find(x => x.clipId === L.clip.id);
       const el = v?.el;
       // the element already applies rotation metadata, so its frame is display-oriented
-      if (!v || !el || el.readyState < 2 || !el.videoWidth) return null;
+      if (!v || !el || el.readyState < 2 || !el.videoWidth || el.seeking) {
+        // not ready yet: the last frame drawn holds; a clip never drawn shows a decoded still meanwhile
+        if (comp.hasTexture(L.clip.id)) return null;
+        const fb = this.fallbackFor(L.clip);
+        if (fb) { if (fb.version === 0 || Math.abs((fb as any).lastT - L.srcTime) > 0.2) { (fb as any).lastT = L.srcTime; void fb.still(L.srcTime); } if (fb.version > 0) return { src: fb.canvas as any, w: fb.w, h: fb.h, version: `fb${fb.version}` }; }
+        return null;
+      }
       v.seq++;
       return { src: el, w: el.videoWidth, h: el.videoHeight, version: `${v.seq}` };
     }, 'p');

@@ -381,3 +381,29 @@ export function tasteText(maxChars = 5000): string {
   }
   return n ? out.trim() : '';
 }
+
+// ---------- calibration: the owner's own scores next to the critic's ----------
+
+export interface Calibration { at: number; project: string; round: number; critic: number; owner: number; note: string; headline: string }
+let calib: Calibration[] | null = null;
+
+export async function loadCalibration(): Promise<Calibration[]> {
+  if (!calib) { const c = await idbGet<Calibration[]>('kv', 'calibration').catch(() => undefined); calib = Array.isArray(c) ? c : []; }
+  return calib;
+}
+
+export async function addCalibration(x: Omit<Calibration, 'at'>) {
+  const all = await loadCalibration();
+  calib = [{ ...x, at: Date.now() }, ...all.filter(c => !(c.project === x.project && c.round === x.round))].slice(0, 40);
+  await idbPut('kv', 'calibration', calib).catch(() => {});
+}
+
+/** What the critic reads: the owner's scores against its own, and how far its scale runs from theirs. */
+export async function calibrationText(): Promise<string> {
+  const all = (await loadCalibration()).slice(0, 12);
+  if (!all.length) return '';
+  const off = all.reduce((a, c) => a + (c.owner - c.critic), 0) / all.length;
+  return `CALIBRATION FROM THE OWNER (they watched these edits with sound and scored them themselves; your scale must match theirs)
+${all.map(c => `- "${c.project}" round ${c.round}: you scored ${c.critic.toFixed(1)}, the owner scored ${c.owner.toFixed(1)}${c.note ? ` ("${c.note.slice(0, 220)}")` : ''}`).join('\n')}
+On average the owner scores ${Math.abs(off) < 0.15 ? 'the same as you' : `${Math.abs(off).toFixed(1)} points ${off > 0 ? 'higher' : 'lower'} than you`}. ${Math.abs(off) >= 0.3 ? `Move your scale by about that much: an edit like the ones the owner scored higher is worth what they gave it, and what they liked (their words above) is what the scale rewards.` : 'Keep your scale.'} Problems still get named in full; the calibration changes the numbers, not the honesty.`;
+}

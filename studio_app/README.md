@@ -198,6 +198,30 @@ and is told to remove and rebuild weak moments rather than add on top. After the
 renders every note's moment again. A note whose frame looks the same is marked not done, and the review
 writes it.
 
+**Loops as set pieces.** `{"op":"loop","style":…}` lands the wrap with a designed move:
+
+- `push`: the last shot pushes in and frame 0 is pulled back out of it, with a zoom blur. This is the default.
+- `light`: a light bloom, with frame 0 under it.
+- `whip`: the last shot whips out and frame 0 whips in.
+- `dissolve`: only on request.
+
+Each ends exactly on frame 0's source frame and framing. Reviews and the critic see a strip of frames
+across the wrap (the last second, then the first 0.4 s), and the critic also gets motion strips at the
+hook and the drop.
+
+**The edit ends with its picture.** A sound, the song or a caption that runs past the last shot no
+longer adds black frames before the loop. The studio trims those tails.
+
+**Preview.** The editor's player draws every graphic before playback starts. A clip whose video is
+not ready on its first frames shows a decoded still instead of nothing, so short overlays (polaroids,
+the loop twin) and graphics always appear.
+
+**Your own score calibrates the critic.** Each critique has a "Your score" box. Your score and note
+are kept next to the critic's, and every later critique is told how far its scale runs from yours.
+
+**No black and white with a colour kept** unless you ask for it. The studio swaps `noir_red` for clean
+noir otherwise.
+
 **The critic's scale.** Scores are calibrated to the owner's approved benchmarks (an edit at their
 level is an 8). The overall score stays within half a point of the weighted area scores. "Critical" is
 kept for defects that break the edit on the first watch, and caps the score at 7 while it remains.

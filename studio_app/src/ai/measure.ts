@@ -163,3 +163,15 @@ export async function layerReport(p: Project, media: Record<string, import('../s
   const head = `MEASURED LAYERS (each effect, graphic and shader rendered with and without itself; ${layers.length} measured)`;
   return { text: lines.length ? `${head}\n${lines.join('\n')}` : `${head}: every layer shows, and none blows the frame out.`, invisible, blown };
 }
+
+/** The wrap, in order: the last second of the edit, then the first 0.4 s (it must read as one move). */
+export function loopStripTimes(p: Project): { times: number[]; labels: string[] } {
+  const dur = projectDuration(p);
+  if (dur < 2) return { times: [], labels: [] };
+  const fps = p.fps || 30;
+  const times: number[] = [], labels: string[] = [];
+  for (let k = 12; k >= 1; k--) { const t = +Math.max(0, dur - k / 12).toFixed(3); times.push(t); labels.push(`end ${(t - dur).toFixed(2)}`); }
+  times.push(+Math.max(0, dur - 1 / fps).toFixed(3)); labels.push('LAST FRAME');
+  for (const t of [0, 0.1, 0.2, 0.3, 0.4]) { times.push(t); labels.push(t === 0 ? 'FRAME 0' : `start +${t.toFixed(2)}`); }
+  return { times, labels };
+}

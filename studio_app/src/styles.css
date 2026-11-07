@@ -1459,3 +1459,17 @@ kbd { font: 600 10.5px var(--font-mono); padding: 2px 6px; border-radius: 5px; b
 .cmark.s-major { background: var(--warn); box-shadow: 0 0 8px rgba(243, 185, 78, 0.7); }
 .cmark.s-minor { background: #9aa0b4; }
 .cmark:hover { transform: rotate(45deg) scale(1.45); }
+
+/* ---------- the owner's own score on a critique ---------- */
+.oscore { display: grid; gap: 10px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(160deg, rgba(127, 211, 255, 0.08), rgba(13, 13, 19, 0.5)); border: 1px solid rgba(127, 211, 255, 0.22); transition: border-color 0.3s, box-shadow 0.3s; }
+.oscore.is-saved { border-color: rgba(82, 214, 160, 0.4); box-shadow: 0 0 24px rgba(82, 214, 160, 0.1); }
+.oscore-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.oscore-row { display: flex; align-items: center; gap: 12px; }
+.oscore-row input[type=range] { flex: 1; accent-color: var(--ice); }
+.oscore-v { font: 800 22px/1 var(--font-display); min-width: 3ch; text-align: right; }
+.oscore-gap { font: 600 11px var(--font-mono); padding: 2px 7px; border-radius: 8px; }
+.oscore-gap.up { color: var(--ok); background: rgba(82, 214, 160, 0.12); }
+.oscore-gap.down { color: var(--bad); background: rgba(255, 97, 112, 0.12); }
+.oscore-note { height: 34px; padding: 0 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.09); }
+.oscore-note:focus { outline: none; border-color: rgba(127, 211, 255, 0.5); }
+.oscore .btn { justify-self: start; height: 32px; padding: 0 14px; }

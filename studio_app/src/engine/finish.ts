@@ -15,6 +15,19 @@ export function finishPass(p: Project): string[] {
   const mainT = p.tracks.find(t => t.main)?.id;
   const lookIds = new Set(p.tracks.filter(t => t.role === 'look').map(t => t.id));
 
+  // 0. nothing runs past the picture: a sound, the song or a caption that does is cut at the last frame
+  const tails: string[] = [];
+  for (const c of p.clips) {
+    if (c.kind === 'video' || c.kind === 'image' || c.kind === 'graphic' || c.kind === 'shader') continue;
+    if (c.start >= dur - 0.02) { tails.push(c.id); continue; }
+    if (c.start + c.dur > dur + 0.01) c.dur = +(dur - c.start).toFixed(4);
+  }
+  if (tails.length) p.clips = p.clips.filter(c => !tails.includes(c.id));
+  for (const c of p.clips) if ((c.kind === 'graphic' || c.kind === 'shader') && c.span !== 'all' && c.start + c.dur > dur + 0.01) {
+    if (c.start >= dur - 0.02) { p.clips = p.clips.filter(x => x !== c); continue; }
+    c.dur = +(dur - c.start).toFixed(4);
+  }
+
   // 1. the loop in sound: the song runs to the last frame (a fade that comes back at full level breaks the loop)
   const bed = p.clips.filter(c => c.kind === 'audio' && c.media).sort((a, b) => b.dur - a.dur)[0];
   const stop = p.clips.some(c => c.kind === 'sfx' && c.sfx === 'tapestop' && c.start > dur - 1.5);

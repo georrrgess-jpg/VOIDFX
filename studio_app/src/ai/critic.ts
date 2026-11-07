@@ -11,14 +11,14 @@ import { TRANSITION_LABELS } from '../engine/transitions';
 import { FX_LIBRARY } from '../engine/fxlib';
 import { SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { whenMediaIdle } from '../media/library';
-import { addLessons, getPreset, tasteText } from '../state/catalog';
+import { addLessons, calibrationText, getPreset, tasteText } from '../state/catalog';
 import { Critique, CritiqueIssue, Effort, FollowUp, Job } from '../state/types';
 import { projectDuration } from '../state/util';
 import { askSafe, brightnessNote, JobIO, maxImagesFor, ownerLedger, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
-import { standardSheets, timelineSheets } from './sheets';
+import { Sheet, standardSheets, timelineSheets } from './sheets';
 import { PIECES } from '../state/pieces';
-import { layerReport, transitionReport, transitionTimes } from './measure';
+import { layerReport, loopStripTimes, transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 
 export { CRITIC_AREAS, CRITIC_CANON } from './canon';
@@ -185,10 +185,23 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
   const budget = Math.max(0, maxImg - stdImgs.length);
   const { sweep, close, tframes } = filmstrip(ws, Math.max(20, (budget - 1) * 20), follow.filter(f => f.at !== undefined).map(f => ({ id: f.id, at: f.at! })));
   const p = ws.project;
-  const sweepSheets = budget ? await timelineSheets(p, ws.media(), sweep, 20, Math.max(1, budget - (close.length ? 1 : 0)), io.signal) : [];
+  const sweepSheets = budget ? await timelineSheets(p, ws.media(), sweep, 20, Math.max(1, budget - (close.length ? 1 : 0) - (budget >= 4 ? 1 : 0)), io.signal) : [];
+  // motion strips: consecutive frames (1/12 s apart) at the hook, the drop and across the loop, so movement and flow are judged, not guessed from stills
+  const motion: { t: number; label: string }[] = [];
+  if (budget >= 4) {
+    const dur = projectDuration(p);
+    for (let k = 0; k < 7; k++) motion.push({ t: +(k / 12).toFixed(3), label: `HOOK +${(k / 12).toFixed(2)}` });
+    const bed = p.clips.filter(c => c.kind === 'audio' && c.media && ws.media()[c.media]?.analysis).sort((a, b) => b.dur - a.dur)[0];
+    const drop = bed ? (ws.media()[bed.media!].analysis!.rises || []).map(r => bed.start + (r - (bed.in ?? 0)) / (bed.speed ?? 1)).find(t => t > dur * 0.2 && t < dur * 0.8) : undefined;
+    if (drop !== undefined) for (let k = -3; k <= 4; k++) motion.push({ t: +Math.max(0, Math.min(dur - 0.01, drop + k / 12)).toFixed(3), label: `DROP ${k >= 0 ? '+' : ''}${(k / 12).toFixed(2)}` });
+    const ls = loopStripTimes(p);
+    ls.times.forEach((t, k) => motion.push({ t, label: ls.labels[k] }));
+  }
+  const motionSheets = motion.length ? await timelineSheets(p, ws.media(), motion.map(m => m.t), 32, 1, io.signal, p.width / p.height < 1 ? 300 : 220, motion.map(m => m.label)).catch(() => [] as Sheet[]) : [];
+  if (motionSheets[0]) motionSheets[0].caption = 'MOTION STRIPS: consecutive frames 1/12 s apart at the hook (HOOK), across the drop (DROP), and across the loop (the last second of the edit, LAST FRAME, then FRAME 0 and the first 0.4 s): judge movement, rhythm and the loop landing from these, as a viewer would see them play';
   const closeSheets = budget > 1 && close.length ? await timelineSheets(p, ws.media(), close.map(c => c.t), 30, 1, io.signal, p.width / p.height < 1 ? 300 : 220, close.map(c => c.label)) : [];
   if (closeSheets[0]) closeSheets[0].caption = `${close.some(c => /^[NP]\d/.test(c.label)) ? 'the moments of the points this round was asked to fix (labelled with their ids), then ' : ''}every transition as three frames (a: just before, b: the middle, c: just after), labelled with the transition name and timeline time`;
-  const images = [...sweepSheets, ...closeSheets, ...stdImgs];
+  const images = [...sweepSheets, ...closeSheets, ...motionSheets, ...stdImgs];
   io.step('render', { state: images.length ? 'done' : 'skip', detail: images.length ? `${sweep.length + close.length} frames on ${images.length} sheets` : 'images not available here' });
 
   io.step('measure', { state: 'run' });
@@ -210,6 +223,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     `PRESET "${preset.name}": ${preset.prompt || preset.description}`,
     last ? `WHAT THE OWNER ASKED FOR IN ROUND ${last.n}: ${last.brief || '(no extra notes)'}${last.fromCritic?.length ? `\nCritic points passed on for that round:\n- ${last.fromCritic.join('\n- ')}` : ''}${last.summary ? `\nTHE EDITOR (Opus) SAYS IT DID: ${last.summary}` : ''}` : '',
     ownerLedger(rounds) ? `${ownerLedger(rounds)}\nNever write an issue or a fix that undoes or contradicts these; where the owner chose something (a song section, a look, a shot, a text style), judge how well it is done, not whether it was chosen. A point that conflicts with them is left out.` : '',
+    await calibrationText(),
     tasteText() ? `THE OWNER'S OWN NOTES ON RECENT EDITS (their taste, across projects)\n${tasteText(3000)}` : '',
     prevCrit?.issues?.length ? `YOUR POINTS LAST ROUND (stay consistent: never ask for the opposite of a point that was carried out, and do not move the goalposts on a point that is now fixed)\n${prevCrit.issues.slice(0, 12).map(i => `- [${i.severity}${i.at !== undefined ? ` @ ${i.at.toFixed(2)}s` : ''}] ${i.problem.slice(0, 160)} Fix: ${i.fix.slice(0, 140)}`).join('\n')}` : '',
     rounds.filter(r => r.critique && r.n !== last?.n).length ? `EARLIER CRITIQUES\n${rounds.filter(r => r.critique && r.n !== last?.n).map(r => `Round ${r.n}: ${r.critique!.score}/10, "${r.critique!.headline}"`).join('\n')}` : '',
@@ -222,7 +236,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     `THE TIMELINE (what the studio will render)\n${timelineJson(p).slice(0, 24000)}`,
     images.length ? `IMAGES (attached, in this order)\n${images.map((x, i) => `${i + 1}. ${x.caption}`).join('\n')}` : 'IMAGES: none attached; judge from the timeline and the measurements, and say that you could not see the picture.',
     toolsLine(),
-    `Write the assessment. Be specific: name the time, the shot, the transition. Look hard at the animation itself: name every transition or animation that is weak (empty or invisible in its close-up, badly timed, looks drawn on), repetitive (the same move, effect or title animation again, or the same family crowded together) or generic (a stock library move where the shot offers something to go through), and give each its replacement: a different designed move in studio terms with its anchor and sound, never "make it better". Name every shot that just sits there with nothing designed on it (the checkpoint lists them) and the moment to add there. Every fix must be something the studio can do, named in its terms above, with the time and the values (for example: "transition dive at 7.80 with at (0.50, 0.41) and to (0.50, 0.43), sound whoosh + subdrop", "fx light_rays 0-2.4 s anchored at (0.62, 0.18)", "look noir_red with keep #c70f14"). Reply with only JSON:
+    `Write the assessment. Be specific: name the time, the shot, the transition. Look hard at the animation itself: name every transition or animation that is weak (empty or invisible in its close-up, badly timed, looks drawn on), repetitive (the same move, effect or title animation again, or the same family crowded together) or generic (a stock library move where the shot offers something to go through), and give each its replacement: a different designed move in studio terms with its anchor and sound, never "make it better". Name every shot that just sits there with nothing designed on it (the checkpoint lists them) and the moment to add there. Judge the edit as a whole, the way the owner watches it: cohesion (one look, one concept, shots and moves that belong together, a flow that carries across the cuts) and motion are read from the motion strips and the order of the filmstrip, not from single stills; an edit that holds together as one piece earns that in concept, rhythm and picture even where a single still looks plain. Judge the loop from its strip: it must play as one designed move landing on frame 0. Every fix must be something the studio can do, named in its terms above, with the time and the values (for example: "transition dive at 7.80 with at (0.50, 0.41) and to (0.50, 0.43), sound whoosh + subdrop", "fx light_rays 0-2.4 s anchored at (0.62, 0.18)", "look noir_red with keep #c70f14"). Reply with only JSON:
 {"score": 0-10 with one decimal,
  "verdict": "not ready" | "close" | "ready",
  "headline": "one blunt sentence: the verdict in plain words",

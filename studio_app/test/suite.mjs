@@ -518,6 +518,25 @@ if (on('units')) {
     const np = { ...r.project, lyrics: undefined };
     lyricGuard(np, media);
     out.lyrNone = np.clips.filter(c => c.kind === 'text').map(c => c.id);
+    // the edit ends with its picture: a sound or caption past the last shot never adds black frames
+    r = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', media: vid, track: 'V1', in: 0, dur: 2 }, { op: 'add', media: mus, track: 'A1', start: 0, in: 0, dur: 5 }, { op: 'sfx', sound: 'boom', start: 1.9 }, { op: 'text', start: 1.5, dur: 2, text: 'X' }], media);
+    out.tail = { dur: r.project.clips.reduce((a, c) => Math.max(a, (c.kind === 'video' || c.kind === 'image') ? c.start + c.dur : 0), 0) };
+    const { projectDuration: pd } = window.__voidfx;
+    out.tail.len = pd ? pd(r.project) : null;
+    // designed loops: each style lands exactly on frame 0's frame and framing
+    out.loops = {};
+    for (const style of ['push', 'light', 'whip']) {
+      const lr = applyOps(store.state.project, [{ op: 'clear' }, { op: 'add', id: 'f0', media: vid, track: 'V1', in: 0.8, dur: 1.2, focus: { x: 0.5, y: 0.42 }, transform: { scale: 1.1 } }, { op: 'add', id: 'f1', media: vid, track: 'V1', in: 2.5, dur: 1.2 }, { op: 'loop', style }], media);
+      const tw = lr.project.clips.find(c => c.name === 'loop twin');
+      const end = (k) => (tw.kf?.[k] || []).slice(-1)[0]?.v;
+      out.loops[style] = { twin: !!tw, endScale: end('scale'), endX: end('x'), landing: lr.project.clips.filter(c => c.name === 'loop landing').map(c => c.preset), lastKf: Object.keys(lr.project.clips.find(c => c.id === 'f1')?.kf || {}), srcEnd: tw ? +((tw.in ?? 0) + tw.dur * (tw.speed ?? 1)).toFixed(3) : null };
+      if (style === 'push') {
+        const frames = await renderStills(lr.project, [1.95, 2.05, 2.15, 2.25, 2.3, 2.38, 0, 0.1], 300, undefined, media);
+        const cv = document.createElement('canvas'); cv.width = 169 * 8; cv.height = 300; const g = cv.getContext('2d');
+        frames.forEach((f, i) => f && g.drawImage(f, i * 169, 0, 169, 300));
+        out.loopSheet = cv.toDataURL('image/jpeg', 0.8);
+      }
+    }
     // lessons from the critic are remembered and read back
     await clearLessons();
     await addLessons([{ area: 'picture', severity: 'critical', problem: 'The drop is a white card. More words.', fix: 'Delete the wash. More.', project: 'x' }]);
@@ -537,6 +556,9 @@ if (on('units')) {
   check('every set piece expands into its build with no problems', Object.values(u.pieces).every(x => x.added >= 1 && !x.bad.length), JSON.stringify(u.pieces));
     check('lyric guard: a caption is the real line on its sung time; invented or unsung lines are removed', Math.abs(u.lyr.wrongStart - 1.94) < 0.02 && /by \*my\* side/.test(u.lyr.wrongText) && !u.lyr.made && u.lyr.title && !u.lyr.late, JSON.stringify(u.lyr));
   check('lyric guard: with no lyrics only short titles stay', JSON.stringify(u.lyrNone) === '["title"]', JSON.stringify(u.lyrNone));
+    check('the edit ends with its picture (no black tail after the last shot)', u.tail.len !== null && Math.abs(u.tail.len - u.tail.dur) < 0.01, JSON.stringify(u.tail));
+  writeFileSync(join(OUT, 'loop-push.jpg'), Buffer.from(u.loopSheet.split(',')[1], 'base64')); delete u.loopSheet;
+  check('designed loops land on frame 0 (push, light, whip)', u.loops.push.endScale === 1.1 && u.loops.push.landing.includes('zoom_blur') && u.loops.push.lastKf.includes('scale') && u.loops.light.landing.includes('exposure_wash') && u.loops.whip.endX === 0 && Object.values(u.loops).every(l => l.twin && Math.abs(l.srcEnd - 0.8) < 0.01), JSON.stringify(u.loops));
     check('critic lessons are remembered for later edits', /white card/.test(u.lessons) && /Delete the wash/.test(u.lessons), u.lessons);
 }
 

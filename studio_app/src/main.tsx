@@ -8,6 +8,7 @@ import { addLessons, addToLibrary, blankPreset, clearLessons, getPreset, lessons
 import { idleShots, runChecks } from './engine/qc';
 import { lyricGuard } from './engine/lyricguard';
 import { parseLyrics } from './state/lyrics';
+import { projectDuration } from './state/util';
 import { layerReport, transitionReport } from './ai/measure';
 import { createProject, getRecord, listProjects, migrateLegacy, openProject } from './state/projects';
 import { applyOps } from './state/ops';
@@ -43,5 +44,5 @@ window.addEventListener('pagehide', () => store.flushSave());
 (window as any).__voidfx = {
   store, player, runtime, open: openProject, applyOps, customIssues, compileError, FX_PRESETS, FX_LIBRARY, fxCode, fxParams, renderStills,
   enqueue, startAiEdit, stopJob, resumeJob, setParallelLimit, savePreset, blankPreset, getPreset, listPresets, getRecord, listProjects, createProject, addToLibrary, listLibrary,
-  runChecks, idleShots, transitionReport, layerReport, lyricGuard, parseLyrics, addLessons, clearLessons, lessonsText,
+  runChecks, idleShots, transitionReport, layerReport, lyricGuard, parseLyrics, projectDuration, addLessons, clearLessons, lessonsText,
 };

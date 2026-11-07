@@ -7,6 +7,9 @@ import { openProject } from '../../state/projects';
 import { store } from '../../state/store';
 import { Critique } from '../../state/types';
 import { Icon } from '../controls';
+import { useState } from 'preact/hooks';
+import { updateRecord } from '../../state/projects';
+import { addCalibration } from '../../state/catalog';
 import { timeAgo } from '../home/common';
 
 export function seekTo(projectId: string, t: number) {
@@ -44,6 +47,8 @@ export function CritiqueView(props: {
           <p class="muted">Round {crit.round} · {crit.duration.toFixed(1)} s edit · {timeAgo(crit.at)}{crit.model ? ` · ${crit.model}` : ''}{crit.prevScore !== undefined ? ` · ${crit.score - crit.prevScore >= 0 ? '+' : ''}${(crit.score - crit.prevScore).toFixed(1)} on the last round` : ''}</p>
         </div>
       </header>
+
+      {!sel && <OwnerScore crit={crit} projectId={projectId} />}
 
       {Object.keys(crit.scores).length > 0 && (
         <div class="crit-bars">
@@ -129,5 +134,40 @@ export function CritiqueView(props: {
         </section>
       )}
     </article>
+  );
+}
+
+/** The owner's own score: watched with sound. Every one calibrates the critic's scale for later edits. */
+function OwnerScore({ crit, projectId }: { crit: Critique; projectId: string }) {
+  const [v, setV] = useState<number>(crit.ownerScore ?? Math.round(crit.score * 2) / 2);
+  const [note, setNote] = useState(crit.ownerNote || '');
+  const [saved, setSaved] = useState(crit.ownerScore !== undefined);
+  const save = async () => {
+    const rec = await updateRecord(projectId, r => {
+      const round = (r.rounds || []).find(x => x.critique && x.critique.at === crit.at);
+      if (!round?.critique) return false;
+      round.critique.ownerScore = v;
+      round.critique.ownerNote = note.trim();
+    });
+    crit.ownerScore = v; crit.ownerNote = note.trim();
+    await addCalibration({ project: rec?.name || 'an edit', round: crit.round, critic: crit.score, owner: v, note: note.trim(), headline: crit.headline });
+    setSaved(true);
+    store.toast('Saved. The critic calibrates its scale to your scores from now on.', 'info', 4000);
+  };
+  const gap = v - crit.score;
+  return (
+    <section class={`oscore${saved ? ' is-saved' : ''}`} aria-label="Your score">
+      <div class="oscore-h">
+        <b>Your score</b>
+        <span class="muted small">Watched it with sound? Rate it yourself: the critic learns your scale.</span>
+      </div>
+      <div class="oscore-row">
+        <input type="range" min={0} max={10} step={0.5} value={v} aria-label="Your score out of 10" onInput={e => { setV(+(e.target as HTMLInputElement).value); setSaved(false); }} />
+        <span class="oscore-v">{v.toFixed(1)}</span>
+        {Math.abs(gap) >= 0.5 && <span class={`oscore-gap ${gap > 0 ? 'up' : 'down'}`}>{gap > 0 ? '+' : ''}{gap.toFixed(1)} vs the critic</span>}
+      </div>
+      <input class="oscore-note" type="text" value={note} placeholder="What makes it better or worse than the critic says? (optional)" onInput={e => { setNote((e.target as HTMLInputElement).value); setSaved(false); }} />
+      <button type="button" class="btn btn-primary" onClick={() => void save()} disabled={saved}>{saved ? 'Saved' : 'Save my score'}</button>
+    </section>
   );
 }

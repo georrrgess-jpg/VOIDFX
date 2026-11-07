@@ -166,9 +166,16 @@ export const textStyleOf = (c: Clip): TextStyle => ({ ...DEFAULT_TEXT_STYLE, ...
 export const textAnimOf = (c: Clip): TextAnim => ({ ...DEFAULT_TEXT_ANIM, ...(c.anim || {}) });
 
 /** Length of the edit. Custom effects and graphics are overlays: they never make an edit longer. */
+/** The edit's length: it ends with its picture (a sound or a caption running past the last shot would
+ * leave black frames before the loop); a project with no picture yet runs to its last clip. */
 export function projectDuration(p: Project): number {
-  let d = 0;
-  for (const c of p.clips) if (c.kind !== 'graphic' && c.kind !== 'shader') d = Math.max(d, c.start + c.dur);
+  let d = 0, pic = 0;
+  for (const c of p.clips) {
+    if (c.kind === 'graphic' || c.kind === 'shader') continue;
+    d = Math.max(d, c.start + c.dur);
+    if (c.kind === 'video' || c.kind === 'image') pic = Math.max(pic, c.start + c.dur);
+  }
+  if (pic > 0) return pic;
   if (d === 0) for (const c of p.clips) d = Math.max(d, c.start + c.dur);
   return d;
 }

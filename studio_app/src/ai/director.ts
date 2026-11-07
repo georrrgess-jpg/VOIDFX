@@ -30,7 +30,7 @@ import { ASPECTS, Effort, Job, JobStep, MediaInfo, NoteCheck, Project, Round, Tr
 import { deepClone, projectDuration } from '../state/util';
 import { ContextExtras, contextBlock, parseJson, parseReply } from './prompt';
 import { elementSheet, FrameStat, libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
-import { layerReport, storyboardTimes, transitionReport, transitionTimes } from './measure';
+import { layerReport, loopStripTimes, storyboardTimes, transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 import { lyricsText, parseLyrics } from '../state/lyrics';
 import type { Lyrics } from '../state/types';
@@ -434,7 +434,7 @@ Write every remaining operation from your plan, improved by what the frames show
 - the captions and two or more designed titles that act out their meaning, clear of faces;
 - light, atmosphere, particles and themed graphics in every section, the drop on its biggest move. RESTRAINT: every layer must read in a still frame (atmosphere under a contrasty look needs amount 0.5+ or "over"); at most three layers land on one moment; one flash per hit; light and particles off the face. A clean, readable moment beats a stacked one, and the studio measures every layer;
 - the sound for each set piece and hard hit (punctuation, not a sound on every cut);
-- {"op":"loop"} so the last frame lands on frame 0.
+- THE LOOP AS A SET PIECE, as strong as the drop: the approach in the last 1.5 s (a push, a light, a whip or an object the landing continues, with its sound), the text cleared, then {"op":"loop","style":"push"|"light"|"whip","dur":0.5} so it lands exactly on frame 0 (or the pupil_loop piece). A fade or a plain cut back is a weak loop.
 ${idle ? `SHOTS WITH NOTHING ON THEM YET (measured on the cut; a shot held with nothing designed on it feels purposeless): ${idle}. Give each one a reason tied to what it shows (a themed graphic or effect, a light, a title, or a push-in or ramp with "set"), or say in "message" why it holds.\n` : ''}Do not write clear and do not remove shots.${scope} ${TAG_NOTES} Reply with only JSON, compact (no indentation or blank lines): {"message": "what the design does, for the owner", "ops": [...]}`;
 }
 
@@ -745,6 +745,18 @@ async function unchangedNotes(ws: Workspace, io: JobIO, notes: NoteCheck[], befo
   return out;
 }
 
+const WANTS_KEPT_COLOUR = /(colou?r kept|one colou?r|sin city|noir[ _-]?red|keep (the )?red|red (kept|only)|(black[- ]and[- ]white|b&w|b\/w)[^.]{0,40}\bred\b|\bred\b[^.]{0,40}(black[- ]and[- ]white|b&w|b\/w))/i;
+
+/** The owner dislikes black and white with a colour kept: the studio swaps it for clean noir unless they asked for it. */
+function keptColourGuard(ws: Workspace, ownerText: string): string[] {
+  if (WANTS_KEPT_COLOUR.test(ownerText)) return [];
+  const bad = ws.project.clips.filter(c => c.kind === 'shader' && c.preset === 'noir_red');
+  if (!bad.length) return [];
+  const r = applyOpsRaw(ws.project, bad.map(c => ({ op: 'set', id: c.id, preset: 'noir' })), ws.media());
+  ws.setProject(r.project);
+  return ['the studio replaced the black-and-white look with a colour kept (noir_red) by clean noir: the owner dislikes red bleeding through a black-and-white grade unless they ask for it'];
+}
+
 /** The loop lands on frame 0: when the wrap still jumps and Opus did not land it, the studio does ({"op":"loop"}). */
 async function landLoop(ws: Workspace, preset: Preset): Promise<string[]> {
   if (!preset.houseRules || ws.project.clips.some(c => c.name === 'loop twin')) return [];
@@ -831,7 +843,7 @@ function reviewMessage(k: number, total: number, o: { issues: string[]; checks: 
     : o.revision
       ? `REVIEW ${k} OF ${total}: CHECK EVERY NOTE, THEN THE QUALITY. Look at each note's frames (labelled with its id): a note is done only when the frame visibly shows the change the owner or critic asked for, in full. For every note that is partly done or not done, write its operations now. Then fix every failed or warning gate and check the frames as below.`
       : `REVIEW ${k} OF ${total}: QUALITY. Fix every failed or warning gate, then check the frames in this order.`;
-  const checklist = 'FRAMING (a face cut off or off-centre: set or correct "focus"); TEXT (every caption a sung or spoken line on its time, never invented words; readable; nothing over a face); FLOW (does movement, position and light carry across each cut, or do shots feel shuffled? reorder or swap shots); TRANSITIONS (in the close-ups: every weak, repeated or generic one measured above or seen there is replaced with a different designed move that goes through something in the shot, with its anchor read off the ruler and its sound; never the same fix twice); MOTION (ramps, freezes, the beat camera, push-ins: no static stretch); SHOTS WITH A REASON (every shot the checkpoint lists as having nothing on it gets a designed moment tied to what it shows, or is cut); LOOK AND LAYERS (the look reads in every frame; each section has its light, atmosphere, graphics or beat moments; nothing looks drawn on, nothing sits on a face); SOUND (only the moments that matter, each set piece with its material sound); the LOOP.';
+  const checklist = 'FRAMING (a face cut off or off-centre: set or correct "focus"); TEXT (every caption a sung or spoken line on its time, never invented words; readable; nothing over a face); FLOW (does movement, position and light carry across each cut, or do shots feel shuffled? reorder or swap shots); TRANSITIONS (in the close-ups: every weak, repeated or generic one measured above or seen there is replaced with a different designed move that goes through something in the shot, with its anchor read off the ruler and its sound; never the same fix twice); MOTION (ramps, freezes, the beat camera, push-ins: no static stretch); SHOTS WITH A REASON (every shot the checkpoint lists as having nothing on it gets a designed moment tied to what it shows, or is cut); LOOK AND LAYERS (the look reads in every frame; each section has its light, atmosphere, graphics or beat moments; nothing looks drawn on, nothing sits on a face); SOUND (only the moments that matter, each set piece with its material sound); the LOOP (in its strip: the approach in the last second builds into one designed move that lands on frame 0; a fade, a jump or a plain return is a weak loop: rebuild it with {"op":"loop","style":"push"|"light"|"whip"} and its approach, or the pupil_loop piece).';
   return [
     head,
     o.lost?.length ? `Part of the work (${o.lost.join(' and ')}) could not be written in the first pass: write it now, in full, from your plan.` : '',
@@ -878,7 +890,10 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
     const trep = transitionReport(p, tf, close);
     io.step(id, { detail: 'checking every layer shows' });
     const lrep = await layerReport(p, ws.media(), io.signal).catch(() => ({ text: '', invisible: [], blown: [] }));
-    const rSheets = [...frames, ...close, ...palette.slice(0, Math.max(0, maxImg - frames.length - close.length))];
+    const ls = loopStripTimes(p);
+    const loopSheet = maxImg >= 4 && ls.times.length ? await timelineSheets(p, ws.media(), ls.times, 18, 1, io.signal, undefined, ls.labels).catch(() => [] as Sheet[]) : [];
+    for (const sh of loopSheet) sh.caption = 'THE LOOP: the last second of the edit, then frame 0 and the first 0.4 s, in order. Read it as the viewer sees the wrap: one continuous designed move landing on frame 0, never a jump, a fade or a cut back';
+    const rSheets = [...frames, ...close, ...loopSheet, ...palette.slice(0, Math.max(0, maxImg - frames.length - close.length - loopSheet.length))];
     io.step(id, { detail: 'thinking…' });
     const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined, transitions: [trep.text, lrep.text].filter(Boolean).join('\n\n') });
     const rest: Turn[] = [...opts.turns.slice(1), { role: 'user', content: msg }];
@@ -1068,7 +1083,7 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   await ws.save();
   const extra = await fillMissingNotes(ws, io2, { preset, standards, turns, notes, effort, mediaImages: images.length > 0 });
   const applied = res.applied + (extra?.applied || 0);
-  const adjusted = [...res.issues, ...(extra?.issues || []), ...(await landLoop(ws, preset))];
+  const adjusted = [...res.issues, ...(extra?.issues || []), ...(await landLoop(ws, preset)), ...keptColourGuard(ws, [req.notes || '', ownerLedger(ws.rec.rounds || [])].join(' '))];
   io.step('apply', { state: 'done', detail: `${applied} applied${adjusted.length ? `, ${adjusted.length} adjusted` : ''}${notes.length ? ` · ${notes.filter(n => n.ops).length}/${notes.length} notes carried` : ''}` });
 
   io.step('check', { state: 'run' });
@@ -1159,7 +1174,7 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   await ws.save();
   const extra = await fillMissingNotes(ws, io2, { preset, standards, turns, notes, effort, mediaImages: footage.length > 0 });
   const applied = res.applied + (extra?.applied || 0);
-  const adjusted = [...res.issues, ...(extra?.issues || []), ...(await landLoop(ws, preset))];
+  const adjusted = [...res.issues, ...(extra?.issues || []), ...(await landLoop(ws, preset)), ...keptColourGuard(ws, [brief, ownerLedger(ws.rec.rounds || [])].join(' '))];
   // a note is carried only when its moment looks different: render each note's frame again and compare
   const unchanged = await unchangedNotes(ws, io, notes, before);
   io.step('apply', { state: 'done', detail: `${applied} applied${adjusted.length ? `, ${adjusted.length} adjusted` : ''}${notes.length ? ` · ${notes.filter(n => n.ops).length}/${notes.length} notes carried` : ''}${unchanged.length ? ` · ${unchanged.length} moment${unchanged.length > 1 ? 's' : ''} unchanged` : ''}` });

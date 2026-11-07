@@ -119,6 +119,10 @@ export function graphicCanvas(c: Clip, pxW: number): HTMLCanvasElement | null {
   const key = rasterKey(c, pxW);
   const hit = rasters.get(key);
   if (hit && hit !== 'pending' && hit !== 'failed') { hit.used = Date.now(); return hit.canvas; }
+  // while this size is being drawn, any finished size of the same graphic stands in (never a blank frame)
+  const prefix = `${c.id}:${hashStr(c.svg || '')}:`;
+  let stand: HTMLCanvasElement | null = null;
+  for (const [k, v] of rasters) if (k.startsWith(prefix) && typeof v === 'object') { stand = v.canvas; break; }
   if (!hit) {
     rasters.set(key, 'pending');
     rasterize(c.svg, bucket(pxW)).then(canvas => {
@@ -130,7 +134,7 @@ export function graphicCanvas(c: Clip, pxW: number): HTMLCanvasElement | null {
       for (const f of readyListeners) f();
     }).catch(() => rasters.set(key, 'failed'));
   }
-  return null;
+  return stand;
 }
 
 /** Draw every graphic of a project at the given frame width before an offline render. */

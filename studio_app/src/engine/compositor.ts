@@ -663,7 +663,8 @@ export class Compositor {
     }
   }
 
-  hasTexture(key: string) { return this.textures.has(key); }
+  /** Has this key a drawn texture (a frame to hold while a source catches up)? */
+  hasTexture(key: string) { const e = this.textures.get(key); return !!e && e.version !== undefined; }
 
   dispose() {
     for (const e of this.textures.values()) this.gl.deleteTexture(e.tex);

@@ -343,6 +343,9 @@ export interface Critique {
   brief: string;
   /** How each point of the previous round was carried out, as the critic saw it. */
   followUp?: FollowUp[];
+  /** The owner's own score of the same round, and what they said: the critic calibrates to it. */
+  ownerScore?: number;
+  ownerNote?: string;
   /** The previous round's score, for the change. */
   prevScore?: number;
   /** Edit length and round the critique looked at. */

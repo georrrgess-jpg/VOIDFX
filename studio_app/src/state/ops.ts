@@ -1001,8 +1001,10 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           const m = first?.media ? media[first.media] : undefined;
           if (!first || !m || first.kind !== 'video' && first.kind !== 'image') { issues.push(`${tag}: the loop needs a video or image shot first on the main track`); return; }
           const end = projectDuration(p);
-          const d = num(op.dur, 0.1, 2, 0.4);
-          p.clips = p.clips.filter(c => c.name !== 'loop twin');
+          // a designed landing, not a fade: push through an anchor (default), a light bloom, a whip, or the plain dissolve
+          const style: 'push' | 'light' | 'whip' | 'dissolve' = ['push', 'light', 'whip', 'dissolve'].includes(op.style) ? op.style : 'push';
+          const d = num(op.dur, 0.15, 2, style === 'whip' ? 0.35 : style === 'dissolve' ? 0.4 : 0.55);
+          p.clips = p.clips.filter(c => c.name !== 'loop twin' && c.name !== 'loop landing');
           const tr = freeTrack(p, 'video', end - d, d);
           const tw = makeMediaClip(p, m, round(end - d, 4), tr.id);
           tw.dur = round(d, 4);
@@ -1015,10 +1017,31 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
             tw.muted = true;
           }
           for (const k of ['focus', 'fit', 'transform', 'color', 'autoExposure'] as const) if (first[k] !== undefined) (tw as any)[k] = deepClone(first[k]);
-          tw.kf = { opacity: [{ t: 0, v: 0, e: 'inOut' }, { t: round(d, 4), v: 1 }] };
+          const last = shots[shots.length - 1];
+          const fs = first.transform?.scale ?? 1, fx0 = first.transform?.x ?? 0;
+          const D = round(d, 4);
+          const lt0 = round(Math.max(0, last.dur - d * 1.4), 4);
+          const lastKeys = (prop: 'scale' | 'x', from: number, to: number) => [...(last.kf?.[prop] || []).filter(k => k.t < lt0 - 0.01), { t: lt0, v: from, e: 'in' as const }, { t: round(last.dur, 4), v: to }];
+          const extra: any[] = [];
+          if (style === 'push') {
+            // the last shot pushes in, the first shot is pulled back out of the push and settles exactly on frame 0
+            tw.kf = { opacity: [{ t: 0, v: 0, e: 'out' }, { t: round(d * 0.45, 4), v: 1 }], scale: [{ t: 0, v: round(fs * 1.32, 4), e: 'out' }, { t: D, v: fs }] };
+            if (last !== first) extra.push({ op: 'set', id: last.id, kf: { ...(last.kf || {}), scale: lastKeys('scale', last.transform?.scale ?? 1, round((last.transform?.scale ?? 1) * 1.35, 4)) } });
+            extra.push({ op: 'fx', preset: 'zoom_blur', start: round(end - d * 0.95, 4), dur: round(d * 0.9, 4), params: { amount: 0.5 }, name: 'loop landing' });
+          } else if (style === 'light') {
+            tw.kf = { opacity: [{ t: 0, v: 0 }, { t: round(d * 0.35, 4), v: 0, e: 'inOut' }, { t: round(d * 0.62, 4), v: 1 }] };
+            extra.push({ op: 'fx', preset: 'exposure_wash', start: round(end - d, 4), dur: D, params: { amount: 0.6, peak: 0.5 }, name: 'loop landing' });
+          } else if (style === 'whip') {
+            tw.kf = { opacity: [{ t: 0, v: 0 }, { t: round(d * 0.2, 4), v: 1 }], x: [{ t: 0, v: round(fx0 + 0.7, 4), e: 'out' }, { t: D, v: fx0 }] };
+            if (last !== first) extra.push({ op: 'set', id: last.id, kf: { ...(last.kf || {}), x: lastKeys('x', last.transform?.x ?? 0, round((last.transform?.x ?? 0) - 0.7, 4)) } });
+            extra.push({ op: 'fx', preset: 'zoom_blur', start: round(end - d, 4), dur: D, params: { amount: 0.35 }, name: 'loop landing' });
+          } else {
+            tw.kf = { opacity: [{ t: 0, v: 0, e: 'inOut' }, { t: D, v: 1 }] };
+          }
           p.clips.push(tw);
           touched.push(tw.id);
           applied++;
+          if (extra.length) queue.splice(i + 1, 0, ...extra);
           break;
         }
         case 'sounds': {
