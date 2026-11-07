@@ -125,12 +125,14 @@ def src_rank(n):
             if g.mean() > 20:
                 d_ = detail(g[int(1920 * 0.08):int(1920 * 0.68), int(1080 * 0.15):int(1080 * 0.85)])
                 if d_ == d_: ds.append(d_)
-        res.append(dict(n=s["n"], src=src, zmax=zmax, enlarge=1920.0 / sh * zmax, detail=float(np.median(ds)) if ds else None))
+        kbps = probe(path)[3] / 1000
+        res.append(dict(n=s["n"], src=src, zmax=zmax, enlarge=1920.0 / sh * zmax, kbps=kbps, detail=float(np.median(ds)) if ds else None))
     med = float(np.median([r["detail"] for r in res if r["detail"] is not None]))
     print(f"{'shot':10s} {'src':4s} {'enlarge':>8s} {'detail':>7s} {'vs median':>9s}  flags   (source frames, cubic-enlarged; face-centred crops use the frame centre unless cx is set)")
     for r in sorted(res, key=lambda r: r["detail"] if r["detail"] is not None else 9):
         rel = r["detail"] / med if r["detail"] is not None else None; r["rel"] = rel
-        fl = (["SOFT"] if rel is not None and rel < 0.80 else []) + ([f"zoom {100 * (r['zmax'] - 1):.0f}%"] if r["enlarge"] > 2.95 else [])
+        fl = (["SOFT"] if rel is not None and rel < 0.80 else []) + ([f"zoom {100 * (r['zmax'] - 1):.0f}%"] if r["enlarge"] > 2.95 else []) \
+             + (["LOWBIT"] if r["kbps"] < 800 else [])                                         # the Dexter studio's flag: pack under 800 kb/s
         r["flags"] = fl
         print(f"{r['n']:10s} {r['src']:4s} {r['enlarge']:7.2f}x " + (f"{r['detail']:7.3f} {rel:8.2f}x" if rel else "      -         -") + "  " + ", ".join(fl))
     json.dump(dict(median=med, shots=res), open(f"{ROOT}/v{n}/work/sharpness_src.json", "w"), indent=1)

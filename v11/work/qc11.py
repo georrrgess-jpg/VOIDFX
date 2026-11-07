@@ -145,6 +145,29 @@ print(f"   audio: last 20 ms {20*np.log10(np.sqrt(np.mean(m[-960:]**2))+1e-9):.1
 dur_v = n / E.FPS; dur_a = len(m) / sr
 print(f"   durations: video {dur_v:.4f} s, audio {dur_a:.4f} s, diff {1000 * (dur_a - dur_v):.1f} ms")
 
+# ---- 7b. flashes (from the Dexter studio's qc105 §7b; the v11 flash-discipline rule)
+fl_ev, i = [], 1
+while i < n - 1:
+    if lum[i] - lum[i - 1] >= 25.5:                                   # a rise...
+        j = i
+        while j + 1 < n and lum[j + 1] >= lum[j]: j += 1               # ...to its peak...
+        k = j
+        while k + 1 < n and k - i < 12 and lum[k + 1] > lum[i - 1] + 12: k += 1
+        if lum[j] - lum[min(k + 1, n - 1)] >= 25.5 and k - i <= 12:   # ...and back down within 0.2 s
+            fl_ev.append((i, int(j), round(float(lum[j]), 1)))
+        i = k + 1
+    else: i += 1
+wo_runs, rr = [], 0
+for i in range(n):
+    if lum[i] >= 200: rr += 1
+    else:
+        if rr >= 2: wo_runs.append((i - rr, rr, round(float(lum[i - rr:i].max()), 1)))
+        rr = 0
+rate = max([sum(1 for e in fl_ev if t0 <= e[0] < t0 + E.FPS) for t0 in range(0, n, 6)] + [0])
+hot = [e for e in fl_ev if e[2] > 110]
+print(f"\n== 7b. flashes: {len(fl_ev)} events, max {rate} per second; white-out runs (mean luma >= 200, 2+ frames): {wo_runs}")
+print(f"   flashes over a peak mean luma of 110 (check they keep the picture): {hot[:10]}")
+
 # ---- 8. SHIP / NO-SHIP checkpoint
 print("\n== 8. SHIP CHECKPOINT")
 crit = {
@@ -157,6 +180,8 @@ crit = {
   "no audio clicks at cuts or loop seam": clicks == 0 and not seam_click,
   "loop seam picture matched (static -> static)": seam_d < 12 and tex < 12,
   "audio and video same length (<= 1 frame)": abs(dur_a - dur_v) <= 1 / E.FPS,
+  "loop seam lands on frame 0 (blurred diff <= 1)": seam_d <= 1.0,
+  "no white-out runs; at most 3 flashes a second": not wo_runs and rate <= 3,
 }
 for k_, v_ in crit.items(): print(f"  [{'PASS' if v_ else 'FAIL'}] {k_}")
 print("  VERDICT:", "SHIP (pending visual sign-off)" if all(crit.values()) else "NOT READY -> fix and re-render")

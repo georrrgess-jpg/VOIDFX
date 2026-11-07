@@ -368,14 +368,14 @@
   },
   {
    "id": "sharpness",
-   "check": "no shot below 0.80x the edit's median in-focus detail; zoom <= 1.10 on 720p",
+   "check": "before rendering: sharpness.py N --src (SOFT < 0.80x median, zoom > 10 %, LOWBIT < 800 kb/s); after: sharpness.py N",
    "tool": "tools/sharpness.py N",
    "auto": true
   },
   {
    "id": "flash",
-   "check": "every flash keeps the picture (mean luma peak <= ~110)",
-   "tool": "manual measure on the encode",
+   "check": "no white-out runs (mean luma >= 200 for 2+ frames); <= 3 flashes a second; flashes peaking over 110 listed for a visual check",
+   "tool": "qcN.py §7b (from qc105)",
    "auto": true
   },
   {
@@ -438,6 +438,13 @@
    "evidence": "v105 rev 2 and 3",
    "applies_to": "all",
    "check": "plan"
+  },
+  {
+   "from": "v105 DRACULA (report)",
+   "rule": "Mix effects against how loudly the song is mastered: measure at every set piece; on a loud master push effects ~+9 dB and duck the music ~3 dB under the biggest hits.",
+   "evidence": "v105 effects first sat 20-25 dB under the song (rev 1 review)",
+   "applies_to": "all",
+   "check": "auto"
   }
  ]
 }

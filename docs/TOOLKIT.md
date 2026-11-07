@@ -172,7 +172,8 @@ These live in `v105/work/fx105.py` / `qc105.py` on the Dexter studio's branch; p
 | `coffin_lid` | A height-map-lit prop (normals, diffuse, specular) | Emblems, the cowl, a S.T.A.R. Labs door |
 | `moon_tex`, `bloodmoon_fx` | A procedural moon behind a matte | A planet or a singularity behind Barry |
 | `mist_tr`, `cape_tr`, `card_flip`, `palm_sweep` | Smoke dissolve, cape sweep, card flip, foliage sweep | Speed-wind sweep, a card-flip of a photo |
-| QC §7b flash measurement | Flags white-out runs and flash rate on the encoded file | Drop into `qcN.py` (we measure flashes by hand today) |
+| QC §7b flash measurement | Flags white-out runs and flash rate on the encoded file | **Ported** into `v11/work/qc11.py` §7b (so every new Flash edit has it) |
+| Their `tools/sharpness.py` metric | detail = mean \|L − blur 1.2\| / mean \|L − blur 8\| over the middle of each shot; flags SOFT, ZOOM (> 3.1×), LOWBIT (< 800 kb/s); absolute scale, ≈0.30+ sharp | Ours scores relative to the edit's median and flags zoom at > 2.95× (z 1.10); LOWBIT adopted. Pick one tool at the merge |
 
 ## 5b. What made v11 the standard (carry the principles, not the look)
 
