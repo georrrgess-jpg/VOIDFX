@@ -190,7 +190,7 @@ await page.waitForSelector('.preset-card');
 await page.click('.preset-card:has-text("VOIDFX · Dexter")');
 await page.fill('#c-notes', 'Smoke test: the evidence points back at him.');
 await page.click('.seg-big button:has-text("Both")');
-await page.click('.linkbtn:has-text("Lyrics for captions")');
+if (!(await page.$('#c-lyrics'))) await page.click('.linkbtn:has-text("Lyrics for captions")');
 await page.fill('#c-lyrics', '[00:00.50] Could it be him\n[00:02.10] The evidence points back\n[00:04.00] All along\n[00:06.00]');
 await page.setInputFiles('.cdrop input[type=file]', [join(MEDIA, 'portrait.mp4'), join(MEDIA, 'rotated.mp4'), join(MEDIA, 'still.png')]);
 await page.waitForTimeout(400);
