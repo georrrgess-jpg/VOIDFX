@@ -113,7 +113,7 @@ await ctx.addInitScript(() => {
             const follow = [...full.matchAll(/^(N\d+)(?: @ [\d.]+s)?: /gm)].map(m => m[1]);
             return reply(JSON.stringify({
               score: call.anchored ? 7.1 : 6.2, verdict: 'not ready', headline: 'Competent, but the hook is soft.',
-              scores: { hook: 5, rhythm: 6, transitions: 7, motion: 6, text: 7.5, sound: 6, concept: 6.5, picture: 6, loop: 4 },
+              scores: call.anchored ? { hook: 7, rhythm: 7, transitions: 7.5, motion: 7, text: 7.5, sound: 7, concept: 7, picture: 7, loop: 6.5 } : { hook: 5, rhythm: 6, transitions: 7, motion: 6, text: 7.5, sound: 6, concept: 6.5, picture: 6, loop: 4 },
               strengths: ['The dive lands on a downbeat.'],
               issues: [
                 // a critical issue caps the score at 6.5, so the re-scored round has none
@@ -421,7 +421,7 @@ if (on('render')) {
 // ---------- 5b. operations and gates added from the live test edit ----------
 if (on('units')) {
   const u = await page.evaluate(async () => {
-    const { store, applyOps, runChecks, idleShots, transitionReport, addLessons, clearLessons, lessonsText } = window.__voidfx;
+    const { store, applyOps, runChecks, idleShots, transitionReport, layerReport, renderStills, addLessons, clearLessons, lessonsText } = window.__voidfx;
     const media = store.state.media;
     const ids = store.state.mediaOrder;
     const vid = ids.find(id => media[id].kind === 'video'), mus = ids.find(id => media[id].kind === 'audio');
@@ -460,6 +460,25 @@ if (on('units')) {
     const fr = [['a', q1.start - 0.18], ['b', q1.start], ['c', q1.start + 0.18]].map(([k, t]) => ({ t, k, clip: 'q1', label: k }));
     const rep = transitionReport(r.project, fr, [{ blob: null, caption: '', stats: [st(fr[0].t, A), st(fr[1].t, B), st(fr[2].t, C)] }]);
     out.trans = { text: rep.text, weak: rep.weak };
+    // set pieces: each one expands into its tested build on the shots at its time
+    const base = [{ op: 'clear' }, ...[0, 1, 2, 3, 4, 5].map(k => ({ op: 'add', id: `s${k}`, media: vid, track: 'V1', in: k * 0.4, dur: 1.5, focus: { x: 0.5, y: 0.42 } })), { op: 'add', media: mus, track: 'A1', start: 0, in: 0, dur: 9 }];
+    out.pieces = {};
+    const sheets = [];
+    for (const [kind, extra] of [['freeze_hit', { at: 2.0, word: 'HIM' }], ['blood_drop', { at: 4.5, word: 'DARLING' }], ['plastic_burst', { at: 3.0 }], ['crt_dive', { at: 6.0 }], ['polaroid_toss', { at: 1.5 }], ['glass_shatter', { at: 7.5, anchor: { x: 0.7, y: 0.75 } }], ['lens_blood', { at: 4.6 }], ['light_title', { at: 5.0, word: 'ALONG' }], ['pupil_loop', {}]]) {
+      const before = applyOps(store.state.project, base, media).project;
+      const res = applyOps(before, [{ op: 'piece', kind, ...extra }], media);
+      const lr = await layerReport(res.project, media);
+      out.pieces[kind] = { added: res.project.clips.length - before.clips.length, changed: res.applied, bad: res.issues.filter(x => !/moved|removed|cut|landed/.test(x)), invisible: lr.invisible, blown: lr.blown };
+      const T = extra.at ?? 8.8;
+      const ts = kind === 'pupil_loop' ? [8.4, 8.75, 0.05, 0.3] : kind === 'blood_drop' ? [3.4, 4.2, 4.5, 4.75] : [T - 0.3, T, T + 0.15, T + 0.4];
+      const frames = await renderStills(res.project, ts, 360, undefined, media);
+      sheets.push({ kind, frames });
+    }
+    const W = 203, H = 360, cv = document.createElement('canvas');
+    cv.width = W * 4; cv.height = H * sheets.length;
+    const g = cv.getContext('2d');
+    sheets.forEach((sh, r) => sh.frames.forEach((f, c) => { if (f) g.drawImage(f, c * W, r * H, W, H); g.fillStyle = '#000a'; g.fillRect(c * W, r * H, W, 22); g.fillStyle = '#fff'; g.font = '14px monospace'; g.fillText(sh.kind, c * W + 4, r * H + 16); }));
+    out.pieceSheet = cv.toDataURL('image/jpeg', 0.8);
     // lessons from the critic are remembered and read back
     await clearLessons();
     await addLessons([{ area: 'picture', severity: 'critical', problem: 'The drop is a white card. More words.', fix: 'Delete the wash. More.', project: 'x' }]);
@@ -474,7 +493,10 @@ if (on('units')) {
   check('velocity ramps burst on the cut', u.ramp && u.ramp.t < 0.03 && u.ramp.v >= 1.5, JSON.stringify(u.ramp));
   check('idle shots: only the shot with nothing on it is flagged', JSON.stringify(u.idle) === '["p3"]' && u.idleGate === 'warn', JSON.stringify({ idle: u.idle, gate: u.idleGate }));
   check('transitions measured: an empty middle and a type used three times are flagged', u.trans.weak.length === 1 && /empty black frame/.test(u.trans.text) && /used 3 times/.test(u.trans.text), u.trans.text);
-  check('critic lessons are remembered for later edits', /white card/.test(u.lessons) && /Delete the wash/.test(u.lessons), u.lessons);
+  writeFileSync(join(OUT, 'pieces.jpg'), Buffer.from(u.pieceSheet.split(',')[1], 'base64'));
+  delete u.pieceSheet;
+  check('every set piece expands into its build with no problems', Object.values(u.pieces).every(x => x.added >= 1 && !x.bad.length), JSON.stringify(u.pieces));
+    check('critic lessons are remembered for later edits', /white card/.test(u.lessons) && /Delete the wash/.test(u.lessons), u.lessons);
 }
 
 // ---------- 6. persistence ----------

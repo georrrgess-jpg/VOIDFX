@@ -1,5 +1,6 @@
 // Edit operations shared by the UI and the Opus Director. Every change is validated here so the
 // timeline can never hold out-of-range values, overlapping clips or dangling references.
+import { expandPiece } from './pieces';
 import {
   ANIM_PROPS, AnimProp, BLEND_MODES, Clip, ClipKind, DEFAULT_CAMERA, Ease, FONTS, Keyframe, MediaInfo, Project, REVEALS_IN, REVEALS_OUT, SFX, SfxType, STANDARD_CAPTION, TEXT_ANIMS_IN, TEXT_ANIMS_OUT,
   Track, TrackKind, TRANSITIONS, TransitionType, BeatCamera,
@@ -804,7 +805,9 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
   if (!Array.isArray(rawOps)) issues.push('ops must be an array');
   const noteOps: Record<string, number> = {};
   const alias = new Map<string, string>();
-  ops.slice(0, 2000).forEach((op: any, i: number) => {
+  // a queue: a set piece expands into its operations right after itself
+  const queue: any[] = ops.slice(0, 2000);
+  const step = (op: any, i: number) => {
     const tag = `op ${i + 1}`;
     if (!op || typeof op !== 'object' || typeof op.op !== 'string') { issues.push(`${tag}: not an operation`); return; }
     // "note": which of the round's numbered notes this operation serves (counted, not applied)
@@ -875,6 +878,7 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           const m = media[op.media];
           if (!m) { issues.push(`${tag}: unknown media "${op.media}"`); return; }
           if (m.status === 'error') { issues.push(`${tag}: media ${m.id} could not be read`); return; }
+          if (op.track === '@overlay') op = { ...op, track: freeTrack(p, 'video', num(op.start, 0, 36000, 0), num(op.dur, 0.05, 36000, 1)).id };
           let track = op.track ? p.tracks.find(t => t.id === op.track) : undefined;
           if (op.track && !track) { issues.push(`${tag}: no track "${op.track}" (add it with a track op first)`); return; }
           const asAudio = m.kind === 'audio' || track?.kind === 'audio';
@@ -982,6 +986,11 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
           applied++;
           break;
         }
+        case 'piece': {
+          const sub = expandPiece(p, op, issues, tag);
+          if (sub.length) { queue.splice(i + 1, 0, ...sub); applied++; }
+          break;
+        }
         case 'loop': {
           // land the loop: a twin of the first shot (same file, framing, colour) dissolves in over the last
           // seconds and ends on exactly the source frame frame 0 opens on
@@ -1052,7 +1061,8 @@ export function applyOps(base: Project, rawOps: unknown, media: Record<string, M
       issues.push(`${tag}: ${e?.message || 'failed'}`);
     }
     if (applied > before && noteIds.length) for (const n of noteIds) noteOps[n] = (noteOps[n] || 0) + 1;
-  });
+  };
+  for (let i = 0; i < queue.length && i < 4000; i++) step(queue[i], i);
   if (ops.length > 2000) issues.push('only the first 2000 operations were applied');
   normalize(p, media, { pruneTracks: true, resolveOverlaps: false });
   // velocity ramps need final positions and the music's beats

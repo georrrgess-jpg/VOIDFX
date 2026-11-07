@@ -60,7 +60,7 @@ function Featured({ rec }: { rec: ProjectRecord }) {
     : rec.clips ? `Edited by hand · ${rec.clips} clip${rec.clips === 1 ? '' : 's'}` : 'Empty project';
   const open = () => { markSeen(rec.id); void openProject(rec.id); };
   return (
-    <section class="feat glass" aria-label="Featured project">
+    <section class="feat glass spot" aria-label="Featured project">
       <button type="button" class="feat-thumb" onClick={open} aria-label={`Open ${rec.name}`}>
         {rec.thumb ? <img src={rec.thumb} alt="" /> : <span class="recent-ph">{Icon.media}</span>}
         <span class="feat-dur">{Icon.play}{fmtDur(rec.duration)}</span>
@@ -110,7 +110,7 @@ function ActivityCard() {
   const order = { running: 0, queued: 1, error: 2, interrupted: 3, done: 4, stopped: 5 };
   const list = [...jobs].sort((a, b) => order[a.state] - order[b.state] || (b.finished || b.created) - (a.finished || a.created)).slice(0, 3);
   return (
-    <section class="desk-act glass" aria-label="Activity">
+    <section class="desk-act glass spot" aria-label="Activity">
       <header class="desk-h">
         <h2><span aria-hidden="true">{Icon.bolt}</span>Activity</h2>
         {attention.length > 0 ? <span class="desk-badge bad">Needs attention ({attention.length})</span> : live.length > 0 ? <span class="desk-badge live">Live ({live.length})</span> : null}
@@ -163,6 +163,38 @@ const TILE_META: Record<string, (c: { lib: number; std: number; pre: number }) =
   rules: () => 'Trained on 18 edits',
 };
 
+/** The studio at a glance: projects, the critic's scores across them, and Opus's work. */
+function Stats({ projects, jobs }: { projects: ProjectRecord[]; jobs: Job[] }) {
+  const latest = projects.map(p => [...(p.rounds || [])].reverse().find(r => r.critique)?.critique?.score).filter((x): x is number => typeof x === 'number');
+  const all = projects.flatMap(p => (p.rounds || []).filter(r => r.critique).map(r => ({ at: r.critique!.at, s: r.critique!.score }))).sort((a, b) => a.at - b.at).slice(-14);
+  const best = latest.length ? Math.max(...latest) : 0;
+  const avg = latest.length ? latest.reduce((a, b) => a + b, 0) / latest.length : 0;
+  const live = jobs.filter(j => j.state === 'running' || j.state === 'queued').length;
+  const done = jobs.filter(j => j.state === 'done').length;
+  return (
+    <section class="desk-stats" aria-label="The studio at a glance">
+      <div class="stat spot" style={{ '--c': 'var(--ice)' } as any}>
+        <span class="stat-k">Projects</span>
+        <span class="stat-v">{projects.length}<small>{projects.filter(p => (p.rounds || []).length).length} by Opus</small></span>
+      </div>
+      <div class="stat spot" style={{ '--c': '#52d6a0' } as any}>
+        <span class="stat-k">Best score</span>
+        <span class="stat-v">{best ? best.toFixed(1) : '–'}<small>/ 10</small></span>
+        <span class="stat-bar" aria-hidden="true"><i style={{ width: `${best * 10}%` }} /></span>
+      </div>
+      <div class="stat spot" style={{ '--c': '#c084fc' } as any}>
+        <span class="stat-k">Critic trend</span>
+        <span class="stat-v">{avg ? avg.toFixed(1) : '–'}<small>average</small></span>
+        <span class="stat-spark" aria-hidden="true">{all.map((x, k) => <i style={{ height: `${Math.max(8, x.s * 10)}%`, '--k': k } as any} title={`${x.s}/10`} />)}</span>
+      </div>
+      <div class="stat spot" style={{ '--c': 'var(--tungsten)' } as any}>
+        <span class="stat-k">Opus</span>
+        <span class="stat-v">{live}<small>{live === 1 ? 'job live' : 'jobs live'} · {done} done</small></span>
+      </div>
+    </section>
+  );
+}
+
 export function Dashboard() {
   const [projects] = useCatalog<ProjectRecord[]>(listProjects, []);
   const [counts] = useCatalog(async () => ({ lib: (await listLibrary()).length, std: (await listStandards()).filter(s => s.kind === 'video').length, pre: (await listPresets()).length }), { lib: 0, std: 0, pre: 0 });
@@ -187,9 +219,11 @@ export function Dashboard() {
         </div>
       </header>
 
+      <Stats projects={projects} jobs={jobs} />
+
       <div class="desk-row">
         {featured ? <Featured rec={featured} /> : (
-          <section class="feat glass feat-empty">
+          <section class="feat glass feat-empty spot">
             <div class="feat-b">
               <p class="desk-eyebrow">Start here</p>
               <h2 class="feat-t">Make your first edit</h2>
@@ -201,7 +235,7 @@ export function Dashboard() {
         <ActivityCard />
       </div>
 
-      <section class="desk-recent glass" aria-label="Recent projects">
+      <section class="desk-recent glass spot" aria-label="Recent projects">
         <header class="desk-h">
           <h2><span aria-hidden="true">{Icon.media}</span>Recent projects</h2>
           {projects.length > 0 && <button type="button" class="desk-link" onClick={() => store.set({ homeTab: 'projects' })}>View all projects<span aria-hidden="true">{Icon.arrowR}</span></button>}
@@ -213,7 +247,7 @@ export function Dashboard() {
 
       <nav class="desk-tiles" aria-label="Studio sections">
         {tiles.map((s, i) => (
-          <button type="button" class="dtile" style={{ '--c': s.tint, '--i': i } as any} onClick={() => store.set({ homeTab: s.id as HomeTab })}>
+          <button type="button" class="dtile spot" style={{ '--c': s.tint, '--i': i } as any} onClick={() => store.set({ homeTab: s.id as HomeTab })}>
             <span class="dtile-top">
               <span class="dtile-ic" aria-hidden="true">{s.icon}</span>
               <span class="dtile-t">{s.label}</span>

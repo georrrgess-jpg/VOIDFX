@@ -45,7 +45,7 @@ export function Home() {
         <button type="button" class="home-k" onClick={openPalette} title="Jump to anything (Ctrl+K)">{Icon.search}<span>Jump to…</span><kbd>Ctrl K</kbd></button>
         <p class="home-foot">Opus director · everything stays in this browser</p>
       </nav>
-      <main class="home-main" key={tab}>
+      <main class="home-main" key={tab} onPointerMove={spotlight}>
         {tab === 'home' && <Dashboard />}
         {tab === 'projects' && <ProjectsSection />}
         {tab === 'create' && <CreateSection />}
@@ -56,4 +56,13 @@ export function Home() {
       </main>
     </div>
   );
+}
+
+/** Cards marked "spot" carry a light that follows the pointer. */
+function spotlight(e: PointerEvent) {
+  const el = (e.target as HTMLElement | null)?.closest?.('.spot') as HTMLElement | null;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+  el.style.setProperty('--my', `${e.clientY - r.top}px`);
 }

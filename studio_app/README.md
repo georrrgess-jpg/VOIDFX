@@ -132,6 +132,29 @@ is mud on a phone. They also get every transition measured on its three frames (
 after): a middle that is an empty card, a move that is invisible, a plain crossfade, or a type used
 three or more times is flagged for replacement with a different designed move.
 
+**Set pieces in one operation.** `{"op":"piece","kind":…}` expands into a tested, multi-stage build of
+an approved set piece on the shots at that time: the freeze or ramp, the transition, the effects with
+their anchors and amounts, the title and the sounds. The kinds are `freeze_hit`, `blood_drop`,
+`plastic_burst`, `crt_dive`, `polaroid_toss`, `glass_shatter`, `lens_blood`, `light_title` and
+`pupil_loop`. Opus builds the drop, the focal moment and the loop with them, then adds its own layers
+around them.
+
+**The studio's finishing pass.** After every Opus pass the studio fixes, and reports, the defects the
+critic kept marking down:
+
+- a music fade at the loop;
+- a flash effect stacked on another flash;
+- light or props anchored on a face, which are moved to the side;
+- a loop that still jumps, which gets `{"op":"loop"}`.
+
+The checkpoint also flags clutter (more than four layers starting within half a second). Every effect,
+graphic and shader is rendered with and without itself. A layer that does not show, or that turns a lit
+frame into a white or black card, is listed for the review and the critic.
+
+**The critic's scale.** Scores are calibrated to the owner's approved benchmarks (an edit at their
+level is an 8). The overall score stays within half a point of the weighted area scores. "Critical" is
+kept for defects that break the edit on the first watch, and caps the score at 7 while it remains.
+
 **Export on every machine.** The exporter asks the browser which audio settings it can encode
 (Windows' AAC encoder stops at 192 kbps) and steps down the bitrate. If platform AAC is unavailable
 it falls back to the bundled AAC encoder, then to Opus audio. If an encoder still refuses mid-render,

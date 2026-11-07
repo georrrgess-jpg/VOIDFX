@@ -22,12 +22,13 @@ import { attachLibraryItem, whenMediaIdle } from '../media/library';
 import { getPreset, lessonsText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
 import { addTransitionSounds, applyOps as applyOpsRaw, lastPruned, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
 import { customIssues } from '../engine/custom';
+import { finishPass } from '../engine/finish';
 import { store } from '../state/store';
 import { ASPECTS, Effort, Job, JobStep, MediaInfo, NoteCheck, Project, Round } from '../state/types';
 import { deepClone, projectDuration } from '../state/util';
 import { ContextExtras, contextBlock, parseJson, parseReply } from './prompt';
 import { libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
-import { storyboardTimes, transitionReport, transitionTimes } from './measure';
+import { layerReport, storyboardTimes, transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 import { lyricsText, parseLyrics } from '../state/lyrics';
 import type { Lyrics } from '../state/types';
@@ -41,11 +42,12 @@ function applyOps(base: Project, ops: unknown, media: Record<string, MediaInfo>)
   const snapped = snapToBeats(res.project, media);
   const pruned = pruneSfx(res.project);
   normalize(res.project, media);
+  const finished = finishPass(res.project);
   const notes: string[] = [];
   if (snapped) notes.push(`the studio moved ${snapped} cut${snapped > 1 ? 's' : ''} (by up to 90 ms) exactly onto the beat`);
   if (pruned) notes.push(`the studio removed ${pruned} sound effect${pruned > 1 ? 's' : ''}: ${lastPruned().slice(0, 8).join(', ')} (stacked within 0.3 s of another, more than two layers or two moments in a second, or over the budget of about three every four seconds); layer one hit instead of stacking near-simultaneous sounds`);
   const bad = customIssues(res.project);
-  return { ...res, issues: [...res.issues, ...notes, ...bad] };
+  return { ...res, issues: [...res.issues, ...notes, ...finished, ...bad] };
 }
 
 type SampleFn = ((input: any, opts?: any) => Promise<{ text: string; truncated: boolean; modelTierApplied: string; modelApplied?: string }>) & {
@@ -332,7 +334,7 @@ const countOps = (t: string) => (t.match(/"op"\s*:/g) || []).length;
 function cutStep(notes: NoteCheck[]) {
   return `CALL 1 OF 2: THE CUT. Direct the whole edit in your thinking, clearing the PRE-BUILD GATE with the worked examples and the playbook: the concept from the character's world and the song's words; a bold look; the song window and the drop; three or more multi-stage set pieces plus the focal one; the shot list; a designed transition for every cut; the titles; graphics in every section; the loop. Work fast where the studio already did the work: take every time from the song window's timeline grid in MEDIA (bars, the drop, the beat), never list or recompute beats, and take shots from the shot list and the pack notes.
 Write only the PICTURE as operations now: {"op":"clear"}; "project" (name; the beat camera with its sections); the music and any dialogue on audio tracks; every main-track shot in order (media, in, dur, focus read off the cyan ruler, speed, ramp or freeze, transform, push-in or drift kf); any overlay copy of a shot a set piece needs (a polaroid, a mirror, a ghost); the look with its params. Every shot is there for a reason: what it adds to the concept, or the set piece it belongs to. Do not write transitions, text, lyrics, fx, graphics, shaders or sfx yet.
-Call 2 sees a storyboard rendered from your cut (each shot's first, middle and last frame, with a ruler) and writes the design against the real frames. Write its plan in "design", compact, one line each: the concept; every set piece as anticipation -> action -> payoff with its times and layers; the transition on every cut (time, type, what it goes through, sound); every caption and designed title (time, words, animation); graphics and effects per section; the loop. Keep "design" under about 6,000 characters.${notes.length ? '\nFor every note N#, a one-line plan in "notes", and tag the operations that carry it out.' : ''}
+Call 2 sees a storyboard rendered from your cut (each shot's first, middle and last frame, with a ruler) and writes the design against the real frames. Write its plan in "design", compact, one line each: the concept; every set piece as anticipation -> action -> payoff with its times and layers (name the piece kind where one fits); the transition on every cut (time, type, what it goes through, sound); every caption and designed title (time, words, animation); graphics and effects per section; the loop. Keep "design" under about 6,000 characters.${notes.length ? '\nFor every note N#, a one-line plan in "notes", and tag the operations that carry it out.' : ''}
 Reply with only JSON, compact (no indentation or blank lines): {"message": "the concept sentence and the set pieces, for the owner", "design": "the plan for call 2"${notes.length ? ', "notes": [{"id": "N1", "plan": "one line"}]' : ''}, "ops": [...]}`;
 }
 
@@ -343,9 +345,9 @@ function designStep(idle: string, part?: Part) {
   return `CALL 2 OF 2: THE DESIGN. The studio applied your cut: the CURRENT TIMELINE in the first message shows it with every clip id and time, and the attached images are its STORYBOARD (each shot's first, middle and last frame, labelled with the clip id and timeline time, with a cyan 0..1 ruler of the frame: x along the top, y down the left). Design against these real frames: read off the ruler where each thing is (a light, the impact point, an eye, a window, a barrel, a door) and anchor the transitions and layers on it.
 Write every remaining operation from your plan, improved by what the frames show:
 - a designed transition on every cut ("set" on the incoming clip: transition {type, dur, at, to}), each going through something in the shot; vary them: no type twice in a row, no move family three times in 5 s, generic library moves only as filler between signature ones;
-- the set pieces in all their layers (fx presets with params and anchors, your own shader or SVG graphic where no preset fits; change a freeze or ramp with "set" where a frame shows a better moment);
+- the set pieces: build the drop, the focal moment and the loop with {"op":"piece"} (tested builds that render right: freeze_hit, blood_drop, plastic_burst, crt_dive, polaroid_toss, glass_shatter, lens_blood, light_title, pupil_loop) and add your own shader, graphic or title around them where the concept needs it; change a freeze or ramp with "set" where a frame shows a better moment;
 - the captions and two or more designed titles that act out their meaning, clear of faces;
-- light, atmosphere, particles and themed graphics in every section, the drop on its biggest move;
+- light, atmosphere, particles and themed graphics in every section, the drop on its biggest move. RESTRAINT: every layer must read in a still frame (atmosphere under a contrasty look needs amount 0.5+ or "over"); at most three layers land on one moment; one flash per hit; light and particles off the face. A clean, readable moment beats a stacked one, and the studio measures every layer;
 - the sound for each set piece and hard hit (punctuation, not a sound on every cut);
 - {"op":"loop"} so the last frame lands on frame 0.
 ${idle ? `SHOTS WITH NOTHING ON THEM YET (measured on the cut; a shot held with nothing designed on it feels purposeless): ${idle}. Give each one a reason tied to what it shows (a themed graphic or effect, a light, a title, or a push-in or ramp with "set"), or say in "message" why it holds.\n` : ''}Do not write clear and do not remove shots.${scope} ${TAG_NOTES} Reply with only JSON, compact (no indentation or blank lines): {"message": "what the design does, for the owner", "ops": [...]}`;
@@ -568,6 +570,18 @@ function withSounds(p: Project, media: Record<string, MediaInfo>): Project {
   return normalize(q, media);
 }
 
+/** The loop lands on frame 0: when the wrap still jumps and Opus did not land it, the studio does ({"op":"loop"}). */
+async function landLoop(ws: Workspace, preset: Preset): Promise<string[]> {
+  if (!preset.houseRules || ws.project.clips.some(c => c.name === 'loop twin')) return [];
+  const s = await measureLoopSeam(ws.project, ws.media()).catch(() => null);
+  if (!s || s.seam <= 1 || s.seam <= s.step * 1.5 + 0.3) return [];
+  const r = applyOpsRaw(ws.project, [{ op: 'loop', dur: 0.4 }], ws.media());
+  if (!r.applied) return [];
+  ws.setProject(r.project);
+  await ws.save();
+  return [`the studio landed the loop on frame 0 with {"op":"loop"} (the wrap jumped by ${s.seam.toFixed(1)}); keep the layers over the last frames the same as over frame 0`];
+}
+
 async function checkpoint(ws: Workspace, preset: Preset, seam: boolean): Promise<Check[]> {
   const s = seam ? await measureLoopSeam(ws.project, ws.media()).catch(() => null) : null;
   return runChecks(ws.project, ws.media(), { houseRules: preset.houseRules, duration: preset.duration, fps: preset.fps, seam: s });
@@ -686,9 +700,11 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
     const close = closeN && tf.length ? await timelineSheets(p, ws.media(), tf.map(x => x.t), 30, closeN, io.signal, p.width / p.height < 1 ? 300 : 220, tf.map(x => x.label), { ruler: true }) : [];
     for (const c of close) c.caption = `transition close-ups: each transition as three frames (a just before, b the middle, c just after), labelled with its name and timeline time, with the frame ruler`;
     const trep = transitionReport(p, tf, close);
+    io.step(id, { detail: 'checking every layer shows' });
+    const lrep = await layerReport(p, ws.media(), io.signal).catch(() => ({ text: '', invisible: [], blown: [] }));
     const rSheets = [...frames, ...close, ...palette.slice(0, Math.max(0, maxImg - frames.length - close.length))];
     io.step(id, { detail: 'thinking…' });
-    const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined, transitions: trep.text });
+    const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined, transitions: [trep.text, lrep.text].filter(Boolean).join('\n\n') });
     const rest: Turn[] = [...opts.turns.slice(1), { role: 'user', content: msg }];
     const ctxNow = fitContext(x => contextBlock(ws.ctx, [], opts.mediaImages ? REVIEW_NOTE : undefined, x), extrasFor(opts.preset, opts.standards, undefined, { canon: true, exemplars: cfg.reviews > 1 && k === cfg.reviews }), inputBytes(rest));
     let rk: { text: string; truncated: boolean };
@@ -873,7 +889,7 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   await ws.save();
   const extra = await fillMissingNotes(ws, io2, { preset, standards, turns, notes, effort, mediaImages: images.length > 0 });
   const applied = res.applied + (extra?.applied || 0);
-  const adjusted = [...res.issues, ...(extra?.issues || [])];
+  const adjusted = [...res.issues, ...(extra?.issues || []), ...(await landLoop(ws, preset))];
   io.step('apply', { state: 'done', detail: `${applied} applied${adjusted.length ? `, ${adjusted.length} adjusted` : ''}${notes.length ? ` · ${notes.filter(n => n.ops).length}/${notes.length} notes carried` : ''}` });
 
   io.step('check', { state: 'run' });
@@ -946,7 +962,7 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   await ws.save();
   const extra = await fillMissingNotes(ws, io2, { preset, standards, turns, notes, effort, mediaImages: footage.length > 0 });
   const applied = res.applied + (extra?.applied || 0);
-  const adjusted = [...res.issues, ...(extra?.issues || [])];
+  const adjusted = [...res.issues, ...(extra?.issues || []), ...(await landLoop(ws, preset))];
   io.step('apply', { state: 'done', detail: `${applied} applied${adjusted.length ? `, ${adjusted.length} adjusted` : ''}${notes.length ? ` · ${notes.filter(n => n.ops).length}/${notes.length} notes carried` : ''}` });
 
   io.step('check', { state: 'run' });

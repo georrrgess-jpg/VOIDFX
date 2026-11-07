@@ -8,6 +8,7 @@ import { FLASHY, GENERIC, TRANSITION_LABELS } from './transitions';
 import { QUIET_TRANSITIONS, sfxBudget, sfxEvents } from '../state/ops';
 import { customIssues } from './custom';
 import { getFx } from './fxlib';
+import { clutter } from './finish';
 
 export interface Check { id: string; label: string; status: 'pass' | 'warn' | 'fail' | 'info'; detail: string; at?: number[]; /** A one-click fix the panel can offer. */ action?: 'thin-sfx' | 'add-sfx' }
 export interface CheckOptions { houseRules: boolean; duration?: [number, number]; fps?: number; seam?: number | { seam: number; step: number } | null }
@@ -153,6 +154,11 @@ export function runChecks(p: Project, media: Record<string, MediaInfo>, o: Check
         : 'Every shot of 0.9 s or more has a move or a designed layer on it.',
       at: idle.map(c => c.start),
     });
+  }
+  // clutter: too many layers landing on one moment read as noise, not a set piece
+  if (o.houseRules) {
+    const crowd = clutter(p);
+    if (crowd.length) out.push({ id: 'clutter', label: 'Clutter', status: 'warn', detail: `More than four picture layers (effects, graphics, transitions) start within half a second at ${crowd.map(f2).join(', ')} s: the moment reads as clutter. Keep the two or three that carry it, each one visible.`, at: crowd });
   }
   // logo
   const logos = trans.filter(c => c.transition!.type === 'logo');

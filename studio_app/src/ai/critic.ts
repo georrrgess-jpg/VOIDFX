@@ -1,4 +1,4 @@
-// The critic: a second Opus pass with one job, to judge the edit as harshly as the best editors in
+// The critic: a second Opus pass with one job, to judge the edit as exactingly as the best editors in
 // TikTok's edit community would, against the owner's standards and the canon of top TikTok edits.
 // It sees frames rendered from the edit (a dense filmstrip plus every transition), measured timing,
 // the checkpoint and the owner's brief, and writes an assessment plus a write-up for the next round.
@@ -17,7 +17,8 @@ import { projectDuration } from '../state/util';
 import { askSafe, brightnessNote, JobIO, maxImagesFor, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
 import { standardSheets, timelineSheets } from './sheets';
-import { transitionReport, transitionTimes } from './measure';
+import { PIECES } from '../state/pieces';
+import { layerReport, transitionReport, transitionTimes } from './measure';
 import type { Workspace } from './workspace';
 
 export { CRITIC_AREAS, CRITIC_CANON } from './canon';
@@ -106,7 +107,14 @@ export function parseCritique(text: string, round: number, duration: number, mod
   const order = { critical: 0, major: 1, minor: 2 };
   issues.sort((a, b) => order[a.severity] - order[b.severity] || (a.at ?? 999) - (b.at ?? 999));
   let score = clampScore(v.score);
-  if (issues.some(i => i.severity === 'critical')) score = Math.min(score, 6.5);
+  // the overall score follows the area scores (weighted toward hook, transitions, motion, concept), within half a point
+  const W: Record<string, number> = { hook: 1.25, transitions: 1.2, motion: 1.15, concept: 1.1 };
+  const areas = Object.entries(scores);
+  if (areas.length >= 5) {
+    const mean = areas.reduce((a, [k, v]) => a + v * (W[k] || 1), 0) / areas.reduce((a, [k]) => a + (W[k] || 1), 0);
+    score = Math.round(Math.max(mean - 0.5, Math.min(mean + 0.5, score)) * 10) / 10;
+  }
+  if (issues.some(i => i.severity === 'critical')) score = Math.min(score, 7);
   const verdict = v.verdict === 'ready' || v.verdict === 'close' || v.verdict === 'not ready' ? v.verdict : score >= 8.5 ? 'ready' : score >= 7 ? 'close' : 'not ready';
   const st = (x: any): FollowUp['status'] => { const k = String(x || '').toLowerCase(); return k.startsWith('fix') || k === 'done' ? 'fixed' : k.startsWith('part') ? 'partly' : 'not'; };
   const followUp: FollowUp[] = (Array.isArray(v.followUp) ? v.followUp : []).slice(0, 30).map((x: any) => ({
@@ -136,6 +144,7 @@ export function toolsLine(): string {
 - Library effects: ${[...groups.entries()].filter(([g]) => g !== 'look').map(([g, ids]) => `${g}: ${ids.join(', ')}`).join('; ')}.
 - Text animations in: ${TEXT_ANIMS_IN.join(', ')}; out: ${TEXT_ANIMS_OUT.join(', ')}; knockout type, motif particles, the house caption style, timed lyric captions.
 - Sounds: ${SFX.join(', ')}.
+- Set pieces in one operation (tested builds): ${PIECES.map(d => d.id).join(', ')}.
 - Also: velocity ramps, freezes (speed keys to 0.05), the beat camera (punch, kick), focus framing, push-ins (scale keys), custom GLSL effects and SVG graphics written for the edit.`;
 }
 
@@ -186,12 +195,13 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
   const seam = await measureLoopSeam(p, ws.media()).catch(() => null);
   const checks = runChecks(p, ws.media(), { houseRules: preset.houseRules, duration: preset.duration, fps: preset.fps, seam });
   const metrics = editMetrics(ws);
+  const layers = await layerReport(p, ws.media(), io.signal).catch(() => ({ text: '' }));
   io.step('measure', { state: 'done', detail: `${checks.filter(c => c.status === 'fail').length} gates failing` });
 
   io.step('critic', { state: 'run', detail: 'watching…' });
   const music = ws.order().map(id => ws.media()[id]).filter(m => m?.kind === 'audio' || (m?.hasAudio && m.analysis?.bpm));
   const prompt = [
-    'You are the critic for VOIDFX Studio: the harshest, most knowledgeable judge in TikTok\'s edit community. You have studied thousands of fan edits (velocity edits, character edits, movie and TV edits, AMV-style and After Effects or CapCut work) and you know exactly why the top ones travel and the rest get scrolled past. Your job is not to encourage: it is to find everything that keeps this edit from being one of the best in its niche, say it plainly, and say how to fix it. Judge only what you can see in the frames and the measurements; you cannot hear the audio, so judge sound from the timing data and the sound effects placed.',
+    'You are the critic for VOIDFX Studio: the most knowledgeable, exacting judge in TikTok\'s edit community. You have studied thousands of fan edits (velocity edits, character edits, movie and TV edits, AMV-style and After Effects or CapCut work) and you know exactly why the top ones travel and the rest get scrolled past. Your job is to score the edit honestly against the owner\'s approved benchmarks (an edit at their level is an 8), credit what works, find everything that keeps it from the best in its niche, say it plainly, and say exactly how to fix it. Judge only what you can see in the frames and the measurements; you cannot hear the audio, so judge sound from the timing data and the sound effects placed.',
     CRITIC_CANON,
     preset.houseRules ? `THE OWNER'S TASTE (their house rules: an edit that breaks these fails, however good it looks)\n${HOUSE_RULES}` : '',
     preset.houseRules ? `THE OWNER'S APPROVED BENCHMARKS (the bar this edit must clear)\n${BENCHMARK_TEXT}` : '',
@@ -203,7 +213,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     follow.length ? `WHAT THIS ROUND WAS ASKED TO FIX (check every item in the frames and the timeline; frames labelled with an item's id show its moment)\n${follow.map(f => `${f.id}${f.at !== undefined ? ` @ ${f.at.toFixed(2)}s` : ''}: ${f.text.slice(0, 320)}${f.plan ? ` | the editor's plan: ${f.plan.slice(0, 200)}` : ''}${f.check ? ` | the editor's own check: ${f.check.slice(0, 160)}` : ''}`).join('\n')}\nGive each item's status in "followUp": fixed (the frames or timeline show it done in full), partly, or not.` : '',
     prevCrit ? `SCORING AGAINST THE LAST ROUND: the last critique scored the edit ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). Score the edit as it is now, starting from that score: every point that is really fixed raises its area and the total (a critical point fixed is worth about +0.6 to +1.0, a major one +0.3 to +0.5, a minor one +0.1 to +0.2); every remaining or new problem holds it down or lowers it. Do not re-judge fixed points from scratch and never ignore a real fix; never inflate either: a fix you cannot see in the frames or the timeline does not count.` : '',
     p.lyrics?.lines.length ? `THE SONG'S LYRICS (from the owner${p.lyrics.timed ? '; song times' : ', untimed'}): check that every caption is a sung line on its time, never invented words\n${p.lyrics.lines.slice(0, 80).map((l, i) => `${p.lyrics!.timed ? `L${i + 1} ${l.t.toFixed(2)} ` : ''}${l.text}`).join('\n')}` : 'NO LYRICS WERE SUPPLIED: any caption that claims to be a sung line is a guess; flag captions that do not read as dialogue, a designed title or a likely sung hook.',
-    `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '').replace(/: fine\.$/, '.')}` : ''}${closeSheets.length ? `\n${transitionReport(p, tframes, closeSheets).text}` : ''}`,
+    `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '').replace(/: fine\.$/, '.')}` : ''}${closeSheets.length ? `\n${transitionReport(p, tframes, closeSheets).text}` : ''}${layers.text ? `\n${layers.text}` : ''}`,
     `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
     music.length ? `MUSIC\n${music.map(m => `${m.id} "${m.name}" ${m.analysis?.bpm ? `${m.analysis.bpm} BPM` : ''}`).join('\n')}` : '',
     `THE TIMELINE (what the studio will render)\n${timelineJson(p).slice(0, 24000)}`,
