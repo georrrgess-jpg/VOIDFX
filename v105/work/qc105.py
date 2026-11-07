@@ -156,6 +156,8 @@ fev = [f_ for f_ in range(1, len(ml) - 1) if ml[f_] - ml[max(0, f_ - 12):f_].min
 fps_max = max((sum(1 for e in fev if a_ <= e < a_ + E.FPS) for a_ in range(len(ml))), default=0)
 print(f"\n== 7b. flashes: brightest frame mean luma {ml.max():.0f} (median {np.median(ml):.0f}); most flashes in any second: {fps_max}")
 for a_, b_ in wruns: print(f"  WHITE-OUT frames {a_}-{b_} ({b_ - a_ + 1} f), peak mean luma {ml[a_:b_ + 1].max():.0f}: a flare should keep the picture (v11 took its rim flash from 178 to 104)")
+hot = [f_ for f_ in fev if ml[f_] > 110]
+print(f"  flashes over the Flash studio's flare limit (peak mean luma ~110): {len(hot)} of {len(fev)}" + (f" at frames {hot}" if hot else ""))
 
 # ---- 8. SHIP / NO-SHIP checkpoint
 print("\n== 8. SHIP CHECKPOINT")

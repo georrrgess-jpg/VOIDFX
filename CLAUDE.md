@@ -54,6 +54,11 @@
   - every clearly sung line captioned on its words (`tools/lyrics.py`), with key moments landing on sung words.
 
 **Workflow from 2026-11-07: two voidfx chats as a coalition.**
+- **Roles:**
+  - the Flash studio is Studio 1 (the other chat; v12 onward; branch `claude/gallant-planck-pqpczp`);
+  - the Dexter studio is Studio 2 (this chat; v106 onward).
+- **Report format:** both studios write the same 9-section report: verdict, the edit, creative process, revision history, what made it good or bad, caught by review, rules (marked *new*, *changed* or *confirmed*), techniques described well enough to rebuild without the code, and measured numbers. The Flash studio's version of the procedure is in Drift-Master `voidfx-studio-kit/sync/FLASH_STUDIO_EXCHANGE.md`.
+- **Conflicts:** when two rules conflict, the newer owner verdict wins; record what it replaces. Shared decisions (the scaffold base, tools with the same name) are the owner's, and are recorded in both chats.
 - **This chat is the Dexter studio.** Every Dexter edit is made here, numbered v106 onward; the other chat has its own range.
 - **The loop:**
   - the owner sends the song (and maybe scene packs);
@@ -90,23 +95,27 @@
   Two rounds of "lacklustre" were fixed by **the motion pass, not by more effects**.
 
 **Rules from Studio 1's standards (every edit, both studios):**
-1. **A motion pass on every hook shot** (v10): speed ramps, smooth slow motion where it's earned, and beat-synced camera moves, before adding any more effects.
+1. **A motion pass on every hook shot** (v10): speed ramps on every hook and montage shot (a burst on each beat, then about 0.3–0.6× flow slow motion between, over the same source range); a camera that moves with the music (about a 5–6% zoom punch and a ±1° rotation kick per beat, with zoom blur and a slight colour split on the hit frames, type kept clean on top); light that reacts to the footage. Plan the speed curve and the camera with the shot list. Flow only where it stays clean (the owner's v104 brief: no visible interpolation artefacts; Dexter edits otherwise hold the source cadence).
 2. **Restore the 720p source** (v10): Studio 1's `tools/sr_prep.py` + `tools/srnet.py`. They run a Real-ESRGAN compact model through ONNX Runtime on the CPU, 2×, on only the band each frame is cropped from, in the background after prep.
    - **It is also the fix for the owner's v105 clip-quality note.** Studio 2's v105 note said an AI upscaler needed a GPU; that held for the large model tried, not for this compact one.
    - After the merge, run it on every edit as well as checking `tools/sharpness.py`.
-3. **Lyrics checked against the sung vocal** (v10): the isolated Demucs vocal plus the published lyrics (`tools/lyrics.py` in Studio 2).
+3. **Lyrics on their sung onsets** (v10): check every word on the isolated vocal (pitch and onsets), not just Whisper, which was up to 1 s off in v10. Studio 2's `tools/lyrics.py` snaps word starts to the vocal envelope; also check pitch onsets by ear.
 4. **Designed set pieces on the drop, the hook and the loop** (v10).
 5. **Find the concept in the song or the character** (v11): a hook in the song's own words or the character's history, carried through picture, grade, sound and the loop.
 6. **One focal set piece** the owner can point to (v11): multi-stage, with its own layered sound, on a structural moment such as a bar line after a build.
 7. **Hero graphics detailed and lit to the shot** (v11): lit, bevelled procedural assets matched to the shot's light, revealed physically on real objects. Check them at full size.
 8. **No "just moving to the beat" shots** (v11): give each its own beat animation, with its own sound.
-9. **Measure the loop seam** (v11): build the last frames from frame 0's own image, and aim for a blurred difference of ≤ 1 (v11: 0.11). Studio 2's QC measures the same thing.
+9. **The loop is a set piece that lands exactly on frame 0** (v10, v11): build the last frames from frame 0's own image, and measure the seam (blurred difference ≤ 1; v10 0.93, v11 0.11). A plain motion-blurred rewind reads as low quality. Studio 2's QC measures the same thing.
    - v104 THE PASSENGER: 0.14.
    - v105 DRACULA: 8.4. The light is still collapsing into frame 0's sun on the last frame.
-10. **Measure flash brightness in the final file** (v11): a flare should keep the picture; v11's rim flash went from mean luma 178 to 104.
+10. **Flash discipline** (v11): measure every flash in the encode. A flare must keep the picture, with a **peak mean luma of about 110 or less** (v11's rim flash went from 178 to 104). Studio 2's QC section 7b lists every flash over 110. v105 has 9 of 14 flashes over it, partly because its day half is bright overall.
     - Studio 2's `qcN.py` now reports it in section 7b: every white-out run (mean luma ≥ 200) and the most flashes in any second, and it fails above 3 flashes a second.
     - v105 measured two white-outs: the torch blind-out (frames 687–692, peak 236) and the loop flare (1360–1372, peak 223). At most 2 flashes a second.
 11. **When the lyrics are explicit, use only a couple of designed titles** (v11: LET'S GO, BOP), not captions.
+12. **Nothing on faces** (v10, v11, confirmed): lightning, seams, particles, streaks and wipe edges are routed around a face/head box. Particles in front of faces are masked off.
+13. **Packs labelled 4K are usually 720p** (v11, confirmed by Studio 2): check the specs; frame inside insets; keep watermarks out of the crop.
+14. **"Lacklustre" means motion and polish are missing,** not that more overlays are needed (v10, confirmed).
+15. **Props and overlays must land** (v10, confirmed): no glass webs over the frame or the face (v10 rev 4 replaced its glass shatter, as v103 did).
 
 **Engines after the merge:** the two studios' scaffolds start from different engines.
 - **Studio 1:** `tools/new_edit.py` copies the v11 engine (v4–v11, 91 transitions plus the audio builder). Its EDL template adds v11's three timing settings: `E_BEAT` (where the beat drops in), `E_DIP` (the dip before the drop) and `E_LOOP` (where the loop set piece starts). Its setup check confirms v11 loads.

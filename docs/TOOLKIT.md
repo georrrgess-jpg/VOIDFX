@@ -131,6 +131,28 @@ These live on Studio 1's branch (`claude/gallant-planck-pqpczp`, read at `122013
   - `look="voltage"|"rival"`.
 - **Flash discipline (v11):** measure every flash in the encode; a flare keeps the picture (v11's rim flash went from mean luma 178 to 104). Studio 2's `qc105.py` (copied into every new edit) reports it in section 7b: white-out runs at mean luma ≥ 200, and flashes per second, failing above 3.
 
+### The Flash studio's techniques (from the v10 and v11 reports; code on Studio 1's branch)
+
+Each is described well enough to rebuild in Studio 2's engine.
+
+| Technique | Function (Studio 1) | How it works | Sound |
+|---|---|---|---|
+| Velocity ramps | `vel()` in the EDL template | speed = slow + burst·exp(−t/70 ms) on each beat, integrated to source time; flow in-betweens on restored frames | — |
+| Beat camera | `beat_bounce`, `shake`, `beat_fx` | about a 5–6% zoom punch and ±1° rotation kick per beat; zoom blur and colour split on the hit frames; type on top | a quiet swish per punch |
+| Emblem dive | `emblem_gate`, `drop_wave` | track the chest emblem with keyframes, flare it, zoom into the bolt, burst through into the next shot, then a refracting shockwave | whine, crack, sub, rush |
+| TIME PARTICLES | `time_particles` | the frozen frame breaks into fragments of its own pixels (edges first, people last), they hang in the stopped air, then rebuild as the next shot from a focus point on the beat | grains, shimmer, reversed grains into an impact |
+| Bullet time | (automatic on frozen holds) | parallax from the person matte plus a floor gradient, with a slow dolly push | — |
+| Speed Force loop | (v10 loop) | the lyric's letters run a ring that opens into a tunnel; panels of the edit's own moments fly past, newest to oldest, and frame 0 lands | the song rewinding (anti-aliased) |
+| Rival grade | `look="rival"` vs `"voltage"` | a second grade for the antagonist (red-shifted highlights, dark red shadows, red halation) | — |
+| Red phase | `red_phase` | jittered red ghost copies (face vibration) resolving into the next shot | crackle |
+| Red eye dive | `red_eye_dive` | find the brightest red point (an eye), dive in until the frame is red light, pull out of the next character's eye (face landmarks) | — |
+| BOLT SPLIT drop | `bolt_split` | a lightning-bolt seam cracks down beside the face; left half graded red, right gold; on the drop the seam sweeps across, tears the title apart, shockwave | crackle build, impact, thunder, sub drop |
+| THE RIFT (focal piece) | `rift` | a tear grows along a jagged diagonal below the face, opens with white-gold electric edges and light spill, the Speed Force churns inside, the camera flies through, and the next shot rushes out of the vanishing point | crack, a rip panned across, reversed swell into a sub drop, roar and whine, arrival impact |
+| Coin-flip emblem | `rf_emblem`, `coin_flip` | a procedural emblem (bevelled rim, groove, glossy disc with a reflection, emissive bolt with light spill) lit by the real emblem's brightness; the real emblem flips on its axis (found by a circle fit to its visible edge each frame), edge visible, suit filled in behind; flare at edge-on, shockwave and sparks on landing | spin whir, sizzle, metal ring |
+| REVERSE loop | `reverse_loop` | strike → flip → red radiates → an anticipation pull-back and accelerating dive into the black disc (speed-matched blur, radial colour fringes, rays, sparks, a red flare as the rim passes) → lands on frame 0 | power-down whine, tape-stop |
+| Beat moments | `aura`, `remnants`, `charge` | silhouette rings pulsing out on each beat; time-remnant copies splitting sideways and snapping back; lightning and dust gathering into the chest | one each |
+| Also in Studio 1's catalogue | — | clash, strobe echo, bolt trace, heat haze, whip, dolly focus pull, emblem draw-on reveal, lens shatter, Lichtenberg lightning branches, perimeter lap, phase, whirlwind, speed slices, lightning tear | — |
+
 ### The v104 THE PASSENGER toolkit (a standard; in `fx104.py`, carried in every new edit's `fxN.py`)
 
 | tin / flag | What it does | Sound in `audio104.py` |
