@@ -1282,7 +1282,8 @@ def render_shot(s, f, with_shake=True, want_mask=False):
     out = cv2.warpAffine(roi, M, (W, H), flags=cv2.INTER_LANCZOS4 | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REFLECT)
     L = lum(out); d = L - cv2.GaussianBlur(L, (0, 0), 1.6)
     gate = np.clip((np.abs(d) - 0.006) / 0.02, 0, 1)                                    # recover edges, leave the noise alone
-    out = out + (d * gate * 0.55)[..., None]
+    dg = d * gate * 0.55
+    for c in range(3): out[..., c] += dg                                                # pipeline v2: channel-wise (same values)
     if want_mask:
         mr = cv2.resize(msk, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_LINEAR)[y0:y1, x0:x1]
         mw = cv2.warpAffine(mr, M, (W, H), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REPLICATE)
@@ -1314,8 +1315,11 @@ def dusk_u(s, f):
 
 def grade(img, s, f):
     g, gains = correction(s)
-    x = np.clip(img * gains, 0, 1) ** g
-    if s.get("ev"): x = np.clip(x * 2 ** s["ev"], 0, 1)                                 # per-shot exposure (dark night sources)
+    if in_unit(img):                                                                    # pipeline v2: the same chain by table (tone_lut)
+        x = apply_lut3(img, tone_lut(("105", s["n"], s.get("ev") or 0, float(g), tuple(float(v) for v in gains)), gains, g, s.get("ev")))
+    else:
+        x = np.clip(img * gains, 0, 1) ** g
+        if s.get("ev"): x = np.clip(x * 2 ** s["ev"], 0, 1)                             # per-shot exposure (dark night sources)
     look = s.get("look", "night")
     if look == "day": o = day_grade(x)
     elif look == "night": o = night_grade(x, s)
@@ -1867,13 +1871,22 @@ def text103(out, f):
 def finish105(out, f, night, logo=False):
     L = lum(out); hi = np.clip(L - 0.64, 0, 1)
     if not logo:                                                                         # the logo keeps its own colours: no halo or red bloom on it
-        halo = cv2.resize(cv2.GaussianBlur(cv2.resize(hi, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H))[..., None]
+        halo = cv2.resize(cv2.GaussianBlur(cv2.resize(hi, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H))
         red = np.clip((out[..., 2] - np.maximum(out[..., 0], out[..., 1])) * 2, 0, 1)
-        rh = cv2.resize(cv2.GaussianBlur(cv2.resize(red, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6), (W, H))[..., None]
-        out = out + halo * (MOONS * 0.20 if night else SUNC * 0.26) + rh * CRIMSON * 0.18
-    L = lum(out)[..., None]
-    out = out + grain(f, 1.0) * (0.010 + 0.018 * L * (1 - L) * 2.5)
-    return np.clip(out * VIG, 0, 1)
+        rh = cv2.resize(cv2.GaussianBlur(cv2.resize(red, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6), (W, H))
+        c1 = MOONS * 0.20 if night else SUNC * 0.26                                     # pipeline v2: channel-wise, same order of operations
+        o = np.empty(out.shape, out.dtype); t = np.empty(halo.shape, out.dtype)
+        for ch in range(3):
+            oc = o[..., ch]; np.multiply(halo, c1[ch], out=oc); np.add(out[..., ch], oc, out=oc)   # out + halo * c1
+            np.multiply(rh, CRIMSON[ch], out=t); t *= 0.18; oc += t                                # + rh * CRIMSON * 0.18
+        out = o
+    L = lum(out)
+    k = 0.018 * L; k *= 1 - L; k *= 2.5; k += 0.010                                     # 0.010 + 0.018 * L * (1 - L) * 2.5
+    k *= grain(f, 1.0)[..., 0]
+    o = np.empty(out.shape, out.dtype)
+    for ch in range(3):
+        oc = o[..., ch]; np.add(out[..., ch], k, out=oc); oc *= VIG[..., 0]
+    return np.clip(o, 0, 1, out=o)
 
 # ---------------------------------------------------------------------------- rev 3
 def eclipse_tr(A, B, j, f, sa, sb, pre=10, post=14):

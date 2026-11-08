@@ -46,6 +46,9 @@ T_DROP = th(HDROP); T_SPLICE = th(K_SPL)
 BASS = list(range(0, 88, 2))                          # the kick: every beat
 SUN_K = (24, 31.5)                                     # the sun sets across the drop-out bar
 DAWN_K = (83, 88)                                      # it rises again at the end (the loop)
+# pipeline v2 (tools/mixcheck.py): the set pieces, (name, t0, t1) in edit seconds; data only, the renderer does not read it
+SET_PIECES = [("sundown", th(24), th(32)), ("bat burst + DRACULA", th(32), th(34)), ("blood moon", th(48), th(50)),
+              ("coffin", th(64), th(66)), ("daybreak loop", th(84), th(88))]
 
 # ---- no dialogue: the song's own voice carries the text
 VO = []; VO_STEMS = {}

@@ -794,6 +794,8 @@ def main():
     for k_ in (32, 48, 64): duck[I(E.th(k_) - 0.03) + PRE:I(E.th(k_) + 0.30) + PRE] = 1.0
     duck = np.convolve(duck, np.hanning(I(0.12)) / np.hanning(I(0.12)).sum(), "same")
     mus = mus * db(-3.0 * duck)[:, None]
+    wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))                        # pipeline v2: tools/mixcheck.py
+    wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
     full = mus + vo + fx
     lead, mix = full[:PRE].copy(), full[PRE:].copy()
     th_ = np.linspace(0, np.pi / 2, PRE)[:, None]

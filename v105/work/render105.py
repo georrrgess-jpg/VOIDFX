@@ -6171,7 +6171,7 @@ def main():
                "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", *(["-c:a", "aac", "-b:a", "160k", "-shortest"] if aud else []), out]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
-            for fr in pool.imap(render, frames, chunksize=4):
+            for _, fr in render_blocks(pool, frames, 24):                    # pipeline v2: contiguous blocks
                 p.stdin.write(cv2.resize(fr, (W // 2, H // 2), interpolation=cv2.INTER_AREA).tobytes())
         p.stdin.close(); p.wait(); print(out); return
     if mode == "full":
@@ -6191,69 +6191,10 @@ def main():
                *tags, "-c:a", "pcm_s24le", "-ar", "48000", f"{outdir}/{E.SLUG}_voidfx_9x16_master.mov"]
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         with Pool(4) as pool:
-            for i, fr in enumerate(pool.imap(render, range(E.DUR_F), chunksize=4)):
+            for i, (_, fr) in enumerate(render_blocks(pool, list(range(E.DUR_F)))):   # pipeline v2: contiguous blocks
                 p.stdin.write(fr.tobytes())
                 if i % 150 == 0: print(f"frame {i}/{E.DUR_F}", flush=True)
         p.stdin.close(); p.wait(); print("done", outdir, flush=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # >>> v105 section (generated from fx105.py by splice.py)
 # ============================================================================ v105 — DRACULA — Dexter × Tame Impala: toolkit from the v104 standard (restyle it)
@@ -7540,7 +7481,8 @@ def render_shot(s, f, with_shake=True, want_mask=False):
     out = cv2.warpAffine(roi, M, (W, H), flags=cv2.INTER_LANCZOS4 | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REFLECT)
     L = lum(out); d = L - cv2.GaussianBlur(L, (0, 0), 1.6)
     gate = np.clip((np.abs(d) - 0.006) / 0.02, 0, 1)                                    # recover edges, leave the noise alone
-    out = out + (d * gate * 0.55)[..., None]
+    dg = d * gate * 0.55
+    for c in range(3): out[..., c] += dg                                                # pipeline v2: channel-wise (same values)
     if want_mask:
         mr = cv2.resize(msk, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_LINEAR)[y0:y1, x0:x1]
         mw = cv2.warpAffine(mr, M, (W, H), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REPLICATE)
@@ -7572,8 +7514,11 @@ def dusk_u(s, f):
 
 def grade(img, s, f):
     g, gains = correction(s)
-    x = np.clip(img * gains, 0, 1) ** g
-    if s.get("ev"): x = np.clip(x * 2 ** s["ev"], 0, 1)                                 # per-shot exposure (dark night sources)
+    if in_unit(img):                                                                    # pipeline v2: the same chain by table (tone_lut)
+        x = apply_lut3(img, tone_lut(("105", s["n"], s.get("ev") or 0, float(g), tuple(float(v) for v in gains)), gains, g, s.get("ev")))
+    else:
+        x = np.clip(img * gains, 0, 1) ** g
+        if s.get("ev"): x = np.clip(x * 2 ** s["ev"], 0, 1)                             # per-shot exposure (dark night sources)
     look = s.get("look", "night")
     if look == "day": o = day_grade(x)
     elif look == "night": o = night_grade(x, s)
@@ -8125,13 +8070,22 @@ def text103(out, f):
 def finish105(out, f, night, logo=False):
     L = lum(out); hi = np.clip(L - 0.64, 0, 1)
     if not logo:                                                                         # the logo keeps its own colours: no halo or red bloom on it
-        halo = cv2.resize(cv2.GaussianBlur(cv2.resize(hi, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H))[..., None]
+        halo = cv2.resize(cv2.GaussianBlur(cv2.resize(hi, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H))
         red = np.clip((out[..., 2] - np.maximum(out[..., 0], out[..., 1])) * 2, 0, 1)
-        rh = cv2.resize(cv2.GaussianBlur(cv2.resize(red, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6), (W, H))[..., None]
-        out = out + halo * (MOONS * 0.20 if night else SUNC * 0.26) + rh * CRIMSON * 0.18
-    L = lum(out)[..., None]
-    out = out + grain(f, 1.0) * (0.010 + 0.018 * L * (1 - L) * 2.5)
-    return np.clip(out * VIG, 0, 1)
+        rh = cv2.resize(cv2.GaussianBlur(cv2.resize(red, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6), (W, H))
+        c1 = MOONS * 0.20 if night else SUNC * 0.26                                     # pipeline v2: channel-wise, same order of operations
+        o = np.empty(out.shape, out.dtype); t = np.empty(halo.shape, out.dtype)
+        for ch in range(3):
+            oc = o[..., ch]; np.multiply(halo, c1[ch], out=oc); np.add(out[..., ch], oc, out=oc)   # out + halo * c1
+            np.multiply(rh, CRIMSON[ch], out=t); t *= 0.18; oc += t                                # + rh * CRIMSON * 0.18
+        out = o
+    L = lum(out)
+    k = 0.018 * L; k *= 1 - L; k *= 2.5; k += 0.010                                     # 0.010 + 0.018 * L * (1 - L) * 2.5
+    k *= grain(f, 1.0)[..., 0]
+    o = np.empty(out.shape, out.dtype)
+    for ch in range(3):
+        oc = o[..., ch]; np.add(out[..., ch], k, out=oc); oc *= VIG[..., 0]
+    return np.clip(o, 0, 1, out=o)
 
 # ---------------------------------------------------------------------------- rev 3
 def eclipse_tr(A, B, j, f, sa, sb, pre=10, post=14):
@@ -8376,6 +8330,82 @@ def init_hits():
     for k_, a in ((32, 22), (48, 12), (64, 18), (12, 6), (60, 8)): HITS.append((E.fh(k_), a, 4.0))
 
 # <<< v105 section
+
+# >>> pipeline v2: speed (WP2, ported from the Flash studio's render11.py section; same pictures)
+# KEEP THIS SECTION LAST: splice.py inserts the edit's section (fxN.py) above it, so an edit's own grade / render_shot
+# are what this section wraps. Checked with `python3 tools/golden.py 105 --check` (gate: max 2/255, mean < 0.2/255).
+#   1. TONE LUT    tone_lut / apply_lut3: a grade's per-channel gain -> gamma -> exposure (-> tone curve) chain as one
+#                  65,536-entry lookup per channel. The grid holds every 8-bit level exactly, so a crop of 8-bit source
+#                  pixels grades bit-identically. fx105's grade uses it.
+#   2. STILL CACHE unshaken shot renders (ghost trails, afterimages, time slices) cached per worker as read-only arrays.
+#                  Dexter addition: a current frame with zero shake IS its unshaken render, so it is cached too (most of
+#                  v105's ghost frames then cost no extra shot render).
+#   3. BLOCKS      frame_blocks / render_blocks: contiguous blocks per worker that never cross a cut, output in order.
+F32 = np.float32
+_TLUT = {}
+def tone_lut(key, gains, g, ev, lx=None, ly=None):
+    """(3, 65536) table: clip(u * gain_c) ** g, then * 2 ** ev (clipped), then the tone curve (lx, ly) if given; u = i / 65535."""
+    if key not in _TLUT:
+        if len(_TLUT) > 96: _TLUT.clear()
+        u = np.arange(65536, dtype=np.float32) / 65535; tabs = []
+        for c in range(3):
+            x = np.clip(u * gains[c], 0, 1) ** g
+            if ev: x = np.clip(x * 2 ** ev, 0, 1)
+            tabs.append((np.interp(x, lx, ly) if lx is not None else x).astype(np.float32))
+        _TLUT[key] = np.stack(tabs)
+    return _TLUT[key]
+
+def apply_lut3(img, tab):
+    """per-channel lookup of a float image in [0, 1] (quantised to 1/65535 before the lookup)."""
+    q = np.clip(img, 0, 1); q *= 65535; q += 0.5; idx = q.astype(np.uint16)
+    out = np.empty(img.shape, np.float32)
+    for c in range(3): np.take(tab[c], idx[..., c], out=out[..., c])
+    return out
+
+def in_unit(img): return img.dtype == np.float32 and img.ndim == 3 and img.shape[2] == 3 and float(img.min()) >= 0.0 and float(img.max()) <= 1.0
+
+def mul3(a, col, k=1.0, out=None):
+    """(a[..., None] * col) * k as an HxWx3 array, channel by channel (same values, faster)."""
+    o = np.empty(a.shape + (3,), F32) if out is None else out
+    for c in range(3):
+        oc = o[..., c]; np.multiply(a, col[c], out=oc)
+        if k != 1.0: oc *= k
+    return o
+
+_STILL = {}
+STILL_MAX = 18                                                                              # ~33 MB each with a matte
+_SHOT_IDS = {}
+_render_shot_v2ref = render_shot
+def render_shot(s, f, with_shake=True, want_mask=False):
+    if not _SHOT_IDS: _SHOT_IDS.update({id(x): x for x in SHOTS})
+    if _SHOT_IDS.get(id(s)) is not s or (with_shake and any(shake(f))):                  # shaken, or a modified shot dict
+        return _render_shot_v2ref(s, f, with_shake, want_mask)
+    key = (s["n"], f, bool(want_mask))
+    hit = _STILL.pop(key, None)
+    if hit is None:
+        r = _render_shot_v2ref(s, f, False, want_mask)
+        for a_ in (r if isinstance(r, tuple) else (r,)): a_.flags.writeable = False
+        hit = (r,)
+        while len(_STILL) >= STILL_MAX: _STILL.pop(next(iter(_STILL)))
+    _STILL[key] = hit                                                                       # most recent last
+    return hit[0]
+
+def frame_blocks(frames, size=36):
+    """split a sorted frame list into contiguous runs that never cross a cut, at most `size` frames each."""
+    out, cur = [], []
+    for f in frames:
+        if cur and (f != cur[-1] + 1 or shot_at(f) is not shot_at(cur[-1]) or len(cur) >= size): out.append(cur); cur = []
+        cur.append(f)
+    if cur: out.append(cur)
+    return out
+
+def _render_block(fs): return [render(f) for f in fs]
+
+def render_blocks(pool, frames, size=36):
+    """yield (frame, image) in the order given, each block rendered by one worker."""
+    for fs, ims in zip(frame_blocks(frames, size), pool.imap(_render_block, frame_blocks(frames, size), chunksize=1)):
+        yield from zip(fs, ims)
+# <<< pipeline v2: speed
 
 if __name__ == "__main__":
     main()
