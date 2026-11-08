@@ -264,7 +264,9 @@ def main():
     if a.out: OUT_OVERRIDE[0] = os.path.abspath(a.out)
     DRY[0] = a.dry
     E = edit_env.edl(a.n)
-    if a.mode == "status": return status(a.n, E)
+    if a.mode == "status":
+        edit_env.load_edit(a.n, setup=False)                 # the renderer may write into the EDL's shot dicts on import
+        return status(a.n, E)
     if a.mode == "clean":
         stop_master(a.n)
         for k in ("mkv", "meta"):

@@ -74,3 +74,9 @@ v*/work/cache/
 v*/work/*.log
 v*/sr/
 library/
+v12/work/*.log
+v12/audio/
+v12/frames/
+v12/out/
+v12/work/*.npz
+v12/work/*.npy

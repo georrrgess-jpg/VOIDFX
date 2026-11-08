@@ -64,6 +64,27 @@ Downloaded with `python3 tools/fetch_packs.py LINKS.txt`; **the links are not in
 | `dexter_mix_1440.mp4` (`dmx`) | dexter scenpack (1440p) | 7:07 | S1–S3 mix: knife in the dark (45 s), burning photo (62 s), bloodied in the street (98 s), **kill-room plastic (187, 240 s)**, the container-yard fight (258 s), **the confetti parade "GO DEXTER" (329–418 s)** |
 | `ref_v104_the_passenger.mp4` | voidfx THE PASSENGER S LOVE SONG | 23 s, 1080×1920 | **Not a source**: the Dexter studio's finished v104 *THE PASSENGER* export, kept as a reference edit |
 
+**Proven in v12 (BLOOM):**
+- `fs5` 105.12–106.58: storm sky with a bolt (pushed to night; the bolt from 105.47 at x≈700);
+- `fbh` 10.32–12.06: the lab strike (tame its red light);
+- `fs1` 4.45–4.98: he wakes in S.T.A.R. Labs (face in frame from 4.45);
+- `fbk` 133.20–134.20: hood down in the dark, sparks gather at his hand;
+- `fs2t` 28.9–31.3: the S2 suit in blue cortex light;
+- `fs1` 291.90–292.85: his eye fills with lightning (pupil at source x 343, y 288);
+- `fbk` 60.70–63.40: FPV speed trails down a night street (no face);
+- `fbk` 124.75–126.20: masked close-up, blue-grey;
+- `fs5` 72.00–74.60: S5 suit under street lights;
+- `fs5` 108.60–110.90: crouch with lightning streaks;
+- `fbk` 23.95–25.78: hood down, night bokeh;
+- `fs5` 180.00–182.60: lightning on his chest;
+- `fs3` 59.10–61.50: masked extreme close-up (YuNet sometimes finds only the left half);
+- `fbk` 20.00–21.85: lightning run at the camera;
+- `fbk` 136.02–138.20: S4 suit standing in a night street (hero shot);
+- `fs3` 106.80–108.45: masked under street lights;
+- `fbh` 109.70–112.40: S5 suit walking toward the camera.
+
+**Avoid:** `fbk` 100.5–102.2 (the same strike scene as `fbh` 10.3); `fs2t` 133–137 (his head at the top of the source frame); `fs1` 138–143 (a dark limb across the frame).
+
 ## Dexter scene packs
 
 ### `trinity_goodbye.mp4` (key `tg`): "Trinity Finds Out Who Dexter Is (Goodbye Dexter Morgan)", 1280×720, 60 fps, 1:49, 36 shots
