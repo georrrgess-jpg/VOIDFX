@@ -5,11 +5,15 @@ of render and a round of feedback.
   python3 tools/preflight.py N                       # the EDL, the renderer's transitions, the sound events
   python3 tools/preflight.py N --hero bh_draw,bh_warp   # name the hero asset's drawing functions (or HERO = [...] in the EDL)
   python3 tools/preflight.py N --dir PATH            # check a copy of the work folder (e.g. an old revision from git)
-  python3 tools/preflight.py registry                # rebuild studio/transitions.json (every transition, where used, status)
+  python3 tools/preflight.py registry                # rebuild studio/transitions_usage.json (every transition, where defined and used)
 
 Levels: FAIL = breaks a rule the owner has stated (fix before rendering); WARN = likely to draw a note (decide);
-INFO = review items (look at these in the sheets). Exit code 1 when anything FAILs. `build.sh N plan` runs it, and
-`build.sh N prep` runs it after the source audit.
+INFO = review items (look at these in the sheets). Exit code 1 when anything FAILs. `build.sh N plan` runs it next to the
+Dexter studio's tools/plan_check.py (the shared gate: owner verdicts per transition from studio/transitions.json,
+look-alike clips, spins landing on faces, the signature graphic, density, the hero family); a FAIL in either stops `video`.
+This tool adds what needs the renderer's code or the audio builder's events: the hero asset by call graph (HERO), the
+emblem rule, sound kinds and sounds on beat hits, the same source shot twice, order-dependent caches, the registry's
+'caution' notes.
 
 What it reads: edlN.py (shots, transitions, SET_PIECES, HERO, TEXT), renderN.py imported without set-up (the TR2
 registry and a static call graph of every transition), and the sound events: vN/audio/fx_events.json, written by the
@@ -21,22 +25,10 @@ import os, sys, json, types, re, ast, hashlib, importlib, subprocess, tempfile, 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, f"{ROOT}/tools")
 SCAFFOLD = f"{ROOT}/v12/work/render12.py"
-REG = f"{ROOT}/studio/transitions.json"
+REG = f"{ROOT}/studio/transitions.json"            # the owner's verdicts (shared with the Dexter studio; curated)
+USAGE = f"{ROOT}/studio/transitions_usage.json"    # where each transition is defined and used (generated: `registry`)
 VERDICT = {"v4": "standard", "v6": "standard", "v7": "standard", "v10": "standard", "v11": "standard", "v12": "standard",
            "v13": "approved (not a standard)", "v8": "approved", "v9": "lacklustre"}
-# owner reception of individual transitions (from the handoffs); the registry carries these into every new plan
-KNOWN = {
-    "bolt_trace": ("leaks", "samples past its shot and shows the next pack shot (v13 rev 2 review); pull frames or don't use"),
-    "lens_drop": ("hero-kit", "v13 rev 1 singularity transition: 'the singularity is the primary object in every transition'"),
-    "photon_ring": ("hero-kit", "v13 rev 1 singularity transition"), "eye_horizon": ("hero-kit", "v13 rev 1 singularity transition"),
-    "accretion_whip": ("hero-kit", "v13 rev 1 singularity transition"), "spaghettify": ("hero-kit", "v13 rev 1 singularity transition"),
-    "emblem_horizon": ("rejected", "a black hole born in the emblem did not read as an emblem transition (v13 rev 1 -> 'make a emblem transition')"),
-    "frame_drag": ("hero-kit", "v13 rev 1 singularity transition"), "redshift_tr": ("hero-kit", "v13 rev 1 singularity transition"),
-    "emblem_split": ("approved", "v13 rev 2: the emblem's own bolt splits the frame"),
-    "ribbon": ("approved", "v13 rev 2 hero graphic that becomes the transition"),
-    "redact": ("rejected", "black occluder (v107: 'the black box transition')"),
-    "tv_off": ("caution", "a screen in a dark room read as a black box (v107)"),
-}
 OCCLUDER = re.compile(r"letterbox|black_?bars?|redact|blackout|black_box", re.I)
 BANNED_SFX = re.compile(r"\b(drone|swirl|whine|chime|bell|shimmer|shine|twinkle)\w*\s*\(", re.I)
 DRAWS = {"circle", "ellipse", "polylines", "line", "fillPoly", "fillConvexPoly", "remap", "warpAffine", "warpPerspective", "putText"}
@@ -147,7 +139,7 @@ def _sound_sandbox(n, wd, tmp):
 def check(n, wd, hero_cli):
     E, R = load(n, wd)
     F = funcs_of(R); TR2 = getattr(R, "TR2", {}); SH = E.SHOTS
-    reg = json.load(open(REG)) if os.path.exists(REG) else {}
+    reg = (json.load(open(REG)) if os.path.exists(REG) else {}).get("transitions", {})
     flash = any("flash" in str(v[0]).lower() for v in getattr(E, "SRC", {}).values())
     lib = scaffold_defs(); src_text = open(R.__file__).read()
     dur = E.DUR_F / E.FPS
@@ -220,10 +212,10 @@ def check(n, wd, hero_cli):
         em = sorted(t for t, fn in tfn.items() if "emblem_at" in reach(fn, F) or "emblem" in t)
         if not em: say("FAIL", "emblem", "no transition uses the tracked emblem (emblem_at): every Flash edit needs one (v12)")
         else: say("INFO", "emblem", f"emblem transition(s): {', '.join(em)}: the emblem's own bolt or shape must carry the move (v13 rule 2)")
-    for t in sorted(set(used)):
-        st = KNOWN.get(t) or ((reg.get(t) or {}).get("status"), (reg.get(t) or {}).get("note"))
-        if st and st[0] == "rejected": say("FAIL", "registry", f"'{t}': {st[0]}: {st[1]}")
-        elif st and st[0] in ("leaks", "hero-kit", "caution"): say("WARN", "registry", f"'{t}': {st[0]}: {st[1]}")
+    for t in sorted(set(used)):                     # verdicts are plan_check's gate; the technical traps are listed here
+        r = reg.get(t) or {}
+        if r.get("caution"): say("WARN", "registry", f"'{t}': {r['caution']}")
+        if r.get("verdict") in ("rejected", "banned"): say("INFO", "registry", f"'{t}' was {r['verdict']} by the owner (plan_check FAILs it): {r.get('fix', '')}")
         if OCCLUDER.search(t): say("WARN", "occluder", f"'{t}' looks like a black occluder (v107 rule 1: a cover must be content)")
     libt = sorted(t for t, fn in tfn.items() if fn_src_hash(fn) in lib.get(fn.__name__, set()))
     if libt: say("INFO", "library", f"library transitions (pull their frames before relying on them, v13 rule 5): {', '.join(libt)}")
@@ -305,15 +297,15 @@ def registry():
         for m in re.finditer(r'tin\s*=\s*"([A-Za-z0-9_]+)"', open(p).read()):
             t = m.group(1); e = reg.setdefault(t, {"engines": [], "used_in": {}})
             e["used_in"].setdefault(f"v{n}", 0); e["used_in"][f"v{n}"] += 1
+    ver = (json.load(open(REG)) if os.path.exists(REG) else {}).get("transitions", {})
     for k, e in reg.items():
-        if k in KNOWN: e["status"], e["note"] = KNOWN[k]
-        elif any(VERDICT.get(v, "").startswith(("standard", "approved")) for v in e["used_in"]): e["status"] = "approved"
-        else: e.setdefault("status", "unused" if not e["used_in"] else "used")
-        e["verdicts"] = {v: VERDICT.get(v, "?") for v in e["used_in"]}
-    json.dump({"_about": "every transition in the Flash engines (TR2 in v12, v13): pre/post frames, which edits used it and how the "
-               "owner received it. Rebuilt by `python3 tools/preflight.py registry`; read by preflight.", "transitions": dict(sorted(reg.items()))},
-              open(REG, "w"), indent=1)
-    print(f"{REG}: {len(reg)} transitions, {sum(1 for e in reg.values() if e.get('status') == 'approved')} used in approved edits")
+        e["edit_verdicts"] = {v: VERDICT.get(v, "?") for v in e["used_in"]}
+        e["owner_verdict"] = (ver.get(k) or {}).get("verdict", "unrated")
+    json.dump({"_about": "generated by `python3 tools/preflight.py registry`: every transition in the Flash engines (TR2 in v12, v13) "
+               "with its pre/post frames, the edits that used it and those edits' verdicts. The owner's verdict per transition is "
+               "curated in studio/transitions.json (shared with the Dexter studio); owner_verdict here is a copy for reading.",
+               "transitions": dict(sorted(reg.items()))}, open(USAGE, "w"), indent=1)
+    print(f"{USAGE}: {len(reg)} transitions, {sum(1 for e in reg.values() if e['owner_verdict'] != 'unrated')} with an owner verdict")
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "_tr2": return _tr2_dump(int(sys.argv[2]))

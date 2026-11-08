@@ -167,18 +167,16 @@
  },
  "workflow": {
   "loop": [
-   "build.sh N song:FILE[:H0:H1] (song_prep: map, stems, drum-stem grid, vocal-stem words, loop wrap)",
-   "EDL (with HERO and SET_PIECES)",
-   "build.sh N audio plan (preflight: fix every FAIL before the first render)",
-   "build.sh N prep auto (preflight again; source restoration starts in the background)",
-   "sheet:/strip:/clip: on the render server",
-   "audio (+ mixcheck table, fx_events.json)",
-   "one video qc per revision (change tracking: only frames that ran edited code re-render; QC passes run in parallel; review pack)",
-   "look at every review sheet (vN/frames/review_*.jpg) and the faceqc/motionqc lists",
-   "visual sign-off on the encoded file",
-   "deliver (waits for the master)",
-   "revision rounds: build.sh N plan rev",
-   "vrender.py N clean at the verdict"
+   "read studio/OWNER_RULES.md; pick transitions from studio/transitions.json",
+   "build.sh N song:FILE[:H0:H1]",
+   "EDL (HERO, HERO_TINS, SIGNATURE, SET_PIECES)",
+   "build.sh N audio plan (plan_check + preflight: 0 FAIL)",
+   "build.sh N prep auto (restoration starts in the background)",
+   "stills on the render server (sheet:/strip:/clip:)",
+   "build.sh N ship (audio, plan gate, video, qc + review pack, signoff, report, deliver)",
+   "fresh-eyes critique (studio/CRITIQUE_PROMPT.md); fix every HIGH item",
+   "deliver; revision: apply every note, then ship",
+   "at the verdict: registry verdicts in studio/transitions.json, handoff, vrender.py N clean"
   ],
   "review_gates": [
    "preflight on the plan before rendering (tools/preflight.py: owner rules as checks)",
@@ -207,7 +205,8 @@
     "one_shot_revision_s": 227,
     "sheet_24_frames_s": 7.6
    }
-  }
+  },
+  "targets": "owner rounds to approval <= 2; full renders before a first delivery <= 2 (studio/WORKFLOW.md)"
  },
  "communication": {
   "progress": "short lines, no long code in chat",
@@ -728,6 +727,16 @@
    "evidence": "v107 review; ported into qc12.py",
    "applies_to": "all",
    "check": "auto"
+  },
+  {
+   "from": "2026-11-08_dexter_DEV_efficiency.md",
+   "rules": [
+    "OWNER_RULES.md before designing and delivering",
+    "one shared verdict registry; log every rejection the same turn",
+    "plan gate before every render (plan_check + preflight)",
+    "every first delivery has a signature graphic that becomes a transition",
+    "fresh-eyes critique before delivery"
+   ]
   }
  ]
 }

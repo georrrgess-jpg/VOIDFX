@@ -43,9 +43,10 @@ next:
   bash tools/build.sh {n} song:src/SONG.mp3[:H0:H1]                # map, stems, drum-stem grid, vocal-stem words, loop wrap -> EDL lines
   python3 {V}/work/analyze.py src/PACK.mp4 TAG                     # shot list + contact sheets per NEW pack (known packs: copy shots_*.json)
   python3 tools/transcribe.py {V} NAME src/PACK.mp4 --vad          # dialogue word times (if using dialogue)
-  edit {V}/work/edl{n}.py  (shots, transitions, HERO, SET_PIECES, knobs) and audio{n}.py
-  bash tools/build.sh {n} audio plan                               # sound, then preflight: the plan against every owner rule
+  read studio/OWNER_RULES.md; pick transitions from studio/transitions.json (the owner's verdicts)
+  edit {V}/work/edl{n}.py  (shots, transitions, HERO, HERO_TINS, SIGNATURE, SET_PIECES, knobs) and audio{n}.py
+  bash tools/build.sh {n} audio plan                               # sound, then plan_check + preflight until 0 FAIL
   bash tools/build.sh {n} prep auto                                # tracks/mattes, preflight, restoration in the background, sheets of every cut
   bash tools/build.sh {n} clip:A:B preview                         # motion checks
-  bash tools/build.sh {n} video qc                                 # final render + ship checkpoint + review pack (vN/frames/review_*.jpg)
-  revision rounds: bash tools/build.sh {n} plan rev                # preflight, then audio + only the changed frames + QC""")
+  bash tools/build.sh {n} ship                                     # audio, plan gate, render, QC + review pack, sign-off pages, report, master
+  then the fresh-eyes critique (studio/CRITIQUE_PROMPT.md, one agent) before delivering; each revision: apply every note, ship""")

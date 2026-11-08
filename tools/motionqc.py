@@ -6,7 +6,7 @@ Decodes the encode at 135x240 grey and takes d[f] = mean |frame f - frame f-1| (
 - Activity per half-beat, and DEAD spans: runs of half-beats whose mean d stays under --dead (static floor ~1-1.5,
   an active edit 5-18) for --span seconds or more. Each one wants a new cut and a designed transition (v106 rule 2).
 - POPS: d[f] > 3 * median(d[f-6 .. f+6]) + 2 (v106 rule 3). Each one is labelled cut (within 1 frame of a cut), flash
-  (the frame's mean luma is 12+ over its neighbourhood), or beat (within 1 frame of a half-beat: a beat-camera hit);
+  (the frame's mean luma is 12+ over its neighbourhood, or it is the previous frame's negative: correlation < -0.25), or beat (within 1 frame of a half-beat: a beat-camera hit);
   everything else is listed as UNEXPLAINED with the transition it sits in, if any. Every unexplained pop is a defect
   to fix or a designed hit to justify (v106 rev 1 shipped six, three invisible on stills).
 - JUDDER per shot (v106 rule 5): a 24p/30p hold cadence between 60p flow shots. A frame is a repeat when its d is
@@ -30,6 +30,10 @@ def decode(path):
     cmd = ["ffmpeg", "-v", "error", "-i", path, "-vf", f"scale={W_}:{H_}:flags=area,format=gray", "-f", "rawvideo", "-"]
     raw = subprocess.run(cmd, capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.uint8).reshape(-1, H_, W_).astype(np.float32)
+
+def anti(a, b):
+    """correlation of two grey frames: about -1 when one is the other's negative (an impact's designed negative frame)."""
+    a = a - a.mean(); b = b - b.mean(); return float((a * b).sum() / (np.sqrt((a * a).sum() * (b * b).sum()) + 1e-6))
 
 def local_median(x, r=6):
     n = len(x); return np.array([np.median(x[max(0, i - r):min(n, i + r + 1)]) for i in range(n)], np.float32)
@@ -74,7 +78,8 @@ def main():
     for f in range(1, N):
         if d[f] <= 3 * med[f] + 2: continue
         near_cut = min((abs(f - c) for c in cuts), default=99)
-        flash = max(luma[f] - lmed[f], luma[f - 1] - lmed[f - 1]) >= 12
+        flash = max(luma[f] - lmed[f], luma[f - 1] - lmed[f - 1]) >= 12 \
+            or anti(fr[f], fr[f - 1]) < -0.25                  # a designed negative frame (an impact's inverted hit, Dexter v107 f352)
         near_hb = min(abs(f - x) for x in hb_f)
         kind = "cut" if near_cut <= 1 else "flash" if flash else "beat" if near_hb <= 1 else "cadence" if cad[f] else "UNEXPLAINED"
         ctx = None
