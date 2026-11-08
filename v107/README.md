@@ -72,6 +72,14 @@ From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the bea
 
   Sound: one paper flutter as it gathers, one whoosh on the burst.
 
+## Rev 3 (owner notes)
+- **"I don't like the transition at 3 seconds with the black bars."** The TV is gone. The kill-table shot now carries a two-part set piece, full frame throughout:
+  1. **SPATTER ANALYSIS** (`spatter_fx`, the new graphic). Ten blood stains spatter across the lens, elongated along their flight lines, with satellites and mist. A taut red string runs back from each stain, with impact-angle readouts. On the e6 beat they lock at a ringed crosshair, and a paper tag types POINT OF ORIGIN. The point is where his face is about to appear.
+  2. **RORSCHACH** (`rorschach`, 21 + 30 frames). From the point of origin a blood-ink blot blooms, mirrored about the fold like an inkblot card. Inside it his face appears mirrored (both of him), then the blot floods the frame. The mirrored half of the card swings open on the fold, and the real "shh" is underneath.
+
+  Sound: a wet spatter burst, a short swell as the blot blooms, a plop on the cut, a paper swish as the card opens. These replace the four TV sounds.
+- **"How slow it writes Dexter's name in black ... make it line up so it's not too fast and not too slow."** D-E-X-T-E-R is now stamped on an even 16th-note grid (e44 → e46.5, one letter every 10 frames, the hi-hat rhythm), not one letter per sung word (uneven gaps of 0.19–0.33 s). The platen comes down in the 3 frames before each hit, so each letter lands on its beat, with the stamp sound on the same frame. The name is complete on "the", so "man name" plays over the whole word.
+
 ## Measured (rev 2)
 - **QC:** 11/11 on the encode.
 - **Loudness:** −13.0 LUFS, true peak −3.5 dBTP after AAC.

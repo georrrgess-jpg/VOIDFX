@@ -722,6 +722,15 @@ def pour(dur, level, seed):
         y[i0:i0 + m] += np.sin(2 * np.pi * np.cumsum(180 + 260 * qq / 0.10) / SR) * np.exp(-qq / 0.03) * rng.uniform(0.4, 0.9)
     return norm(y, level)
 
+def splatter(level, seed):
+    """blood hitting glass: a spray of short wet ticks, thinning out, over a soft low body."""
+    n = I(0.32); q = np.arange(n) / SR; rng = np.random.default_rng(seed); y = np.zeros(n, np.float32)
+    for k, (t_, a) in enumerate(zip(np.sort(rng.uniform(0, 0.085, 11)), rng.uniform(0.35, 1.0, 11))):
+        m = I(0.03); i0 = I(t_); qq = np.arange(m) / SR
+        y[i0:i0 + m] += (bq(noise(m, seed + k), "band", np.array([900 + 300 * k % 1500, 5200]), 2) * np.exp(-qq / 0.0045) * a * (1 - t_ / 0.12)).astype(np.float32)
+    y += (np.sin(2 * np.pi * 85 * q) * np.exp(-q / 0.05) * 0.5 + bq(noise(n, seed + 99), "band", np.array([250, 1400]), 2) * np.exp(-q / 0.06) * 0.35).astype(np.float32)
+    return norm(y, level)
+
 def flutter(dur, level, seed, rate=14.0):
     n = I(dur); q = np.arange(n) / SR
     y = bq(noise(n, seed), "band", np.array([900, 6000]), 2) * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * rate * q * (1 + q / dur)))) * np.sin(np.pi * q / dur) ** 0.7
@@ -738,12 +747,11 @@ def main():
     # ---- the kill table: the plastic tears
     pl = crackle(0.32, -20, 3301, 0.95, (1200, 9000)); place(fx, stereo(pl, -0.3), t0["table"] - 0.10)
     place(fx, A2.whoosh(0.20, -24, 3302, True), t0["table"] - 0.08)
-    # ---- SPECIAL REPORT: a CRT hum as the shot becomes a TV, the channel clicks over in static, we push back in
-    n_ = I(0.60); q_ = np.arange(n_) / SR
-    hum = sum(np.sin(2 * np.pi * 60 * k * q_) / k for k in range(1, 6)) * np.sin(np.pi * q_ / 0.60) ** 1.2 + bq(noise(n_, 3350), "high", 9000, 2) * 0.15
-    place(fx, stereo(norm(hum.astype(np.float32), -26)), t0["shh"] - 0.60)
-    place(fx, stereo(click(-16, 3351)), t0["shh"] - 0.09); place(fx, static_hiss(0.30, -17, 3352), t0["shh"] - 0.08)
-    place(fx, A2.whoosh(0.34, -20, 3353, True), t0["shh"] + 0.20)
+    # ---- SPATTER ANALYSIS: the spatter hits the lens (a wet burst); RORSCHACH: the blot blooms (a wet swell), a plop on
+    # ---- the cut, the card swings open (a paper swish)
+    place(fx, stereo(splatter(-17, 3350)), 99 / E.FPS - 0.01)
+    place(fx, stereo(pour(0.40, -23, 3351)), 144 / E.FPS); place(fx, stereo(bloop(-19, 3352)), t0["shh"] - 0.01)
+    place(fx, stereo(swish(-21, 0.20, 3353), 0.5), (E.SHOTS[2]["f0"] + 14) / E.FPS)
     # ---- redact: a marker stroke
     place(fx, stereo(swish(-22, 0.18, 3305), 0.4), t0["lab"] - 0.08)
     # ---- HOT MOLASSES: the pour swells, a thick glug at the cut, it drips as it drains
@@ -775,7 +783,7 @@ def main():
     caps = next(wt for tx in E.TEXT if tx["style"] == "cap" for w_, wt, _ in tx["words"] if w_ == "CAPS")
     place(fx, stereo(paper_slap(-14, 3323)), caps + 3 / E.FPS)
     for q, tx in enumerate([t for t in E.TEXT if t["style"] == "stamp"][0]["words"]):
-        place(fx, stereo(stamp_hit(-12 - (0 if q == 5 else 1), 3330 + q), -0.5 + 0.2 * q), tx[1] + 4 / E.FPS)
+        place(fx, stereo(stamp_hit(-12 - (0 if q == 5 else 1), 3330 + q), -0.5 + 0.2 * q), tx[1] - 0.004)     # rev 3: on the hit
     # ---- the strip flies into the sky onto the banner
     place(fx, A2.whoosh(0.50, -16, 3340, True), t0["banner"] - 0.05); place(fx, wind_gust(0.9, -22, 3341, (-0.5, 0.5)), t0["banner"])
     # ---- the parade: the confetti pops

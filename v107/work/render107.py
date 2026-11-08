@@ -10976,6 +10976,248 @@ def render(f):
     out = flash_governor(out)
     return (np.clip(finish107(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
 
+# ============================================================================ v107 rev 3 (owner notes; overrides above)
+# ---- DEXTER on the 16th grid: each letter lands ON its hit (the platen comes down in the 3 frames before) -------------
+STAMP_DROP = 3
+def strip_canvas(t, stamps):
+    """the strip (rgba, its own pixel space) with the letters stamped by time t."""
+    base = strip_tex().copy(); inks, xs = _ST["lets"]; h, w = base.shape[:2]
+    for (wd, tw), m, xc in zip(stamps, inks, xs):
+        k = (t - tw) * FPS + STAMP_DROP
+        if k < 0: continue
+        v = clamp(k / STAMP_DROP, 0, 1)
+        if v < 1:                                                                          # the stamp coming down
+            sc = 1.6 - 0.6 * ein(v, 2.0); mm = cv2.resize(m, None, fx=sc, fy=sc); mm = cv2.GaussianBlur(mm, (0, 0), 0.1 + 4 * (1 - v)) * (0.35 + 0.65 * v)
+        else: mm = m
+        hh, ww = mm.shape; x0 = int(xc - ww / 2); y0 = int(h / 2 - hh / 2 + 6)
+        ys, xs_ = slice(max(0, y0), min(h, y0 + hh)), slice(max(0, x0), min(w, x0 + ww))
+        sub = mm[ys.start - y0:ys.stop - y0, xs_.start - x0:xs_.stop - x0]
+        if v >= 1:                                                                         # the deboss: pressed into the paper
+            dm = cv2.GaussianBlur(sub, (0, 0), 2.0)
+            sh = np.clip(np.roll(dm, 3, 0) - dm, 0, 1) * 0.35; hl = np.clip(np.roll(dm, -3, 0) - dm, 0, 1) * 0.10
+            base[ys, xs_, :3] *= (1 - sh)[..., None]; base[ys, xs_, :3] += hl[..., None]
+            sub = np.clip(sub * (1 + 0.10 * math.exp(-(k - STAMP_DROP) / 3)), 0, 1)           # ink spreads at the hit, then settles
+        base[ys, xs_, :3] = base[ys, xs_, :3] * (1 - sub[..., None]) + INK * sub[..., None]
+    return base
+
+def text_stamp(out, f, tx):
+    t = f / FPS; stamps = [(w, wt) for w, wt, _ in tx["words"]]
+    t_in = next(wt for tx_ in E.TEXT if tx_["style"] == "cap" for w_, wt, _ in tx_["words"] if w_ == "CAPS") - 0.02   # it slaps on with "CAPS"
+    t_cut = E.th(48); t_end = t_cut + 0.80
+    if t < t_in or t > t_end: return out
+    rgba = strip_canvas(min(t, t_cut + 0.2), stamps)
+    k = (t - t_in) * FPS; v = clamp(k / 5.0, 0, 1)
+    sc = 1.28 - 0.28 * eout(v, 3) + (0.02 * math.sin(k * 0.9) * math.exp(-k / 6) if v >= 1 else 0)
+    cx, cy = STRIP_C; rot = STRIP_ROT; a = min(1.0, k / 3.0); shake = 0.0
+    for _, tw in stamps:                                                                   # each hit shakes the strip
+        dk = (t - tw) * FPS
+        if 0 <= dk < 8: shake = max(shake, 5 * math.exp(-dk / 2.5))
+    cy += shake * math.sin(f * 2.1)
+    if t > t_cut - 0.02:                                                                   # it flies into the sky onto the banner
+        w_ = smooth((t - t_cut + 0.02) / 0.45)
+        (bx, by), bs, br = banner_target()
+        cx, cy = cx + (bx - cx) * w_, cy + (by - cy) * w_; sc = sc + (bs - sc) * w_; rot = rot + (br - rot) * w_
+        a = a * (1 - smooth((t - t_cut - 0.42) / 0.36))
+    return put_strip(out, rgba, cx, cy, sc, rot, a, 0.45 * (1 - smooth((t - t_cut) / 0.3)))
+
+# ---- SPATTER ANALYSIS (new graphic, the kill table): blood spatters across the lens, strings run back from every
+# ---- stain along its flight line and lock on the beat at the POINT OF ORIGIN, where his face is about to appear --------
+SP_F0, SP_STR, SP_LOCK = 99, 106, 124                                                      # the spatter, the strings, the lock (e6)
+BLOOD_HI = np.array([0.08, 0.06, 0.66], np.float32); BLOOD_LO = np.array([0.02, 0.01, 0.20], np.float32)
+STRING_C = np.array([0.17, 0.16, 0.93], np.float32)
+_SP = {}
+def sp_origin():
+    if "o" not in _SP:
+        sb = [s_ for s_ in SHOTS if s_["n"] == "shh"][0]; fs = face_scr(sb, sb["f0"])
+        _SP["o"] = (float(fs[0]), float(fs[1])) if fs else (W / 2, 640.0)
+    return _SP["o"]
+
+def sp_geom():
+    if "g" in _SP: return _SP["g"]
+    ox, oy = sp_origin(); rng = np.random.default_rng(1077)
+    spec = [(-160, 430, 24, 28), (-125, 360, 18, 40), (-75, 440, 22, 24), (-35, 330, 26, 35), (-5, 420, 16, 20),
+            (30, 360, 20, 46), (70, 310, 15, 38), (110, 330, 14, 50), (150, 300, 17, 33), (175, 380, 21, 22)]
+    drops = []
+    for i, (th_, r, w, al) in enumerate(spec):
+        w = w * 1.7; a = math.radians(th_); ux, uy = math.cos(a), math.sin(a); L = w / math.sin(math.radians(al))
+        sats = list(zip(rng.uniform(1.15, 2.0, 3) * L, rng.uniform(2.6, 6.0, 3), rng.uniform(-0.25, 0.25, 3)))
+        drops.append(dict(x=ox + r * ux, y=oy + r * uy, ux=ux, uy=uy, w=w, L=L, al=al, sats=sats,
+                          t=SP_F0 + int(rng.integers(0, 6)), s=SP_STR + 2 * i, lab=i in (0, 3, 5, 8)))
+    ang = rng.uniform(-math.pi, math.pi, 70); rr = rng.uniform(170, 560, 70)
+    mist = [(ox + q * math.cos(a), oy + q * math.sin(a), rad, SP_F0 + int(dt)) for a, q, rad, dt in
+            zip(ang, rr, rng.uniform(1.8, 4.8, 70), rng.integers(0, 7, 70)) if oy + q * math.sin(a) < 1200]
+    _SP["g"] = (drops, mist); return _SP["g"]
+
+def sp_text(key, txt, size, col):
+    if key not in _SP: _SP[key] = shadowed(text_mask(txt, F_MONO, size), col, blur=4, sa=0.8)
+    return _SP[key]
+
+def paste_rgba(out, rg, x, y, a=1.0):
+    h, w = rg.shape[:2]; x0, y0 = int(round(x)), int(round(y))
+    ys, xs = slice(max(0, y0), min(H, y0 + h)), slice(max(0, x0), min(W, x0 + w))
+    if ys.stop <= ys.start or xs.stop <= xs.start: return out
+    sub = rg[ys.start - y0:ys.stop - y0, xs.start - x0:xs.stop - x0]; al = sub[..., 3:4] * a
+    out[ys, xs] = out[ys, xs] * (1 - al) + sub[..., :3] * al
+    return out
+
+SS = 16                                                                                    # cv2 sub-pixel shift (4 bits)
+def P_(x, y): return (int(round(x * SS)), int(round(y * SS)))
+
+def spatter_fx(img, f):
+    if f < SP_F0: return img
+    drops, mist = sp_geom(); ox, oy = sp_origin(); out = img.copy()
+    # the blood on the lens: elongated stains (round head, body along the flight line, a tapering tail), satellites, mist
+    m = np.zeros((H, W), np.uint8)
+    for d in drops:
+        if f < d["t"]: continue
+        g = eout(clamp((f - d["t"] + 1) / 3.0, 0, 1), 2)
+        L = d["w"] + (d["L"] - d["w"]) * g; ang = math.degrees(math.atan2(d["uy"], d["ux"]))
+        cx, cy = d["x"] + d["ux"] * (L / 2 - d["w"] / 2), d["y"] + d["uy"] * (L / 2 - d["w"] / 2)
+        cv2.ellipse(m, P_(cx, cy), P_(L / 2, d["w"] / 2), ang, 0, 360, 255, -1, cv2.LINE_AA, 4)
+        tx_, ty_ = d["x"] + d["ux"] * (L - d["w"] * 0.6), d["y"] + d["uy"] * (L - d["w"] * 0.6)
+        ex, ey = tx_ + d["ux"] * 0.55 * L * g, ty_ + d["uy"] * 0.55 * L * g; px_, py_ = -d["uy"], d["ux"]; hw = d["w"] * 0.30
+        tri = np.array([P_(tx_ + px_ * hw, ty_ + py_ * hw), P_(tx_ - px_ * hw, ty_ - py_ * hw), P_(ex, ey)], np.int32)
+        cv2.fillConvexPoly(m, tri, 255, cv2.LINE_AA, 4)
+        for dd, rad, side in d["sats"]:
+            sx, sy = d["x"] + (d["ux"] + side * px_) * dd * g, d["y"] + (d["uy"] + side * py_) * dd * g
+            cv2.circle(m, P_(sx, sy), int(rad * SS), 255, -1, cv2.LINE_AA, 4)
+    for x, y, rad, t_ in mist:
+        if f >= t_: cv2.circle(m, P_(x, y), int(rad * SS), 255, -1, cv2.LINE_AA, 4)
+    M = m.astype(np.float32) / 255
+    inner = cv2.GaussianBlur(M, (0, 0), 3.0)
+    col = BLOOD_LO + (BLOOD_HI - BLOOD_LO) * np.clip(inner * 1.3, 0, 1)[..., None]
+    hgt = cv2.GaussianBlur(M, (0, 0), 2.2); gx = cv2.Sobel(hgt, cv2.CV_32F, 1, 0, ksize=3); gy = cv2.Sobel(hgt, cv2.CV_32F, 0, 1, ksize=3)
+    spec = np.clip((-gx * 0.55 - gy * 0.85) * 2.4, 0, 1) ** 2 * M * 0.75
+    out = out * (1 - M[..., None]) + col * M[..., None] + spec[..., None] * PAPER
+    # the strings: taut red string from each stain's head back along its flight line (a pin at the stain)
+    sm = np.zeros((H, W), np.uint8); sh = np.zeros((H, W), np.uint8); pins = []
+    for d in drops:
+        if f < d["s"]: continue
+        p = eout(clamp((f - d["s"]) / 9.0, 0, 1), 2.2)
+        ex, ey = d["x"] + (ox - d["x"]) * p, d["y"] + (oy - d["y"]) * p
+        cv2.line(sm, P_(d["x"], d["y"]), P_(ex, ey), 255, 5, cv2.LINE_AA, 4)
+        cv2.line(sh, P_(d["x"] + 4, d["y"] + 5), P_(ex + 4, ey + 5), 255, 5, cv2.LINE_AA, 4)
+        pins.append(d)
+    if pins:
+        S_ = cv2.GaussianBlur(sh.astype(np.float32) / 255, (0, 0), 1.6) * 0.45
+        out = out * (1 - S_[..., None])
+        Sm = sm.astype(np.float32) / 255
+        out = out * (1 - Sm[..., None]) + STRING_C * Sm[..., None]
+        for d in pins:
+            cv2.circle(out, P_(d["x"], d["y"]), 10 * SS, tuple(float(v) for v in INK), -1, cv2.LINE_AA, 4)
+            cv2.circle(out, P_(d["x"] - 3, d["y"] - 3), 3 * SS, tuple(float(v) for v in PAPER), -1, cv2.LINE_AA, 4)
+            if d["lab"]:                                                                   # the impact angle, read off the stain
+                rg = sp_text(f"al{d['al']}", f"{d['al']}\u00b0", 46, PAPER)
+                px_, py_ = -d["uy"], d["ux"]; side = 1 if (d["x"] + px_ * 40) > ox else -1
+                lx = d["x"] + side * px_ * (d["w"] + 46) - rg.shape[1] / 2; ly = d["y"] + side * py_ * (d["w"] + 46) - rg.shape[0] / 2
+                out = paste_rgba(out, rg, lx, ly, smooth((f - d["s"] - 2) / 5.0))
+    # the lock: a ring with a crosshair at the point of origin, a pulse, and the tag
+    if f >= SP_LOCK:
+        q = f - SP_LOCK; sc = eout(clamp(q / 6.0, 0, 1), 3); r = 48 * (1.6 - 0.6 * sc)
+        lay = np.zeros((H, W), np.uint8)
+        cv2.circle(lay, P_(ox, oy), int(r * SS), 255, 5, cv2.LINE_AA, 4)
+        for ddx, ddy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            cv2.line(lay, P_(ox + ddx * (r + 8), oy + ddy * (r + 8)), P_(ox + ddx * (r + 32), oy + ddy * (r + 32)), 255, 5, cv2.LINE_AA, 4)
+        tgx, tgy = ox + 40, oy - 440
+        cv2.line(lay, P_(ox + r * 0.72, oy - r * 0.72), P_(tgx + 30, tgy + 80), 255, 3, cv2.LINE_AA, 4)
+        La = lay.astype(np.float32) / 255 * sc
+        out = out * (1 - La[..., None]) + PAPER * La[..., None]
+        cv2.circle(out, P_(ox, oy), 9 * SS, tuple(float(v) for v in STRING_C), -1, cv2.LINE_AA, 4)
+        if q < 12:                                                                         # the pulse
+            pr = np.zeros((H, W), np.uint8); cv2.circle(pr, P_(ox, oy), int((r + 70 * eout(q / 12, 2)) * SS), 255, 2, cv2.LINE_AA, 4)
+            out = out + (pr.astype(np.float32) / 255 * 0.6 * (1 - q / 12))[..., None] * PAPER
+        n = int(clamp((q - 2) * 2.2, 0, 15))
+        if n > 0:                                                                          # POINT OF ORIGIN, typed on a paper tag
+            txt = "POINT OF ORIGIN"[:n]
+            if "tagm" not in _SP: _SP["tagm"] = text_mask("POINT OF ORIGIN", F_MONO, 48)
+            rg = shadowed(text_mask(txt, F_MONO, 48), INK, blur=1, sa=0.0)            # padded by 7 px
+            tw_, th2 = _SP["tagm"].shape[1] + 28, _SP["tagm"].shape[0] + 18
+            x0, y0 = int(tgx), int(tgy)
+            out[y0 + 6:y0 + th2 + 6, x0 + 5:x0 + tw_ + 5] *= 0.55                          # the tag's shadow
+            out[y0:y0 + th2, x0:x0 + tw_] = PAPER * 0.97
+            out[y0 + th2 - 4:y0 + th2, x0:x0 + tw_] = STRING_C                              # a red rule under the type
+            out = paste_rgba(out, rg, x0 + 14 - 7, y0 + 9 - 7, 1.0)
+    return np.clip(out, 0, 1)
+
+_base107_r2 = base107
+def base107(s, f):
+    img, person = _base107_r2(s, f)
+    if s["n"] == "table": img = spatter_fx(img, f)
+    return img, person
+
+# ---- RORSCHACH (the 3 s transition): from the point of origin a blood-ink blot blooms, mirrored about the fold like an
+# ---- inkblot card; inside it his face appears mirrored (both of him), the blot floods the frame, the mirrored half of the
+# ---- card swings open on the fold and the real shot is underneath. Full frame: no bars, no box. ---------------------------
+RO_PRE, RO_POST = 21, 30
+RO_BLOBS = [(0, 0, 95), (0, 110, 70), (0, -120, 60), (45, -190, 30), (150, -60, 95), (280, -120, 80), (400, -190, 62),
+            (500, -230, 42), (560, -170, 30), (200, 70, 80), (330, 60, 62), (440, 20, 48), (520, -40, 36), (260, 160, 42),
+            (390, 140, 34), (55, 210, 34), (70, 270, 20), (610, -110, 18), (150, 300, 14)]
+INKB = np.array([0.03, 0.02, 0.24], np.float32)
+_RO = {}
+def ro_grids():
+    if "g" not in _RO:
+        ox, oy = sp_origin(); rng = np.random.default_rng(1078)
+        X, Y = np.meshgrid(np.arange(W, dtype=np.float32), np.arange(H, dtype=np.float32))
+        AX = np.abs(X - ox); DY = Y - oy
+        n1 = cv2.resize(rng.random((H // 40 + 2, W // 40 + 2)).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC)
+        n2 = cv2.resize(rng.random((H // 10 + 2, W // 10 + 2)).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC)
+        nz = 0.6 * n1 + 0.4 * n2
+        xi = np.clip(ox + AX, 0, W - 1).astype(np.int32); nz = nz[np.arange(H)[:, None], xi]    # symmetric about the fold
+        mx = np.where(X > ox, 2 * ox - X, X).astype(np.float32)                                  # the mirror map
+        _RO["g"] = (AX, DY, nz, mx, Y)
+    return _RO["g"]
+
+def ro_mask(grow, flood=0.0):
+    AX, DY, nz, _, _ = ro_grids(); F = np.zeros((H, W), np.float32)
+    for bx, by, r in RO_BLOBS:
+        bx, by, r = bx * 0.72, by * 1.25, r * 0.85                                          # a card: it fits the frame
+        dist = math.hypot(bx, by); g = eout(clamp((grow - dist / 700 * 0.55) / 0.45, 0, 1), 2.5)
+        rr = r * g * (1 + 2.2 * ein(clamp(flood / 0.5, 0, 1), 1.6))
+        if rr > 0.5: F += rr * rr / ((AX - bx) ** 2 + (DY - by) ** 2 + 1.0)
+    if flood > 0:
+        rc = 1450 * eout(clamp(flood / 0.5, 0, 1), 1.8); F += rc * rc / (AX ** 2 + DY ** 2 + 1.0)
+    F = F * (0.86 + 0.28 * nz)
+    return cv2.GaussianBlur((F > 1.0).astype(np.float32), (0, 0), 1.1)
+
+def mirror(img):
+    _, _, _, mx, Y = ro_grids()
+    return cv2.remap(img, mx, Y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+
+def ink_comp(A, content, m, clear):
+    inner = cv2.GaussianBlur(m, (0, 0), 14); rim = np.clip((m - inner) * 3.2, 0, 1)
+    dens = np.maximum(rim, 1 - clear) * m
+    ins = content * (1 - 0.92 * dens[..., None]) + INKB * 0.92 * dens[..., None]
+    hgt = cv2.GaussianBlur(m, (0, 0), 5.0); gx = cv2.Sobel(hgt, cv2.CV_32F, 1, 0, ksize=3); gy = cv2.Sobel(hgt, cv2.CV_32F, 0, 1, ksize=3)
+    spec = np.clip((-gx * 0.55 - gy * 0.85) * 5.0, 0, 1) ** 2 * m * 0.55
+    halo = np.clip(cv2.GaussianBlur(m, (0, 0), 3.0) - m, 0, 1) * 0.7                       # the ink bleeds into the paper
+    out = A * (1 - halo[..., None]) * (1 - m[..., None]) + ins * m[..., None] + spec[..., None] * PAPER
+    return np.clip(out, 0, 1)
+
+def unfold(Bm, B, phi):
+    """the mirrored half of the card (right of the fold) swings away on the fold; the real shot is underneath."""
+    ox, _ = sp_origin(); D = 1700.0; s = W - ox
+    if phi >= math.pi / 2 - 1e-3: return B
+    Z = s * math.sin(phi); k = D / (D + Z); xf = ox + s * math.cos(phi) * k
+    src = np.float32([[ox, 0], [W, 0], [W, H], [ox, H]]); dst = np.float32([[ox, 0], [xf, H / 2 - H / 2 * k], [xf, H / 2 + H / 2 * k], [ox, H]])
+    Mp = cv2.getPerspectiveTransform(src, dst)
+    pg = cv2.warpPerspective(Bm, Mp, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+    pm = np.zeros((H, W), np.float32); pm[:, int(ox):] = 1
+    pm = cv2.warpPerspective(pm, Mp, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+    shade = 1 - 0.55 * math.sin(phi); pm = pm * (1 - smooth((phi - math.radians(55)) / math.radians(30)))   # gone before it is edge-on
+    shadow = np.clip(1 - np.abs(np.arange(W, dtype=np.float32) - xf) / 160, 0, 1) * 0.35 * math.sin(phi)   # the card's shadow
+    base = B * (1 - shadow[None, :, None] * (np.arange(W) > ox)[None, :, None])
+    return np.clip(base * (1 - pm[..., None]) + pg * shade * pm[..., None], 0, 1)
+
+def rorschach(A, B, j, f, sa, sb, pre=RO_PRE, post=RO_POST):
+    if j < 0:
+        u = (j + pre + 1) / pre
+        m = ro_mask(u); return ink_comp(A, mirror(B), m, smooth((u - 0.10) / 0.55))
+    v = (j + 1) / post; Bm = mirror(B)
+    if v < 0.5:
+        m = ro_mask(1.0, v); return ink_comp(A, Bm, m, 1.0)
+    return unfold(Bm, B, math.pi / 2 * smooth((v - 0.5) / 0.45))
+TR2["rorschach"] = (rorschach, RO_PRE, RO_POST)
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with

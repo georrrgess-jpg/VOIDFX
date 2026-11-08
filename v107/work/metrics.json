@@ -1,6 +1,6 @@
 {
  "edit": "v107",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-08 16:57:35",
@@ -183,6 +183,13 @@
    "step": "deliver",
    "s": 72.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:37:06",
+   "round": 2,
+   "step": "audio",
+   "s": 12.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -215,6 +222,24 @@
    "round": 2,
    "cat": "loop",
    "text": "the loop is pretty low effort ... make the loop more creative with a unique graphic/animation and then do the transition"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "I don't like the transition at 3 seconds with the black bars."
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "text",
+   "text": "I also don't like how slow it writes dexters name in black near the end of the edit. Can you make it line up so it's not too fast and not too slow."
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "other",
+   "text": "I want you to implement one new really unique graphic/animation that you have not tried to create before to give this edit it's own custom flare."
   }
  ],
  "catches": [
@@ -253,9 +278,28 @@
    "round": 1,
    "cat": "other",
    "text": "red-lit skin read as spot-red blood under the TABLOID grade (stare, poster, parade); per-shot redthr"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "spatter analysis: drops, strings and tag too small to read at phone size on the first stills; scaled 1.4-1.7x"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "Rorschach blot wings ran off the frame and read as a band; reshaped to a card that fits"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "the unfolding card went edge-on as a dark line through his nose; it now fades before 90 degrees"
   }
  ],
  "round_starts": {
-  "2": "2026-11-08 18:47:38"
+  "2": "2026-11-08 18:47:38",
+  "3": "2026-11-08 19:37:22"
  }
 }

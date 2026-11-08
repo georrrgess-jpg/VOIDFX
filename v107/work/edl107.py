@@ -97,7 +97,7 @@ TB = dict(look="tabloid")
 shot("stare", "ds2b", 0, 4, 322.30, 323.20, z=[(0, 1.00), (1, 1.05)], interp="flow", seg=True, redthr=0.30, **TB)
 shot("table", "ds2b", 4, 8, 156.40, 157.80, z=[(0, 1.02), (1, 1.07)], tin="plastic_rip", face=None, cx=(640, 640), interp="flow", **TB)
 # ---- "AND SHOW 'EM WHAT THEY KNOW NOT THROUGH FLOWS OF HOT MOLASSES"
-shot("shh", "ds2b", 8, 11, 346.40, 347.50, z=[(0, 1.02), (1, 1.07)], tin="broadcast", interp="flow", **TB)
+shot("shh", "ds2b", 8, 11, 346.40, 347.50, z=[(0, 1.02), (1, 1.07)], tin="rorschach", interp="flow", **TB)
 shot("lab", "ds2b", 11, 14, 178.30, 179.40, z=[(0, 1.00), (1, 1.05)], tin="redact", interp="flow", **TB)
 shot("hazmat", "dmx", 14, 17, 94.95, 95.95, z=[(0, 1.04), (1, 1.00)], tin="molasses", interp="flow", **TB)
 # ---- "DO IT LIKE THE ROBOT TO HEADSPIN TO BOOGALOO"
@@ -144,7 +144,7 @@ TEXT = [
          ys=(1452, 1568), band=(1382, 1638)),                                            # lower: his face fills "remember"
     dict(style="cap", words=[("WHEN", 15.03, 0), ("YOU", 15.36, 0), ("SPELL", 15.60, 0), ("THE", 15.86, 1), ("MAN", 16.08, 1), ("NAME", 16.27, 1)],
          end=th(48) - 0.05, emph=["NAME"]),
-    dict(style="stamp", words=[("D", 15.03, 0), ("E", 15.36, 0), ("X", 15.60, 0), ("T", 15.86, 0), ("E", 16.08, 0), ("R", 16.27, 0)],
+    dict(style="stamp", words=[(c, th(44 + 0.5 * i), 0) for i, c in enumerate("DEXTER")],   # rev 3: an even 16th grid (e44-46.5), each letter lands on its hit
          sung=["WHEN", "YOU", "SPELL", "THE", "MAN", "NAME"], end=th(48) + 0.02, band=(745, 1000)),
 ]
 CAPS = []; CAP_Y = (1385, 1490); END_CAP = []
