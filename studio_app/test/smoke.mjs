@@ -112,7 +112,7 @@ await ctx.addInitScript(() => {
               brief: '1. Rebuild the first second around a hit.\n2. Snap every cut to the beat grid.\n3. Close the loop on frame 0.',
               ...(full.includes('WHAT THIS ROUND WAS ASKED TO FIX') ? { followUp: [...full.matchAll(/^(N\d+)(?: @ [\d.]+s)?: /gm)].map((m, i) => ({ id: m[1], status: i % 2 ? 'partly' : 'fixed', comment: 'checked in the frames' })) } : {}),
             });
-            window.__critics = [...(window.__critics || []), { follow: full.includes('WHAT THIS ROUND WAS ASKED TO FIX'), anchored: full.includes('SCORING AGAINST THE LAST ROUND'), tools: full.includes("THE STUDIO'S TOOLS"), exemplars: full.includes('WORKED EXAMPLES') }];
+            window.__critics = [...(window.__critics || []), { follow: full.includes('WHAT THIS ROUND WAS ASKED TO FIX'), anchored: full.includes('THE LAST ROUND SCORED'), tools: full.includes("THE STUDIO'S TOOLS"), exemplars: full.includes('WORKED EXAMPLES') }];
           } else if (last.includes('NOTES WITH NO APPLIED OPERATIONS')) {
             const ids = [...last.matchAll(/^(N\d+) \[/gm)].map(m => m[1]);
             window.__filledNotes = (window.__filledNotes || 0) + 1;
