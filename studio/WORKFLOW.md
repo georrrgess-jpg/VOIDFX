@@ -21,9 +21,9 @@ one render per revision; studio time to a first delivery ≤ ~1.5 h, a revision 
 5. **Build the custom pieces on warm stills, never on full renders:** `build.sh N sheet:NAME:f,f,...` (render server: 12
    frames in ~4 s once warm; an edited `fxN.py` is spliced in automatically), `strip:A:B` for motion, `clip:A:B` for sound.
    Check each new graphic at phone size and full size: faces, black, does it read, does it look filmed or drawn.
-6. `bash tools/build.sh N ship` = audio → plan → video → qc (3 passes in parallel + the review pack) → signoff → report → deliver.
-7. **Review before sending** (10 min): the review pack `vN/frames/review_*.jpg` (flagged frames boxed red), the sign-off
-   pages `vN/frames/signoff_*.jpg`, `faceqc.jpg`, every UNEXPLAINED pop, then the **fresh-eyes critique** (`studio/CRITIQUE_PROMPT.md`, one agent run). Fix every HIGH item, `ship` again
+6. `bash tools/build.sh N ship` = audio → plan → video → qc (3 passes in parallel, then the sign-off pages) → report → deliver.
+7. **Review before sending** (10 min): the sign-off pages `vN/frames/signoff_*.jpg` (every transition and cut,
+   set piece, the loop, titles, pops; QC-flagged frames boxed red), `faceqc.jpg`, every UNEXPLAINED pop, then the **fresh-eyes critique** (`studio/CRITIQUE_PROMPT.md`, one agent run). Fix every HIGH item, `ship` again
    (the second and last render).
 8. **Deliver:** the MP4 (SendUserFile), a short message (what it is, what changed, what to watch for), the README's
    Measured section from `vN/work/measured.md`. Ask the owner to watch with sound.
@@ -47,7 +47,7 @@ Handoff (`sync/HANDOFF_TEMPLATE.md`), the registry verdicts, `data/edits.json` /
 | plan_check | 1–5 s |
 | stills sheet through the render server | 12 frames in 4 s warm, 8 s from cold (v107's scratch stills script: 60–120 s a sheet) |
 | full render, 1317 frames | ~4.6 min; a code change re-renders only its frames (Flash v12: one transition edited, 157 s instead of 312 s, most of it the re-encode); an audio-only change 4 s |
-| qc (qc + faceqc + motionqc in parallel, then the review pack) | 72–80 s (was 103 s in sequence) |
+| qc (qc + faceqc + motionqc in parallel, then the sign-off pages) | 72–80 s (was 103 s in sequence) |
 | song prep (`song:`) | 6.8 min the first time (Demucs, Whisper), 27 s after |
 | signoff pages | 6 s (pulling frames by hand: 5–10 min a round) |
 | report (Measured block) | 1 s |

@@ -20,7 +20,7 @@ import os, sys, json, importlib, importlib.util, math
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REG = json.load(open(f"{ROOT}/studio/transitions.json"))["transitions"]
+REG = json.load(open(f"{ROOT}/studio/transitions.json"))["transitions"]          # the owner's curated verdicts (usage: transitions_usage.json)
 GENERIC_MAX, SIG_MIN_S, DENSITY_MIN, ZOOM_MAX, HOLD_WARN = 0.50, 0.80, 0.70, 1.10, 1.5   # calibrated so the approved v107, v12, v106 pass
 SOUND_WARN, SOUND_FAIL = 16, 30                      # sound events (layered hits grouped): v106 and v13 approved after cuts at ~11-14
 
@@ -120,10 +120,8 @@ def main():
         for tag, why in (("black_occluder", "a black occluder (bars, boxes, a dark surround)"), ("face_gimmick", "a graphic converging on a face")):
             if tag in r.get("tags", []) and r["verdict"] not in ("banned", "rejected"):
                 add("WARN", f"{tag}:{t}", f"`{t}` can read as {why}: check it on stills", "v107 rev 3-4")
-        if "leaks" in REG.get(t, {}).get("tags", []):
-            add("WARN", f"leaks:{t}", f"`{t}` samples past its shot and can show the next pack shot: pull its frames before relying on it", REG[t].get("evidence", "v13 rev 2 review"))
-        if "caution" in REG.get(t, {}).get("tags", []) and REG[t].get("verdict") not in ("banned", "rejected"):
-            add("WARN", f"caution:{t}", f"`{t}`: {REG[t].get('evidence', 'check it on stills')}", "the registry")
+        if REG.get(t, {}).get("caution") and REG[t].get("verdict") not in ("banned", "rejected"):    # a technical trap, not a verdict
+            add("WARN", f"caution:{t}", f"`{t}`: {REG[t]['caution']}", REG[t].get("evidence", "the registry"))
     unrated = sorted(t for t in set(used) if t not in REG or "verdict" not in REG[t])
     add("ok", "unrated", f"{len(unrated)} transitions without an owner verdict yet: {', '.join(unrated) or '-'}")
 

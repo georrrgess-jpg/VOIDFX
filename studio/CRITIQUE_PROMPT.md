@@ -17,8 +17,7 @@ Read, in this order:
 2. The brief and the owner's latest note (verbatim): {BRIEF_AND_NOTE}
 3. What the studio changed this round: {CHANGES}
 4. The automatic checks: `{ROOT}/v{N}/work/plan_check.log` and `{ROOT}/v{N}/work/measured.md`.
-5. The review pages, pulled from the encoded file (look at every one with the Read tool): `{ROOT}/v{N}/frames/review_*.jpg`
-   (a row per transition, set piece and the wrap; frames that QC flagged are boxed red), and the larger sign-off pages:
+5. The sign-off pages, pulled from the encoded file (look at every one with the Read tool; frames that QC flagged are boxed red):
    `{ROOT}/v{N}/frames/signoff_tr*.jpg` (one row per transition: before, its middle, the frame before the cut, the cut,
    after, its end; the label gives the shot, the transition and the time), `signoff_loop.jpg` (the last second and the
    wrap into frame 0), `signoff_titles.jpg`, `signoff_pops.jpg` if present, and `faceqc.jpg`.
