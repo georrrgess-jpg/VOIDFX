@@ -384,7 +384,7 @@ export interface Round {
   snapshot?: Project;
 }
 
-export type JobKind = 'create' | 'revise' | 'critique';
+export type JobKind = 'create' | 'revise' | 'critique' | 'longform';
 export type JobState = 'queued' | 'running' | 'done' | 'error' | 'stopped' | 'interrupted';
 
 export interface Job {
@@ -402,6 +402,10 @@ export interface Job {
   presetId: string;
   /** Round 1: the owner's notes, lyrics, database use and standards. */
   request?: { notes: string; lyrics: string; library: { mode: 'none' | 'auto' | 'picked'; ids: string[] }; standards?: string[] };
+  /** Long-form edits: the transcript, the owner's comments and the features turned on. */
+  longform?: { notes: string; transcript: string; options: { captions: boolean; chapters: boolean; breakdowns: boolean; zooms: boolean; trim: boolean; pace: 'calm' | 'lively'; accent: string } };
+  /** Revisions: start from this round's edit (the best scored so far) instead of the latest. */
+  restoreFrom?: number;
   /** Revisions: the owner's instructions and the critic points passed on. */
   brief?: string;
   fromCritic?: string[];

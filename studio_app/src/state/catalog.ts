@@ -407,3 +407,26 @@ export async function calibrationText(): Promise<string> {
 ${all.map(c => `- "${c.project}" round ${c.round}: you scored ${c.critic.toFixed(1)}, the owner scored ${c.owner.toFixed(1)}${c.note ? ` ("${c.note.slice(0, 220)}")` : ''}`).join('\n')}
 On average the owner scores ${Math.abs(off) < 0.15 ? 'the same as you' : `${Math.abs(off).toFixed(1)} points ${off > 0 ? 'higher' : 'lower'} than you`}. ${Math.abs(off) >= 0.3 ? `Move your scale by about that much: an edit like the ones the owner scored higher is worth what they gave it, and what they liked (their words above) is what the scale rewards.` : 'Keep your scale.'} Problems still get named in full; the calibration changes the numbers, not the honesty.`;
 }
+
+// ---------- signatures: each edit's look and signature moves, so the next one finds its own ----------
+
+export interface Signature { at: number; project: string; look: string; transitions: string[]; effects: string[]; custom: number }
+let sigs: Signature[] | null = null;
+
+export async function loadSignatures(): Promise<Signature[]> {
+  if (!sigs) { const s = await idbGet<Signature[]>('kv', 'signatures').catch(() => undefined); sigs = Array.isArray(s) ? s : []; }
+  return sigs;
+}
+
+export async function addSignature(x: Omit<Signature, 'at'>) {
+  const all = await loadSignatures();
+  sigs = [{ ...x, at: Date.now() }, ...all.filter(s => s.project !== x.project)].slice(0, 12);
+  await idbPut('kv', 'signatures', sigs).catch(() => {});
+}
+
+/** What recent edits already used as their look and signature moves (read synchronously once loaded). */
+export function signaturesText(): string {
+  const all = (sigs || []).slice(0, 6);
+  if (!all.length) return '';
+  return all.map(s => `- "${s.project}": look ${s.look || 'none'}; signature transitions ${s.transitions.join(', ') || 'none'}; effects ${s.effects.join(', ') || 'none'}${s.custom ? `; ${s.custom} custom elements` : ''}`).join('\n');
+}

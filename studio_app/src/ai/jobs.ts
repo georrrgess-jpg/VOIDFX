@@ -9,6 +9,7 @@ import { idbGet, idbPut } from '../state/storage';
 import { store } from '../state/store';
 import { Effort, Job, JobKind, JobStep } from '../state/types';
 import { uid } from '../state/util';
+import { longformEdit, longformSteps } from './longform';
 import { critiqueEdit, criticSteps, issueLine, pathLine } from './critic';
 import { buildEdit, errText, HIDE, JobIO, reviseEdit, stepsFor } from './director';
 import { Workspace } from './workspace';
@@ -28,9 +29,9 @@ export function setParallelLimit(n: number) {
   pump();
 }
 
-const LABEL: Record<JobKind, string> = { create: 'Build', revise: 'Revision', critique: 'Critique' };
+const LABEL: Record<JobKind, string> = { create: 'Build', revise: 'Revision', critique: 'Critique', longform: 'Long form' };
 export function jobTitle(j: Job) {
-  return j.kind === 'critique' ? `Critique of round ${j.round}` : j.kind === 'create' ? 'Round 1 · build' : `Round ${j.round} · revision`;
+  return j.kind === 'longform' ? 'Long-form edit' : j.kind === 'critique' ? `Critique of round ${j.round}` : j.kind === 'create' ? 'Round 1 · build' : `Round ${j.round} · revision`;
 }
 export { LABEL as JOB_LABEL };
 
@@ -97,6 +98,8 @@ export interface QueueOpts {
   lyrics?: string;
   follow?: Job['follow'];
   files?: File[];
+  longform?: Job['longform'];
+  restoreFrom?: number;
 }
 
 export async function enqueue(o: QueueOpts): Promise<Job | null> {
@@ -107,10 +110,10 @@ export async function enqueue(o: QueueOpts): Promise<Job | null> {
   const round = o.round ?? (o.kind === 'critique' ? Math.max(1, lastRound) : o.kind === 'create' ? 1 : lastRound + 1);
   const job: Job = {
     id: uid('J'), kind: o.kind, projectId: o.projectId, projectName: rec.name, state: 'queued', steps: [], created: Date.now(), round,
-    effort: o.effort, presetId: o.presetId, request: o.request, brief: o.brief, fromCritic: o.fromCritic, follow: o.follow, ...(o.lyrics ? { lyrics: o.lyrics } : {}),
+    effort: o.effort, presetId: o.presetId, request: o.request, ...(o.longform ? { longform: o.longform } : {}), ...(o.restoreFrom ? { restoreFrom: o.restoreFrom } : {}), brief: o.brief, fromCritic: o.fromCritic, follow: o.follow, ...(o.lyrics ? { lyrics: o.lyrics } : {}),
   };
   if (o.files?.length) files.set(job.id, o.files);
-  job.steps = job.kind === 'critique' ? criticSteps() : stepsFor(job, !!o.files?.length);
+  job.steps = job.kind === 'critique' ? criticSteps() : job.kind === 'longform' ? longformSteps(!!o.files?.length) : stepsFor(job, !!o.files?.length);
   setJobs([...store.state.jobs, job]);
   pump();
   return job;
@@ -122,6 +125,13 @@ export async function startAiEdit(o: { name: string; presetId: string; effort: E
   const projectId = await createProject({ name: o.name, aspect: preset.aspect, fps: preset.fps, presetId: preset.id, open: false });
   store.set(s => ({ catalogRev: s.catalogRev + 1 }));
   return enqueue({ kind: 'create', projectId, effort: o.effort, presetId: o.presetId, request: o.request, files: o.files, follow: o.follow });
+}
+
+/** Start a long-form edit: a new 16:9 project with the video stored, then the one-call plan and the build. */
+export async function startLongform(o: { name: string; effort: Effort; file: File; longform: NonNullable<Job['longform']> }): Promise<Job | null> {
+  const projectId = await createProject({ name: o.name, aspect: '16:9', fps: 30, presetId: 'longform', open: false });
+  store.set(s => ({ catalogRev: s.catalogRev + 1 }));
+  return enqueue({ kind: 'longform', projectId, effort: o.effort, presetId: 'longform', files: [o.file], longform: o.longform });
 }
 
 export function stopJob(id: string) {
@@ -138,7 +148,7 @@ export function resumeJob(id: string, opts: { lighter?: boolean } = {}) {
   const j = store.state.jobs.find(x => x.id === id);
   if (!j || !['error', 'stopped', 'interrupted'].includes(j.state)) return;
   const effort = opts.lighter ? LOWER[j.effort] : j.effort;
-  const fresh = j.kind === 'critique' ? criticSteps() : stepsFor({ ...j, effort }, files.has(j.id));
+  const fresh = j.kind === 'critique' ? criticSteps() : j.kind === 'longform' ? longformSteps(files.has(j.id)) : stepsFor({ ...j, effort }, files.has(j.id));
   patchJob(id, { state: 'queued', error: undefined, steps: fresh, started: undefined, finished: undefined, effort });
   pump();
 }
@@ -214,6 +224,7 @@ async function run(job: Job, ctl: AbortController) {
     let summary = '';
     if (job.kind === 'create') summary = (await buildEdit(job, ws, io)).summary;
     else if (job.kind === 'revise') summary = (await reviseEdit(job, ws, io)).summary;
+    else if (job.kind === 'longform') summary = (await longformEdit(job, ws, io)).summary;
     else {
       const c = await critiqueEdit(job, ws, io);
       summary = `${c.score}/10 · ${c.headline}`;
@@ -261,12 +272,17 @@ function followUp(job: Job, ws: Workspace) {
     return;
   }
   if (job.kind === 'critique' && f.autoRounds > 0) {
-    const crit = (ws.rec.rounds || []).find(r => r.n === job.round)?.critique;
+    let crit = (ws.rec.rounds || []).find(r => r.n === job.round)?.critique;
     if (!crit) return;
+    // a round that scored below the best so far is not built on: the next round starts from the best
+    // version and works from that version's critique
+    const best = (ws.rec.rounds || []).filter(r => r.critique && r.snapshot).sort((a, b) => b.critique!.score - a.critique!.score)[0];
+    const restore = best && best.n !== job.round && best.critique!.score > crit.score + 0.2 ? best.n : undefined;
+    if (restore) crit = best!.critique!;
     // every point, minor ones too: each fix the critic can see moves the score
     void enqueue({
       kind: 'revise', projectId: job.projectId, round: job.round + 1, effort: job.effort, presetId: job.presetId,
-      brief: `Automatic round: apply the critic's write-up.\n${crit.brief}`, fromCritic: [...(crit.path || []).map(pathLine), ...crit.issues.map(issueLine)],
+      brief: `Automatic round: apply the critic's write-up.\n${crit.brief}`, fromCritic: [...(crit.path || []).map(pathLine), ...crit.issues.map(issueLine)], ...(restore ? { restoreFrom: restore } : {}),
       follow: { critic: f.critic, autoRounds: f.autoRounds - 1 },
     });
   }

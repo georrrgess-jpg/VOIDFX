@@ -139,8 +139,19 @@ function timesFor(m: MediaInfo, n: number): { t: number; label: string }[] {
 /** What the sheets and prompts read: a project with its media (the editor's or a background job's). */
 export interface EditCtx { project: Project; media: Record<string, MediaInfo>; order: string[] }
 
-/** Contact sheets for the project's video and image files. */
+const sheetCache = new Map<string, Sheet[]>();
+
+/** Contact sheets for the project's video and image files (cached: the footage does not change between rounds). */
 export async function mediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet: number, signal?: AbortSignal, onStep?: (msg: string) => void): Promise<Sheet[]> {
+  const key = [ctx.project.width, ctx.project.height, maxImages, cellsPerSheet, ...ctx.order.map(id => { const m = ctx.media[id]; return m ? `${id}:${m.status}:${m.duration.toFixed(2)}:${m.shots?.length ?? 0}` : id; })].join('|');
+  const hit = sheetCache.get(key);
+  if (hit) return hit;
+  const out = await buildMediaSheets(ctx, maxImages, cellsPerSheet, signal, onStep);
+  if (!signal?.aborted && out.length) { sheetCache.set(key, out); if (sheetCache.size > 24) sheetCache.delete(sheetCache.keys().next().value!); }
+  return out;
+}
+
+async function buildMediaSheets(ctx: EditCtx, maxImages: number, cellsPerSheet: number, signal?: AbortSignal, onStep?: (msg: string) => void): Promise<Sheet[]> {
   const proj = ctx.project;
   const frameAspect = proj.width / proj.height;
   const vids = ctx.order.map(id => ctx.media[id]).filter(m => m && m.status === 'ready' && m.kind === 'video' && m.hasVideo);

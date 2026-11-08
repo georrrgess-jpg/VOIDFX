@@ -66,6 +66,7 @@ export function Composer() {
   const [text, setText] = useState('');
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const [briefOn, setBriefOn] = useState(true);
+  const [useBest, setUseBest] = useState(true);
   const [effort, setEffort] = useState<Effort>(store.state.director.effort);
   const [critic, setCritic] = useState(true);
   const [auto, setAuto] = useState(0);
@@ -131,6 +132,9 @@ export function Composer() {
   const preset = presets.find(p => p.id === presetId);
   const hasMedia = (rec.media || []).some(m => m.status !== 'error');
   const canGo = !busy && !running && (mode === 'create' ? hasMedia || useDb : !!(text.trim() || fromCritic.length));
+  // a later round that scored lower than an earlier one: offer to start again from the best version
+  const bestRound = crit ? rounds.filter(r => r.critique && r.snapshot).sort((a, b) => b.critique!.score - a.critique!.score)[0] : undefined;
+  const offerBest = !!bestRound && !!crit && bestRound.critique!.score > crit.score + 0.2 && bestRound.n !== last?.n;
 
   const start = async () => {
     if (!canGo) return;
@@ -139,7 +143,7 @@ export function Composer() {
       const follow = { critic, autoRounds: critic ? auto : 0 };
       const job = mode === 'create'
         ? await enqueue({ kind: 'create', projectId: rec.id, effort, presetId, request: { notes: text, lyrics, library: { mode: useDb ? 'auto' : 'none', ids: [] } }, follow })
-        : await enqueue({ kind: 'revise', projectId: rec.id, effort, presetId, brief: text.trim(), fromCritic, follow, lyrics: lyrics.trim() || undefined });
+        : await enqueue({ kind: 'revise', projectId: rec.id, effort, presetId, brief: text.trim(), fromCritic, follow, lyrics: lyrics.trim() || undefined, ...(offerBest && useBest && bestRound ? { restoreFrom: bestRound.n } : {}) });
       if (job) {
         await updateRecord(rec.id, r => { r.draft = ''; });
         store.set({ composer: null });
@@ -239,6 +243,13 @@ export function Composer() {
               </div>
             )}
             <div class="comp-go">
+              {offerBest && bestRound && (
+                <label class={`toggle${useBest ? ' on' : ''}`}>
+                  <input type="checkbox" checked={useBest} onChange={() => setUseBest(!useBest)} />
+                  <span class="toggle-t" aria-hidden="true" />
+                  <span><b>Start from round {bestRound.n} ({bestRound.critique!.score.toFixed(1)}/10, the best so far)</b><em>The last round scored {crit!.score.toFixed(1)}: building on the better version keeps what worked.</em></span>
+                </label>
+              )}
               {running && <p class="note warn">{running.kind === 'critique' ? 'The critic is still reviewing this project.' : 'Opus is already working on this project.'} Start the next round when it finishes.</p>}
               <button type="button" class="cta cta-opus cta-xl" disabled={!canGo} onClick={() => void start()}>{Icon.spark}<span>{busy ? 'Starting…' : `Start round ${nextRound} in the background`}</span></button>
               {!canGo && !running && mode === 'revise' && <p class="muted small">Write an instruction or pick at least one critic point.</p>}

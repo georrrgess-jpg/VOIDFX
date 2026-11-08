@@ -9,7 +9,7 @@ import { timeAgo } from '../home/common';
 import { Floating } from '../Menu';
 import { openComposer } from './actions';
 
-const KIND_ICON = { create: Icon.spark, revise: Icon.pen, critique: Icon.critic };
+const KIND_ICON = { create: Icon.spark, revise: Icon.pen, critique: Icon.critic, longform: Icon.media };
 
 // one shared clock for every job display, so timers move every second even while Opus thinks silently
 const clockSubs = new Set<() => void>();

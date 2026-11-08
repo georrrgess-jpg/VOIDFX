@@ -359,7 +359,7 @@ async function probe(id: string, file: Blob, kind: MediaKind, haveAnalysis: bool
   if (patch.hasAudio && !(analysisKnown && rt.peaks)) queue(() => buildAudio(id));
   // a long video dropped straight into a project is usually a scene pack: find its shots too, so its
   // contact sheets show one frame per shot and Opus gets the shot list (database items have it already)
-  if (finalKind === 'video' && (patch.duration || 0) >= 30 && !(cur?.shots ?? der?.shots)) queue(() => buildShots(id));
+  if (finalKind === 'video' && (patch.duration || 0) >= 30 && (patch.duration || 0) < 360 && !(cur?.shots ?? der?.shots)) queue(() => buildShots(id));
 }
 
 async function buildShots(id: string) {

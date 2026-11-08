@@ -4,7 +4,7 @@ import { deepClone, uid } from './util';
 
 export type LeftTab = 'media' | 'text' | 'transitions' | 'looks' | 'effects' | 'sounds';
 export type RightTab = 'director' | 'inspector' | 'checks';
-export type HomeTab = 'home' | 'projects' | 'create' | 'presets' | 'library' | 'standards' | 'rules';
+export type HomeTab = 'home' | 'projects' | 'create' | 'longform' | 'presets' | 'library' | 'standards' | 'rules';
 
 export type DirectorStep = JobStep;
 export type { Effort };

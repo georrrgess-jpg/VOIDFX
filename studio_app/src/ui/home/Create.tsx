@@ -231,7 +231,7 @@ export function CreateSection() {
   );
 }
 
-const ETA: Record<Effort, [number, number]> = { low: [3, 5], medium: [7, 10], high: [12, 18], extra: [20, 30] };
+const ETA: Record<Effort, [number, number]> = { low: [3, 5], medium: [7, 10], high: [10, 15], extra: [20, 30] };
 
 /** Your edit at a glance: what is ready, what is missing, how long it will take, and the start button. */
 function Summary(o: { preset?: Preset; notes: string; lyrics: string; files: number; bytes: number; lib: number; libAuto: boolean; std: number; effort: Effort; critic: boolean; auto: number; canGo: boolean; busy: boolean; opusOk: boolean; go: () => void }) {
@@ -270,7 +270,7 @@ function Summary(o: { preset?: Preset; notes: string; lyrics: string; files: num
 const EFFORT_STEPS: Record<Effort, string> = {
   low: 'One planning pass',
   medium: 'The cut, then the design on its storyboard',
-  high: 'Cut, design, workshop on the custom elements, a deep review',
+  high: 'Cut, design, then a deep review that also rebuilds the custom elements, rendered large',
   extra: 'Cut, design, two workshop passes, two deep reviews',
 };
 

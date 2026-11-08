@@ -14,7 +14,7 @@ import { jobClock, useNow } from '../ai/Activity';
 import { fmtDur, timeAgo, useCatalog } from './common';
 import { SECTIONS } from './Home';
 
-const KIND_ICON = { create: Icon.spark, revise: Icon.pen, critique: Icon.critic };
+const KIND_ICON = { create: Icon.spark, revise: Icon.pen, critique: Icon.critic, longform: Icon.media };
 
 /** "The Flash edit" → Continue <i>The Flash</i> edit. */
 function FeaturedTitle({ name }: { name: string }) {

@@ -239,6 +239,44 @@ Force tear), `bolt_split` and `speedforce_loop` are tested one-operation builds 
 and v11 moments. Their lightning is anchored on the framed subject (face near (0.5, 0.42), chest near
 (0.5, 0.62)).
 
+**Long form.** A new main-menu section for 5 to 30 minute videos: talks, commentary, essays and
+tutorials. You give it:
+
+- the video;
+- its transcript (SRT, VTT or timestamped text; Opus cannot hear, so this is how it reads what is
+  said);
+- the features you want: trim pauses, chapter cards, breakdown panels, emphasis zooms, captions,
+  calm or lively pace, accent colour;
+- a comment box for anything to add or remove.
+
+One Opus planning call, trained on a long-form playbook, decides:
+
+- chapters at topic changes;
+- animated breakdown panels for the complicated parts, with points revealed as they are said;
+- key-term callouts;
+- a few emphasis zooms;
+- the pauses and false starts to trim.
+
+The studio builds it from tested templates, with a subtle punch-in on jump cuts and quiet crossfades
+only at chapter starts. It takes about 2 to 5 minutes.
+
+**Toward 8 over several rounds.**
+
+- **Best version first:** a revision that scores lower than an earlier round does not get built on.
+  The next round restarts from the best version, automatically in automatic rounds, or with one switch
+  in the round composer.
+- **Plateau breaker:** a round that moved the score by less than 0.3 makes the next one rebuild
+  wider. It clears more of the edit and redesigns the lowest-scoring area across the whole edit.
+- **The path carries over:** the critic sees its own path from the last round, so unfinished steps
+  stay on it.
+
+**Faster High builds, fresher edits.**
+
+- High folds the custom-element workshop into its review, one Opus call fewer.
+- Contact sheets of the footage are cached between rounds.
+- Every finished round records the edit's look and signature moves. Later edits are shown that list
+  and asked for their own look and one element no earlier edit had.
+
 **The critic's scale.** Scores are calibrated to the owner's approved benchmarks (an edit at their
 level is an 8). The overall score stays within half a point of the weighted area scores. "Critical" is
 kept for defects that break the edit on the first watch, and caps the score at 7 while it remains.

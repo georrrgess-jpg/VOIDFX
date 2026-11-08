@@ -20,7 +20,7 @@ import { cutTimes } from '../engine/evaluate';
 import { measureLoopSeam } from '../engine/exporter';
 import { TRANSITION_LABELS } from '../engine/transitions';
 import { attachLibraryItem, whenMediaIdle } from '../media/library';
-import { addTaste, getPreset, lessonsText, tasteText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
+import { addSignature, addTaste, getPreset, lessonsText, signaturesText, tasteText, LibraryItem, listLibrary, listStandards, Preset, Standard, standardsFor } from '../state/catalog';
 import { addTransitionSounds, applyOps as applyOpsRaw, lastPruned, normalize, OpsResult, pruneSfx, snapToBeats } from '../state/ops';
 import { customIssues } from '../engine/custom';
 import { finishPass } from '../engine/finish';
@@ -369,7 +369,7 @@ Reply with only JSON, compact: {"message": "what you changed", "elements": [{"id
  * highest-value points (their transitions, effects, graphics, titles and sounds; the shots, the look,
  * the lyric captions and the loop stay) so the revision designs them again from scratch.
  */
-async function clearForRebuild(ws: Workspace, io: JobIO, notes: NoteCheck[], effort: Effort): Promise<{ text: string; board: Sheet[]; ids: Set<string>; windows: { a: number; b: number }[] }> {
+async function clearForRebuild(ws: Workspace, io: JobIO, notes: NoteCheck[], effort: Effort, plateau = false): Promise<{ text: string; board: Sheet[]; ids: Set<string>; windows: { a: number; b: number }[] }> {
   const none = { text: '', board: [] as Sheet[], ids: new Set<string>(), windows: [] as { a: number; b: number }[] };
   if (effort === 'low') return none;
   const dur = projectDuration(ws.project);
@@ -379,7 +379,7 @@ async function clearForRebuild(ws: Workspace, io: JobIO, notes: NoteCheck[], eff
     return /PATH TO 8/.test(n.text) ? v + 0.3 : v;
   };
   const cands = notes.filter(n => n.from === 'critic' && n.at !== undefined && valueOf(n) >= 0.4).sort((x, y) => valueOf(y) - valueOf(x));
-  const maxW = effort === 'extra' ? 3 : effort === 'high' ? 2 : 1;
+  const maxW = (effort === 'extra' ? 3 : effort === 'high' ? 2 : 1) + (plateau ? 1 : 0);
   const wins: { a: number; b: number; ids: string[] }[] = [];
   for (const n of cands) {
     const r = n.text.match(/@ ([\d.]+)s-([\d.]+)s/);
@@ -391,7 +391,7 @@ async function clearForRebuild(ws: Workspace, io: JobIO, notes: NoteCheck[], eff
     if (wins.length < maxW) wins.push({ a, b, ids: [n.id] });
   }
   let total = 0;
-  const keep = wins.filter(w => { if (total + (w.b - w.a) > dur * 0.45) return false; total += w.b - w.a; return true; });
+  const keep = wins.filter(w => { if (total + (w.b - w.a) > dur * (plateau ? 0.6 : 0.45)) return false; total += w.b - w.a; return true; });
   if (!keep.length) return none;
   io.step('look', { state: 'run', detail: 'clearing the weakest sections for a rebuild' });
   const q = deepClone(ws.project);
@@ -660,6 +660,7 @@ export function extrasFor(preset: Preset, standards: Standard[], checks?: string
     canon: o.canon ? CRITIC_CANON : '',
     lessons: o.canon ? lessonsText() : '',
     taste: tasteText(),
+    signatures: signaturesText(),
     presetName: preset.name,
     presetPrompt: preset.prompt,
     standards: standardsText(standards),
@@ -828,7 +829,7 @@ async function checkpoint(ws: Workspace, preset: Preset, seam: boolean): Promise
 }
 
 /** Wait for the job's media, failing clearly if nothing usable is there. */
-async function readMedia(ws: Workspace, io: JobIO) {
+export async function readMedia(ws: Workspace, io: JobIO) {
   io.step('media', { state: 'run', detail: 'opening files and sound analysis' });
   await ws.attach();
   await whenMediaIdle(240000, ws, io.signal);
@@ -946,9 +947,14 @@ async function reviewPasses(ws: Workspace, io: JobIO, opts: { preset: Preset; st
     const ls = loopStripTimes(p);
     const loopSheet = maxImg >= 4 && ls.times.length ? await timelineSheets(p, ws.media(), ls.times, 18, 1, io.signal, undefined, ls.labels).catch(() => [] as Sheet[]) : [];
     for (const sh of loopSheet) sh.caption = 'THE LOOP: the last second of the edit, then frame 0 and the first 0.4 s, in order. Read it as the viewer sees the wrap: one continuous designed move landing on frame 0, never a jump, a fade or a cut back';
-    const rSheets = [...frames, ...close, ...loopSheet, ...palette.slice(0, Math.max(0, maxImg - frames.length - close.length - loopSheet.length))];
+    // High has no separate workshop: its review sees the custom elements rendered large and rebuilds them
+    const els = opts.effort === 'high' && k === 1 ? workshopPick(p, 2) : [];
+    const elSheets: Sheet[] = [];
+    for (const c of els) { const sh = await elementSheet(p, ws.media(), c.id, io.signal).catch(() => null); if (sh) elSheets.push(sh); }
+    const rSheets = [...frames, ...close, ...loopSheet, ...elSheets, ...palette.slice(0, Math.max(0, maxImg - frames.length - close.length - loopSheet.length - elSheets.length))];
     io.step(id, { detail: 'thinking…' });
-    const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined, transitions: [trep.text, lrep.text].filter(Boolean).join('\n\n') });
+    const elText = els.length ? `YOUR CUSTOM ELEMENTS (rendered large in the element images): judge each on its frames against the standard below and rebuild any under 8 in this same reply with "set" (new code or svg, kf, reveal).\n${CRAFT_STANDARD}\n${els.map(c => `ELEMENT ${c.id} (${c.kind}, ${f2(c.start)}-${f2(c.start + c.dur)} s)${c.kind === 'shader' ? ` code: ${c.code}` : (c.svg || '').length <= 5000 ? ` svg: ${c.svg}` : ' (svg too long to show: rewrite it if it needs work)'}`).join('\n')}` : '';
+    const msg = reviewMessage(k, cfg.reviews, { issues: res.issues, checks, sheets: rSheets, notes: opts.notes, revision: opts.revision, lost: k === 1 ? opts.lost : undefined, transitions: [trep.text, lrep.text, elText].filter(Boolean).join('\n\n') });
     const rest: Turn[] = [...opts.turns.slice(1), { role: 'user', content: msg }];
     const ctxNow = fitContext(x => contextBlock(ws.ctx, [], opts.mediaImages ? REVIEW_NOTE : undefined, x), extrasFor(opts.preset, opts.standards, undefined, { canon: true, exemplars: cfg.reviews > 1 && k === cfg.reviews }), inputBytes(rest));
     let rk: { text: string; truncated: boolean };
@@ -1001,7 +1007,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
       ...(twoStage(job.effort) ? [{ id: 'cut', label: 'Opus directs and cuts: concept, look, song, shots, plan', state: 'wait' as const }, { id: 'board', label: 'Render a storyboard of the cut', state: 'wait' as const }, { id: 'design', label: 'Opus designs on the frames: transitions, set pieces, text, effects, sound', state: 'wait' as const }] : [{ id: 'plan', label: 'Opus plans the edit', state: 'wait' as const }]),
       { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
       { id: 'check', label: 'Run the checkpoint', state: 'wait' },
-      ...(reviews ? [{ id: 'workshop', label: 'Workshop: Opus refines its custom elements, rendered large', state: 'wait' as const }] : []),
+      ...(job.effort === 'extra' ? [{ id: 'workshop', label: 'Workshop: Opus refines its custom elements, rendered large', state: 'wait' as const }] : []),
       ...rev,
     ];
   }
@@ -1011,7 +1017,7 @@ export function stepsFor(job: Job, hasFiles: boolean): JobStep[] {
     { id: 'plan', label: `Opus works through every note of round ${job.round}`, state: 'wait' as const },
     { id: 'apply', label: 'Apply, validate, add sounds', state: 'wait' },
     { id: 'check', label: 'Run the checkpoint', state: 'wait' },
-    ...(reviews ? [{ id: 'workshop', label: 'Workshop: Opus refines the elements it changed', state: 'wait' as const }] : []),
+    ...(job.effort === 'extra' ? [{ id: 'workshop', label: 'Workshop: Opus refines the elements it changed', state: 'wait' as const }] : []),
     ...rev,
   ];
 }
@@ -1143,7 +1149,7 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
   let checks = await checkpoint(ws, preset, true);
   const failing = checks.filter(c => c.status === 'fail' || c.status === 'warn').length;
   io.step('check', { state: 'done', detail: failing ? `${failing} to look at` : 'all gates pass' });
-  if (cfg.reviews) {
+  if (effort === 'extra') {
     const wk = await workshop(ws, io2, { preset, standards, effort, turns });
     if (wk.applied) { adjusted.push(...wk.issues); checks = await checkpoint(ws, preset, true); }
   }
@@ -1171,6 +1177,13 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   const brief = job.brief?.trim() || '';
   const notes = roundNotes(brief, job.fromCritic);
   void addTaste(brief, ws.rec.name, 'revise');
+  // the best version so far, not a regression, is what this round builds on
+  const restoreR = job.restoreFrom ? (ws.rec.rounds || []).find(r => r.n === job.restoreFrom && r.snapshot) : undefined;
+  if (restoreR) ws.setProject({ ...deepClone(restoreR.snapshot!), name: ws.project.name });
+  // a round that barely moved the score: this one rebuilds wider
+  const scoredR = (ws.rec.rounds || []).filter(r => r.critique).sort((a, b) => a.n - b.n);
+  const lastTwo = scoredR.slice(-2);
+  const plateau = lastTwo.length === 2 && lastTwo[1].critique!.score - lastTwo[0].critique!.score < 0.3 && !restoreR;
 
   io.step('look', { state: 'run' });
   const maxImg = maxImagesFor(effort);
@@ -1189,7 +1202,7 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   const measured = [tsh.length ? transitionReport(p, tfx, tsh).text : '', lrep0.text].filter(Boolean).join('\n\n');
   const before = new Map(notes.filter(n => n.at !== undefined).map(n => [n.id, timeSheets.flatMap(sh => sh.stats || []).filter(x => Math.abs(x.t - n.at!) < 0.03)[0]]));
   // the weakest sections are cleared and rebuilt from scratch; their notes are checked against the cleared frames
-  const rebuild = await clearForRebuild(ws, io, notes, effort);
+  const rebuild = await clearForRebuild(ws, io, notes, effort, plateau);
   if (rebuild.ids.size) {
     const rn = notes.filter(n => rebuild.ids.has(n.id) && before.get(n.id));
     const after = rn.length ? await timelineSheets(ws.project, ws.media(), rn.map(n => before.get(n.id)!.t), 30, 1, io.signal).catch(() => [] as Sheet[]) : [];
@@ -1210,6 +1223,8 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
     `ROUND ${job.round} INSTRUCTIONS FROM THE OWNER`,
     auto ? 'Automatic round: carry out every critic point below.' : brief || '(no extra words: work through the critic\'s points)',
     notesBlock(notes),
+    restoreR ? `STARTING FROM THE BEST VERSION: the last round scored lower than round ${restoreR.n} (${restoreR.critique?.score.toFixed(1)}/10), so the studio restored round ${restoreR.n}'s edit; the CURRENT TIMELINE is that version. Build on what made it the best, and make the changes the notes ask for without repeating what lowered the score.` : '',
+    plateau ? `PLATEAU: the last round moved the score by only ${(lastTwo[1].critique!.score - lastTwo[0].critique!.score).toFixed(1)}. Local fixes are no longer enough. This round rebuilds wider (the studio cleared more of the edit), and the lowest-scoring area (${weakest.split(',')[0] || 'see the critic'}) is redesigned across the WHOLE edit: if it is transitions, every transition is redesigned; if motion, every shot gets its move; if the loop or the hook, it becomes a set piece as strong as the drop.` : '',
     rebuild.text,
     notes.some(n => n.at !== undefined) ? `WHAT IS AT EACH NOTE'S MOMENT NOW (rebuild from these: remove what makes the moment weak, then build it again)\n${notes.filter(n => n.at !== undefined).map(n => `${n.id} @ ${n.at!.toFixed(2)}s: ${clipsAt(ws.project, n.at!)}`).join('\n')}` : '',
     measured,
@@ -1246,10 +1261,10 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   let checks = await checkpoint(ws, preset, true);
   const failing = checks.filter(c => c.status === 'fail' || c.status === 'warn').length;
   io.step('check', { state: 'done', detail: failing ? `${failing} to look at` : 'all gates pass' });
-  if (cfg.reviews && res.touched.length) {
+  if (effort === 'extra' && res.touched.length) {
     const wk = await workshop(ws, io2, { preset, standards, effort, turns, only: new Set(res.touched) });
     if (wk.applied) { adjusted.push(...wk.issues); checks = await checkpoint(ws, preset, true); }
-  } else if (cfg.reviews) io.step('workshop', { state: 'skip', detail: 'no elements changed this round' });
+  } else if (effort === 'extra') io.step('workshop', { state: 'skip', detail: 'no elements changed this round' });
 
   const rv = await reviewPasses(ws, io2, { preset, standards, effort, turns, res: { ...res, issues: adjusted }, checks, mediaImages: footage.length > 0, notes, revision: true, lost });
   checks = rv.checks;
@@ -1261,10 +1276,10 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
 }
 
 /** Record the round on the project, with a short memory of the exchange for later rounds. */
-async function finishRound(ws: Workspace, job: Job, out: { summary: string; applied: number; model?: string; notes: NoteCheck[]; scores?: Record<string, number> }, turns: Turn[]) {
+export async function finishRound(ws: Workspace, job: Job, out: { summary: string; applied: number; model?: string; notes: NoteCheck[]; scores?: Record<string, number> }, turns: Turn[]) {
   const round: Round = {
-    n: job.round, kind: job.kind === 'create' ? 'create' : 'revise', at: Date.now(), jobId: job.id, effort: job.effort, presetId: job.presetId,
-    brief: job.kind === 'create' ? job.request?.notes || '' : job.brief || '', fromCritic: job.fromCritic, summary: out.summary, applied: out.applied, model: out.model,
+    n: job.round, kind: job.kind === 'revise' ? 'revise' : 'create', at: Date.now(), jobId: job.id, effort: job.effort, presetId: job.presetId,
+    brief: job.kind === 'create' ? job.request?.notes || '' : job.kind === 'longform' ? job.longform?.notes || '(long form)' : job.brief || '', fromCritic: job.fromCritic, summary: out.summary, applied: out.applied, model: out.model,
     ...(out.notes.length ? { notes: out.notes } : {}),
     ...(out.scores ? { selfScores: out.scores } : {}),
     snapshot: deepClone(ws.project),
@@ -1278,6 +1293,18 @@ async function finishRound(ws: Workspace, job: Job, out: { summary: string; appl
   if (ask0) memory.push({ role: 'user', content: ask0.content.slice(0, 4000) });
   if (plan0) { const d = compactReply(plan0.content); memory.push({ role: 'assistant', content: d.length > 14000 ? `${d.slice(0, 14000)}… (the rest of the direction is shortened here; the CURRENT TIMELINE shows what was built)` : d }); }
   if (lastRev) memory.push({ role: 'user', content: 'Then the studio applied it and you reviewed the rendered frames.' }, { role: 'assistant', content: compactReply(lastRev.content).slice(0, 3000) });
+  // this edit's look and signature moves, so the next edits find their own
+  {
+    const p = ws.project, lookIds = new Set(p.tracks.filter(t => t.role === 'look').map(t => t.id));
+    const count = (xs: string[]) => [...xs.reduce((m, x) => m.set(x, (m.get(x) || 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1]).map(([k]) => k);
+    if (p.clips.some(c => c.kind === 'video')) void addSignature({
+      project: ws.rec.name,
+      look: p.clips.filter(c => lookIds.has(c.track) && c.preset).map(c => c.preset!)[0] || '',
+      transitions: count(p.clips.filter(c => c.transition && !['crossfade', 'logo'].includes(c.transition.type)).map(c => c.transition!.type)).slice(0, 4),
+      effects: count(p.clips.filter(c => c.kind === 'shader' && c.preset && !lookIds.has(c.track)).map(c => c.preset!)).slice(0, 5),
+      custom: p.clips.filter(c => (c.kind === 'shader' && !c.preset) || c.kind === 'graphic').length,
+    });
+  }
   await ws.save(rec => {
     const rounds = (rec.rounds || []).filter(r => r.n !== round.n);
     rec.rounds = [...rounds, round].sort((a, b) => a.n - b.n);

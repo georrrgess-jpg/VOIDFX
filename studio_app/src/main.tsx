@@ -1,10 +1,10 @@
 import { render } from 'preact';
 import { initDirector } from './ai/director';
-import { enqueue, loadJobs, resumeJob, setParallelLimit, startAiEdit, stopJob } from './ai/jobs';
+import { startLongform, enqueue, loadJobs, resumeJob, setParallelLimit, startAiEdit, stopJob } from './ai/jobs';
 import { loadLogo } from './engine/logo';
 import { player } from './engine/player';
 import { runtime } from './media/library';
-import { addLessons, addToLibrary, blankPreset, clearLessons, getPreset, lessonsText, listLibrary, listPresets, loadKnowledge, loadLessons, loadTaste, savePreset } from './state/catalog';
+import { addLessons, addToLibrary, blankPreset, clearLessons, getPreset, lessonsText, listLibrary, listPresets, loadKnowledge, loadLessons, loadSignatures, loadTaste, savePreset } from './state/catalog';
 import { idleShots, runChecks } from './engine/qc';
 import { lyricGuard } from './engine/lyricguard';
 import { parseLyrics } from './state/lyrics';
@@ -31,6 +31,7 @@ void (async () => {
   await loadKnowledge();
   await loadLessons();
   await loadTaste();
+  await loadSignatures();
   await loadJobs();
   store.set(s => ({ catalogRev: s.catalogRev + 1 }));
   void requestPersistence();
@@ -43,6 +44,6 @@ window.addEventListener('pagehide', () => store.flushSave());
 // test hooks for the automated tests (harmless in production)
 (window as any).__voidfx = {
   store, player, runtime, open: openProject, applyOps, customIssues, compileError, FX_PRESETS, FX_LIBRARY, fxCode, fxParams, renderStills,
-  enqueue, startAiEdit, stopJob, resumeJob, setParallelLimit, savePreset, blankPreset, getPreset, listPresets, getRecord, listProjects, createProject, addToLibrary, listLibrary,
+  enqueue, startAiEdit, startLongform, stopJob, resumeJob, setParallelLimit, savePreset, blankPreset, getPreset, listPresets, getRecord, listProjects, createProject, addToLibrary, listLibrary,
   runChecks, idleShots, transitionReport, layerReport, lyricGuard, parseLyrics, projectDuration, addLessons, clearLessons, lessonsText,
 };

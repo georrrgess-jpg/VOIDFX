@@ -37,3 +37,7 @@ ffmpeg -v error -y -f lavfi -i "smptehdbars=s=1280x720:r=30:d=2" -f lavfi -i "te
   -f lavfi -i "color=c=0x8b0000:s=1280x720:r=30:d=1.5,drawbox=x=500:y=200:w=280:h=320:color=black:t=fill" -f lavfi -i "cellauto=s=1280x720:r=30,trim=duration=2" \
   -f lavfi -i "sine=f=220:d=10:sample_rate=48000" \
   -filter_complex "[0:v][1:v][2:v][3:v][4:v]concat=n=5:v=1:a=0,format=yuv420p[v]" -map "[v]" -map 5:a -c:v libx264 -preset veryfast -c:a aac -shortest pack.mp4
+# a 12 s "talk" for long form: a face-like frame and speech-like bursts with pauses
+ffmpeg -v error -y -i nat_astronaut.mp4 -i nat_chelsea.mp4 -i nat_coffee.mp4 -f lavfi -i "sine=f=180:d=12:sample_rate=48000" \
+  -filter_complex "[0:v]scale=1280:720,setsar=1[a];[1:v]scale=1280:720,setsar=1[b];[2:v]scale=1280:720,setsar=1[c];[a][b][c]concat=n=3:v=1:a=0,tpad=stop_mode=clone:stop_duration=0,format=yuv420p[v];[3:a]volume='if(between(t,1.0,2.1)+between(t,6.8,7.9),0,1)':eval=frame[s]" \
+  -map "[v]" -map "[s]" -c:v libx264 -preset veryfast -c:a aac -t 12 talk.mp4

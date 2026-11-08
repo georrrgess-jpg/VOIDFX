@@ -5,6 +5,7 @@ import { VoidField } from './VoidField';
 import { Dashboard } from './Dashboard';
 import { ProjectsSection } from './Projects';
 import { CreateSection } from './Create';
+import { LongformSection } from './Longform';
 import { PresetsSection } from './Presets';
 import { LibrarySection } from './Library';
 import { StandardsSection } from './Standards';
@@ -15,6 +16,7 @@ import { openPalette } from '../Palette';
 export const SECTIONS: { id: HomeTab; label: string; tint: string; tint2: string; icon: any; blurb: string }[] = [
   { id: 'home', label: 'Home', tint: '#7fd3ff', tint2: '#8a5cff', icon: Icon.home, blurb: '' },
   { id: 'create', label: 'AI Edit', tint: '#ffb357', tint2: '#ff2b3a', icon: Icon.spark, blurb: 'Opus builds a complete edit from a preset, your notes and your material.' },
+  { id: 'longform', label: 'Long form', tint: '#7fd3ff', tint2: '#52d6a0', icon: Icon.media, blurb: 'A 5-30 minute video edited calmly: trims, chapters, breakdowns of the complicated parts.' },
   { id: 'projects', label: 'Projects', tint: '#7fd3ff', tint2: '#3a6dff', icon: Icon.media, blurb: 'Every edit, saved in this browser with its media.' },
   { id: 'presets', label: 'Presets', tint: '#c084fc', tint2: '#ff5fa2', icon: Icon.sliders, blurb: 'Standing briefs for AI edits. Add notes per edit for its uniqueness.' },
   { id: 'library', label: 'Database', tint: '#52d6a0', tint2: '#2bb3ff', icon: Icon.upload, blurb: 'Scene packs, clips and music Opus can draw from.' },
@@ -49,6 +51,7 @@ export function Home() {
         {tab === 'home' && <Dashboard />}
         {tab === 'projects' && <ProjectsSection />}
         {tab === 'create' && <CreateSection />}
+        {tab === 'longform' && <LongformSection />}
         {tab === 'presets' && <PresetsSection />}
         {tab === 'library' && <LibrarySection />}
         {tab === 'standards' && <StandardsSection />}

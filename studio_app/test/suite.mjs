@@ -132,6 +132,13 @@ await ctx.addInitScript(() => {
             window.__filled = (window.__filled || 0) + 1;
             return reply(JSON.stringify({ message: `Carried ${ids.join(', ')}.`, ops: [{ op: 'fx', preset: 'dust', start: 0.5, dur: 2, note: ids }] }), opts);
           }
+          if (full.includes('planning a long-form edit')) {
+            window.__longform = { transcript: full.includes('[2.0] Today we break down'), pauses: full.includes('MEASURED PAUSES'), comments: full.includes('No zooms in the intro'), effort: opts.effort };
+            return reply(JSON.stringify({ message: 'Tightened the pauses, two chapters and a breakdown of the process.', title: 'How it works',
+              chapters: [{ t: 0, title: 'How it works' }, { t: 5, title: 'The three steps' }],
+              breakdowns: [{ start: 5.5, dur: 5, title: 'The process', points: ['Collect the evidence', 'Test every sample', 'Close the case'] }],
+              callouts: [{ t: 2.3, text: 'Key term' }], zooms: [{ t: 2.5, dur: 3, zoom: 1.1 }], remove: [{ from: 1.0, to: 1.6 }] }), opts);
+          }
           if (last.includes('CALL 1 OF 2: THE CUT')) {
             const tight = last.includes('Your last attempt used its whole time');
             window.__cutCalls = [...(window.__cutCalls || []), { effort: opts.effort, tight, images: call.images }];
@@ -567,6 +574,40 @@ if (on('units')) {
   writeFileSync(join(OUT, 'loop-push.jpg'), Buffer.from(u.loopSheet.split(',')[1], 'base64')); delete u.loopSheet;
   check('designed loops land on frame 0 (push, light, whip)', u.loops.push.endScale === 1.1 && u.loops.push.landing.includes('zoom_blur') && u.loops.push.lastKf.includes('scale') && u.loops.light.landing.includes('exposure_wash') && u.loops.whip.endX === 0 && Object.values(u.loops).every(l => l.twin && Math.abs(l.srcEnd - 0.8) < 0.01), JSON.stringify(u.loops));
     check('critic lessons are remembered for later edits', /white card/.test(u.lessons) && /Delete the wash/.test(u.lessons), u.lessons);
+}
+
+// ---------- 5b. long form: one planning call, built from templates ----------
+if (on('longform')) {
+  await S(() => window.__voidfx.store.set({ view: 'home', homeTab: 'longform' }));
+  const jid = await page.evaluate(async () => {
+    const b = await (await fetch('/test/media/talk.mp4')).blob();
+    const file = new File([b], 'talk.mp4', { type: 'video/mp4' });
+    const tr = '1\n00:00:02,000 --> 00:00:04,500\nToday we break down the process\n\n2\n00:00:05,000 --> 00:00:08,000\nThere are three steps to it\n';
+    const j = await window.__voidfx.startLongform({ name: 'Long talk', effort: 'medium', file, longform: { notes: 'No zooms in the intro.', transcript: tr, options: { captions: true, chapters: true, breakdowns: true, zooms: true, trim: true, pace: 'calm', accent: '#7fd3ff' } } });
+    return j?.id;
+  });
+  await page.waitForFunction(id => ['done', 'error'].includes(window.__voidfx.store.state.jobs.find(x => x.id === id)?.state), jid, { timeout: 300000 });
+  const lj = await page.evaluate(id => window.__voidfx.store.state.jobs.find(x => x.id === id), jid);
+  const lf = await page.evaluate(async pid => {
+    const v = window.__voidfx; const r = await v.getRecord(pid); const p = r.project;
+    const media = Object.fromEntries((r.media || []).map(m => [m.id, m]));
+    return { w: p.width, h: p.height, segs: p.clips.filter(c => c.kind === 'video').length, graphics: p.clips.filter(c => c.kind === 'graphic').length, texts: p.clips.filter(c => c.kind === 'text').map(c => c.text.slice(0, 30)), trans: p.clips.filter(c => c.transition).map(c => c.transition.type), stub: window.__longform, rounds: (r.rounds || []).length };
+  }, lj.projectId);
+  check('long form: the edit is planned in one call and built', lj.state === 'done' && lf.segs >= 2 && lf.graphics >= 2, JSON.stringify({ state: lj.state, error: lj.error, steps: lj.steps.map(s => `${s.id}:${s.state}`), ...lf }));
+  check('long form: Opus reads the transcript, the pauses and the owner\'s comments', lf.stub?.transcript && lf.stub?.comments, JSON.stringify(lf.stub));
+  check('long form: chapters, a breakdown, a callout and captions are placed; the timeline stays calm', lf.texts.some(t => /CHAPTER 01/.test(t)) && lf.texts.some(t => /Collect the evidence/.test(t)) && lf.texts.some(t => /Key term/.test(t)) && lf.texts.some(t => /Today we break down/.test(t)) && lf.trans.every(t => t === 'crossfade') && lf.w === 1920, JSON.stringify(lf));
+  // a frame of the breakdown panel, for review
+  const shot = await page.evaluate(async pid => {
+    const v = window.__voidfx; await v.open(pid);
+    await new Promise(r => setTimeout(r, 1500));
+    const p = v.store.state.project;
+    const fr = await v.renderStills(p, [0.9, 4.9, 9.2, 10.4], 360, undefined, v.store.state.media);
+    const cv = document.createElement('canvas'); cv.width = 640 * 2; cv.height = 360 * 2; const g = cv.getContext('2d');
+    fr.forEach((f, i) => f && g.drawImage(f, (i % 2) * 640, Math.floor(i / 2) * 360, 640, 360));
+    return cv.toDataURL('image/jpeg', 0.85);
+  }, lj.projectId);
+  writeFileSync(join(OUT, 'longform.jpg'), Buffer.from(shot.split(',')[1], 'base64'));
+  await S(() => window.__voidfx.store.set({ view: 'home' }));
 }
 
 // ---------- 6. persistence ----------

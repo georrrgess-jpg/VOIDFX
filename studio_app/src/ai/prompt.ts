@@ -216,6 +216,8 @@ export interface ContextExtras {
   lessons?: string;
   /** The owner's own notes on recent edits, across projects. */
   taste?: string;
+  /** Recent edits' looks and signature moves. */
+  signatures?: string;
   presetName: string;
   presetPrompt: string;
   standards: string;
@@ -233,6 +235,7 @@ export function contextBlock(ctx: { project: Project; media: Record<string, Medi
     x.craft || '',
     x.canon ? `HOW THE EDIT WILL BE JUDGED (the critic scores every round against this; plan to score 8 or more in every area)\n${x.canon}` : '',
     x.taste ? `THE OWNER'S OWN NOTES ON RECENT EDITS (their taste in their own words, newest first, across all their projects: what they keep asking for is the style to build; what they asked to remove never comes back)\n${x.taste}` : '',
+    x.signatures ? `WHAT RECENT EDITS ALREADY USED (the owner wants every edit to have its own look and its own signature: do not reuse these as this edit's look or its signature moves, except in the edit they belong to; find a new idea from this character, this song and this footage, and give it one element no earlier edit had)\n${x.signatures}` : '',
     x.lessons ? `LESSONS FROM THE CRITIC ON RECENT EDITS (its critical and major findings; make sure this edit does not repeat them)\n${x.lessons}` : '',
     x.standards ? `REFERENCE EDITS THE OWNER ADDED AS STANDARDS\n${x.standards}` : '',
     x.knowledge.trim() ? `STUDIO KNOWLEDGE (from the owner; follow it)\n${x.knowledge.trim()}` : '',
