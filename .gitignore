@@ -106,3 +106,10 @@ v*/work/cache/
 v*/work/*.log
 v*/sr/
 library/
+v106/work/*.log
+v106/audio/
+v106/frames/
+v106/out/
+v106/work/*.npz
+v106/work/*.npy
+v106/sr/
