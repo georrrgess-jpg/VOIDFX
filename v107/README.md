@@ -90,6 +90,17 @@ From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the bea
 
   This is a true roll, where v104's page turn was a flat fold. Sound: one paper flip.
 
+Caught by review before delivery:
+- **Edge fringe on the beat hits:** every beat hit's colour split wrapped the frame's edge columns (`np.roll`), leaving a 2–3 px cyan line on the left edge and a magenta line on the right edge for a frame or two. It has been there since rev 1. `rgb_split` now repeats the edge pixels instead.
+
+## Measured (rev 4)
+- **QC:** 11/11 on the encode.
+- **Loudness:** −13.0 LUFS, true peak −3.5 dBTP after AAC.
+- **Loop seam:** the audio seam step is 0.0005; the picture lands on frame 0.
+- **Glitch audit:** every jump is a cut, a beat hit or a designed transition. The page turn (frames 218–241) moves smoothly, with no single-frame pop; the cut at 165 is the downbeat.
+- **Dead spans:** none of 0.5 s or more.
+- **Effort:** 2 full renders for rev 4 (the second for the edge fix), about 280 s each.
+
 ## Measured (rev 3)
 - **QC:** 11/11 on the encode.
 - **Loudness:** −13.0 LUFS, true peak −3.4 dBTP after AAC.
