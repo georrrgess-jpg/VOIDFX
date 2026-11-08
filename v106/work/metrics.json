@@ -1,6 +1,6 @@
 {
  "edit": "v106",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-08 03:02:01",
@@ -162,6 +162,41 @@
    "step": "deliver",
    "s": 18.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:23:19",
+   "round": 2,
+   "step": "prep",
+   "s": 97.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:24:42",
+   "round": 2,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:29:51",
+   "round": 2,
+   "step": "video",
+   "s": 309.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:32:07",
+   "round": 2,
+   "step": "qc",
+   "s": 136.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:34:15",
+   "round": 2,
+   "step": "deliver",
+   "s": 99.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -188,6 +223,12 @@
    "round": 2,
    "cat": "density",
    "text": "identify one space where these isn't anything happening and add a custom unique graphic into a cool transition"
+  },
+  {
+   "t": "2026-11-08 05:34:15",
+   "round": 3,
+   "cat": "other",
+   "text": "can you slow down the tear drop transition so it's more visible?"
   }
  ],
  "catches": [
@@ -211,6 +252,7 @@
   }
  ],
  "round_starts": {
-  "2": "2026-11-08 04:47:32"
+  "2": "2026-11-08 04:47:32",
+  "3": "2026-11-08 05:34:15"
  }
 }

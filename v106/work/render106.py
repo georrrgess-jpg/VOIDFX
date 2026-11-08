@@ -9501,7 +9501,7 @@ def finish106(out, f, s, ff=None, fmw=1.0):
 # ---- the beat camera: from the cold open's end to the loop; it rests on Iris and through the wall's burst -------------
 def beat_phase(f):
     e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
-    hook = (E.E_BEAT <= e < E.E_LOOP) and not (13 <= e < 19) and not (E.E_WALL - 1 <= e < E.E_WALL + 2)
+    hook = (E.E_BEAT <= e < E.E_LOOP) and not (13 <= e < 20) and not (E.E_WALL - 1 <= e < E.E_WALL + 2)
     return ph, bi, hook, False
 
 # ---- noise fields (fractal, cached per worker) -----------------------------------------------------------------------
@@ -9828,22 +9828,24 @@ def sf_virtual(fv):
 
 # ---- TEAR LENS (rev 2): her tear gathers under her jaw, swells, and falls toward the lens; inside it, Barry's goodbye.
 #      We fall through it: the frame is inside the drop (a magnifying lens relaxing flat) and a ripple runs out from it.
-def tear_lens(A, B, j, f, sa, sb, pre=36, post=18):
+def tear_lens(A, B, j, f, sa, sb, pre=60, post=26):                                   # rev 3: slower (owner)
     if j < 0:
         u = (j + pre + 1) / pre                                                            # 1/pre .. 1 (lands on the cut)
         fs = face_scr(sa, f) if sa.get("face") is not None else None
         C0 = (fs[0] + 0.30 * fs[2], fs[1] + 0.29 * fs[2]) if fs else (W * 0.55, H * 0.55)      # under her jaw, beside the chin
         Ct = (W * 0.5, H * 0.62)
-        if u < 0.42:                                                                       # it gathers on her jaw and hangs
-            g = smooth(u / 0.42); r = 4 + 30 * g; C = (C0[0], C0[1] + 10 * g); v = 0.0
-        else:                                                                              # it lets go and falls toward the lens
-            v = (u - 0.42) / 0.58; e_ = ein(v, 2.3)
-            r = 34 * math.exp(math.log(1500 / 34) * e_); C = (C0[0] + (Ct[0] - C0[0]) * ein(v, 1.6), C0[1] + (Ct[1] - C0[1]) * ein(v, 1.6))
+        if u < 0.40:                                                                       # it gathers on her jaw (0.4 s)
+            g = smooth(u / 0.40); r = 4 + 30 * g; C = (C0[0], C0[1] + 10 * g); v = 0.0
+        elif u < 0.55:                                                                     # it hangs, swells and sags (0.15 s)
+            g = smooth((u - 0.40) / 0.15); r = 34 + 10 * g + 1.5 * math.sin(g * math.pi * 2); C = (C0[0], C0[1] + 10 + 12 * g); v = 0.0
+        else:                                                                              # it lets go and falls toward the lens (0.45 s)
+            v = (u - 0.55) / 0.45; e_ = ein(v, 2.3); C0 = (C0[0], C0[1] + 22)
+            r = 44 * math.exp(math.log(1500 / 44) * e_); C = (C0[0] + (Ct[0] - C0[0]) * ein(v, 1.6), C0[1] + (Ct[1] - C0[1]) * ein(v, 1.6))
         fb = face_scr(sb, sb["f0"]) if sb.get("face") is not None else None
         PB = (fb[0], fb[1]) if fb else (W / 2, H * 0.40)
         k = smooth(v)
         P_ = (PB[0] + (C[0] - PB[0]) * k, PB[1] + (C[1] - PB[1]) * k)                       # the drop holds his face, then the whole frame
-        mag = 1 + 5.0 * (1 - smooth((r - 34) / 520))
+        mag = 1 + 5.0 * (1 - smooth((r - 44) / 520))
         L = 0.42 - 0.17 * smooth(v)
         return np.clip(drop_over(A, B, C, r, P_, mag, L, 1 - smooth((r - 220) / 700)), 0, 1)
     v = (j + 1) / post; Ct = (W * 0.5, H * 0.62)
@@ -9860,7 +9862,7 @@ def tear_lens(A, B, j, f, sa, sb, pre=36, post=18):
     o = cv2.remap(B, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     o = o + band[..., None] * (WCORE * 0.10)                                               # the ripple catches the light
     return np.clip(o, 0, 1)
-TR2["tear_lens"] = (tear_lens, 36, 18)
+TR2["tear_lens"] = (tear_lens, 60, 26)
 
 def drop_over(A, B, C, r, P_, mag, L, spec):
     """a lit water drop of radius r at C over A; inside, B seen through it (centred on P_, minified by mag, bulged by L)."""

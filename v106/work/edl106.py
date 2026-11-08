@@ -53,7 +53,7 @@ LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 
 VO = []                                    # dialogue: (stem, src_in, src_out, edit_at); [] = music-only
-SET_PIECES = [("lightning rod", th(13), th(15)), ("her tear", th(15), th(17)), ("saves me", th(19), th(21)), ("the wall rises", th(32), th(36)),
+SET_PIECES = [("lightning rod", th(13), th(15)), ("her tear", th(15), th(18)), ("saves me", th(20), th(22)), ("the wall rises", th(32), th(36)),
               ("WONDERWALL burst", th(47), th(51)), ("the loop", th(58), th(64))]
 VO_STEM = None; VO_STEM_T0 = 0.0
 
@@ -94,11 +94,12 @@ shot("eyes", "fh", 6, 10, 116.70, 118.20, z=[(0, 1.02), (1, 1.08)], tin="mist_sw
 shot("run1", "f5", 10, 13, 113.00, 116.00, z=[(0, 1.00), (1, 1.06)], tin="strobe_echo", seg=True, face=None, cx=(700, 640),
      tmap=vel(10, 13, 113.00, 116.00), lin=True, interp="flow", **WD)
 # ---- "you're gonna be the one": the lightning rod strikes onto Iris; on "GONNA" her tear falls toward the lens and holds
-#      Barry's goodbye (the S3 farewell, the reverse shot); we fall through it onto him
-shot("iris", "f3", 13, 16, 130.90, 131.65, z=[(0, 1.00), (1, 1.04)], tin="lightning_rod", seg=True, interp="flow", dust=0.35, **WD)
-shot("goodbye", "f3", 16, 19, 127.30, 128.35, z=[(0, 1.00), (1, 1.04)], tin="tear_lens", interp="flow", dust=0.3, **WD)
+#      Barry's goodbye (the S3 farewell, the reverse shot); we fall through it onto him on "BE" (rev 3: slower, 1 s);
+#      the clash into "saves me" moved one half-beat later, onto the sung "SAVES"
+shot("iris", "f3", 13, 17, 130.90, 131.90, z=[(0, 1.00), (1, 1.04)], tin="lightning_rod", seg=True, interp="flow", dust=0.35, **WD)
+shot("goodbye", "f3", 17, 20, 127.30, 128.35, z=[(0, 1.00), (1, 1.04)], tin="tear_lens", interp="flow", dust=0.3, **WD)
 # ---- "that saves me": he tears out in gold
-shot("saves", "fh", 19, 22, 127.70, 128.90, z=[(0, 1.04), (1, 1.00)], tin="clash106", seg=True, rays=0.6, interp="flow", **WD)
+shot("saves", "fh", 20, 22, 127.70, 128.50, z=[(0, 1.04), (1, 1.00)], tin="clash106", seg=True, rays=0.6, interp="flow", **WD)
 shot("runat2", "f5", 22, 24, 119.30, 121.30, z=[(0, 1.00), (1, 1.05)], tin="lightstreak", face=None, cx=(800, 760),
      tmap=vel(22, 24, 119.30, 121.30), lin=True, interp="flow", **WD)
 # ---- the run (instrumental bar): velocity on every beat

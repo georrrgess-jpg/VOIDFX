@@ -557,7 +557,7 @@ def main():
             n_ = I(0.16); q_ = np.arange(n_) / SR
             plip = np.sin(2 * np.pi * np.cumsum(1400 * np.exp(-q_ / 0.014) + 380) / SR) * np.exp(-q_ / 0.035)
             plip = plip + bq(noise(n_, 3200), "band", np.array([600, 3500]), 2) * np.exp(-q_ / 0.02) * 0.25
-            place(fx, stereo(norm(plip, -24), 0.2), t0 - 0.35); place(fx, rev_swell(0.32, -24, 3201), t0 - 0.32)
+            place(fx, stereo(norm(plip, -24), 0.2), t0 - 0.45); place(fx, rev_swell(0.45, -24, 3201), t0 - 0.45)
             n_ = I(0.7); q_ = np.arange(n_) / SR
             bloom = bq(noise(n_, 3202), "low", 900, 2) * np.exp(-q_ / 0.12) * np.minimum(1, q_ / 0.004)
             place(fx, stereo(norm(bloom, -21)), t0); place(fx, stereo(sub_drop(-20, 0.6, 62, 30)), t0)
@@ -571,7 +571,7 @@ def main():
     place(fx, stereo(hum_rise(th(48) - th(46), -24, 90, 520)), th(46))
     fx = fx * db(10.0)                                                         # rule 7: the master is loud (-12 dBFS RMS): lift the design
     duck = np.zeros(N + PRE, np.float32)                                      # the music gives way for the big hits
-    for t_h in (E.th(13), E.th(19), E.th(E.E_WALL)): duck[I(t_h - 0.03) + PRE:I(t_h + 0.35) + PRE] = 1.0
+    for t_h in (E.th(13), E.th(20), E.th(E.E_WALL)): duck[I(t_h - 0.03) + PRE:I(t_h + 0.35) + PRE] = 1.0
     duck = np.convolve(duck, np.hanning(I(0.12)) / np.hanning(I(0.12)).sum(), "same")
     mus = mus * db(-3.0 * duck)[:, None]
     fx = np.tanh(fx * 1.2) / 1.2

@@ -57,5 +57,8 @@ From the engine: the motion pass (velocity ramps with flow on restored frames, p
 
 Rev 2 measured on the encode: QC 11/11, loop seam 0.14, −13.0 LUFS / −3.3 dBTP after AAC. Frame-to-frame jumps that weren't cuts or designed flashes: rev 1 had them at 2.3 s, 18.4 s, 20.27 s, 20.35 s, 21.4 s and across the wrap; rev 2 has none. Sharpness within 1–4 % of rev 1 on every shot.
 
+## Rev 3 (owner note)
+- **"Can you slow down the tear drop transition so it's more visible?"** The tear now runs 1.0 s instead of 0.6 s (it gathers on her jaw for 0.4 s with Barry visible inside, hangs and swells for 0.15 s, then falls toward the lens for 0.45 s), and the fall-through settles over 0.43 s instead of 0.3 s. To make room, the cut onto Barry moved one half-beat later, onto the sung "BE", and the clash into "saves me" moved one half-beat later too, onto the sung "SAVES" (it was 0.43 s early). QC 11/11, seam 0.14, −13.0 LUFS / −2.9 dBTP after AAC.
+
 ## Measured
 See `work/qc.log`, `work/mixcheck.json` and `work/sharpness.json` after the render.
