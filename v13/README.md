@@ -2,6 +2,50 @@
 
 A 20.87 s, 1080×1920, 60 fps TikTok edit on the v12 engine with pipeline v2. It loops in picture and sound.
 
+## Rev 2 (owner: "I really don't like this edit. I don't like that the singularity is the primary object in every transition and animation … make a emblem transition … more transitions that replace the previous singularity transitions … remove some of the tedious sound effects … create a really cool graphic that you use to turn into a transition … smooth out the rest of the edit and polish it")
+- **The singularity now appears once:** in the "Darling," set piece only (EVENT HORIZON → GRAV WAVE on the breakout). It's gone from frame 0, the loop and every other transition.
+- **New hero graphic, the LIGHT RIBBON:** his speed trail drawn as a long-exposure light painting.
+  - What it is: two twisting bands of light with a current crackling along them and sparks shedding. They orbit his shoulders in depth: behind his matte at the back, in front of his chest at the front.
+  - The transition (on "God", 5.22 s): it flares and spirals outward toward the lens with the next shot inside its loop, and fades before it can sit on a face.
+  - The loop: it returns round him in the last shot, spirals out, and frame 0 is inside it.
+- **The emblem transition, EMBLEM SPLIT** (16.96 s):
+  - the camera pushes onto his real tracked chest emblem;
+  - its bolt ignites, with arcs crawling along it;
+  - the bolt leaps off at the camera until its zigzag spans the frame;
+  - the frame splits open along it onto the next shot.
+- **Ten other transitions replace the singularity ones:**
+  - EDGE CURRENT: the picture's own outlines carry a current and morph into the next shot's;
+  - FOCUS RACK: the lens racks out to bokeh and back in;
+  - SPEED WHIP;
+  - EYE IRIS: lightning forks from his orange iris, and a ring of lightning opens from the pupil;
+  - TIME SLICE: slivers slide out in a wave;
+  - AFTERIMAGE: his afterimages peel off;
+  - LIGHT LEAK into "Darling,";
+  - PANEL RUN: three panels run out in alternate directions;
+  - SLIPSTREAM (kept);
+  - WHIP UP: he looks up.
+
+  The library bolt trace was dropped: it leaked into the next source shot.
+- **Sound, about 16 effects → 11 sound events, with no drone, swirls, whine or swells on every move.** What's left:
+  - the current;
+  - the ribbon's sweep;
+  - the eye arc;
+  - the drop into the frozen moment;
+  - the breakout (impact and sub);
+  - the emblem (ignite and split);
+  - his wind;
+  - the loop's rise.
+
+  Seven transitions are silent. True peak margin: limiter at −4.6 dB (−3.3 dBTP after AAC).
+- **QC fix:** the audio seam check now trims the decoded AAC padding (it compared the padding with the first sample).
+- **Measured:**
+  - −13.5 LUFS / −3.3 dBTP after AAC;
+  - loop seam 0.12 (picture) and 0.019 against a local median of 0.0066 (audio);
+  - 1 flash a second at most;
+  - no dead spans, no judder.
+
+  The motion audit lists 1 unexplained pop (f893: the breakout's lightning igniting in the source, checked on frames). Faces vs effects lists 3 runs: the horizon's rim light behind his helmet, and the loop's wipe onto frame 0 (last 1220–1232). Sharpness flags 1 shot: emblem, a dark glowing source.
+
 ## Concept: SINGULARITY
 In the S1 finale a singularity tears open over Central City and pulls everything toward it; Barry runs into it to close it. Here the song is the singularity's voice, a love that pulls everything in:
 - *"Pick me up"*: its pull lifts the debris;

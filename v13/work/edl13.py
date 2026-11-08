@@ -89,29 +89,29 @@ def shot(n, src, e0, e1, a, b, **kw):
 
 # ---- PHRASE 1-2: THE PULL ("Pick me up, don't know if it's what I need / But it's what I want, God, look out for me")
 shot("sky", "fs1", 0, 8, 290.22, 291.40, tin="loop_in13", face=None, cx=(480, 480), z=[(0, 1.00), (1, 1.04)], flowmax=40)
-shot("pull", "fs1", 8, 14, 277.47, 278.90, tin="lens_drop", seg=True, z=[(0, 1.00), (1, 1.05)], flowmax=40)
-shot("mask", "fs1", 14, 19, 228.10, 229.20, tin="frame_drag", seg=True)
-shot("blood", "fs1", 19, 24, 286.95, 288.20, tin="redshift", seg=True)
-shot("god", "fs1", 24, 30, 268.30, 269.80, tin="photon_ring", seg=True)
+shot("pull", "fs1", 8, 14, 277.47, 278.90, tin="edge_current", seg=True, z=[(0, 1.00), (1, 1.05)], flowmax=40)
+shot("mask", "fs1", 14, 19, 228.10, 229.20, tin="focus_rack", seg=True)
+shot("blood", "fs1", 19, 24, 286.95, 288.20, tin="speed_whip", seg=True)
+shot("god", "fs1", 24, 30, 268.30, 269.80, tin="ribbon", seg=True)
 # ---- PHRASE 3: "look out for me" — the eye, the take-off
 shot("eye", "fs1", 30, 34, 291.50, 292.80, tin="dolly", face=None, cx=(320, 320), z=[(0, 1.00), (1, 1.08)])
-shot("takeoff", "fs1", 34, 40, 195.00, 196.80, tin="eye_horizon", face=None, cx=(640, 640), seg=True,
+shot("takeoff", "fs1", 34, 40, 195.00, 196.80, tin="eye_iris", face=None, cx=(640, 640), seg=True,
      tmap=vel(34, 40, 195.00, 196.80), lin=True, ev=0.35, flowmax=40)
 # ---- PHRASE 4: the run, Iris and Joe watching, "Darling,"
-shot("run", "fbh", 40, 44, 80.90, 82.20, tin="accretion_whip", face=None, cx=(560, 520), tmap=vel(40, 44, 80.90, 82.20), lin=True, satk=0.6)
-shot("watch", "fs1", 44, 48, 285.55, 286.65, tin="strobe_echo", seg=True)
+shot("run", "fbh", 40, 44, 80.90, 82.20, tin="time_slice", face=None, cx=(560, 520), tmap=vel(40, 44, 80.90, 82.20), lin=True, satk=0.6)
+shot("watch", "fs1", 44, 48, 285.55, 286.65, tin="afterimage", seg=True)
 # ---- THE EVENT HORIZON (focal set piece): Darling (e49.6), time dilates and stops, the photon ring, the collapse
-shot("darling", "fs1", 48, 56, 221.72, 222.95, tin="whip", seg=True, tmap=dilate(48, 56, 221.72, 222.95, 50, 55.5))
+shot("darling", "fs1", 48, 56, 221.72, 222.95, tin="light_leak13", seg=True, tmap=dilate(48, 56, 221.72, 222.95, 50, 55.5))
 shot("horizon", "fs1", 56, 64, 207.55, 207.95, tin="event_horizon", seg=True, z=[(0, 1.00), (1, 1.06)],
      tmap=dilate(56, 64, 207.55, 207.95, 56, 60))                       # the airfield: the hole looms in the sky behind him
 # ---- PHRASE 5: the breakout ("I don't wish you well"), the emblem, he leaves her ("When you ain't with me, I want you crying")
 shot("breakout", "fbh", 64, 72, 52.92, 54.28, tin="grav_wave", seg=True, ev=0.30, flowmax=14, flowfall="blend")
-shot("emblem", "fbh", 72, 78, 83.85, 85.05, tin="spaghettify", seg=True, satk=0.75, flowmax=30)
-shot("leave", "fs1", 78, 82, 236.30, 237.60, tin="emblem_horizon", seg=True)
+shot("emblem", "fbh", 72, 78, 83.85, 85.05, tin="panel_run", seg=True, satk=0.75, flowmax=30)
+shot("leave", "fs1", 78, 82, 236.30, 237.60, tin="emblem_split", seg=True)
 shot("iris", "fs1", 82, 88, 237.80, 238.75, tin="slipstream", seg=True)
 # ---- PHRASE 6: the loop: he looks up into it, the fall, frame 0 out of the Einstein ring
-shot("last", "fs1", 88, 96, 279.55, 281.10, tin="lens_drop", seg=True, z=[(0, 1.00), (1, 1.03)], flowmax=40)
-SET_PIECES = [("event_horizon", th(48), th(64)), ("grav_wave", th(62), th(68)), ("loop_fall", th(90), th(96))]
+shot("last", "fs1", 88, 96, 279.55, 281.10, tin="whip_up13", seg=True, z=[(0, 1.00), (1, 1.03)], flowmax=40)
+SET_PIECES = [("ribbon", th(20), th(26)), ("event_horizon", th(48), th(64)), ("grav_wave", th(62), th(68)), ("emblem_split", th(76), th(80)), ("ribbon_loop", th(92), th(96))]
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

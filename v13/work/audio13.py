@@ -637,34 +637,21 @@ def main():
     mus = music13(song) * db(-1.0)
     n = N + PRE; tt = np.arange(n) / SR - PRE / SR; th = E.th
     fx = np.zeros((n, 2), np.float32)
-    drone = bq(noise(n, 1390), "low", 90, 2) + 0.10 * np.sin(2 * np.pi * 36 * tt) * (1 + 0.3 * np.sin(2 * np.pi * tt / (16 * E.HB)))
-    fx += stereo(norm(drone, -40))                                                              # the singularity's hum, across the wrap
     t0 = {s_["n"]: s_["t0"] for s_ in E.SHOTS}
-    # ---- PHRASES 1-3: the pull (one sound per designed move; small moves are silent)
-    place(fx, RS(0.40, -12, 3101), t0["pull"] - 0.40); place(fx, S2(A2.impact(-9, (48, 26), 0.6, 0.35, 3102)), t0["pull"])   # LENS DROP
-    place(fx, S2(swirl(0.55, -14, 3110, 1.2)), t0["mask"] - 0.20)                                                     # FRAME DRAG
-    place(fx, S2(whine(0.45, -20, 1800, 160)), t0["blood"] - 0.18)                                                    # REDSHIFT: the light loses energy
-    place(fx, S2(swirl(0.60, -12, 3120, 2.0)), t0["god"] - 0.22)                                                      # PHOTON RING: light in orbit
-    place(fx, RS(0.40, -11, 3130), t0["takeoff"] - 0.40); place(fx, S2(sub_drop(-8, 0.9, 62, 24)), t0["takeoff"])      # EYE HORIZON
-    place(fx, S2(CR(0.30, -12, 3140, 0.8)), t0["run"] - 0.08); place(fx, WH(0.22, -11, 3141, True), t0["run"] - 0.10)  # ACCRETION WHIP
-    place(fx, WH(0.20, -14, 3150, False), t0["darling"] - 0.10)                                                           # whip
-    # ---- THE EVENT HORIZON: Darling, time dilates (the song sinks), the freeze, the collapse, the breakout
-    tg = th(50.0); te_ = th(60.0)
-    place(fx, S2(hum_rise(te_ - tg, -16, 38, 120)), tg)                                                                # gravity rising
-    place(fx, RS(0.55, -12, 3160), t0["horizon"] - 0.55); place(fx, S2(sub_drop(-10, 1.2, 50, 18)), t0["horizon"])     # into the frozen moment
+    # rev 2 (owner: "remove some of the tedious sound effects"): no drone, no swirls, no whine, no swell on every move.
+    # A sound only where a designed transition or the set piece needs one; the small moves are silent.
+    place(fx, S2(CR(0.35, -13, 3101, 0.8)), t0["pull"] - 0.10)                                          # EDGE CURRENT: the current
+    place(fx, WH(0.55, -12, 3120, True), t0["god"] - 0.30)                                               # LIGHT RIBBON: one long sweep
+    place(fx, S2(ZP(-12, 3130, 3600, 500, 0.14)), t0["takeoff"] - 0.04)                                  # EYE IRIS: the arc
+    place(fx, S2(sub_drop(-10, 1.2, 50, 18)), t0["horizon"])                                              # into the frozen moment
     tb_ = t0["breakout"]
-    place(fx, RS(0.70, -8, 3170), tb_ - 0.70)                                                                             # the collapse
-    place(fx, S2(A2.impact(-4, (50, 24), 1.0, 0.6, 3171)), tb_); place(fx, S2(sub_drop(-5, 1.1, 60, 22)), tb_ + 0.02)
-    place(fx, S2(thunder(-9, 3172, 1.5)), tb_ + 0.05)                                                                  # GRAV WAVE
-    # ---- PHRASE 5: the emblem, he leaves her
-    place(fx, S2(swirl(0.50, -12, 3180, 1.5)), t0["emblem"] - 0.18)                                                   # SPAGHETTIFY
-    place(fx, RS(0.45, -12, 3190), t0["leave"] - 0.45); place(fx, S2(A2.impact(-10, (56, 30), 0.4, 0.25, 3191)), t0["leave"])  # EMBLEM HORIZON
-    place(fx, WH(0.40, -11, 3200, True) * np.array([[1.0, 0.45]], np.float32), t0["iris"] - 0.20)                       # he is gone: the wind
-    # ---- the loop: the lens drop, he looks up into it, the fall onto frame 0
-    place(fx, RS(0.40, -12, 3210), t0["last"] - 0.40); place(fx, S2(A2.impact(-11, (46, 26), 0.5, 0.3, 3211)), t0["last"])
-    tl_ = t0["last"] + 30 / E.FPS
-    rush = WH(E.DUR - tl_, -9, 3220, True); rush = rush * np.linspace(0.3, 1.0, len(rush))[:, None] ** 1.5
-    fade = np.ones(len(rush), np.float32); fade[-I(0.25):] = np.linspace(1, 0, I(0.25)) ** 2                               # clean at the wrap
+    place(fx, S2(A2.impact(-5, (50, 24), 1.0, 0.6, 3171)), tb_); place(fx, S2(sub_drop(-6, 1.1, 60, 22)), tb_ + 0.02)   # GRAV WAVE
+    place(fx, S2(ZP(-10, 3190, 2600, 400, 0.12)), t0["leave"] - 0.20)                                     # EMBLEM SPLIT: the bolt ignites
+    place(fx, S2(A2.impact(-9, (56, 30), 0.5, 0.3, 3191)), t0["leave"])                                   #   and splits the frame
+    place(fx, WH(0.40, -13, 3200, True) * np.array([[1.0, 0.45]], np.float32), t0["iris"] - 0.20)        # SLIPSTREAM: his wind
+    tl_ = t0["last"] + (t0["last"] - t0["last"]) + (E.DUR - t0["last"]) - 46 / E.FPS                     # the loop: the ribbon spirals out
+    rush = WH(E.DUR - tl_, -12, 3220, True); rush = rush * np.linspace(0.25, 1.0, len(rush))[:, None] ** 1.5
+    fade = np.ones(len(rush), np.float32); fade[-I(0.25):] = np.linspace(1, 0, I(0.25)) ** 2           # clean at the wrap
     place(fx, (rush * fade[:, None]).astype(np.float32), tl_)
     fx = np.tanh(fx * 1.2) / 1.2
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))                        # pipeline v2: tools/mixcheck.py
@@ -674,12 +661,12 @@ def main():
     th2 = np.linspace(0, np.pi / 2, PRE)[:, None]
     mix[-PRE:] = mix[-PRE:] * np.cos(th2) + lead * np.sin(th2)
     raw = f"{AD}/mix_raw.wav"; wf.write(raw, SR, mix.astype(np.float32))
-    Iraw, _ = measure(raw); gain = -12.2 - Iraw
+    Iraw, _ = measure(raw); gain = -12.0 - Iraw
     P2 = SR; wrapped = np.vstack([mix[-P2:], mix, mix[:P2]])
     wf.write(f"{AD}/mix_raw_wrapped.wav", SR, wrapped.astype(np.float32))
     tmp = f"{AD}/mix_wrapped_master.wav"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f"{AD}/mix_raw_wrapped.wav", "-af", f"volume={gain:.2f}dB,aresample=192000,"
-                    f"alimiter=limit={db(-3.6):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr", "-c:a", "pcm_f32le", tmp], check=True)
+                    f"alimiter=limit={db(-4.6):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr", "-c:a", "pcm_f32le", tmp], check=True)
     _, mw = wf.read(tmp); mw = mw.astype(np.float32)
     ref = wrapped[P2:P2 + SR, 0]; seg_ = mw[P2 - 2000:P2 + SR + 2000, 0]
     lag = int(np.argmax(np.correlate(seg_, ref, mode="valid"))) - 2000

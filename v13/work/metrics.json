@@ -1,6 +1,6 @@
 {
  "edit": "v13",
- "round": 1,
+ "round": 2,
  "stages": [
   {
    "t": "2026-11-08 16:52:09",
@@ -260,9 +260,144 @@
    "step": "deliver",
    "s": 57.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:25:16",
+   "round": 2,
+   "step": "sheet:r2a:0,98,104,110,178,183,188,245,250,262,280,300,306,311,315,322,436,440,446,452,518,524,528,570",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:26:05",
+   "round": 2,
+   "step": "sheet:rib:250,262,272,284,296,302,306,310,313,316,320,326,245,1160,1180,1200,1212,1222,1232,1240,1246,1250,1251,0",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:26:58",
+   "round": 2,
+   "step": "sheet:rib2:262,272,284,296,306,313,1170,1190",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:27:14",
+   "round": 2,
+   "step": "sheet:r2b:568,572,576,580,620,624,628,632,934,938,942,946,1003,1008,1012,1016,1019,1023,1027,1140,1146,1150,1156,1062",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:27:57",
+   "round": 2,
+   "step": "sheet:r2c:572,576,1019,1023,1027,1031,1144,1148,1152,1158",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:28:21",
+   "round": 2,
+   "step": "audio",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:28:30",
+   "round": 2,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:28:38",
+   "round": 2,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:33:23",
+   "round": 2,
+   "step": "video",
+   "s": 279.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:35:51",
+   "round": 2,
+   "step": "qc",
+   "s": 148.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:37:30",
+   "round": 2,
+   "step": "sheet:fade:310,316,320,324,1214,1222,1230,1236",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:42:03",
+   "round": 2,
+   "step": "video",
+   "s": 266.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:44:21",
+   "round": 2,
+   "step": "qc",
+   "s": 138.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:45:34",
+   "round": 2,
+   "step": "deliver",
+   "s": 73.0,
+   "rc": 0
   }
  ],
- "notes": [],
+ "notes": [
+  {
+   "t": "2026-11-08 18:21:26",
+   "round": 2,
+   "cat": "plain_effect",
+   "text": "I don't like that the singularity is the primary object in every transition and animation"
+  },
+  {
+   "t": "2026-11-08 18:21:26",
+   "round": 2,
+   "cat": "other",
+   "text": "make a emblem transition"
+  },
+  {
+   "t": "2026-11-08 18:21:26",
+   "round": 2,
+   "cat": "density",
+   "text": "do some more transitions that replace the previous singularity transitions"
+  },
+  {
+   "t": "2026-11-08 18:21:26",
+   "round": 2,
+   "cat": "other",
+   "text": "remove some of the tedious sound effects"
+  },
+  {
+   "t": "2026-11-08 18:21:26",
+   "round": 2,
+   "cat": "other",
+   "text": "create a really cool graphic that you use to turn into a transition"
+  },
+  {
+   "t": "2026-11-08 18:21:26",
+   "round": 2,
+   "cat": "quality",
+   "text": "smooth out the rest of the edit and polish it"
+  }
+ ],
  "catches": [
   {
    "t": "2026-11-08 18:09:37",
@@ -317,6 +452,21 @@
    "round": 1,
    "cat": "framing",
    "text": "loop hole on his forehead; frame 0's hole moved into clear sky where he looks"
+  },
+  {
+   "t": "2026-11-08 18:46:00",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "rev 2: ribbon arcs lingered across his face in the spiral-out and the loop; faded sooner"
+  },
+  {
+   "t": "2026-11-08 18:46:00",
+   "round": 2,
+   "cat": "other",
+   "text": "rev 2: library bolt_trace leaked into the next source shot; afterimages were drawn on Iris; emblem split showed reflected wedges"
   }
- ]
+ ],
+ "round_starts": {
+  "2": "2026-11-08 18:21:26"
+ }
 }
