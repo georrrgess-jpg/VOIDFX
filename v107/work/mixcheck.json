@@ -9,19 +9,19 @@
    "t0": 1.07,
    "t1": 1.82,
    "music_db": -13.5,
-   "fx_peak_db": -22.0,
-   "fx_minus_music": -8.5,
+   "fx_peak_db": -18.5,
+   "fx_minus_music": -5.0,
    "buried": false
   },
   {
-   "name": "broadcast",
+   "name": "rorschach",
    "kind": "transition",
    "at": 2.74,
    "t0": 2.44,
    "t1": 3.19,
    "music_db": -13.4,
-   "fx_peak_db": -20.5,
-   "fx_minus_music": -7.2,
+   "fx_peak_db": -15.1,
+   "fx_minus_music": -1.8,
    "buried": false
   },
   {
@@ -196,8 +196,8 @@
    "t0": 14.4,
    "t1": 16.46,
    "music_db": -12.1,
-   "fx_peak_db": -11.6,
-   "fx_minus_music": 0.5,
+   "fx_peak_db": -12.3,
+   "fx_minus_music": -0.2,
    "buried": false
   },
   {
@@ -207,8 +207,8 @@
    "t0": 16.16,
    "t1": 16.91,
    "music_db": -11.2,
-   "fx_peak_db": -13.4,
-   "fx_minus_music": -2.3,
+   "fx_peak_db": -20.2,
+   "fx_minus_music": -9.1,
    "buried": false
   },
   {
