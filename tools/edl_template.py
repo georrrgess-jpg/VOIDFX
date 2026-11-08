@@ -41,6 +41,9 @@ VO = []                                    # dialogue: (stem, src_in, src_out, e
 SET_PIECES = []                            # pipeline v2 (mixcheck): (name, t0, t1) in edit seconds for each set piece
 HERO = []                                  # names of the renderer functions that draw the hero asset (preflight counts its
                                            # transitions: about 2-4, v13 rule 1), e.g. ["bloom_draw"] or ["bh_draw", "bh_warp"]
+HERO_TINS = []                             # plan_check: the hero asset's transitions (tins), at most 4
+SIGNATURE = []                             # plan_check: the one custom graphic that becomes a transition (~1 s on screen first)
+PLAN_ACCEPT = {}                           # plan_check: {"check_id": "why"} to accept a WARN/FAIL on purpose (printed, not hidden)
 VO_STEM = None; VO_STEM_T0 = 0.0
 
 def vel(e0, e1, a, b, lo=0.30, hi=3.2, tau=0.07, n=96):

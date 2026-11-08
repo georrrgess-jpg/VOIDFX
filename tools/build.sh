@@ -8,24 +8,23 @@
 #   video             upload MP4 + lossless frame cache; re-renders only the EDL's changed shots when a cache exists; the master
 #                     encodes in the background.   video:A:B[,C:D]  re-render only those frames (verified)   fullvideo  force a full render
 #   qc                ship checkpoint on the encoded MP4 + faces-vs-effects list + motion audit (dead spans, pops, judder)
-#                     + the review pack (a row of stills per transition, set piece and the wrap), all four in parallel
-#   review            the review pack alone            deliver   wait for the master and check it
+#                     + the signoff pages (every transition and cut, set piece, the loop, titles, pops; QC flags boxed red)
+#   signoff / review  the review pages alone           deliver   wait for the master and check it
 #   golden            engine regression check (tools/golden.py N --check)              preview   whole edit at 30 fps / 540x960 (engine)
 #   plan              the plan against the owner's rules (tools/plan_check.py, which also runs preflight's checks); runs before
 #                     every video step and a FAIL stops the render (accept a check with PLAN_ACCEPT in the EDL, or PLAN_FORCE=1)
-#   signoff           larger review pages from the encode (transitions, the loop, titles, unexplained pops) for the critique
 #   report            the Measured block from the tools' outputs -> vN/work/measured.md            splice    re-splice fxN.py
-#   rev  = audio plan video qc signoff report           (a revision round: only the changed frames are re-rendered)
-#   ship = rev + deliver                                 all = prep audio plan auto video qc signoff report deliver
+#   rev  = audio plan video qc report                   (a revision round: only the changed frames are re-rendered)
+#   ship = rev + deliver                                 all = prep audio plan auto video qc report deliver
 #   An edited fxN.py is re-spliced automatically before any step that renders. Every step is logged to vN/work/metrics.json.
 set -euo pipefail
 N="$1"; shift; ROOT="$(cd "$(dirname "$0")/.." && pwd)"; V="v$N"; W="$ROOT/$V/work"
 [ "$#" -gt 0 ] || { sed -n '2,20p' "$0"; exit 1; }
 STEPS=("$@")
 case "${STEPS[0]}" in
-  all)  STEPS=(prep audio plan auto video qc signoff report deliver) ;;
-  rev)  STEPS=(audio plan video qc signoff report "${STEPS[@]:1}") ;;
-  ship) STEPS=(audio plan video qc signoff report deliver "${STEPS[@]:1}") ;;
+  all)  STEPS=(prep audio plan auto video qc report deliver) ;;
+  rev)  STEPS=(audio plan video qc report "${STEPS[@]:1}") ;;                # qc ends with the signoff pages
+  ship) STEPS=(audio plan video qc report deliver "${STEPS[@]:1}") ;;
 esac
 case "${STEPS[0]}" in song:*) SLUG="" ;; *) SLUG=$(cd "$W" && python3 -c "import edl$N as E; print(E.SLUG)") ;; esac
 T="$ROOT/tools"
@@ -80,11 +79,11 @@ for s in "${STEPS[@]}"; do
                python3 "$T/faceqc.py" "$N" > "$W/faceqc.log" 2>&1 & P2=$!
                python3 "$T/motionqc.py" "$N" > "$W/motionqc.log" 2>&1 & P3=$!
                R1=0; R2=0; R3=0; wait $P1 || R1=$?; wait $P2 || R2=$?; wait $P3 || R3=$?
-               python3 "$T/review.py" "$N" > "$W/review.log" 2>&1 || true      # after faceqc/motionqc: it boxes their flags
+               python3 "$T/signoff.py" "$N" > "$W/signoff.log" 2>&1 || true    # the review pages, after faceqc/motionqc: it boxes their flags
                grep -v WARN "$W/qc.log" | sed -n '/loudness/p;/flagged/p;/text band/p;/near-black/p;/== 8/,$p' | grep -v " 0 flagged" || true
-               tail -14 "$W/faceqc.log"; grep -v "activity per" "$W/motionqc.log" || true; tail -1 "$W/review.log"
+               tail -14 "$W/faceqc.log"; grep -v "activity per" "$W/motionqc.log" || true; tail -1 "$W/signoff.log"
                [ $R1$R2$R3 = 000 ] || echo "   a QC pass exited non-zero (qc $R1, faceqc $R2, motionqc $R3): see $V/work/*.log" ;;
-    review)    python3 "$T/review.py" "$N" ;;
+    review)    python3 "$T/signoff.py" "$N" ;;                                # the old name of signoff
     deliver)   python3 "$T/vrender.py" "$N" master --wait ;;
     golden)    python3 "$T/golden.py" "$N" --check ;;
     *)         echo "unknown step $s"; exit 1 ;;

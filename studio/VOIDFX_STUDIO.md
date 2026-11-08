@@ -428,7 +428,7 @@ Only then deliver.
 
 **One brief per edit.** Use `START_PROMPT.md`: song, packs, theme ideas and must-haves in one message, so the studio never needs to ask.
 
-**Front-load the rules.** This handbook plus the rejected list in §4 removes most revision rounds. v7 needed one round of notes; aim for zero. **Since 2026-11-08 the rules are also checks:** `build.sh N plan` (`tools/preflight.py`) runs the plan against them in seconds, before the first render. Fix every FAIL; decide every WARN. Run retroactively on v13 rev 1, it flags what the owner's rev 1 notes said: the hero asset in 7 transitions, 24 sound effects, the swirls and whines.
+**Front-load the rules.** `studio/OWNER_RULES.md` (one page, both studios), this handbook and the rejected list in §4 remove most revision rounds. v7 needed one round of notes; aim for zero. **Since 2026-11-08 the rules are also checks:** `build.sh N plan` (`tools/preflight.py`) runs the plan against them in seconds, before the first render. Fix every FAIL; decide every WARN. Run retroactively on v13 rev 1, it flags what the owner's rev 1 notes said: the hero asset in 7 transitions, 24 sound effects, the swirls and whines.
 
 **The fast loop** (wall-clock on the 4-core cloud box):
 
@@ -444,7 +444,8 @@ Only then deliver.
 | Motion check | `bash tools/build.sh N clip:A:B` | ~20 s |
 | Sound | `bash tools/build.sh N audio` | ~7 s |
 | **One** final render + checkpoint + review pack (QC passes in parallel) | `bash tools/build.sh N video qc` | ~7 min |
-| A revision round (only the frames the change reached re-render) | `bash tools/build.sh N plan rev` | ~4–8 min |
+| A revision, or a first delivery once the stills are right: audio, plan gate, render (only the frames the change reached), QC + review pack, sign-off pages, report, master | `bash tools/build.sh N ship` | ~4–8 min |
+| Fresh-eyes critique before delivering (`studio/CRITIQUE_PROMPT.md`, one agent) | Agent tool | a few min |
 
 **Two studios in parallel:**
 - Each studio works on its **own git branch** and its **own version range** (Studio 1: v8, v9, …; Studio 2: v101, v102, …), so folders never collide.
