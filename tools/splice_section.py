@@ -2,6 +2,8 @@
 
   python3 tools/splice_section.py N SECTION.py        # inserts SECTION.py's text just above `# >>> pipeline v2: speed`
   python3 tools/splice_section.py N --check           # warn about overrides placed below the section
+  python3 tools/splice_section.py N SECTION.py --replace   # re-splice an edited section: replaces the block from its first
+                                                           # line up to the speed section with the file's current text
 
 The speed section wraps whatever `grade`, `render_shot` and hot effects exist above it (fast grade, still cache,
 channel-wise effects). A `grade` or `render_shot` defined below it replaces the fast path: the picture is still right,
@@ -32,7 +34,11 @@ def main():
         sys.exit(0)
     sec = open(arg).read().rstrip("\n") + "\n\n"
     first = next((l for l in sec.splitlines() if l.strip()), "")
-    if first and first in src: print(f"already in render{n}.py: {first[:70]}"); return
+    if first and first in src and "--replace" in sys.argv and START in src:
+        a, b = src.index(first), src.index(START)
+        if a < b:
+            open(p, "w").write(src[:a] + sec + src[b:]); print(f"replaced {arg} in render{n}.py ({len(sec.splitlines())} lines)"); return
+    if first and first in src: print(f"already in render{n}.py: {first[:70]} (use --replace to update it)"); return
     if START in src: src = src.replace(START, sec + START, 1); where = "above the speed section"
     else: src = src.replace("\ndef main():", "\n" + sec + "def main():", 1); where = "before main() (no speed section)"
     open(p, "w").write(src); print(f"inserted {arg} into render{n}.py {where}")

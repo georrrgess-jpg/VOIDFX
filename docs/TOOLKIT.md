@@ -300,6 +300,24 @@ Port by copying the functions into the edit's own section (`tools/splice_section
 | Smooth shiver | `shiver(shape, f, seed)` | Per-element sines at 9–15 Hz for tremble (no per-frame random). |
 | WONDER grade + finish | `look="wonder"`, `grade`, `finish106` | Amber highs, cobalt shadows, milky blacks by `tone_lut`; halation kept off the face box (its weight can be faded, for the loop). |
 
+
+### The v107 ALL CAPS toolkit (the newest Dexter standard; on the v12 engine; in `v107/work/fx107.py`, spliced above the speed section of `render107.py`; every `--base v107` scaffold carries it)
+Restyle it in the new edit's `fxN.py` and re-splice with `tools/splice_section.py N vN/work/fxN.py --replace`. Full recipes in `sync/handoffs/2026-11-08_dexter_v107_ALL_CAPS_standard.md` §8.
+
+| Piece | Call | What it does |
+|---|---|---|
+| TABLOID grade + finish | `look="tabloid"`, `grade`, `finish107`, `redthr` (per shot) | Tone LUT; spot red kept above a per-shot red threshold (red-lit skin stays out); paper tint in the highlights; a misregistered red-plate ghost, a fine shadow screen, paper grain. |
+| HOT MOLASSES | `tin="molasses"` (36 / 24) | A viscous blood sheet pours down the lens: fingered leading edge with a bead, sliding undulations, refraction, absorption by thickness, gloss; drains from the top with a meniscus. |
+| HEADSPIN | `tin="headspin"` (20 / 24), `spin_about` | Two turns, multi-sample motion blur and radial blur; the incoming half turns about the incoming face's centre and lands at 0° on a centred face. |
+| THE FRONT PAGE | `tin="frontpage"` (82 / 28), `page_layers`, `page_with_photo`, `halftone` | The MIAMI GAZETTE (masthead, BAY HARBOR / BUTCHER in spot red, columns) spins in with his halftone photo and caption, lands, settles; we dive into the photo and its dots resolve. |
+| ALL CAPS stamp | `style="stamp"` in `TEXT`, `strip_canvas`, `text_stamp`, `banner_target` | A torn newsprint strip slaps on; letterpress letters on an even 16th grid, each landing on its hit (3-frame descent, ink spread, deboss, strip shake); at the cut it flies onto the real banner's DEXTER. |
+| Banner shot | `banner=True`, `banner_frame` | A 1.2× crop tracking the banner, the sky extended from the source's own top and bottom colours, so a wide sign fits whole in 9:16. |
+| Confetti | `pop=True` + `tin="confetti_pop"`, `conf_set`, `draw_confetti`, `pop_behind` | Lit, fluttering paper pieces with depth of field in the edit's palette; bursts in the sky, carries on behind the person matte. |
+| THE MASSES SPELL HIS NAME (loop) | `tout="name_loop"`, `name_targets`, `draw_pieces`, `name_loop` | ~1,050 confetti pieces swirl in from both sides at chest height and form a word (a text mask), hold through the drop-out bar, burst toward the lens and down while `frame0_plate()` dissolves in; the last frame is frame 0. |
+| PAGE TURN | `tin="page_turn107"` (14 / 12), `pt_back` | A true cylinder roll from the bottom-right corner: flat front, the rising quarter (front, foreshortened), the top of the roll and the turned part (newsprint back with the picture faintly showing through), the roll's shadow on the next shot. |
+| Edge-clamped colour split | `rgb_split`, `_shift_edge` | The beat-hit colour split repeats the edge column instead of wrapping (`np.roll` left a cyan/magenta edge line). |
+| Rejected in v107 (kept, working) | `press_flash`, `broadcast` (TV), `spatter_fx`, `rorschach` | Reuse only with the lessons: no black room around a screen; never converge on a face. |
+
 ## 3. Graphics and text
 
 - **v9 graphics and type** (`render9.py`, end of file):
