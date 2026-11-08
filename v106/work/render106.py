@@ -9517,12 +9517,19 @@ def fbm(seed, h, w, oct_=5, falloff=0.55):
         acc /= tot; acc = (acc - acc.min()) / (acc.max() - acc.min() + 1e-6); _NZ[key] = acc.astype(np.float32)
     return _NZ[key]
 
+def crop_frac(c, oy, ox, h, w):
+    """an h x w window of c at a fractional offset (bilinear): the mist drifts smoothly, not in whole quarter-res steps."""
+    oy = min(max(oy, 0.0), c.shape[0] - h - 1.001); ox = min(max(ox, 0.0), c.shape[1] - w - 1.001)
+    iy, ix = int(oy), int(ox); fy, fx = oy - iy, ox - ix; a = c[iy:iy + h + 1, ix:ix + w + 1]
+    return (a[:h, :w] * ((1 - fy) * (1 - fx)) + a[1:, :w] * (fy * (1 - fx)) + a[:h, 1:] * ((1 - fy) * fx) + a[1:, 1:] * (fy * fx)).astype(np.float32)
+
 def mist_field(t, speed=1.0):
-    """(density, wisps) at full res: two drifting fractal layers (quarter res), wisps = ridges of the second."""
-    h4, w4 = H // 4, W // 4
-    c1 = fbm(61, h4 * 2, w4 * 2, 4, 0.5); c2 = fbm(67, h4 * 2, w4 * 2, 5, 0.6)
-    o1 = (int(18 * t * speed) % h4, int(11 * t * speed) % w4); o2 = (h4 - 1 - int(13 * t * speed) % h4, w4 - 1 - int(7 * t * speed) % w4)
-    n1 = c1[o1[0]:o1[0] + h4, o1[1]:o1[1] + w4]; n2 = c2[o2[0]:o2[0] + h4, o2[1]:o2[1] + w4]
+    """(density, wisps) at full res: two drifting fractal layers (quarter res), wisps = ridges of the second.
+    rev 2: sub-pixel drift on a canvas big enough that nothing wraps for t in -1.5..23 s (rev 1 stepped every ~3 frames
+    and wrapped at negative t, which broke the loop's virtual frames)."""
+    h4, w4 = H // 4, W // 4; ts = t * speed
+    c1 = fbm(61, h4 + 904, w4 + 564, 4, 0.5); c2 = fbm(67, h4 + 904, w4 + 564, 5, 0.6)
+    n1 = crop_frac(c1, 60 + 18 * ts, 40 + 11 * ts, h4, w4); n2 = crop_frac(c2, 610 - 13 * ts, 330 - 7 * ts, h4, w4)
     dens = cv2.GaussianBlur(smooth_arr((0.62 * n1 + 0.38 * n2 - 0.30) / 0.50), (0, 0), 3)
     wisp = cv2.GaussianBlur(np.clip(1 - np.abs(n2 * 2 - 1) * 2.6, 0, 1) ** 1.5 * dens, (0, 0), 1.5)
     return cv2.resize(dens, (W, H), interpolation=cv2.INTER_CUBIC), cv2.resize(wisp, (W, H), interpolation=cv2.INTER_CUBIC)

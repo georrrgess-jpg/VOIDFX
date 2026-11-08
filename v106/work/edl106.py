@@ -122,7 +122,8 @@ shot("charge", "fz", 46, 48, 47.90, 49.00, z=[(0, 1.00), (1, 1.05)], tin="perime
 shot("through", "fh", 48, 54, 49.40, 51.20, z=[(0, 1.06), (1, 1.00)], tin="wonderwall", seg=True, rays=0.7, dust=0.5, interp="flow", **WD)
 shot("smile", "fh", 54, 58, 6.80, 8.60, z=[(0, 1.00), (1, 1.05)], tin="light_leak", seg=True, dust=0.4, interp="flow", **WD)
 # ---- the loop: he turns and walks back into the Speed Force; the mist rolls over the lens and clears on frame 0
-shot("home", "f3", 58, 64, 134.30, 135.40, z=[(0, 1.00), (1, 1.04)], tin="mist_swirl", interp="flow", seg=True, mist=1.0, face=None,
+#      (rev 2: from 134.50, after the source's pink lightning flicker at 134.37-134.47 that jumped twice)
+shot("home", "f3", 58, 64, 134.50, 135.40, z=[(0, 1.00), (1, 1.04)], tin="mist_swirl", interp="flow", seg=True, mist=1.0, face=None,
      cx=(560, 520), tout="loop_mist", **WD)
 SHOTS = S
 for s in SHOTS:
