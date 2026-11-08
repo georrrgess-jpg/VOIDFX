@@ -49,7 +49,7 @@ Red-lit skin is kept out of the spot red per shot (`redthr`).
 | `frontpage` (hero asset) | The front page spins in (MIAMI GAZETTE, BAY HARBOR / BUTCHER, INVESTIGATION STILL ONGOING, columns, his halftone photo and caption), lands and settles. We dive into his photo, and its dots resolve into the next shot | Paper flutter, a slap, a whoosh |
 | `stamp` (focal) | A torn strip of newsprint slaps on with "CAPS". D-E-X-T-E-R is stamped one letter per sung word: the type comes down, the ink spreads and settles, the paper is debossed, and the strip shakes. On the cut it flies into the sky and morphs onto the banner's own DEXTER | A paper slap, six letterpress hits, a whoosh and wind |
 | banner shot | The source frame is enlarged only 1.2×, tracked on the banner, with the sky extended above and below, so WE ♥ DEXTER fits whole in 9:16 | (from the stamp) |
-| `confetti_pop`, `confetti_loop` | Procedural paper confetti in the press palette: lit, fluttering, with depth of field, kept off faces. It bursts into the parade, then thickens over the lens and clears on frame 0 | A pop and a flutter; nothing in the loop bar |
+| `confetti_pop`, `confetti_loop` | Procedural paper confetti in the press palette: lit, fluttering, with depth of field. It bursts in the sky over the banner, then carries on behind him in the parade (his matte keeps it off him). In the loop it thickens over the lens on the bass drop-out bar and clears on frame 0 | A pop and a flutter; nothing in the loop bar |
 
 From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the beat camera; flow on restored frames; the robot step-motion (`robo()` in the EDL).
 

@@ -772,7 +772,7 @@ def main():
     # ---- the strip flies into the sky onto the banner
     place(fx, A2.whoosh(0.50, -16, 3340, True), t0["banner"] - 0.05); place(fx, wind_gust(0.9, -22, 3341, (-0.5, 0.5)), t0["banner"])
     # ---- the parade: the confetti pops
-    place(fx, stereo(flash_pop(-16, 3342)), t0["hero"] - 0.16); place(fx, petal_flutter(0.9, -20, 3343, 90, 1.0), t0["hero"] + 0.02)
+    place(fx, stereo(flash_pop(-16, 3342)), t0["laugh"] - 0.40 - 0.16); place(fx, petal_flutter(1.1, -20, 3343, 90, 1.0), t0["laugh"] - 0.38)
     fx = fx * db(10.0)                                                                         # rule 7: a loud master (about -12 dBFS RMS)
     duck = np.zeros(N + PRE, np.float32)
     for t_h in (t0["hazmat"], t0["upside"], caps): duck[I(t_h - 0.03) + PRE:I(t_h + 0.35) + PRE] = 1.0

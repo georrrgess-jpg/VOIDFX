@@ -114,13 +114,13 @@ shot("lookat", "ds2a", 35, 37, 224.20, 224.90, z=[(0, 1.02), (1, 1.06)], tin="wh
 shot("shame", "dmx", 37, 40, 183.90, 185.00, z=[(0, 1.00), (1, 1.05)], tin="zipper", interp="flow", **TB)
 # ---- "JUST REMEMBER ALL CAPS WHEN YOU SPELL THE MAN NAME": the strip of newsprint, D-E-X-T-E-R stamped one letter a word
 shot("remember", "dmx", 40, 42, 247.90, 248.80, z=[(0, 1.02), (1, 1.06)], tin="impact", interp="flow", **TB)
-shot("parade", "dmx", 42, 48, 327.30, 328.90, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 600), interp="flow", stamp=True, **TB)
+shot("parade", "dmx", 42, 48, 327.30, 328.90, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 600), interp="flow", stamp=True, redthr=0.30, **TB)
 # ---- the beat break: the strip flies up and becomes the banner the plane tows; the parade; he has got the masses
 shot("banner", "dmx", 48, 51, 326.05, 326.68, tin="banner_match", face=None, banner=True, interp="flow", **TB)
-shot("hero", "dmx", 51, 54, 335.75, 337.30, z=[(0, 1.00), (1, 1.05)], tin="confetti_pop", interp="flow", **TB)
+shot("laugh", "dmx", 51, 54, 343.10, 344.70, z=[(0, 1.00), (1, 1.04)], tin="confetti_pop", interp="flow", seg=True, pop=True, redthr=0.30, **TB)
 shot("poster", "dmx", 54, 56, 341.20, 342.80, z=[(0, 1.02), (1, 1.06)], tin="whip", interp="flow", redthr=0.40, **TB)
-shot("armup", "dmx", 56, 60, 343.10, 345.60, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", **TB)
-shot("final", "dmx", 60, 64, 386.00, 388.40, z=[(0, 1.00), (1, 1.04)], tin="whip", face=None, cx=(575, 575), interp="flow", tout="confetti_loop", **TB)
+shot("hero", "dmx", 56, 60, 335.75, 337.30, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", redthr=0.30, **TB)
+shot("final", "dmx", 60, 64, 386.00, 388.40, z=[(0, 1.00), (1, 1.04)], tin="whip", face=None, cx=(575, 575), interp="flow", tout="confetti_loop", redthr=0.30, **TB)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

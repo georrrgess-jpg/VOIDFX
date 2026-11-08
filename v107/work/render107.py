@@ -10287,7 +10287,9 @@ def banner_frame(s, f):
 
 def base107(s, f):
     if s.get("banner"): return banner_frame(s, f), None
-    return base12(s, f)
+    img, person = base12(s, f)
+    if s.get("pop"): img = pop_behind(img, s, f, person)
+    return img, person
 
 _B107 = {}
 def edge107(S_, which):
@@ -10549,11 +10551,24 @@ def face_keep(s, f, grow=1.25):
     cv2.ellipse(m, (int(fs[0] / 4), int(fs[1] / 4)), (int(fs[2] * 0.62 * grow / 4), int(fs[2] * 0.85 * grow / 4)), 0, 0, 360, 1.0, -1, cv2.LINE_AA)
     return 1 - cv2.resize(cv2.GaussianBlur(m, (0, 0), 5), (W, H))
 
-def confetti_pop(A, B, j, f, sa, sb, pre=3, post=40):
-    if j < 0: return A
-    if "pop" not in _FP: _FP["pop"] = conf_set(1073, 170, 0.0, 0.0, "pop")
-    return np.clip(draw_confetti(B, (j + 1) / FPS, _FP["pop"], "pop", (W * 0.5, H * 0.04), guard=face_keep(sb, f)), 0, 1)
-TR2["confetti_pop"] = (confetti_pop, 3, 40)
+POP_PRE = 24
+def pop_set():
+    if "pop" not in _FP: _FP["pop"] = conf_set(1073, 190, 0.0, 0.0, "pop")
+    return _FP["pop"]
+
+def confetti_pop(A, B, j, f, sa, sb, pre=POP_PRE, post=2):
+    """the confetti bursts in the sky over the banner; after the cut it carries on behind him (pop_behind)."""
+    if j >= 0: return B
+    return np.clip(draw_confetti(A, (j + pre + 1) / FPS, pop_set(), "pop", (W * 0.5, H * 0.02)), 0, 1)
+
+def pop_behind(img, s, f, person):
+    """a confetti burst from the top of the frame, between him and the crowd (his matte keeps it off him)."""
+    k = f - s["f0"]
+    if k >= 70 or person is None: return img
+    c = draw_confetti(img, (k + POP_PRE + 1) / FPS, pop_set(), "pop", (W * 0.5, H * 0.02))
+    pm = np.clip(person * 1.1, 0, 1)[..., None]
+    return img * pm + c * (1 - pm)
+TR2["confetti_pop"] = (confetti_pop, POP_PRE, 2)
 
 # ---- THE LOOP: the confetti thickens over the lens on the bass drop-out bar and clears on frame 0 ---------------------
 LOOP_F0 = None
