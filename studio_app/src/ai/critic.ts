@@ -12,7 +12,7 @@ import { FX_LIBRARY } from '../engine/fxlib';
 import { SFX, TEXT_ANIMS_IN, TEXT_ANIMS_OUT, TRANSITIONS } from '../state/types';
 import { whenMediaIdle } from '../media/library';
 import { addLessons, calibrationText, getPreset, tasteText } from '../state/catalog';
-import { Critique, CritiqueIssue, Effort, FollowUp, Job } from '../state/types';
+import { Critique, CritiqueIssue, Effort, FollowUp, Job, PathStep } from '../state/types';
 import { projectDuration } from '../state/util';
 import { askSafe, brightnessNote, JobIO, maxImagesFor, ownerLedger, standardsForPreset, standardsText } from './director';
 import { parseJson, timelineJson } from './prompt';
@@ -103,9 +103,13 @@ export function parseCritique(text: string, round: number, duration: number, mod
   const issues: CritiqueIssue[] = (Array.isArray(v.issues) ? v.issues : []).slice(0, 24).map((x: any) => ({
     severity: sev(x?.severity), at: Number.isFinite(Number(x?.at)) && x?.at !== null && x?.at !== '' ? Math.max(0, Number(x.at)) : undefined,
     area: String(x?.area || 'edit'), problem: String(x?.problem || x?.issue || '').trim(), fix: String(x?.fix || '').trim(),
+    ...(Number.isFinite(Number(x?.gain)) && Number(x.gain) > 0 ? { gain: Math.min(3, Math.round(Number(x.gain) * 10) / 10) } : {}),
   })).filter((x: CritiqueIssue) => x.problem);
   const order = { critical: 0, major: 1, minor: 2 };
-  issues.sort((a, b) => order[a.severity] - order[b.severity] || (a.at ?? 999) - (b.at ?? 999));
+  // the biggest wins first: what fixing it is worth, then severity
+  issues.sort((a, b) => (b.gain ?? 0) - (a.gain ?? 0) || order[a.severity] - order[b.severity] || (a.at ?? 999) - (b.at ?? 999));
+  const num = (x: any) => (Number.isFinite(Number(x)) && x !== null && x !== '' ? Number(x) : undefined);
+  const path: PathStep[] = (Array.isArray(v.path) ? v.path : []).slice(0, 6).map((x: any) => ({ change: String(x?.change || '').trim(), at: num(x?.at), to: num(x?.to), gain: Math.max(0, Math.min(3, num(x?.gain) ?? 0)) })).filter((x: PathStep) => x.change);
   let score = clampScore(v.score);
   // the overall score follows the area scores (weighted toward hook, transitions, motion, concept), within half a point
   const W: Record<string, number> = { hook: 1.25, transitions: 1.2, motion: 1.15, concept: 1.1 };
@@ -125,13 +129,18 @@ export function parseCritique(text: string, round: number, duration: number, mod
     at: Date.now(), model, score, verdict, headline: String(v.headline || '').trim() || 'No headline.', scores,
     strengths: (Array.isArray(v.strengths) ? v.strengths : []).map(String).filter(Boolean).slice(0, 8),
     issues, versus: String(v.versus || '').trim(), brief: String(v.brief || '').trim(), duration, round,
-    ...(followUp.length ? { followUp } : {}), ...(prevScore !== undefined ? { prevScore } : {}),
+    ...(followUp.length ? { followUp } : {}), ...(prevScore !== undefined ? { prevScore } : {}), ...(path.length ? { path } : {}),
   };
 }
 
 /** One line per issue, as it is handed to Opus in a revision. */
 export function issueLine(i: CritiqueIssue): string {
-  return `[${i.severity}${i.at !== undefined ? ` @ ${i.at.toFixed(2)}s` : ''}, ${i.area}] ${i.problem}${i.fix ? ` Fix: ${i.fix}` : ''}`;
+  return `[${i.severity}${i.at !== undefined ? ` @ ${i.at.toFixed(2)}s` : ''}, ${i.area}${i.gain ? `, worth +${i.gain.toFixed(1)}` : ''}] ${i.problem}${i.fix ? ` Fix: ${i.fix}` : ''}`;
+}
+
+/** One step of the path to 8, as it is handed to Opus: the biggest changes come first in a revision. */
+export function pathLine(s: PathStep): string {
+  return `[PATH TO 8${s.at !== undefined ? ` @ ${s.at.toFixed(2)}s${s.to !== undefined ? `-${s.to.toFixed(2)}s` : ''}` : ''}, worth +${s.gain.toFixed(1)}] ${s.change}`;
 }
 
 /** The studio's vocabulary, so every fix the critic writes is one the editor can carry out exactly. */
@@ -228,7 +237,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     prevCrit?.issues?.length ? `YOUR POINTS LAST ROUND (stay consistent: never ask for the opposite of a point that was carried out, and do not move the goalposts on a point that is now fixed)\n${prevCrit.issues.slice(0, 12).map(i => `- [${i.severity}${i.at !== undefined ? ` @ ${i.at.toFixed(2)}s` : ''}] ${i.problem.slice(0, 160)} Fix: ${i.fix.slice(0, 140)}`).join('\n')}` : '',
     rounds.filter(r => r.critique && r.n !== last?.n).length ? `EARLIER CRITIQUES\n${rounds.filter(r => r.critique && r.n !== last?.n).map(r => `Round ${r.n}: ${r.critique!.score}/10, "${r.critique!.headline}"`).join('\n')}` : '',
     follow.length ? `WHAT THIS ROUND WAS ASKED TO FIX (check every item in the frames and the timeline; frames labelled with an item's id show its moment)\n${follow.map(f => `${f.id}${f.at !== undefined ? ` @ ${f.at.toFixed(2)}s` : ''}: ${f.text.slice(0, 320)}${f.plan ? ` | the editor's plan: ${f.plan.slice(0, 200)}` : ''}${f.check ? ` | the editor's own check: ${f.check.slice(0, 160)}` : ''}`).join('\n')}\nGive each item's status in "followUp": fixed (the frames or timeline show it done in full), partly, or not.` : '',
-    prevCrit ? `SCORING AGAINST THE LAST ROUND: the last critique scored the edit ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). Score the edit as it is now, starting from that score: every point that is really fixed raises its area and the total (a critical point fixed is worth about +0.6 to +1.0, a major one +0.3 to +0.5, a minor one +0.1 to +0.2); every remaining or new problem holds it down or lowers it. Do not re-judge fixed points from scratch and never ignore a real fix; never inflate either: a fix you cannot see in the frames or the timeline does not count.` : '',
+    prevCrit ? `THE LAST ROUND SCORED ${prevCrit.score}/10 (${CRITIC_AREAS.filter(a => prevCrit.scores[a.id] !== undefined).map(a => `${a.id} ${prevCrit.scores[a.id]}`).join(', ')}). That number is context, not a starting point: score the edit as it is now, fresh, on the calibrated scale. If the round rebuilt its weak moments well, the score moves by as much as the edit got better, and a point or more is normal when the big problems are gone; if it got worse, it goes down. Credit every fix you can see; a fix you cannot see in the frames or the timeline does not count.` : '',
     p.lyrics?.lines.length ? `THE SONG'S LYRICS (from the owner${p.lyrics.timed ? '; song times' : ', untimed'}): check that every caption is a sung line on its time, never invented words\n${p.lyrics.lines.slice(0, 80).map((l, i) => `${p.lyrics!.timed ? `L${i + 1} ${l.t.toFixed(2)} ` : ''}${l.text}`).join('\n')}` : 'NO LYRICS WERE SUPPLIED: any caption that claims to be a sung line is a guess; flag captions that do not read as dialogue, a designed title or a likely sung hook.',
     `MEASURED\n${metrics}${brightnessNote(sweepSheets) ? `\n${brightnessNote(sweepSheets).replace(/ On a phone,.*$/, '').replace(/: fine\.$/, '.')}` : ''}${closeSheets.length ? `\n${transitionReport(p, tframes, closeSheets).text}` : ''}${layers.text ? `\n${layers.text}` : ''}`,
     `AUTOMATED CHECKPOINT\n${checksText(checks)}`,
@@ -242,11 +251,12 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
  "headline": "one blunt sentence: the verdict in plain words",
  "scores": {${CRITIC_AREAS.map(a => `"${a.id}": 0-10`).join(', ')}},
  "strengths": ["what genuinely works (at most 4; empty if nothing does)"],
- "issues": [{"severity": "critical" | "major" | "minor", "at": seconds or null, "area": one of ${CRITIC_AREAS.map(a => a.id).join('/')}, "problem": "what is wrong and why it hurts the edit", "fix": "exactly what to change", "lesson": "for critical and major issues: the general rule it breaks, one sentence true for any edit (no clip ids or times), so the studio can learn it"}],
+ "issues": [{"severity": "critical" | "major" | "minor", "at": seconds or null, "area": one of ${CRITIC_AREAS.map(a => a.id).join('/')}, "problem": "what is wrong and why it hurts the edit", "fix": "exactly what to change", "gain": the score this fix is worth when done well (0.1-1.5), "lesson": "for critical and major issues: the general rule it breaks, one sentence true for any edit (no clip ids or times), so the studio can learn it"}],
  "versus": "two or three sentences: how it stands against the owner's benchmarks and the best TikTok edits of this kind",${follow.length ? `
  "followUp": [{"id": "${follow[0].id}", "status": "fixed" | "partly" | "not", "comment": "what the frames show"}],` : ''}
- "brief": "the write-up for the editor's next round: numbered, imperative instructions in priority order, each with its time and the studio tool that does it, ready to paste"}
-Order issues by severity. Up to 14 issues.`,
+ "path": [{"change": "one big change, a section rebuilt or a set piece redesigned, in the studio's terms", "at": start seconds or null, "to": end seconds or null, "gain": the score it is worth}],
+ "brief": "the write-up for the editor's next round: numbered, imperative instructions in priority order (the path first), each with its time and the studio tool that does it, ready to paste"}
+THE PATH TO 8: three to five changes, biggest first, whose gains add up to what takes this edit to 8 or more. Think in sections and set pieces (rebuild the hook, redesign the drop, make the loop a set piece, one look across the edit), not in tweaks. Issues: up to 10; merge points that share a cause into one; every issue names its gain. Order issues by gain.`,
   ].filter(Boolean).join('\n\n');
   const r = await askSafe(io2, prompt, images, effort, 'critic', t => {
     const n = (t.match(/"problem"\s*:/g) || []).length;

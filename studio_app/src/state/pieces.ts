@@ -16,8 +16,17 @@ export const PIECES: PieceDef[] = [
   { id: 'glass_shatter', does: 'v4 drop: the cut shatters from the impact point (muzzle flash, a hit) with a shake; impact and glass', takes: 'at (a cut), anchor (the impact point, never the face)' },
   { id: 'lens_blood', does: 'v7: blood splats on the lens in a corner and runs clear while the next shot plays through it; hit and rip', takes: 'at (the splat, usually on a cut), anchor (a top corner or the lower third)' },
   { id: 'light_title', does: 'a hero word revealed by a light sweep across it, the light passing over the shot; whoosh', takes: 'at, word, dur (1.2), color (the light tint)' },
+  { id: 'emblem_dive', does: 'THE FLASH v10 drop: lightning crackles on the chest emblem, the camera dives through it on the drop and the next shot bursts out on a gold shockwave with light rays; zap then impact', takes: 'at (the drop, a cut), anchor (the emblem on the outgoing shot, default the chest under the framed face)' },
+  { id: 'lightning_strike', does: 'THE FLASH v10 lens shatter: a bolt is thrown at the lens, the frame shatters where it hits with gold sparks; zap then glass', takes: 'at (a cut), anchor (where it hits: off the face)' },
+  { id: 'time_stop', does: 'THE FLASH v10 stutter: time stops on the hit (frozen frame, drained colour, gold rim light), embers hang in the air, then time restarts on a gold shockwave; reverse then impact', takes: 'at (the hit), hold 0.6-1.4 (0.9)' },
+  { id: 'speed_rift', does: 'THE FLASH v11 focal: a jagged rift tears open below his face with white-gold electric edges and the Speed Force churning inside, sparks off its edges, then the camera flies through it into the next shot; rip then boom', takes: 'at (a cut), anchor (the rift centre, default under the face)' },
+  { id: 'bolt_split', does: 'THE FLASH v11 drop: a lightning bolt splits the frame on the cut and every outline in the new shot pulses gold; zap', takes: 'at (the drop, a cut)' },
+  { id: 'speedforce_loop', does: 'THE FLASH v10 loop: the last second dissolves into the Speed Force (the picture pulled toward the centre with streaks racing past), then the push lands exactly on frame 0; riser into it', takes: 'nothing (it builds on the end of the edit)' },
   { id: 'pupil_loop', does: 'v4/v7 loop: the last shot pushes into the eye as an aperture closes on it, frame 0 opens from the same black on the first shot\'s eye: the wrap is black to black, invisible; heartbeat under the close', takes: 'anchor (the eye on the last shot, default the focus point), open_anchor (the eye on frame 0)' },
 ];
+
+/** The Speed Force rift (v11 focal): a tear with electric edges and the Speed Force churning inside. */
+const RIFT = `vec4 effect(vec2 uv, float t, float p) { vec2 q = toLocal(uv); float open = easeOutCubic(stage(p, 0.1, 0.85)); float wob = (fbm(vec2(q.x * 9.0, floor(t * 18.0))) - 0.5) * 0.05 + (noise(vec2(q.x * 40.0, t * 6.0)) - 0.5) * 0.012; float len = mix(0.02, 0.3, easeOutExpo(stage(p, 0.0, 0.4))); float along = 1.0 - smoothstep(len * 0.8, len, abs(q.x)); float hw = (0.004 + 0.07 * open) * along * (1.0 - 0.6 * smoothstep(0.0, len, abs(q.x))); float d = abs(q.y - wob) - hw; vec3 pic = frame(uv); vec2 sw = rot2(t * 2.0) * q; float churn = fbm(sw * 7.0 + vec2(t * 3.0, 0.0)); float streak = smoothstep(0.6, 0.95, fbm(vec2(atan(q.y, q.x) * 3.0, length(q) * 14.0 - t * 12.0))); vec3 inner = mix(vec3(0.9, 0.42, 0.05), vec3(1.0, 0.93, 0.62), churn) * (0.55 + 0.8 * streak) + frame(uv + q * 0.25 * open) * 0.25; float inside = fillAA(d); float edge = glow(abs(d), 0.0035) * along; float halo = glow(max(d, 0.0), 0.05) * along * open; vec3 col = pic + vec3(1.0, 0.8, 0.4) * halo * 0.55 + lightSpill(uv, uPos, vec3(1.0, 0.7, 0.3), 0.25) * open * 0.5; col = mix(col, inner, inside); col += vec3(1.0, 0.97, 0.85) * edge * (1.1 + 0.5 * sin(t * 60.0)); vec4 sp = sparks(q, vec2(0.0, 0.0), stage(p, 0.15, 1.0) * 0.8, 3.0, 0.6, vec3(1.0, 0.75, 0.3)); col = mix(col, sp.rgb, sp.a * 0.8); return vec4(col, envelope(p, 0.0, 0.05, 0.94, 1.0)); }`;
 
 const r4 = (v: number) => Math.round(v * 10000) / 10000;
 const pt = (v: any, d: { x: number; y: number }) => (v && typeof v === 'object' && Number.isFinite(+v.x) && Number.isFinite(+v.y) ? { x: Math.min(1, Math.max(0, +v.x)), y: Math.min(1, Math.max(0, +v.y)) } : d);
@@ -159,6 +168,61 @@ export function expandPiece(p: Project, op: any, issues: string[], tag: string):
       out.push({ ...title(word, t, d, 'sweep', color), ...note });
       fx('light_sweep', t - 0.05, 0.6, { strength: 0.8, width: 0.14, tint: color || '#ffd9a8' });
       sfx('whoosh', t, 0.3);
+      break;
+    }
+    case 'emblem_dive': {
+      const a = pt(op.anchor, { x: 0.5, y: 0.62 });
+      fx('lightning_arc', T - 0.45, 0.45, { amount: 1, color: color || '#ffc23d' }, a);
+      if (needCut()) out.push({ op: 'set', id: cut!.id, transition: { type: 'dive', dur: 0.45, at: a, to: { x: 0.5, y: 0.45 } }, ...note });
+      fx('shockwave', T + 0.02, 0.55, { amount: 0.85, color: '#ffd27a' }, { x: 0.5, y: 0.55 });
+      fx('light_rays', T, 1.2, { strength: 0.6, tint: '#ffe0a0', length: 0.5 }, { x: 0.5, y: 0.08 });
+      sfx('zap', T - 0.45, 0.4);
+      sfx('impact', T, 0.55);
+      break;
+    }
+    case 'lightning_strike': {
+      const a = pt(op.anchor, { x: 0.66, y: 0.3 });
+      fx('lightning_arc', T - 0.35, 0.38, { amount: 1, color: color || '#ffd04a' }, a);
+      if (needCut()) out.push({ op: 'set', id: cut!.id, transition: { type: 'shatter', dur: 0.5, at: a }, ...note });
+      fx('sparks_burst', T, 0.6, { amount: 1, spread: 0.8, color: '#ffc04a' }, a);
+      sfx('zap', T - 0.35, 0.4);
+      sfx('glass', T, 0.45);
+      break;
+    }
+    case 'time_stop': {
+      const hold = Math.min(1.4, Math.max(0.6, +op.hold || 0.9));
+      const lt = t - at.start;
+      const h = Math.min(hold, at.dur - lt);
+      out.push({ op: 'set', id: at.id, kf: { ...(at.kf || {}), speed: freezeKeys(at, lt, h) }, ...note });
+      fx('freeze', t, h, { drain: 0.8, rim: color || '#ffc74d', glow: 0.5 });
+      fx('embers', t, h, { amount: 0.8, density: 0.6, speed: 0.3, color: '#ffb84a' });
+      fx('shockwave', t + h, 0.5, { amount: 0.75, color: '#ffd27a' }, { x: 0.5, y: 0.5 });
+      sfx('reverse', t, 0.35);
+      sfx('impact', t + h, 0.5);
+      break;
+    }
+    case 'speed_rift': {
+      const a = pt(op.anchor, { x: 0.5, y: 0.66 });
+      const s0 = Math.max(0, T - 0.7);
+      out.push({ op: 'shader', start: r4(s0), dur: r4(T + 0.05 - s0), blend: 'normal', at: a, name: 'speed rift', code: RIFT, ...note });
+      if (needCut()) out.push({ op: 'set', id: cut!.id, transition: { type: 'dive', dur: 0.45, at: a, to: { x: 0.5, y: 0.45 } }, ...note });
+      fx('speed_force', T, 0.5, { amount: 0.55, color: '#ffc74d' }, { x: 0.5, y: 0.5 });
+      sfx('rip', s0 + 0.05, 0.4);
+      sfx('boom', T, 0.55);
+      break;
+    }
+    case 'bolt_split': {
+      if (needCut()) out.push({ op: 'set', id: cut!.id, transition: { type: 'bolt', dur: 0.4 }, ...note });
+      fx('edge_pulse', T, 0.9, { amount: 0.7, color: color || '#ffc23d' });
+      sfx('zap', T, 0.5);
+      break;
+    }
+    case 'speedforce_loop': {
+      const s0 = Math.max(0, dur - 1.0);
+      fx('speed_force', s0, dur - s0 - 0.05, { amount: 0.5, color: '#ffc74d' }, { x: 0.5, y: 0.5 });
+      fx('speed_streaks', s0, dur - s0, { amount: 0.6, color: '#ffd980' });
+      sfx('riser', s0, 0.3);
+      out.push({ op: 'loop', style: 'push', dur: 0.5, ...note });
       break;
     }
     case 'pupil_loop': {

@@ -76,6 +76,20 @@ export function CritiqueView(props: {
         </section>
       ) : null}
 
+      {crit.path?.length ? (
+        <section class="crit-sec crit-path">
+          <h4>The path to 8 <em>+{crit.path.reduce((a, s) => a + s.gain, 0).toFixed(1)} if all done well</em></h4>
+          <ol>
+            {crit.path.map(s => (
+              <li>
+                <span class="path-gain">+{s.gain.toFixed(1)}</span>
+                <span>{s.at !== undefined && <button type="button" class="tchip" onClick={() => seekTo(projectId, s.at!)}>{s.at.toFixed(2)}s{s.to !== undefined ? `–${s.to.toFixed(2)}s` : ''}</button>} {s.change}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+
       {crit.strengths.length > 0 && (
         <section class="crit-sec">
           <h4>What works</h4>

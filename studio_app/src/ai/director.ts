@@ -31,6 +31,7 @@ import { deepClone, projectDuration } from '../state/util';
 import { ContextExtras, contextBlock, parseJson, parseReply } from './prompt';
 import { elementSheet, FrameStat, libraryMosaic, mediaSheets, Sheet, standardSheets, timelineSheets } from './sheets';
 import { layerReport, loopStripTimes, storyboardTimes, transitionReport, transitionTimes } from './measure';
+import { PIECES } from '../state/pieces';
 import type { Workspace } from './workspace';
 import { lyricsText, parseLyrics } from '../state/lyrics';
 import type { Lyrics } from '../state/types';
@@ -363,6 +364,58 @@ Reply with only JSON, compact: {"message": "what you changed", "elements": [{"id
   return { applied, issues };
 }
 
+/**
+ * The weakest sections are rebuilt, not patched: the studio clears the windows around the critic's
+ * highest-value points (their transitions, effects, graphics, titles and sounds; the shots, the look,
+ * the lyric captions and the loop stay) so the revision designs them again from scratch.
+ */
+async function clearForRebuild(ws: Workspace, io: JobIO, notes: NoteCheck[], effort: Effort): Promise<{ text: string; board: Sheet[]; ids: Set<string>; windows: { a: number; b: number }[] }> {
+  const none = { text: '', board: [] as Sheet[], ids: new Set<string>(), windows: [] as { a: number; b: number }[] };
+  if (effort === 'low') return none;
+  const dur = projectDuration(ws.project);
+  const valueOf = (n: NoteCheck) => {
+    const g = n.text.match(/worth \+(\d+(?:\.\d+)?)/);
+    const v = g ? +g[1] : /^\[critical/.test(n.text) ? 0.8 : /^\[major/.test(n.text) ? 0.5 : 0.2;
+    return /PATH TO 8/.test(n.text) ? v + 0.3 : v;
+  };
+  const cands = notes.filter(n => n.from === 'critic' && n.at !== undefined && valueOf(n) >= 0.4).sort((x, y) => valueOf(y) - valueOf(x));
+  const maxW = effort === 'extra' ? 3 : effort === 'high' ? 2 : 1;
+  const wins: { a: number; b: number; ids: string[] }[] = [];
+  for (const n of cands) {
+    const r = n.text.match(/@ ([\d.]+)s-([\d.]+)s/);
+    let a = n.at! - 1.2, b = (r ? +r[2] : n.at!) + 1.2;
+    if (b - a > 6.5) b = a + 6.5;
+    a = Math.max(0, a); b = Math.min(dur, b);
+    const hit = wins.find(w => a < w.b + 0.3 && b > w.a - 0.3);
+    if (hit) { hit.a = Math.min(hit.a, a); hit.b = Math.max(hit.b, b); hit.ids.push(n.id); continue; }
+    if (wins.length < maxW) wins.push({ a, b, ids: [n.id] });
+  }
+  let total = 0;
+  const keep = wins.filter(w => { if (total + (w.b - w.a) > dur * 0.45) return false; total += w.b - w.a; return true; });
+  if (!keep.length) return none;
+  io.step('look', { state: 'run', detail: 'clearing the weakest sections for a rebuild' });
+  const q = deepClone(ws.project);
+  const main = q.tracks.find(t => t.main)?.id;
+  const lookIds = new Set(q.tracks.filter(t => t.role === 'look').map(t => t.id));
+  const inW = (c: Project['clips'][number]) => keep.some(w => Math.min(c.start + c.dur, w.b) - Math.max(c.start, w.a) >= Math.min(c.dur, 0.3) * 0.5);
+  let removed = 0, trans = 0;
+  q.clips = q.clips.filter(c => {
+    if (c.track === main || lookIds.has(c.track) || c.span === 'all') return true;
+    if (c.name === 'loop twin' || c.name === 'loop landing' || (c.name || '').startsWith('lyric L')) return true;
+    if ((c.kind === 'shader' || c.kind === 'graphic' || c.kind === 'text' || c.kind === 'sfx') && inW(c)) { removed++; return false; }
+    return true;
+  });
+  for (const c of q.clips) if (c.track === main && c.transition && c.transition.type !== 'logo' && keep.some(w => c.start >= w.a && c.start <= w.b)) { delete c.transition; trans++; }
+  ws.setProject(q);
+  await ws.save();
+  const sb = storyboardTimes(q, 72);
+  const pick = sb.times.map((t, k) => ({ t, l: sb.labels[k] })).filter(x => keep.some(w => x.t >= w.a - 0.05 && x.t <= w.b + 0.05)).slice(0, 36);
+  const board = pick.length && maxImagesFor(effort) ? await timelineSheets(q, ws.media(), pick.map(x => x.t), 18, 2, io.signal, undefined, pick.map(x => x.l), { ruler: true }).catch(() => [] as Sheet[]) : [];
+  for (const sh of board) sh.caption = `STORYBOARD of the sections cleared for the rebuild, ${sh.caption.replace(/^frames of the current edit rendered by the studio at /, '')}: each shot's first, middle and last frame with its clip id, on the bare shots`;
+  const text = `CLEARED FOR REBUILD: the studio removed ${trans} transition${trans === 1 ? '' : 's'} and ${removed} layer${removed === 1 ? '' : 's'} (effects, graphics, titles, sounds) in ${keep.map(w => `${f2(w.a)}-${f2(w.b)} s (for ${w.ids.join(', ')})`).join('; ')}; the shots, the look, the lyric captions and the loop stay. These are where the critic's biggest points are. Design each section again from scratch, the way you designed the drop: a designed transition with a reason on every cut (or a punch cut on the beat), its set piece ({"op":"piece"} where one fits, or your own element built to the craft standard), its title moments, its light and its sound, so every note for it is answered in full and the section becomes one of the best moments of the edit. Rebuild anything the owner asked for there. A section left bare is a failed rebuild: the studio checks it.`;
+  return { text, board, ids: new Set(keep.flatMap(w => w.ids)), windows: keep };
+}
+
 /** What is on screen at t: the shot, the transition into it, and every layer over it (for rebuilding a moment). */
 function clipsAt(p: Project, t: number): string {
   const main = p.tracks.find(x => x.main)?.id;
@@ -430,7 +483,7 @@ function designStep(idle: string, part?: Part) {
   return `CALL 2 OF 2: THE DESIGN. The studio applied your cut: the CURRENT TIMELINE in the first message shows it with every clip id and time, and the attached images are its STORYBOARD (each shot's first, middle and last frame, labelled with the clip id and timeline time, with a cyan 0..1 ruler of the frame: x along the top, y down the left). Design against these real frames: read off the ruler where each thing is (a light, the impact point, an eye, a window, a barrel, a door) and anchor the transitions and layers on it.
 Write every remaining operation from your plan, improved by what the frames show:
 - a designed transition on every cut ("set" on the incoming clip: transition {type, dur, at, to}), each going through something in the shot; vary them: no type twice in a row, no move family three times in 5 s, generic library moves only as filler between signature ones;
-- the set pieces: build the drop, the focal moment and the loop with {"op":"piece"} (tested builds that render right: freeze_hit, blood_drop, plastic_burst, crt_dive, polaroid_toss, glass_shatter, lens_blood, light_title, pupil_loop) and add your own shader, graphic or title around them where the concept needs it; change a freeze or ramp with "set" where a frame shows a better moment;
+- the set pieces: build the drop, the focal moment and the loop with {"op":"piece"} (tested builds that render right: ${PIECES.map(x => x.id).join(', ')}; the Flash ones are emblem_dive, lightning_strike, time_stop, speed_rift, bolt_split, speedforce_loop) and add your own shader, graphic or title around them where the concept needs it; change a freeze or ramp with "set" where a frame shows a better moment;
 - the captions and two or more designed titles that act out their meaning, clear of faces;
 - light, atmosphere, particles and themed graphics in every section, the drop on its biggest move. RESTRAINT: every layer must read in a still frame (atmosphere under a contrasty look needs amount 0.5+ or "over"); at most three layers land on one moment; one flash per hit; light and particles off the face. A clean, readable moment beats a stacked one, and the studio measures every layer;
 - the sound for each set piece and hard hit (punctuation, not a sound on every cut);
@@ -1135,7 +1188,16 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
   const lrep0 = await layerReport(p, ws.media(), io.signal).catch(() => ({ text: '' }));
   const measured = [tsh.length ? transitionReport(p, tfx, tsh).text : '', lrep0.text].filter(Boolean).join('\n\n');
   const before = new Map(notes.filter(n => n.at !== undefined).map(n => [n.id, timeSheets.flatMap(sh => sh.stats || []).filter(x => Math.abs(x.t - n.at!) < 0.03)[0]]));
-  io.step('look', { state: sheets.length ? 'done' : 'skip', detail: sheets.length ? `${sheets.length} image${sheets.length > 1 ? 's' : ''}` : 'no images' });
+  // the weakest sections are cleared and rebuilt from scratch; their notes are checked against the cleared frames
+  const rebuild = await clearForRebuild(ws, io, notes, effort);
+  if (rebuild.ids.size) {
+    const rn = notes.filter(n => rebuild.ids.has(n.id) && before.get(n.id));
+    const after = rn.length ? await timelineSheets(ws.project, ws.media(), rn.map(n => before.get(n.id)!.t), 30, 1, io.signal).catch(() => [] as Sheet[]) : [];
+    const st = after.flatMap(x => x.stats || []);
+    for (const n of rn) { const b = st.find(x => Math.abs(x.t - before.get(n.id)!.t) < 1e-3); if (b) before.set(n.id, b); }
+    sheets.splice(timeSheets.length, 0, ...rebuild.board);
+  }
+  io.step('look', { state: sheets.length ? 'done' : 'skip', detail: `${sheets.length} image${sheets.length === 1 ? '' : 's'}${rebuild.windows.length ? ` · ${rebuild.windows.length} section${rebuild.windows.length > 1 ? 's' : ''} cleared for a rebuild` : ''}` });
 
   const checks0 = await checkpoint(ws, preset, true);
   const rounds = ws.rec.rounds || [];
@@ -1148,7 +1210,8 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
     `ROUND ${job.round} INSTRUCTIONS FROM THE OWNER`,
     auto ? 'Automatic round: carry out every critic point below.' : brief || '(no extra words: work through the critic\'s points)',
     notesBlock(notes),
-    notes.some(n => n.at !== undefined) ? `WHAT IS AT EACH NOTE'S MOMENT NOW (rebuild from these: remove what makes the moment weak, then build it again)\n${notes.filter(n => n.at !== undefined).map(n => `${n.id} @ ${n.at!.toFixed(2)}s: ${clipsAt(p, n.at!)}`).join('\n')}` : '',
+    rebuild.text,
+    notes.some(n => n.at !== undefined) ? `WHAT IS AT EACH NOTE'S MOMENT NOW (rebuild from these: remove what makes the moment weak, then build it again)\n${notes.filter(n => n.at !== undefined).map(n => `${n.id} @ ${n.at!.toFixed(2)}s: ${clipsAt(ws.project, n.at!)}`).join('\n')}` : '',
     measured,
     auto && lastCrit?.brief ? `THE CRITIC'S WRITE-UP (context for the notes)\n${lastCrit.brief}` : '',
     lastCrit ? `THE CRITIC'S LAST SCORE: ${lastCrit.score}/10 ("${lastCrit.headline}"); areas from weakest: ${weakest}. Raise the weakest areas with real changes; the critic checks every note again and scores the result.` : '',

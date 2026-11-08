@@ -222,6 +222,23 @@ are kept next to the critic's, and every later critique is told how far its scal
 **No black and white with a colour kept** unless you ask for it. The studio swaps `noir_red` for clean
 noir otherwise.
 
+**Revisions that jump, not creep.**
+
+- **The critic scores each round fresh** on the calibrated scale. It no longer starts from last
+  round's number and adds small increments per fixed point.
+- **Every issue carries its expected gain**, and issues are ordered by gain.
+- **The path to 8** names the three to five biggest changes (sections and set pieces, not tweaks) that
+  would take the edit to 8 or more. The path leads the next round's notes.
+- **Revisions rebuild sections.** The studio clears the one to three sections around the
+  highest-value points: their transitions, effects, graphics, titles and sounds. The shots, the look,
+  the lyric captions and the loop stay. Opus redesigns those sections from scratch, with a storyboard
+  of the bare shots and the full design process; the workshop and reviews follow.
+
+**Flash set pieces.** `emblem_dive`, `lightning_strike`, `time_stop`, `speed_rift` (a custom Speed
+Force tear), `bolt_split` and `speedforce_loop` are tested one-operation builds of the approved v10
+and v11 moments. Their lightning is anchored on the framed subject (face near (0.5, 0.42), chest near
+(0.5, 0.62)).
+
 **The critic's scale.** Scores are calibrated to the owner's approved benchmarks (an edit at their
 level is an 8). The overall score stays within half a point of the weighted area scores. "Critical" is
 kept for defects that break the edit on the first watch, and caps the score at 7 while it remains.

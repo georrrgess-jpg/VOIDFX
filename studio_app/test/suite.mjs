@@ -109,7 +109,8 @@ await ctx.addInitScript(() => {
           }
           if (full.includes('You are the critic for VOIDFX Studio')) {
             call.critic = true;
-            call.anchored = full.includes('SCORING AGAINST THE LAST ROUND');
+            call.anchored = full.includes('THE LAST ROUND SCORED');
+            call.fresh = !full.includes('starting from that score');
             const follow = [...full.matchAll(/^(N\d+)(?: @ [\d.]+s)?: /gm)].map(m => m[1]);
             return reply(JSON.stringify({
               score: call.anchored ? 7.1 : 6.2, verdict: 'not ready', headline: 'Competent, but the hook is soft.',
@@ -117,11 +118,12 @@ await ctx.addInitScript(() => {
               strengths: ['The dive lands on a downbeat.'],
               issues: [
                 // a critical issue caps the score at 6.5, so the re-scored round has none
-                { severity: call.anchored ? 'major' : 'critical', at: 0, area: 'hook', problem: 'The first second is static.', fix: 'Open on the strongest shot with a zoom punch.' },
+                { severity: call.anchored ? 'major' : 'critical', at: 0, area: 'hook', problem: 'The first second is static.', fix: 'Open on the strongest shot with a zoom punch.', gain: 0.9 },
                 { severity: 'major', at: 3.0, area: 'rhythm', problem: 'The bloom starts late.', fix: 'Move the cut onto the beat at 3.00 s.' },
                 { severity: 'minor', at: 6.0, area: 'text', problem: 'The knockout title is small.', fix: 'size 0.11.' },
               ],
               versus: 'Below v7.', brief: '1. Rebuild the first second.\n2. Snap every cut.',
+              path: [{ change: 'Rebuild the hook as a set piece.', at: 0, to: 1.5, gain: 1.0 }, { change: 'Make the loop a push landing.', at: null, gain: 0.6 }],
               ...(follow.length ? { followUp: follow.map((id, i) => ({ id, status: i % 2 ? 'partly' : 'fixed', comment: 'checked' })) } : {}),
             }), opts);
           }
@@ -152,6 +154,8 @@ await ctx.addInitScript(() => {
             return reply(JSON.stringify({ message: 'Designed the transitions, titles and light.', ops }), opts);
           }
           if (/ROUND \d+ INSTRUCTIONS FROM THE OWNER/.test(full) && last.includes('Work through')) {
+            if (last.includes('CLEARED FOR REBUILD')) window.__sawRebuild = true;
+            if (last.includes('[PATH TO 8')) window.__sawPath = true;
             const part = last.match(/THIS CALL CARRIES OUT (N\d+)(?:-(N\d+))? ONLY/);
             window.__reviseCalls = [...(window.__reviseCalls || []), { effort: opts.effort, images: call.images, part: part ? part[0] : null }];
             if (!part && window.__breakRevise > 0) { window.__breakRevise--; call.failed = 'empty_completion'; throw { code: 'empty_completion', message: 'no text' }; }
@@ -283,6 +287,9 @@ if (on('build') && on('revise')) {
   check('revision: notes with timed critic points keep their time', r2?.notes?.some(n => n.at === 3), JSON.stringify(r2?.notes?.map(n => n.at)));
   check('critic: scores against the last round', r2?.crit?.prev === 6.2 && r2.crit.score === 7.1, JSON.stringify(r2?.crit));
   check('critic: follows up every note', r2?.crit?.follow?.length === 5, JSON.stringify(r2?.crit?.follow?.map(f => f.id)));
+  const rb = await S(() => ({ rebuild: !!window.__sawRebuild, path: !!window.__sawPath, fresh: window.__calls.filter(c => c.critic).every(c => c.fresh !== false) }));
+  check('revisions clear the weakest sections and rebuild them; the path to 8 leads the notes', rb.rebuild && rb.path, JSON.stringify(rb));
+  check('the critic scores each round fresh (no building up from the last score)', rb.fresh, JSON.stringify(rb));
   check('automatic round ran after the critique', !!r3 && r3.kind === 'revise' && r3.notes?.every(n => n.from === 'critic') && !!r3.crit, JSON.stringify(r3 && { notes: r3.notes?.length, crit: r3.crit?.score }));
   const rc = await S(() => window.__reviseCalls || []);
   check('revision: one call writes every note; when it runs out of time two calls share the notes at the same effort', rc.filter(c => c.part).length === 2 && rc.every(c => c.effort === 'high'), JSON.stringify(rc));
@@ -492,13 +499,13 @@ if (on('units')) {
     const base = [{ op: 'clear' }, ...[0, 1, 2, 3, 4, 5].map(k => ({ op: 'add', id: `s${k}`, media: vid, track: 'V1', in: k * 0.4, dur: 1.5, focus: { x: 0.5, y: 0.42 } })), { op: 'add', media: mus, track: 'A1', start: 0, in: 0, dur: 9 }];
     out.pieces = {};
     const sheets = [];
-    for (const [kind, extra] of [['freeze_hit', { at: 2.0, word: 'HIM' }], ['blood_drop', { at: 4.5, word: 'DARLING' }], ['plastic_burst', { at: 3.0 }], ['crt_dive', { at: 6.0 }], ['polaroid_toss', { at: 1.5 }], ['glass_shatter', { at: 7.5, anchor: { x: 0.7, y: 0.75 } }], ['lens_blood', { at: 4.6 }], ['light_title', { at: 5.0, word: 'ALONG' }], ['pupil_loop', {}]]) {
+    for (const [kind, extra] of [['freeze_hit', { at: 2.0, word: 'HIM' }], ['blood_drop', { at: 4.5, word: 'DARLING' }], ['plastic_burst', { at: 3.0 }], ['crt_dive', { at: 6.0 }], ['polaroid_toss', { at: 1.5 }], ['glass_shatter', { at: 7.5, anchor: { x: 0.7, y: 0.75 } }], ['lens_blood', { at: 4.6 }], ['light_title', { at: 5.0, word: 'ALONG' }], ['pupil_loop', {}], ['emblem_dive', { at: 3.0 }], ['lightning_strike', { at: 4.5 }], ['time_stop', { at: 2.0 }], ['speed_rift', { at: 6.0 }], ['bolt_split', { at: 7.5 }], ['speedforce_loop', {}]]) {
       const before = applyOps(store.state.project, base, media).project;
       const res = applyOps(before, [{ op: 'piece', kind, ...extra }], media);
       const lr = await layerReport(res.project, media);
       out.pieces[kind] = { added: res.project.clips.length - before.clips.length, changed: res.applied, bad: res.issues.filter(x => !/moved|removed|cut|landed/.test(x)), invisible: lr.invisible, blown: lr.blown };
       const T = extra.at ?? 8.8;
-      const ts = kind === 'pupil_loop' ? [8.4, 8.75, 0.05, 0.3] : kind === 'blood_drop' ? [3.4, 4.2, 4.5, 4.75] : [T - 0.3, T, T + 0.15, T + 0.4];
+      const ts = kind === 'pupil_loop' || kind === 'speedforce_loop' ? [8.2, 8.55, 8.85, 0.05] : kind === 'speed_rift' ? [5.45, 5.75, 5.95, 6.15] : kind === 'time_stop' ? [2.05, 2.4, 2.85, 3.0] : kind === 'blood_drop' ? [3.4, 4.2, 4.5, 4.75] : [T - 0.3, T, T + 0.15, T + 0.4];
       const frames = await renderStills(res.project, ts, 360, undefined, media);
       sheets.push({ kind, frames });
     }

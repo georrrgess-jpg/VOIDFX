@@ -1473,3 +1473,9 @@ kbd { font: 600 10.5px var(--font-mono); padding: 2px 6px; border-radius: 5px; b
 .oscore-note { height: 34px; padding: 0 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.09); }
 .oscore-note:focus { outline: none; border-color: rgba(127, 211, 255, 0.5); }
 .oscore .btn { justify-self: start; height: 32px; padding: 0 14px; }
+
+/* the critic's path to 8 */
+.crit-path h4 em { font-style: normal; color: var(--ok); margin-left: 8px; letter-spacing: 0.05em; }
+.crit-path ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.crit-path li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: linear-gradient(90deg, rgba(82, 214, 160, 0.09), rgba(255, 255, 255, 0.02)); border: 1px solid rgba(82, 214, 160, 0.22); }
+.path-gain { font: 800 15px/1.4 var(--font-display); color: var(--ok); }

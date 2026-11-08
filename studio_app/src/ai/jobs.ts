@@ -9,7 +9,7 @@ import { idbGet, idbPut } from '../state/storage';
 import { store } from '../state/store';
 import { Effort, Job, JobKind, JobStep } from '../state/types';
 import { uid } from '../state/util';
-import { critiqueEdit, criticSteps, issueLine } from './critic';
+import { critiqueEdit, criticSteps, issueLine, pathLine } from './critic';
 import { buildEdit, errText, HIDE, JobIO, reviseEdit, stepsFor } from './director';
 import { Workspace } from './workspace';
 
@@ -266,7 +266,7 @@ function followUp(job: Job, ws: Workspace) {
     // every point, minor ones too: each fix the critic can see moves the score
     void enqueue({
       kind: 'revise', projectId: job.projectId, round: job.round + 1, effort: job.effort, presetId: job.presetId,
-      brief: `Automatic round: apply the critic's write-up.\n${crit.brief}`, fromCritic: crit.issues.map(issueLine),
+      brief: `Automatic round: apply the critic's write-up.\n${crit.brief}`, fromCritic: [...(crit.path || []).map(pathLine), ...crit.issues.map(issueLine)],
       follow: { critic: f.critic, autoRounds: f.autoRounds - 1 },
     });
   }

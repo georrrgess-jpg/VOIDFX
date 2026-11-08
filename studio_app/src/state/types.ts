@@ -304,7 +304,10 @@ export type Effort = 'low' | 'medium' | 'high' | 'extra';
 export interface JobStep { id: string; label: string; state: 'wait' | 'run' | 'done' | 'error' | 'skip'; detail?: string; t0?: number; t1?: number }
 
 /** One issue the critic found. `at` is timeline seconds when the issue is at a moment. */
-export interface CritiqueIssue { severity: 'critical' | 'major' | 'minor'; at?: number; area: string; problem: string; fix: string }
+export interface CritiqueIssue { severity: 'critical' | 'major' | 'minor'; at?: number; area: string; problem: string; fix: string; /** How much the score rises when this is fixed well (the critic's estimate). */ gain?: number }
+
+/** One step of the critic's path to 8+: a big change and the score it is worth. */
+export interface PathStep { change: string; at?: number; to?: number; gain: number }
 
 /** One numbered note of a round (an owner instruction or a critic point) and how it was carried out. */
 export interface NoteCheck {
@@ -343,6 +346,8 @@ export interface Critique {
   brief: string;
   /** How each point of the previous round was carried out, as the critic saw it. */
   followUp?: FollowUp[];
+  /** The few biggest changes that would take the edit to 8 or more, with their gains. */
+  path?: PathStep[];
   /** The owner's own score of the same round, and what they said: the critic calibrates to it. */
   ownerScore?: number;
   ownerNote?: string;

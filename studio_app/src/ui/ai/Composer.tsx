@@ -2,7 +2,7 @@
 // words, the critic points they choose to pass on, and how the round runs. Rounds run in the
 // background, so this screen closes as soon as the round starts.
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { issueLine } from '../../ai/critic';
+import { issueLine, pathLine } from '../../ai/critic';
 import { EFFORTS, roundNotes } from '../../ai/director';
 import { activeJobFor, enqueue } from '../../ai/jobs';
 import { listPresets, Preset } from '../../state/catalog';
@@ -121,7 +121,9 @@ export function Composer() {
   const fromCritic = useMemo(() => {
     if (!crit) return [] as string[];
     const lines = crit.issues.filter((_, i) => picked.has(i)).map(issueLine);
-    return briefOn && crit.brief ? [`The critic's write-up: ${crit.brief}`, ...lines] : lines;
+    // the path to 8 leads: the few big changes come before the individual points
+    const path = briefOn ? (crit.path || []).map(pathLine) : [];
+    return briefOn && crit.brief ? [...path, `The critic's write-up: ${crit.brief}`, ...lines] : [...path, ...lines];
   }, [crit, picked, briefOn]);
 
   if (!c || !rec) return null;

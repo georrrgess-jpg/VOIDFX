@@ -48,7 +48,7 @@ DEXTER
 - BLEED IT blood fill (v4): the title in white with anim.in "bloom" on a single line marked emphasis so it floods red from the bottom, then it rides into the shatter.
 - Kill-room light, the Dark Passenger's shadow: fx spotlight (anchor at the top, dark 0.7) + fx dust; transition shadow for the darkness swallowing the frame.
 
-THE FLASH
+THE FLASH (the studio has these as tested one-operation pieces: emblem_dive, lightning_strike, time_stop, speed_rift, bolt_split, speedforce_loop; use them for the drop, the focal moment and the loop, then build your own lightning and speed elements around them, anchored on him: with focus set, his face sits near (0.5, 0.42) of the frame and his chest near (0.5, 0.62))
 - Emblem dive + drop wave (v10 drop; approved): dive with at = the chest emblem (to = centre), fx lightning_arc on the emblem 0.4 s before, fx shockwave (amount 0.9, rim #ffd27a) + fx light_rays on the incoming. The pre-drop words ride into the dive.
 - Lens shatter (v10; approved): fx lightning_arc thrown toward the lens, then transition shatter where it hits + fx sparks_burst. Sound: zap + glass + impact.
 - Time stops in the stutter (v10; approved): speed keys to 0.05 + fx freeze (rim #ffc74d, drain 0.8) + fx embers hanging (speed 0.3) + fx pulse only on the music's hits; restart with fx shockwave.
