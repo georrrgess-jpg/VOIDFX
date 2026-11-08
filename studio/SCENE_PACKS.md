@@ -14,24 +14,36 @@ All times are **seconds in that file**. "w" is the YuNet face width in source pi
 
 ## Pack quality (measured with `tools/sharpness.py packs`)
 
-Every pack is 1280×720 (some are labelled 4K), so a 9:16 crop is enlarged about 2.7× before any zoom. Bits per pixel = how much data each pixel gets (higher = less compressed). Detail = the in-focus detail score (higher = crisper; the Reverse-Flash pack scores high because it was pre-sharpened).
+Every pack is 1280×720, including every one labelled 4K, 1440p or "4K TOPAZ" (the 2026-11-08 Drive batch too), so a 9:16 crop is enlarged about 2.7× before any zoom. Bits per pixel = how much data each pixel gets (higher = less compressed). Detail = the in-focus detail score (higher = crisper; the Reverse-Flash pack scores high because it was pre-sharpened).
 
 | Pack | Mb/s | Bits/px | Detail | Use for close-ups? |
 |---|---|---|---|---|
 | `reverse_flash.mp4` | 1.25 | 0.023 | 1.18 | Yes (inside its 600×600 inset; pre-sharpened) |
+| `pack8_s1_hq.mp4` (S1, **replaces `pack8_s1`**) | 2.00 | 0.036 | 0.73 | **Yes.** Same frames and timing as `pack8_s1.mp4` at 4.6× the bitrate: the blocking is gone. Use it for every S1 shot |
 | `scenepack2_60fps.mp4` | 2.02 | 0.036 | 0.65 | Yes |
 | `scenepack3_24fps.mp4` | 1.95 | 0.088 | 0.63 | Yes |
-| `flash_b.mp4` | 1.18 | 0.021 | 0.60 | Yes |
+| `flash_b_hq.mp4` (**replaces `flash_b`**) | 2.20 | 0.040 | 0.63 | Yes. Same frames and timing as `flash_b.mp4`, 1.9× the bitrate |
+| `pack9_s4_best_hq.mp4` (S4, **replaces `pack9_s4_best`**) | 1.80 | 0.033 | 0.62 | **Yes** (was static close-ups only). Same frames and timing as `pack9_s4_best.mp4`, 2.6× the bitrate |
+| `flash_b.mp4` | 1.18 | 0.021 | 0.60 | Superseded by `flash_b_hq.mp4` for new edits (kept for v5/v10) |
 | `pack7_4k.mp4` ("4K", really 720p) | 2.10 | 0.038 | 0.59 | Yes |
-| `pack8_s1.mp4` (S1) | **0.43** | **0.008** | 0.58 | Detail looks fine on still frames, but it's the most compressed pack: blocks in dark and moving areas. Wide or static shots only |
+| `pack8_s1.mp4` (S1) | **0.43** | **0.008** | 0.58 | **Superseded by `pack8_s1_hq.mp4`** (same frames, 4.6× the bitrate). The old copy blocks in dark and moving areas; kept only for the shipped edits that used it |
 | `flash_a.mp4` | 1.78 | 0.076 | 0.58 | Yes |
-| `pack9_s4_best.mp4` | 0.69 | 0.013 | 0.55 | Static close-ups only |
+| `flash_s5.mp4` | 1.37 | 0.062 | 0.56 | Yes |
+| `pack9_s4_best.mp4` | 0.69 | 0.013 | 0.55 | Superseded by `pack9_s4_best_hq.mp4` for new edits |
 | `doakes.mp4` | 1.07 | 0.019 | 0.55 | OK |
+| `dexter_s2_all.mp4` | 2.07 | 0.037 | 0.55 | Yes |
+| `flash_s2_topaz.mp4` | 1.40 | 0.051 | 0.55 | Yes (skip the shots with credit overlays) |
+| `flash_s3.mp4` | 1.22 | 0.044 | 0.54 | Yes |
 | `pack10_s4_24p.mp4` | 0.76 | 0.034 | 0.53 | OK |
 | `pack5_mixtape120.mp4` | 2.19 | 0.040 | 0.51 | OK |
+| `flash_blitzkrieg.mp4` | 2.06 | 0.037 | 0.51 | OK (heavily lit action) |
+| `flash_s1.mp4` | 1.11 | 0.040 | 0.51 | OK |
 | `scenepack.mp4` | 1.03 | 0.020 | 0.50 | OK |
+| `dexter_s2.mp4` | 1.98 | 0.036 | 0.50 | OK |
+| `dexter_mix_1440.mp4` ("1440p", really 720p) | 1.72 | 0.031 | 0.48 | OK for wides; check close-ups |
 | `trinity_goodbye.mp4` | 1.46 | 0.026 | 0.44 | Soft |
 | `pack6_s5.mp4` | 0.71 | 0.026 | 0.44 | Soft |
+| `flash_s2.mp4` ("4K 60FPS") | 1.46 | 0.027 | 0.43 | Soft: prefer `flash_s2_topaz.mp4` for the same season |
 | `flash_s4.mp4` | 1.08 | 0.020 | 0.39 | Soft: pick the crispest moments, keep zoom low |
 | `pack4_aesthetic.mp4` | 1.70 | 0.064 | 0.36 | Softest (filtered/graded): wide shots, not close-ups |
 | `dexter_s1_hq.mp4` (S1, added 2026-11-08) | 2.00 | 0.036 | **0.73** | **Yes: the sharpest Dexter pack.** The same footage and timing as `pack8_s1.mp4` at 4.6× the bitrate (matched frames 30–41 dB). Use it instead of p8 |
@@ -56,6 +68,46 @@ Every link labelled 4K or 1440p is **1280×720**.
     - S3 (30 fps, 2:16, 1.22 Mb/s);
     - S5 (23.98 fps, 6:22, 1.37 Mb/s);
     - Blitzkrieg (60 fps, 3:02, 2.06 Mb/s).
+
+## Packs added 2026-11-08 (the owner's Google Drive list)
+
+Downloaded with `python3 tools/fetch_packs.py LINKS.txt`; **the links are not in git** (the repository is public). Every file is 1280×720; the "60 fps" ones are about 24 fps film with repeated frames (the sampler handles that). Not shot-listed yet: run `vN/work/analyze.py src/FILE.mp4 KEY` when an edit uses one. Times below are from a 24-frame contact sheet.
+
+**Better copies of packs already in the library** (same frames, same timing, so an EDL's source times carry over): `pack8_s1_hq.mp4` (S1, 0.43 → 2.00 Mb/s, detail 0.58 → 0.73), `pack9_s4_best_hq.mp4` (S4, 0.69 → 1.80 Mb/s), `flash_b_hq.mp4` (1.18 → 2.20 Mb/s). **New edits use the `_hq` files.** The old files stay because the shipped edits (and their reference frames) were made from them.
+
+| File (key) | Uploaded as | Length | What's in it |
+|---|---|---|---|
+| `flash_s1.mp4` (`fs1`) | The Flash Season 1 4k 60fps Scenepack (4k upscaled in ae) | 4:54, 30 fps | Barry S1 (civilian and the first suit), **Harrison Wells (43 s)**, Cisco, Caitlin, Iris, Oliver with the bow (165–177 s), the wave/tsunami wide (116 s), a lightning strike (141 s), the leap (202 s), bloodied Barry close-ups (275, 288 s) |
+| `flash_s2_topaz.mp4` (`fs2t`) | Barry Allen The Flash Season 2 Scene Pack (4K TOPAZ!!) | 2:27, 30 fps | Barry civilian close-ups, S.T.A.R. Labs, Oliver (89 s), a speed fight in red lightning (95–101 s), the gala in a tux (119 s). **Credit overlays on some shots** (~40 s "Tom Cavanagh", ~58 s "Glen Winter"): avoid those frames |
+| `flash_s2.mp4` (`fs2`) | THE FLASH SEASON 2 SCENE PACK 4K 60FPS | 5:09 | Flash Day flyer (32 s), the glowing emblem (45 s), speed trails (148 s), fire/Firestorm (6, 187 s), the tachyon chest device (238 s), **Zoom's red eyes (290 s)**. Softest new pack |
+| `flash_s3.mp4` (`fs3`) | Barry Allen The Flash Season 3 Scene Pack (4K TOPAZ!!) | 2:16, 30 fps | **A title card at 0–5 s and a "based on characters from DC Comics" credit at 8 s.** Barry in the S3 suit at night, suit vs suit (76 s), civilian close-ups, Savitar's light (133 s) |
+| `flash_s5.mp4` (`fs5`) | Flash S5 4K Scenepack | 6:22, 23.976 fps | The S5 suit (bright red, white emblem), the time vault, Nora, **Wells in front of the studded wall (135 s)**, Cicada, **the Reverse-Flash in yellow with red lightning (342 s)**, speed lightning (119, 183 s) |
+| `flash_blitzkrieg.mp4` (`fbk`) | Blitzkrieg Flash Scene Pack 4k 60fps | 3:02 | Action-heavy, in-camera lightning on almost every shot: the S4/S5 suit in a dark bar, speed trails down a street (65 s), an explosion (80 s), a fight in an office (103–118 s), a corridor run (148–156 s) |
+| `dexter_s2.mp4` (`ds2`) | Dexter Morgan (S2) Scenepack 4K | 5:18 | S2: close-ups, Miami Metro, the smoke-filled lab (99–139 s), Lila (205, 258, 285 s), night exteriors; lots of tight close-ups (check the face width) |
+| `dexter_s2_all.mp4` (`ds2a`) | Dexter Morgan 4k All Scenes Dexter (Season 2) Best & Most Popular Scenes for Edit | 6:51 | S2, overlaps `dexter_s2` (the smoke lab is at 145 s here): the boat (26 s), Doakes in the cage/cabin (316 s), the Everglades walk (368 s), with Deb at night (385 s), blood-spatter lab (180 s) |
+| `dexter_mix_1440.mp4` (`dmx`) | dexter scenpack (1440p) | 7:07 | S1–S3 mix: knife in the dark (45 s), burning photo (62 s), bloodied in the street (98 s), **kill-room plastic (187, 240 s)**, the container-yard fight (258 s), **the confetti parade "GO DEXTER" (329–418 s)** |
+| `ref_v104_the_passenger.mp4` | voidfx THE PASSENGER S LOVE SONG | 23 s, 1080×1920 | **Not a source**: the Dexter studio's finished v104 *THE PASSENGER* export, kept as a reference edit |
+
+**Proven in v12 (BLOOM):**
+- `fs5` 105.12–106.58: storm sky with a bolt (pushed to night; the bolt from 105.47 at x≈700);
+- `fbh` 10.32–12.06: the lab strike (tame its red light);
+- `fs1` 4.45–4.98: he wakes in S.T.A.R. Labs (face in frame from 4.45);
+- `fbk` 133.20–134.20: hood down in the dark, sparks gather at his hand;
+- `fs2t` 28.9–31.3: the S2 suit in blue cortex light;
+- `fs1` 291.90–292.85: his eye fills with lightning (pupil at source x 343, y 288);
+- `fbk` 60.70–63.40: FPV speed trails down a night street (no face);
+- `fbk` 124.75–126.20: masked close-up, blue-grey;
+- `fs5` 72.00–74.60: S5 suit under street lights;
+- `fs5` 108.60–110.90: crouch with lightning streaks;
+- `fbk` 23.95–25.78: hood down, night bokeh;
+- `fs5` 180.00–182.60: lightning on his chest;
+- `fs3` 59.10–61.50: masked extreme close-up (YuNet sometimes finds only the left half);
+- `fbk` 20.00–21.85: lightning run at the camera;
+- `fbk` 136.02–138.20: S4 suit standing in a night street (hero shot);
+- `fs3` 106.80–108.45: masked under street lights;
+- `fbh` 109.70–112.40: S5 suit walking toward the camera.
+
+**Avoid:** `fbk` 100.5–102.2 (the same strike scene as `fbh` 10.3); `fs2t` 133–137 (his head at the top of the source frame); `fs1` 138–143 (a dark limb across the frame).
 
 ## Dexter scene packs
 

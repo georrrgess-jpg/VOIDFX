@@ -264,7 +264,9 @@ def main():
     if a.out: OUT_OVERRIDE[0] = os.path.abspath(a.out)
     DRY[0] = a.dry
     E = edit_env.edl(a.n)
-    if a.mode == "status": return status(a.n, E)
+    if a.mode == "status":
+        edit_env.load_edit(a.n, setup=False)                 # the renderer may write into the EDL's shot dicts on import
+        return status(a.n, E)
     if a.mode == "clean":
         stop_master(a.n)
         for k in ("mkv", "meta"):
@@ -273,6 +275,8 @@ def main():
     if a.mode == "master": return master_wait(a.n, E) if a.wait else master(a.n, E)
     for f in ("mix.wav", "mix_preroll.wav"):
         if not os.path.exists(f"{paths(a.n)['audio']}/{f}"): sys.exit(f"missing audio/{f}: run the audio step first")
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "rsrv.py"), str(a.n), "stop"],
+                   capture_output=True)                     # the render server's warm workers would compete for memory
     R = edit_env.load_edit(a.n)
     if a.full: return full_render(a.n, E, "--full")
     only = [tuple(int(x) for x in r.split(":")) for r in a.only.split(",")] if a.only else []

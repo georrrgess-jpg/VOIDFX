@@ -1,0 +1,197 @@
+{
+ "edit": "v12",
+ "round": 3,
+ "stages": [
+  {
+   "t": "2026-11-08 02:41:35",
+   "round": 1,
+   "step": "prep",
+   "s": 112.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 02:45:52",
+   "round": 1,
+   "step": "prep",
+   "s": 108.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:08:17",
+   "round": 1,
+   "step": "prep",
+   "s": 112.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:12:09",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:12:27",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:12:41",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:36:41",
+   "round": 1,
+   "step": "video",
+   "s": 295.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:39:18",
+   "round": 1,
+   "step": "qc",
+   "s": 144.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:44:44",
+   "round": 1,
+   "step": "video:618:1052",
+   "s": 217.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:47:21",
+   "round": 1,
+   "step": "qc",
+   "s": 143.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:54:13",
+   "round": 1,
+   "step": "video:100:112,904:918",
+   "s": 306.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:57:29",
+   "round": 1,
+   "step": "qc",
+   "s": 142.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:58:54",
+   "round": 1,
+   "step": "deliver",
+   "s": 66.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:02:11",
+   "round": 2,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:04:55",
+   "round": 2,
+   "step": "video:10:105",
+   "s": 164.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:07:21",
+   "round": 2,
+   "step": "qc",
+   "s": 138.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:09:15",
+   "round": 2,
+   "step": "deliver",
+   "s": 114.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:15:55",
+   "round": 3,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:20:07",
+   "round": 3,
+   "step": "video:560:640",
+   "s": 211.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:22:43",
+   "round": 3,
+   "step": "qc",
+   "s": 140.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:24:29",
+   "round": 3,
+   "step": "deliver",
+   "s": 106.0,
+   "rc": 0
+  }
+ ],
+ "notes": [
+  {
+   "t": "2026-11-08 04:02:07",
+   "round": 2,
+   "cat": "other",
+   "text": "remove the NIGHT text at the beginning"
+  },
+  {
+   "t": "2026-11-08 04:02:07",
+   "round": 2,
+   "cat": "other",
+   "text": "get rid of like half the sound effects"
+  },
+  {
+   "t": "2026-11-08 04:15:51",
+   "round": 3,
+   "cat": "text",
+   "text": "get rid of the bloom text"
+  },
+  {
+   "t": "2026-11-08 04:15:51",
+   "round": 3,
+   "cat": "other",
+   "text": "remove the bell sound on the flower and the whoosh on one of the first transitions"
+  },
+  {
+   "t": "2026-11-08 04:15:51",
+   "round": 3,
+   "cat": "density",
+   "text": "one more really cool transition and an emblem transition"
+  }
+ ],
+ "catches": [],
+ "round_starts": {
+  "1": "2026-11-08 03:59:15",
+  "2": "2026-11-08 04:02:07",
+  "3": "2026-11-08 04:15:51"
+ },
+ "verdict": {
+  "t": "2026-11-08 04:34:14",
+  "round": 3,
+  "verdict": "standard",
+  "words": "I like this edit make it a standard"
+ }
+}

@@ -1,11 +1,13 @@
-"""Scaffold a new voidfx edit from one of the two standard engines (agreed by both studios, 2026-11-07):
-  --base v11   the Flash standard, v11 BOP rev 4: every v4-v11 transition and graphic, the restored-source sampler, velocity +
-               optical flow, the beat camera, the v9 text system, the v11 rival/emblem/rift pieces. Template: tools/edl_template.py
+"""Scaffold a new voidfx edit from one of the standard engines:
+  --base v12   the Flash standard since 2026-11-08, v12 BLOOM rev 3 on v11 BOP: every v4-v12 transition and graphic, the
+               restored-source sampler, velocity + optical flow, the beat camera, the v9 text system, the v11 and v12 pieces.
+               Template: tools/edl_template.py
+  --base v11   the previous Flash standard, v11 BOP rev 4 (inside v12). Template: tools/edl_template.py
   --base v105  the Dexter standard, v105 DRACULA rev 3: the v4-v9 engine + the v103 FOREVER, v104 THE PASSENGER and v105 DRACULA
                toolkits in fxN.py (spliced into renderN.py by splice.py). Template: tools/edl_template_v105.py
-Without --base: v105 if the slug or title mentions Dexter, otherwise v11.
+Without --base: v105 if the slug or title mentions Dexter, otherwise v12.
 
-Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song" [--base v11|v105]
+Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song" [--base v12|v11|v105]
 Creates vN/{work,frames,audio,out}; copies the engine wired to vN/work/edlN.py; writes edlN.py from the base's template;
 adds the media folders to .gitignore. The engine reads every path and the output file name from the EDL (VER, SLUG).
 """
@@ -14,9 +16,9 @@ import os, sys, re, shutil
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 n, slug = args[0], args[1]; title = args[2] if len(args) > 2 else slug
-if "--base" in sys.argv: BASE = sys.argv[sys.argv.index("--base") + 1]
-else: BASE = "v105" if "dexter" in (slug + title).lower() else "v11"
-assert BASE in ("v11", "v105"), "--base must be v11 (Flash) or v105 (Dexter)"
+if "--base" in sys.argv: BASE = sys.argv[sys.argv.index("--base") + 1]; args = [a for a in args if a != BASE]; n, slug = args[0], args[1]; title = args[2] if len(args) > 2 else slug
+else: BASE = "v105" if "dexter" in (slug + title).lower() else "v12"
+assert BASE in ("v12", "v11", "v105"), "--base must be v12 (Flash), v11 (the previous Flash standard) or v105 (Dexter)"
 V = f"v{n}"; D = f"{ROOT}/{V}"
 if os.path.exists(f"{D}/work/edl{n}.py"): sys.exit(f"{V} already exists — refusing to overwrite")
 for sub in ("work", "frames", "audio", "out"): os.makedirs(f"{D}/{sub}", exist_ok=True)

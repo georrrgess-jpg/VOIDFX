@@ -378,6 +378,21 @@ These live in `v105/work/fx105.py` / `qc105.py` on the Dexter studio's branch; p
 | QC §7b flash measurement | Flags white-out runs and flash rate on the encoded file | **Ported** into `v11/work/qc11.py` §7b (so every new Flash edit has it) |
 | Their `tools/sharpness.py` metric | detail = mean \|L − blur 1.2\| / mean \|L − blur 8\| over the middle of each shot; flags SOFT, ZOOM (> 3.1×), LOWBIT (< 800 kb/s); absolute scale, ≈0.30+ sharp | Ours scores relative to the edit's median and flags zoom at > 2.95× (z 1.10); LOWBIT adopted. Pick one tool at the merge |
 
+## 5d. What made v12 the standard (carry the principles, not the look)
+- **One hero asset, many stages.** The lightning jasmine (`jas_draw`, `jas_light`, `jas_geom`, `jas_veins`) appears as:
+  - a bud in his pupil;
+  - a frame-filling bloom on the drop;
+  - a flower behind him (`behind`: light only from the background, plus a wrap);
+  - the petals of the cracked emblem;
+  - the closing bud the camera dives into.
+- **Transitions:** strike link, ECG bolt, bud iris, `bloom`, `full_bloom` (in), petal pass, pollen burst, petal whip, `fractal_burn`, `emblem_bloom`. Library moves are restyled by repointing `GOLD*`, `RED*` and `EMBER2`.
+- **Tools:**
+  - `emblem_at(s, f)` finds the real chest emblem (Hough on the source frame through `to_screen`);
+  - `face_guard` keeps beat moments off faces;
+  - `flash_governor` caps flare frames;
+  - `tame` turns coloured light to cream without touching the suit.
+- **Restraint the owner asked for:** no text (both titles removed) and 37 effects instead of 87.
+
 ## 5b. What made v11 the standard (carry the principles, not the look)
 
 - **A concept found in the material:** the song's spoken "Harrison" became the whole edit (the Reverse-Flash rivalry): a second grade for the rival, red against gold at the drop (the bolt split), the gold winning on the punch (the clash), the red taking the symbol at the end (REVERSE).
