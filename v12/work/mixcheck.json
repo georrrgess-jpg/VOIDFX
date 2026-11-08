@@ -20,8 +20,8 @@
    "t0": 1.45,
    "t1": 2.2,
    "music_db": -7.7,
-   "fx_peak_db": -11.6,
-   "fx_minus_music": -3.9,
+   "fx_peak_db": -11.7,
+   "fx_minus_music": -4.0,
    "buried": false
   },
   {
@@ -31,8 +31,8 @@
    "t0": 3.2,
    "t1": 3.95,
    "music_db": -7.7,
-   "fx_peak_db": -17.4,
-   "fx_minus_music": -9.7,
+   "fx_peak_db": -19.0,
+   "fx_minus_music": -11.2,
    "buried": false
   },
   {
@@ -53,8 +53,8 @@
    "t0": 5.54,
    "t1": 6.29,
    "music_db": -7.7,
-   "fx_peak_db": -16.1,
-   "fx_minus_music": -8.4,
+   "fx_peak_db": -16.8,
+   "fx_minus_music": -9.1,
    "buried": false
   },
   {
@@ -64,9 +64,9 @@
    "t0": 7.58,
    "t1": 8.33,
    "music_db": -7.0,
-   "fx_peak_db": -19.0,
-   "fx_minus_music": -12.0,
-   "buried": false
+   "fx_peak_db": -24.4,
+   "fx_minus_music": -17.5,
+   "buried": true
   },
   {
    "name": "bloom",
@@ -75,8 +75,8 @@
    "t0": 9.05,
    "t1": 10.51,
    "music_db": -9.5,
-   "fx_peak_db": -9.0,
-   "fx_minus_music": 0.5,
+   "fx_peak_db": -9.2,
+   "fx_minus_music": 0.3,
    "buried": false
   },
   {
@@ -97,8 +97,8 @@
    "t0": 10.21,
    "t1": 10.96,
    "music_db": -9.0,
-   "fx_peak_db": -17.2,
-   "fx_minus_music": -8.2,
+   "fx_peak_db": -17.6,
+   "fx_minus_music": -8.7,
    "buried": false
   },
   {
@@ -108,8 +108,8 @@
    "t0": 11.37,
    "t1": 12.12,
    "music_db": -10.0,
-   "fx_peak_db": -18.1,
-   "fx_minus_music": -8.1,
+   "fx_peak_db": -21.8,
+   "fx_minus_music": -11.7,
    "buried": false
   },
   {
@@ -119,8 +119,8 @@
    "t0": 12.54,
    "t1": 13.29,
    "music_db": -8.9,
-   "fx_peak_db": -19.2,
-   "fx_minus_music": -10.3,
+   "fx_peak_db": -19.5,
+   "fx_minus_music": -10.6,
    "buried": false
   },
   {
@@ -130,7 +130,7 @@
    "t0": 13.71,
    "t1": 14.46,
    "music_db": -9.0,
-   "fx_peak_db": -18.8,
+   "fx_peak_db": -18.9,
    "fx_minus_music": -9.9,
    "buried": false
   },
@@ -141,8 +141,8 @@
    "t0": 14.88,
    "t1": 15.63,
    "music_db": -9.1,
-   "fx_peak_db": -15.3,
-   "fx_minus_music": -6.2,
+   "fx_peak_db": -16.6,
+   "fx_minus_music": -7.5,
    "buried": false
   },
   {
@@ -152,8 +152,8 @@
    "t0": 16.04,
    "t1": 16.79,
    "music_db": -10.0,
-   "fx_peak_db": -16.7,
-   "fx_minus_music": -6.7,
+   "fx_peak_db": -18.1,
+   "fx_minus_music": -8.1,
    "buried": false
   },
   {
@@ -174,8 +174,8 @@
    "t0": 18.39,
    "t1": 20.43,
    "music_db": -9.5,
-   "fx_peak_db": -10.7,
-   "fx_minus_music": -1.2,
+   "fx_peak_db": -11.0,
+   "fx_minus_music": -1.5,
    "buried": false
   },
   {
@@ -185,8 +185,8 @@
    "t0": 18.38,
    "t1": 19.13,
    "music_db": -9.1,
-   "fx_peak_db": -9.9,
-   "fx_minus_music": -0.8,
+   "fx_peak_db": -10.2,
+   "fx_minus_music": -1.0,
    "buried": false
   },
   {
@@ -196,8 +196,8 @@
    "t0": 20.13,
    "t1": 20.88,
    "music_db": -8.9,
-   "fx_peak_db": -14.5,
-   "fx_minus_music": -5.6,
+   "fx_peak_db": -14.6,
+   "fx_minus_music": -5.7,
    "buried": false
   },
   {
@@ -207,8 +207,8 @@
    "t0": 21.3,
    "t1": 22.05,
    "music_db": -9.8,
-   "fx_peak_db": -18.8,
-   "fx_minus_music": -9.0,
+   "fx_peak_db": -20.4,
+   "fx_minus_music": -10.5,
    "buried": false
   },
   {
@@ -218,8 +218,8 @@
    "t0": 22.18,
    "t1": 23.35,
    "music_db": -10.5,
-   "fx_peak_db": -14.5,
-   "fx_minus_music": -4.1,
+   "fx_peak_db": -14.7,
+   "fx_minus_music": -4.3,
    "buried": false
   }
  ]

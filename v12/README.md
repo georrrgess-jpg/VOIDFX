@@ -2,6 +2,14 @@
 
 A 23.35 s, 1080×1920, 60 fps TikTok edit on the v11 engine with pipeline v2 (render server, frame cache, partial re-renders, face and mix checks). It loops in picture and sound.
 
+## Rev 2 (owner: "remove the night text at the beginning and get rid of like half the sound effects")
+- **NIGHT removed:** the opening is the storm sky and its bolt alone; BLOOM on the drop is now the only title.
+- **Sound effects 87 → 37:** what's left is the set-piece hits (the strike, THE BLOOM's impact/sub/thunder, FULL BLOOM, the loop dive and landing) and one sound per transition.
+  - Removed: the beat-moment sounds (pollen, bokeh stars, bud, petal echoes, aura), the BLOOM letter chimes, the NIGHT crackle, the cloud flickers, the heart-monitor beeps before the cut, the charge hum, and the secondary layers (whines, glass, shimmers, extra crackles and zaps).
+- **Effects vs music (`mixcheck`):** one transition (the dolly into the eye, now only a reversed swell) sits more than 12 dB under the music, which follows from the request.
+- **Loudness** is unchanged: −13.0 LUFS / −3.5 dBTP after AAC.
+- **Render:** a verified partial re-render (96 frames, 32 checked bit-exact outside the range) plus the re-encode, 164 s.
+
 ## Concept: LIGHTNING BLOOM
 "Night blooming" is the night Barry was struck by lightning. Lightning leaves Lichtenberg figures on what it hits, often called "lightning flowers". So the hero asset is a five-petal **lightning jasmine**:
 - petal edges of live, crackling lightning;

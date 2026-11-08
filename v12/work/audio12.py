@@ -625,61 +625,37 @@ def main():
     t0 = {s_["n"]: s_["t0"] for s_ in E.SHOTS}
     # ---- the landing on frame 0 and the storm
     place(fx, stereo(A2.impact(-6, (55, 30), 0.30, 0.25, 2201)), 0.0); place(fx, stereo(thunder(-10, 2202, 1.4)), 0.38)
-    for k_ in (2, 4): place(fx, stereo(thunder(-17, 2203 + k_, 0.9)), th(k_ * 2))                       # the clouds flicker
-    nc = CR(0.75, -16, 2210, 0.6) * np.linspace(0.2, 1.0, I(0.75)) ** 1.2; place(fx, stereo(nc.astype(np.float32)), th(1))   # NIGHT grows
-    place(fx, np.stack([SH(0.7, -22)] * 2, 1), th(2.2))
     # ---- STRIKE LINK, ECG, sparks, the bud iris, the cortex, the eye
-    place(fx, stereo(whine(0.12, -16, 900, 5200)), t0["strike"] - 0.11); place(fx, stereo(ZP(-8, 2220, 5200, 300, 0.22)), t0["strike"])
+    place(fx, stereo(ZP(-8, 2220, 5200, 300, 0.22)), t0["strike"])
     place(fx, stereo(thunder(-6, 2221, 1.6)), t0["strike"]); place(fx, stereo(sub_drop(-8, 0.8)), t0["strike"] + 0.02)
-    for k_, tb in enumerate((th(10), th(11), th(11.6))): place(fx, stereo(beep(-14)), tb)                 # the heart monitor
     place(fx, stereo(beep(-12, 1000, 0.25)), t0["wake"] - 0.14); place(fx, stereo(ZP(-10, 2224, 4200, 500, 0.16)), t0["wake"])
-    place(fx, stereo(A2.impact(-14, (60, 34), 0.25, 0.1, 2225)), t0["wake"] + 0.02)
     place(fx, WH(0.20, -12, 2226, True) * np.array([[1.0, 0.3]], np.float32), t0["spark"] - 0.14)
-    place(fx, stereo(ZP(-6, 2227, 3000, 700, 0.14), 0.6), t0["spark"]); place(fx, stereo(CR(0.4, -15, 2228, 0.8)), t0["spark"] + 0.05)
-    for k_ in range(3): place(fx, stereo(CR(0.12, -17, 2230 + k_, 0.9), (-1) ** k_ * 0.5), t0["spark"] + 0.3 + k_ * 0.29)
-    place(fx, stereo(CR(0.25, -15, 2235, 0.7)), t0["cortex"] - 0.12); place(fx, stereo(GC(-14)), t0["cortex"])
-    place(fx, WH(0.30, -14, 2236, True), t0["cortex"] - 0.05)
-    place(fx, stereo(hum_rise(t0["bloomrun"] - t0["cortex"], -16, 70, 440)), t0["cortex"])                 # the charge to the bloom
-    place(fx, RS(0.45, -14, 2237), t0["eye"] - 0.42); place(fx, WH(0.25, -15, 2238, False), t0["eye"] - 0.05)
+    place(fx, stereo(ZP(-6, 2227, 3000, 700, 0.14), 0.6), t0["spark"])
+    place(fx, stereo(GC(-14)), t0["cortex"])
+    place(fx, RS(0.45, -14, 2237), t0["eye"] - 0.42)
     cr = CR(0.40, -12, 2239, 0.95) * np.linspace(0.2, 1.0, I(0.40)) ** 1.6; place(fx, stereo(cr.astype(np.float32)), t0["bloomrun"] - 0.40)
-    place(fx, stereo(whine(0.40, -14, 500, 6000)), t0["bloomrun"] - 0.40)
     # ---- THE BLOOM (the vocal enters)
     tb_ = t0["bloomrun"]
     place(fx, stereo(A2.impact(-4, (52, 28), 0.9, 0.55, 2240)), tb_); place(fx, stereo(sub_drop(-6, 0.9, 64, 26)), tb_ + 0.02)
-    place(fx, stereo(thunder(-8, 2241, 1.4)), tb_); place(fx, WH(0.45, -10, 2242, True), tb_ - 0.04)
-    place(fx, stereo(glass(-12, 2243, 1.1)), tb_ + 0.03); place(fx, np.stack([SH(1.2, -16)] * 2, 1), tb_ + 0.05)
-    for k_ in range(5): place(fx, stereo(GC(-20), (k_ - 2) * 0.3), th(32.5) + k_ * 0.07)        # BLOOM letter by letter
+    place(fx, stereo(thunder(-8, 2241, 1.4)), tb_)
     # ---- the montage: a sound per transition and per beat moment
     place(fx, WH(0.26, -10, 2250, True) * np.array([[0.3, 1.0]], np.float32), t0["blue"] - 0.12)
-    for e_ in (36, 38): place(fx, np.stack([SH(0.35, -20)] * 2, 1), th(e_))                     # pollen
-    place(fx, stereo(CR(0.45, -12, 2251, 0.85)), t0["street"] - 0.15); place(fx, stereo(ZP(-13, 2252, 2600, 800, 0.10)), t0["street"])
-    for e_ in (40, 42): place(fx, stereo(TK(-16, 2253 + e_)), th(e_)); place(fx, stereo(GC(-22)), th(e_) + 0.01)   # bokeh stars
+    place(fx, stereo(CR(0.45, -12, 2251, 0.85)), t0["street"] - 0.15)
     for q in range(5): place(fx, WH(0.07, -14 - q, 2260 + q, True), t0["crouch"] - 0.13 + q * 0.032)
-    place(fx, stereo(ZP(-13, 2266, 3200, 1200, 0.07)), t0["crouch"])
     for q in range(4): place(fx, WH(0.11, -14 - q, 2270 + q, q % 2 == 0), t0["hood"] - 0.09 + q * 0.035)
-    for e_ in (48, 50):                                                                                    # petal echoes
-        place(fx, WH(0.14, -15, 2280 + e_, True) * np.array([[1.0, 0.25]], np.float32), th(e_) - 0.03)
-        place(fx, WH(0.14, -15, 2290 + e_, True) * np.array([[0.25, 1.0]], np.float32), th(e_) - 0.01)
-    place(fx, stereo(A2.impact(-8, (62, 32), 0.4, 0.4, 2300)), t0["charge"]); place(fx, stereo(ZP(-11, 2301, 4400, 600, 0.14)), t0["charge"])
-    for e_ in (52, 54): place(fx, stereo(ZP(-15, 2302 + e_, 5000, 2000, 0.06)), th(e_) + 0.02)           # the bud opens on the beat
-    place(fx, WH(0.30, -13, 2310, False), t0["s3night"] - 0.12); place(fx, np.stack([SH(0.5, -20)] * 2, 1), t0["s3night"])
-    for e_ in (56, 58): place(fx, stereo(A2.impact(-17, (70, 40), 0.25, 0.1, 2311 + e_)), th(e_))           # aura rings
-    place(fx, WH(0.22, -10, 2320, True), t0["dash"] - 0.10); place(fx, stereo(CR(0.6, -14, 2321, 0.6)), t0["dash"] + 0.1)
+    place(fx, stereo(A2.impact(-8, (62, 32), 0.4, 0.4, 2300)), t0["charge"])
+    place(fx, WH(0.30, -13, 2310, False), t0["s3night"] - 0.12)
+    place(fx, WH(0.22, -10, 2320, True), t0["dash"] - 0.10)
     # ---- FULL BLOOM (the claps enter)
     tf = t0["full"]
     place(fx, RS(0.35, -12, 2330), tf - 0.33); place(fx, stereo(ZP(-10, 2331, 600, 5200, 0.25)), tf + 0.02)
-    gr = CR(0.9, -13, 2332, 0.8) * np.linspace(0.3, 1.0, I(0.9)) ** 1.2; place(fx, stereo(gr.astype(np.float32)), tf + 0.20)
     place(fx, stereo(A2.impact(-6, (50, 26), 0.9, 0.3, 2333)), tf + 0.28); place(fx, stereo(sub_drop(-8, 0.9, 60, 25)), tf + 0.30)
-    place(fx, np.stack([SH(1.4, -15)] * 2, 1), tf + 0.30); place(fx, stereo(glass(-15, 2334, 1.0)), tf + 0.32)
-    for e_ in (67, 71): place(fx, stereo(ZP(-12, 2335 + e_, 4800, 900, 0.10)), th(e_))                 # the flower breathes on the claps
-    place(fx, WH(0.50, -9, 2340, True), t0["s3mask"] - 0.18); place(fx, stereo(glass(-16, 2341, 0.6)), t0["s3mask"])
-    place(fx, np.stack([SH(0.6, -18)] * 2, 1), t0["last"] - 0.08); place(fx, WH(0.30, -15, 2342, False), t0["last"] - 0.10)
+    place(fx, WH(0.50, -9, 2340, True), t0["s3mask"] - 0.18)
+    place(fx, WH(0.30, -15, 2342, False), t0["last"] - 0.10)
     # ---- the loop: the bud closes, the dive, the landing on frame 0
     tl_ = t0["last"]
-    bc = CR(0.75, -16, 2350, 0.9) * np.linspace(0.3, 1.0, I(0.75)); place(fx, stereo(bc.astype(np.float32)), tl_ + 0.05)
     td = tl_ + 46 / E.FPS
     place(fx, RS(E.DUR - td, -10, 2351), td); place(fx, WH(E.DUR - td, -9, 2352, True), td)
-    place(fx, stereo(whine(E.DUR - td, -16, 300, 4200)), td)
     fx = np.tanh(fx * 1.2) / 1.2
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))                        # pipeline v2: tools/mixcheck.py
     wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))

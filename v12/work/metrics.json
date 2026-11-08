@@ -1,6 +1,6 @@
 {
  "edit": "v12",
- "round": 1,
+ "round": 2,
  "stages": [
   {
    "t": "2026-11-08 02:41:35",
@@ -92,11 +92,53 @@
    "step": "deliver",
    "s": 66.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:02:11",
+   "round": 2,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:04:55",
+   "round": 2,
+   "step": "video:10:105",
+   "s": 164.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:07:21",
+   "round": 2,
+   "step": "qc",
+   "s": 138.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:09:15",
+   "round": 2,
+   "step": "deliver",
+   "s": 114.0,
+   "rc": 0
   }
  ],
- "notes": [],
+ "notes": [
+  {
+   "t": "2026-11-08 04:02:07",
+   "round": 2,
+   "cat": "other",
+   "text": "remove the NIGHT text at the beginning"
+  },
+  {
+   "t": "2026-11-08 04:02:07",
+   "round": 2,
+   "cat": "other",
+   "text": "get rid of like half the sound effects"
+  }
+ ],
  "catches": [],
  "round_starts": {
-  "1": "2026-11-08 03:59:15"
+  "1": "2026-11-08 03:59:15",
+  "2": "2026-11-08 04:02:07"
  }
 }

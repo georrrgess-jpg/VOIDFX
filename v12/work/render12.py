@@ -10049,7 +10049,6 @@ def prefinish(f):
         if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge12(n_, "first"), kn, f, s, n_)
     if s["n"] == "last": out = loop_dive(out, f, s)
     out = beat_fx(out, f)
-    out = text_night(out, f)
     out = text_bloom(out, f)
     return np.clip(out, 0, 1)
 
