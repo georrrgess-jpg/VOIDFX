@@ -9875,6 +9875,99 @@ TR2.update({"strike_link": (strike_link, 6, 8), "ecg_bolt": (ecg_bolt, 8, 9), "b
             "bloom": (bloom, 10, 24), "full_bloom": (full_bloom_in, 6, 6), "petal_pass": (petal_pass, 8, 10),
             "pollen_burst": (pollen_burst, 6, 8), "petal_whip": (petal_whip, 5, 6)})
 
+# ---- rev 3: EMBLEM BLOOM and FRACTAL BURN ------------------------------------------------------------------------
+_EMB = {}
+def emblem_at(s, f):
+    """his chest emblem on screen (x, y, r): a Hough circle on the source frame, mapped through the shot's camera."""
+    key = (s["n"], f)
+    if key in _EMB: return _EMB[key]
+    t, u, _ = src_time(s, f); img = sample(s["src"], t)
+    if img.dtype != np.uint8: img = np.clip(img * (255 if img.max() <= 1.5 else 1), 0, 255).astype(np.uint8)
+    g = cv2.medianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), 5); y0 = img.shape[0] // 3
+    cs = cv2.HoughCircles(g[y0:], cv2.HOUGH_GRADIENT, 1.2, 80, param1=120, param2=40, minRadius=40, maxRadius=150)
+    if cs is None: x, y = chest_of(s, f); res = (x, y, 150.0)
+    else:
+        cx, cy, r = cs[0][0]; X, Y, sc = to_screen(s, f, float(cx), float(cy) + y0); res = (X, Y, float(r) * sc)
+    if len(_EMB) > 64: _EMB.clear()
+    _EMB[key] = res; return res
+
+def crack_canvas(cx, cy, r, u, f, n=5, rot=-math.pi / 2):
+    cv = bolt_canvas()
+    for k in range(n):
+        a = rot + k * 2 * math.pi / n
+        put_bolt(cv, (cx, cy), (cx + math.cos(a) * r * u, cy + math.sin(a) * r * u), 9700 + k + 7 * (f // 2), 2, 0.30, 4, 0)
+    return cv
+
+def emblem_bloom(A, B, j, f, sa, sb, pre=12, post=16):
+    """EMBLEM BLOOM: the camera pushes onto his chest emblem, its rim lights, lightning cracks it into five petals; the
+    petals peel open outward like a flower and the next shot is inside the emblem as we fly through it."""
+    if j < 0:
+        u = (j + pre + 1) / pre; ex, ey, er = emblem_at(sa, f)
+        Z = 1 + 0.55 * ein(u, 2.2); o = zoom_about(A, ex, ey, Z)
+        R = er * Z; ring = np.zeros((H, W), np.uint8); cv2.circle(ring, (int(ex), int(ey)), int(R), 255, 3, cv2.LINE_AA)
+        lay = light_rgb(ring, 0.5 + 0.8 * u, JASW, JASG) + light_rgb(crack_canvas(ex, ey, R, ein(u, 1.5), f), 1.1 * u, JASW, JASG)
+        return np.clip(o + lay, 0, 1)
+    v = (j + 1) / post; ex, ey, er = emblem_at(sa, sa["f1"] - 1)
+    Z0 = 1.55; Z = Z0 * math.exp(3.0 * ein(v, 1.6))
+    px, py = ex + (W / 2 - ex) * smooth(v), ey + (H * 0.47 - ey) * smooth(v)
+    outer = zoom_about(A, ex, ey, Z)
+    M = np.float32([[1, 0, px - ex], [0, 1, py - ey]]); outer = cv2.warpAffine(outer, M, (W, H), borderMode=cv2.BORDER_REFLECT)
+    sb_ = 1.0 + 0.35 * (1 - eout(v, 2)); inner = zoom_about(B, W / 2, H * 0.47, sb_)
+    R = er * Z0 * (1 + 2.2 * ein(v, 1.4)) * (1 + 0.15 * eout(v))                            # the opening widens
+    hole = np.zeros((H, W), F32); cv2.circle(hole, (int(px), int(py)), int(R), 1.0, -1, cv2.LINE_AA)
+    o = mixm(outer, inner, cv2.GaussianBlur(hole, (0, 0), 2))
+    Rd = er * Z0                                                                              # the five petals of the disc
+    disc = np.zeros((H, W), F32); cv2.circle(disc, (int(ex), int(ey)), int(Rd), 1.0, -1, cv2.LINE_AA)
+    A0 = zoom_about(A, ex, ey, Z0); cv = bolt_canvas()
+    for k in range(5):
+        a0 = -math.pi / 2 + k * 2 * math.pi / 5; a1 = a0 + 2 * math.pi / 5; am = (a0 + a1) / 2
+        wedge = np.zeros((H, W), F32)
+        pts = [(ex, ey)] + [(ex + math.cos(a) * Rd * 1.02, ey + math.sin(a) * Rd * 1.02) for a in np.linspace(a0, a1, 12)]
+        cv2.fillPoly(wedge, [np.array(pts, np.int32)], 1.0, cv2.LINE_AA); wedge *= disc
+        d = R * 0.85 * eout(v, 1.6); rot = (25 if k % 2 else -25) * v; sc = 1 + 0.6 * v
+        Mw = cv2.getRotationMatrix2D((ex, ey), rot, sc); Mw[0, 2] += math.cos(am) * d + (px - ex); Mw[1, 2] += math.sin(am) * d + (py - ey)
+        wa = cv2.warpAffine(wedge, Mw, (W, H)) * (1 - v) ** 0.7
+        tex = cv2.warpAffine(A0, Mw, (W, H), borderMode=cv2.BORDER_REFLECT)
+        o = mixm(o, tex * (1 - 0.35 * v), wa)
+        edge = cv2.morphologyEx((wa > 0.3).astype(np.uint8), cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8))
+        cv = np.maximum(cv, edge * 255)
+    lay = light_rgb(cv, 1.2 * (1 - v) ** 0.6, JASW, JASG)
+    rim = np.zeros((H, W), np.uint8); cv2.circle(rim, (int(px), int(py)), int(R), 255, 3, cv2.LINE_AA)
+    lay += light_rgb(rim, 0.9 * (1 - v), JASW, JASG)
+    return np.clip(o + lay, 0, 1)
+
+_FBN = {}
+def fractal_burn(A, B, j, f, sa, sb, pre=8, post=18):
+    """FRACTAL BURN: lightning burns a Lichtenberg figure into the frame (as it burns into wood): two discharges crawl in
+    from the edges, embers glowing along the branches, the picture chars around them and burns through to the next shot."""
+    if "t" not in _FBN:
+        t1 = lich_tree(-20, H * 0.58, None, seed=41); t2 = lich_tree(W + 20, H * 0.40, None, seed=43)
+        segs = np.concatenate([t1, t2]); _FBN["t"] = segs
+        _FBN["n"] = cv2.resize(np.random.default_rng(5).random((H // 16, W // 16)).astype(F32), (W, H), interpolation=cv2.INTER_CUBIC)
+    segs = _FBN["t"]; u = (j + pre + 1) / (pre + post)
+    tau = 1.15 * ein(u, 1.25)
+    vis = segs[segs[:, 4] <= tau]; cv = np.zeros((H, W), np.uint8)
+    if len(vis):
+        for wd in (4, 3, 2, 1):
+            sel = vis[np.abs(vis[:, 5] - wd) < 0.75] if wd > 1 else vis[vis[:, 5] < 1.75]
+            if len(sel): cv2.polylines(cv, list(sel[:, :4].reshape(-1, 2, 2).astype(np.int32)), False, 255, max(1, wd), cv2.LINE_AA)
+    dist = cv2.distanceTransform(255 - cv, cv2.DIST_L2, 3) + _FBN["n"] * 18
+    burn = max(0.0, (u - 0.22) / 0.78)
+    rh = 2 + 820 * ein(burn, 2.3); rc = rh + 12 + 30 * (1 - burn)                           # the hole and its char ring
+    hole = np.clip((rh - dist) / 5.0, 0, 1) if burn > 0 else np.zeros((H, W), F32)
+    char = np.clip((rc - dist) / (rc - rh + 1e-3), 0, 1) * (1 - hole)
+    src = A if j < 0 else A
+    o = src * (1 - 0.72 * char)[..., None]
+    o[..., 2] += char * 0.035; o[..., 1] += char * 0.012                                     # scorched brown
+    o = mixm(o, B, hole)
+    front = np.exp(-((dist - rh) / 4.0) ** 2) * (burn > 0) * (1 - 0.6 * burn)
+    EMB_ = np.array([0.10, 0.48, 1.00], F32)
+    addc(o, front, EMB_, 1.1); addc(o, front, JASW, 0.4)
+    o = o + light_rgb(cv, 0.9 * (1 - burn) ** 2.6, JASW, JASG)
+    return np.clip(o, 0, 1)
+
+TR2.update({"emblem_bloom": (emblem_bloom, 12, 16), "fractal_burn": (fractal_burn, 8, 18)})
+
 # ---- beat moments (one per "just moving" shot, each with its own sound) ---------------------------------------
 def beat_age(f):
     e = f / FPS / E.HB; return (e % 2) * E.HB, int(e // 2)
@@ -10049,7 +10142,6 @@ def prefinish(f):
         if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge12(n_, "first"), kn, f, s, n_)
     if s["n"] == "last": out = loop_dive(out, f, s)
     out = beat_fx(out, f)
-    out = text_bloom(out, f)
     return np.clip(out, 0, 1)
 
 FLASH_CAP = 0.40

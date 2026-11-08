@@ -2,6 +2,24 @@
 
 A 23.35 s, 1080×1920, 60 fps TikTok edit on the v11 engine with pipeline v2 (render server, frame cache, partial re-renders, face and mix checks). It loops in picture and sound.
 
+## Rev 3 (owner: "get rid of the bloom text, remove the bell sound on the flower and the whoosh on one of the first transitions … one more really cool transition and … an emblem transition")
+- **BLOOM removed:** the edit has no text now.
+- **Sound:** the chime on the bud-iris flower (5.8 s) is now a short crackle, and the whoosh into the sparks shot (4.2 s) is removed.
+- **New, FRACTAL BURN (11.67 s, blue → street; replaces the restyled Lichtenberg crawl).** Lightning burns Lichtenberg figures into wood, and here it burns one through the frame:
+  - two discharges crawl in from the frame edges;
+  - embers glow along the branches and the picture chars around them;
+  - the char burns through into the next shot.
+
+  Sound: a low-passed burning crackle and a soft impact.
+- **New, EMBLEM BLOOM (15.18 s, hood → charge; replaces the clash).** His real chest emblem is tracked with a Hough circle on the source frame:
+  - the camera pushes onto it and its rim lights;
+  - lightning cracks it into five petals, which peel open outward;
+  - we fly through the opening into the S5 suit, where a bud pulses on its emblem.
+
+  Sound: a crack, a reversed swell and an impact (no chime).
+- **Effects vs music (`mixcheck`):** two quiet transitions now sit more than 12 dB under the music, the bud iris and the dolly. Both follow from the owner's removals.
+- **Render:** a verified partial re-render of 343 frames (38 frames checked bit-exact outside the ranges). `vrender.py` now stops the edit's render server first: its warm workers next to the render workers ran out of memory once.
+
 ## Rev 2 (owner: "remove the night text at the beginning and get rid of like half the sound effects")
 - **NIGHT removed:** the opening is the storm sky and its bolt alone; BLOOM on the drop is now the only title.
 - **Sound effects 87 → 37:** what's left is the set-piece hits (the strike, THE BLOOM's impact/sub/thunder, FULL BLOOM, the loop dive and landing) and one sound per transition.

@@ -275,6 +275,8 @@ def main():
     if a.mode == "master": return master_wait(a.n, E) if a.wait else master(a.n, E)
     for f in ("mix.wav", "mix_preroll.wav"):
         if not os.path.exists(f"{paths(a.n)['audio']}/{f}"): sys.exit(f"missing audio/{f}: run the audio step first")
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "rsrv.py"), str(a.n), "stop"],
+                   capture_output=True)                     # the render server's warm workers would compete for memory
     R = edit_env.load_edit(a.n)
     if a.full: return full_render(a.n, E, "--full")
     only = [tuple(int(x) for x in r.split(":")) for r in a.only.split(",")] if a.only else []

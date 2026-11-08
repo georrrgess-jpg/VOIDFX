@@ -91,10 +91,10 @@ shot("eye", "fs1", 27, 32, 291.90, 292.85, tin="dolly", face=None, cx=(343, 343)
 # ---- THE BLOOM (e32, the vocal enters) and the speed montage (e32-e64): velocity ramps + a beat animation per shot
 shot("bloomrun", "fbk", 32, 36, 60.70, 63.40, tin="bloom", face=None, cx=(640, 640), tmap=vel(32, 36, 60.70, 63.40), lin=True, interp="flow")
 shot("blue", "fbk", 36, 40, 124.75, 126.20, tin="petal_whip", seg=True, pollen=1.0, tmap=vel(36, 40, 124.75, 126.20), lin=True, interp="flow")
-shot("street", "fs5", 40, 44, 72.00, 74.60, tin="lichtenberg", seg=True, stars=1.0, tmap=vel(40, 44, 72.00, 74.60), lin=True, interp="flow")
+shot("street", "fs5", 40, 44, 72.00, 74.60, tin="fractal_burn", seg=True, stars=1.0, tmap=vel(40, 44, 72.00, 74.60), lin=True, interp="flow")
 shot("crouch", "fs5", 44, 48, 108.60, 110.90, tin="strobe_echo", seg=True, tmap=vel(44, 48, 108.60, 110.90), lin=True, interp="flow")
 shot("hood", "fbk", 48, 52, 23.95, 25.78, tin="slices", seg=True, echo=1.0, tmap=vel(48, 52, 23.95, 25.78), lin=True, interp="flow")
-shot("charge", "fs5", 52, 56, 180.00, 182.60, tin="clash", seg=True, bud=1.0, tmap=vel(52, 56, 180.00, 182.60), lin=True, interp="flow")
+shot("charge", "fs5", 52, 56, 180.00, 182.60, tin="emblem_bloom", seg=True, bud=1.0, tmap=vel(52, 56, 180.00, 182.60), lin=True, interp="flow")
 shot("s3night", "fs3", 56, 60, 59.10, 61.50, tin="heat_haze", seg=True, ring=1.0, tmap=vel(56, 60, 59.10, 61.50), lin=True, interp="flow")
 shot("dash", "fbk", 60, 64, 20.00, 21.85, tin="whip", face=None, cx=(838, 838), tmap=vel(60, 64, 20.00, 21.85), lin=True, interp="flow")
 # ---- FULL BLOOM (e64, the claps enter; the focal set piece) and the loop

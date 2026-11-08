@@ -42,8 +42,8 @@
    "t0": 4.08,
    "t1": 4.83,
    "music_db": -7.5,
-   "fx_peak_db": -16.2,
-   "fx_minus_music": -8.7,
+   "fx_peak_db": -16.5,
+   "fx_minus_music": -9.0,
    "buried": false
   },
   {
@@ -53,9 +53,9 @@
    "t0": 5.54,
    "t1": 6.29,
    "music_db": -7.7,
-   "fx_peak_db": -16.8,
-   "fx_minus_music": -9.1,
-   "buried": false
+   "fx_peak_db": -23.3,
+   "fx_minus_music": -15.6,
+   "buried": true
   },
   {
    "name": "dolly",
@@ -102,14 +102,14 @@
    "buried": false
   },
   {
-   "name": "lichtenberg",
+   "name": "fractal_burn",
    "kind": "transition",
    "at": 11.67,
    "t0": 11.37,
    "t1": 12.12,
    "music_db": -10.0,
-   "fx_peak_db": -21.8,
-   "fx_minus_music": -11.7,
+   "fx_peak_db": -17.9,
+   "fx_minus_music": -7.8,
    "buried": false
   },
   {
@@ -135,14 +135,14 @@
    "buried": false
   },
   {
-   "name": "clash",
+   "name": "emblem_bloom",
    "kind": "transition",
    "at": 15.18,
    "t0": 14.88,
    "t1": 15.63,
    "music_db": -9.1,
-   "fx_peak_db": -16.6,
-   "fx_minus_music": -7.5,
+   "fx_peak_db": -14.9,
+   "fx_minus_music": -5.8,
    "buried": false
   },
   {
@@ -153,7 +153,7 @@
    "t1": 16.79,
    "music_db": -10.0,
    "fx_peak_db": -18.1,
-   "fx_minus_music": -8.1,
+   "fx_minus_music": -8.0,
    "buried": false
   },
   {

@@ -1,6 +1,6 @@
 {
  "edit": "v12",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-08 02:41:35",
@@ -120,6 +120,34 @@
    "step": "deliver",
    "s": 114.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:15:55",
+   "round": 3,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:20:07",
+   "round": 3,
+   "step": "video:560:640",
+   "s": 211.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:22:43",
+   "round": 3,
+   "step": "qc",
+   "s": 140.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:24:29",
+   "round": 3,
+   "step": "deliver",
+   "s": 106.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -134,11 +162,30 @@
    "round": 2,
    "cat": "other",
    "text": "get rid of like half the sound effects"
+  },
+  {
+   "t": "2026-11-08 04:15:51",
+   "round": 3,
+   "cat": "text",
+   "text": "get rid of the bloom text"
+  },
+  {
+   "t": "2026-11-08 04:15:51",
+   "round": 3,
+   "cat": "other",
+   "text": "remove the bell sound on the flower and the whoosh on one of the first transitions"
+  },
+  {
+   "t": "2026-11-08 04:15:51",
+   "round": 3,
+   "cat": "density",
+   "text": "one more really cool transition and an emblem transition"
   }
  ],
  "catches": [],
  "round_starts": {
   "1": "2026-11-08 03:59:15",
-  "2": "2026-11-08 04:02:07"
+  "2": "2026-11-08 04:02:07",
+  "3": "2026-11-08 04:15:51"
  }
 }

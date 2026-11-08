@@ -629,9 +629,8 @@ def main():
     place(fx, stereo(ZP(-8, 2220, 5200, 300, 0.22)), t0["strike"])
     place(fx, stereo(thunder(-6, 2221, 1.6)), t0["strike"]); place(fx, stereo(sub_drop(-8, 0.8)), t0["strike"] + 0.02)
     place(fx, stereo(beep(-12, 1000, 0.25)), t0["wake"] - 0.14); place(fx, stereo(ZP(-10, 2224, 4200, 500, 0.16)), t0["wake"])
-    place(fx, WH(0.20, -12, 2226, True) * np.array([[1.0, 0.3]], np.float32), t0["spark"] - 0.14)
     place(fx, stereo(ZP(-6, 2227, 3000, 700, 0.14), 0.6), t0["spark"])
-    place(fx, stereo(GC(-14)), t0["cortex"])
+    place(fx, stereo(CR(0.30, -13, 2235, 0.7)), t0["cortex"] - 0.10)                                       # the bud turns (no chime)
     place(fx, RS(0.45, -14, 2237), t0["eye"] - 0.42)
     cr = CR(0.40, -12, 2239, 0.95) * np.linspace(0.2, 1.0, I(0.40)) ** 1.6; place(fx, stereo(cr.astype(np.float32)), t0["bloomrun"] - 0.40)
     # ---- THE BLOOM (the vocal enters)
@@ -640,10 +639,12 @@ def main():
     place(fx, stereo(thunder(-8, 2241, 1.4)), tb_)
     # ---- the montage: a sound per transition and per beat moment
     place(fx, WH(0.26, -10, 2250, True) * np.array([[0.3, 1.0]], np.float32), t0["blue"] - 0.12)
-    place(fx, stereo(CR(0.45, -12, 2251, 0.85)), t0["street"] - 0.15)
+    fb_ = CR(0.55, -10, 2251, 0.9) * np.linspace(0.4, 1.0, I(0.55)); place(fx, stereo(bq(fb_, "low", 5000, 1).astype(np.float32)), t0["street"] - 0.13)   # FRACTAL BURN: the burn
+    place(fx, stereo(A2.impact(-12, (70, 40), 0.3, 0.15, 2252)), t0["street"] + 0.10)
     for q in range(5): place(fx, WH(0.07, -14 - q, 2260 + q, True), t0["crouch"] - 0.13 + q * 0.032)
     for q in range(4): place(fx, WH(0.11, -14 - q, 2270 + q, q % 2 == 0), t0["hood"] - 0.09 + q * 0.035)
-    place(fx, stereo(A2.impact(-8, (62, 32), 0.4, 0.4, 2300)), t0["charge"])
+    place(fx, stereo(ZP(-10, 2301, 2400, 400, 0.10)), t0["charge"] - 0.06)                                 # EMBLEM BLOOM: it cracks
+    place(fx, stereo(A2.impact(-7, (60, 30), 0.5, 0.35, 2300)), t0["charge"]); place(fx, RS(0.25, -14, 2302), t0["charge"] - 0.22)
     place(fx, WH(0.30, -13, 2310, False), t0["s3night"] - 0.12)
     place(fx, WH(0.22, -10, 2320, True), t0["dash"] - 0.10)
     # ---- FULL BLOOM (the claps enter)
