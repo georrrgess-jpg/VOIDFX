@@ -65,7 +65,11 @@ Examples: a reused clip, an off-centre spin landing, the AAC seam click, text ov
 | v13 rev 1 | FAIL the singularity carries 11 transitions | rev 2: "the singularity is the primary object in every transition" |
 | v107, v12, v13, v106 as approved | 0 FAIL (WARNs point at long holds and sound counts) | approved |
 
-**The critique on v107 rev 3,** given only the rules on file before that round (the banned list already named "target rings, converging strings") and the encoded frames. Result: see §5, recorded when the run finished.
+**The critique on v107 rev 3,** given only the rules on file before that round (the banned list already named "target rings, converging strings") and that round's encoded frames:
+- **Its #1 prediction (HIGH):** *"Get rid of the target and the red lines pointing at his face"*, citing the banned rule. The owner's actual next note was *"Can you get rid of the point of origin graphic/transition"*. That round would have been saved.
+- **Also flagged (MEDIUM):** black left at the 3 s transition, the same family as the owner's *"black box transition"* note that round.
+- **Other predictions:** it also predicted the mirrored face reading as uncanny and the blood reading as drawn; the owner didn't comment on either.
+- **Not every flag was right:** two of its "broken frame" items were not defects (the stamp's designed descending letter, and a dark object that is in the source shot). So the workflow keeps the rule: **verify every critique claim on frames before acting on it.**
 
 ## 4. Split with the Flash studio (the same request went to both)
 
@@ -90,4 +94,4 @@ Adopt the above: the tools are shared and work on Flash EDLs (tested on v12, v13
 - **Full renders before the first delivery:** target ≤ 2 (was 4).
 - **Renders per revision:** target 1.
 - **plan_check FAILs at the first `ship`:** target 0.
-- **Critique predictions that match the owner's actual notes:** recorded in each edit's handoff.
+- **Critique predictions that match the owner's actual notes:** recorded in each edit's handoff (the v107 rev 3 test: 1 of 1 HIGH predictions matched).
