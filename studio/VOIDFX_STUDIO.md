@@ -443,8 +443,8 @@ Only then deliver.
 | Audit, tracks, preflight, restoration started in the background, sheets of every cut | `bash tools/build.sh N prep auto` | ~1–2 min |
 | Motion check | `bash tools/build.sh N clip:A:B` | ~20 s |
 | Sound | `bash tools/build.sh N audio` | ~7 s |
-| **One** final render + checkpoint + review pack (QC passes in parallel) | `bash tools/build.sh N video qc` | ~7 min |
-| A revision, or a first delivery once the stills are right: audio, plan gate, render (only the frames the change reached), QC + review pack, sign-off pages, report, master | `bash tools/build.sh N ship` | ~4–8 min |
+| **One** final render + checkpoint + sign-off pages (QC passes in parallel) | `bash tools/build.sh N video qc` | ~7 min |
+| A revision, or a first delivery once the stills are right: audio, plan gate, render (only the frames the change reached), QC + sign-off pages, report, master | `bash tools/build.sh N ship` | ~4–8 min |
 | Fresh-eyes critique before delivering (`studio/CRITIQUE_PROMPT.md`, one agent) | Agent tool | a few min |
 
 **Two studios in parallel:**
