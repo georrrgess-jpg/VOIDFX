@@ -5,7 +5,8 @@
 #   strip:A:B         every 2nd frame A..B in one sheet         clip:A:B        frames A..B as a 540x960 MP4 with sound (render server)
 #   video             upload MP4 + lossless frame cache; re-renders only the EDL's changed shots when a cache exists; the master
 #                     encodes in the background.   video:A:B[,C:D]  re-render only those frames (verified)   fullvideo  force a full render
-#   qc                ship checkpoint on the encoded MP4 + faces-vs-effects list      deliver   wait for the master and check it
+#   qc                ship checkpoint on the encoded MP4 + faces-vs-effects list + motion audit (dead spans, pops, judder)
+#                     deliver   wait for the master and check it
 #   golden            engine regression check (tools/golden.py N --check)              preview   whole edit at 30 fps / 540x960 (engine)
 #   all = prep audio auto video qc deliver.   Every step is logged to vN/work/metrics.json.
 set -euo pipefail
@@ -35,7 +36,8 @@ for s in "${STEPS[@]}"; do
                tail -2 "$W/render.log" ;;
     qc)        python3 "$W/qc$N.py" "$ROOT/$V/out/${SLUG}_voidfx_9x16.mp4" > "$W/qc.log" 2>&1
                grep -v WARN "$W/qc.log" | sed -n '/loudness/p;/flagged/p;/text band/p;/near-black/p;/== 8/,$p' | grep -v " 0 flagged"
-               python3 "$T/faceqc.py" "$N" | tail -14 ;;
+               python3 "$T/faceqc.py" "$N" | tail -14
+               python3 "$T/motionqc.py" "$N" | grep -v "activity per" ;;
     deliver)   python3 "$T/vrender.py" "$N" master --wait ;;
     golden)    python3 "$T/golden.py" "$N" --check ;;
     *)         echo "unknown step $s"; exit 1 ;;

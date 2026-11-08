@@ -38,7 +38,8 @@
   "loop": "built circularly; room tone/drone across the wrap; mastered on a wrapped copy; audio length == video length (<= 1 frame)",
   "music": "edited on the half-beat grid; tape-stop or dead stop allowed as an ending; splices on the beat grid with 12 ms equal-power crossfade",
   "dialogue": "Demucs vocal stem, cleaned, levelled, equal-power fades at every join",
-  "sfx": "every transition has its own layered sound (whoosh + impact + a material); no loud sound on every cut"
+  "sfx": "v12 + v106: layered sound only at set pieces and structural hits; at most one sound per other transition, small transitions may be silent; none on beat moments, camera punches or title letters; no chimes, shimmers or 'shine'; the song carries the ending and the loop; ~14-40 sound moments in 22-23 s (both owners' cuts were ~half). (Original rule, kept for reference: every transition has its own layered sound.)",
+  "sfx_vs_music": "mix kept sounds against the master's loudness (+9-10 dB on a loud master, music ducked 3 dB under the biggest hits); mixcheck 'buried' is a review list, not a target (v106)"
  },
  "picture": {
   "face_centre_y_frac": 0.37,
@@ -87,11 +88,12 @@
  "loop": {
   "required": true,
   "picture_seam_blurred_diff_max": 1.0,
-  "method": "the last frames are built from frame 0's own image; the loop is a set piece from the character's world",
+  "method": "the last frames are built from frame 0's own image; the loop is a set piece from the character's world; dissolve into frame 0 under a cover (never switch), fade frame 0's finish in, render frame 0's background animation at the wrap's virtual negative frames, no periodic events on frame 0 (v106)",
   "never": [
    "outro card",
    "plain motion-blurred rewind"
-  ]
+  ],
+  "wrap_step": "no frame-difference spike across the wrap (tools/motionqc.py)"
  },
  "structure": {
   "cold_open_frac": [
@@ -124,7 +126,9 @@
     18
    ]
   },
-  "repeat": "never, except as a deliberate motif"
+  "repeat": "never, except as a deliberate motif",
+  "signature_read_time": "a signature graphic transition gets ~1 s on screen and a graphic >= ~8 % of the frame width; move the cut to the next sung word to make room (v106 rev 3)",
+  "covers": "cover transitions are exactly 0 at u=0 and full at u=1, continuous across the cut, plates dissolved under the cover; pre-roll progress reaches 1 before the cut (j/pre) (v106)"
  },
  "dialogue": {
   "max_lines": 2,
@@ -154,7 +158,8 @@
    "rotation_kick_deg": 1.0,
    "hit_frames": "zoom blur + colour split, type kept clean"
   },
-  "beat_moments": "no shot only 'moves to the beat': give each a beat animation (aura, remnants, charge-up) with its own sound"
+  "beat_moments": "no shot only 'moves to the beat': give each a beat animation (aura, remnants, charge-up) with its own sound",
+  "smoothness": "flow on held 24p/30p shots; sub-pixel procedural motion; tremble as smooth 9-15 Hz sines; no noise texture wraps inside the edit's time range incl. the loop's virtual frames (v106)"
  },
  "concept": {
   "rule": "one concept tying picture, sound, text and the loop; found in the material (the song's own words, the character's history); Dexter edits rooted in Dexter's world (kill room, plastic, slides, tools, the Code, the Dark Passenger, victims)",
@@ -221,6 +226,13 @@
    "engine_base": true
   },
   {
+   "edit": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "folder": "v106/ on dev/pipeline-v2 (v11 engine; not merged here)",
+   "reference_for": "story concept from a lyric line and the show's history (Iris saves Barry from the Speed Force); sound restraint (28 -> 14 sound moments, silent transitions); a loop that lands exactly and keeps moving (seam 0.14); measured dead-span, pop and judder audits; TEAR LENS, THE WONDERWALL",
+   "quote": "I like this edit make it a standard",
+   "engine_base": false
+  },
+  {
    "edit": "v11 BOP",
    "folder": "v11/",
    "reference_for": "concept from the material, one focal set piece, detailed physical hero assets, beat moments, exact loop landing",
@@ -267,7 +279,11 @@
   "'Darling,' freeze into the falling blood drop; rear-view-mirror open and loop; streetlight sweep, wiper, whips, plastic wrap, impact frame, rain focus pull, lamp on (v8)",
   "v9 text: 'it was perfect'",
   "v10 motion pass (speed ramps, beat camera, light rays) and the Speed Force loop",
-  "v11 RIFT, REVERSE loop with the coin-flip emblem, beat moments"
+  "v11 RIFT, REVERSE loop with the coin-flip emblem, beat moments",
+  {
+   "edit": "v13 EVENT HORIZON rev 2",
+   "what": "approved, not a standard: 'It does somethings good and somethings bad' (items not yet named by the owner)"
+  }
  ],
  "rejected": [
   {
@@ -436,15 +452,21 @@
   },
   {
    "id": "fx_vs_music",
-   "check": "no transition or set piece with effects more than 12 dB under the music (loudest 50 ms of effects vs music RMS)",
+   "check": "no transition or set piece with effects more than 12 dB under the music (loudest 50 ms of effects vs music RMS); for the sounds kept: a silent transition is fine and the list is a review list (v106 rule 1)",
    "tool": "tools/mixcheck.py N",
+   "auto": true
+  },
+  {
+   "id": "motion_audit",
+   "check": "on the encode: no dead span (half-beat activity < 1.5 grey levels for >= 1 s); every pop (d > 3*median(+-6) + 2) is a cut, designed flash or beat hit; no hold-cadence judder run; no spike across the loop's wrap",
+   "tool": "tools/motionqc.py N",
    "auto": true
   }
  ],
  "engine_bases": {
   "flash": "v12",
   "dexter": "v105",
-  "note": "flash moved to v12 on 2026-11-08 (v12 BLOOM standard); dexter v105"
+  "note": "flash moved to v12 on 2026-11-08 (v12 BLOOM standard); dexter v105. v106's report still names v11 (written before our v12 handoff); moving the Flash base to v106 is the owner's call - port its pieces meanwhile"
  },
  "rules_from_handoffs": [
   {
@@ -525,6 +547,104 @@
    "rule": "One hero asset carries the edit through the drop, the focal piece, the emblem and the loop",
    "evidence": "the verdict",
    "applies_to": "all"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "Sound restraint: sound set pieces and structural hits only; nothing on camera punches, letters, small transitions or beat animations; no shimmer/chime/shine; the song carries the ending and the loop; a transition may be silent; mixcheck 'buried' is a review list. Conflict kept: v12 says one sound per transition (~35-40); read together = at most one, small ones silent.",
+   "evidence": "remove like half of the sound effects mostly the tedious annoying ones like the emblem shine and the few near the end (rev 2), then approval",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "Find dead spans by measurement: mean frame difference per half-beat on the encode (135x240 grey); ~1 s near the static floor (1-1.5) gets a new cut and a designed transition.",
+   "evidence": "identify one space where these isn't anything happening (rev 2): the Iris hold measured 1.2-1.4",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "Pop audit on every encode: d > 3*median(+-6) + 2; each is a cut, designed flash or beat hit, or a defect.",
+   "evidence": "rev 1 shipped six such defects, three invisible on stills",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "A signature transition gets ~1 s and a graphic >= ~8 % of the frame width; move the cut to the next sung word rather than squeeze it.",
+   "evidence": "slow down the tear drop transition so it's more visible (rev 3, 0.6 -> 1.0 s), then approval",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "Smoothness: flow on held 24p shots; sub-pixel procedural motion; smooth sine tremble (9-15 Hz); no noise wrap inside the edit's time range.",
+   "evidence": "one more polish smooth over the animations (rev 2)",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "Cover transitions start and end at exactly zero (cover.max at u=0, cover.min at u=1), continuous across the cut, plates dissolved under the cover.",
+   "evidence": "rev 1 pops at both mist transitions",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "The loop lands exactly and keeps moving: dissolve into frame 0 under the cover, fade frame 0's finish in, frame 0's background animation at virtual negative frames, no periodic events on frame 0; seam <= 1 and no spike across the wrap.",
+   "evidence": "make sure the loop is seemless (rev 2); seam 0.14",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "Probe each chosen source range for VFX colour flickers (they become pops under flow and transitions) and hidden cuts.",
+   "evidence": "S3 Speed Force flash at flash_s3.mp4 134.37-134.47 s; v12 street ghost frame at a flash_s5 73.50 s jump cut (found here by motionqc)",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "v106 WONDERWALL (Dexter chat, Flash edit)",
+   "rule": "Confirmed: concept from the song's words and the character's history; one focal set piece; nothing on faces; lyric onsets on the vocal stem with Whisper large-v3 (not small); the beat map checked against the Demucs drum stem.",
+   "evidence": "small Whisper put 'I said maybe' 3.4 s early; the automatic map locked to 116 BPM (4/3 of 87.02)",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "The hero asset is a motif, not the transition kit: its set piece(s) and at most the focal piece and the loop (2-4 appearances); every other transition a different idea",
+   "evidence": "I don't like that the singularity is the primary object in every transition and animation (v13 rev 1)",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "An emblem transition comes from the emblem itself (its bolt or shape on the real tracked emblem), not another effect starting there",
+   "evidence": "rev 1 black hole in the emblem, then 'make a emblem transition'; EMBLEM SPLIT approved",
+   "applies_to": "flash",
+   "check": "visual"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "A hero graphic lives ~1 s on screen as a graphic (in depth, off faces), then becomes the transition",
+   "evidence": "create a really cool graphic that you use to turn into a transition -> LIGHT RIBBON approved",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "Start sound lean: ~10-12 sound events in 20-23 s; small transitions silent; no drones, swirls, whines or a swell on every move",
+   "evidence": "remove some of the tedious sound effects (v13 rev 1; third edit in a row)",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "Pull frames of any library transition before use; some sample past their shot (v11 bolt_trace showed the next pack shot)",
+   "evidence": "v13 rev 2 review",
+   "applies_to": "all",
+   "check": "visual"
   }
  ]
 }

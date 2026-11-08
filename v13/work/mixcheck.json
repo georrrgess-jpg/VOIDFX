@@ -1,0 +1,237 @@
+{
+ "music_rms_db": -18.9,
+ "under": 12.0,
+ "rows": [
+  {
+   "name": "loop_in13",
+   "kind": "transition",
+   "at": 0.0,
+   "t0": -0.3,
+   "t1": 0.45,
+   "music_db": -18.6,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -161.4,
+   "buried": true
+  },
+  {
+   "name": "edge_current",
+   "kind": "transition",
+   "at": 1.74,
+   "t0": 1.44,
+   "t1": 2.19,
+   "music_db": -16.3,
+   "fx_peak_db": -22.0,
+   "fx_minus_music": -5.7,
+   "buried": false
+  },
+  {
+   "name": "focus_rack",
+   "kind": "transition",
+   "at": 3.04,
+   "t0": 2.74,
+   "t1": 3.49,
+   "music_db": -20.2,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -159.8,
+   "buried": true
+  },
+  {
+   "name": "speed_whip",
+   "kind": "transition",
+   "at": 4.13,
+   "t0": 3.83,
+   "t1": 4.58,
+   "music_db": -17.4,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -162.6,
+   "buried": true
+  },
+  {
+   "name": "ribbon",
+   "kind": "set piece",
+   "at": 4.35,
+   "t0": 4.35,
+   "t1": 5.65,
+   "music_db": -16.9,
+   "fx_peak_db": -17.9,
+   "fx_minus_music": -0.9,
+   "buried": false
+  },
+  {
+   "name": "ribbon",
+   "kind": "transition",
+   "at": 5.22,
+   "t0": 4.92,
+   "t1": 5.67,
+   "music_db": -17.1,
+   "fx_peak_db": -18.0,
+   "fx_minus_music": -0.9,
+   "buried": false
+  },
+  {
+   "name": "dolly",
+   "kind": "transition",
+   "at": 6.52,
+   "t0": 6.22,
+   "t1": 6.97,
+   "music_db": -22.3,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -157.7,
+   "buried": true
+  },
+  {
+   "name": "eye_iris",
+   "kind": "transition",
+   "at": 7.39,
+   "t0": 7.09,
+   "t1": 7.84,
+   "music_db": -17.3,
+   "fx_peak_db": -22.2,
+   "fx_minus_music": -4.9,
+   "buried": false
+  },
+  {
+   "name": "time_slice",
+   "kind": "transition",
+   "at": 8.7,
+   "t0": 8.4,
+   "t1": 9.15,
+   "music_db": -18.2,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -161.8,
+   "buried": true
+  },
+  {
+   "name": "afterimage",
+   "kind": "transition",
+   "at": 9.57,
+   "t0": 9.27,
+   "t1": 10.02,
+   "music_db": -28.9,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -151.1,
+   "buried": true
+  },
+  {
+   "name": "light_leak13",
+   "kind": "transition",
+   "at": 10.44,
+   "t0": 10.14,
+   "t1": 10.89,
+   "music_db": -20.7,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -159.3,
+   "buried": true
+  },
+  {
+   "name": "event_horizon",
+   "kind": "set piece",
+   "at": 10.44,
+   "t0": 10.44,
+   "t1": 13.91,
+   "music_db": -20.7,
+   "fx_peak_db": -13.6,
+   "fx_minus_music": 7.0,
+   "buried": false
+  },
+  {
+   "name": "event_horizon",
+   "kind": "transition",
+   "at": 12.17,
+   "t0": 11.87,
+   "t1": 12.62,
+   "music_db": -18.9,
+   "fx_peak_db": -13.7,
+   "fx_minus_music": 5.2,
+   "buried": false
+  },
+  {
+   "name": "grav_wave",
+   "kind": "set piece",
+   "at": 13.48,
+   "t0": 13.48,
+   "t1": 14.78,
+   "music_db": -20.1,
+   "fx_peak_db": -9.5,
+   "fx_minus_music": 10.6,
+   "buried": false
+  },
+  {
+   "name": "grav_wave",
+   "kind": "transition",
+   "at": 13.91,
+   "t0": 13.61,
+   "t1": 14.36,
+   "music_db": -19.9,
+   "fx_peak_db": -9.7,
+   "fx_minus_music": 10.2,
+   "buried": false
+  },
+  {
+   "name": "panel_run",
+   "kind": "transition",
+   "at": 15.65,
+   "t0": 15.35,
+   "t1": 16.1,
+   "music_db": -17.2,
+   "fx_peak_db": -27.9,
+   "fx_minus_music": -10.8,
+   "buried": false
+  },
+  {
+   "name": "emblem_split",
+   "kind": "set piece",
+   "at": 16.52,
+   "t0": 16.52,
+   "t1": 17.39,
+   "music_db": -21.3,
+   "fx_peak_db": -16.9,
+   "fx_minus_music": 4.4,
+   "buried": false
+  },
+  {
+   "name": "emblem_split",
+   "kind": "transition",
+   "at": 16.96,
+   "t0": 16.66,
+   "t1": 17.41,
+   "music_db": -20.4,
+   "fx_peak_db": -16.7,
+   "fx_minus_music": 3.6,
+   "buried": false
+  },
+  {
+   "name": "slipstream",
+   "kind": "transition",
+   "at": 17.83,
+   "t0": 17.53,
+   "t1": 18.28,
+   "music_db": -17.3,
+   "fx_peak_db": -22.3,
+   "fx_minus_music": -5.0,
+   "buried": false
+  },
+  {
+   "name": "whip_up13",
+   "kind": "transition",
+   "at": 19.13,
+   "t0": 18.83,
+   "t1": 19.58,
+   "music_db": -17.6,
+   "fx_peak_db": -49.3,
+   "fx_minus_music": -31.6,
+   "buried": true
+  },
+  {
+   "name": "ribbon_loop",
+   "kind": "set piece",
+   "at": 20.0,
+   "t0": 20.0,
+   "t1": 20.87,
+   "music_db": -28.6,
+   "fx_peak_db": -22.5,
+   "fx_minus_music": 6.1,
+   "buried": false
+  }
+ ]
+}

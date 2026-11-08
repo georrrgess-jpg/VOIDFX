@@ -1,6 +1,6 @@
 # voidfx studio handbook
 
-This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers both studios' standards (§0: Dexter v105 DRACULA, v104 THE PASSENGER, v103 FOREVER; §1: Flash v11 BOP, v10 LET IT HAPPEN), every preference learned over v1–v11 and v101–v105 and their revision rounds, what works and what doesn't, and how to work twice as fast.
+This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers both studios' standards (§0: Dexter v107 ALL CAPS, v105 DRACULA, v104 THE PASSENGER, v103 FOREVER; §1: Flash v12 BLOOM, v11 BOP, v10 LET IT HAPPEN; v106 WONDERWALL a standard made in the Dexter chat; v13 EVENT HORIZON approved, not a standard), every preference learned over v1–v13 and v101–v107 and their revision rounds, what works and what doesn't, and how to work twice as fast.
 
 Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (the engine) and `/CLAUDE.md` (the binding rules).
 
@@ -115,6 +115,7 @@ The owner, after rev 5: *"I like this edit. I would like for you to make it a st
 | Edit | Folder | Why it is a benchmark |
 |---|---|---|
 | **BLOOM** (The Flash × fakemink "Night Blooming Jasmine", rev 3) | `v12/` | Approved as a standard: *"I like this edit make it a standard."* The newest engine (`tools/new_edit.py` builds on it). The reference for one hero asset carried through the edit (the lightning jasmine), an emblem transition on the real tracked emblem (EMBLEM BLOOM), a transition built on a real phenomenon (FRACTAL BURN), a focal piece lit behind him, a closing-bud dive onto frame 0 (seam 0.19), and restraint: no text, 37 effects. Handoff `sync/handoffs/2026-11-08_flash_v12_BLOOM_standard.md` |
+| **v106 WONDERWALL** (The Flash × Oasis "Wonderwall", rev 3; made in the Dexter chat as a one-off) | `v106/` on `dev/pipeline-v2` (v11 engine) | Approved as a standard: *"I like this edit make it a standard."* The reference for a **story concept from a lyric line and the show's history** ("the one that saves me" = Iris bringing Barry back from the Speed Force), **sound restraint** (28 → 14 sound moments, silent transitions, the song carries the ending), **a loop that lands exactly and keeps moving** (the Speed Force mist dissolves into frame 0, seam 0.14) and **measured dead-span, pop and judder audits**. Signature pieces: TEAR LENS (his goodbye inside her falling tear), THE WONDERWALL (tiles cut from the edit's own frames rise behind him, then burst toward the camera), the lightning rod, the Speed Force mist. Handoff `sync/handoffs/2026-11-08_dexter_v106_WONDERWALL_standard.md` |
 | **BOP** (The Flash × DaBaby, rev 4) | `v11/` | Approved as a standard: *"I like this edit and would like for you to make it a standard."* The previous engine (inside v12). The reference for **concept, focal set pieces and the loop**: the song's spoken "Harrison" turned into the Reverse-Flash rivalry (a red rival grade against Barry's gold); THE RIFT (a tear across the frame into the Speed Force, flown through); a detailed procedural Reverse-Flash emblem revealed by a coin flip of the real tracked chest emblem; the REVERSE loop (strike, flip, red radiating, a dive through the black disc that lands exactly on frame 0); beat animations on every shot that only moved to the beat (aura, time remnants, charge-up); red eye dive, bolt split, clash, strobe echo, bolt trace, heat haze; two designed titles only. See `v11/README.md` for every revision and why. |
 | **WONDERWALL** (The Flash × Oasis "Wonderwall", rev 3; made in the Dexter chat on the v11 engine) | `v106/` (voidfx `dev/pipeline-v2`) | Approved as a standard: *"I like this edit make it a standard."* The reference for **a story concept from a lyric line and the show's history** ("you're gonna be the one that saves me": into the Speed Force, Iris brings him back), **a focal set piece built from the edit's own frames** (THE WONDERWALL rises tile by tile behind him, cracks, and the frame bursts into its tiles on the word), **a custom graphic transition carrying the reverse shot** (TEAR LENS: Iris's tear holds Barry's goodbye, falls toward the lens, we fall through), **sound restraint** (half the effects cut, then approved), **dead-span and pop audits by measurement**, and **a loop that lands exactly and keeps moving** (seam 0.14). Handoff: `sync/handoffs/2026-11-08_dexter_v106_WONDERWALL_standard.md`. |
 | **LET IT HAPPEN** (The Flash × Tame Impala, rev 5) | `v10/` | Approved as a standard: *"I like this edit and would like for you to make it a standard."* The reference for **motion and professional finish**: velocity ramps with optical-flow slow motion on restored 2× source, a beat-synced camera (zoom punches, rotation kicks, hit-frame blur), light rays, multi-stage set pieces (emblem dive + drop wave, time particles, lens shatter, lightning branches, perimeter lap, phase, whirlwind), bullet time in frozen holds, onset-timed lyric type (runner drop-off, charge fill, AROUND ring), and the Speed Force loop back to frame 0. See `v10/README.md` for every revision and why. |
@@ -154,7 +155,7 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 6. **No labels:** no name tags, speaker chips, "who is who", counters or timecodes. No stamps sitting on top of captions.
 7. **Transitions:**
    - Pronounced, designed and **going through something**.
-   - **Every transition has its own sound.**
+   - **Every transition has its own sound** *(the original rule)*. **Updated by v12 and v106:** at most one sound per transition, small ones may be silent, layered sound only at the set pieces (§5, sound design).
    - No plain hard cuts in quiet or dialogue sections.
 8. **Sound:**
    - Smooth and clean; the song is edited on its beat grid.
@@ -175,6 +176,7 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
   - For Dexter that means blood slides, kill-room plastic, the knife, body bags, luminol, M99 and Harry's code.
   - For The Flash it meant lightning, the speed force and the emblem.
 - **Lots of designed motion.** He repeatedly asks for **"more transitions, animations and graphics"** and **"more sound effects"**. Density is welcome when every move is clean.
+  - **Sound is the exception since v12 and v106:** in both he asked to cut about half the sound effects (*"get rid of like half the sound effects"*, *"remove like half of the sound effects mostly the tedious annoying ones like the emblem shine and the few near the end"*), then approved. Picture density stays; sound goes to the set pieces and structural hits.
 - **Graphics that add depth:**
   - v6: the vapor-world tune-in behind the person matte, palm shadows, bokeh motes, neon light spill and the VHS pause;
   - v7: evidence markers and the CASE CLOSED stamp.
@@ -263,6 +265,11 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | v105 verdict gripe: *"the quality of some of the clips"* (soft 720p, heavily compressed packs, a 3.5× zoom) | v105 (Dexter studio) | Rank sources before choosing (`sharpness.py N --src`), zoom ≤ 1.1, hero shots on high-bitrate packs, ask for better packs (§5a item 12). |
 | v10 rev 3: the glass shatter in the frozen bullet scene (a crack web and hanging shards over the frame) | v10 | Replaced in rev 4 by TIME PARTICLES: the frozen moment comes apart into fragments of its own pixels and rebuilds as the next moment, from his hand outward. Glass has to land (see the props rule below). |
 | v10 rev 3: the CARRY OFF whirlwind exit | v10 | Replaced in rev 4 by a lightning runner that drops each word off on its sung onset and later snatches the letters away. |
+| v12 rev 2–3: the NIGHT and BLOOM titles; half the sound effects; the bell on the flower; a whoosh on an early transition | v12 | Text is optional; fewer, bigger sounds; no chimes or bells on graphics. |
+| v106 rev 2: *"the tedious annoying"* sounds (the emblem shine, a sound on every camera punch and title letter, the sounds after the burst); a span *"where there isn't anything happening"*; animations not smooth enough | v106 (Dexter chat, Flash edit) | Sound the set pieces and structural hits only; transitions may be silent. Find dead spans, pops and judder by measurement (`tools/motionqc.py`). Flow on held 24p shots; sub-pixel procedural motion; covers exactly clear at their ends. |
+| v106 rev 3: the tear-drop transition too quick to see (0.6 s) | v106 | A signature graphic transition gets ~1 s and ≥ 8 % of the frame width; move the cut to the next sung word to make room. |
+| v13 rev 1: *"I don't like that the singularity is the primary object in every transition and animation"*; the emblem transition (a black hole born in the emblem) didn't count as one; *"the tedious sound effects"* | v13 | The hero asset gets 2–4 appearances, and every other transition is a different idea. An emblem transition comes from the emblem itself (its bolt, its shape). Start sound lean (~10–12 events). |
+| v13 verdict: *"I like this edit but I do not want you to make it a standard. It does somethings good and somethings bad."* | v13 | Approved, not a standard. The studio's reading of the weak parts: an abstract concept (a black hole as the voice of a love song); nearly all footage from the soft S1 pack under a grey grade; a drumless section with few beat moments and no big moment in the first 10 s; newer bright-red suits mixed with S1 maroon. |
 
 ### Props and effects from the character's world: when they work (Studio 2, after FOREVER)
 
@@ -322,6 +329,7 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 11. **(v11, the standard) Concept, focus, and the finish.** Find the concept in the material (a word in the song, the character's history); give the edit one focal set piece; build hero graphics as detailed, lit, physical assets on the real objects; give every "just moving" shot a beat animation; land the loop exactly on frame 0; measure flashes. Reached through four owner revisions: more transitions and sounds → a creative loop and beat moments → a detailed symbol, a flashier dive and a focal piece.
 12. **(Studio 2, DRACULA) Source sharpness is part of the plan.** Every pack is 720p, so every shot is enlarged ~2.7× before any zoom, and several packs are heavily compressed. Run `tools/sharpness.py packs` before picking, keep zoom ≤ 10 % on 720p, put close-ups and big moments on the least-compressed packs, and run `tools/sharpness.py N` on the finished video: swap what it flags. v11 measured afterwards: the punch (source motion blur, dark, the S4 pack's heavy compression) and the grin (speed-ramp blur) read soft; the stare scores low because restoration smooths skin texture.
 13. **(Dexter studio, v105) Light, loops and library reuse.** Light sources go behind the subject (matte + light wrap). The loop is the most creative transition in the edit and lands in frame 0's own image. Restyle any library transition before reuse. When the subject is burned/dissolved away, remove him before drawing light and fill the hole with real background. "Add transitions wherever possible" = replace generic connectors with themed ones and add new cuts. Mix effects against the song's mastering level (a loud master: effects +9 dB, music ducked 3 dB under the big hits).
+14. **(Dexter chat's Flash edit, v106 WONDERWALL) Measure the motion, not only the stills.** Before the first delivery, run `tools/motionqc.py N` on the encode: no span of ~1 s near the static floor (a dead span gets a new cut and a designed transition), every pop is a cut, a designed flash or a beat hit, no hold-cadence judder (flow on held 24p/30p shots), and no spike across the loop's wrap. Give each signature transition ~1 s to read. Cover transitions start and end at exactly zero and dissolve their plates. The loop keeps its background moving across the wrap (frame 0's animation rendered at virtual negative frames). Probe every source range for VFX colour flickers and hidden cuts. Fit the beat grid on the Demucs drum stem (an automatic map locked to 4/3 of the tempo on a swung strum) and time lyrics with Whisper large-v3 on the vocal stem.
 
 ## 5. What works: craft lessons
 
@@ -355,7 +363,7 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 - Each needs:
   - a pre-roll (the outgoing shot starts reacting 6–15 frames before the cut);
   - a post-roll (the incoming shot settles over 8–18 frames);
-  - its own sound.
+  - at most one sound, or none for a small move (v12, v106). A signature transition gets about 1 s and a graphic at least ~8 % of the frame width (v106 rev 3).
 
 **Text:**
 - Two-line lockups, word-timed to speech or lyrics with Whisper word times.
@@ -367,8 +375,9 @@ The owner's standard after v9: *"go above and beyond with these edits."* "Techni
 - The finish pass (halation, grain, vignette) gives every edit its signature.
 
 **Sound design:**
-- A drone or room tone bed across the whole loop.
-- Every transition has a layered sound: whoosh + impact + a material sound (glass, wood, plastic, zipper, paper).
+- **Restraint first (v12, v106):** layered sound only at the set pieces and structural hits; at most one sound per other transition, and small ones may be silent; no sounds on beat moments, camera punches or title letters; no chimes, shimmers or "shine"; let the song carry the ending and the loop. Both times the owner cut about half the effects, so start lean.
+- A drone or room tone bed across the whole loop (if it doesn't fight the song).
+- Set pieces get a layered sound: whoosh + impact + a material sound (glass, wood, plastic, zipper, paper).
 - Text ticks (typewriter for case notes).
 - A sub drop and riser into the drop.
 - The ending: a tape-stop, rewind or heartbeat into the loop.
@@ -401,7 +410,8 @@ The full list is in `/docs/TOOLKIT.md` §4. The most expensive ones:
 - text over faces (per-shot summary; check every flag on frames);
 - clicks at every cut and at the loop seam;
 - the loop-seam picture;
-- audio and video length.
+- audio and video length;
+- then the faces-vs-effects list (`tools/faceqc.py`) and the **motion audit** (`tools/motionqc.py`: dead spans per half-beat, pops, hold-cadence judder, the loop's wrap step).
 
 Then the **visual sign-off**:
 - pull frames from the **encoded** file around every transition, title, the drop and the loop;
@@ -459,6 +469,8 @@ Only then deliver.
 | v105 DRACULA | SUNDOWN: two looks split on the drop. Day: a bleached warm "Sunshine State postcard" (teal shadows, a sun with rays and lens ghosts). Night: cold moonlit silver, deep blacks, only crimson kept and pushed (a blood moon, bats, a crimson bloom). |
 | v106 WONDERWALL (The Flash) | WONDER (golden-hour amber light against Speed Force cobalt, milky lifted blacks, red-orange halation kept off faces; cobalt mist, gold mortar light) |
 | v107 ALL CAPS | TABLOID (newsprint-cream highlights, ink blacks, slate blues, one spot red; a misregistered red plate, paper grain, a fine screen in the shadows; red-lit skin kept out of the spot red per shot) |
+| v12 BLOOM | NOCTURNE: indigo nights, crimson suit, orange light turned cream, lightning in jasmine white over a cream glow, deep vignette |
+| v13 EVENT HORIZON | REDSHIFT: a desaturated silver-steel world, only the suit's crimson, skin and the light keep colour; the picture redshifts (dimmer, sliding to red) as time slows |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);
@@ -469,7 +481,6 @@ Fresh directions for future edits:
 - cold winter teal (Trinity season);
 - Sunshine State postcard (used for v105's day half; a whole edit in it is still open);
 - an X-ray or MRI medical look.
-| v12 BLOOM | NOCTURNE: indigo nights, crimson suit, orange light turned cream, lightning in jasmine white over a cream glow, deep vignette |
 
 ## 10. Songs used so far
 
@@ -493,6 +504,7 @@ Fresh directions for future edits:
 | v105 | Tame Impala "Dracula" | 114.99 BPM | half-beats 592–680 (2:34.6–2:57.5, 11 bars, one pass); the pre-roll is the song's own lead-in, so the loop plays through | 2:40.8 one-bar drop-out → SUNDOWN; 2:42.9 drop (+29.8 dB) → THE BAT BURST |
 | v106 | Oasis "Wonderwall" | 87.02 BPM (drum-stem fit; the auto map locked to 4/3 = 116) | half-beats 456–520 (bars 57–65, 2:37.5–2:59.6, chorus 2); bar 65 starts chorus 3 the same way, so the loop wraps on the music | 16.55 s, the sung "WONDERWALL" → THE WONDERWALL burst |
 | v107 | Madvillain "All Caps" | 87.50 BPM (drum-stem fit over 8 bars; the auto map read 175.6, the autocorrelation 117.4 = the dotted pattern) | half-beats 176–240 (8 bars, 60.92–82.86 s): the end of verse 1 and the beat break; the bass drops out in the last bar and returns on bar 1, so the wrap lands like a drop | 14.76 s "ALL CAPS" → the strip slaps on; D-E-X-T-E-R on the 16ths e44–e46.5 → 16.45 s the strip flies onto the real banner |
+| v13 | Brent Faiyaz "Wish You Well" (full version; v8 used a 36 s screen recording) | 138 BPM half-beats, 69 BPM feel (drum-stem fit) | h92–h188 (0:20.05–0:40.92, six 16-half-beat phrases, no drums: an 808 hit at e8 mod 16, a rest at e12–14) | "Darling," (30.84) → a 3 s vocal silence → the deepest rest (33.1) → the music returns (33.97); bar 23 mirrors bar 11, so the window wraps exactly |
 
 ## 11. Communication
 
