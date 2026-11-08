@@ -135,9 +135,9 @@ TEXT = [
                              ("ONE", sw(163.92), 1), ("THAT", sw(164.22), 1), ("SAVES", sw(164.48), 1), ("ME", sw(165.02), 1)],
          end=sw(165.36) + 0.35, emph=["ONE", "SAVES"]),
     dict(style="cap", words=[("AND", sw(168.54), 0), ("AFTER", sw(168.86), 0), ("ALL", sw(169.26), 0)], end=sw(170.44) + 0.30, emph=["ALL"]),
-    dict(style="cap", words=[("YOU'RE", sw(171.92), 0)], end=th(45) - 0.04, emph=[]),                  # paused over the eyes2 close-up
+    dict(style="cap", words=[("YOU'RE", sw(171.92), 0)], end=th(45) - 0.22, emph=[]),                  # paused over the eyes2 close-up
     dict(style="cap", words=[("YOU'RE", sw(171.92), 0), ("MY", sw(173.90), 0)], end=th(E_WALL) - 0.04, emph=[], **{"from": th(46)}),
-    dict(style="wonder", words=[("WONDERWALL", sw(174.14), 0)], end=th(54) - 0.05, emph=["WONDERWALL"]),
+    dict(style="wonder", words=[("WONDERWALL", sw(174.14), 0)], end=th(54) - 0.05, emph=["WONDERWALL"], band=(1450, 1615)),
 ]
 CAPS = []; CAP_Y = (1385, 1490); END_CAP = []
 CLOSE_T = None; DROP_TITLE = None; VANISH_T0 = None

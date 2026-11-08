@@ -45,11 +45,11 @@ def grade(img, s, f):
     return np.clip(o, 0, 1, out=o)
 
 # ---- the finish: halation, vignette, grain -------------------------------------------------------------------------
-def finish106(out, f, s):
+def finish106(out, f, s, ff=None):
     small = cv2.resize(out, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
     hi_ = np.clip(small.max(2) - 0.68, 0, 1)
     bl = cv2.resize(cv2.GaussianBlur(hi_, (0, 0), 3) * 0.40 + cv2.GaussianBlur(hi_, (0, 0), 12) * 0.70, (W, H), interpolation=cv2.INTER_LINEAR)
-    fb = face_box(s, f) if s is not None and s.get("face") is not None else None
+    fb = face_box(s, f if ff is None else ff) if s is not None and s.get("face") is not None else None
     if fb:                                                                                 # the halation stays off his face
         fm = np.zeros((H // 8, W // 8), np.float32); cv2.ellipse(fm, (int((fb[0] + fb[1]) / 16), int((fb[2] - (fb[1] - fb[0]) * 0.55) / 8)),
                                                                    (int((fb[1] - fb[0]) / 14) + 4, int((fb[1] - fb[0]) * 0.8 / 8) + 4), 0, 0, 360, 1.0, -1)
@@ -374,7 +374,7 @@ def wonder_letter(c, size):
 def text_wonder(out, f, tx):
     t = f / FPS; word = tx["words"][0][0]; t0 = tx["words"][0][1]; t_end = tx["end"]
     if t < t0 - 0.05 or t > t_end + 0.02: return out
-    size = 150; (lets, wd) = hero_letters(word, size, 4); fit = min(1.0, 960 / max(1, wd)); y = 1440
+    size = 150; (lets, wd) = hero_letters(word, size, 4); fit = min(1.0, 960 / max(1, wd)); y = 1530
     out = out * cap_scrim(y - 150, y + 120, 0.30 * smooth((t - t0) / 0.25) * (1 - smooth((t - t_end + 0.2) / 0.2)))
     sung = 1.52; n = len(lets)
     for i, (c, m, xo) in enumerate(lets):
@@ -451,7 +451,9 @@ def render(f):
     if s.get("tout") == "loop_mist": out = loop_mist(out, f, s)
     out = beat_fx(out, f)
     out = text106(out, f, s, False)
-    out = finish106(out, f, s)
+    if s.get("tout") == "loop_mist" and (f - fh(E.E_LOOP + 2) + 1) / (E.DUR_F - fh(E.E_LOOP + 2)) >= 0.55:
+        out = finish106(out, f, SHOTS[0], 0)                                               # frame 0's own finish: the seam lands exactly
+    else: out = finish106(out, f, s)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
 
 
