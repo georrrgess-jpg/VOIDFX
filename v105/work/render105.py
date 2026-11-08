@@ -5296,12 +5296,18 @@ def draw_sprite(acc, spr, x, y, sc, rot, flip=1.0, blur=0.0, alpha=1.0, stretch=
     M[0, 2] = n / 2 - (M[0, 0] * w / 2 + M[0, 1] * h / 2); M[1, 2] = n / 2 - (M[1, 0] * w / 2 + M[1, 1] * h / 2)
     pm = np.dstack([spr[..., :3] * spr[..., 3:4], spr[..., 3:4]])                       # premultiplied: no dark fringes
     tile = cv2.warpAffine(pm, M, (n, n), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
-    if blur > 0.6: tile = cv2.GaussianBlur(tile, (0, 0), blur)
-    if flip < 0: tile[..., :3] *= 0.86                                                   # the back of the petal
     x0, y0 = int(x - n / 2), int(y - n / 2)
     xa, ya, xb, yb = max(0, x0), max(0, y0), min(W, x0 + n), min(H, y0 + n)
     if xb <= xa or yb <= ya: return
-    t_ = tile[ya - y0:yb - y0, xa - x0:xb - x0]; a = t_[..., 3:4] * alpha
+    if blur > 0.6:                                  # pipeline v2 (WP2 item 5): blur only the part that lands in the frame,
+        rad = int(blur * 4) + 2                     # plus the kernel's reach (OpenCV: 4 sigma for float), as a copy so the
+        ca, ra = max(0, xa - x0 - rad), max(0, ya - y0 - rad)          # borders are the tile's own: the same pixels, without
+        cb, rb = min(n, xb - x0 + rad), min(n, yb - y0 + rad)          # blurring a zoomed sprite's off-screen 90 %
+        part = cv2.GaussianBlur(np.ascontiguousarray(tile[ra:rb, ca:cb]), (0, 0), blur)
+        t_ = part[ya - y0 - ra:yb - y0 - ra, xa - x0 - ca:xb - x0 - ca]
+    else: t_ = tile[ya - y0:yb - y0, xa - x0:xb - x0]
+    if flip < 0: t_[..., :3] *= 0.86                                                     # the back of the petal
+    a = t_[..., 3:4] * alpha
     sub = acc[ya:yb, xa:xb]
     sub[..., :3] = sub[..., :3] * (1 - a) + t_[..., :3] * alpha; sub[..., 3:4] = sub[..., 3:4] * (1 - a) + a
 
