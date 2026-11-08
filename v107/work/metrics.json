@@ -1,6 +1,6 @@
 {
  "edit": "v107",
- "round": 3,
+ "round": 4,
  "stages": [
   {
    "t": "2026-11-08 16:57:35",
@@ -211,6 +211,13 @@
    "step": "deliver",
    "s": 51.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:10:54",
+   "round": 4,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -261,6 +268,18 @@
    "round": 3,
    "cat": "other",
    "text": "I want you to implement one new really unique graphic/animation that you have not tried to create before to give this edit it's own custom flare."
+  },
+  {
+   "t": "2026-11-08 20:10:50",
+   "round": 4,
+   "cat": "plain_effect",
+   "text": "Can you get rid of the point of origin graphic/transition"
+  },
+  {
+   "t": "2026-11-08 20:10:50",
+   "round": 4,
+   "cat": "plain_effect",
+   "text": "remove and replace the black box transition from the 3 and a half second mark."
   }
  ],
  "catches": [
@@ -317,10 +336,17 @@
    "round": 3,
    "cat": "drawn_asset",
    "text": "the unfolding card went edge-on as a dark line through his nose; it now fades before 90 degrees"
+  },
+  {
+   "t": "2026-11-08 20:10:50",
+   "round": 4,
+   "cat": "other",
+   "text": "rev 3's POINT OF ORIGIN (strings converging on a target ring where his face appears) broke a recorded owner dislike: no gimmick-on-the-face effects such as lines converging on his face with a target ring; check CLAUDE.md dislikes before designing"
   }
  ],
  "round_starts": {
   "2": "2026-11-08 18:47:38",
-  "3": "2026-11-08 19:37:22"
+  "3": "2026-11-08 19:37:22",
+  "4": "2026-11-08 20:10:50"
  }
 }

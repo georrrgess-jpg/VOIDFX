@@ -9,30 +9,19 @@
    "t0": 1.07,
    "t1": 1.82,
    "music_db": -13.5,
-   "fx_peak_db": -18.5,
-   "fx_minus_music": -5.0,
+   "fx_peak_db": -22.0,
+   "fx_minus_music": -8.5,
    "buried": false
   },
   {
-   "name": "rorschach",
-   "kind": "transition",
-   "at": 2.74,
-   "t0": 2.44,
-   "t1": 3.19,
-   "music_db": -13.4,
-   "fx_peak_db": -15.1,
-   "fx_minus_music": -1.8,
-   "buried": false
-  },
-  {
-   "name": "redact",
+   "name": "page_turn107",
    "kind": "transition",
    "at": 3.77,
    "t0": 3.47,
    "t1": 4.22,
    "music_db": -12.0,
-   "fx_peak_db": -22.8,
-   "fx_minus_music": -10.8,
+   "fx_peak_db": -23.4,
+   "fx_minus_music": -11.4,
    "buried": false
   },
   {
