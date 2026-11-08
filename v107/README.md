@@ -72,7 +72,19 @@ From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the bea
 
   Sound: one paper flutter as it gathers, one whoosh on the burst.
 
-## Measured
+## Measured (rev 2)
+- **QC:** 11/11 on the encode.
+- **Loudness:** −13.0 LUFS, true peak −3.5 dBTP after AAC.
+- **Loop seam:** the audio seam step is 0.0005; the picture lands on frame 0.
+- **Dead spans:** none of 0.5 s or more.
+- **Glitch audit:** every frame-to-frame jump is a cut, a beat hit or a designed transition.
+- **Effort:** 2 full renders for rev 2, about 275 s each.
+
+Caught by review before delivery:
+- **The TV exit:** the screen vignette and glass reflection switched off in one frame as the screen opened (top-of-frame luma 50 → 80). They now fade in with the letterbox and out as it opens.
+- **The grin centring flag:** the grin is an extreme close-up whose face is wider than the frame, so the detector boxes it past the edge. Its only flags were inside the whip and the front-page fly-in. Centring QC now lists flags inside designed transitions without counting them, using the same windows faceqc leaves out.
+
+## Measured (rev 1)
 - **QC:** 11/11 on the encode.
 - **Loudness:** −13.0 LUFS, true peak −3.5 dBTP after AAC.
 - **Loop seam:** blurred difference 0.16 (the gate is ≤ 1); the audio seam step is 0.0005.
