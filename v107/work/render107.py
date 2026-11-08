@@ -10265,6 +10265,31 @@ def beat_phase(f):
     hook = (E.E_BEAT <= e < E.E_LOOP - 1) and not (19 <= e < 23) and not (24 <= e < 28.5) and not (47 <= e < 50)
     return ph, bi, hook, False
 
+# ---- smooth motion: where flow is refused (big frame-to-frame change), blend the two frames instead of holding one ----
+def src_weights(s, f):
+    """as the engine's, but a flow shot whose neighbours differ too much for clean flow blends them (motion-blur-like at
+    60 fps) instead of holding one (24p judder). check_sources keeps every range inside one source shot."""
+    pk = s["src"]; fps = E.SRC[pk][1]; U = UNIQ[pk]
+    t, u, sp = src_time(s, f)
+    def idx(tt, mode):
+        kf = tt * fps; i = clamp(bisect.bisect_right(U, kf + 0.3) - 1, 0, len(U) - 1)
+        if mode == "hold" or i >= len(U) - 1: return [(U[i], 1.0)]
+        i0, i1 = U[i], U[i + 1]; a = clamp((kf - i0) / (i1 - i0), 0.0, 1.0)
+        if a < 0.05: return [(i0, 1.0)]
+        if a > 0.95: return [(i1, 1.0)]
+        if mode == "blend": return [(i0, 1 - a), (i1, a)]
+        A0, A1 = FR[(pk, i0)], FR[(pk, i1)]
+        if np.abs(A0[::8, ::8].astype(np.float32) - A1[::8, ::8]).mean() > 14: return [(i0, 1 - a), (i1, a)]
+        m0, m1 = A0[::8, ::8].mean(axis=(0, 1)), A1[::8, ::8].mean(axis=(0, 1))
+        if np.abs(m0.astype(np.float32) - m1).max() > 6: return [(i0, 1 - a), (i1, a)]
+        return [("flow", i0, i1, a)]
+    if sp > 1.7:
+        K = int(min(7, max(3, round(sp * 2)))); span = 0.5 / FPS * sp; out_ = []
+        for j in range(K):
+            out_ += [(k, w / K) for k, w in idx(t + (j / (K - 1) - 0.5) * span, "hold")]
+        return out_, t, u
+    return idx(t, s.get("interp", "hold")), t, u
+
 # ---- base frame ---------------------------------------------------------------------------------------------------
 def banner_geom(t):
     """the banner shot: the source cropped round the banner (tracked as it drifts left and up), scaled 1.2x so the whole
@@ -10676,6 +10701,33 @@ def text_stamp(out, f, tx):
         cx, cy = cx + (bx - cx) * w_, cy + (by - cy) * w_; sc = sc + (bs - sc) * w_; rot = rot + (br - rot) * w_
         a = a * (1 - smooth((t - t_cut - 0.42) / 0.36))
     return put_strip(out, rgba, cx, cy, sc, rot, a, 0.45 * (1 - smooth((t - t_cut) / 0.3)))
+
+def text_cap(out, f, tx, person=None):
+    """the v9 caption (the approved construction), with an optional per-caption ys=(line0, line1)."""
+    t = f / FPS; words = tx["words"]; t_in = max(words[0][1], tx.get("from", -1))
+    if t < t_in - 0.02 or t > tx["end"] + 0.01: return out
+    big = tx.get("big"); sizes = [92, 120] if big else [88, 114]
+    ys = tx.get("ys") or ((1368, 1492) if big else (1380, 1496))
+    emph = tx.get("emph", []); fr = tx.get("from", -1)
+    a_out = 1 - smooth((t - (tx["end"] - 0.16)) / 0.16)
+    out = out * cap_scrim(ys[0] - 70, ys[1] + 70, 0.34 * a_out * smooth((t - t_in + 0.05) / 0.25))
+    for ln in (0, 1):
+        ws = [(w, max(wt, fr)) for w, wt, l in words if l == ln]
+        if not ws: continue
+        sz = sizes[ln]
+        for _ in range(6):                                                                 # auto-fit the line to 940 px
+            ims = [cap_word(w, sz, w in emph) for w, _ in ws]
+            gap = int(sz * 0.26); widths = [im.shape[1] - 72 for im in ims]
+            tot = sum(widths) + gap * (len(ims) - 1)
+            if tot <= 940: break
+            sz = int(sz * 940 / tot) - 1
+        x = W / 2 - tot / 2
+        for (w, wt), im, wd in zip(ws, ims, widths):
+            v = eout(clamp((t - wt) / 0.17, 0, 1), 2.4)
+            o_im = im if a_out > 0.98 else cv2.GaussianBlur(im, (0, 0), 0.1 + 5 * (1 - a_out))
+            out = ease_word(out, o_im, x + wd / 2, ys[ln] - 14 * (1 - a_out), v, a_out, rise=30)
+            x += wd + gap
+    return out
 
 def text107(out, f, s, rides):
     for tx in E.TEXT:

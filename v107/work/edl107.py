@@ -94,31 +94,31 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 
 TB = dict(look="tabloid")
 # ---- "AND HE WON'T STOP TILL HE GOT THE MASSES" (frame 0 is the loop's landing)
-shot("stare", "ds2b", 0, 4, 323.40, 324.70, z=[(0, 1.00), (1, 1.05)], interp="flow", seg=True, redthr=0.30, **TB)
+shot("stare", "ds2b", 0, 4, 322.30, 323.20, z=[(0, 1.00), (1, 1.05)], interp="flow", seg=True, redthr=0.30, **TB)
 shot("table", "ds2b", 4, 8, 156.40, 157.80, z=[(0, 1.02), (1, 1.07)], tin="plastic_rip", face=None, cx=(640, 640), interp="flow", **TB)
 # ---- "AND SHOW 'EM WHAT THEY KNOW NOT THROUGH FLOWS OF HOT MOLASSES"
 shot("shh", "ds2b", 8, 11, 346.40, 347.50, z=[(0, 1.02), (1, 1.07)], tin="press_flash", interp="flow", **TB)
 shot("lab", "ds2b", 11, 14, 178.30, 179.40, z=[(0, 1.00), (1, 1.05)], tin="redact", interp="flow", **TB)
-shot("hazmat", "dmx", 14, 17, 96.90, 97.90, z=[(0, 1.05), (1, 1.00)], tin="molasses", interp="flow", **TB)
+shot("hazmat", "dmx", 14, 17, 94.95, 95.95, z=[(0, 1.04), (1, 1.00)], tin="molasses", interp="flow", **TB)
 # ---- "DO IT LIKE THE ROBOT TO HEADSPIN TO BOOGALOO"
 shot("robot", "dmx", 17, 20, 191.50, 194.30, z=[(0, 1.00), (1, 1.06)], tin="impact", face=None, cx=(560, 620), robot=True,
      tmap=robo(17, 20, 191.50, 194.30), lin=True, interp="flow", **TB)
 shot("upside", "ds2b", 20, 22, 101.60, 102.40, z=[(0, 1.02), (1, 1.00)], tin="headspin", face=None, cx=(830, 830), interp="flow", **TB)
-shot("grin", "dmx", 22, 28, 37.90, 39.40, z=[(0, 1.00), (1, 1.04)], tin="flip", interp="flow", **TB)
+shot("grin", "dmx", 22, 28, 75.50, 76.80, z=[(0, 1.00), (1, 1.00)], tin="flip", interp="flow", **TB)
 # ---- "TOOK A FEW MINUTES TO CONVINCE THE AVERAGE BUGABOO": the front page spins in; we dive into his photo under the headline
-shot("con", "dmx", 28, 30, 4.70, 5.60, z=[(0, 1.00), (1, 1.04)], tin="frontpage", interp="flow", **TB)
+shot("con", "ds2b", 28, 30, 244.00, 244.80, z=[(0, 1.00), (1, 1.04)], tin="frontpage", interp="flow", **TB)
 shot("doakes", "dmx", 30, 32, 11.00, 11.80, z=[(0, 1.02), (1, 1.06)], tin="whip", interp="flow", **TB)
 # ---- "IT'S UGLY LIKE LOOK AT YOU, IT'S A DAMN SHAME": Doakes in the cage
 shot("cage", "ds2a", 32, 35, 226.60, 228.00, z=[(0, 1.00), (1, 1.05)], tin="slam", interp="flow", **TB)
 shot("lookat", "ds2a", 35, 37, 224.20, 224.90, z=[(0, 1.02), (1, 1.06)], tin="whip", interp="flow", **TB)
-shot("shame", "dmx", 37, 40, 183.90, 185.00, z=[(0, 1.00), (1, 1.05)], tin="zipper", interp="flow", **TB)
+shot("shame", "ds2b", 37, 40, 161.50, 162.60, z=[(0, 1.00), (1, 1.04)], tin="zipper", interp="flow", **TB)
 # ---- "JUST REMEMBER ALL CAPS WHEN YOU SPELL THE MAN NAME": the strip of newsprint, D-E-X-T-E-R stamped one letter a word
-shot("remember", "dmx", 40, 42, 247.90, 248.80, z=[(0, 1.02), (1, 1.06)], tin="impact", interp="flow", **TB)
+shot("remember", "ds2b", 40, 42, 296.00, 296.80, z=[(0, 1.00), (1, 1.05)], tin="impact", interp="flow", **TB)
 shot("parade", "dmx", 42, 48, 327.30, 328.90, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 600), interp="flow", stamp=True, redthr=0.30, **TB)
 # ---- the beat break: the strip flies up and becomes the banner the plane tows; the parade; he has got the masses
 shot("banner", "dmx", 48, 51, 326.05, 326.68, tin="banner_match", face=None, banner=True, interp="flow", **TB)
 shot("laugh", "dmx", 51, 54, 343.10, 344.70, z=[(0, 1.00), (1, 1.04)], tin="confetti_pop", interp="flow", seg=True, pop=True, redthr=0.30, **TB)
-shot("poster", "dmx", 54, 56, 341.20, 342.80, z=[(0, 1.02), (1, 1.06)], tin="whip", interp="flow", redthr=0.40, **TB)
+shot("crowd", "dmx", 54, 56, 337.60, 338.40, z=[(0, 1.00), (1, 1.04)], tin="whip", face=None, cx=(620, 620), interp="flow", **TB)
 shot("hero", "dmx", 56, 60, 335.75, 337.30, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", redthr=0.30, **TB)
 shot("final", "dmx", 60, 64, 386.00, 388.40, z=[(0, 1.00), (1, 1.04)], tin="whip", face=None, cx=(575, 575), interp="flow", tout="confetti_loop", redthr=0.30, **TB)
 SHOTS = S
@@ -141,7 +141,8 @@ TEXT = [
     dict(style="cap", words=[("IT'S", 10.87, 0), ("UGLY", 11.43, 0), ("LIKE", 11.81, 1), ("LOOK", 12.15, 1), ("AT", 12.32, 1), ("YOU", 12.40, 1)],
          end=12.64, emph=["UGLY"]),
     dict(style="cap", words=[("IT'S", 12.67, 0), ("A", 12.92, 0), ("DAMN", 12.96, 1), ("SHAME", 13.09, 1)], end=13.46, emph=["SHAME"]),
-    dict(style="cap", words=[("JUST", 13.49, 0), ("REMEMBER", 14.01, 0), ("ALL", 14.36, 1), ("CAPS", 14.76, 1)], end=15.00, emph=["ALL", "CAPS"]),
+    dict(style="cap", words=[("JUST", 13.49, 0), ("REMEMBER", 14.01, 0), ("ALL", 14.36, 1), ("CAPS", 14.76, 1)], end=15.00, emph=["ALL", "CAPS"],
+         ys=(1452, 1568), band=(1382, 1638)),                                            # lower: his face fills "remember"
     dict(style="cap", words=[("WHEN", 15.03, 0), ("YOU", 15.36, 0), ("SPELL", 15.60, 0), ("THE", 15.86, 1), ("MAN", 16.08, 1), ("NAME", 16.27, 1)],
          end=th(48) - 0.05, emph=["NAME"]),
     dict(style="stamp", words=[("D", 15.03, 0), ("E", 15.36, 0), ("X", 15.60, 0), ("T", 15.86, 0), ("E", 16.08, 0), ("R", 16.27, 0)],

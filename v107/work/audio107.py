@@ -795,7 +795,10 @@ def main():
     _, mw = wf.read(tmp); mw = mw.astype(np.float32)
     ref = wrapped[P2:P2 + SR, 0]; seg_ = mw[P2 - 2000:P2 + SR + 2000, 0]
     lag = int(np.argmax(np.correlate(seg_, ref, mode="valid"))) - 2000
-    m = mw[P2 + lag:P2 + lag + N]
+    m = mw[P2 + lag:P2 + lag + N].copy()
+    zf = 96                                                                                # v107: frame 0 is a loud kick; the AAC tail pads
+    fade = np.sin(np.linspace(0, np.pi / 2, zf)) ** 2                                       # with ~2 ms of silence, so the wrap passes
+    m[:zf] *= fade[:, None]; m[-zf:] *= fade[::-1, None]                                   # through zero (a 4 ms dip, no click)
     out = f"{AD}/mix.wav"; wf.write(out, SR, (np.clip(m, -1, 1) * (2 ** 31 - 1)).astype(np.int32))
     wf.write(f"{AD}/mix_preroll.wav", SR, np.vstack([m[-1024:], m]).astype(np.float32))
     test = f"{AD}/aac_test.m4a"

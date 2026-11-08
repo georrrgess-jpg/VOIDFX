@@ -29,8 +29,143 @@
    "step": "prep",
    "s": 51.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:33:02",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:37:48",
+   "round": 1,
+   "step": "video",
+   "s": 286.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:40:15",
+   "round": 1,
+   "step": "qc",
+   "s": 141.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:44:54",
+   "round": 1,
+   "step": "prep",
+   "s": 22.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:53:09",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:57:41",
+   "round": 1,
+   "step": "video",
+   "s": 272.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:59:55",
+   "round": 1,
+   "step": "qc",
+   "s": 134.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:01:49",
+   "round": 1,
+   "step": "prep",
+   "s": 23.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:06:02",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:10:44",
+   "round": 1,
+   "step": "video",
+   "s": 282.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:12:54",
+   "round": 1,
+   "step": "qc",
+   "s": 130.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:20:47",
+   "round": 1,
+   "step": "video",
+   "s": 276.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:22:54",
+   "round": 1,
+   "step": "qc",
+   "s": 127.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:24:29",
+   "round": 1,
+   "step": "deliver",
+   "s": 57.0,
+   "rc": 0
   }
  ],
  "notes": [],
- "catches": []
+ "catches": [
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "other",
+   "text": "AAC end padding (~2 ms of silence) against a frame 0 that starts on a loud kick: a click at the wrap (step 0.61); fixed with a 2 ms fade each side"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "text_face",
+   "text": "five close-ups (stare, hazmat, con, shame, remember) put the face box in the caption band or past the frame edge; swapped for wider moments, one caption lowered"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "other",
+   "text": "flow refused on fast shots (hazmat, crowd) fell back to a held frame: 24p judder; now a blend"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "the confetti burst covered his face on the close-up; it now bursts in the sky over the banner and continues behind his matte"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "the banner shot's reflected padding mirrored the banner above and below; the sky is extended from its own colour"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "other",
+   "text": "red-lit skin read as spot-red blood under the TABLOID grade (stare, poster, parade); per-shot redthr"
+  }
+ ]
 }

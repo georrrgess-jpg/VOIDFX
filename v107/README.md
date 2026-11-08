@@ -54,4 +54,21 @@ Red-lit skin is kept out of the spot red per shot (`redthr`).
 From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the beat camera; flow on restored frames; the robot step-motion (`robo()` in the EDL).
 
 ## Measured
-See `work/qc.log`, `work/mixcheck.json` and `work/sharpness.json` after the render.
+- **QC:** 11/11 on the encode.
+- **Loudness:** −13.0 LUFS, true peak −3.5 dBTP after AAC.
+- **Loop seam:** blurred difference 0.16 (the gate is ≤ 1); the audio seam step is 0.0005.
+- **Flashes:** none over a mean luma of 110, and no white-outs.
+- **Text over faces:** 2 single frames, on cuts.
+- **Faces vs effects:** 11 flags in 2 runs (Doakes and the cage, ≤ 4.4 % of the face box).
+- **Glitch audit:** every frame-to-frame jump is a cut, a beat hit or a designed transition.
+- **Dead spans:** none of 1 s or more.
+- **Sharpness:** five shots flagged soft: hazmat, robot, cage, crowd, final. They are 720p, restored, with zoom ≤ 1.06.
+- **Effort:** 4 full renders before delivery, about 275 s each.
+
+Caught by review before delivery:
+- **The loop click:** the AAC tail pads about 2 ms of silence, and frame 0 starts on a loud kick, so the wrap clicked. Fixed with a 2 ms fade on each side.
+- **Tight close-ups:** five shots put the face in the caption band or past the frame edge; they were swapped for wider moments.
+- **Judder:** where flow is refused, the engine held frames, giving 24p judder; it now blends them.
+- **The confetti burst:** it covered his face; it now goes behind his matte, and starts in the sky.
+- **The banner sky:** the padding reflected the banner above and below.
+- **Red skin:** red-lit skin read as blood, fixed with a per-shot red threshold.
