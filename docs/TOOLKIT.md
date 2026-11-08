@@ -284,6 +284,22 @@ Clip quality (the owner's v105 gripe): `tools/sharpness.py N --src` ranks the so
 | `daybreak=True` + `seg=True` | He burns in the sunlight: a flickering hot rim on his edge, embers lifting off his hair and shoulders, then the white. Needs a shot with a clear silhouette (not a frame-filling close-up). | sizzle + crackle |
 | always on | `render_shot` upscale: Lanczos + a noise-gated luma detail boost (not AI super-resolution). `finish105`: warm or moonlit halation and a crimson bloom (skipped on logo frames). | — |
 
+### The v106 WONDERWALL toolkit (a standard; The Flash, on the v11 engine; in `v106/work/fx106.py`, spliced above the speed section of `render106.py`)
+Port by copying the functions into the edit's own section (`tools/splice_section.py`). Full recipes in `sync/handoffs/2026-11-08_dexter_v106_WONDERWALL_standard.md` §8.
+
+| Piece | Call | What it does |
+|---|---|---|
+| TEAR LENS | `tin="tear_lens"` (60 / 26 frames), `drop_over` | A lit water drop gathers on the outgoing face's jaw holding the next shot (minified, then the whole frame), hangs, falls toward the lens and fills the frame; the lens relaxes and a ripple runs out, masked off the incoming face. Give it ~1 s. |
+| Lightning rod | `tin="lightning_rod"` (6 / 20) | A leader flickers down beside the next face (330 px aside, never on it); the strike; the next shot burns open outward from the bolt with an ember rim. |
+| Clash below the face | `tin="clash106"` (10 / 14) | v11's clash with the collision 110 px under the face box and every spark masked off a face ellipse. |
+| Speed Force mist | `mist=1.0` (shot flag), `mist_swirl` (10 / 16), `mist_over`, `mist_field` | Drifting cobalt fractal mist behind the matte (sub-pixel drift, never wraps), a cold flicker on the half bar; as a transition, a refracting cover ≤ 88 % that closes from the edges and clears exactly, with the plates dissolving under it. |
+| THE WONDERWALL | `wall=1..3` (shot flag), `wall_tex`, `wall_frame`, `wall_state` | A running-bond wall of bevelled tiles cut from the edit's own source frames (warm sepia), gold mortar light breathing on the beat, in perspective behind the matte; rises tile by tile, cracks with lightning along the mortar, shivers before the burst. |
+| THE WONDERWALL burst | `tin="wonderwall"` (12 / 30), `tile_split`, `tiles_of` | The frame becomes the wall, then its tiles fly toward the camera from the centre (the ones over the face first), gold light and a shockwave behind them. |
+| Loop mist | `tout="loop_mist"` on the last shot, `loop_w`, `sf_virtual` | The mist rolls over the lens; the picture under it dissolves into frame 0's, whose background animation is rendered at the wrap's virtual negative frames; frame 0's finish fades in. Seam 0.14. |
+| Title forged from light | `style="wonder"` in `TEXT`, `text_wonder` | Bevelled white-gold letters with a cobalt glow, struck one by one over the sung word, phasing out as vibrating ghosts. |
+| Smooth shiver | `shiver(shape, f, seed)` | Per-element sines at 9–15 Hz for tremble (no per-frame random). |
+| WONDER grade + finish | `look="wonder"`, `grade`, `finish106` | Amber highs, cobalt shadows, milky blacks by `tone_lut`; halation kept off the face box (its weight can be faded, for the loop). |
+
 ## 3. Graphics and text
 
 - **v9 graphics and type** (`render9.py`, end of file):
