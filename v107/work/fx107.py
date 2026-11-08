@@ -1136,3 +1136,22 @@ def page_turn107(A, B, j, f, sa, sb, pre=PT_PRE, post=PT_POST):
     o = o * (1 - sh1[..., None]) * (1 - sh2[..., None])
     return np.clip(o, 0, 1)
 TR2["page_turn107"] = (page_turn107, PT_PRE, PT_POST)
+
+# ---- the colour split on the beat hits clamps at the frame edge (np.roll wrapped it: a cyan / magenta line on the edges)
+def _shift_edge(ch, d, axis):
+    if d == 0: return ch
+    o = np.empty_like(ch); n = ch.shape[axis]; d = max(-n + 1, min(n - 1, d))
+    src = [slice(None)] * ch.ndim; dst = [slice(None)] * ch.ndim; pad = [slice(None)] * ch.ndim; edge = [slice(None)] * ch.ndim
+    if d > 0:
+        dst[axis], src[axis], pad[axis], edge[axis] = slice(d, None), slice(0, n - d), slice(0, d), slice(0, 1)
+    else:
+        dst[axis], src[axis], pad[axis], edge[axis] = slice(0, n + d), slice(-d, None), slice(n + d, None), slice(n - 1, n)
+    o[tuple(dst)] = ch[tuple(src)]; o[tuple(pad)] = ch[tuple(edge)]
+    return o
+
+def rgb_split(img, d, vertical=False):
+    d = int(round(d))
+    if d == 0: return img
+    o = img.copy(); ax = 0 if vertical else 1
+    o[..., 2] = _shift_edge(img[..., 2], d, ax); o[..., 0] = _shift_edge(img[..., 0], -d, ax)
+    return o

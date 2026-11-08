@@ -218,6 +218,20 @@
    "step": "audio",
    "s": 4.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:15:45",
+   "round": 4,
+   "step": "video",
+   "s": 291.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:18:02",
+   "round": 4,
+   "step": "qc",
+   "s": 137.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -342,6 +356,12 @@
    "round": 4,
    "cat": "other",
    "text": "rev 3's POINT OF ORIGIN (strings converging on a target ring where his face appears) broke a recorded owner dislike: no gimmick-on-the-face effects such as lines converging on his face with a target ring; check CLAUDE.md dislikes before designing"
+  },
+  {
+   "t": "2026-11-08 20:19:22",
+   "round": 4,
+   "cat": "other",
+   "text": "beat-hit colour split wrapped the edge columns (np.roll): a 2-3 px cyan/magenta line on the frame edges on every beat hit since rev 1; now clamped at the edge"
   }
  ],
  "round_starts": {
