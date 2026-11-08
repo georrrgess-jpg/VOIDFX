@@ -53,6 +53,25 @@ Red-lit skin is kept out of the spot red per shot (`redthr`).
 
 From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the beat camera; flow on restored frames; the robot step-motion (`robo()` in the EDL).
 
+## Rev 2 (owner notes)
+- **"The transition that occurs at 3 seconds in, I don't really like that. I like to replace it with a custom graphic into a really cool transition."** The press flash at 2.74 s is replaced by **SPECIAL REPORT** (`broadcast`):
+  1. The kill-table shot letterboxes into a TV image.
+  2. The TV pulls back into a dark room. It is a lit CRT set with a bevel, an LED and the screen's glow on the wall, and the picture carries a LIVE bug and a chyron: SPECIAL REPORT, BAY HARBOR BUTCHER STILL AT LARGE, POLICE URGE RESIDENTS TO STAY ALERT · FBI JOINS INVESTIGATION.
+  3. The channel flips through rolling static onto him ("shh").
+  4. We push back in, and the screen opens to the full frame.
+
+  It runs 1.2 s on "till he got the masses / and show 'em". Sound: a CRT hum, a channel click with static, a push-in whoosh.
+- **"The head spin transition ... the final shot doesn't have a centered shot of Dexter."** The spin now lands on a centred shot: his face from directly overhead on the pillow (S2, eyes opening). The turn decelerates about his face, so it reads as the camera spinning above his head. The roll into the grin became a whip.
+- **"I also don't like that you reuse the same clip around the 17-second mark ... and the 19-second mark."** The second smiling parade close-up is gone. From 19.2 s it is one wide shot of him walking through the cheering crowd.
+- **"Smooth out the ending part."** The beat camera rests through the whole break (from 18.5 s). The ending has fewer cuts: the crowd (a dolly), then the walk (a soft smear) carries the loop.
+- **"The loop is pretty low effort ... make the loop more creative with a unique graphic/animation and then do the transition."** The loop is now **THE MASSES SPELL HIS NAME** (`name_loop`):
+  1. The crowd's confetti swirls in from both sides at chest height (never across his face) and assembles into a 1000 px DEXTER of about 1,050 lit, fluttering paper pieces, while the parade steps back (dimmed, softened).
+  2. The name holds through the bass drop-out bar.
+  3. On the bar line it bursts toward the lens and down, while frame 0 dissolves in under it.
+  4. The last frame is frame 0's picture.
+
+  Sound: one paper flutter as it gathers, one whoosh on the burst.
+
 ## Measured
 - **QC:** 11/11 on the encode.
 - **Loudness:** −13.0 LUFS, true peak −3.5 dBTP after AAC.

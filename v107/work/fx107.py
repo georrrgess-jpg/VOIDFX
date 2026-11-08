@@ -593,3 +593,226 @@ def render(f):
     out = text107(out, f, s, False)
     out = flash_governor(out)
     return (np.clip(finish107(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+
+# ============================================================================ v107 rev 2 (owner notes; overrides above)
+# ---- the camera rests through the break (the ending is smooth) and during the TV ------------------------------------
+def beat_phase(f):
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    hook = (E.E_BEAT <= e < 54) and not (6.5 <= e < 9.7) and not (19 <= e < 23) and not (24 <= e < 28.5) and not (47 <= e < 50)
+    return ph, bi, hook, False
+
+# ---- SPECIAL REPORT: the shot is on a TV; the channel flips; we push back through the screen -------------------------
+TV_W, TV_H = 860.0, 645.0                                                                  # the 4:3 screen at the TV's own scale
+Z_FULL = W / TV_W                                                                          # the zoom where the screen fills the width
+_TV = {}
+def tv_assets():
+    """(casing rgba at scale 1 around a screen centred on the frame, chyron rgba in screen pixels, scanlines)."""
+    if "c" in _TV: return _TV["c"]
+    bw, bh = 1000, 900; cx, cy = W / 2, H / 2 + 60                                          # the body: the screen sits high in it
+    cas = np.zeros((H, W, 4), np.float32)
+    body = np.zeros((H, W), np.float32)
+    cv2.rectangle(body, (int(cx - bw / 2), int(cy - bh / 2 - 60)), (int(cx + bw / 2), int(cy + bh / 2 - 60)), 1.0, -1)
+    body = cv2.GaussianBlur(body, (0, 0), 6); body = np.clip(body * 1.6 - 0.3, 0, 1)
+    scr = np.zeros((H, W), np.float32)
+    cv2.rectangle(scr, (int(W / 2 - TV_W / 2 + 22), int(H / 2 - TV_H / 2 + 22)), (int(W / 2 + TV_W / 2 - 22), int(H / 2 + TV_H / 2 - 22)), 1.0, -1)
+    scr = np.clip(cv2.GaussianBlur(scr, (0, 0), 14) * 1.9 - 0.45, 0, 1)                    # rounded screen corners
+    yy = (_GY - (cy - bh / 2 - 60)) / bh
+    xx = (_GX - (cx - bw / 2)) / bw
+    shade = 0.20 + 0.10 * (1 - np.clip(yy, 0, 1)) + 0.04 * np.sin(np.pi * np.clip(xx, 0, 1))   # lit from above and the front
+    shade = shade + 0.16 * np.exp(-((_GY - (cy - bh / 2 - 54)) / 5) ** 2) + 0.06 * np.exp(-((_GX - (cx - bw / 2 + 6)) / 5) ** 2)   # edge highlights
+    shade = shade - 0.06 * np.exp(-((_GY - (cy + bh / 2 - 66)) / 6) ** 2)                 # the bottom edge in shadow
+    rim = np.exp(-((cv2.GaussianBlur(scr, (0, 0), 3) - 0.5) / 0.18) ** 2) * 0.16             # the bevel round the glass
+    for c in range(3): cas[..., c] = shade * (0.95 + 0.05 * c) + rim
+    led = np.exp(-(((_GX - (cx + bw / 2 - 90)) / 7) ** 2 + ((_GY - (cy + bh / 2 - 105)) / 7) ** 2))
+    cas[..., :3] += led[..., None] * SPOT * 1.4
+    for k in range(5): cv2.line(cas, (int(cx - bw / 2 + 70 + 34 * k), int(cy + bh / 2 - 112)), (int(cx - bw / 2 + 92 + 34 * k), int(cy + bh / 2 - 112)), (0.30, 0.30, 0.30, 1.0), 3, cv2.LINE_AA)
+    cas[..., 3] = body * (1 - scr)
+    cas[..., :3] *= cas[..., 3:4]
+    sw, sh = int(TV_W), int(TV_H); ch = np.zeros((sh, sw, 4), np.float32)
+    bar_y = int(sh * 0.74); cv2.rectangle(ch, (0, bar_y), (int(sw * 0.36), bar_y + 50), tuple(float(v) for v in SPOT) + (1.0,), -1)
+    cv2.rectangle(ch, (int(sw * 0.36), bar_y), (sw, bar_y + 50), tuple(float(v) for v in PAPER) + (1.0,), -1)
+    cv2.rectangle(ch, (0, bar_y + 50), (sw, bar_y + 92), tuple(float(v) for v in INK) + (0.92,), -1)
+    def put_txt(word, font, size, col, x, y):
+        m = text_mask(word, font, size, tracking=1); h_, w_ = m.shape; y0 = int(y - h_ / 2)
+        sub = ch[y0:y0 + h_, x:x + w_]; mm = m[:sub.shape[0], :sub.shape[1]]
+        sub[..., :3] = sub[..., :3] * (1 - mm[..., None]) + np.array(col, np.float32) * mm[..., None]; sub[..., 3] = np.maximum(sub[..., 3], mm)
+    put_txt("SPECIAL REPORT", F_BLACK, 30, (0.97, 0.97, 0.97), 14, bar_y + 25)
+    put_txt("BAY HARBOR BUTCHER STILL AT LARGE", F_BLACK, 28, tuple(float(v) for v in INK), int(sw * 0.36) + 14, bar_y + 25)
+    put_txt("POLICE URGE RESIDENTS TO STAY ALERT · FBI JOINS INVESTIGATION", F_XB, 22, tuple(PAPER), 14, bar_y + 71)
+    cv2.rectangle(ch, (22, 22), (110, 62), tuple(float(v) for v in SPOT) + (1.0,), -1); put_txt("LIVE", F_BLACK, 26, (0.97, 0.97, 0.97), 34, 42)
+    scan = (1 - 0.10 * (np.arange(sh) % 3 == 0))[:, None].astype(np.float32)
+    _TV["c"] = (cas, ch, scan, scr); return _TV["c"]
+
+def tv_frame(content, Z, mask_h, chy, static, glow=1.0, f=0, scan_a=1.0):
+    """content (a full frame) on the TV: Z = zoom of the TV (Z_FULL: the screen is the frame's width); mask_h = the
+    visible height of the screen window in output px (letterbox closing/opening); chy 0..1 chyron in; static 0..1."""
+    cas, ch, scan, scr = tv_assets()
+    k = Z / Z_FULL                                                                         # content scale: 1 at Z_FULL
+    M = np.float32([[k, 0, W / 2 * (1 - k)], [0, k, H / 2 * (1 - k)]])
+    c = cv2.warpAffine(content, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    sw, sh = TV_W * Z, TV_H * Z                                                            # the screen window
+    win_h = min(mask_h, sh) if Z >= Z_FULL - 1e-3 else sh
+    sc = cv2.warpAffine(scr, np.float32([[Z, 0, W / 2 * (1 - Z)], [0, Z, H / 2 * (1 - Z)]]), (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+    if Z >= Z_FULL - 1e-3 and mask_h > sh:                                                 # still opening: a plain letterbox
+        sc = np.clip((mask_h / 2 - np.abs(_GY - H / 2)) / 3, 0, 1).astype(np.float32)
+    # the screen: scanlines, phosphor, the chyron, static, the glass
+    scr_img = c.copy()
+    if scan_a > 0:
+        sl = cv2.resize(np.repeat(scan, int(TV_W), 1), None, fx=Z, fy=Z, interpolation=cv2.INTER_LINEAR)
+        y0 = int(H / 2 - sl.shape[0] / 2); x0 = int(W / 2 - sl.shape[1] / 2)
+        full = np.ones((H, W), np.float32); ys, xs = slice(max(0, y0), min(H, y0 + sl.shape[0])), slice(max(0, x0), min(W, x0 + sl.shape[1]))
+        full[ys, xs] = sl[ys.start - y0:ys.stop - y0, xs.start - x0:xs.stop - x0]
+        scr_img = scr_img * (1 - scan_a + scan_a * full)[..., None]
+    if chy > 0:
+        Mc = np.float32([[Z, 0, W / 2 - TV_W * Z / 2 - (1 - eout(chy, 3)) * 400 * Z], [0, Z, H / 2 - TV_H * Z / 2]])
+        cw = cv2.warpAffine(ch, Mc, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0)); a = cw[..., 3:4] * min(1.0, chy * 1.5)
+        scr_img = scr_img * (1 - a) + cw[..., :3] * a
+    if static > 0:
+        rng = np.random.default_rng(f * 7 + 3); nz = cv2.resize(rng.random((H // 6, W // 6)).astype(np.float32), (W, H), interpolation=cv2.INTER_NEAREST)
+        roll = 0.5 + 0.5 * np.sin((_GY / H * 3 + f * 0.37) * 2 * math.pi)
+        stc = (nz * 0.75 + 0.15) * (0.75 + 0.25 * roll)
+        scr_img = scr_img * (1 - static) + stc[..., None] * PAPER * static
+    vig = 1 - 0.35 * np.clip(((_GX - W / 2) / (sw / 2 + 1)) ** 2 + ((_GY - H / 2) / (sh / 2 + 1)) ** 2, 0, 1) ** 1.5
+    refl = np.exp(-(((_GX - W / 2) * 0.6 + (_GY - H / 2 + sh * 0.25)) / (sw * 0.18 + 1)) ** 2) * 0.06       # a soft glass reflection
+    scr_img = scr_img * vig[..., None] + refl[..., None]
+    # the room: dark, lit by the screen
+    room = np.zeros((H, W, 3), np.float32) + INK * 0.6
+    lum_s = float(cv2.resize(c, (8, 8), interpolation=cv2.INTER_AREA).mean())
+    gl = np.exp(-(((_GX - W / 2) / (sw * 1.05 + 1)) ** 2 + ((_GY - H / 2) / (sh * 1.5 + 1)) ** 2)) * (0.16 + 0.35 * lum_s) * glow
+    room = room + gl[..., None] * PAPER
+    casz = cv2.warpAffine(cas, np.float32([[Z, 0, W / 2 * (1 - Z)], [0, Z, H / 2 * (1 - Z)]]), (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
+    o = room * (1 - casz[..., 3:4]) + casz[..., :3]
+    return np.clip(o * (1 - sc[..., None]) + scr_img * sc[..., None], 0, 1)
+
+def broadcast(A, B, j, f, sa, sb, pre=36, post=36):
+    Zmin = 0.92
+    if j < 0:
+        u = (j + pre + 1) / pre
+        if u < 0.33:                                                                       # the picture closes into a TV image
+            mh = H - (H - TV_H * Z_FULL) * smooth(u / 0.33)
+            return tv_frame(A, Z_FULL, mh, 0.0, 0.0, f=f, scan_a=smooth(u / 0.33))
+        w = smooth((u - 0.33) / 0.50); Z = Z_FULL + (Zmin - Z_FULL) * w                     # the TV pulls back into a dark room
+        st = smooth((u - 0.86) / 0.14) * 0.85                                              # the channel starts to flip
+        return tv_frame(A, Z, TV_H * Z, smooth((u - 0.30) / 0.30), st, f=f)
+    v = (j + 1) / post
+    st = 0.85 * (1 - smooth(v / 0.16))
+    if v < 0.70:                                                                           # the new channel: him; we push in
+        w = smooth((v - 0.14) / 0.56); Z = Zmin + (Z_FULL - Zmin) * w
+        return tv_frame(B, Z, TV_H * Z, 1 - smooth((v - 0.20) / 0.30), st, f=f)
+    w = smooth((v - 0.70) / 0.30); mh = TV_H * Z_FULL + (H - TV_H * Z_FULL) * w            # the screen opens to the frame
+    return tv_frame(B, Z_FULL, mh, 0.0, 0.0, f=f, scan_a=1 - w)
+TR2["broadcast"] = (broadcast, 36, 36)
+
+# ---- HEADSPIN onto a centred shot: the turn decelerates about his face -------------------------------------------------
+def spin_about(img, ang, z, cx, cy, n=1, spread=0.0):
+    acc = None
+    for i in range(n):
+        a = ang + (i / max(1, n - 1) - 0.5) * spread if n > 1 else ang
+        M = cv2.getRotationMatrix2D((cx, cy), a, z); M[0, 2] += W / 2 - cx; M[1, 2] += H / 2 - cy
+        M[0, 2] += (cx - W / 2); M[1, 2] += (cy - H / 2)
+        r = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        acc = r if acc is None else acc + r
+    return acc / n
+
+def headspin(A, B, j, f, sa, sb, pre=20, post=24):
+    N = pre + post; q = (j + pre + 0.5) / N
+    phi = 720 * q * q * (3 - 2 * q); dphi = 720 * 6 * q * (1 - q) / N
+    z = 1 + 0.28 * math.sin(math.pi * q)
+    if j < 0: img, ang, cx, cy = A, -phi, W / 2, H / 2
+    else:
+        fs = face_scr(sb, f) if sb.get("face") is not None else None
+        cx, cy = (fs[0], fs[1]) if fs else (W / 2, H / 2); img, ang = B, -(phi - 720)
+    n = int(clamp(dphi / 4, 1, 9))
+    o = spin_about(img, ang, z, cx, cy, n, dphi)
+    if dphi > 8: o = radial_blur(o, cx, cy, 1.0, 1.0 + 0.0025 * dphi, 4)
+    return np.clip(o, 0, 1)
+TR2["headspin"] = (headspin, 20, 24)
+
+# ---- THE MASSES SPELL HIS NAME (the loop): the parade's confetti gathers into DEXTER, holds, bursts into frame 0 -----
+NL_G0, NL_G1, NL_B = 58.4, 60.4, 62.3                                                       # edit half-beats: gather, formed, burst
+_NL = {}
+def name_targets():
+    if "t" in _NL: return _NL["t"]
+    m = text_mask("DEXTER", F_BLACK, 300, tracking=10); m = squeeze(m, 1000 / m.shape[1])
+    h, w = m.shape; cx, cy = W / 2, 1110
+    ys, xs = np.nonzero(m > 0.6); rng = np.random.default_rng(1077); n = 1050
+    pick = rng.choice(len(xs), n, replace=False)
+    tx = (xs[pick] - w / 2 + cx).astype(np.float32); ty = (ys[pick] - h / 2 + cy).astype(np.float32)
+    side = np.where(rng.random(n) < 0.5, -1.0, 1.0).astype(np.float32)
+    d = dict(tx=tx, ty=ty, side=side, x0=(W / 2 + side * rng.uniform(W * 0.62, W * 1.05, n)).astype(np.float32),
+             y0=rng.uniform(820, 1650, n).astype(np.float32), vf=rng.uniform(380, 900, n).astype(np.float32),
+             delay=rng.uniform(0, 0.28, n).astype(np.float32),
+             size=rng.uniform(18, 32, n).astype(np.float32), ar=rng.uniform(0.40, 0.70, n).astype(np.float32),
+             a0=rng.uniform(0, 360, n).astype(np.float32), wa=rng.uniform(-240, 240, n).astype(np.float32),
+             b0=rng.uniform(0, 6.28, n).astype(np.float32), wb=rng.uniform(5, 13, n).astype(np.float32),
+             col=rng.choice([1, 1, 2, 2, 1, 0, 0, 5], n), sw=rng.uniform(-1, 1, n).astype(np.float32),
+             bv=rng.uniform(0.8, 1.3, n).astype(np.float32))
+    _NL["t"] = d; return d
+
+def draw_pieces(out, px, py, size, ang, flut, cols, alpha=None, blur_big=True):
+    """lit paper pieces (fluttering quads), far/near layers; size in px, ang in radians, flut = cos of the flutter."""
+    lay = [np.zeros((H, W, 3), np.uint8), np.zeros((H, W, 3), np.uint8)]; al = [np.zeros((H, W), np.uint8), np.zeros((H, W), np.uint8)]
+    for i in np.argsort(size):
+        x, y, sz = px[i], py[i], size[i]
+        if x < -sz or x > W + sz or y < -sz or y > H + sz or (alpha is not None and alpha[i] < 0.02): continue
+        hw, hh = sz * 0.5, sz * 0.5 * 0.55 * max(0.10, abs(flut[i]))
+        ca, sa_ = math.cos(ang[i]), math.sin(ang[i])
+        pts = np.array([[x + ca * dx - sa_ * dy, y + sa_ * dx + ca * dy] for dx, dy in ((-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh))], np.float32)
+        bright = 0.60 + 0.40 * abs(flut[i]) + (0.45 if abs(flut[i]) > 0.97 else 0.0)
+        col = np.clip(CONF_COLS[cols[i]] * bright, 0, 1); a8 = int(255 * (1.0 if alpha is None else alpha[i]))
+        L = 1 if (blur_big and sz > 70) else 0
+        cv2.fillConvexPoly(lay[L], (pts * 4).astype(np.int32), tuple(int(c * 255) for c in col), cv2.LINE_AA, 2)
+        cv2.fillConvexPoly(al[L], (pts * 4).astype(np.int32), a8, cv2.LINE_AA, 2)
+    o = out
+    for L, bl in ((0, 0.0), (1, 3.0)):
+        if not al[L].any(): continue
+        Lf = lay[L].astype(np.float32) / 255; Af = al[L].astype(np.float32) / 255
+        if bl: Lf = cv2.GaussianBlur(Lf, (0, 0), bl); Af = cv2.GaussianBlur(Af, (0, 0), bl)
+        o = o * (1 - Af[..., None]) + Lf * Af[..., None]
+    return o
+
+def name_loop(out, f, s):
+    t = f / FPS; e = t / E.HB
+    if e < NL_G0 - 1.5: return out
+    d = name_targets(); tg0, tg1, tb, T = E.th(NL_G0), E.th(NL_G1), E.th(NL_B), E.DUR
+    # the pieces fall in from above the frame, then gather into the letters (staggered, with a curl)
+    tf = t - (tg0 - 1.0)
+    fx_ = d["x0"] - d["side"] * d["vf"] * 0.55 * tf; fy_ = d["y0"] + 60 * np.sin(1.7 * tf + d["b0"])     # drifting in from the sides
+    w = np.clip((t - tg0 - d["delay"]) / (tg1 - tg0 - 0.28), 0, 1); we = w * w * (3 - 2 * w)
+    curl = np.sin(np.pi * we) * 90 * d["sw"]
+    px = fx_ + (d["tx"] - fx_) * we + curl; py = fy_ + (d["ty"] - fy_) * we
+    ang = np.radians(d["a0"] + d["wa"] * t * (1 - 0.75 * we)); flut = np.cos(d["b0"] + d["wb"] * t)
+    size = d["size"].copy(); alpha = None
+    plate = out
+    hold = smooth((t - tg0 - 0.3) / 0.5) * (1 - smooth((t - tb) / 0.25))
+    if hold > 0:                                                                          # the parade steps back so the name reads
+        soft = cv2.GaussianBlur(cv2.resize(out, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 2.5)
+        plate = out * (1 - 0.45 * hold) + cv2.resize(soft, (W, H)) * (0.45 * hold)
+        plate = plate * (1 - 0.30 * hold)
+    if t >= tb:                                                                           # the burst: toward the lens and out
+        b = clamp((t - tb) / (T - tb - 0.06), 0, 1); be = b ** 1.6
+        dx, dy = d["tx"] - W / 2, d["ty"] - 1110
+        px = d["tx"] + dx * 3.2 * be * d["bv"] + d["sw"] * 160 * be; py = d["ty"] + np.abs(dy) * 3.0 * be * d["bv"] + 260 * be
+        size = d["size"] * (1 + 9 * be * d["bv"])
+        alpha = np.clip(1 - (b - 0.55) / 0.40, 0, 1) * np.ones_like(size)
+        wz = smooth((t - tb - 0.02) / 0.30)                                               # under it: frame 0
+        if wz > 0: plate = plate * (1 - wz) + frame0_plate() * wz
+    o = draw_pieces(plate, px, py, size, ang, flut, d["col"], alpha)
+    if t > T - 0.08: o = o * 0 + frame0_plate() if t > T - 1.5 / FPS else o                 # the last frame is frame 0's picture
+    return np.clip(o, 0, 1)
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    out, person = base107(s, f)
+    out = text107(out, f, s, True)
+    if tin in TR2 and k < TR2[tin][2] and P is not None:
+        out = TR2[tin][0](edge107(P, "last"), out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge107(n_, "first"), kn, f, s, n_)
+    if s.get("tout") == "name_loop": out = name_loop(out, f, s)
+    out = beat_fx(out, f)
+    out = text107(out, f, s, False)
+    out = flash_governor(out)
+    return (np.clip(finish107(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)

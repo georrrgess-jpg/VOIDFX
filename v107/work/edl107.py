@@ -44,14 +44,14 @@ HDROP = 42; DROP_HB = HDROP; T_STOP = DUR  # 'ALL CAPS' (the focal set piece)
 E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0   # optional sections (v10: freeze / run / loop); = end when unused
 STUT_GAPS, STUT_HITS = [], []              # optional: half-beats where time freezes / jolts forward
 E_BEAT, E_DIP = 2, 40                      # the beat camera from the first beat after frame 0 (frame 0 stays clean)
-E_LOOP = 60                                # the confetti loop over the bass drop-out bar
+E_LOOP = 58                                # the loop: the crowd's confetti spells his name, bursts, clears on frame 0
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 
 VO = []                                    # dialogue: (stem, src_in, src_out, edit_at); [] = music-only
 SET_PIECES = [("hot molasses", th(13), th(15)), ("headspin", th(19), th(22)), ("the front page", th(24), th(29)),
-              ("ALL CAPS", th(42), th(48)), ("the banner", th(48), th(50)), ("the loop", th(60), th(64))]
+              ("ALL CAPS", th(42), th(48)), ("the banner", th(48), th(50)), ("the masses spell his name", th(58), th(64))]
 VO_STEM = None; VO_STEM_T0 = 0.0
 
 def vel(e0, e1, a, b, lo=0.30, hi=3.2, tau=0.07, n=96):
@@ -97,14 +97,14 @@ TB = dict(look="tabloid")
 shot("stare", "ds2b", 0, 4, 322.30, 323.20, z=[(0, 1.00), (1, 1.05)], interp="flow", seg=True, redthr=0.30, **TB)
 shot("table", "ds2b", 4, 8, 156.40, 157.80, z=[(0, 1.02), (1, 1.07)], tin="plastic_rip", face=None, cx=(640, 640), interp="flow", **TB)
 # ---- "AND SHOW 'EM WHAT THEY KNOW NOT THROUGH FLOWS OF HOT MOLASSES"
-shot("shh", "ds2b", 8, 11, 346.40, 347.50, z=[(0, 1.02), (1, 1.07)], tin="press_flash", interp="flow", **TB)
+shot("shh", "ds2b", 8, 11, 346.40, 347.50, z=[(0, 1.02), (1, 1.07)], tin="broadcast", interp="flow", **TB)
 shot("lab", "ds2b", 11, 14, 178.30, 179.40, z=[(0, 1.00), (1, 1.05)], tin="redact", interp="flow", **TB)
 shot("hazmat", "dmx", 14, 17, 94.95, 95.95, z=[(0, 1.04), (1, 1.00)], tin="molasses", interp="flow", **TB)
 # ---- "DO IT LIKE THE ROBOT TO HEADSPIN TO BOOGALOO"
 shot("robot", "dmx", 17, 20, 191.50, 194.30, z=[(0, 1.00), (1, 1.06)], tin="impact", face=None, cx=(560, 620), robot=True,
      tmap=robo(17, 20, 191.50, 194.30), lin=True, interp="flow", **TB)
-shot("upside", "ds2b", 20, 22, 101.60, 102.40, z=[(0, 1.02), (1, 1.00)], tin="headspin", face=None, cx=(830, 830), interp="flow", **TB)
-shot("grin", "dmx", 22, 28, 75.50, 76.80, z=[(0, 1.00), (1, 1.00)], tin="flip", interp="flow", **TB)
+shot("pillow", "ds2a", 20, 22, 19.00, 19.80, z=[(0, 1.00), (1, 1.04)], tin="headspin", interp="flow", **TB)
+shot("grin", "dmx", 22, 28, 75.50, 76.80, z=[(0, 1.00), (1, 1.00)], tin="whip", interp="flow", **TB)
 # ---- "TOOK A FEW MINUTES TO CONVINCE THE AVERAGE BUGABOO": the front page spins in; we dive into his photo under the headline
 shot("con", "ds2b", 28, 30, 244.00, 244.80, z=[(0, 1.00), (1, 1.04)], tin="frontpage", interp="flow", **TB)
 shot("doakes", "dmx", 30, 32, 11.00, 11.80, z=[(0, 1.02), (1, 1.06)], tin="whip", interp="flow", **TB)
@@ -118,9 +118,8 @@ shot("parade", "dmx", 42, 48, 327.30, 328.90, z=[(0, 1.00), (1, 1.04)], tin="sla
 # ---- the beat break: the strip flies up and becomes the banner the plane tows; the parade; he has got the masses
 shot("banner", "dmx", 48, 51, 326.05, 326.68, tin="banner_match", face=None, banner=True, interp="flow", **TB)
 shot("laugh", "dmx", 51, 54, 343.10, 344.70, z=[(0, 1.00), (1, 1.04)], tin="confetti_pop", interp="flow", seg=True, pop=True, redthr=0.30, **TB)
-shot("crowd", "dmx", 54, 56, 337.60, 338.40, z=[(0, 1.00), (1, 1.04)], tin="whip", face=None, cx=(620, 620), interp="flow", **TB)
-shot("hero", "dmx", 56, 60, 335.75, 337.30, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", redthr=0.30, **TB)
-shot("final", "dmx", 60, 64, 386.00, 388.40, z=[(0, 1.00), (1, 1.04)], tin="whip", face=None, cx=(575, 575), interp="flow", tout="confetti_loop", redthr=0.30, **TB)
+shot("crowd", "dmx", 54, 56, 337.60, 338.40, z=[(0, 1.00), (1, 1.04)], tin="dolly", face=None, cx=(620, 620), interp="flow", **TB)
+shot("walk", "dmx", 56, 64, 331.90, 334.10, z=[(0, 1.00), (1, 1.06)], tin="smear", interp="flow", redthr=0.30, tout="name_loop", **TB)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

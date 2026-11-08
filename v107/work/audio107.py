@@ -738,8 +738,12 @@ def main():
     # ---- the kill table: the plastic tears
     pl = crackle(0.32, -20, 3301, 0.95, (1200, 9000)); place(fx, stereo(pl, -0.3), t0["table"] - 0.10)
     place(fx, A2.whoosh(0.20, -24, 3302, True), t0["table"] - 0.08)
-    # ---- the press flash: the bulb pops, the shutter
-    place(fx, stereo(flash_pop(-17, 3303)), t0["shh"] - 0.16); place(fx, stereo(shutter_ticks(-24, 2, 0.05, 3304)), t0["shh"] - 0.05)
+    # ---- SPECIAL REPORT: a CRT hum as the shot becomes a TV, the channel clicks over in static, we push back in
+    n_ = I(0.60); q_ = np.arange(n_) / SR
+    hum = sum(np.sin(2 * np.pi * 60 * k * q_) / k for k in range(1, 6)) * np.sin(np.pi * q_ / 0.60) ** 1.2 + bq(noise(n_, 3350), "high", 9000, 2) * 0.15
+    place(fx, stereo(norm(hum.astype(np.float32), -26)), t0["shh"] - 0.60)
+    place(fx, stereo(click(-16, 3351)), t0["shh"] - 0.09); place(fx, static_hiss(0.30, -17, 3352), t0["shh"] - 0.08)
+    place(fx, A2.whoosh(0.34, -20, 3353, True), t0["shh"] + 0.20)
     # ---- redact: a marker stroke
     place(fx, stereo(swish(-22, 0.18, 3305), 0.4), t0["lab"] - 0.08)
     # ---- HOT MOLASSES: the pour swells, a thick glug at the cut, it drips as it drains
@@ -749,10 +753,13 @@ def main():
     # ---- the robot: a servo clunk on the cut
     place(fx, stereo(vcr_clunk(-20, 3310)), t0["robot"] - 0.02)
     # ---- HEADSPIN: the spin circles the stereo field, a whoom at the turn, the landing
-    th_ = t0["upside"]
+    th_ = t0["pillow"]
     place(fx, swirl(0.66, -15, 3311, 2.0), th_ - 0.34); place(fx, A2.whoosh(0.30, -18, 3312, True), th_ - 0.10)
     place(fx, stereo(sub_drop(-20, 0.45, 70, 32)), th_ + 0.30)
-    place(fx, A2.whoosh(0.16, -24, 3313, False), t0["grin"] - 0.06)                       # the flip
+    place(fx, A2.whoosh(0.16, -24, 3313, False), t0["grin"] - 0.06)                       # the whip
+    # ---- the loop: the crowd's confetti gathers into his name (a paper flutter), then bursts into frame 0
+    place(fx, petal_flutter(1.30, -21, 3360, 140, 1.0), th(57.6))
+    place(fx, A2.whoosh(0.42, -20, 3361, True), th(62.2))
     # ---- THE FRONT PAGE: it spins in fluttering, lands with a slap, we dive into the photo
     tp = th(24); tl = tp + 0.52 * (t0["con"] - tp)
     place(fx, stereo(flutter(tl - tp, -21, 3314, 12.0), 0.2), tp); place(fx, stereo(paper_slap(-15, 3315)), tl - 0.01)
@@ -775,7 +782,7 @@ def main():
     place(fx, stereo(flash_pop(-16, 3342)), t0["laugh"] - 0.40 - 0.16); place(fx, petal_flutter(1.1, -20, 3343, 90, 1.0), t0["laugh"] - 0.38)
     fx = fx * db(10.0)                                                                         # rule 7: a loud master (about -12 dBFS RMS)
     duck = np.zeros(N + PRE, np.float32)
-    for t_h in (t0["hazmat"], t0["upside"], caps): duck[I(t_h - 0.03) + PRE:I(t_h + 0.35) + PRE] = 1.0
+    for t_h in (t0["hazmat"], t0["pillow"], caps): duck[I(t_h - 0.03) + PRE:I(t_h + 0.35) + PRE] = 1.0
     duck = np.convolve(duck, np.hanning(I(0.12)) / np.hanning(I(0.12)).sum(), "same")
     mus = mus * db(-3.0 * duck)[:, None]
     fx = np.tanh(fx * 1.2) / 1.2

@@ -1,6 +1,6 @@
 {
  "edit": "v107",
- "round": 1,
+ "round": 2,
  "stages": [
   {
    "t": "2026-11-08 16:57:35",
@@ -127,9 +127,54 @@
    "step": "deliver",
    "s": 57.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:44:42",
+   "round": 1,
+   "step": "prep",
+   "s": 29.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:49:04",
+   "round": 2,
+   "step": "audio",
+   "s": 9.0,
+   "rc": 0
   }
  ],
- "notes": [],
+ "notes": [
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "replace_shot",
+   "text": "the transition that occurs at 3 seconds in, I don't really like that. I like to replace it with a custom graphic into a really cool transition"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "other",
+   "text": "the head spin transition, I don't really like it because the final shot doesn't have a centered shot of Dexter"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "replace_shot",
+   "text": "I also don't like that you reuse the same clip around the 17-second mark ... and the 19-second mark"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "quality",
+   "text": "smooth out the ending part"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "loop",
+   "text": "the loop is pretty low effort ... make the loop more creative with a unique graphic/animation and then do the transition"
+  }
+ ],
  "catches": [
   {
    "t": "2026-11-08 18:24:54",
@@ -167,5 +212,8 @@
    "cat": "other",
    "text": "red-lit skin read as spot-red blood under the TABLOID grade (stare, poster, parade); per-shot redthr"
   }
- ]
+ ],
+ "round_starts": {
+  "2": "2026-11-08 18:47:38"
+ }
 }
