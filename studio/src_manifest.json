@@ -1,5 +1,5 @@
 {
- "note": "voidfx source library: put these in src/ with exactly these names (tools/setup_studio.sh verifies them)",
+ "note": "voidfx source library: put these in src/ with exactly these names (tools/setup_studio.sh verifies them). Packs over the upload limit come as Google Drive links: python3 tools/fetch_packs.py LINKS.txt (never commit the links; the repo is public)",
  "files": [
   {
    "file": "blood_theme.mp3",
@@ -210,6 +210,110 @@
    "sha256": "5141bfbd5fc85d9cd1726d599c709cd763c12c5925bf67b0e92b0691a49d2415",
    "duration": "35.955034",
    "uploaded_as": "the user's screen recording of Brent Faiyaz - Wish You Well (.mov)"
+  },
+  {
+   "file": "flash_s3.mp4",
+   "bytes": 22929554,
+   "sha256": "88eacaec6f552bb7475cb1a9ce56ad775200d49359e931e4b609f3a2100ebf0a",
+   "duration": "135.558095",
+   "uploaded_as": "Barry Allen The Flash Season 3 Scene Pack (4K TOPAZ!!).mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "flash_s2_topaz.mp4",
+   "bytes": 28125959,
+   "sha256": "d0355a4267143040a6835f1d5d2003c531907f90b807f516b964c4c5a6f582ff",
+   "duration": "146.889433",
+   "uploaded_as": "Barry Allen The Flash Season 2 Scene Pack (4K TOPAZ!!).mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "ref_v104_the_passenger.mp4",
+   "bytes": 35638494,
+   "sha256": "43882b5ff13f47299db7335fd684728c0b02ea89c6fb2747009e2aa3a08fbd3f",
+   "duration": "22.890667",
+   "uploaded_as": "voidfx THE PASSENGER S LOVE SONG.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "flash_b_hq.mp4",
+   "bytes": 44053682,
+   "sha256": "d5c5e17c138d371e1bfd26accb49655bff1beba9f58a8beef20c3119e10e0232",
+   "duration": "150.813605",
+   "uploaded_as": "The flash scenepack all seasons 4K 60 FPS.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "flash_s1.mp4",
+   "bytes": 45665752,
+   "sha256": "8b632e93f5c61d8ad9701d24918432967ee0c9a603869a91678e02ba71a9e210",
+   "duration": "293.685986",
+   "uploaded_as": "The Flash Season 1 4k 60fps Scenepack (4k upscaled in ae).mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "flash_blitzkrieg.mp4",
+   "bytes": 50134480,
+   "sha256": "069badafbc09dcb031c2255937b21ca68f7d95b5221382dc50ce5c721240ebd1",
+   "duration": "182.369524",
+   "uploaded_as": "Blitzkrieg Flash Scene Pack 4k 60fps.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "pack9_s4_best_hq.mp4",
+   "bytes": 58947302,
+   "sha256": "ddcd795a10003f88e066d2fd52661d58ff678ab8ebcf478079f39b3bcf5c1d95",
+   "duration": "243.159365",
+   "uploaded_as": "Dexter (S4) 4k Scenepack Dexter Morgan All Best & Most Popular Clips.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "flash_s2.mp4",
+   "bytes": 61901165,
+   "sha256": "af1f1cfc704758d6a848f4489ca2b64bbf746d36ed80d24e6e6717a49e7b63bd",
+   "duration": "308.987937",
+   "uploaded_as": "THE FLASH SEASON 2 SCENE PACK 4K 60FPS #scenepacks.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "flash_s5.mp4",
+   "bytes": 71974798,
+   "sha256": "f4561a80795e4229f59c6077fe0dd4c5980590477cfe3a9741a7979c28730245",
+   "duration": "381.945034",
+   "uploaded_as": "Flash S5 4K Scenepack.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "dexter_s2.mp4",
+   "bytes": 84441984,
+   "sha256": "b65d15fbbfe660149e267b00033bb371529323ad81e0015450171a6ff7157dcf",
+   "duration": "317.974059",
+   "uploaded_as": "Dexter Morgan (S2) Scenepack 4K.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "dexter_mix_1440.mp4",
+   "bytes": 99087194,
+   "sha256": "1b68c2c204015790d2782a88699284740af82e70a41c63dcc4fc952c3ceb191b",
+   "duration": "427.432925",
+   "uploaded_as": "dexter scenpack (1440p).mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "pack8_s1_hq.mp4",
+   "bytes": 109137490,
+   "sha256": "4e6568a7553a31fbd37ef00075b0891cf543bee59d03cbbfac383b8e34c0e74e",
+   "duration": "407.463764",
+   "uploaded_as": "Dexter 4k 60fps All Scenes Dexter Morgan (S1) Best & Most Popular Scenes for Edit - Scenepack.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
+  },
+  {
+   "file": "dexter_s2_all.mp4",
+   "bytes": 113278089,
+   "sha256": "983a89a333c87eb0b635f6e367de2e6bb0e0257c19c0aefeb2c4931032335121",
+   "duration": "410.621678",
+   "uploaded_as": "Dexter Morgan 4k All Scenes Dexter (Season 2) Best & Most Popular Scenes for Edit - Scenepack.mp4",
+   "source": "Google Drive link (owner's list, 2026-11-08; links kept out of git)"
   }
  ]
 }
