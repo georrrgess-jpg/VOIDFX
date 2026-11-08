@@ -19,17 +19,23 @@ preset slow master, BT.709 tags, the same audio. Only the order of work changes:
     to each range, one per shot) and requires a bit-exact match with the cache. Any mismatch means the change reached
     further than declared, so it falls back to a full render. Changed EDL globals, frame count, tracks, mattes or
     restored bands also force a full render. (Guardrail 9 of sync/PIPELINE_V2_PLAN.md.)
+  * change tracking (tools/codetrack.py, efficiency update 2026-11-08): every full render records which renderer
+    functions drew each frame. After a code or EDL-global change, `video` finds the frames that ran an edited function
+    (or one that reads a changed value) and re-renders only those, with the same bit-exact verification outside them.
+    An EDL global that no renderer code reads (SET_PIECES, VO, audio knobs) no longer forces a full render. Changes that
+    reach more than 70 % of the frames, a changed SRC/FPS/W/H or a changed helper module still render in full.
 """
 import os, sys, json, time, hashlib, random, signal, subprocess, argparse
 from multiprocessing import Pool
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import edit_env
+import edit_env, codetrack
 
 R = None
 OUT_OVERRIDE = [None]
 DRY = [False]
+NO_MASTER = [False]
 ENC_TAGS = ["-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"]
 VF = "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p"
 
@@ -76,12 +82,31 @@ def blocks(frames, size=36):
     if cur: out.append(cur)
     return out
 
-def _block(fs): return [R.render(f) for f in fs]
+def _block(fs): return [codetrack.traced(R.render, f, R.__file__) for f in fs]
 
 def render_iter(pool, frames, size=36):
+    """yield (frame, image, renderer code keys that drew it)."""
     bl = blocks(frames, size)
-    for fs, ims in zip(bl, edit_env.bounded_imap(pool, _block, bl)):
-        yield from zip(fs, ims)
+    for fs, res in zip(bl, edit_env.bounded_imap(pool, _block, bl)):
+        for f, (im, keys) in zip(fs, res): yield f, im, keys
+
+STRUCT = {"SRC", "FPS", "W", "H", "DUR_F", "ROOT", "VER", "SLUG"}   # globals that change every frame or the output
+
+def foreign_sig(n):
+    """helper modules the renderer imported from its work folder (facetrack, ...): a change there renders in full."""
+    w = edit_env.work_dir(n); out = {}
+    for name, mod in list(sys.modules.items()):
+        f = getattr(mod, "__file__", None) or ""
+        if f.startswith(w + "/") and f.endswith(".py") and os.path.basename(f) not in (f"render{n}.py", f"edl{n}.py"):
+            out[os.path.basename(f)] = file_md5(f)
+    return out
+
+def ct_build(frames_keys):
+    """{key: ranges} from {frame: keys}."""
+    by = {}
+    for f, ks in frames_keys.items():
+        for k in ks: by.setdefault(k, set()).add(f)
+    return {k: codetrack.to_ranges(v) for k, v in by.items()}
 
 # ---- encoders ----------------------------------------------------------------------------------------------------
 def upload_cmd(n, E, out_mp4, cache_mkv):
@@ -120,6 +145,7 @@ def stop_master(n):
 
 def spawn_master(n):
     p = paths(n)
+    if NO_MASTER[0]: print("master not started (--no-master)", flush=True); return
     lg = open(p["mlog"], "w")
     pr = subprocess.Popen(["nice", "-n", "15", sys.executable, os.path.abspath(__file__), str(n), "master", "--out", p["out"]], stdout=lg, stderr=subprocess.STDOUT,
                           start_new_session=True)
@@ -131,24 +157,25 @@ def full_render(n, E, reason=""):
     stop_master(n)
     up = f"{p['out']}/{E.SLUG}_voidfx_9x16.mp4"; tmp = p["mkv"] + ".part.mkv"
     print(f"full render of {E.DUR_F} frames{' (' + reason + ')' if reason else ''}", flush=True)
-    t0 = time.time(); hashes = [None] * E.DUR_F
+    t0 = time.time(); hashes = [None] * E.DUR_F; fk = {}
     enc = subprocess.Popen(upload_cmd(n, E, up, tmp), stdin=subprocess.PIPE)
     with Pool(4) as pool:
-        for i, (f, fr) in enumerate(render_iter(pool, list(range(E.DUR_F)))):
-            b = fr.tobytes(); hashes[f] = sha(b); enc.stdin.write(b)
+        for i, (f, fr, keys) in enumerate(render_iter(pool, list(range(E.DUR_F)))):
+            b = fr.tobytes(); hashes[f] = sha(b); enc.stdin.write(b); fk[f] = keys
             if i % 150 == 0: print(f"frame {i}/{E.DUR_F}  {time.time() - t0:.0f} s", flush=True)
     enc.stdin.close(); rc = enc.wait()
     if rc: sys.exit(f"encoder failed ({rc})")
     os.replace(tmp, p["mkv"])
-    write_meta(n, E, hashes, "full", time.time() - t0)
+    fr_ = ct_build(fk)
+    write_meta(n, E, hashes, "full", time.time() - t0, {"frames": fr_, "info": codetrack.info(R, fr_), "data": codetrack.data_sig(R)})
     print(f"done {p['out']}  ({time.time() - t0:.0f} s)", flush=True)
     spawn_master(n)
 
-def write_meta(n, E, hashes, kind, secs):
+def write_meta(n, E, hashes, kind, secs, ct=None, cache_id=None, master_of=None):
     p = paths(n)
     m = {"frames": E.DUR_F, "fps": E.FPS, "size": [E.W, E.H], "hashes": hashes, "edl": edl_snapshot(E), "inputs": inputs_sig(n),
-         "code": code_sig(n), "made": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": kind, "secs": round(secs, 1),
-         "cache_id": sha(("".join(hashes) + time.strftime("%s")).encode())[:12], "master_of": None}
+         "code": code_sig(n), "foreign": foreign_sig(n), "made": time.strftime("%Y-%m-%d %H:%M:%S"), "kind": kind, "secs": round(secs, 1),
+         "cache_id": cache_id or sha(("".join(hashes) + time.strftime("%s")).encode())[:12], "master_of": master_of, "ct": ct}
     json.dump(m, open(p["meta"] + ".tmp", "w")); os.replace(p["meta"] + ".tmp", p["meta"])
 
 def changed_shots(old, new, E):
@@ -164,16 +191,35 @@ def partial_render(n, E, only):
     if not os.path.exists(p["meta"]) or not os.path.exists(p["mkv"]): return full_render(n, E, "no frame cache yet")
     m = json.load(open(p["meta"])); new = edl_snapshot(E)
     if m["frames"] != E.DUR_F or m["fps"] != E.FPS: return full_render(n, E, "frame count changed")
-    if m["edl"]["globals"] != new["globals"]: return full_render(n, E, "an EDL global changed")
+    og, ng = m["edl"]["globals"], new["globals"]
+    gch = sorted(k for k in set(og) | set(ng) if og.get(k) != ng.get(k))
+    if set(gch) & STRUCT: return full_render(n, E, f"a structural EDL global changed ({', '.join(sorted(set(gch) & STRUCT))})")
     if len(m["edl"]["shots"]) != len(new["shots"]) or any(a.get("f0") != b.get("f0") for a, b in zip(m["edl"]["shots"], new["shots"])):
         return full_render(n, E, "the shot list or cut points changed")
     if m["inputs"] != inputs_sig(n): return full_render(n, E, "tracks, mattes or restored bands changed")
+    if m.get("foreign") is not None and m["foreign"] != foreign_sig(n): return full_render(n, E, "a helper module (facetrack, ...) changed")
     ranges = list(only) + changed_shots(m["edl"], new, E)
-    if not ranges:
-        if m["code"] == code_sig(n): print("nothing changed since the cache; nothing to render"); return
-        return full_render(n, E, "the code changed and no range was given (use --only A:B)")
-    dirty = sorted({f for a, b in ranges for f in range(max(0, a), min(E.DUR_F - 1, b) + 1)})
-    ds = set(dirty)
+    code_changed = m["code"] != code_sig(n); ct = m.get("ct")
+    ds = {f for a, b in ranges for f in range(max(0, a), min(E.DUR_F - 1, b) + 1)}
+    if gch or code_changed:
+        if not ct:
+            if gch: return full_render(n, E, f"an EDL global changed ({', '.join(gch[:4])}) and the cache has no change tracking")
+            if not ranges: return full_render(n, E, "the code changed, no range was given and the cache has no change tracking")
+        else:
+            cf, why, chg = codetrack.dirty(ct, R, gch)
+            if why:
+                print(f"change tracking: {len(why)} renderer function(s) affected -> {len(cf)} frames", flush=True)
+                for k, w in sorted(why.items(), key=lambda kv: -len(codetrack.from_ranges(ct['frames'].get(kv[0], []))))[:12]:
+                    print(f"    {k.split(':')[0]:28s} {w:44s} frames {codetrack.to_ranges(codetrack.from_ranges(ct['frames'].get(k, [])))[:4]}", flush=True)
+            elif chg: print(f"change tracking: changed {', '.join(chg[:6])}, which no traced renderer code reads (audio/QC only)", flush=True)
+            ds |= cf
+    if not ds:
+        if not code_changed and not gch: print("nothing changed since the cache; nothing to render"); return
+        print("the changes reach no rendered frame; the cache stays valid (metadata refreshed)", flush=True)
+        write_meta(n, E, m["hashes"], m["kind"], m["secs"], ct, m["cache_id"], m.get("master_of")); return
+    if len(ds) > 0.7 * E.DUR_F and not DRY[0]: return full_render(n, E, f"the changes reach {100 * len(ds) // E.DUR_F} % of the frames")
+    dirty = sorted(ds)
+    ranges = [tuple(r) for r in codetrack.to_ranges(ds)]
     ver = set()
     for a, b in ranges:
         for f in (a - 1, a - 2, b + 1, b + 2):
@@ -186,9 +232,9 @@ def partial_render(n, E, only):
     ver = sorted(ver)
     print(f"partial render: {len(dirty)} frames in {len(ranges)} range(s) {ranges}; verifying {len(ver)} frames outside", flush=True)
     stop_master(n)
-    t0 = time.time(); new_frames = {}; bad = []
+    t0 = time.time(); new_frames = {}; new_keys = {}; bad = []
     with Pool(4) as pool:
-        for f, fr in render_iter(pool, ver, 1):
+        for f, fr, _k in render_iter(pool, ver, 1):
             if sha(fr.tobytes()) != m["hashes"][f]: bad.append(f)
         if bad:
             print(f"verification FAILED on {len(bad)} of {len(ver)} frames outside the range (e.g. {bad[:8]}): the change reaches further", flush=True)
@@ -196,7 +242,7 @@ def partial_render(n, E, only):
             return full_render(n, E, "verification failed")
         print(f"verification passed ({len(ver)} frames bit-exact, {time.time() - t0:.0f} s)", flush=True)
         if DRY[0]: return
-        for f, fr in render_iter(pool, dirty): new_frames[f] = fr.tobytes()
+        for f, fr, keys in render_iter(pool, dirty): new_frames[f] = fr.tobytes(); new_keys[f] = keys
     print(f"rendered {len(dirty)} frames ({time.time() - t0:.0f} s); splicing and encoding", flush=True)
     up = f"{p['out']}/{E.SLUG}_voidfx_9x16.mp4"; tmp = p["mkv"] + ".part.mkv"; hashes = list(m["hashes"])
     enc = subprocess.Popen(upload_cmd(n, E, up, tmp), stdin=subprocess.PIPE)
@@ -208,7 +254,17 @@ def partial_render(n, E, only):
     if rc: sys.exit(f"encoder failed ({rc})")
     if f != E.DUR_F - 1: sys.exit(f"cache held {f + 1} frames, expected {E.DUR_F}; run a full render (--full)")
     os.replace(tmp, p["mkv"])
-    write_meta(n, E, hashes, f"partial {ranges}", time.time() - t0)
+    nct = None
+    if ct:                                                  # keep the trace current: drop the re-rendered frames, add theirs
+        frs = {k: codetrack.from_ranges(v) - ds for k, v in ct["frames"].items()}
+        for f, ks in new_keys.items():
+            for k in ks: frs.setdefault(k, set()).add(f)
+        frs = {k: codetrack.to_ranges(v) for k, v in frs.items() if v}
+        inf = {k: v for k, v in ct["info"].items() if k in frs}; inf.update(codetrack.info(R, [k for k in frs if k not in inf]))
+        nct = {"frames": frs, "info": inf, "data": codetrack.data_sig(R)}
+    elif not code_changed: nct = None
+    rs = codetrack.to_ranges(ds); kind = f"partial {[tuple(r) for r in rs[:6]]}{' ...' if len(rs) > 6 else ''} ({len(ds)} frames)"
+    write_meta(n, E, hashes, kind, time.time() - t0, nct)
     print(f"done {p['out']}  ({time.time() - t0:.0f} s)", flush=True)
     spawn_master(n)
 
@@ -259,10 +315,11 @@ def main():
     ap.add_argument("n", type=int); ap.add_argument("mode", choices=["video", "master", "status", "clean"])
     ap.add_argument("--only"); ap.add_argument("--full", action="store_true"); ap.add_argument("--wait", action="store_true")
     ap.add_argument("--out", help="output folder (default vN/out)")
-    ap.add_argument("--dry", action="store_true", help="with --only: run the verification only (exit 2 if it fails); render nothing")
+    ap.add_argument("--dry", action="store_true", help="show what would re-render and run the verification only (exit 2 if it fails)")
+    ap.add_argument("--no-master", action="store_true", help="don't start the background master encode (tests, timing)")
     a = ap.parse_args()
     if a.out: OUT_OVERRIDE[0] = os.path.abspath(a.out)
-    DRY[0] = a.dry
+    DRY[0] = a.dry; NO_MASTER[0] = a.no_master
     E = edit_env.edl(a.n)
     if a.mode == "status":
         edit_env.load_edit(a.n, setup=False)                 # the renderer may write into the EDL's shot dicts on import

@@ -10216,7 +10216,8 @@ def ht_grid(pitch, ang):
     key = (round(pitch, 2), ang)
     if key not in _HT:
         if len(_HT) > 10: _HT.clear()
-        a = math.radians(ang); u = (_GX * math.cos(a) + _GY * math.sin(a)) / pitch; v = (-_GX * math.sin(a) + _GY * math.cos(a)) / pitch
+        a = math.radians(ang); p = key[0]                                                 # from the rounded key: order-independent (partial renders verify)
+        u = (_GX * math.cos(a) + _GY * math.sin(a)) / p; v = (-_GX * math.sin(a) + _GY * math.cos(a)) / p
         du, dv = u - np.round(u), v - np.round(v); _HT[key] = np.sqrt(du * du + dv * dv).astype(np.float32)
     return _HT[key]
 

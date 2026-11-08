@@ -84,13 +84,15 @@ if new_: open(gi, "a").write(("\n" if g and not g.endswith("\n") else "") + "\n"
 
 print(f"""scaffolded {V} from {BASE}: {title}
 next:
-  python3 tools/song_map.py src/SONG.mp3 {V}/work                 # grid, drops, candidate windows
-  python3 {V}/work/analyze.py src/PACK.mp4 TAG                     # shot list + contact sheets per pack
-  python3 tools/lyrics.py {V} src/SONG.mp3 START END "published lyrics | line 2"   # sung words + times
+  bash tools/build.sh {n} song:src/SONG.mp3[:H0:H1]                # map, stems, drum-stem grid, vocal-stem words, loop wrap -> EDL lines
+  python3 {V}/work/analyze.py src/PACK.mp4 TAG                     # shot list + contact sheets per NEW pack (known packs: copy shots_*.json)
+  python3 tools/transcribe.py {V} NAME src/PACK.mp4 --vad          # dialogue word times (if using dialogue)
   python3 tools/sharpness.py {n} --src                             # clip quality before rendering
-  edit {V}/work/edl{n}.py""" + (f" and {V}/work/fx{n}.py, then python3 {V}/work/splice.py" if BASE == "v105" else
-                                  f" and {V}/work/fx{n}.py, then python3 tools/splice_section.py {n} {V}/work/fx{n}.py --replace" if BASE == "v107" else "") + f"""
-  bash tools/build.sh {n} prep auto                                # tracks/mattes + review sheets of every cut
-  nohup python3 tools/sr_prep.py {n} &                              # restore + 2x upscale the source (background)
-  bash tools/build.sh {n} audio clip:A:B preview                   # sound + motion checks
-  bash tools/build.sh {n} video qc                                 # final render + ship checkpoint""")
+  read studio/OWNER_RULES.md and studio/WORKFLOW.md, then edit {V}/work/edl{n}.py (shots, transitions from studio/transitions.json,
+    SIGNATURE, HERO, SET_PIECES, knobs)""" + (f" and {V}/work/fx{n}.py (python3 {V}/work/splice.py)" if BASE == "v105" else
+                                  f" and {V}/work/fx{n}.py (spliced automatically by build.sh)" if BASE == "v107" else "") + f"""
+  bash tools/build.sh {n} audio plan                               # sound, then the plan against every owner rule (0 FAIL before rendering)
+  bash tools/build.sh {n} prep auto                                # tracks/mattes, the plan check, restoration in the background, sheets of every cut
+  bash tools/build.sh {n} sheet:NAME:f,f clip:A:B                  # warm stills and motion for every custom piece
+  bash tools/build.sh {n} ship                                     # audio, plan, video, QC + review pack, signoff, report, deliver
+  revision rounds: bash tools/build.sh {n} ship                    # only the changed frames are re-rendered""")

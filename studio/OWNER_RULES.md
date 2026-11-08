@@ -3,20 +3,20 @@
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
 (v4–v13, v101–v107) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
-Markers: **[plan]** checked on the EDL by `tools/plan_check.py` before any render · **[qc]** measured on the encode by
+Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
 (`studio/CRITIQUE_PROMPT.md`).
 
 ## 1. Never
 - **Black occluders as transitions**: letterbox bars, redaction boxes, a screen floating in a dark room ("the black bars", "the black box transition", v107). **[plan]** registry tags
 - **Graphics on or pointing at a face**: lines or strings converging on it, crosshairs, target rings, even when the face arrives a beat later (v107 rev 3 rebuilt the old `strings` gimmick and lost a round). Nothing crosses a face: lightning, particles, seams, wipe edges, suns go round the face box or behind the matte. **[plan] [qc] [eye]**
-- **A transition the owner rejected**, unless the registry's `fix` is applied: see `studio/transitions.json` (press flash, broadcast TV, redact, rorschach, strings, glass shatter, knife pass, tv_off …). **[plan]**
+- **A transition the owner rejected**, unless the registry's `fix` is applied: see `studio/transitions.json` (press flash, broadcast TV, redact, rorschach, strings, glass shatter, knife pass, emblem horizon …). **[plan]**
 - **The same clip twice**, or two shots that look the same (the same close-up from the same scene) (v107 rev 2). **[plan]**
 - **Overlays parked on the frame**: glass webs, hanging shards, slides drifting as a constant layer. Transform the picture itself (v10, v103).
 - **Drawn-looking props** next to footage: blood, slides, knives, tape only when motivated by the shot or lyric, brief, physically lit, off the face (v103). **[eye]**
 - Outro / title cards, watermarks, labels, name tags, counters, timecodes, CJK lines; a recoloured logo. **[plan]** `logo_uv` banned
 - A line shown as spoken when the lips don't match (v101); captions on words the song isn't singing (v103).
-- Chimes, bells, shimmers, drones, swirls, whines, a swell on every move (v12, v106, v13). **[plan]** sound count
+- Chimes, bells, shimmers, drones, swirls, whines, a swell on every move (v12, v106, v13). **[plan]** sound kinds (a WARN: v107 shipped one swirl)
 
 ## 2. Every first delivery already has (these were asked for again and again)
 1. **One signature custom graphic that becomes a transition**: on screen as a graphic for about a second, then it carries the cut (v106 tear lens, v13 light ribbon, v107 front page → stamp → banner). Asked for in **4 of the last 4** edits. **[plan]** `signature`

@@ -400,11 +400,22 @@ def hblur(img, L, vertical=False):
     k = np.ones((L, 1) if vertical else (1, L), np.float32) / L
     return cv2.filter2D(img, -1, k, borderType=cv2.BORDER_REFLECT)
 
+def _shift_edge(ch, d, axis):
+    """shift one channel by d px along axis, repeating the edge column instead of wrapping (np.roll wrapped the beat
+    camera's colour split into a cyan / magenta line at the frame edges: the Dexter studio's v107 catch)."""
+    if d == 0: return ch
+    o = np.empty_like(ch); n = ch.shape[axis]; d = max(-n + 1, min(n - 1, d))
+    src = [slice(None)] * ch.ndim; dst = [slice(None)] * ch.ndim; pad = [slice(None)] * ch.ndim; edge = [slice(None)] * ch.ndim
+    if d > 0: dst[axis], src[axis], pad[axis], edge[axis] = slice(d, None), slice(0, n - d), slice(0, d), slice(0, 1)
+    else: dst[axis], src[axis], pad[axis], edge[axis] = slice(0, n + d), slice(-d, None), slice(n + d, None), slice(n - 1, n)
+    o[tuple(dst)] = ch[tuple(src)]; o[tuple(pad)] = ch[tuple(edge)]
+    return o
+
 def rgb_split(img, d, vertical=False):
     d = int(round(d))
     if d == 0: return img
     o = img.copy(); ax = 0 if vertical else 1
-    o[..., 2] = np.roll(img[..., 2], d, axis=ax); o[..., 0] = np.roll(img[..., 0], -d, axis=ax)
+    o[..., 2] = _shift_edge(img[..., 2], d, ax); o[..., 0] = _shift_edge(img[..., 0], -d, ax)
     return o
 
 def zoom_about(img, px, py, s, rot=0.0):

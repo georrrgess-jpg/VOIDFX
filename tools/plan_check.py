@@ -3,6 +3,12 @@
   python3 tools/plan_check.py N            # report; exit 1 on any FAIL (build.sh video / ship stop there)
   python3 tools/plan_check.py N --json     # the same as JSON (for the critique pass and the report)
   python3 tools/plan_check.py N --edl PATH # check another EDL file (e.g. an earlier revision) against the same rules
+  python3 tools/plan_check.py N --dir PATH # check a copy of the whole work folder (EDL + renderer + audio), e.g. from git
+  python3 tools/plan_check.py N --hero f,g # name the hero asset's drawing functions (or HERO = [...] in the EDL)
+
+One report for both studios: its own checks and the Flash studio's preflight checks (tools/preflight.py: a transition
+missing from the engine, set pieces, held-frame judder, the same source shot, the hero found in the code's call graph,
+the Flash emblem, cache determinism, length, and the sound events with their kinds), merged 2026-11-08, one check per rule.
 
 Every check is a note the owner has already given (the evidence is printed with it), so a first delivery that passes
 doesn't spend a round on it. It reads the EDL, studio/transitions.json (the owner's verdict on every transition), the
@@ -19,8 +25,8 @@ GENERIC_MAX, SIG_MIN_S, DENSITY_MIN, ZOOM_MAX, HOLD_WARN = 0.50, 0.80, 0.70, 1.1
 SOUND_WARN, SOUND_FAIL = 16, 30                      # sound events (layered hits grouped): v106 and v13 approved after cuts at ~11-14
 
 
-def load(n, edl_path=None):
-    w = f"{ROOT}/v{n}/work"; os.chdir(w); sys.path.insert(0, w); argv = sys.argv; sys.argv = ["x", "video", "frames/x"]
+def load(n, edl_path=None, wd=None):
+    w = wd or f"{ROOT}/v{n}/work"; os.chdir(w); sys.path.insert(0, w); argv = sys.argv; sys.argv = ["x", "video", "frames/x"]
     if edl_path:                                                                          # check another EDL (an earlier revision)
         spec = importlib.util.spec_from_file_location(f"edl{n}", os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", edl_path)) if not os.path.isabs(edl_path) else edl_path)
         E = importlib.util.module_from_spec(spec); sys.modules[f"edl{n}"] = E; spec.loader.exec_module(E)
@@ -76,10 +82,25 @@ def sound_events(n):
     return [e[0] for e in ev]
 
 
+# the Flash studio's preflight rules: kept, replaced by one of ours (same rule), or recalibrated on the approved edits
+PF_DROP = {"no plain cuts", "loop", "variety", "sharpness", "registry", "text"}    # ours covers these (plain cuts: downbeat-aware)
+def preflight_results(n, wd, hero):
+    """run tools/preflight.py's checks in this process (the EDL and renderer are already imported) -> [(level, rule, msg)]"""
+    try:
+        sys.path.insert(0, f"{ROOT}/tools"); import io, contextlib, preflight as PF
+        PF.OUT.clear()
+        with contextlib.redirect_stdout(io.StringIO()): PF.check(int(n), wd, hero)
+        return list(PF.OUT), None
+    except Exception as ex:
+        return [], f"{type(ex).__name__}: {ex}"
+
+
 def main():
     n = sys.argv[1]; as_json = "--json" in sys.argv
-    edl_path = sys.argv[sys.argv.index("--edl") + 1] if "--edl" in sys.argv else None
-    E, R, trk = load(n, edl_path)
+    arg = lambda k: sys.argv[sys.argv.index(k) + 1] if k in sys.argv else None
+    edl_path, wd, hero_cli = arg("--edl"), arg("--dir"), [h for h in (arg("--hero") or "").split(",") if h]
+    wd = os.path.abspath(wd) if wd else f"{ROOT}/v{n}/work"
+    E, R, trk = load(n, edl_path, wd)
     FPS = getattr(E, "FPS", 60); S = E.SHOTS; dur = getattr(E, "DUR_F", S[-1]["f1"]) / FPS
     accept = getattr(E, "PLAN_ACCEPT", {}); res = []
     def add(level, cid, msg, ev=""):
@@ -93,13 +114,17 @@ def main():
     # 1. the owner's verdicts on each transition
     for t in sorted(set(used)):
         r = REG.get(t)
-        if r is None: continue
+        if r is None or "verdict" not in r: continue
         if r["verdict"] in ("banned", "rejected"):
             add("FAIL", f"verdict:{t}", f"`{t}` was {r['verdict']} by the owner" + (f"; fix first: {r['fix']}" if r.get("fix") else ""), r["evidence"])
         for tag, why in (("black_occluder", "a black occluder (bars, boxes, a dark surround)"), ("face_gimmick", "a graphic converging on a face")):
             if tag in r.get("tags", []) and r["verdict"] not in ("banned", "rejected"):
                 add("WARN", f"{tag}:{t}", f"`{t}` can read as {why}: check it on stills", "v107 rev 3-4")
-    unrated = sorted(t for t in set(used) if t not in REG)
+        if "leaks" in REG.get(t, {}).get("tags", []):
+            add("WARN", f"leaks:{t}", f"`{t}` samples past its shot and can show the next pack shot: pull its frames before relying on it", REG[t].get("evidence", "v13 rev 2 review"))
+        if "caution" in REG.get(t, {}).get("tags", []) and REG[t].get("verdict") not in ("banned", "rejected"):
+            add("WARN", f"caution:{t}", f"`{t}`: {REG[t].get('evidence', 'check it on stills')}", "the registry")
+    unrated = sorted(t for t in set(used) if t not in REG or "verdict" not in REG[t])
     add("ok", "unrated", f"{len(unrated)} transitions without an owner verdict yet: {', '.join(unrated) or '-'}")
 
     # 2. variety: generic share, repeats, the hero asset
@@ -215,8 +240,34 @@ def main():
                     + ("plan a designed beat inside it" if gap > HOLD_WARN else "make sure an animation runs through it"),
                     "v104: 'one span had some headspace'; v106 rev 2: 'identify one space where there isn't anything happening' (motionqc measures it after the render)")
 
-    # 11. sound budget (after the audio is built)
-    ev = sound_events(n)
+    # 11. plain cuts: a designed transition is the default; a clean cut lands on a beat hit with the camera's punch (v107)
+    for i, s in enumerate(S):
+        if i == 0 or s.get("tin"): continue
+        on_beat = False
+        if R is not None and hasattr(R, "beat_phase"):
+            for f in range(s["f0"] - 1, s["f0"] + 2):
+                b0, b1 = R.beat_phase(f - 1), R.beat_phase(f)
+                if b1[2] and b1[1] != b0[1]: on_beat = True
+        add("ok" if on_beat else "WARN", f"cut:{s['n']}", f"plain cut into `{s['n']}` at {s['f0'] / FPS:.2f} s: " +
+            ("on a beat hit with the camera's punch (v107's approved fallback)" if on_beat else "off the beat: design a transition, or move the cut onto a downbeat"),
+            "v6: 'no plain hard cuts in quiet or dialogue sections'; v107 rev 4: the clean downbeat cut was approved")
+
+    # 12. the Flash studio's preflight checks (one report; overlaps dropped; recalibrated where the approved edits disagree)
+    hero = hero_cli or list(getattr(E, "HERO", []) or [])
+    pf, err = preflight_results(n, wd, hero)
+    if err: add("WARN", "preflight", f"preflight checks not run ({err})")
+    pf_sound = any(r == "sound count" for _, r, _ in pf)
+    for lv, rule, msg in pf:
+        if rule in PF_DROP: continue
+        if rule == "clip reuse" and " overlap in " in msg: continue                     # ours: reuse/lookalike
+        if rule == "transition" and any(REG.get(t, {}).get("set_piece") and f"'{t}'" in msg for t in used): continue   # handled by the edit's own code
+        if rule == "occluder" and any(x["id"].startswith(("black_occluder:", "verdict:")) for x in res): continue
+        if rule == "sound kind" and lv == "FAIL": lv, msg = "WARN", msg + " (a WARN: the approved v107 has a swirl on the headspin)"
+        level = {"FAIL": "FAIL", "WARN": "WARN", "INFO": "ok"}[lv]
+        add(level, f"pf:{rule}:{msg[:40]}", f"[{rule}] {msg}", "preflight (the Flash studio's checks)")
+
+    # 13. sound budget (after the audio is built; the preflight count of placed effects is used when it ran)
+    ev = None if pf_sound else sound_events(n)
     if ev is not None:
         c = len(ev); lvl = "FAIL" if c > SOUND_FAIL else "WARN" if c > SOUND_WARN else "ok"
         add(lvl, "sound", f"{c} sound events on the effects stem (start lean: about 10-12; warn > {SOUND_WARN}, fail > {SOUND_FAIL})",

@@ -167,27 +167,29 @@
  },
  "workflow": {
   "loop": [
-   "song_map",
-   "EDL",
-   "build.sh N prep auto",
-   "sr_prep (background)",
+   "build.sh N song:FILE[:H0:H1] (song_prep: map, stems, drum-stem grid, vocal-stem words, loop wrap)",
+   "EDL (with HERO and SET_PIECES)",
+   "build.sh N audio plan (preflight: fix every FAIL before the first render)",
+   "build.sh N prep auto (preflight again; source restoration starts in the background)",
    "sheet:/strip:/clip: on the render server",
-   "audio (+ mixcheck table)",
-   "one video qc per revision (later revisions re-render only what changed)",
-   "review the faceqc list",
+   "audio (+ mixcheck table, fx_events.json)",
+   "one video qc per revision (change tracking: only frames that ran edited code re-render; QC passes run in parallel; review pack)",
+   "look at every review sheet (vN/frames/review_*.jpg) and the faceqc/motionqc lists",
    "visual sign-off on the encoded file",
    "deliver (waits for the master)",
+   "revision rounds: build.sh N plan rev",
    "vrender.py N clean at the verdict"
   ],
   "review_gates": [
+   "preflight on the plan before rendering (tools/preflight.py: owner rules as checks)",
    "automated QC on the encoded MP4 (qcN.py)",
-   "contact sheets around every transition and title",
+   "the review pack: a row of stills per transition, set piece and the wrap, from the encode (tools/review.py)",
    "fix and re-render anything weak",
    "final pull of key frames from the encoded file",
    "sharpness check on the finished video"
   ],
   "pre_build_gate": "compare the plan shot by shot with the benchmarks; redesign until it clearly beats them",
-  "efficiency": "one brief, one feedback message per revision, one full render per revision",
+  "efficiency": "check the plan against every standing rule before rendering (preflight); one brief, one feedback message per revision; re-render only the frames the change reached; keep render(f) a pure function of f",
   "pipeline_v2": {
    "plan": "sync/PIPELINE_V2_PLAN.md",
    "done": [
@@ -196,7 +198,8 @@
     "WP3",
     "WP4",
     "WP8 face-overlay list",
-    "WP12 level table"
+    "WP12 level table",
+    "efficiency update 2026-11-08: preflight + transitions registry, change-tracked partial renders, parallel QC + review pack, song_prep, auto source restoration"
    ],
    "measured_v11": {
     "full_render_s": 427,
@@ -218,6 +221,13 @@
   "honesty": "cannot watch or listen: report what was verified by frames and measurement"
  },
  "benchmarks": [
+  {
+   "edit": "v107 ALL CAPS (Dexter studio)",
+   "folder": "v107/ on dev/pipeline-v2 (v12 engine)",
+   "reference_for": "concept from the hook word carried by one object; focal set piece becomes the real banner; spell-outs on an even grid; loop from the edit's own confetti; what not to put in a slot",
+   "quote": "I like this edit make it a standard",
+   "engine_base": "dexter"
+  },
   {
    "edit": "v12 BLOOM",
    "folder": "v12/",
@@ -345,6 +355,16 @@
    "edit": "v105 (Dexter studio)",
    "what": "the sun drawn over the whole frame burned away the top of his head; soft clips at the verdict",
    "rule": "light behind the subject; clip-quality ranking"
+  },
+  {
+   "what": "black occluder transitions (letterbox bars, redaction boxes, a TV in a dark room)",
+   "edit": "v107",
+   "quote": "the black bars / the black box transition"
+  },
+  {
+   "what": "graphics converging on where a face appears (POINT OF ORIGIN strings and crosshair)",
+   "edit": "v107",
+   "quote": "get rid of the point of origin graphic/transition"
   }
  ],
  "qc_gates": [
@@ -465,8 +485,8 @@
  ],
  "engine_bases": {
   "flash": "v12",
-  "dexter": "v105",
-  "note": "flash moved to v12 on 2026-11-08 (v12 BLOOM standard); dexter v105. v106's report still names v11 (written before our v12 handoff); moving the Flash base to v106 is the owner's call - port its pieces meanwhile"
+  "dexter": "v107",
+  "note": "flash moved to v12 on 2026-11-08 (v12 BLOOM standard); dexter v105. v106's report still names v11 (written before our v12 handoff); moving the Flash base to v106 is the owner's call - port its pieces meanwhile; dexter moved to v107 on 2026-11-08 (v107 ALL CAPS standard, built on the v12 engine)"
  },
  "rules_from_handoffs": [
   {
@@ -645,6 +665,69 @@
    "evidence": "v13 rev 2 review",
    "applies_to": "all",
    "check": "visual"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "No black occluders as transitions (letterbox bars, redaction boxes, a screen in a dark room); covers are content (paper, liquid, light, the picture)",
+   "evidence": "'the transition at 3 seconds with the black bars'; 'the black box transition' (v107 rev 3-4)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "No graphics that point at a face (converging lines, crosshairs, target rings), even when the face arrives a beat later; read the banned list before designing",
+   "evidence": "'get rid of the point of origin graphic/transition' (v107 rev 4)",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "After a slot is rejected twice, stop adding graphic concepts: a physical move or a clean downbeat cut with the camera punch (designed transitions stay the default elsewhere)",
+   "evidence": "3 s slot: press flash, TV, POINT OF ORIGIN rejected; the clean downbeat cut approved (v107)",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "Spell-outs run on an even rhythm grid (~16th note, ~10 frames a letter at 90 BPM), each letter landing on its hit with its sound",
+   "evidence": "'how slow it writes dexters name ... not too fast and not too slow' (v107 rev 3)",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "A spin transition lands on a centred face and decelerates about it",
+   "evidence": "'the final shot doesn't have a centered shot of Dexter' (v107 rev 2)",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "Never reuse a clip in one edit (bookends from the same continuous shot count)",
+   "evidence": "'you reuse the same clip around the 17-second mark ... and the 19-second mark' (v107 rev 2)",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "Smooth endings: the beat camera rests and the cuts get fewer and longer through a break and the ending",
+   "evidence": "'smooth out the ending part' (v107 rev 2)",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "The beat camera's colour split clamps at the frame edge (np.roll wrapped a cyan/magenta edge line)",
+   "evidence": "v107 review; ported into render12.py",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "dexter v107 ALL CAPS",
+   "rule": "QC lists face-centring flags inside designed transition windows without counting them",
+   "evidence": "v107 review; ported into qc12.py",
+   "applies_to": "all",
+   "check": "auto"
   }
  ]
 }

@@ -1,15 +1,456 @@
 {
- "note": "The transition registry: every transition / set-piece tin with the owner's verdict and the evidence. Read by tools/plan_check.py before any render. verdict: liked (praised, or kept in a standard after review), ok (shipped in an approved edit without comment), rejected (the owner disliked or removed it; don't reuse without the fix in 'fix'), banned (breaks a banned rule; never). tags: generic (filler; keep generic <= 30 %), black_occluder (bars / boxes / a dark surround: banned since v107), face_gimmick (graphics converging on a face: banned), signature (a custom graphic-into-transition; give it ~1 s), physical (a real object or phenomenon), lands_on_face (the incoming face must be centred at the landing). Add every new verdict here in the same turn as the handoff.",
+ "_about": "The transition registry, shared by both studios. Generated fields (pre, post, fn, engines, used_in, verdicts per edit, status) are rebuilt by `python3 tools/preflight.py registry` from the engines and the EDLs; curated fields (verdict, tags, evidence, fix, family, studio) are the owner's verdicts, kept across rebuilds. plan_check reads both. verdict: liked / ok / rejected / banned. tags: generic, black_occluder, face_gimmick, signature, physical, lands_on_face, leaks, caution. family: one hero asset (more than 4 transitions warns, more than 8 fails). Add a verdict in the same turn the owner gives it.",
+ "families": {
+  "note": "A family is one hero asset. plan_check counts each family's transitions: more than 4 warns (v13 rule: the hero asset is a motif, 2-4 appearances), more than 8 fails (v13 rev 1 had 11 singularity transitions: 'I really don't like this edit').",
+  "singularity": "v13",
+  "jasmine": "v12 (approved with 7, before the v13 rule)"
+ },
  "transitions": {
-  "plastic_rip": {
+  "accretion_whip": {
+   "pre": 6,
+   "post": 8,
+   "fn": "accretion_whip",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "hero-kit",
+   "note": "v13 rev 1 singularity transition",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
+   "studio": "flash"
+  },
+  "afterimage": {
+   "pre": 10,
+   "post": 10,
+   "fn": "afterimage",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "arc_link": {
+   "pre": 6,
+   "post": 9,
+   "fn": "arc_link",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {}
+  },
+  "assemble": {
+   "pre": 0,
+   "post": 24,
+   "fn": "assemble",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "banner_match": {
+   "engines": [],
+   "used_in": {
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v107": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v107 'I really like the end'",
+   "studio": "dexter",
+   "set_piece": "no TR2 entry: the stamp's flight (text_stamp) lands on the banner shot (banner_frame); the cut is the set piece"
+  },
+  "bat_burst": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "bat_pass": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "bat_swarm": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "beam": {
+   "pre": 8,
+   "post": 8,
+   "fn": "beam",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v9": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v9": "lacklustre"
+   },
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v9 generic filler",
+   "studio": "both"
+  },
+  "blinds": {
+   "pre": 7,
+   "post": 9,
+   "fn": "blinds",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v9": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v9": "lacklustre"
+   },
+   "verdict": "ok",
+   "tags": [
+    "generic",
+    "black_occluder"
+   ],
+   "evidence": "v9 listed blinds among the generic filler; slats can read as bars (v107 rule): use only with a lit, visible slat surface",
+   "studio": "both"
+  },
+  "blood_lens": {
+   "pre": 9,
+   "post": 18,
+   "fn": "blood_lens",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "physical"
    ],
-   "evidence": "v103 standard ('the plastic rip on the drop' stayed); v107 standard",
+   "evidence": "v7 blood on the lens",
    "studio": "dexter"
   },
+  "bloom": {
+   "pre": 10,
+   "post": 24,
+   "fn": "bloom",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v9": 1,
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v9": "lacklustre",
+    "v12": "standard"
+   },
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "family": "jasmine",
+   "studio": "flash"
+  },
+  "board": {
+   "pre": 9,
+   "post": 9,
+   "fn": "board",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   }
+  },
+  "bolt_link": {
+   "pre": 7,
+   "post": 9,
+   "fn": "bolt_link",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v102": "lacklustre"
+   }
+  },
+  "bolt_split": {
+   "pre": 22,
+   "post": 16,
+   "fn": "bolt_split",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v5": 2,
+    "v11": 1,
+    "v102": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v5": "?",
+    "v11": "standard",
+    "v102": "lacklustre"
+   },
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v11 standard",
+   "studio": "flash"
+  },
+  "bolt_strike": {
+   "pre": 6,
+   "post": 12,
+   "fn": "bolt_strike",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard"
+   }
+  },
+  "bolt_tear": {
+   "pre": 5,
+   "post": 12,
+   "fn": "bolt_tear",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {}
+  },
+  "bolt_trace": {
+   "pre": 10,
+   "post": 14,
+   "fn": "bolt_trace",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1,
+    "v12": 1,
+    "v106": 1
+   },
+   "status": "leaks",
+   "note": "samples past its shot and shows the next pack shot (v13 rev 2 review); pull frames or don't use",
+   "verdicts": {
+    "v11": "standard",
+    "v12": "standard",
+    "v106": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "leaks"
+   ],
+   "evidence": "v12/v106; v13 review: it samples past its shot and leaked the next pack shot - pull frames first",
+   "studio": "flash"
+  },
+  "bolt_wipe": {
+   "engines": [],
+   "used_in": {
+    "v5": 3
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?"
+   }
+  },
+  "broadcast": {
+   "pre": 36,
+   "post": 36,
+   "fn": "broadcast",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "rejected",
+   "tags": [
+    "black_occluder"
+   ],
+   "evidence": "v107 rev 3: 'I don't like the transition at 3 seconds with the black bars' (a TV in a dark room reads as black bars)",
+   "studio": "dexter"
+  },
+  "brush": {
+   "engines": [],
+   "used_in": {
+    "v104": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v104": "standard"
+   }
+  },
+  "bubbles_up": {
+   "engines": [],
+   "used_in": {
+    "v103": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard"
+   }
+  },
+  "bud_iris": {
+   "pre": 6,
+   "post": 10,
+   "fn": "bud_iris",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "lands_on_face"
+   ],
+   "evidence": "v12 standard (the bloom out of his pupil)",
+   "family": "jasmine",
+   "studio": "flash"
+  },
+  "burn": {
+   "pre": 10,
+   "post": 8,
+   "fn": "burn",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   }
+  },
   "burst": {
+   "pre": 19,
+   "post": 18,
+   "fn": "burst",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "physical",
@@ -18,48 +459,409 @@
    "evidence": "v7 plastic burst on the drop ('creative and well animated')",
    "studio": "dexter"
   },
-  "slidebox": {
+  "cape": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "card_flip": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "clash": {
+   "pre": 10,
+   "post": 14,
+   "fn": "clash",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard"
+   }
+  },
+  "clash106": {
+   "pre": 10,
+   "post": 14,
+   "fn": "clash106",
+   "engines": [
+    "v106"
+   ],
+   "used_in": {
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v106": "standard"
+   }
+  },
+  "coffin": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "confetti_pop": {
+   "pre": 24,
+   "post": 2,
+   "fn": "confetti_pop",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v107": "standard"
+   },
    "verdict": "liked",
    "tags": [
-    "physical",
+    "physical"
+   ],
+   "evidence": "v107 'I really like the end'",
+   "studio": "dexter"
+  },
+  "crt": {
+   "engines": [],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "cube": {
+   "pre": 9,
+   "post": 9,
+   "fn": "cube",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "cut_rgb": {
+   "engines": [],
+   "used_in": {
+    "v4": 3
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "darkpass": {
+   "engines": [],
+   "used_in": {
+    "v4": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "datamosh": {
+   "engines": [],
+   "used_in": {
+    "v4": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "dissolve": {
+   "engines": [],
+   "used_in": {
+    "v4": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "dolly": {
+   "pre": 8,
+   "post": 12,
+   "fn": "dolly",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1,
+    "v12": 1,
+    "v13": 1,
+    "v106": 1,
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard",
+    "v12": "standard",
+    "v13": "approved (not a standard)",
+    "v106": "standard",
+    "v107": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v107, v12, v106 standards; v13",
+   "studio": "both"
+  },
+  "doors": {
+   "pre": 38,
+   "post": 14,
+   "fn": "doors",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {}
+  },
+  "ecg_bolt": {
+   "pre": 8,
+   "post": 9,
+   "fn": "ecg_bolt",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   }
+  },
+  "eclipse": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "edge_current": {
+   "pre": 10,
+   "post": 14,
+   "fn": "edge_current",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "emblem": {
+   "engines": [],
+   "used_in": {
+    "v5": 1,
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?",
+    "v102": "lacklustre"
+   }
+  },
+  "emblem_bloom": {
+   "pre": 12,
+   "post": 16,
+   "fn": "emblem_bloom",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "signature",
+    "physical"
+   ],
+   "evidence": "v12 rev 3 ('try to do an emblem transition aswell'), standard",
+   "family": "jasmine",
+   "studio": "flash"
+  },
+  "emblem_flash": {
+   "pre": 12,
+   "post": 12,
+   "fn": "emblem_flash",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard",
+    "v106": "standard"
+   }
+  },
+  "emblem_gate": {
+   "pre": 20,
+   "post": 22,
+   "fn": "emblem_gate",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard"
+   }
+  },
+  "emblem_horizon": {
+   "pre": 14,
+   "post": 14,
+   "fn": "emblem_horizon",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "rejected",
+   "note": "a black hole born in the emblem did not read as an emblem transition (v13 rev 1 -> 'make a emblem transition')",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
+   "studio": "flash"
+  },
+  "emblem_split": {
+   "pre": 16,
+   "post": 14,
+   "fn": "emblem_split",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "note": "v13 rev 2: the emblem's own bolt splits the frame",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   },
+   "verdict": "liked",
+   "tags": [
     "signature"
    ],
-   "evidence": "v7 blood-slide box ('creative and well animated')",
-   "studio": "dexter"
+   "evidence": "v13 rev 2 (approved edit; the emblem's own bolt becomes the cut)",
+   "studio": "flash"
   },
-  "slidebox_close": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
+  "event_horizon": {
+   "pre": 12,
+   "post": 14,
+   "fn": "event_horizon_tr",
+   "engines": [
+    "v13"
    ],
-   "evidence": "v7",
-   "studio": "dexter"
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   },
+   "verdict": "ok",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v13: approved as the one set piece after the singularity was cut back from every transition",
+   "family": "singularity",
+   "studio": "flash"
   },
-  "zipper": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
-   ],
-   "evidence": "v7 body-bag zipper; v107 standard",
-   "studio": "dexter"
-  },
-  "blood_lens": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
-   ],
-   "evidence": "v7 blood on the lens",
-   "studio": "dexter"
-  },
-  "m99": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
-   ],
-   "evidence": "v7 M99 blink",
-   "studio": "dexter"
+  "eye": {
+   "engines": [],
+   "used_in": {
+    "v4": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
   },
   "eye_dive": {
+   "pre": 14,
+   "post": 14,
+   "fn": "eye_dive",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "physical",
@@ -68,47 +870,364 @@
    "evidence": "v103 standard (eye dive stayed after rev 3-5)",
    "studio": "both"
   },
-  "shutter": {
-   "verdict": "liked",
+  "eye_horizon": {
+   "pre": 14,
+   "post": 14,
+   "fn": "eye_horizon",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "hero-kit",
+   "note": "v13 rev 1 singularity transition",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
+   "studio": "flash"
+  },
+  "eye_iris": {
+   "pre": 12,
+   "post": 14,
+   "fn": "eye_iris",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "facematch": {
+   "pre": 7,
+   "post": 7,
+   "fn": "facematch",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1,
+    "v8": 1,
+    "v101": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard",
+    "v8": "approved",
+    "v101": "rejected (style)",
+    "v104": "standard",
+    "v105": "standard"
+   }
+  },
+  "filmmelt": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "filmstrip": {
+   "pre": 9,
+   "post": 9,
+   "fn": "filmstrip",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "fingerprint": {
+   "pre": 5,
+   "post": 10,
+   "fn": "fingerprint",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "ok",
    "tags": [
     "physical"
    ],
-   "evidence": "v103 standard (camera shutter stayed)",
+   "evidence": "v4-v9 forensic set",
    "studio": "dexter"
   },
-  "polaroid": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
+  "flare": {
+   "engines": [],
+   "used_in": {
+    "v5": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?"
+   }
+  },
+  "flash": {
+   "engines": [],
+   "used_in": {
+    "v4": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "flip": {
+   "pre": 5,
+   "post": 9,
+   "fn": "flip",
+   "engines": [
+    "v107"
    ],
-   "evidence": "v103 evidence-camera flash and photo toss stayed",
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v107 rev 1 (replaced by a whip when the headspin changed)",
    "studio": "dexter"
   },
-  "rainfocus": {
+  "focus_rack": {
+   "pre": 10,
+   "post": 12,
+   "fn": "focus_rack",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "foliage": {
+   "pre": 10,
+   "post": 10,
+   "fn": "foliage",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v9": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v9": "lacklustre"
+   }
+  },
+  "fractal_burn": {
+   "pre": 8,
+   "post": 18,
+   "fn": "fractal_burn",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   },
    "verdict": "liked",
    "tags": [
-    "physical"
+    "physical",
+    "signature"
    ],
-   "evidence": "v8 liked 'rain focus pull'",
+   "evidence": "v12 rev 3 ('one more really cool transition'), standard",
+   "studio": "flash"
+  },
+  "frame_drag": {
+   "pre": 8,
+   "post": 10,
+   "fn": "frame_drag",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "hero-kit",
+   "note": "v13 rev 1 singularity transition",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
+   "studio": "flash"
+  },
+  "frameslip": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "freeze_in": {
+   "pre": 4,
+   "post": 10,
+   "fn": "freeze_in",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1,
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v11": "standard"
+   }
+  },
+  "frontpage": {
+   "pre": 82,
+   "post": 28,
+   "fn": "frontpage",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v107": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v107 standard, kept in every round",
    "studio": "dexter"
   },
-  "wiper": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
+  "frozen_shatter": {
+   "pre": 6,
+   "post": 41,
+   "fn": "frozen_shatter",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
    ],
-   "evidence": "v8 liked 'wiper'",
-   "studio": "dexter"
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "rejected",
+   "tags": [],
+   "evidence": "v10 rev 4: the frozen-scene glass shatter was replaced by TIME PARTICLES",
+   "studio": "flash"
   },
-  "lamp_on": {
+  "full_bloom": {
+   "pre": 6,
+   "post": 6,
+   "fn": "full_bloom_in",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   },
    "verdict": "liked",
    "tags": [
-    "physical"
+    "signature"
    ],
-   "evidence": "v8 liked 'lamp on'",
-   "studio": "dexter"
+   "evidence": "v12 standard focal piece",
+   "family": "jasmine",
+   "studio": "flash"
+  },
+  "gold_link": {
+   "pre": 6,
+   "post": 9,
+   "fn": "arc_link",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {}
+  },
+  "grav_wave": {
+   "pre": 10,
+   "post": 24,
+   "fn": "grav_wave",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   },
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 2: the EVENT HORIZON breakout",
+   "family": "singularity",
+   "studio": "flash"
   },
   "headlights": {
+   "pre": 12,
+   "post": 14,
+   "fn": "headlights",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
    "verdict": "liked",
    "tags": [
     "physical"
@@ -116,56 +1235,20 @@
    "evidence": "v8 liked 'streetlight sweep'",
    "studio": "dexter"
   },
-  "whip": {
-   "verdict": "liked",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v8 liked the 'basic' whips; v107, v12 standards",
-   "studio": "both"
-  },
-  "impact": {
-   "verdict": "liked",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v8 liked 'impact frame'; v107 standard",
-   "studio": "both"
-  },
-  "slam": {
-   "verdict": "ok",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v107 standard",
-   "studio": "both"
-  },
-  "dolly": {
-   "verdict": "ok",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v107, v12, v106 standards; v13",
-   "studio": "both"
-  },
-  "smear": {
-   "verdict": "ok",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v107 standard; v9 listed it among the generic filler",
-   "studio": "both"
-  },
-  "molasses": {
-   "verdict": "liked",
-   "tags": [
-    "physical",
-    "signature"
-   ],
-   "evidence": "v107 rev 1-4 kept ('I like most of the transitions'); standard",
-   "studio": "dexter"
-  },
   "headspin": {
+   "pre": 20,
+   "post": 24,
+   "fn": "headspin",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v107": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "lands_on_face",
@@ -175,124 +1258,289 @@
    "fix": "rotate the incoming half about the incoming face and land on a centred face",
    "studio": "dexter"
   },
-  "frontpage": {
+  "heat_haze": {
+   "pre": 10,
+   "post": 12,
+   "fn": "heat_haze",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1,
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard",
+    "v12": "standard"
+   }
+  },
+  "hooddark": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "ignite": {
+   "pre": 8,
+   "post": 10,
+   "fn": "ignite",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1,
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v11": "standard"
+   }
+  },
+  "impact": {
+   "pre": 3,
+   "post": 7,
+   "fn": "impact",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v9": 1,
+    "v102": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1,
+    "v107": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v9": "lacklustre",
+    "v102": "lacklustre",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard",
+    "v107": "standard"
+   },
    "verdict": "liked",
-   "tags": [
-    "physical",
-    "signature"
-   ],
-   "evidence": "v107 standard, kept in every round",
-   "studio": "dexter"
-  },
-  "page_turn107": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
-   ],
-   "evidence": "v107 rev 4 replacement for the redaction boxes, then 'make it a standard'",
-   "studio": "dexter"
-  },
-  "page_turn": {
-   "verdict": "ok",
-   "tags": [
-    "physical"
-   ],
-   "evidence": "v104 standard (flat fold; v107's page_turn107 is the rolled version)",
-   "studio": "dexter"
-  },
-  "banner_match": {
-   "verdict": "liked",
-   "tags": [
-    "physical",
-    "signature"
-   ],
-   "evidence": "v107 'I really like the end'",
-   "studio": "dexter"
-  },
-  "confetti_pop": {
-   "verdict": "liked",
-   "tags": [
-    "physical"
-   ],
-   "evidence": "v107 'I really like the end'",
-   "studio": "dexter"
-  },
-  "flip": {
-   "verdict": "ok",
    "tags": [
     "generic"
    ],
-   "evidence": "v107 rev 1 (replaced by a whip when the headspin changed)",
-   "studio": "dexter"
+   "evidence": "v8 liked 'impact frame'; v107 standard",
+   "studio": "both"
   },
-  "fingerprint": {
-   "verdict": "ok",
-   "tags": [
-    "physical"
+  "ink": {
+   "engines": [],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "ink_bleed": {
+   "engines": [],
+   "used_in": {
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v104": "standard"
+   }
+  },
+  "ink_bloom": {
+   "engines": [],
+   "used_in": {
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v104": "standard"
+   }
+  },
+  "iris": {
+   "engines": [],
+   "used_in": {
+    "v4": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "jolt": {
+   "pre": 2,
+   "post": 6,
+   "fn": "jolt",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
    ],
-   "evidence": "v4-v9 forensic set",
-   "studio": "dexter"
-  },
-  "scan": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v4-v9 forensic set",
-   "studio": "dexter"
-  },
-  "mag_sweep": {
-   "verdict": "ok",
-   "tags": [
-    "lands_on_face"
-   ],
-   "evidence": "v7 magnifier -> pupil loop (liked as part of the v7 set)",
-   "studio": "dexter"
-  },
-  "press_flash": {
-   "verdict": "rejected",
-   "tags": [],
-   "evidence": "v107 rev 2: 'the transition that occurs at 3 seconds in, I don't really like that'",
-   "studio": "dexter"
-  },
-  "broadcast": {
-   "verdict": "rejected",
-   "tags": [
-    "black_occluder"
-   ],
-   "evidence": "v107 rev 3: 'I don't like the transition at 3 seconds with the black bars' (a TV in a dark room reads as black bars)",
-   "studio": "dexter"
-  },
-  "redact": {
-   "verdict": "rejected",
-   "tags": [
-    "black_occluder"
-   ],
-   "evidence": "v107 rev 4: 'remove and replace the black box transition'",
-   "studio": "dexter"
-  },
-  "rorschach": {
-   "verdict": "rejected",
-   "tags": [
-    "face_gimmick"
-   ],
-   "evidence": "v107 rev 4: 'get rid of the point of origin graphic/transition' (with the spatter strings converging on where his face appears)",
-   "studio": "dexter"
-  },
-  "strings": {
-   "verdict": "banned",
-   "tags": [
-    "face_gimmick"
-   ],
-   "evidence": "red strings converging on his face (the 'gimmick on the face' rule); rebuilt by mistake in v107 rev 3 and rejected again",
-   "studio": "dexter"
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {}
   },
   "knife_pass": {
+   "pre": 28,
+   "post": 14,
+   "fn": "knife_pass",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved"
+   },
    "verdict": "rejected",
    "tags": [],
    "evidence": "v103: the knife pass across the lens mid-montage read as random",
    "fix": "only when motivated by the shot or lyric, brief, lit like a real object",
    "studio": "dexter"
   },
+  "lamp_on": {
+   "pre": 6,
+   "post": 16,
+   "fn": "lamp_on",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v8 liked 'lamp on'",
+   "studio": "dexter"
+  },
+  "latex": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "lavalamp": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "lens": {
+   "pre": 12,
+   "post": 9,
+   "fn": "lens_through",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "lens_drop": {
+   "pre": 12,
+   "post": 14,
+   "fn": "lens_drop",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "hero-kit",
+   "note": "v13 rev 1 singularity transition: 'the singularity is the primary object in every transition'",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
+   "studio": "flash"
+  },
+  "lens_open": {
+   "pre": 0,
+   "post": 16,
+   "fn": "lens_open",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   }
+  },
   "lens_shatter": {
+   "pre": 8,
+   "post": 18,
+   "fn": "lens_shatter",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard"
+   },
    "verdict": "rejected",
    "tags": [
     "face_gimmick"
@@ -300,62 +1548,171 @@
    "evidence": "v10 rev 4 and v103: glass webs over the frame or face didn't land (banned: overlays sitting on the frame)",
    "studio": "both"
   },
-  "frozen_shatter": {
-   "verdict": "rejected",
+  "lichtenberg": {
+   "pre": 10,
+   "post": 14,
+   "fn": "lichtenberg",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v106": "standard"
+   }
+  },
+  "light_leak": {
+   "pre": 8,
+   "post": 10,
+   "fn": "light_leak",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v106": "standard"
+   }
+  },
+  "light_leak13": {
+   "pre": 10,
+   "post": 12,
+   "fn": "light_leak13",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "light_sweep": {
+   "pre": 7,
+   "post": 7,
+   "fn": "light_sweep",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   }
+  },
+  "lightning_rod": {
+   "pre": 6,
+   "post": 20,
+   "fn": "lightning_rod",
+   "engines": [
+    "v106"
+   ],
+   "used_in": {
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v106": "standard"
+   },
+   "verdict": "ok",
    "tags": [],
-   "evidence": "v10 rev 4: the frozen-scene glass shatter was replaced by TIME PARTICLES",
+   "evidence": "v106 standard",
    "studio": "flash"
   },
-  "time_particles": {
-   "verdict": "liked",
-   "tags": [
-    "signature"
+  "lightstreak": {
+   "pre": 6,
+   "post": 8,
+   "fn": "lightstreak",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
    ],
-   "evidence": "v10 standard (replaced the glass shatter)",
-   "studio": "flash"
+   "used_in": {
+    "v7": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard",
+    "v106": "standard"
+   }
   },
-  "tv_off": {
-   "verdict": "rejected",
-   "tags": [
-    "black_occluder"
-   ],
-   "evidence": "collapses to a black screen (black occluder rule, v107)",
-   "studio": "both"
-  },
-  "blinds": {
-   "verdict": "ok",
-   "tags": [
-    "generic",
-    "black_occluder"
-   ],
-   "evidence": "v9 listed blinds among the generic filler; slats can read as bars (v107 rule): use only with a lit, visible slat surface",
-   "studio": "both"
-  },
-  "strobe": {
-   "verdict": "ok",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v9 'too many generic transitions (strobe, beam, blinds, roll, smear, whip)'",
-   "studio": "both"
-  },
-  "beam": {
-   "verdict": "ok",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v9 generic filler",
-   "studio": "both"
-  },
-  "roll": {
-   "verdict": "ok",
-   "tags": [
-    "generic"
-   ],
-   "evidence": "v9 generic filler; v104 liked the upside-down roll",
-   "studio": "both"
+  "logo": {
+   "engines": [],
+   "used_in": {
+    "v4": 1,
+    "v5": 1,
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard",
+    "v5": "?",
+    "v6": "standard"
+   }
   },
   "logo_orig": {
+   "pre": 12,
+   "post": 11,
+   "fn": "logo_orig",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1,
+    "v8": 1,
+    "v9": 1,
+    "v10": 1,
+    "v101": 1,
+    "v102": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard",
+    "v8": "approved",
+    "v9": "lacklustre",
+    "v10": "standard",
+    "v101": "rejected (style)",
+    "v102": "lacklustre",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "signature"
@@ -364,12 +1721,878 @@
    "studio": "both"
   },
   "logo_uv": {
+   "pre": 12,
+   "post": 10,
+   "fn": "logo_uv",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
    "verdict": "banned",
    "tags": [],
    "evidence": "never recolour or restyle the logo",
    "studio": "both"
   },
+  "loop_in": {
+   "engines": [],
+   "used_in": {
+    "v9": 1,
+    "v11": 1,
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v9": "lacklustre",
+    "v11": "standard",
+    "v12": "standard"
+   }
+  },
+  "loop_in13": {
+   "engines": [],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "m99": {
+   "pre": 15,
+   "post": 12,
+   "fn": "m99",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1,
+    "v9": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard",
+    "v9": "lacklustre"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v7 M99 blink",
+   "studio": "dexter"
+  },
+  "mag_sweep": {
+   "pre": 11,
+   "post": 12,
+   "fn": "mag_sweep",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "lands_on_face"
+   ],
+   "evidence": "v7 magnifier -> pupil loop (liked as part of the v7 set)",
+   "studio": "dexter"
+  },
+  "microscope": {
+   "pre": 12,
+   "post": 12,
+   "fn": "microscope",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   }
+  },
+  "mirror_in": {
+   "engines": [],
+   "used_in": {
+    "v8": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved"
+   }
+  },
+  "mist": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "mist_swirl": {
+   "pre": 10,
+   "post": 16,
+   "fn": "mist_swirl",
+   "engines": [
+    "v106"
+   ],
+   "used_in": {
+    "v106": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v106": "standard"
+   },
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v106 standard",
+   "studio": "flash"
+  },
+  "molasses": {
+   "pre": 36,
+   "post": 24,
+   "fn": "molasses",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v107": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v107 rev 1-4 kept ('I like most of the transitions'); standard",
+   "studio": "dexter"
+  },
+  "moon_iris": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "newsspin": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "oilwheel": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "overcharge": {
+   "engines": [],
+   "used_in": {
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v102": "lacklustre"
+   }
+  },
+  "page_turn": {
+   "engines": [],
+   "used_in": {
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v104": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v104 standard (flat fold; v107's page_turn107 is the rolled version)",
+   "studio": "dexter"
+  },
+  "page_turn107": {
+   "pre": 14,
+   "post": 12,
+   "fn": "page_turn107",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v107": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v107 rev 4 replacement for the redaction boxes, then 'make it a standard'",
+   "studio": "dexter"
+  },
+  "palm_sweep": {
+   "engines": [],
+   "used_in": {
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "panel_run": {
+   "pre": 8,
+   "post": 12,
+   "fn": "panel_run",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "papertear": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "passby": {
+   "engines": [],
+   "used_in": {
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v102": "lacklustre"
+   }
+  },
+  "passenger": {
+   "engines": [],
+   "used_in": {
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v104": "standard"
+   }
+  },
+  "peel": {
+   "pre": 8,
+   "post": 8,
+   "fn": "peel",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "perimeter": {
+   "pre": 8,
+   "post": 14,
+   "fn": "perimeter",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v106": "standard"
+   }
+  },
+  "petal_pass": {
+   "pre": 8,
+   "post": 10,
+   "fn": "petal_pass",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   },
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "family": "jasmine",
+   "studio": "flash"
+  },
+  "petal_whip": {
+   "pre": 5,
+   "post": 6,
+   "fn": "petal_whip",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   },
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "family": "jasmine",
+   "studio": "flash"
+  },
+  "petals": {
+   "pre": 12,
+   "post": 14,
+   "fn": "petal_gust",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v9": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v9": "lacklustre"
+   }
+  },
+  "phase": {
+   "pre": 10,
+   "post": 12,
+   "fn": "phase_through",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v5": 2,
+    "v10": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v5": "?",
+    "v10": "standard",
+    "v106": "standard"
+   }
+  },
+  "photo": {
+   "engines": [],
+   "used_in": {
+    "v4": 1,
+    "v103": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard",
+    "v103": "standard"
+   }
+  },
+  "photo_l": {
+   "engines": [],
+   "used_in": {
+    "v103": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard"
+   }
+  },
+  "photon_ring": {
+   "pre": 10,
+   "post": 12,
+   "fn": "photon_ring_tr",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "hero-kit",
+   "note": "v13 rev 1 singularity transition",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
+   "studio": "flash"
+  },
+  "plastic_rip": {
+   "pre": 5,
+   "post": 16,
+   "fn": "plastic_rip",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v103": 1,
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard",
+    "v107": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v103 standard ('the plastic rip on the drop' stayed); v107 standard",
+   "studio": "dexter"
+  },
+  "polaroid": {
+   "pre": 6,
+   "post": 16,
+   "fn": "polaroid",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v4": 1,
+    "v6": 1,
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard",
+    "v6": "standard",
+    "v7": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v103 evidence-camera flash and photo toss stayed",
+   "studio": "dexter"
+  },
+  "pollen_burst": {
+   "pre": 6,
+   "post": 8,
+   "fn": "pollen_burst",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   },
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "family": "jasmine",
+   "studio": "flash"
+  },
+  "portal": {
+   "engines": [],
+   "used_in": {
+    "v10": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard"
+   }
+  },
+  "press_flash": {
+   "pre": 4,
+   "post": 18,
+   "fn": "press_flash",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "rejected",
+   "tags": [],
+   "evidence": "v107 rev 2: 'the transition that occurs at 3 seconds in, I don't really like that'",
+   "studio": "dexter"
+  },
+  "prism": {
+   "engines": [],
+   "used_in": {
+    "v5": 2
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?"
+   }
+  },
+  "prism_cut": {
+   "pre": 4,
+   "post": 8,
+   "fn": "prism_cut",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {}
+  },
+  "projector_on": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "pupil_dive": {
+   "engines": [],
+   "used_in": {
+    "v103": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   }
+  },
+  "quarter_roll": {
+   "engines": [],
+   "used_in": {
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v104": "standard",
+    "v105": "standard"
+   }
+  },
+  "rainfocus": {
+   "pre": 8,
+   "post": 16,
+   "fn": "rainfocus",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v103": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v103": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v8 liked 'rain focus pull'",
+   "studio": "dexter"
+  },
+  "ramp": {
+   "pre": 6,
+   "post": 7,
+   "fn": "ramp",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard"
+   }
+  },
+  "red_eye_dive": {
+   "pre": 14,
+   "post": 14,
+   "fn": "red_eye_dive",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard"
+   }
+  },
+  "red_link": {
+   "pre": 6,
+   "post": 10,
+   "fn": "red_link",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard"
+   }
+  },
+  "red_phase": {
+   "pre": 10,
+   "post": 12,
+   "fn": "red_phase",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard"
+   }
+  },
+  "red_slices": {
+   "pre": 6,
+   "post": 9,
+   "fn": "red_slices",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {}
+  },
+  "red_streak": {
+   "pre": 8,
+   "post": 8,
+   "fn": "red_streak",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard"
+   }
+  },
+  "redact": {
+   "pre": 5,
+   "post": 9,
+   "fn": "redact",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "rejected",
+   "note": "black occluder (v107: 'the black box transition')",
+   "verdicts": {},
+   "verdict": "rejected",
+   "tags": [
+    "black_occluder"
+   ],
+   "evidence": "v107 rev 4: 'remove and replace the black box transition'",
+   "studio": "dexter"
+  },
+  "redshift": {
+   "pre": 8,
+   "post": 10,
+   "fn": "redshift_tr",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
+   "studio": "flash"
+  },
+  "remnant": {
+   "engines": [],
+   "used_in": {
+    "v5": 2,
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?",
+    "v102": "lacklustre"
+   }
+  },
+  "restart": {
+   "pre": 3,
+   "post": 14,
+   "fn": "restart",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1,
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v11": "standard"
+   }
+  },
+  "rewind_in": {
+   "engines": [],
+   "used_in": {
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v102": "lacklustre"
+   }
+  },
+  "ribbon": {
+   "pre": 18,
+   "post": 14,
+   "fn": "ribbon_spiral",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "note": "v13 rev 2 hero graphic that becomes the transition",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   },
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v13 rev 2 LIGHT RIBBON ('create a really cool graphic that you use to turn into a transition')",
+   "studio": "flash"
+  },
   "rift": {
+   "pre": 18,
+   "post": 26,
+   "fn": "rift",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "signature"
@@ -377,56 +2600,654 @@
    "evidence": "v11 standard focal set piece THE RIFT",
    "studio": "flash"
   },
-  "bolt_split": {
-   "verdict": "liked",
-   "tags": [],
-   "evidence": "v11 standard",
-   "studio": "flash"
+  "ring": {
+   "engines": [],
+   "used_in": {
+    "v5": 2
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?"
+   }
   },
-  "emblem_bloom": {
+  "ripple": {
+   "engines": [],
+   "used_in": {
+    "v103": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard"
+   }
+  },
+  "roll": {
+   "pre": 8,
+   "post": 9,
+   "fn": "roll",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v4": 1,
+    "v5": 1,
+    "v9": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard",
+    "v5": "?",
+    "v9": "lacklustre",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v9 generic filler; v104 liked the upside-down roll",
+   "studio": "both"
+  },
+  "rorschach": {
+   "pre": 21,
+   "post": 30,
+   "fn": "rorschach",
+   "engines": [
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "rejected",
+   "tags": [
+    "face_gimmick"
+   ],
+   "evidence": "v107 rev 4: 'get rid of the point of origin graphic/transition' (with the spatter strings converging on where his face appears)",
+   "studio": "dexter"
+  },
+  "scalpel": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "scan": {
+   "pre": 6,
+   "post": 9,
+   "fn": "scan",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   },
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v4-v9 forensic set",
+   "studio": "dexter"
+  },
+  "scope_in": {
+   "engines": [],
+   "used_in": {
+    "v4": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "shadow": {
+   "pre": 10,
+   "post": 12,
+   "fn": "shadow_pass",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "shatter": {
+   "engines": [],
+   "used_in": {
+    "v4": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "shock": {
+   "pre": 4,
+   "post": 12,
+   "fn": "shock",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard"
+   }
+  },
+  "shockwave": {
+   "engines": [],
+   "used_in": {
+    "v5": 1,
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?",
+    "v102": "lacklustre"
+   }
+  },
+  "shutter": {
+   "pre": 5,
+   "post": 10,
+   "fn": "shutter",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v9": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v9": "lacklustre",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   },
    "verdict": "liked",
    "tags": [
-    "signature",
     "physical"
    ],
-   "evidence": "v12 rev 3 ('try to do an emblem transition aswell'), standard",
-   "studio": "flash",
-   "family": "jasmine"
+   "evidence": "v103 standard (camera shutter stayed)",
+   "studio": "dexter"
   },
-  "fractal_burn": {
+  "slam": {
+   "pre": 0,
+   "post": 5,
+   "fn": "slam",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 5,
+    "v104": 1,
+    "v105": 1,
+    "v107": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v104": "standard",
+    "v105": "standard",
+    "v107": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v107 standard",
+   "studio": "both"
+  },
+  "slash": {
+   "pre": 5,
+   "post": 14,
+   "fn": "slash",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v4": 1,
+    "v6": 1,
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard",
+    "v6": "standard",
+    "v7": "standard"
+   }
+  },
+  "slices": {
+   "pre": 6,
+   "post": 9,
+   "fn": "slices",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1,
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v12": "standard"
+   }
+  },
+  "slidebox": {
+   "pre": 10,
+   "post": 14,
+   "fn": "slidebox",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
    "verdict": "liked",
    "tags": [
     "physical",
     "signature"
    ],
-   "evidence": "v12 rev 3 ('one more really cool transition'), standard",
-   "studio": "flash"
+   "evidence": "v7 blood-slide box ('creative and well animated')",
+   "studio": "dexter"
   },
-  "full_bloom": {
+  "slidebox_close": {
+   "pre": 50,
+   "post": 16,
+   "fn": "slidebox_close",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   },
    "verdict": "liked",
    "tags": [
-    "signature"
+    "physical"
    ],
-   "evidence": "v12 standard focal piece",
-   "studio": "flash",
-   "family": "jasmine"
+   "evidence": "v7",
+   "studio": "dexter"
   },
-  "bud_iris": {
-   "verdict": "liked",
+  "slidewipe": {
+   "engines": [],
+   "used_in": {
+    "v101": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v101": "rejected (style)"
+   }
+  },
+  "slipstream": {
+   "pre": 8,
+   "post": 12,
+   "fn": "slipstream",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "slit": {
+   "engines": [],
+   "used_in": {
+    "v5": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?"
+   }
+  },
+  "smear": {
+   "pre": 6,
+   "post": 12,
+   "fn": "smear",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v5": 1,
+    "v9": 1,
+    "v102": 1,
+    "v104": 1,
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v5": "?",
+    "v9": "lacklustre",
+    "v102": "lacklustre",
+    "v104": "standard",
+    "v107": "standard"
+   },
+   "verdict": "ok",
    "tags": [
-    "lands_on_face"
+    "generic"
    ],
-   "evidence": "v12 standard (the bloom out of his pupil)",
-   "studio": "flash",
-   "family": "jasmine"
+   "evidence": "v107 standard; v9 listed it among the generic filler",
+   "studio": "both"
   },
-  "bolt_trace": {
+  "spaghettify": {
+   "pre": 10,
+   "post": 12,
+   "fn": "spaghettify",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {},
+   "status": "hero-kit",
+   "note": "v13 rev 1 singularity transition",
+   "verdicts": {},
    "verdict": "ok",
    "tags": [],
-   "evidence": "v12/v106; v13 review: it samples past its shot and leaked the next pack shot - pull frames first",
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "family": "singularity",
    "studio": "flash"
   },
+  "spatter": {
+   "engines": [],
+   "used_in": {
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v104": "standard"
+   }
+  },
+  "speed_whip": {
+   "pre": 5,
+   "post": 7,
+   "fn": "speed_whip",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "speedforce_in": {
+   "pre": 10,
+   "post": 14,
+   "fn": "speedforce_in",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v106": "standard"
+   }
+  },
+  "split": {
+   "engines": [],
+   "used_in": {
+    "v4": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard"
+   }
+  },
+  "strike": {
+   "engines": [],
+   "used_in": {
+    "v102": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v102": "lacklustre"
+   }
+  },
+  "strike_link": {
+   "pre": 6,
+   "post": 8,
+   "fn": "strike_link",
+   "engines": [
+    "v12",
+    "v13",
+    "v107"
+   ],
+   "used_in": {
+    "v12": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v12": "standard"
+   }
+  },
+  "strings": {
+   "pre": 11,
+   "post": 10,
+   "fn": "strings",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {},
+   "status": "unused",
+   "verdicts": {},
+   "verdict": "banned",
+   "tags": [
+    "face_gimmick"
+   ],
+   "evidence": "red strings converging on his face (the 'gimmick on the face' rule); rebuilt by mistake in v107 rev 3 and rejected again",
+   "studio": "dexter"
+  },
+  "strobe": {
+   "pre": 3,
+   "post": 5,
+   "fn": "strobe",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1,
+    "v9": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard",
+    "v9": "lacklustre",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard",
+    "v106": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v9 'too many generic transitions (strobe, beam, blinds, roll, smear, whip)'",
+   "studio": "both"
+  },
+  "strobe_echo": {
+   "pre": 8,
+   "post": 10,
+   "fn": "strobe_echo",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v11": 1,
+    "v12": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v11": "standard",
+    "v12": "standard",
+    "v106": "standard"
+   }
+  },
+  "sun": {
+   "pre": 10,
+   "post": 10,
+   "fn": "sun_through",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "sun_flare": {
+   "engines": [],
+   "used_in": {
+    "v105": 2
+   },
+   "status": "approved",
+   "verdicts": {
+    "v105": "standard"
+   }
+  },
+  "surface": {
+   "engines": [],
+   "used_in": {
+    "v103": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard"
+   }
+  },
+  "tape_in": {
+   "engines": [],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
+  "tape_snap": {
+   "pre": 7,
+   "post": 10,
+   "fn": "tape_snap",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   }
+  },
+  "tear": {
+   "engines": [],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v6": "standard"
+   }
+  },
   "tear_lens": {
+   "pre": 60,
+   "post": 26,
+   "fn": "tear_lens",
+   "engines": [
+    "v106"
+   ],
+   "used_in": {
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v106": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "physical",
@@ -435,7 +3256,300 @@
    "evidence": "v106 rev 2-3 (slowed to ~1 s 'so it's more visible'), standard",
    "studio": "flash"
   },
+  "tilt": {
+   "pre": 12,
+   "post": 16,
+   "fn": "tilt",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v9": 1,
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v9": "lacklustre",
+    "v104": "standard"
+   }
+  },
+  "time_particles": {
+   "pre": 12,
+   "post": 31,
+   "fn": "time_particles",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v10 standard (replaced the glass shatter)",
+   "studio": "flash"
+  },
+  "time_slice": {
+   "pre": 8,
+   "post": 12,
+   "fn": "time_slice",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "torch_blind": {
+   "engines": [],
+   "used_in": {
+    "v103": 1,
+    "v104": 1,
+    "v105": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard"
+   }
+  },
+  "tunnel_in": {
+   "engines": [],
+   "used_in": {
+    "v10": 1,
+    "v12": 1,
+    "v106": 1,
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v12": "standard",
+    "v106": "standard",
+    "v107": "standard"
+   }
+  },
+  "tv_off": {
+   "pre": 14,
+   "post": 12,
+   "fn": "tv_off",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v6": 1
+   },
+   "status": "caution",
+   "note": "a screen in a dark room read as a black box (v107)",
+   "verdicts": {
+    "v6": "standard"
+   },
+   "verdict": "ok",
+   "tags": [
+    "black_occluder",
+    "caution"
+   ],
+   "evidence": "not judged by the owner; a screen collapsing to black reads as a black occluder (v107 rule): check it on stills",
+   "studio": "both"
+  },
+  "twirl": {
+   "engines": [],
+   "used_in": {
+    "v5": 1
+   },
+   "status": "used",
+   "verdicts": {
+    "v5": "?"
+   }
+  },
+  "uv_sweep": {
+   "pre": 8,
+   "post": 10,
+   "fn": "uv_sweep",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard"
+   }
+  },
+  "wave": {
+   "engines": [],
+   "used_in": {
+    "v103": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v103": "standard"
+   }
+  },
+  "whip": {
+   "pre": 6,
+   "post": 8,
+   "fn": "whip",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v5": 2,
+    "v8": 1,
+    "v9": 1,
+    "v11": 1,
+    "v12": 1,
+    "v101": 1,
+    "v102": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1,
+    "v106": 1,
+    "v107": 3
+   },
+   "status": "approved",
+   "verdicts": {
+    "v5": "?",
+    "v8": "approved",
+    "v9": "lacklustre",
+    "v11": "standard",
+    "v12": "standard",
+    "v101": "rejected (style)",
+    "v102": "lacklustre",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard",
+    "v106": "standard",
+    "v107": "standard"
+   },
+   "verdict": "liked",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v8 liked the 'basic' whips; v107, v12 standards",
+   "studio": "both"
+  },
+  "whip_up": {
+   "pre": 5,
+   "post": 7,
+   "fn": "whip_up",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v103": 1,
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v103": "standard",
+    "v104": "standard"
+   }
+  },
+  "whip_up13": {
+   "pre": 6,
+   "post": 8,
+   "fn": "whip_up13",
+   "engines": [
+    "v13"
+   ],
+   "used_in": {
+    "v13": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v13": "approved (not a standard)"
+   }
+  },
+  "whirlwind": {
+   "pre": 12,
+   "post": 14,
+   "fn": "whirlwind",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v10": 1,
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v10": "standard",
+    "v106": "standard"
+   }
+  },
+  "wiper": {
+   "pre": 8,
+   "post": 10,
+   "fn": "wiper",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved"
+   },
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v8 liked 'wiper'",
+   "studio": "dexter"
+  },
   "wonderwall": {
+   "pre": 12,
+   "post": 30,
+   "fn": "wonderwall",
+   "engines": [
+    "v106"
+   ],
+   "used_in": {
+    "v106": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v106": "standard"
+   },
    "verdict": "liked",
    "tags": [
     "signature"
@@ -443,138 +3557,71 @@
    "evidence": "v106 standard focal burst",
    "studio": "flash"
   },
-  "lightning_rod": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v106 standard",
-   "studio": "flash"
+  "wrap": {
+   "pre": 6,
+   "post": 10,
+   "fn": "wrap",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v8": 1,
+    "v103": 1,
+    "v104": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v8": "approved",
+    "v103": "standard",
+    "v104": "standard"
+   }
   },
-  "mist_swirl": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v106 standard",
-   "studio": "flash"
-  },
-  "emblem_split": {
+  "zipper": {
+   "pre": 10,
+   "post": 12,
+   "fn": "zipper",
+   "engines": [
+    "v12",
+    "v13",
+    "v106",
+    "v107"
+   ],
+   "used_in": {
+    "v7": 1,
+    "v103": 1,
+    "v104": 1,
+    "v105": 1,
+    "v107": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v7": "standard",
+    "v103": "standard",
+    "v104": "standard",
+    "v105": "standard",
+    "v107": "standard"
+   },
    "verdict": "liked",
    "tags": [
-    "signature"
+    "physical"
    ],
-   "evidence": "v13 rev 2 (approved edit; the emblem's own bolt becomes the cut)",
-   "studio": "flash"
+   "evidence": "v7 body-bag zipper; v107 standard",
+   "studio": "dexter"
   },
-  "ribbon": {
-   "verdict": "liked",
-   "tags": [
-    "signature"
-   ],
-   "evidence": "v13 rev 2 LIGHT RIBBON ('create a really cool graphic that you use to turn into a transition')",
-   "studio": "flash"
-  },
-  "event_horizon": {
-   "verdict": "ok",
-   "tags": [
-    "signature"
-   ],
-   "evidence": "v13: approved as the one set piece after the singularity was cut back from every transition",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "lens_drop": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "frame_drag": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "redshift": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "photon_ring": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "eye_horizon": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "accretion_whip": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "spaghettify": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "emblem_horizon": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "grav_wave": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v13 rev 2: the EVENT HORIZON breakout",
-   "studio": "flash",
-   "family": "singularity"
-  },
-  "bloom": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v12 standard (the lightning jasmine)",
-   "studio": "flash",
-   "family": "jasmine"
-  },
-  "petal_whip": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v12 standard (the lightning jasmine)",
-   "studio": "flash",
-   "family": "jasmine"
-  },
-  "petal_pass": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v12 standard (the lightning jasmine)",
-   "studio": "flash",
-   "family": "jasmine"
-  },
-  "pollen_burst": {
-   "verdict": "ok",
-   "tags": [],
-   "evidence": "v12 standard (the lightning jasmine)",
-   "studio": "flash",
-   "family": "jasmine"
+  "zoomblur": {
+   "engines": [],
+   "used_in": {
+    "v4": 1,
+    "v5": 1
+   },
+   "status": "approved",
+   "verdicts": {
+    "v4": "standard",
+    "v5": "?"
+   }
   }
- },
- "families": {
-  "note": "A family is one hero asset. plan_check counts each family's transitions: more than 4 warns (v13 rule: the hero asset is a motif, 2-4 appearances), more than 8 fails (v13 rev 1 had 11 singularity transitions: 'I really don't like this edit').",
-  "singularity": "v13",
-  "jasmine": "v12 (approved with 7, before the v13 rule)"
  }
 }

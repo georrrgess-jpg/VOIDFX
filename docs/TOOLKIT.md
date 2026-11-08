@@ -51,7 +51,7 @@ Never final-render to find out whether something works.
 | Tool | What it does |
 |---|---|
 | `tools/golden.py N --save / --check [--diff]` | Reference frames: frame 0, the last 3 frames, every cut at −6/0/+6, every shot's middle and every 32nd frame (103 for v11, 112 for v10). Gate: max 2/255 per pixel and mean < 0.2/255. **Run `--check` on v10 and v11 before and after any engine change.** The references are the shipped v10 rev 5 and v11 rev 4 engines (kept out of git). |
-| `tools/vrender.py N video [--only A:B] [--full] [--dry]` · `master [--wait]` · `status` · `clean` | Final renders. Workers render contiguous blocks that never cross a cut, so per-worker caches hit. Each full render writes `vN/work/cache/frames.mkv` (Ut Video, lossless) plus a SHA-1 per frame. The master is encoded from that cache in the background at low priority. A partial render needs a cache. It re-renders the declared range plus every shot whose EDL entry changed (±30 frames), then re-renders about 30 frames outside the range and requires a bit-exact match. On any mismatch it falls back to a full render, as it does when an EDL global, the cut points, the tracks, the mattes or the restored bands change. |
+| `tools/vrender.py N video [--only A:B] [--full] [--dry]` · `master [--wait]` · `status` · `clean` | Final renders. Workers render contiguous blocks that never cross a cut, so per-worker caches hit. Each full render writes `vN/work/cache/frames.mkv` (Ut Video, lossless) plus a SHA-1 per frame. The master is encoded from that cache in the background at low priority. A partial render needs a cache. It re-renders the declared range plus every shot whose EDL entry changed (±30 frames), then re-renders about 30 frames outside the range and requires a bit-exact match. On any mismatch it falls back to a full render, as it does when the cut points, the tracks, the mattes or the restored bands change. **Since 2026-11-08 it tracks which renderer code drew each frame (§1c): code and EDL-global changes re-render only the frames they reach.** |
 | `tools/rsrv.py N stills / full / strip / clip / auto / stop` | A render server with 4 warm workers. It restarts itself when `renderN.py`, the EDL, the tracks, the mattes or the SR index change. |
 | `tools/faceqc.py N` | Effects over faces. It compares the final frame with the shot's own picture inside the face box (track, or the matte's head for `face=None`). A gain/offset fit removes grades and fades; a frame is flagged when more than 3 % of the box gains more than 0.10 luma. It writes a list and a sheet; it isn't a gate (designed set pieces and titles show up too). |
 | `tools/mixcheck.py N` | Effects vs music at every transition and `E.SET_PIECES` entry, from the stems the audio builder now writes (`stem_music.wav`, `stem_fx.wav`). FLAG: effects more than 12 dB under the music. |
@@ -90,13 +90,47 @@ Every frame of the v2 render matches the shipped engine within the gate (worst p
   - LET'S GO on his chin (420);
   - the designed red radiate in the REVERSE loop (1198–1216).
 
-## 1c. The efficiency update (2026-11-08; `sync/EFFICIENCY_PLAN.md`, `studio/WORKFLOW.md`)
+## 1c. The efficiency update (both studios, merged into one toolchain on 2026-11-08): fewer rounds, faster rounds
+
+**Since the merge:** `build.sh N plan` (and `preflight.py N`) runs `tools/plan_check.py`, one report with both studios' checks; `studio/transitions.json` holds the generated fields (`preflight.py registry`) and the owner's curated verdicts (kept across rebuilds); `build.sh N rev` = audio → plan → video (only the changed frames) → qc + review pack → signoff → report, `ship` = rev + deliver. The Flash studio's half is the first table, the Dexter studio's the second.
+
+The owner: *"this process takes too long whether that be the revisions or the initial creation process"*, and quality must not drop. Most of an edit's time goes into owner rounds, and most owner notes repeat a rule we already had (v13 rev 1: the hero asset in every transition, too many sounds, swirls and whines). So the update checks the plan before the first render, then makes each round cheaper.
+
+| Tool | What it does |
+|---|---|
+| `tools/preflight.py N` · `build.sh N plan` (also at the end of `prep`) | The plan against the owner's standing rules, in seconds, before rendering. It reads the EDL, the renderer (imported without set-up: TR2 and a static call graph of every transition) and the sound events (`vN/audio/fx_events.json`, or a sandbox run of the audio builder).<br>**FAIL:**<ul><li>the hero asset (`HERO = [...]` in the EDL, or `--hero`) in more than 4 transitions;</li><li>no transition using `emblem_at` in a Flash edit;</li><li>a plain cut;</li><li>overlapping source ranges;</li><li>drone/swirl/whine/chime/bell/shine sounds;</li><li>a sound on a beat-camera hit away from a cut or set piece;</li><li>a transition the registry marks rejected.</li></ul>**WARN:**<ul><li>two shots from one source shot (`shots_<pack>.json`);</li><li>more than 12 effects;</li><li>more than 3 reverse swells;</li><li>z > 1.10;</li><li>held 24p/30p frames;</li><li>a repeated transition;</li><li>fewer than 3 set pieces;</li><li>an edit-local drawing helper reached by more than 4 transitions (the undeclared hero asset);</li><li>caches keyed on rounded arguments but filled from exact ones.</li></ul>**INFO:** the emblem transition, the library transitions to pull frames of, the text. Exit 1 on any FAIL. |
+| `studio/transitions.json` · `preflight.py registry` | Every transition in the v12/v13 engines: pre/post frames, the edits that used it, those edits' verdicts, and the owner's reception where a handoff recorded it (`KNOWN` in preflight: `emblem_horizon` rejected, the v13 rev 1 singularity kit, `bolt_trace` leaks, `redact` an occluder). Add each verdict's transitions to `KNOWN` when a handoff is written. |
+| `tools/codetrack.py` (inside `vrender.py`) | Change tracking for partial renders. A full render records the renderer functions that drew each frame (`sys.monitoring`, one event per function per frame; no measurable cost, identical pixels). Each function is keyed by its qualified name plus a hash of its own source, so moving code changes nothing. At the next `video`, a frame is dirty when it ran a function that was edited, removed or shadowed by a later layer, read a changed module value or EDL global, or ran a function that caches across frames (`global`, a module dict/list) and calls an edited one. Only those frames re-render, still verified bit-exact outside. A global no traced code reads (`SET_PIECES`, `VO`, audio knobs) renders nothing. Changed SRC/FPS/W/H/DUR_F, cut points, tracks, mattes, bands or helper modules still render in full, and so do changes reaching more than 70 % of the frames. `vrender.py N video --dry` shows what would re-render and why. |
+| `tools/review.py N` · `build.sh N review` (also at the end of `qc`) | The review pack from the encode: one row of 8 stills per transition window (TR2 pre/post), per `SET_PIECES` entry and for the wrap, with frames that faceqc or motionqc flagged boxed red. Output: `vN/frames/review_*.jpg`. It replaces hand-picked `sheet:` lists. |
+| `tools/song_prep.py N SONG [--h0 --h1]` · `build.sh N song:FILE[:H0:H1]` | In one command:<ul><li>the song map;</li><li>Demucs stems of the window ±8 s;</li><li>the grid fitted on the drum stem, against the map's period and its 2/3, 3/4, 4/3 and 3/2 relatives (v106's map locked to 4/3);</li><li>Whisper large-v3 words on the vocal stem (v13's full mix heard "girl" for "God"), in song seconds and edit half-beats;</li><li>loop-wrap scores (bar before H0 vs bar before H1) for the chosen and candidate windows.</li></ul>It writes `vN/work/song.json` and prints the EDL lines. |
+| `build.sh` | `qc` runs `qcN`, `faceqc` and `motionqc` in parallel, then the review pack. `prep` starts `sr_prep` in the background (niced; skipped when the bands are current or it is already running). `rev` = `audio video qc`. The scaffold's `audio12.py` logs every `place()` from `main()` to `vN/audio/fx_events.json` (the audio itself is unchanged: identical md5 on v12). |
+
+**Measured (4 cores):**
+
+| | Before | After |
+|---|---|---|
+| Plan check | none: the owner's round found it | **6 s** (15 s when the audio builder must run in a sandbox) |
+| v13 rev 1 run through preflight (retroactively, from git) | the owner's notes after a full build | **with no v13 hindsight in the registry:** 4 FAIL (3 swirls and a whine) and 6 WARN: the black-hole code reached by 7 transitions (the undeclared hero), 24 effects in 21 moments, 11 reverse swells, the bookend reuse (`pull`/`last` in one source shot), a repeated `lens_drop`, the order-dependent cache. That covers two of the owner's five rev 1 notes (the singularity everywhere, the tedious sounds) before any render. On the approved rev 2: 0 FAIL, 2 WARN (the bookend, the cache) |
+| An audio-only EDL change (`SET_PIECES`) | a full render (~5 min) | **4 s**, nothing rendered |
+| One transition's code edited, no range given (v12 `ecg_bolt`) | a full render, **312 s** | **157 s**: 17 frames found and re-rendered in 15 s, 33 frames outside verified bit-exact; ~140 s is re-encoding the upload at preset slow (kept: it is the upload's quality) |
+| Edit, then revert, both partial | — | all 1,401 frames identical to the full render |
+| A helper whose result is cached across frames (`grain`, cached by `finish12`) | — | all frames dirty → full render (correct) |
+| v13 (`doppler_row` cache keyed on rounded values) | — | the edit found (12 frames); verification caught frame 782 in the horizon shot → full render (safe) |
+| QC | ~100 s in sequence (qc 30, faceqc 64, motionqc 5); v13 rev 2 logged 138 s | **80 s** with the review pack |
+| Review sheets | v13 rev 1: 19 hand-picked `sheet:` calls | **9 s**, every transition, set piece and the wrap |
+| Song prep | about six manual steps (map, Demucs, grid fit, Whisper, wrap check, EDL lines) | **one command: 6.8 min the first time (Demucs and Whisper large-v3 on the CPU), 27 s when the stems exist**; on v13 it reproduces the grid within 8 ms and flags "darling" (Whisper e51.2, stem onset e50.4, checked e49.6) for a check on the stem |
+
+**Rules that come with it:**
+- **Declare `HERO` and `SET_PIECES` in the EDL** and run `plan` before `prep`. Fix every FAIL before the first render; each WARN is a decision, and the handoff says why one was kept.
+- **`render(f)` must be a pure function of `f`.** Compute cached values from the rounded key, never from the first caller's exact arguments (the v13 `doppler_row` pattern). Otherwise every partial render falls back to a full one.
+- **When a handoff records an owner verdict on a transition**, add it to `KNOWN` in `tools/preflight.py` and run `preflight.py registry`. The next plan then carries the verdict.
+
+### 1c, the Dexter studio's half (`sync/EFFICIENCY_PLAN.md`, `studio/WORKFLOW.md`, `studio/OWNER_RULES.md`)
 
 | Command | What it does | Time |
 |---|---|---|
 | `build.sh N plan` / `tools/plan_check.py N [--edl PATH] [--json]` | The owner's recurring notes, checked on the EDL before any render, against `studio/transitions.json`. Runs automatically before `video`; a FAIL stops the render (`PLAN_ACCEPT = {"check": "why"}` in the EDL, or `PLAN_FORCE=1`). Optional EDL fields: `SIGNATURE`, `HERO_TINS` | 1–5 s |
-| `build.sh N ship` | audio → plan → video → qc → signoff → report → deliver | one render |
-| `build.sh N qc` | qc + faceqc + motionqc in parallel | 72 s (was 103) |
+| `build.sh N rev` / `ship` | audio → plan → video → qc → signoff → report (→ deliver) | one render (partial when the change is local) |
 | `build.sh N signoff` / `tools/signoff.py N` | Review pages from the encode: every transition as a row (before, its middle, the frame before the cut, the cut, after, its end), the loop wrap, every text block, every UNEXPLAINED pop → `vN/frames/signoff_*.jpg` | 6 s |
 | `build.sh N report` / `tools/report.py N` | The Measured block → `vN/work/measured.md` | 1 s |
 | `build.sh N splice` | Re-splice `fxN.py` (automatic before any rendering step when `fxN.py` is newer) | 0 s |
@@ -442,6 +476,25 @@ All in `v106/work/fx106.py` on `origin/dev/pipeline-v2` (557 lines, spliced abov
 - **The focal piece is made of the edit itself** (the wall's tiles are the edit's own frames; the burst turns the current frame into the wall).
 - **Fewer sounds was better:** a strike, a clash, a run, the wall and the burst; after the burst, only the music.
 - **Measured, not guessed:** a per-beat activity table found the dead span, a pop list found six defects (three invisible on stills), a cadence check found the 24p judder.
+
+## 5g. Port candidates from the Dexter studio (v107 ALL CAPS, standard)
+
+All in `v107/work/fx107.py` on `origin/dev/pipeline-v2`, written for the v12 engine, so they splice into a Flash edit as is. Read it with `git show origin/dev/pipeline-v2:v107/work/fx107.py`.
+
+| Asset | Functions (pre/post frames) | Flash use |
+|---|---|---|
+| HOT MOLASSES | `tin="molasses"` (36/24): a viscous sheet pours down the lens with a fingered edge and bead, refracts the shot, absorbs by thickness, glossy highlight, drains with a meniscus | Molten light or liquid lightning pouring over the lens |
+| HEADSPIN | `tin="headspin"` (20/24): two turns on a smoothstep, angular motion blur; **the second half turns about the incoming face's centre** | A spin into a centred face (rule 5) |
+| THE FRONT PAGE | `tin="frontpage"` (82/28), `page_layers`, `page_with_photo`: a newspaper built from text masks spins in, lands, and we dive into its halftone photo | A Central City Picture News front page (Iris's byline, "FLASH MISSING") |
+| ALL CAPS stamp | `style="stamp"`, `strip_tex`, `strip_canvas`, `text_stamp`: letterpress letters on an even grid, ink spread, emboss, then the strip flies to a target (`banner_target`) | Any spell-out on the beat grid (rule 4) |
+| Banner shot | `banner_frame`: a crop tracking a wide object at 1.2×, the sky extended from the source's own colours | Fitting a wide prop or sign into 9:16 |
+| Confetti | `conf_set`, `draw_confetti`, `confetti_pop`, `pop_behind`: lit paper pieces with flutter and depth of field, behind the matte | Sparks or embers in depth |
+| THE MASSES SPELL HIS NAME (loop) | `name_targets`, `draw_pieces`, `name_loop`, `frame0_plate`: 1,050 pieces gather into a word, hold, burst into frame 0 | A loop built from the edit's own particles |
+| PAGE TURN | `tin="page_turn107"` (14/12): a true roll over a cylinder, newsprint back, the roll's shadow | A page of the Picture News |
+| TABLOID grade | `look="tabloid"`, `grade`, `finish107`, per-shot `redthr` | Don't reuse the look; reuse the spot-colour construction |
+| Edge-clamped colour split | `_shift_edge`, `rgb_split` | **Ported** into `v12/work/render12.py` |
+| QC transition windows | `qc107.py` `_tr_window` | **Ported** into `v12/work/qc12.py` |
+| Rejected in v107 (reuse with care) | `press_flash`, `broadcast` (avoid the black room), `spatter_fx` (never converge on a face), `rorschach` | — |
 
 ## 5f. Reusable from v13 EVENT HORIZON (approved, not a standard)
 

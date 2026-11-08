@@ -1,8 +1,8 @@
 # voidfx two-studio sync (Flash studio side)
 
 Two voidfx chats work as a coalition, and each learns from the other's edits:
-- **the Flash studio** (this chat, Studio 1): every Flash edit, numbered v13 onward (v5, v10, v11, v12 were Flash);
-- **the Dexter studio** (the other chat, Studio 2): every Dexter edit, numbered v107 onward (FOREVER and v105 DRACULA so far; v106 WONDERWALL was a one-off Flash edit made there at the owner's request).
+- **the Flash studio** (this chat, Studio 1): every Flash edit, numbered v14 onward (v5, v10, v11, v12, v13 were Flash);
+- **the Dexter studio** (the other chat, Studio 2): every Dexter edit, numbered v108 onward (FOREVER, v105 DRACULA and v107 ALL CAPS so far; v106 WONDERWALL was a one-off Flash edit made there at the owner's request).
 
 After every verdict, the studio that made the edit writes a **handoff**: one self-contained markdown file in the shared format (`HANDOFF_TEMPLATE.md`, the same in both studios). The owner sends it to the other chat, which adopts the lessons.
 

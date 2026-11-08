@@ -144,6 +144,8 @@ The fast shots in it (vortex, debris, take-off) need `flowmax=40`. Its source st
 
 **Avoid:** `fbk` 100.5–102.2 (the same strike scene as `fbh` 10.3); `fs2t` 133–137 (his head at the top of the source frame); `fs1` 138–143 (a dark limb across the frame).
 
+**Pack names in the Dexter studio's v107** (same files, so the times carry over): `dexter_s2_b.mp4` = our `dexter_s2_all.mp4` (2.07 Mb/s); `dexter_s2_a.mp4` = our `dexter_s2.mp4` (1.98 Mb/s); `dexter_mix_b.mp4` = our `dexter_mix_1440.mp4` (1.72 Mb/s; the confetti parade with the real WE ♥ DEXTER banner at 329–418 s).
+
 ## Dexter scene packs
 
 ### `trinity_goodbye.mp4` (key `tg`): "Trinity Finds Out Who Dexter Is (Goodbye Dexter Morgan)", 1280×720, 60 fps, 1:49, 36 shots
