@@ -16,6 +16,12 @@ def load_edit(n, setup=True):
     wd = work_dir(n)
     if wd not in sys.path: sys.path.insert(0, wd)
     R = importlib.import_module(f"render{n}")
+    try:                                                     # an override below the speed section bypasses it
+        import splice_section
+        bad = splice_section.below_section(open(f"{wd}/render{n}.py").read())
+        if bad: print(f"WARNING render{n}.py: {', '.join(bad)} defined below the pipeline v2 speed section "
+                      f"(correct but slower); move that section above it (tools/splice_section.py)", file=sys.stderr)
+    except Exception: pass
     if setup and not getattr(R, "_EDIT_ENV_READY", False):
         R.load(); R.init_hits()
         R.RAW_TRK.update(json.load(open(f"{wd}/tracks{n}.json")))
@@ -27,3 +33,14 @@ def edl(n):
     wd = work_dir(n)
     if wd not in sys.path: sys.path.insert(0, wd)
     return importlib.import_module(f"edl{n}")
+
+def bounded_imap(pool, fn, items, ahead=6):
+    """pool.imap in order, with at most `ahead` tasks in flight. pool.imap queues every task at once, and when the
+    consumer (the encoder) is slower, finished frames pile up in memory: 12.1 GB on v11 in the Dexter studio's test
+    (DEV handoff WP2-1). workers + 2 keeps every worker busy."""
+    from collections import deque
+    q = deque()
+    for x in items:
+        q.append(pool.apply_async(fn, (x,)))
+        if len(q) >= ahead: yield q.popleft().get()
+    while q: yield q.popleft().get()

@@ -18,6 +18,7 @@ for s in "${STEPS[@]}"; do
   t0=$(date +%s); echo "== $V: $s"
   case "$s" in
     prep)      python3 "$T/check_sources.py" "$N" | grep -E "BAD|source ranges"
+               python3 "$T/splice_section.py" "$N" --check
                python3 "$W/render$N.py" prep > "$W/prep.log" 2>&1; grep -E "track|seg " "$W/prep.log" | tail -40 ;;
     audio)     python3 "$W/audio$N.py" | tail -4
                [ -f "$ROOT/$V/audio/stem_fx.wav" ] && python3 "$T/mixcheck.py" "$N" | tail -12 || true ;;

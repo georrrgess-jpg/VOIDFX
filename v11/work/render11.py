@@ -9432,6 +9432,7 @@ TR2["rift"] = (rift, 18, 26)
 
 
 
+# >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with
 # `python3 tools/golden.py 11 --check` (gate: max 2/255 per pixel, mean < 0.2/255). See sync/PIPELINE_V2_PLAN.md.
@@ -9680,9 +9681,15 @@ def _render_block(fs): return [render(f) for f in fs]
 
 def render_blocks(pool, frames, size=36):
     """yield (frame, image) in the order given, each block rendered by one worker."""
-    for fs, ims in zip(frame_blocks(frames, size), pool.imap(_render_block, frame_blocks(frames, size), chunksize=1)):
-        yield from zip(fs, ims)
+    from collections import deque
+    bl = frame_blocks(frames, size); q = deque()
+    for fs in bl:                                                                           # at most 6 blocks in flight
+        q.append((fs, pool.apply_async(_render_block, (fs,))))
+        if len(q) >= 6: fs_, r = q.popleft(); yield from zip(fs_, r.get())
+    while q: fs_, r = q.popleft(); yield from zip(fs_, r.get())
 
+
+# <<< pipeline v2: speed
 
 def main():
     mode = sys.argv[1]
