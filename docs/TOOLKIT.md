@@ -50,7 +50,8 @@ Never final-render to find out whether something works.
 | `tools/faceqc.py N` | Effects over faces. It compares the final frame with the shot's own picture inside the face box (track, or the matte's head for `face=None`). A gain/offset fit removes grades and fades; a frame is flagged when more than 3 % of the box gains more than 0.10 luma. It writes a list and a sheet; it isn't a gate (designed set pieces and titles show up too). |
 | `tools/mixcheck.py N` | Effects vs music at every transition and `E.SET_PIECES` entry, from the stems the audio builder now writes (`stem_music.wav`, `stem_fx.wav`). FLAG: effects more than 12 dB under the music. |
 | `tools/metrics.py N …` | `vN/work/metrics.json`. `build.sh` logs every step. Log owner notes (`note CATEGORY "…"`) and by-eye catches (`catch CATEGORY "…"`) so the pilots can be compared. |
-| `tools/edit_env.py` | Loads an edit's renderer as a library (set up as its `main()` does). |
+| `tools/edit_env.py` | Loads an edit's renderer as a library (set up as its `main()` does); `bounded_imap` keeps at most 6 blocks in flight (an unbounded `pool.imap` reached 12.1 GB on v11 in the Dexter studio's test). |
+| `tools/splice_section.py N SECTION.py` · `--check` | Inserts an edit's section above the speed section (idempotent); `--check` lists overrides placed below it. |
 
 **Measured on v11 (4 cores):**
 
@@ -70,6 +71,8 @@ Every frame of the v2 render matches the shipped engine within the gate (worst p
 - In hot per-frame code, don't write `a[..., None] * colour` on full frames. It is ~3× slower than filling each channel (`mul3(a, col, k)`, or the per-channel loops in `light_rgb` / `finish11`).
 - Avoid full-resolution blurs with σ > 4 on masks you can build from 1-D profiles (`face_keepout`).
 - Cached unshaken shot renders (`render_shot(..., with_shake=False)`) are **read-only**. Copy before drawing on one.
+- **Where an edit's code goes:** above `# >>> pipeline v2: speed` (`python3 tools/splice_section.py N SECTION.py`). Below it, a new `grade` / `render_shot` replaces the fast path: still right, only slower. `build.sh N prep` and every tool that loads the edit warn about it.
+- **Prove picture identity with frame hashes or golden frames, never MP4 bytes.** x264's output differs between full-length runs even from identical frames (the Dexter studio, 2026-11-08).
 - Don't make an effect depend on the order frames are rendered in. Partial renders and blocks assume `render(f)` is a pure function of `f`.
 
 **First findings on the shipped v11 (for the next Flash edit):**

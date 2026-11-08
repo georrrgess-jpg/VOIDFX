@@ -9432,6 +9432,7 @@ TR2["rift"] = (rift, 18, 26)
 
 
 
+# >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with
 # `python3 tools/golden.py 11 --check` (gate: max 2/255 per pixel, mean < 0.2/255). See sync/PIPELINE_V2_PLAN.md.
@@ -9687,6 +9688,8 @@ def render_blocks(pool, frames, size=36):
         if len(q) >= 6: fs_, r = q.popleft(); yield from zip(fs_, r.get())
     while q: fs_, r = q.popleft(); yield from zip(fs_, r.get())
 
+
+# <<< pipeline v2: speed
 
 def main():
     mode = sys.argv[1]
