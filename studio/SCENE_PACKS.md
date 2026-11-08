@@ -56,7 +56,7 @@ Downloaded with `python3 tools/fetch_packs.py LINKS.txt`; **the links are not in
 | `flash_s1.mp4` (`fs1`) | The Flash Season 1 4k 60fps Scenepack (4k upscaled in ae) | 4:54, 30 fps | Barry S1 (civilian and the first suit), **Harrison Wells (43 s)**, Cisco, Caitlin, Iris, Oliver with the bow (165–177 s), the wave/tsunami wide (116 s), a lightning strike (141 s), the leap (202 s), bloodied Barry close-ups (275, 288 s) |
 | `flash_s2_topaz.mp4` (`fs2t`) | Barry Allen The Flash Season 2 Scene Pack (4K TOPAZ!!) | 2:27, 30 fps | Barry civilian close-ups, S.T.A.R. Labs, Oliver (89 s), a speed fight in red lightning (95–101 s), the gala in a tux (119 s). **Credit overlays on some shots** (~40 s "Tom Cavanagh", ~58 s "Glen Winter"): avoid those frames |
 | `flash_s2.mp4` (`fs2`) | THE FLASH SEASON 2 SCENE PACK 4K 60FPS | 5:09 | Flash Day flyer (32 s), the glowing emblem (45 s), speed trails (148 s), fire/Firestorm (6, 187 s), the tachyon chest device (238 s), **Zoom's red eyes (290 s)**. Softest new pack |
-| `flash_s3.mp4` (`fs3`) | Barry Allen The Flash Season 3 Scene Pack (4K TOPAZ!!) | 2:16, 30 fps | **A title card at 0–5 s and a "based on characters from DC Comics" credit at 8 s.** Barry in the S3 suit at night, suit vs suit (76 s), civilian close-ups, Savitar's light (133 s) |
+| `flash_s3.mp4` (`fs3`) | Barry Allen The Flash Season 3 Scene Pack (4K TOPAZ!!) | 2:16, 30 fps | **A title card at 0–5 s and a "based on characters from DC Comics" credit at 8 s.** Barry in the S3 suit at night, suit vs suit (76 s), civilian close-ups, Savitar's light (133 s); **the Speed Force at 133.00–135.40 (v106), with a pink-orange VFX flicker at 134.37–134.47**: avoid it |
 | `flash_s5.mp4` (`fs5`) | Flash S5 4K Scenepack | 6:22, 23.976 fps | The S5 suit (bright red, white emblem), the time vault, Nora, **Wells in front of the studded wall (135 s)**, Cicada, **the Reverse-Flash in yellow with red lightning (342 s)**, speed lightning (119, 183 s) |
 | `flash_blitzkrieg.mp4` (`fbk`) | Blitzkrieg Flash Scene Pack 4k 60fps | 3:02 | Action-heavy, in-camera lightning on almost every shot: the S4/S5 suit in a dark bar, speed trails down a street (65 s), an explosion (80 s), a fight in an office (103–118 s), a corridor run (148–156 s) |
 | `dexter_s2.mp4` (`ds2`) | Dexter Morgan (S2) Scenepack 4K | 5:18 | S2: close-ups, Miami Metro, the smoke-filled lab (99–139 s), Lila (205, 258, 285 s), night exteriors; lots of tight close-ups (check the face width) |
@@ -66,15 +66,15 @@ Downloaded with `python3 tools/fetch_packs.py LINKS.txt`; **the links are not in
 
 **Proven in v12 (BLOOM):**
 - `fs5` 105.12–106.58: storm sky with a bolt (pushed to night; the bolt from 105.47 at x≈700);
-- `fbh` 10.32–12.06: the lab strike (tame its red light);
+- `fbh` 10.32–12.06: the lab strike (tame its red light). **24p content: give it `interp="flow"`**; held, it measured 2:3 judder in v12 (`tools/motionqc.py`);
 - `fs1` 4.45–4.98: he wakes in S.T.A.R. Labs (face in frame from 4.45);
 - `fbk` 133.20–134.20: hood down in the dark, sparks gather at his hand;
 - `fs2t` 28.9–31.3: the S2 suit in blue cortex light;
 - `fs1` 291.90–292.85: his eye fills with lightning (pupil at source x 343, y 288);
 - `fbk` 60.70–63.40: FPV speed trails down a night street (no face);
 - `fbk` 124.75–126.20: masked close-up, blue-grey;
-- `fs5` 72.00–74.60: S5 suit under street lights;
-- `fs5` 108.60–110.90: crouch with lightning streaks;
+- `fs5` 72.00–74.60: S5 suit under street lights. **A jump cut to a closer angle at 73.50 that the shot detector misses** (v12 has a ghost frame there, frame 736): use 72.00–73.45 or 73.55–74.60;
+- `fs5` 108.60–110.90: crouch with lightning streaks (v12 measured a cadence run on it despite `interp="flow"`: check the flow fallback on the lightning frames);
 - `fbk` 23.95–25.78: hood down, night bokeh;
 - `fs5` 180.00–182.60: lightning on his chest;
 - `fs3` 59.10–61.50: masked extreme close-up (YuNet sometimes finds only the left half);
@@ -82,6 +82,25 @@ Downloaded with `python3 tools/fetch_packs.py LINKS.txt`; **the links are not in
 - `fbk` 136.02–138.20: S4 suit standing in a night street (hero shot);
 - `fs3` 106.80–108.45: masked under street lights;
 - `fbh` 109.70–112.40: S5 suit walking toward the camera.
+
+**Proven in v106 (WONDERWALL; made in the Dexter chat, which names the packs differently: `flash_all_hq` = `flash_b_hq` (`fbh`), `flash_s3_30` = `flash_s3` (`fs3`), `flash_s5_24` = `flash_s5` (`fs5`), `flash_blitz` = `flash_blitzkrieg` (`fbk`); same files, so the times carry over):**
+- `fs3` 133.00–134.20: Barry inside the Speed Force, looking back over his shoulder (cobalt mist behind his matte);
+- `fs3` 134.50–135.40: he turns and walks back into the Speed Force (starts after the flicker; v106's loop shot);
+- `fbh` 116.70–118.20: his eyes, gold lightning in them;
+- `fs3` 130.90–131.90: Iris in tears (the TEAR LENS forms on her jaw);
+- `fs3` 127.30–128.35: Barry's S3 farewell, the reverse shot;
+- `fbh` 127.70–128.50: "saves", he tears out in gold;
+- `fs5` 113.00–116.00 and 119.30–121.30: velocity runs (no face); `fs5` 108.50–110.80: the run in red (the same moment as v12's crouch);
+- `fbh` 119.60–122.80: flying (no face); `fbk` 61.00–63.45: POV into the Speed Force (no face);
+- `fbh` 89.85–90.95: he looks up (the wall rises behind him);
+- `fbh` 129.40–130.30: the emblem (no face);
+- `fbk` 71.72–72.28: the city; `fbk` 74.40–77.60: a run along a wall (no face);
+- `fs5` 12.80–14.20: arms open; `fs5` 106.80–107.40: the eyes;
+- `fbk` 47.90–49.00: the charge-up;
+- `fbh` 49.40–51.20: he walks out through the light (v106's burst lands here);
+- `fbh` 6.80–8.60: the smile.
+
+v106's held `fbh` shots juddered until they got `interp="flow"`. Their sharpness tool flagged nine of these as SOFT, all within 0.01 of the threshold: run1, saves, pov, runred, lookup, arms, charge, through and smile.
 
 **Avoid:** `fbk` 100.5–102.2 (the same strike scene as `fbh` 10.3); `fs2t` 133–137 (his head at the top of the source frame); `fs1` 138–143 (a dark limb across the frame).
 

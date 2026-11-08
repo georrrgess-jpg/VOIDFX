@@ -125,8 +125,10 @@ The full rules with the owner's own words are in `CLAUDE.md` and the handbook; `
 | v11 BOP | Flash × BOP | voltage / rival | 4 revisions, then **standard** | concept from the material; one focal set piece; detailed physical assets; beat moments; exact loop; flash discipline |
 | FOREVER (Studio 2) | Dexter | — | props lingered, were random, looked drawn, didn't land | the props rule |
 | v105 DRACULA (Dexter studio) | Dexter × Tame Impala "Dracula" | SUNDOWN (day postcard / moonlit night) | 3 revisions, **standard**; gripe: clip quality | light behind the subject; the loop as the most creative transition; restyle library moves; the sharpness rule |
+| v12 BLOOM | Flash × fakemink "Night Blooming Jasmine" | NOCTURNE (indigo night, crimson suit, jasmine-white lightning) | 3 revisions (remove both titles, half the sounds, the bell; add a transition and an emblem transition), then **standard** | text is optional; fewer, bigger sounds; an emblem transition on the tracked emblem; a transition on a real phenomenon (FRACTAL BURN); one hero asset carried through |
+| v106 WONDERWALL (Dexter chat, a Flash edit) | Flash × Oasis "Wonderwall" | WONDER (golden-hour amber vs Speed Force cobalt) | 3 revisions (half the sounds, smoother animation, a seamless loop, fill a dead span; slow the tear), then **standard** | a story concept from a lyric line; sound restraint (silent transitions allowed); measured dead-span, pop and judder audits; signature transitions get ~1 s; a loop that keeps moving across the wrap |
 
-The pattern across eleven edits: the owner keeps asking for **more designed transitions, animations, graphics and sound effects**, for **character-specific physical ideas**, and for **polish** (no soft shots, no white-outs, no effects on faces). Approval came when the edit had a clear concept, a focal piece, and motion on every beat.
+The pattern across eleven edits: the owner keeps asking for **more designed transitions, animations, graphics and sound effects**, for **character-specific physical ideas**, and for **polish** (no soft shots, no white-outs, no effects on faces). Approval came when the edit had a clear concept, a focal piece, and motion on every beat. Since v12 and v106 the sound runs the other way: twice he cut about half the effects, then approved; picture density stays, sound goes to the set pieces.
 
 ---
 

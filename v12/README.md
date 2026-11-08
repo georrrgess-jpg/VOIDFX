@@ -116,3 +116,17 @@ All of them are 720p.
 - `v12/work/render12.py`: the v12 section sits above `# >>> pipeline v2: speed`.
 - `v12/work/audio12.py`: `music12` and the v12 `main`.
 - `v12/work/qc12.py`.
+
+## After the verdict: motion audit (`tools/motionqc.py`, adopted from the v106 handoff)
+This audit ran on the shipped encode after the edit was approved. Nothing was re-rendered.
+- **Still spans (under 1.5 grey levels a frame for ≥ 1 s):**
+  - 0.29–1.75 s: the storm-sky opening, once NIGHT was removed;
+  - 8.17–9.34 s: the eye before THE BLOOM.
+- **Hold-cadence judder (2:3):**
+  - the strike shot (frames 111–203): `flash_b_hq`, 24p content, `interp="hold"`;
+  - the crouch (frames 777–834): `flow` was set, but it still has a cadence run.
+- **One ghost frame:** frame 736 (12.27 s), where the street shot crosses a jump cut in `flash_s5.mp4` at 73.50 s that the shot detector missed.
+- **The other two unexplained pops were checked on frames** and are not defects:
+  - frame 340 is the source's own spark ignition;
+  - frame 1135 is the designed bolt ending.
+- **Loop wrap step:** 0.7 against a local median of 6.7 (no spike).

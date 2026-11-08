@@ -30,9 +30,9 @@ Timings were measured on this 4-core box for a 26 s edit.
 1. Write the EDL.
 2. Run `prep auto`.
 3. Fix whatever the sheets show, using `sheet:` / `strip:` / `clip:` on single moments (the render server keeps the engine loaded and restarts itself when the code changes).
-4. Run `audio` and read the effects-vs-music table: no transition or set piece more than 12 dB under the music.
+4. Run `audio` and read the effects-vs-music table: no kept sound at a transition or set piece more than 12 dB under the music (a silent transition is fine, v106).
 5. Run **one** `video qc` per revision. In later revisions `video` re-renders only what changed.
-6. Look at every run in the faces-vs-effects list (`vN/frames/faceqc.jpg`) and fix the ones that aren't designed.
+6. Look at every run in the faces-vs-effects list (`vN/frames/faceqc.jpg`) and fix the ones that aren't designed. Then read the motion audit that `qc` prints (`tools/motionqc.py`): fill every dead span with a cut and a designed transition, fix every UNEXPLAINED pop and judder run, and check the wrap step.
 7. Visual sign-off on frames pulled from the encoded MP4, then `deliver`.
 8. At the verdict: `python3 tools/vrender.py N clean` (the frame cache is ~2.2 GB).
 
@@ -52,6 +52,7 @@ Never final-render to find out whether something works.
 | `tools/metrics.py N …` | `vN/work/metrics.json`. `build.sh` logs every step. Log owner notes (`note CATEGORY "…"`) and by-eye catches (`catch CATEGORY "…"`) so the pilots can be compared. |
 | `tools/edit_env.py` | Loads an edit's renderer as a library (set up as its `main()` does); `bounded_imap` keeps at most 6 blocks in flight (an unbounded `pool.imap` reached 12.1 GB on v11 in the Dexter studio's test). |
 | `tools/splice_section.py N SECTION.py` · `--check` | Inserts an edit's section above the speed section (idempotent); `--check` lists overrides placed below it. |
+| `tools/motionqc.py N [--file F]` | The v106 audits on the encode (~10 s; run by `build.sh N qc`): mean frame difference per half-beat (135×240 grey) and **dead spans** (< 1.5 for ≥ 1 s); **pops** (d > 3·median(±6) + 2) labelled cut / flash / beat / cadence / UNEXPLAINED with the transition they sit in; **hold-cadence judder** per shot (15-frame windows with ≥ 40 % repeat frames; 2:3 pulldown gives 60 %) plus v106's p80/p20 ratio; the loop's wrap step. Writes `vN/work/motionqc.json`. A review list, not a gate. |
 
 **Measured on v11 (4 cores):**
 
@@ -85,7 +86,7 @@ Every frame of the v2 render matches the shipped engine within the gate (worst p
 
 ## 2. Transitions (`tin=` on the incoming shot)
 
-Each transition goes through something and has its own sound in `audioN.py` (`if tin == ...`).
+Each transition goes through something. Its sound lives in `audioN.py` (`if tin == ...`): at most one sound, none for a small move, layered sound only at the set pieces (v12, v106).
 
 | tin | What it does | Extra EDL fields | Sound |
 |---|---|---|---|
@@ -207,6 +208,13 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 14. **Whisper word times drift on sung, held notes** (v10: up to 1.1 s early on "All this running around", ~0.2 s late on others). Before captions go in, check every word against the Demucs vocal stem: a 30 ms RMS + pitch track shows where each syllable starts, and the line's parallel phrase (verse 1 vs verse 2) confirms it.
 15. **A 720p pack cropped to 9:16 is a 2.7× blow-up.** Run `tools/sr_prep.py` (restoration + 2× from the network) instead of cubic + unsharp mask; the renderer drops the unsharp mask to 0.16 on restored frames.
 16. **Soft shots (Studio 2, DRACULA):** check every shot with `tools/sharpness.py` while picking and on the finished video; zoom ≤ 10 % on 720p; close-ups on the least-compressed packs. The detail score is per-tile (80th percentile), so a shallow depth-of-field background doesn't read as soft, but motion blur and restoration-smoothed skin do.
+17. **The automatic beat map can lock to the wrong tempo** on a swung strum (v106: 116 BPM, 4/3 of the real 87.02). Fit the grid on the Demucs drum stem and check that the downbeats sit on its kick onsets.
+18. **Whisper's small model drifts by seconds on sung lines** (v106: "I said maybe" 3.4 s early). Use large-v3 on the vocal stem and check each word against the stem's envelope.
+19. **Procedural textures:** drift in whole low-res pixels steps visibly (a jump every ~3 frames); crop at sub-pixel offsets (`crop_frac`, bilinear). A `%` wrap on the noise canvas jumps at negative time and breaks the loop's virtual frames; make the canvas big enough for −1.5 s … DUR + 1 s.
+20. **Cover formulas that don't reach exactly 0 and 1** leave the corners covered at u = 0 and pop at the transition's ends (v106 mist: fixed with an offset of `1.22 − 1.55u`). Assert `cover.max() == 0` at u = 0 and `cover.min() == 1` at u = 1. Likewise a pre-roll progress of `j/(pre+1)` never reaches 1 before the cut and makes a framing jump; use `j/pre`.
+21. **Source VFX flickers** (S3 Speed Force pink-orange flash at `flash_s3.mp4` 134.37–134.47 s) become pops under flow and transitions. Start the range after them.
+22. **Held 24p shots in a 60p edit judder** next to flow shots (2:3 cadence: big, small, big, small, small differences). `interp="hold"` on 24p content in `flash_b_hq` (60 fps container) did this in v106 and in v12's strike shot; use `interp="flow"`. v12's crouch (`flash_s5`, flow set) still measured a cadence run at 777–834: check where flow falls back.
+23. **Hidden jump cuts survive `check_sources.py`** when the angle change is small (same suit, same light): `flash_s5.mp4` 73.50 s cuts to a closer angle inside v12's street shot and left a ghost frame at 736. `motionqc` lists it as an UNEXPLAINED pop; probe each range with a frame-difference scan of the source.
 
 ## 5c. Port candidates from the Dexter studio (v105 DRACULA)
 
@@ -223,6 +231,29 @@ These live in `v105/work/fx105.py` / `qc105.py` on the Dexter studio's branch; p
 | `mist_tr`, `cape_tr`, `card_flip`, `palm_sweep` | Smoke dissolve, cape sweep, card flip, foliage sweep | Speed-wind sweep, a card-flip of a photo |
 | QC §7b flash measurement | Flags white-out runs and flash rate on the encoded file | **Ported** into `v11/work/qc11.py` §7b (so every new Flash edit has it) |
 | Their `tools/sharpness.py` metric | detail = mean \|L − blur 1.2\| / mean \|L − blur 8\| over the middle of each shot; flags SOFT, ZOOM (> 3.1×), LOWBIT (< 800 kb/s); absolute scale, ≈0.30+ sharp | Ours scores relative to the edit's median and flags zoom at > 2.95× (z 1.10); LOWBIT adopted. Pick one tool at the merge |
+
+## 5e. Port candidates from the Dexter chat's Flash edit (v106 WONDERWALL)
+
+All in `v106/work/fx106.py` on `origin/dev/pipeline-v2` (557 lines, spliced above the speed section of `render106.py`; built on the v11 engine, so the names match ours). Read it with `git show origin/dev/pipeline-v2:v106/work/fx106.py`. Port a piece by copying its functions into the new edit's section and registering it in `TR2`; restyle the colours (`COBALT`, `WGOLD`, `WCORE`, `MIST_*`) to the new edit's look.
+
+| Asset | Functions (pre/post frames) | What it does | Use in a Flash edit |
+|---|---|---|---|
+| **TEAR LENS** | `tear_lens`, `drop_over` (60/26) | A water drop gathers on the outgoing face's jawline (radius 4 → 34 px), hangs and swells (44 px), then falls and grows to fill the frame (`44·exp(ln(1500/44)·v^2.3)`). Inside it, the next shot through a magnifying lens (`q = P + d·m(ρ)`, `m = (1 − L(1 − ρ²))·mag`, mag 6 → 1, L 0.42 → 0.25); dark Fresnel edge, gold/cobalt rim, highlight and caustic, a skin shadow; after the cut the lens relaxes and a ripple ring (masked off his face) runs out. Sound: a plip, a reversed swell, a low muffled bloom with a sub. | Any reverse-shot reveal (a goodbye, a memory); a drop of rain or sweat, or a lens of light in the Speed Force. Give it ~1 s. |
+| **THE WONDERWALL** | `wall_tex`, `wall_quad`, `wall_frame`, `wall_state`, `wall_layer` | A running-bond wall of 6 × 11 tiles cut from the edit's own frames (bevelled, warm-tinted, gold mortar), perspective-warped, behind his matte at 90 %. It rises tile by tile, its mortar pulses on the beat, lightning crawls along the mortar before the burst, and it trembles in smooth sines. | A wall of moments behind him (his past, the Speed Force's memories). |
+| **WONDERWALL burst** | `wonderwall`, `tile_split`, `tiles_of` (12/30) | The frame becomes the wall, its tiles shiver, then fly at the camera from the centre out (zoom 1 + 4.5·w^1.25, rotation ±60°, motion blur), tiles over his face first; the next shot behind in decaying gold, a shockwave ring. | A focal burst made of the edit itself. |
+| **Speed Force mist** | `fbm`, `crop_frac`, `mist_field`, `mist_rgb`, `mist_layer`, `mist_cover`, `mist_over`, `mist_swirl` (10/16) | Two fractal noise layers drifting sub-pixel from a canvas that never wraps; cobalt body, pale wisps; behind his matte with a cold lightning flicker, or as a closing radial cover that refracts the picture (≤ 88 %, exactly clear at both ends). | Inside the Speed Force; a cover transition that hides a dissolve. |
+| **Loop mist** | `loop_mist`, `loop_w`, `sf_virtual` | The cover peaks at 55 % of the last 1.38 s; between 40 % and 62 % the picture under it dissolves into frame 0, with frame 0's mist rendered at virtual frame f − DUR, and frame 0's finish fades in. | The pattern for any loop that should keep moving across the wrap. |
+| **Lightning rod** | `lightning_rod` (6/20) | A gold leader flickers down 330 px beside the next face, strikes, and the next shot burns open outward from the bolt (distance field, radius 30 → 1,130 px) with an ember rim. | A strike link that never touches a face. |
+| **`clash106`** | `clash106`, `clash_at` (10/14) | v11's clash with the collision 110 px below the face box; every spark and ring masked off a face ellipse. | Replace v11's `clash` with it. |
+| **WONDERWALL title** | `text_wonder`, `wonder_letter` | Bevelled white-gold letters with a cobalt glow, each struck on its share of the sung word (ease in, scale 1.35 → 1, blur to sharp, a gold flare), exiting as vibrating ghosts. | A held sung word, if the edit has a title. |
+| **WONDER grade** | `lutw`, `grade`, `finish106` | One `tone_lut` table grade; halation kept off faces with an ellipse mask. | Don't reuse the look; reuse the construction. |
+| **The audits** | (scratchpad scripts in the Dexter chat) | Dead spans, pops, judder. | **Built here as `tools/motionqc.py`.** |
+
+**What made v106 a standard (carry the principles, not the look):**
+- **A story, not a motif.** The lyric line maps onto a real arc in the show (S3 finale → S4 premiere), so every set piece is a beat of that story: into the Speed Force, her tear, he is saved, the wall, back into the Speed Force.
+- **The focal piece is made of the edit itself** (the wall's tiles are the edit's own frames; the burst turns the current frame into the wall).
+- **Fewer sounds was better:** a strike, a clash, a run, the wall and the burst; after the burst, only the music.
+- **Measured, not guessed:** a per-beat activity table found the dead span, a pop list found six defects (three invisible on stills), a cadence check found the 24p judder.
 
 ## 5d. What made v12 the standard (carry the principles, not the look)
 - **One hero asset, many stages.** The lightning jasmine (`jas_draw`, `jas_light`, `jas_geom`, `jas_veins`) appears as:
