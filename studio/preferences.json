@@ -1,6 +1,6 @@
 {
  "schema": "voidfx-preferences/1",
- "updated": "2026-11-07",
+ "updated": "2026-11-08",
  "authoritative_prose": [
   "CLAUDE.md",
   "studio/VOIDFX_STUDIO.md",
@@ -214,11 +214,18 @@
  },
  "benchmarks": [
   {
+   "edit": "v12 BLOOM",
+   "folder": "v12/",
+   "reference_for": "one hero asset carried through (lightning jasmine), emblem transition on the tracked emblem, a transition on a real phenomenon (fractal burn), focal piece behind the subject, exact loop, no text, fewer bigger sounds",
+   "quote": "I like this edit make it a standard",
+   "engine_base": true
+  },
+  {
    "edit": "v11 BOP",
    "folder": "v11/",
    "reference_for": "concept from the material, one focal set piece, detailed physical hero assets, beat moments, exact loop landing",
    "quote": "I like this edit and would like for you to make it a standard.",
-   "engine_base": true
+   "engine_base": false
   },
   {
    "edit": "v105 DRACULA (Dexter studio)",
@@ -435,9 +442,9 @@
   }
  ],
  "engine_bases": {
-  "flash": "v11",
+  "flash": "v12",
   "dexter": "v105",
-  "note": "agreed between the studios 2026-11-07; shared effects ported through handoffs"
+  "note": "flash moved to v12 on 2026-11-08 (v12 BLOOM standard); dexter v105"
  },
  "rules_from_handoffs": [
   {
@@ -488,6 +495,36 @@
    "evidence": "v105 effects first sat 20-25 dB under the song (rev 1 review)",
    "applies_to": "all",
    "check": "auto"
+  },
+  {
+   "from": "flash v12 BLOOM",
+   "rule": "Text is optional: start without titles when the lyrics aren't captioned; a title must earn its place",
+   "evidence": "remove the night text; get rid of the bloom text; then approved",
+   "applies_to": "all"
+  },
+  {
+   "from": "flash v12 BLOOM",
+   "rule": "Fewer, bigger sounds: one per transition, layered only at set pieces, ~35-40 effects per 23 s, no sounds on beat moments, no chimes/bells",
+   "evidence": "get rid of like half the sound effects; remove the bell sound on the flower and the whoosh",
+   "applies_to": "all"
+  },
+  {
+   "from": "flash v12 BLOOM",
+   "rule": "Every Flash edit has an emblem transition on the real tracked emblem",
+   "evidence": "try to do an emblem transition aswell",
+   "applies_to": "flash"
+  },
+  {
+   "from": "flash v12 BLOOM",
+   "rule": "At least one transition built on a real physical phenomenon tied to the concept",
+   "evidence": "implement one more really cool transition (FRACTAL BURN), then approved",
+   "applies_to": "all"
+  },
+  {
+   "from": "flash v12 BLOOM",
+   "rule": "One hero asset carries the edit through the drop, the focal piece, the emblem and the loop",
+   "evidence": "the verdict",
+   "applies_to": "all"
   }
  ]
 }

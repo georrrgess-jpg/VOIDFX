@@ -9448,8 +9448,9 @@ F32 = np.float32
 # restyle the library (rule 4): every gold / red / ember light in the v4-v11 transitions now draws in the v12 palette
 GOLDW, GOLD2, GOLD, EMBER2 = JASW.copy(), JASG.copy(), np.array([0.55, 0.88, 1.00], F32), np.array([0.45, 0.80, 1.00], F32)
 REDW, RED2 = JASW.copy(), JASY.copy()
-for _s in E.SHOTS:
-    _s["look"] = "nocturne"; _s.setdefault("target", 0.34)
+if E.VER == "v12":                                                                         # v12's own shots only
+    for _s in E.SHOTS:
+        _s["look"] = "nocturne"; _s.setdefault("target", 0.34)
 E_SKY_NIGHT = {"sky": 1.05, "wake": 0.25, "crouch": 0.60}       # daylight / bright shots pushed into the night
 
 def addc(out, lay, col, k=1.0):
