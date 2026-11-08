@@ -80,6 +80,20 @@ From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the bea
   Sound: a wet spatter burst, a short swell as the blot blooms, a plop on the cut, a paper swish as the card opens. These replace the four TV sounds.
 - **"How slow it writes Dexter's name in black ... make it line up so it's not too fast and not too slow."** D-E-X-T-E-R is now stamped on an even 16th-note grid (e44 → e46.5, one letter every 10 frames, the hi-hat rhythm), not one letter per sung word (uneven gaps of 0.19–0.33 s). The platen comes down in the 3 frames before each hit, so each letter lands on its beat, with the stamp sound on the same frame. The name is complete on "the", so "man name" plays over the whole word.
 
+## Measured (rev 3)
+- **QC:** 11/11 on the encode.
+- **Loudness:** −13.0 LUFS, true peak −3.4 dBTP after AAC.
+- **Loop seam:** the audio seam step is 0.0005; the picture lands on frame 0.
+- **The set piece (frames 96–200):** no frame-to-frame pop. The largest step is the e6 beat hit at the lock.
+- **Dead spans:** none of 0.5 s or more.
+- **Stamp:** the letters land on frames 905, 915, 926, 936, 946 and 957, one every 10 frames.
+- **Effort:** 1 full render for rev 3, 282 s.
+
+Caught by review on stills before the render:
+- The spatter drops, strings and tag were too small to read at phone size; they are now 1.4–1.7× larger.
+- The blot's wings ran off the frame and read as a band; it was reshaped into a card that fits the frame.
+- The unfolding card went edge-on as a dark line through his nose; it now fades out before it turns edge-on.
+
 ## Measured (rev 2)
 - **QC:** 11/11 on the encode.
 - **Loudness:** −13.0 LUFS, true peak −3.5 dBTP after AAC.

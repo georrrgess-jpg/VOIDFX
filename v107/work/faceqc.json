@@ -611,6 +611,80 @@
 "skip": "no face"
 },
 {
+"f": 130,
+"shot": "table",
+"skip": "no face"
+},
+{
+"f": 132,
+"shot": "table",
+"skip": "no face"
+},
+{
+"f": 134,
+"shot": "table",
+"skip": "no face"
+},
+{
+"f": 136,
+"shot": "table",
+"skip": "no face"
+},
+{
+"f": 138,
+"shot": "table",
+"skip": "no face"
+},
+{
+"f": 140,
+"shot": "table",
+"skip": "no face"
+},
+{
+"f": 142,
+"shot": "table",
+"skip": "no face"
+},
+{
+"f": 196,
+"shot": "shh",
+"box": [
+258,
+295,
+821,
+1045
+],
+"frac": 0.0,
+"peak": 0.026,
+"gain": 0.97
+},
+{
+"f": 198,
+"shot": "shh",
+"box": [
+255,
+294,
+824,
+1050
+],
+"frac": 0.0,
+"peak": 0.027,
+"gain": 0.97
+},
+{
+"f": 200,
+"shot": "shh",
+"box": [
+253,
+293,
+826,
+1056
+],
+"frac": 0.0,
+"peak": 0.027,
+"gain": 0.969
+},
+{
 "f": 202,
 "shot": "shh",
 "box": [
