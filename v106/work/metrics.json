@@ -1,6 +1,6 @@
 {
  "edit": "v106",
- "round": 1,
+ "round": 2,
  "stages": [
   {
    "t": "2026-11-08 03:02:01",
@@ -115,6 +115,53 @@
    "rc": 0
   }
  ],
- "notes": [],
- "catches": []
+ "notes": [
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "other",
+   "text": "remove like half of the sound effects mostly the tedious annoying ones like the emblem shine and the few near the end"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "quality",
+   "text": "do one more polish smooth over the animations"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "loop",
+   "text": "make sure the loop is seemless"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "density",
+   "text": "identify one space where these isn't anything happening and add a custom unique graphic into a cool transition"
+  }
+ ],
+ "catches": [
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "seam",
+   "text": "rev 1 loop switched the picture under the mist in one frame (diff 25.8 at 21.4 s) and froze the mist behind him"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "other",
+   "text": "mist transitions left the corners covered at u=0: pops at their ends (diff 29 at 20.27 s); 24p holds juddered"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "loop mist lightning crossed his face (frame 1306)"
+  }
+ ],
+ "round_starts": {
+  "2": "2026-11-08 04:47:32"
+ }
 }
