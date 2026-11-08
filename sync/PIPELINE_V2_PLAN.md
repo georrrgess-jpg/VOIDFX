@@ -16,7 +16,10 @@
 | WP4 verified partial re-render | **done** (target close) | `tools/vrender.py`: one shot in 227 s (target ≤ 3 min; the upload re-encode is ~2.5 min of it); the EDL round trip was bit-identical; an injected global change was caught on 32 of 32 check frames. |
 | WP8 effects over faces | **done** (as a list, not a gate) | `tools/faceqc.py`: on the shipped v11 it flags the light sweeps and bolts across his face and the title on his chin. |
 | WP12 effects-vs-music table | **done** | `tools/mixcheck.py` + stems from the audio builder: v11 has 12 of 17 transitions more than 12 dB under the music. |
-| WP5–WP7, WP9–WP11, WP13, WP14 | planned | Next: WP7 plan check and WP9 critique pass (the owner rounds are still the biggest cost). |
+| WP7 plan check | **done** (2026-11-08, Dexter studio) | `tools/plan_check.py` + `studio/transitions.json` (the owner's verdicts). On v107 rev 1 it reports 4 of the owner's later notes before any render; the approved v107/v12/v13/v106 pass. `build.sh video` stops on a FAIL. See `sync/EFFICIENCY_PLAN.md`. |
+| WP9 critique pass | **done** (2026-11-08) | `studio/CRITIQUE_PROMPT.md` + `tools/signoff.py` (review pages from the encode in 6 s) + `tools/report.py` (the Measured block). |
+| WP8 QC v2 | partly | The three QC passes run in parallel in `build.sh qc` (103 → 72 s); `build.sh N ship` chains audio → plan → video → qc → signoff → report → deliver. |
+| WP5, WP6, WP10, WP11, WP13, WP14 | planned | Proposed split in `sync/EFFICIENCY_PLAN.md` §4: the Flash studio takes render speed and the Flash verdicts; the Dexter studio WP5. |
 
 ---
 

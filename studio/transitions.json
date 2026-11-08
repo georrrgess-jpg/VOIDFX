@@ -1,0 +1,580 @@
+{
+ "note": "The transition registry: every transition / set-piece tin with the owner's verdict and the evidence. Read by tools/plan_check.py before any render. verdict: liked (praised, or kept in a standard after review), ok (shipped in an approved edit without comment), rejected (the owner disliked or removed it; don't reuse without the fix in 'fix'), banned (breaks a banned rule; never). tags: generic (filler; keep generic <= 30 %), black_occluder (bars / boxes / a dark surround: banned since v107), face_gimmick (graphics converging on a face: banned), signature (a custom graphic-into-transition; give it ~1 s), physical (a real object or phenomenon), lands_on_face (the incoming face must be centred at the landing). Add every new verdict here in the same turn as the handoff.",
+ "transitions": {
+  "plastic_rip": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v103 standard ('the plastic rip on the drop' stayed); v107 standard",
+   "studio": "dexter"
+  },
+  "burst": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v7 plastic burst on the drop ('creative and well animated')",
+   "studio": "dexter"
+  },
+  "slidebox": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v7 blood-slide box ('creative and well animated')",
+   "studio": "dexter"
+  },
+  "slidebox_close": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v7",
+   "studio": "dexter"
+  },
+  "zipper": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v7 body-bag zipper; v107 standard",
+   "studio": "dexter"
+  },
+  "blood_lens": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v7 blood on the lens",
+   "studio": "dexter"
+  },
+  "m99": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v7 M99 blink",
+   "studio": "dexter"
+  },
+  "eye_dive": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "lands_on_face"
+   ],
+   "evidence": "v103 standard (eye dive stayed after rev 3-5)",
+   "studio": "both"
+  },
+  "shutter": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v103 standard (camera shutter stayed)",
+   "studio": "dexter"
+  },
+  "polaroid": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v103 evidence-camera flash and photo toss stayed",
+   "studio": "dexter"
+  },
+  "rainfocus": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v8 liked 'rain focus pull'",
+   "studio": "dexter"
+  },
+  "wiper": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v8 liked 'wiper'",
+   "studio": "dexter"
+  },
+  "lamp_on": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v8 liked 'lamp on'",
+   "studio": "dexter"
+  },
+  "headlights": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v8 liked 'streetlight sweep'",
+   "studio": "dexter"
+  },
+  "whip": {
+   "verdict": "liked",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v8 liked the 'basic' whips; v107, v12 standards",
+   "studio": "both"
+  },
+  "impact": {
+   "verdict": "liked",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v8 liked 'impact frame'; v107 standard",
+   "studio": "both"
+  },
+  "slam": {
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v107 standard",
+   "studio": "both"
+  },
+  "dolly": {
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v107, v12, v106 standards; v13",
+   "studio": "both"
+  },
+  "smear": {
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v107 standard; v9 listed it among the generic filler",
+   "studio": "both"
+  },
+  "molasses": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v107 rev 1-4 kept ('I like most of the transitions'); standard",
+   "studio": "dexter"
+  },
+  "headspin": {
+   "verdict": "liked",
+   "tags": [
+    "lands_on_face",
+    "signature"
+   ],
+   "evidence": "v107 rev 2: rejected while it landed off-centre ('the final shot doesn't have a centered shot of Dexter'); kept once it landed on a centred face",
+   "fix": "rotate the incoming half about the incoming face and land on a centred face",
+   "studio": "dexter"
+  },
+  "frontpage": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v107 standard, kept in every round",
+   "studio": "dexter"
+  },
+  "page_turn107": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v107 rev 4 replacement for the redaction boxes, then 'make it a standard'",
+   "studio": "dexter"
+  },
+  "page_turn": {
+   "verdict": "ok",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v104 standard (flat fold; v107's page_turn107 is the rolled version)",
+   "studio": "dexter"
+  },
+  "banner_match": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v107 'I really like the end'",
+   "studio": "dexter"
+  },
+  "confetti_pop": {
+   "verdict": "liked",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v107 'I really like the end'",
+   "studio": "dexter"
+  },
+  "flip": {
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v107 rev 1 (replaced by a whip when the headspin changed)",
+   "studio": "dexter"
+  },
+  "fingerprint": {
+   "verdict": "ok",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v4-v9 forensic set",
+   "studio": "dexter"
+  },
+  "scan": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v4-v9 forensic set",
+   "studio": "dexter"
+  },
+  "mag_sweep": {
+   "verdict": "ok",
+   "tags": [
+    "lands_on_face"
+   ],
+   "evidence": "v7 magnifier -> pupil loop (liked as part of the v7 set)",
+   "studio": "dexter"
+  },
+  "press_flash": {
+   "verdict": "rejected",
+   "tags": [],
+   "evidence": "v107 rev 2: 'the transition that occurs at 3 seconds in, I don't really like that'",
+   "studio": "dexter"
+  },
+  "broadcast": {
+   "verdict": "rejected",
+   "tags": [
+    "black_occluder"
+   ],
+   "evidence": "v107 rev 3: 'I don't like the transition at 3 seconds with the black bars' (a TV in a dark room reads as black bars)",
+   "studio": "dexter"
+  },
+  "redact": {
+   "verdict": "rejected",
+   "tags": [
+    "black_occluder"
+   ],
+   "evidence": "v107 rev 4: 'remove and replace the black box transition'",
+   "studio": "dexter"
+  },
+  "rorschach": {
+   "verdict": "rejected",
+   "tags": [
+    "face_gimmick"
+   ],
+   "evidence": "v107 rev 4: 'get rid of the point of origin graphic/transition' (with the spatter strings converging on where his face appears)",
+   "studio": "dexter"
+  },
+  "strings": {
+   "verdict": "banned",
+   "tags": [
+    "face_gimmick"
+   ],
+   "evidence": "red strings converging on his face (the 'gimmick on the face' rule); rebuilt by mistake in v107 rev 3 and rejected again",
+   "studio": "dexter"
+  },
+  "knife_pass": {
+   "verdict": "rejected",
+   "tags": [],
+   "evidence": "v103: the knife pass across the lens mid-montage read as random",
+   "fix": "only when motivated by the shot or lyric, brief, lit like a real object",
+   "studio": "dexter"
+  },
+  "lens_shatter": {
+   "verdict": "rejected",
+   "tags": [
+    "face_gimmick"
+   ],
+   "evidence": "v10 rev 4 and v103: glass webs over the frame or face didn't land (banned: overlays sitting on the frame)",
+   "studio": "both"
+  },
+  "frozen_shatter": {
+   "verdict": "rejected",
+   "tags": [],
+   "evidence": "v10 rev 4: the frozen-scene glass shatter was replaced by TIME PARTICLES",
+   "studio": "flash"
+  },
+  "time_particles": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v10 standard (replaced the glass shatter)",
+   "studio": "flash"
+  },
+  "tv_off": {
+   "verdict": "rejected",
+   "tags": [
+    "black_occluder"
+   ],
+   "evidence": "collapses to a black screen (black occluder rule, v107)",
+   "studio": "both"
+  },
+  "blinds": {
+   "verdict": "ok",
+   "tags": [
+    "generic",
+    "black_occluder"
+   ],
+   "evidence": "v9 listed blinds among the generic filler; slats can read as bars (v107 rule): use only with a lit, visible slat surface",
+   "studio": "both"
+  },
+  "strobe": {
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v9 'too many generic transitions (strobe, beam, blinds, roll, smear, whip)'",
+   "studio": "both"
+  },
+  "beam": {
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v9 generic filler",
+   "studio": "both"
+  },
+  "roll": {
+   "verdict": "ok",
+   "tags": [
+    "generic"
+   ],
+   "evidence": "v9 generic filler; v104 liked the upside-down roll",
+   "studio": "both"
+  },
+  "logo_orig": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "the voidfx logo once, as a transition, unaltered",
+   "studio": "both"
+  },
+  "logo_uv": {
+   "verdict": "banned",
+   "tags": [],
+   "evidence": "never recolour or restyle the logo",
+   "studio": "both"
+  },
+  "rift": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v11 standard focal set piece THE RIFT",
+   "studio": "flash"
+  },
+  "bolt_split": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v11 standard",
+   "studio": "flash"
+  },
+  "emblem_bloom": {
+   "verdict": "liked",
+   "tags": [
+    "signature",
+    "physical"
+   ],
+   "evidence": "v12 rev 3 ('try to do an emblem transition aswell'), standard",
+   "studio": "flash",
+   "family": "jasmine"
+  },
+  "fractal_burn": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v12 rev 3 ('one more really cool transition'), standard",
+   "studio": "flash"
+  },
+  "full_bloom": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v12 standard focal piece",
+   "studio": "flash",
+   "family": "jasmine"
+  },
+  "bud_iris": {
+   "verdict": "liked",
+   "tags": [
+    "lands_on_face"
+   ],
+   "evidence": "v12 standard (the bloom out of his pupil)",
+   "studio": "flash",
+   "family": "jasmine"
+  },
+  "bolt_trace": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12/v106; v13 review: it samples past its shot and leaked the next pack shot - pull frames first",
+   "studio": "flash"
+  },
+  "tear_lens": {
+   "verdict": "liked",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v106 rev 2-3 (slowed to ~1 s 'so it's more visible'), standard",
+   "studio": "flash"
+  },
+  "wonderwall": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v106 standard focal burst",
+   "studio": "flash"
+  },
+  "lightning_rod": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v106 standard",
+   "studio": "flash"
+  },
+  "mist_swirl": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v106 standard",
+   "studio": "flash"
+  },
+  "emblem_split": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v13 rev 2 (approved edit; the emblem's own bolt becomes the cut)",
+   "studio": "flash"
+  },
+  "ribbon": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v13 rev 2 LIGHT RIBBON ('create a really cool graphic that you use to turn into a transition')",
+   "studio": "flash"
+  },
+  "event_horizon": {
+   "verdict": "ok",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v13: approved as the one set piece after the singularity was cut back from every transition",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "lens_drop": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "frame_drag": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "redshift": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "photon_ring": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "eye_horizon": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "accretion_whip": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "spaghettify": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "emblem_horizon": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 1: one of the singularity transitions ('the singularity is the primary object in every transition and animation'); rev 2 kept only the EVENT HORIZON set piece",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "grav_wave": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v13 rev 2: the EVENT HORIZON breakout",
+   "studio": "flash",
+   "family": "singularity"
+  },
+  "bloom": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "studio": "flash",
+   "family": "jasmine"
+  },
+  "petal_whip": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "studio": "flash",
+   "family": "jasmine"
+  },
+  "petal_pass": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "studio": "flash",
+   "family": "jasmine"
+  },
+  "pollen_burst": {
+   "verdict": "ok",
+   "tags": [],
+   "evidence": "v12 standard (the lightning jasmine)",
+   "studio": "flash",
+   "family": "jasmine"
+  }
+ },
+ "families": {
+  "note": "A family is one hero asset. plan_check counts each family's transitions: more than 4 warns (v13 rule: the hero asset is a motif, 2-4 appearances), more than 8 fails (v13 rev 1 had 11 singularity transitions: 'I really don't like this edit').",
+  "singularity": "v13",
+  "jasmine": "v12 (approved with 7, before the v13 rule)"
+ }
+}

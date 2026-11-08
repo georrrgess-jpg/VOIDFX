@@ -90,6 +90,20 @@ Every frame of the v2 render matches the shipped engine within the gate (worst p
   - LET'S GO on his chin (420);
   - the designed red radiate in the REVERSE loop (1198–1216).
 
+## 1c. The efficiency update (2026-11-08; `sync/EFFICIENCY_PLAN.md`, `studio/WORKFLOW.md`)
+
+| Command | What it does | Time |
+|---|---|---|
+| `build.sh N plan` / `tools/plan_check.py N [--edl PATH] [--json]` | The owner's recurring notes, checked on the EDL before any render, against `studio/transitions.json`. Runs automatically before `video`; a FAIL stops the render (`PLAN_ACCEPT = {"check": "why"}` in the EDL, or `PLAN_FORCE=1`). Optional EDL fields: `SIGNATURE`, `HERO_TINS` | 1–5 s |
+| `build.sh N ship` | audio → plan → video → qc → signoff → report → deliver | one render |
+| `build.sh N qc` | qc + faceqc + motionqc in parallel | 72 s (was 103) |
+| `build.sh N signoff` / `tools/signoff.py N` | Review pages from the encode: every transition as a row (before, its middle, the frame before the cut, the cut, after, its end), the loop wrap, every text block, every UNEXPLAINED pop → `vN/frames/signoff_*.jpg` | 6 s |
+| `build.sh N report` / `tools/report.py N` | The Measured block → `vN/work/measured.md` | 1 s |
+| `build.sh N splice` | Re-splice `fxN.py` (automatic before any rendering step when `fxN.py` is newer) | 0 s |
+| `studio/CRITIQUE_PROMPT.md` | The fresh-eyes critique: one agent run that predicts the owner's notes from the rules and the sign-off pages | a few minutes |
+
+**The registry** (`studio/transitions.json`): every transition the owner has a verdict on (liked / ok / rejected / banned), with his words, the `fix` for a rejected one, tags (`black_occluder`, `face_gimmick`, `generic`, `signature`, `physical`, `lands_on_face`) and hero `family`. Add a verdict in the same turn the owner gives it.
+
 ## 2. Transitions (`tin=` on the incoming shot)
 
 Each transition goes through something. Its sound lives in `audioN.py` (`if tin == ...`): at most one sound, none for a small move, layered sound only at the set pieces (v12, v106).
