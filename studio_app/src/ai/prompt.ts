@@ -251,7 +251,7 @@ export function contextBlock(ctx: { project: Project; media: Record<string, Medi
 
 /** Parse one JSON value from a reply (whole text, a code fence, or the outermost braces). */
 export function parseJson(text: string): any {
-  const tryParse = (s: string) => { try { return JSON.parse(s); } catch { return undefined; } };
+  const tryParse = (s: string) => { try { return JSON.parse(s); } catch { try { return JSON.parse(escapeControls(s)); } catch { return undefined; } } };
   let v = tryParse(text.trim());
   if (v === undefined) {
     const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -265,8 +265,36 @@ export function parseJson(text: string): any {
 }
 
 /** Parse the JSON object Opus replies with. */
+/** Raw line breaks and tabs inside JSON strings (a long plan written across lines) made valid. */
+function escapeControls(s: string): string {
+  let out = '', inStr = false, esc = false;
+  for (const ch of s) {
+    if (inStr) {
+      if (esc) { esc = false; out += ch; continue; }
+      if (ch === '\\') { esc = true; out += ch; continue; }
+      if (ch === '"') { inStr = false; out += ch; continue; }
+      if (ch === '\n') { out += '\\n'; continue; }
+      if (ch === '\r') continue;
+      if (ch === '\t') { out += '\\t'; continue; }
+      out += ch;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    out += ch;
+  }
+  return out;
+}
+
+/** The operations list wherever Opus put it: "ops", "operations", "edits", or one level down. */
+function opsOf(v: any): unknown[] {
+  if (!v || typeof v !== 'object') return [];
+  for (const k of ['ops', 'operations', 'edits', 'actions']) if (Array.isArray(v[k])) return v[k];
+  for (const x of Object.values(v)) if (x && typeof x === 'object' && !Array.isArray(x)) { const inner = opsOf(x); if (inner.length) return inner; }
+  return [];
+}
+
 export function parseReply(text: string): { message: string; ops: unknown[] } | null {
-  const tryParse = (s: string) => { try { return JSON.parse(s); } catch { return undefined; } };
+  const tryParse = (s: string) => { try { return JSON.parse(s); } catch { try { return JSON.parse(escapeControls(s)); } catch { return undefined; } } };
   let v = tryParse(text.trim());
   if (v === undefined) {
     const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -278,7 +306,9 @@ export function parseReply(text: string): { message: string; ops: unknown[] } | 
   }
   if (!v || typeof v !== 'object') return salvageOps(text);
   if (Array.isArray(v)) return { message: '', ops: v };
-  return { message: typeof v.message === 'string' ? v.message : '', ops: Array.isArray(v.ops) ? v.ops : [] };
+  const ops = opsOf(v);
+  if (!ops.length) { const s = salvageOps(text); if (s) return { ...s, message: typeof v.message === 'string' ? v.message : s.message }; }
+  return { message: typeof v.message === 'string' ? v.message : '', ops };
 }
 
 /**
@@ -286,7 +316,8 @@ export function parseReply(text: string): { message: string; ops: unknown[] } | 
  * written out completely, so a long build is not thrown away for its last half-written line.
  */
 export function salvageOps(text: string): { message: string; ops: unknown[]; salvaged: true } | null {
-  const k = text.indexOf('"ops"');
+  const m0 = text.match(/"(ops|operations|edits)"\s*:\s*\[/);
+  const k = m0 ? m0.index! : -1;
   if (k < 0) return null;
   const a = text.indexOf('[', k);
   if (a < 0) return null;

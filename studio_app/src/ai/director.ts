@@ -472,8 +472,8 @@ const countOps = (t: string) => (t.match(/"op"\s*:/g) || []).length;
 function cutStep(notes: NoteCheck[]) {
   return `CALL 1 OF 2: THE CUT. Direct the whole edit in your thinking, clearing the PRE-BUILD GATE with the worked examples and the playbook: the concept from the character's world and the song's words; a bold look; the song window and the drop; three or more multi-stage set pieces plus the focal one; the shot list; a designed transition for every cut; the titles; graphics in every section; the loop. Work fast where the studio already did the work: take every time from the song window's timeline grid in MEDIA (bars, the drop, the beat), never list or recompute beats, and take shots from the shot list and the pack notes.
 Write only the PICTURE as operations now: {"op":"clear"}; "project" (name; the beat camera with its sections); the music and any dialogue on audio tracks; every main-track shot in order (media, in, dur, focus read off the cyan ruler, speed, ramp or freeze, transform, push-in or drift kf); any overlay copy of a shot a set piece needs (a polaroid, a mirror, a ghost); the look with its params. Every shot is there for a reason: what it adds to the concept, or the set piece it belongs to. Do not write transitions, text, lyrics, fx, graphics, shaders or sfx yet.
-Call 2 sees a storyboard rendered from your cut (each shot's first, middle and last frame, with a ruler) and writes the design against the real frames. Write its plan in "design", compact, one line each: the concept; every set piece as anticipation -> action -> payoff with its times and layers (name the piece kind where one fits); the transition on every cut (time, type, what it goes through, sound); every caption and designed title (time, words, animation); graphics and effects per section; the loop. Keep "design" under about 6,000 characters.${notes.length ? '\nFor every note N#, a one-line plan in "notes", and tag the operations that carry it out.' : ''}
-Reply with only JSON, compact (no indentation or blank lines): {"message": "the concept sentence and the set pieces, for the owner", "design": "the plan for call 2"${notes.length ? ', "notes": [{"id": "N1", "plan": "one line"}]' : ''}, "ops": [...]}`;
+Call 2 sees a storyboard rendered from your cut (each shot's first, middle and last frame, with a ruler) and writes the design against the real frames. Write its plan in "design", compact, one line each: the concept; every set piece as anticipation -> action -> payoff with its times and layers (name the piece kind where one fits); the transition on every cut (time, type, what it goes through, sound); every caption and designed title (time, words, animation); graphics and effects per section; the loop. Keep "design" under about 4,000 characters.${notes.length ? '\nFor every note N#, a one-line plan in "notes", and tag the operations that carry it out.' : ''}
+Reply with only JSON, compact (no indentation or blank lines), with "ops" FIRST so the picture is never lost if the reply runs long, and "design" as one string with no raw line breaks (separate its lines with " | "): {"ops": [...], "message": "the concept sentence and the set pieces, for the owner"${notes.length ? ', "notes": [{"id": "N1", "plan": "one line"}]' : ''}, "design": "the plan for call 2"}`;
 }
 
 interface Part { from: number; to: number; other: string; last: boolean; prefix: string }
@@ -1091,9 +1091,17 @@ export async function buildEdit(job: Job, ws: Workspace, io: JobIO): Promise<Rou
     io.step('cut', { state: 'run', detail: 'thinking…' });
     const cutAsk = `${request}\n\n${cutStep(notes)}`;
     turns = [{ role: 'user', content: ctx }, { role: 'user', content: cutAsk }];
-    const cut = await runParts(io2, 'cut', [{ name: 'cut', input: turns, images }], effort, true);
-    const c1 = cut.replies[0];
-    if (!c1 || !c1.ops.some((o: any) => o?.op === 'add')) throw cut.errors[0] || { code: 'invalid_json' };
+    let cut = await runParts(io2, 'cut', [{ name: 'cut', input: turns, images }], effort, true);
+    let c1 = cut.replies[0];
+    if (!c1 || !c1.ops.some((o: any) => o?.op === 'add')) {
+      // the reply had no usable shots: ask again for the picture alone, ops first, plan short
+      if (cut.errors.some(e => fatal(e, io)) || cut.errors.some(e => e?.code && !['invalid_json', 'empty_completion'].includes(e.code))) throw cut.errors[0];
+      io.step('cut', { detail: 'the reply had no shots the studio could read; asking for the picture again' });
+      const strict: Turn[] = [...turns.slice(0, -1), { role: 'user', content: `${cutAsk}\n\nIMPORTANT: your last reply could not be used (no readable "add" operations for the shots). Reply with only one JSON object, starting with {"ops": [ ... ]} holding every operation of the picture ({"op":"clear"}, the music, every main-track shot as {"op":"add", ...}, the look), then "message", then a short "design" (under 2,000 characters, one line). No code fences, no text outside the JSON.` }];
+      cut = await runParts(io2, 'cut', [{ name: 'cut', input: strict, images: images.slice(0, Math.ceil(images.length / 2)) }], effort, true);
+      c1 = cut.replies[0];
+      if (!c1 || !c1.ops.some((o: any) => o?.op === 'add')) throw cut.errors[0] || { code: 'invalid_json' };
+    }
     const v1: any = parseJson(c1.text);
     const design = typeof v1?.design === 'string' ? v1.design : '';
     readNotes(notes, v1, 'plan');
