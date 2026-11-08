@@ -132,3 +132,4 @@ v13/frames/
 v13/out/
 v13/work/*.npz
 v13/work/*.npy
+*/work/plan_check.err
