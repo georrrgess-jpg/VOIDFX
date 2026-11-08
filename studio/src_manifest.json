@@ -259,6 +259,48 @@
    "sha256": "5141bfbd5fc85d9cd1726d599c709cd763c12c5925bf67b0e92b0691a49d2415",
    "duration": "35.955034",
    "uploaded_as": "the user's screen recording of Brent Faiyaz - Wish You Well (.mov)"
+  },
+  {
+   "file": "dexter_s1_hq.mp4",
+   "bytes": 109137490,
+   "sha256": "4e6568a7553a31fbd37ef00075b0891cf543bee59d03cbbfac383b8e34c0e74e",
+   "duration": "407.463764",
+   "uploaded_as": "Dexter 4k 60fps All Scenes Dexter Morgan (S1) Best & Most Popular Scenes for Edit - Scenepack.mp4"
+  },
+  {
+   "file": "dexter_s4_hq.mp4",
+   "bytes": 58947302,
+   "sha256": "ddcd795a10003f88e066d2fd52661d58ff678ab8ebcf478079f39b3bcf5c1d95",
+   "duration": "243.159365",
+   "uploaded_as": "Dexter (S4) 4k Scenepack Dexter Morgan All Best & Most Popular Clips.mp4"
+  },
+  {
+   "file": "dexter_s2_a.mp4",
+   "bytes": 84441984,
+   "sha256": "b65d15fbbfe660149e267b00033bb371529323ad81e0015450171a6ff7157dcf",
+   "duration": "317.974059",
+   "uploaded_as": "Dexter Morgan (S2) Scenepack 4K.mp4"
+  },
+  {
+   "file": "dexter_s2_b.mp4",
+   "bytes": 113278089,
+   "sha256": "983a89a333c87eb0b635f6e367de2e6bb0e0257c19c0aefeb2c4931032335121",
+   "duration": "410.621678",
+   "uploaded_as": "Dexter Morgan 4k All Scenes Dexter (Season 2) Best & Most Popular Scenes for Edit - Scenepack.mp4"
+  },
+  {
+   "file": "dexter_mix_b.mp4",
+   "bytes": 99087194,
+   "sha256": "1b68c2c204015790d2782a88699284740af82e70a41c63dcc4fc952c3ceb191b",
+   "duration": "427.432925",
+   "uploaded_as": "dexter scenpack (1440p).mp4"
+  },
+  {
+   "file": "ref_v104_passenger_posted.mp4",
+   "bytes": 35638494,
+   "sha256": "43882b5ff13f47299db7335fd684728c0b02ea89c6fb2747009e2aa3a08fbd3f",
+   "duration": "22.890667",
+   "uploaded_as": "voidfx THE PASSENGER S LOVE SONG.mp4"
   }
  ]
 }

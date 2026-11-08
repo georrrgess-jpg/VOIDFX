@@ -34,6 +34,28 @@ Every pack is 1280×720 (some are labelled 4K), so a 9:16 crop is enlarged about
 | `pack6_s5.mp4` | 0.71 | 0.026 | 0.44 | Soft |
 | `flash_s4.mp4` | 1.08 | 0.020 | 0.39 | Soft: pick the crispest moments, keep zoom low |
 | `pack4_aesthetic.mp4` | 1.70 | 0.064 | 0.36 | Softest (filtered/graded): wide shots, not close-ups |
+| `dexter_s1_hq.mp4` (S1, added 2026-11-08) | 2.00 | 0.036 | **0.73** | **Yes: the sharpest Dexter pack.** The same footage and timing as `pack8_s1.mp4` at 4.6× the bitrate (matched frames 30–41 dB). Use it instead of p8 |
+| `dexter_s4_hq.mp4` (S4, added 2026-11-08) | 1.80 | 0.033 | 0.62 | Yes. The same footage and timing as `pack9_s4_best.mp4` at 2.6× the bitrate. Use it instead of p9 |
+| `dexter_s2_b.mp4` (S2, added 2026-11-08) | 2.07 | 0.037 | 0.55 | Yes (new footage, 6:51) |
+| `dexter_s2_a.mp4` (S2, added 2026-11-08) | 1.98 | 0.036 | 0.50 | OK (new footage, 5:18) |
+| `dexter_mix_b.mp4` (labelled 1440p, really 720p; added 2026-11-08) | 1.72 | 0.031 | 0.48 | OK (new footage, 7:07) |
+
+### Packs added 2026-11-08 (the owner's link list, sent to both studios)
+Every link labelled 4K or 1440p is **1280×720**.
+- **Dexter (installed by the Dexter studio):**
+  - `dexter_s1_hq.mp4` and `dexter_s4_hq.mp4` are higher-bitrate copies of `pack8_s1` and `pack9_s4_best`, with the same frame timing. An EDL can switch `SRC` to them without retiming. This is the fix for v105's clip-quality gripe on those packs.
+  - `dexter_s2_a`, `dexter_s2_b` and `dexter_mix_b` are new footage; run `analyze.py` and the sharpness tool before using them.
+  - The "DEXTER MORGAN SCENE PACK 4K 60 FPS" link is byte-identical to `pack7_4k.mp4`.
+  - "voidfx THE PASSENGER S LOVE SONG" is the owner's posted v104, kept as `ref_v104_passenger_posted.mp4`.
+- **Flash (probed by the Dexter studio, left for the Flash studio to install):**
+  - "The flash scenepack all seasons 4K 60 FPS" is `flash_b.mp4`'s footage at 2.20 Mb/s (was 1.18).
+  - New footage:
+    - S1 (30 fps, 4:54, 1.11 Mb/s);
+    - S2 (30 fps, 2:27, 1.40 Mb/s);
+    - S2 (60 fps, 5:09, 1.46 Mb/s);
+    - S3 (30 fps, 2:16, 1.22 Mb/s);
+    - S5 (23.98 fps, 6:22, 1.37 Mb/s);
+    - Blitzkrieg (60 fps, 3:02, 2.06 Mb/s).
 
 ## Dexter scene packs
 
