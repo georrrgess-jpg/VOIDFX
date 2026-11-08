@@ -285,21 +285,23 @@ Only then deliver.
 
 **One brief per edit.** Use `START_PROMPT.md`: song, packs, theme ideas and must-haves in one message, so the studio never needs to ask.
 
-**Front-load the rules.** This handbook plus the rejected list in §4 removes most revision rounds. v7 needed one round of notes; aim for zero.
+**Front-load the rules.** This handbook plus the rejected list in §4 removes most revision rounds. v7 needed one round of notes; aim for zero. **Since 2026-11-08 the rules are also checks:** `build.sh N plan` (`tools/preflight.py`) runs the plan against them in seconds, before the first render. Fix every FAIL; decide every WARN. Run retroactively on v13 rev 1, it flags what the owner's rev 1 notes said: the hero asset in 7 transitions, 24 sound effects, the swirls and whines.
 
 **The fast loop** (wall-clock on the 4-core cloud box):
 
 | Step | Command | Time |
 |---|---|---|
 | Scaffold | `python3 tools/new_edit.py N SLUG "TITLE"` | 1 s |
-| Map the song | `python3 tools/song_map.py src/SONG.mp3 vN/work` | 3 s |
+| Song prep: map, stems, drum-stem grid, vocal-stem words, loop wrap, EDL lines | `bash tools/build.sh N song:src/SONG.mp3[:H0:H1]` | ~7 min (27 s once the stems exist) |
 | Shot list and contact sheets (new packs only; cached JSON for known packs) | `python3 vN/work/analyze.py src/PACK.mp4 TAG` | ~1 min/pack |
-| Dialogue or lyrics on a vocal stem | `python3 tools/transcribe.py vN NAME MEDIA --start S --dur D` | 1–3 min |
-| Write the EDL from `SCENE_PACKS.md` proven shots | | 10–20 min |
-| Audit, tracks, sheets of every cut | `bash tools/build.sh N prep auto` | ~1 min |
+| Dialogue on a vocal stem | `python3 tools/transcribe.py vN NAME MEDIA --start S --dur D` | 1–3 min |
+| Write the EDL from `SCENE_PACKS.md` proven shots (with `HERO`, `SET_PIECES`); pick transitions from `studio/transitions.json` | | 10–20 min |
+| Sound, then the plan against every owner rule | `bash tools/build.sh N audio plan` | ~15 s |
+| Audit, tracks, preflight, restoration started in the background, sheets of every cut | `bash tools/build.sh N prep auto` | ~1–2 min |
 | Motion check | `bash tools/build.sh N clip:A:B` | ~20 s |
 | Sound | `bash tools/build.sh N audio` | ~7 s |
-| **One** final render + checkpoint | `bash tools/build.sh N video qc` | ~10 min |
+| **One** final render + checkpoint + review pack (QC passes in parallel) | `bash tools/build.sh N video qc` | ~7 min |
+| A revision round (only the frames the change reached re-render) | `bash tools/build.sh N plan rev` | ~4–8 min |
 
 **Two studios in parallel:**
 - Each studio works on its **own git branch** and its **own version range** (Studio 1: v8, v9, …; Studio 2: v101, v102, …), so folders never collide.

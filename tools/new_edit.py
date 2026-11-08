@@ -40,11 +40,12 @@ if new: open(gi, "a").write(("\n" if g and not g.endswith("\n") else "") + "\n".
 
 print(f"""scaffolded {V}: {title}
 next:
-  python3 tools/song_map.py src/SONG.mp3 {V}/work                 # grid, drops, candidate windows
-  python3 {V}/work/analyze.py src/PACK.mp4 TAG                     # shot list + contact sheets per pack
+  bash tools/build.sh {n} song:src/SONG.mp3[:H0:H1]                # map, stems, drum-stem grid, vocal-stem words, loop wrap -> EDL lines
+  python3 {V}/work/analyze.py src/PACK.mp4 TAG                     # shot list + contact sheets per NEW pack (known packs: copy shots_*.json)
   python3 tools/transcribe.py {V} NAME src/PACK.mp4 --vad          # dialogue word times (if using dialogue)
-  edit {V}/work/edl{n}.py  (shots, transitions, text, knobs)
-  bash tools/build.sh {n} prep auto                                # tracks/mattes + review sheets of every cut
-  nohup python3 tools/sr_prep.py {n} &                              # restore + 2x upscale the source (background, ~3 s/frame)
-  bash tools/build.sh {n} audio clip:A:B preview                   # sound + motion checks
-  bash tools/build.sh {n} video qc                                 # final render + ship checkpoint""")
+  edit {V}/work/edl{n}.py  (shots, transitions, HERO, SET_PIECES, knobs) and audio{n}.py
+  bash tools/build.sh {n} audio plan                               # sound, then preflight: the plan against every owner rule
+  bash tools/build.sh {n} prep auto                                # tracks/mattes, preflight, restoration in the background, sheets of every cut
+  bash tools/build.sh {n} clip:A:B preview                         # motion checks
+  bash tools/build.sh {n} video qc                                 # final render + ship checkpoint + review pack (vN/frames/review_*.jpg)
+  revision rounds: bash tools/build.sh {n} plan rev                # preflight, then audio + only the changed frames + QC""")

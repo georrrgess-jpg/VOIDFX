@@ -16,7 +16,10 @@
 | WP4 verified partial re-render | **done** (target close) | `tools/vrender.py`: one shot in 227 s (target ≤ 3 min; the upload re-encode is ~2.5 min of it); the EDL round trip was bit-identical; an injected global change was caught on 32 of 32 check frames. |
 | WP8 effects over faces | **done** (as a list, not a gate) | `tools/faceqc.py`: on the shipped v11 it flags the light sweeps and bolts across his face and the title on his chin. |
 | WP12 effects-vs-music table | **done** | `tools/mixcheck.py` + stems from the audio builder: v11 has 12 of 17 transitions more than 12 dB under the music. |
-| WP5–WP7, WP9–WP11, WP13, WP14 | planned | Next: WP7 plan check and WP9 critique pass (the owner rounds are still the biggest cost). |
+| WP4b change-tracked partial renders | **done** (Flash studio, 2026-11-08, the owner's efficiency request) | `tools/codetrack.py` in `vrender.py`: code and EDL-global changes re-render only the frames that ran the changed code. A one-transition edit took 157 s against 312 s for a full render; an audio-only change took 4 s; edit + revert was bit-identical. Needs `render(f)` to be pure (v13 `doppler_row` isn't). |
+| WP7 plan check | **built by the Flash studio** (2026-11-08) as `tools/preflight.py` + `studio/transitions.json` | Owner rules as FAIL/WARN checks on the EDL, the TR2 call graph, source shots and sound events. On v13 rev 1 it gives 4 FAIL and 6 WARN with no hindsight; on the approved rev 2, 0 FAIL. To merge with any Dexter-side `plan_check` (`sync/handoffs/2026-11-08_flash_DEV_efficiency.md`). |
+| WP9 critique pass (part) | **review pack** | `tools/review.py`: stills of every transition, set piece and the wrap from the encode, in `build.sh qc` (QC passes now run in parallel: ~100 → 80 s with the pack). |
+| WP5, WP6, WP10, WP11, WP13, WP14 | planned | WP6 lyrics: `tools/song_prep.py` covers the song side (stems, drum-stem grid, vocal-stem words with onset disagreements flagged). |
 
 ---
 

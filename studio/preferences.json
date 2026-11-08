@@ -167,27 +167,29 @@
  },
  "workflow": {
   "loop": [
-   "song_map",
-   "EDL",
-   "build.sh N prep auto",
-   "sr_prep (background)",
+   "build.sh N song:FILE[:H0:H1] (song_prep: map, stems, drum-stem grid, vocal-stem words, loop wrap)",
+   "EDL (with HERO and SET_PIECES)",
+   "build.sh N audio plan (preflight: fix every FAIL before the first render)",
+   "build.sh N prep auto (preflight again; source restoration starts in the background)",
    "sheet:/strip:/clip: on the render server",
-   "audio (+ mixcheck table)",
-   "one video qc per revision (later revisions re-render only what changed)",
-   "review the faceqc list",
+   "audio (+ mixcheck table, fx_events.json)",
+   "one video qc per revision (change tracking: only frames that ran edited code re-render; QC passes run in parallel; review pack)",
+   "look at every review sheet (vN/frames/review_*.jpg) and the faceqc/motionqc lists",
    "visual sign-off on the encoded file",
    "deliver (waits for the master)",
+   "revision rounds: build.sh N plan rev",
    "vrender.py N clean at the verdict"
   ],
   "review_gates": [
+   "preflight on the plan before rendering (tools/preflight.py: owner rules as checks)",
    "automated QC on the encoded MP4 (qcN.py)",
-   "contact sheets around every transition and title",
+   "the review pack: a row of stills per transition, set piece and the wrap, from the encode (tools/review.py)",
    "fix and re-render anything weak",
    "final pull of key frames from the encoded file",
    "sharpness check on the finished video"
   ],
   "pre_build_gate": "compare the plan shot by shot with the benchmarks; redesign until it clearly beats them",
-  "efficiency": "one brief, one feedback message per revision, one full render per revision",
+  "efficiency": "check the plan against every standing rule before rendering (preflight); one brief, one feedback message per revision; re-render only the frames the change reached; keep render(f) a pure function of f",
   "pipeline_v2": {
    "plan": "sync/PIPELINE_V2_PLAN.md",
    "done": [
@@ -196,7 +198,8 @@
     "WP3",
     "WP4",
     "WP8 face-overlay list",
-    "WP12 level table"
+    "WP12 level table",
+    "efficiency update 2026-11-08: preflight + transitions registry, change-tracked partial renders, parallel QC + review pack, song_prep, auto source restoration"
    ],
    "measured_v11": {
     "full_render_s": 427,

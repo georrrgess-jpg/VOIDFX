@@ -19,8 +19,17 @@ N = int(round(E.DUR_F / E.FPS * SR))
 PRE = 4800
 def I(t): return int(round(t * SR))
 db, bq, noise, env_exp = A2.db, A2.bq, A2.noise, A2.env_exp
+FX_EVENTS = []                         # every effect main() places -> vN/audio/fx_events.json (read by tools/preflight.py)
 def place(out, sig, t):
+    fr = sys._getframe(1)
+    if "music" not in fr.f_code.co_name:
+        ln = open(fr.f_code.co_filename).read().split("\n")[fr.f_lineno - 1].strip()[:140]
+        FX_EVENTS.append([round(float(t), 3), round(len(sig) / SR, 3), round(float(20 * np.log10(np.abs(sig).max() + 1e-9)), 1), fr.f_code.co_name, fr.f_lineno, ln])
     A2.place(out, sig if sig.ndim == 2 else np.stack([sig, sig], 1), I(t) + PRE)
+def _write_fx_events():
+    if FX_EVENTS:
+        import json; os.makedirs(AD, exist_ok=True); json.dump(FX_EVENTS, open(f"{AD}/fx_events.json", "w"))
+import atexit; atexit.register(_write_fx_events)
 def stereo(x, pan=0.0): return np.stack([x * (1 - 0.5 * pan), x * (1 + 0.5 * pan)], 1).astype(np.float32)
 def norm(y, level): return (y / (np.abs(y).max() + 1e-9) * db(level)).astype(np.float32)
 T = {s["n"]: s for s in E.SHOTS}

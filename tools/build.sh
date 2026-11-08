@@ -1,26 +1,38 @@
 #!/usr/bin/env bash
 # One-command build steps for edit vN (pipeline v2).  Usage: bash tools/build.sh N STEP [STEP ...]
-#   prep              source audit + face tracks + mattes      audio           soundtrack (circular, mastered, AAC-checked) + effects-vs-music table
+#   song:FILE[:H0:H1] song prep in one go (tools/song_prep.py)  plan            preflight: the plan against every owner rule (seconds)
+#   prep              source audit + face tracks + mattes + preflight; starts the source restoration in the background
+#   audio             soundtrack (circular, mastered, AAC-checked) + effects-vs-music table
 #   auto              sheets around every cut (render server)   sheet:NAME:f,f  tiled stills of chosen frames (render server)
 #   strip:A:B         every 2nd frame A..B in one sheet         clip:A:B        frames A..B as a 540x960 MP4 with sound (render server)
 #   video             upload MP4 + lossless frame cache; re-renders only the EDL's changed shots when a cache exists; the master
 #                     encodes in the background.   video:A:B[,C:D]  re-render only those frames (verified)   fullvideo  force a full render
 #   qc                ship checkpoint on the encoded MP4 + faces-vs-effects list + motion audit (dead spans, pops, judder)
-#                     deliver   wait for the master and check it
+#                     + the review pack (a row of stills per transition, set piece and the wrap), all four in parallel
+#   review            the review pack alone            deliver   wait for the master and check it
 #   golden            engine regression check (tools/golden.py N --check)              preview   whole edit at 30 fps / 540x960 (engine)
-#   all = prep audio auto video qc deliver.   Every step is logged to vN/work/metrics.json.
+#   all = prep audio auto video qc deliver.   rev = audio video qc (a revision round).   Every step is logged to vN/work/metrics.json.
 set -euo pipefail
 N="$1"; shift; ROOT="$(cd "$(dirname "$0")/.." && pwd)"; V="v$N"; W="$ROOT/$V/work"
-[ "$#" -gt 0 ] || { sed -n '2,10p' "$0"; exit 1; }
+[ "$#" -gt 0 ] || { sed -n '2,13p' "$0"; exit 1; }
 STEPS=("$@"); [ "${STEPS[0]}" = "all" ] && STEPS=(prep audio auto video qc deliver)
-SLUG=$(cd "$W" && python3 -c "import edl$N as E; print(E.SLUG)")
+[ "${STEPS[0]}" = "rev" ] && STEPS=(audio video qc)
+case "${STEPS[0]}" in song:*) SLUG="" ;; *) SLUG=$(cd "$W" && python3 -c "import edl$N as E; print(E.SLUG)") ;; esac
 T="$ROOT/tools"
 for s in "${STEPS[@]}"; do
   t0=$(date +%s); echo "== $V: $s"
   case "$s" in
+    song:*)    IFS=: read -r _ f h0 h1 <<< "$s"; python3 "$T/song_prep.py" "$N" "$f" ${h0:+--h0 $h0} ${h1:+--h1 $h1} ;;
+    plan)      python3 "$T/preflight.py" "$N" 2>&1 | grep -v "^loaded" || true ;;
     prep)      python3 "$T/check_sources.py" "$N" | grep -E "BAD|source ranges"
                python3 "$T/splice_section.py" "$N" --check
-               python3 "$W/render$N.py" prep > "$W/prep.log" 2>&1; grep -E "track|seg " "$W/prep.log" | tail -40 ;;
+               python3 "$W/render$N.py" prep > "$W/prep.log" 2>&1; grep -E "track|seg " "$W/prep.log" | tail -40
+               python3 "$T/preflight.py" "$N" 2>&1 | grep -v "^loaded" || true
+               SRP="$ROOT/$V/sr/prep.pid"
+               if [ -f "$SRP" ] && kill -0 "$(cat "$SRP")" 2>/dev/null; then echo "   source restoration already running (pid $(cat "$SRP"))"
+               elif python3 "$T/sr_prep.py" "$N" --count 2>/dev/null | grep -q "to process 0,"; then echo "   restored source bands are current"
+               else mkdir -p "$ROOT/$V/sr"; nohup nice -n 12 python3 "$T/sr_prep.py" "$N" > "$ROOT/$V/sr/prep.log" 2>&1 & echo $! > "$SRP"
+                    echo "   source restoration started in the background (pid $!, log $V/sr/prep.log); the final render uses the bands, so let it finish first (vrender renders in full when they change)"; fi ;;
     audio)     python3 "$W/audio$N.py" | tail -4
                [ -f "$ROOT/$V/audio/stem_fx.wav" ] && python3 "$T/mixcheck.py" "$N" | tail -12 || true ;;
     auto)      python3 "$T/rsrv.py" "$N" auto cuts ;;
@@ -34,10 +46,16 @@ for s in "${STEPS[@]}"; do
                grep -E "render|verification|done" "$W/render.log" | tail -5 ;;
     fullvideo) python3 "$T/vrender.py" "$N" video --full > "$W/render.log" 2>&1 || { tail -5 "$W/render.log"; exit 1; }
                tail -2 "$W/render.log" ;;
-    qc)        python3 "$W/qc$N.py" "$ROOT/$V/out/${SLUG}_voidfx_9x16.mp4" > "$W/qc.log" 2>&1
-               grep -v WARN "$W/qc.log" | sed -n '/loudness/p;/flagged/p;/text band/p;/near-black/p;/== 8/,$p' | grep -v " 0 flagged"
-               python3 "$T/faceqc.py" "$N" | tail -14
-               python3 "$T/motionqc.py" "$N" | grep -v "activity per" ;;
+    qc)        MP4="$ROOT/$V/out/${SLUG}_voidfx_9x16.mp4"          # the four passes are independent: run them side by side
+               python3 "$W/qc$N.py" "$MP4" > "$W/qc.log" 2>&1 & P1=$!
+               python3 "$T/faceqc.py" "$N" > "$W/faceqc.log" 2>&1 & P2=$!
+               python3 "$T/motionqc.py" "$N" > "$W/motionqc.log" 2>&1 & P3=$!
+               R1=0; R2=0; R3=0; wait $P1 || R1=$?; wait $P2 || R2=$?; wait $P3 || R3=$?
+               python3 "$T/review.py" "$N" > "$W/review.log" 2>&1 || true      # after faceqc/motionqc: it boxes their flags
+               grep -v WARN "$W/qc.log" | sed -n '/loudness/p;/flagged/p;/text band/p;/near-black/p;/== 8/,$p' | grep -v " 0 flagged" || true
+               tail -14 "$W/faceqc.log"; grep -v "activity per" "$W/motionqc.log" || true; tail -1 "$W/review.log"
+               [ $R1$R2$R3 = 000 ] || echo "   a QC pass exited non-zero (qc $R1, faceqc $R2, motionqc $R3): see $V/work/*.log" ;;
+    review)    python3 "$T/review.py" "$N" ;;
     deliver)   python3 "$T/vrender.py" "$N" master --wait ;;
     golden)    python3 "$T/golden.py" "$N" --check ;;
     *)         echo "unknown step $s"; exit 1 ;;
