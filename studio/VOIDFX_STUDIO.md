@@ -146,6 +146,8 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | v12 rev 2–3: the NIGHT and BLOOM titles; half the sound effects; the bell on the flower; a whoosh on an early transition | v12 | Text is optional; fewer, bigger sounds; no chimes or bells on graphics. |
 | v106 rev 2: *"the tedious annoying"* sounds (the emblem shine, a sound on every camera punch and title letter, the sounds after the burst); a span *"where there isn't anything happening"*; animations not smooth enough | v106 (Dexter chat, Flash edit) | Sound the set pieces and structural hits only; transitions may be silent. Find dead spans, pops and judder by measurement (`tools/motionqc.py`). Flow on held 24p shots; sub-pixel procedural motion; covers exactly clear at their ends. |
 | v106 rev 3: the tear-drop transition too quick to see (0.6 s) | v106 | A signature graphic transition gets ~1 s and ≥ 8 % of the frame width; move the cut to the next sung word to make room. |
+| v13 rev 1: *"I don't like that the singularity is the primary object in every transition and animation"*; the emblem transition (a black hole born in the emblem) didn't count as one; *"the tedious sound effects"* | v13 | The hero asset gets 2–4 appearances, and every other transition is a different idea. An emblem transition comes from the emblem itself (its bolt, its shape). Start sound lean (~10–12 events). |
+| v13 verdict: *"I like this edit but I do not want you to make it a standard. It does somethings good and somethings bad."* | v13 | Approved, not a standard. The studio's reading of the weak parts: an abstract concept (a black hole as the voice of a love song); nearly all footage from the soft S1 pack under a grey grade; a drumless section with few beat moments and no big moment in the first 10 s; newer bright-red suits mixed with S1 maroon. |
 
 ### Props and effects from the character's world: when they work (Studio 2, after FOREVER)
 
@@ -319,6 +321,7 @@ Only then deliver.
 | v105 DRACULA (Dexter studio) | SUNDOWN: bleached warm "Sunshine State postcard" day with teal shadows and the sun behind him → cold moonlit silver night with only crimson kept |
 | v11 BOP | voltage / rival (deep clean blacks, crimson suit, warm gold lightning bloom, teal shadows; the rival's shots red-shifted with red halation) |
 | v12 BLOOM | NOCTURNE: indigo nights, crimson suit, orange light turned cream, lightning in jasmine white over a cream glow, deep vignette |
+| v13 EVENT HORIZON | REDSHIFT: a desaturated silver-steel world, only the suit's crimson, skin and the light keep colour; the picture redshifts (dimmer, sliding to red) as time slows |
 | v106 WONDERWALL (Dexter chat, Flash) | WONDER: golden-hour amber against Speed Force cobalt, milky lifted blacks, red-orange halation kept off faces, grain 0.010 |
 
 Fresh directions for future edits:
@@ -348,6 +351,7 @@ Fresh directions for future edits:
 | v105 (Dexter studio) | Tame Impala "Dracula" | 115 BPM | h592–h680 (2:34.6–2:57.5, 11 bars) | 2:40.8 one-bar drop-out → sundown; 2:42.9 drop (+29.8 dB) → bat burst |
 | v11 | DaBaby "BOP" | 127 BPM | h32–h120 (7.75–28.54 s, 11 bars) | 9.64 beat in → red shudder; 14.34 "Let's go!"; 15.31 drop → bolt split; 28.54 → tape stop → loop |
 | v12 | fakemink "Night Blooming Jasmine" (again; v9 used 2:19–3:09) | 102.8 BPM | 18.71–42.05 s (bars 8–18) | bar 12 (28.05 s) the vocal enters, the hats fall away; bar 16 the claps |
+| v13 | Brent Faiyaz "Wish You Well" (full version; v8 used a 36 s screen recording) | 138 BPM half-beats, 69 BPM feel (drum-stem fit) | h92–h188 (0:20.05–0:40.92, six 16-half-beat phrases, no drums: an 808 hit at e8 mod 16, a rest at e12–14) | "Darling," (30.84) → a 3 s vocal silence → the deepest rest (33.1) → the music returns (33.97); bar 23 mirrors bar 11, so the window wraps exactly |
 | v106 (Dexter chat, Flash) | Oasis "Wonderwall" | 87.02 BPM (drum stem; the automatic map said 116) | h456–h520 (2:37.50–2:59.56, bars 57–65, the second chorus) | "WONDERWALL" (16.55 s edit) → the wall bursts; bar 65 starts chorus 3 like bar 57, so the window wraps exactly |
 
 ## 11. Communication

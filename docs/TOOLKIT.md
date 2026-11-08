@@ -215,6 +215,8 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 21. **Source VFX flickers** (S3 Speed Force pink-orange flash at `flash_s3.mp4` 134.37–134.47 s) become pops under flow and transitions. Start the range after them.
 22. **Held 24p shots in a 60p edit judder** next to flow shots (2:3 cadence: big, small, big, small, small differences). `interp="hold"` on 24p content in `flash_b_hq` (60 fps container) did this in v106 and in v12's strike shot; use `interp="flow"`. v12's crouch (`flash_s5`, flow set) still measured a cadence run at 777–834: check where flow falls back.
 23. **Hidden jump cuts survive `check_sources.py`** when the angle change is small (same suit, same light): `flash_s5.mp4` 73.50 s cuts to a closer angle inside v12's street shot and left a ghost frame at 736. `motionqc` lists it as an UNEXPLAINED pop; probe each range with a frame-difference scan of the source.
+24. **Library transitions can sample past their shot.** v11 `bolt_trace` showed the next pack shot in v13. Pull frames of any library transition before using it.
+25. **The engine holds frames when flow is refused** (mean frame difference over 14 levels at 1/8 res), which is 30p judder on fast shots. Use `flowmax` per shot (v13), and `flowfall="blend"` where a lightning jump would warp.
 
 ## 5c. Port candidates from the Dexter studio (v105 DRACULA)
 
@@ -254,6 +256,18 @@ All in `v106/work/fx106.py` on `origin/dev/pipeline-v2` (557 lines, spliced abov
 - **The focal piece is made of the edit itself** (the wall's tiles are the edit's own frames; the burst turns the current frame into the wall).
 - **Fewer sounds was better:** a strike, a clash, a run, the wall and the burst; after the burst, only the music.
 - **Measured, not guessed:** a per-beat activity table found the dead span, a pop list found six defects (three invisible on stills), a cadence check found the 24p judder.
+
+## 5f. Reusable from v13 EVENT HORIZON (approved, not a standard)
+
+All in `v13/work/sec13.py`.
+
+| Asset | Functions | Notes |
+|---|---|---|
+| LIGHT RIBBON (graphic, then transition, then loop) | `ribbon_pts`, `ribbon_canvas`, `ribbon_light`, `ribbon_draw`, `ribbon_orbit`, `ribbon_spiral`, `ribbon_loop` | Two twisting light bands on a tilted orbit in depth (behind the matte, in front of the chest), a current and sparks; spirals out with the next shot inside its loop. Keep the orbit at the shoulders and fade it before it lingers on a face |
+| EMBLEM SPLIT | `emblem_split`, `zig_pts` | The real emblem's bolt ignites, leaps off and splits the frame along its zigzag. Shift the masks with a constant border |
+| EDGE CURRENT, FOCUS RACK, EYE IRIS, TIME SLICE, PANEL RUN, AFTERIMAGE, LIGHT LEAK, SPEED WHIP, WHIP UP | `edge_current`, `focus_rack`, `eye_iris`, `time_slice`, `panel_run`, `afterimage`, `light_leak13`, `speed_whip`, `whip_up13` | General designed moves; afterimages only on the speedster |
+| Black-hole kit (use once) | `bh_warp` (point-mass lensing), `bh_disk`, `bh_draw` (`inner=` throat), `clean_plate`, `doppler_row`; `horizon_fx`, `event_horizon_tr`, `grav_wave`; EDL `dilate()` | Lensing behind a matte needs `clean_plate`, or a ghost of him follows his edge |
+| Smoothness | `src_weights` with `flowmax` / `flowfall` | The engine refuses flow above a 14-level frame difference (30p judder on fast shots) |
 
 ## 5d. What made v12 the standard (carry the principles, not the look)
 - **One hero asset, many stages.** The lightning jasmine (`jas_draw`, `jas_light`, `jas_geom`, `jas_veins`) appears as:

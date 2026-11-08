@@ -111,6 +111,7 @@ lum = np.array([x.mean() for x in small]); print("  near-black frames:", [i for 
 print("\n== 5. audio clicks at every cut")
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-vn", "-c:a", "pcm_f32le", f"{E.ROOT}/{E.VER}/audio/qc_dec.wav"], check=True)
 sr, a = wf.read(f"{E.ROOT}/{E.VER}/audio/qc_dec.wav"); m = a.mean(1)
+m_full = m; m = m[:int(round(n / E.FPS * sr))]          # the AAC padding past the container's end is not part of the loop
 dd = np.abs(np.diff(m)); loc = np.convolve(dd, np.ones(480) / 480, "same"); clicks = 0
 for s in E.SHOTS[1:]:
     i = int(s["t0"] * sr); w = dd[max(0, i - 480):i + 480]; l = loc[max(0, i - 480):i + 480]
@@ -142,8 +143,10 @@ bl = lambda x: cv2.GaussianBlur(x, (0, 0), 6)
 seam_d = np.abs(bl(f_last) - bl(f_first)).mean(); tex = abs(f_last.std() - f_first.std())
 print(f"\n== 7. loop seam: last luma {f_last.mean():.1f} (std {f_last.std():.1f}), first luma {f_first.mean():.1f} (std {f_first.std():.1f}); blurred diff {seam_d:.2f}")
 print(f"   audio: last 20 ms {20*np.log10(np.sqrt(np.mean(m[-960:]**2))+1e-9):.1f} dBFS, first 20 ms {20*np.log10(np.sqrt(np.mean(m[:960]**2))+1e-9):.1f} dBFS")
-dur_v = n / E.FPS; dur_a = len(m) / sr
-print(f"   durations: video {dur_v:.4f} s, audio {dur_a:.4f} s, diff {1000 * (dur_a - dur_v):.1f} ms")
+dur_v = n / E.FPS; dur_dec = len(m_full) / sr
+_pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=duration", "-of", "csv=p=0", path], capture_output=True, text=True).stdout.strip()
+dur_a = float(_pr) if _pr else dur_dec                       # the container duration (players trim the AAC padding with it)
+print(f"   durations: video {dur_v:.4f} s, audio {dur_a:.4f} s (container; decoded {dur_dec:.4f} s with AAC padding), diff {1000 * (dur_a - dur_v):.1f} ms")
 
 # ---- 7b. flashes (from the Dexter studio's qc105 §7b; the v11 flash-discipline rule)
 fl_ev, i = [], 1

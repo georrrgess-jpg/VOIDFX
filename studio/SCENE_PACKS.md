@@ -102,6 +102,22 @@ Downloaded with `python3 tools/fetch_packs.py LINKS.txt`; **the links are not in
 
 v106's held `fbh` shots juddered until they got `interp="flow"`. Their sharpness tool flagged nine of these as SOFT, all within 0.01 of the threshold: run1, saves, pov, runred, lookup, arms, charge, through and smile.
 
+**Proven in v13 (EVENT HORIZON), the S1 pack `fs1`:**
+- 290.20–291.43: the S1 finale vortex over the city (no face);
+- 277.43–281.17: he looks up as debris rises (bloody; vortex top-left in the source);
+- 286.87–290.17: masked, bloody, profile;
+- 268.27–269.83: bloody, looking up;
+- 291.47–292.87: his eye, the iris turns orange (pupil at source 310, 280; `cx=320`);
+- 195.0–196.8: masked take-off on the airfield;
+- 285.33–286.83: Iris and Joe watching;
+- 221.70–223.00: masked close-up (calm);
+- 228.03–229.37: masked, serious;
+- 207.55–207.95: the airfield, sky above his head (good for anything behind him);
+- 236.30–237.60: he looks at Iris and speeds off;
+- 237.77–238.80: Iris, hair blown by his passing.
+
+The fast shots in it (vortex, debris, take-off) need `flowmax=40`. Its source starts at 52.82 (`fbh` ignition) and a cut sits right before it: start at 52.92.
+
 **Avoid:** `fbk` 100.5–102.2 (the same strike scene as `fbh` 10.3); `fs2t` 133–137 (his head at the top of the source frame); `fs1` 138–143 (a dark limb across the frame).
 
 ## Dexter scene packs

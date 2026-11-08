@@ -279,7 +279,11 @@
   "'Darling,' freeze into the falling blood drop; rear-view-mirror open and loop; streetlight sweep, wiper, whips, plastic wrap, impact frame, rain focus pull, lamp on (v8)",
   "v9 text: 'it was perfect'",
   "v10 motion pass (speed ramps, beat camera, light rays) and the Speed Force loop",
-  "v11 RIFT, REVERSE loop with the coin-flip emblem, beat moments"
+  "v11 RIFT, REVERSE loop with the coin-flip emblem, beat moments",
+  {
+   "edit": "v13 EVENT HORIZON rev 2",
+   "what": "approved, not a standard: 'It does somethings good and somethings bad' (items not yet named by the owner)"
+  }
  ],
  "rejected": [
   {
@@ -606,6 +610,41 @@
    "evidence": "small Whisper put 'I said maybe' 3.4 s early; the automatic map locked to 116 BPM (4/3 of 87.02)",
    "applies_to": "all",
    "check": "plan"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "The hero asset is a motif, not the transition kit: its set piece(s) and at most the focal piece and the loop (2-4 appearances); every other transition a different idea",
+   "evidence": "I don't like that the singularity is the primary object in every transition and animation (v13 rev 1)",
+   "applies_to": "all",
+   "check": "plan"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "An emblem transition comes from the emblem itself (its bolt or shape on the real tracked emblem), not another effect starting there",
+   "evidence": "rev 1 black hole in the emblem, then 'make a emblem transition'; EMBLEM SPLIT approved",
+   "applies_to": "flash",
+   "check": "visual"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "A hero graphic lives ~1 s on screen as a graphic (in depth, off faces), then becomes the transition",
+   "evidence": "create a really cool graphic that you use to turn into a transition -> LIGHT RIBBON approved",
+   "applies_to": "all",
+   "check": "visual"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "Start sound lean: ~10-12 sound events in 20-23 s; small transitions silent; no drones, swirls, whines or a swell on every move",
+   "evidence": "remove some of the tedious sound effects (v13 rev 1; third edit in a row)",
+   "applies_to": "all",
+   "check": "auto"
+  },
+  {
+   "from": "flash v13 EVENT HORIZON (approved, not a standard)",
+   "rule": "Pull frames of any library transition before use; some sample past their shot (v11 bolt_trace showed the next pack shot)",
+   "evidence": "v13 rev 2 review",
+   "applies_to": "all",
+   "check": "visual"
   }
  ]
 }
