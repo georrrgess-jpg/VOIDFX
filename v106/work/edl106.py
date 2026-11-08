@@ -107,13 +107,13 @@ shot("pov", "fz", 27, 29, 61.00, 63.45, z=[(0, 1.00), (1, 1.04)], tin="speedforc
 shot("runred", "f5", 29, 32, 108.50, 110.80, z=[(0, 1.00), (1, 1.06)], tin="bolt_trace", seg=True, face=None, cx=(470, 560),
      tmap=vel(29, 32, 108.50, 110.80), lin=True, interp="flow", **WD)
 # ---- "and after all": THE WONDERWALL rises behind him
-shot("lookup", "fh", 32, 35, 89.85, 90.95, z=[(0, 1.00), (1, 1.06)], tin="whirlwind", seg=True, wall=1, aura=0.8, **WD)
+shot("lookup", "fh", 32, 35, 89.85, 90.95, z=[(0, 1.00), (1, 1.06)], tin="whirlwind", seg=True, wall=1, **WD)
 shot("emblem", "fh", 35, 37, 129.40, 130.30, z=[(0, 1.04), (1, 1.00)], tin="emblem_flash", face=None, cx=(640, 640), **WD)
 shot("city", "fz", 37, 39, 71.72, 72.28, z=[(0, 1.00), (1, 1.06)], interp="flow", tin="dolly", face=None, cx=(700, 760), **WD)
 shot("wallrun", "fz", 39, 42, 74.40, 77.60, z=[(0, 1.00), (1, 1.05)], tin="lichtenberg", face=None, cx=(560, 700), speed=0.5,
      tmap=vel(39, 42, 74.40, 77.60), lin=True, interp="flow", **WD)
 # ---- "you're my": arms open, the wall glows and cracks; the charge-up
-shot("arms", "f5", 42, 45, 12.80, 14.20, z=[(0, 1.00), (1, 1.06)], tin="whip", seg=True, wall=2, remnants=0.8, interp="flow", **WD)
+shot("arms", "f5", 42, 45, 12.80, 14.20, z=[(0, 1.00), (1, 1.06)], tin="whip", seg=True, wall=2, interp="flow", **WD)
 shot("eyes2", "f5", 45, 46, 106.80, 107.40, z=[(0, 1.02), (1, 1.06)], tin="strobe", seg=True, wall=2, **WD)
 shot("charge", "fz", 46, 48, 47.90, 49.00, z=[(0, 1.00), (1, 1.05)], tin="perimeter", seg=True, wall=3, charge=1.0, **WD)
 # ---- "WONDERWALL": the frame becomes the wall and bursts; he strides out through it
@@ -135,7 +135,8 @@ TEXT = [
                              ("ONE", sw(163.92), 1), ("THAT", sw(164.22), 1), ("SAVES", sw(164.48), 1), ("ME", sw(165.02), 1)],
          end=sw(165.36) + 0.35, emph=["ONE", "SAVES"]),
     dict(style="cap", words=[("AND", sw(168.54), 0), ("AFTER", sw(168.86), 0), ("ALL", sw(169.26), 0)], end=sw(170.44) + 0.30, emph=["ALL"]),
-    dict(style="cap", words=[("YOU'RE", sw(171.92), 0), ("MY", sw(173.90), 0)], end=th(E_WALL) - 0.04, emph=[]),
+    dict(style="cap", words=[("YOU'RE", sw(171.92), 0)], end=th(45) - 0.04, emph=[]),                  # paused over the eyes2 close-up
+    dict(style="cap", words=[("YOU'RE", sw(171.92), 0), ("MY", sw(173.90), 0)], end=th(E_WALL) - 0.04, emph=[], **{"from": th(46)}),
     dict(style="wonder", words=[("WONDERWALL", sw(174.14), 0)], end=th(54) - 0.05, emph=["WONDERWALL"]),
 ]
 CAPS = []; CAP_Y = (1385, 1490); END_CAP = []

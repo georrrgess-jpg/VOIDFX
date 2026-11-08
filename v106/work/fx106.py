@@ -47,11 +47,16 @@ def grade(img, s, f):
 # ---- the finish: halation, vignette, grain -------------------------------------------------------------------------
 def finish106(out, f, s):
     small = cv2.resize(out, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
-    hi_ = np.clip(small.max(2) - 0.60, 0, 1)
-    bl = cv2.resize(cv2.GaussianBlur(hi_, (0, 0), 3) * 0.45 + cv2.GaussianBlur(hi_, (0, 0), 12) * 0.75, (W, H), interpolation=cv2.INTER_LINEAR)
+    hi_ = np.clip(small.max(2) - 0.68, 0, 1)
+    bl = cv2.resize(cv2.GaussianBlur(hi_, (0, 0), 3) * 0.40 + cv2.GaussianBlur(hi_, (0, 0), 12) * 0.70, (W, H), interpolation=cv2.INTER_LINEAR)
+    fb = face_box(s, f) if s is not None and s.get("face") is not None else None
+    if fb:                                                                                 # the halation stays off his face
+        fm = np.zeros((H // 8, W // 8), np.float32); cv2.ellipse(fm, (int((fb[0] + fb[1]) / 16), int((fb[2] - (fb[1] - fb[0]) * 0.55) / 8)),
+                                                                   (int((fb[1] - fb[0]) / 14) + 4, int((fb[1] - fb[0]) * 0.8 / 8) + 4), 0, 0, 360, 1.0, -1)
+        bl = bl * (1 - 0.85 * cv2.resize(cv2.GaussianBlur(fm, (0, 0), 3), (W, H)))
     o = np.empty(out.shape, np.float32); g = grain(f, 0.010)[..., 0]; v = VIG[..., 0]
     for ch in range(3):
-        oc = o[..., ch]; np.multiply(bl, HALO_C[ch] * 0.50, out=oc); oc += out[..., ch]; oc *= v; oc += g
+        oc = o[..., ch]; np.multiply(bl, HALO_C[ch] * 0.42, out=oc); oc += out[..., ch]; oc *= v; oc += g
     return np.clip(o, 0, 1, out=o)
 
 # ---- the beat camera: from the cold open's end to the loop; it rests on Iris and through the wall's burst -------------
@@ -189,8 +194,10 @@ def wall_layer(img, s, f, person, stage):
     gl = cv2.resize(cv2.GaussianBlur(cv2.resize(glow, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 4), (W, H))
     light = glow[..., None] * WCORE * 0.9 + gl[..., None] * WGOLD * 0.9
     o = o + light * bg[..., None]
-    if person is not None:                                                                 # the wall's light wraps his edge
+    if person is not None:                                                                 # the wall's light wraps his edge (never his face)
         edge = np.clip(cv2.GaussianBlur(person, (0, 0), 9) - person * 0.85, 0, 1)
+        fb = face_box(s, f)
+        if fb: edge = edge * (1 - ((_GX > fb[0] - 40) & (_GX < fb[1] + 40) & (_GY < fb[2] + 60)).astype(np.float32))
         o = o + edge[..., None] * WGOLD * (0.25 + 0.45 * crack) * (gl[..., None] * 2.5 + 0.2)
     return np.clip(o, 0, 1)
 

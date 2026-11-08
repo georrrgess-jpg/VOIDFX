@@ -70,7 +70,7 @@ clash = []; lowfp = []
 def text_bands(t):
     b = []
     for tx in getattr(E, "TEXT", []):
-        if tx["words"][0][1] - 0.05 <= t < tx["end"] + 0.2:
+        if max(tx["words"][0][1], tx.get("from", -1)) - 0.05 <= t < tx["end"] + 0.2:          # a caption shows from its first word, or its "from"
             if tx["style"] == "behind": continue                                    # set behind his cutout by design
             b.append({"lyric": (1330, 1550), "hook": (1250, 1590), "script": (1290, 1580)}.get(tx["style"], tx.get("band", (1240, 1640))) + (tx["style"],))
     for vi, words, s_end, emph, style in E.CAPS:
