@@ -14,14 +14,14 @@
    "buried": false
   },
   {
-   "name": "press_flash",
+   "name": "broadcast",
    "kind": "transition",
    "at": 2.74,
    "t0": 2.44,
    "t1": 3.19,
    "music_db": -13.4,
-   "fx_peak_db": -12.9,
-   "fx_minus_music": 0.5,
+   "fx_peak_db": -20.5,
+   "fx_minus_music": -7.2,
    "buried": false
   },
   {
@@ -91,7 +91,7 @@
    "buried": false
   },
   {
-   "name": "flip",
+   "name": "whip",
    "kind": "transition",
    "at": 7.54,
    "t0": 7.24,
@@ -234,7 +234,7 @@
    "buried": true
   },
   {
-   "name": "whip",
+   "name": "dolly",
    "kind": "transition",
    "at": 18.51,
    "t0": 18.21,
@@ -245,7 +245,7 @@
    "buried": true
   },
   {
-   "name": "dolly",
+   "name": "smear",
    "kind": "transition",
    "at": 19.2,
    "t0": 18.9,
@@ -256,26 +256,15 @@
    "buried": true
   },
   {
-   "name": "whip",
-   "kind": "transition",
-   "at": 20.57,
-   "t0": 20.27,
-   "t1": 21.02,
-   "music_db": -14.7,
-   "fx_peak_db": -44.8,
-   "fx_minus_music": -30.2,
-   "buried": true
-  },
-  {
-   "name": "the loop",
+   "name": "the masses spell his name",
    "kind": "set piece",
-   "at": 20.57,
-   "t0": 20.57,
+   "at": 19.89,
+   "t0": 19.89,
    "t1": 21.94,
-   "music_db": -14.4,
-   "fx_peak_db": -44.8,
-   "fx_minus_music": -30.4,
-   "buried": true
+   "music_db": -13.5,
+   "fx_peak_db": -23.9,
+   "fx_minus_music": -10.3,
+   "buried": false
   }
  ]
 }
