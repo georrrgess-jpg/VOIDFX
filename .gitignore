@@ -119,3 +119,10 @@ v12/frames/
 v12/out/
 v12/work/*.npz
 v12/work/*.npy
+v107/work/*.log
+v107/audio/
+v107/frames/
+v107/out/
+v107/work/*.npz
+v107/work/*.npy
+v107/sr/
