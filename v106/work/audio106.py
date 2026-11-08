@@ -451,8 +451,10 @@ def main():
     mus = music106(song) * db(-1.0)
     fx = np.zeros((N + PRE, 2), np.float32); n = N + PRE; tt = np.arange(n) / SR - PRE / SR; th = E.th
     fx += stereo(norm(bq(noise(n, 1790), "low", 140, 2) + 0.08 * np.sin(2 * np.pi * 44 * tt), -46))     # room tone, continuous
+    MUTED = {"strobe_echo", "bolt_trace", "emblem_flash", "strobe", "light_leak"}          # rev 2: cut (busy, shiny or near the end)
     for s_ in E.SHOTS:
         tin, t0 = s_.get("tin"), s_["t0"]
+        if tin in MUTED or (tin == "mist_swirl" and s_["n"] == "home"): continue
         if tin == "red_phase":                                   # the beat: the Reverse-Flash shudder
             place(fx, stereo(buzz(0.18, -24, 45, 140)), t0 - 0.17); place(fx, A2.whoosh(0.28, -25, 1801, True), t0 - 0.03)
             place(fx, stereo(crackle(0.30, -28, 1802, 0.8)), t0)
@@ -482,7 +484,7 @@ def main():
         elif tin == "ignite":
             place(fx, stereo(whine(0.28, -30, 300, 1800)), t0 - 0.05); place(fx, stereo(crackle(0.40, -24, 1829, 0.5)), t0 + 0.02)
         elif tin == "speedforce_in":                             # into the Speed Force: a rising whine, a rush, a low rumble
-            place(fx, stereo(whine(0.30, -24, 500, 5000)), t0 - 0.28); place(fx, A2.whoosh(0.5, -20, 1830, True), t0 - 0.06)
+            place(fx, A2.whoosh(0.5, -20, 1830, True), t0 - 0.06)
             rr = bq(noise(I(1.2), 1831), "low", 220, 2) * np.sin(np.pi * np.arange(I(1.2)) / I(1.2)) ** 1.5
             place(fx, stereo(norm(rr, -26)), t0)
         elif tin == "ramp": place(fx, A2.whoosh(0.22, -24, 1832, True), t0 - 0.10)
@@ -516,7 +518,6 @@ def main():
             place(fx, A2.whoosh(0.35, -20, 2206, True), t0 + post_ - 0.25); place(fx, stereo(A2.impact(-15, (58, 30), 0.5, 0.5, 2207)), t0 + post_ - 0.05)
         elif tin == "mist_swirl":                                # the Speed Force mist rolls over: an airy swell, a cold crackle, a reversed shimmer
             place(fx, air(0.75, -24, 3001 + s_["e0"]), t0 - 0.42); place(fx, stereo(crackle(0.30, -30, 3002 + s_["e0"], 0.6), 0.4), t0 - 0.05)
-            place(fx, rev(np.stack([A2.shimmer(0.40, -29)] * 2, 1)).astype(np.float32), t0 - 0.40)
         elif tin == "lightning_rod":                             # the strike: a leader crackle, a thunder crack, the ground impact
             place(fx, stereo(crackle(0.10, -24, 3010, 0.95), -0.4), t0 - 0.10); place(fx, stereo(zap(-20, 3011, 5200, 400, 0.14)), t0 - 0.01)
             place(fx, stereo(thunder(-15, 3012, 1.2)), t0); place(fx, stereo(A2.impact(-14, (55, 30), 0.5, 0.6, 3013)), t0 + 0.01)
@@ -526,7 +527,6 @@ def main():
             place(fx, stereo(crackle(0.4, -23, 1919, 0.9)), t0 + 0.02)
         elif tin == "lightstreak":                               # light streaks rip past: a fast doubled pass and a shimmer
             place(fx, A2.whoosh(0.30, -16, 3025, True), t0 - 0.12); place(fx, A2.whoosh(0.22, -19, 3026, False), t0 - 0.02)
-            place(fx, np.stack([A2.shimmer(0.4, -26)] * 2, 1), t0)
         elif tin == "time_particles":                            # the picture comes apart: grains, a shimmer, reversed grains into a hit
             place(fx, stereo(crackle(0.40, -24, 3020, 0.5, (3000, 11000))), t0); place(fx, np.stack([A2.shimmer(0.5, -27)] * 2, 1), t0 + 0.05)
             place(fx, rev(stereo(crackle(0.30, -25, 3021, 0.5, (3000, 11000)))).astype(np.float32), t0 + 0.30)
@@ -553,38 +553,22 @@ def main():
             place(fx, stereo(sub_drop(-13, 0.9, 70, 26)), t0 + 0.02); place(fx, stereo(thunder(-17, 3095, 1.1)), t0 + 0.02)
             sh = shatter(-15, 3096); place(fx, np.stack([sh, np.roll(sh, 180)], 1).astype(np.float32), t0)
             place(fx, A2.whoosh(0.6, -18, 3097, True), t0 + 0.05)
+        elif tin == "tear_lens":
+            n_ = I(0.16); q_ = np.arange(n_) / SR
+            plip = np.sin(2 * np.pi * np.cumsum(1400 * np.exp(-q_ / 0.014) + 380) / SR) * np.exp(-q_ / 0.035)
+            plip = plip + bq(noise(n_, 3200), "band", np.array([600, 3500]), 2) * np.exp(-q_ / 0.02) * 0.25
+            place(fx, stereo(norm(plip, -24), 0.2), t0 - 0.35); place(fx, rev_swell(0.32, -24, 3201), t0 - 0.32)
+            n_ = I(0.7); q_ = np.arange(n_) / SR
+            bloom = bq(noise(n_, 3202), "low", 900, 2) * np.exp(-q_ / 0.12) * np.minimum(1, q_ / 0.004)
+            place(fx, stereo(norm(bloom, -21)), t0); place(fx, stereo(sub_drop(-20, 0.6, 62, 30)), t0)
         elif tin == "emblem_flash":                              # the emblem draws itself, flares
             place(fx, np.stack([A2.shimmer(0.7, -29)] * 2, 1), t0 - 0.20); place(fx, stereo(A2.impact(-20, (100, 55), 0.15, 0.7, 1833)), t0)
-    cuts = {s_["e0"] for s_ in E.SHOTS}
-    for e_ in range(E.E_BEAT + 2, E.E_LOOP, 2):                              # a quiet swish on each camera punch that isn't a cut
-        if e_ in cuts or 13 <= e_ < 19 or E.E_WALL - 1 <= e_ < E.E_WALL + 2: continue
-        place(fx, A2.whoosh(0.12, -34, 1850 + e_, e_ % 4 == 0), th(e_) - 0.06)
-    # the Speed Force: an airy bed under the first and last shots (it carries across the wrap)
-    for t_a, t_b in ((-0.10, th(6)), (th(58), E.DUR + 0.05)):
-        n_ = I(t_b - t_a); q_ = np.arange(n_) / SR; env = np.clip(np.minimum(q_ / 0.4, (n_ / SR - q_) / 0.3), 0, 1)
-        bed = bq(noise(n_, 3100 + int(t_a * 10)), "band", np.array([250, 3500]), 2) * env
-        place(fx, stereo(norm(bed, -33)), max(0.0, t_a))
-    # THE WONDERWALL rises (a low stone grind and a tick per tile row), then cracks (a crackle bed rising to the burst)
+    # rev 2: the camera-punch swishes, the Speed Force beds, the row ticks, the crack bed, the aura and remnant hits, the
+    # title zaps and the loop swells are cut. Kept: THE WONDERWALL rising (a low stone grind) and the charge into the burst.
     n_ = I(th(36) - th(32)); q_ = np.arange(n_) / SR
     grind = bq(noise(n_, 3110), "band", np.array([60, 420]), 2) * np.sin(np.pi * q_ / (n_ / SR)) ** 0.8
     place(fx, stereo(norm(grind, -24)), th(32))
-    for r in range(11): place(fx, stereo(tick(-29, 3120 + r), -0.6 + 0.12 * r), th(32) + 0.10 + r * 0.11)
-    cr = crackle(th(E.E_WALL) - th(42), -24, 3130, 0.7) * np.linspace(0.15, 1.0, I(th(E.E_WALL) - th(42))) ** 1.6
-    place(fx, stereo(cr.astype(np.float32), 0.2), th(42))
-    # beat moments: the aura on "and after all", the remnants on "you're my", the charge into the wall
-    place(fx, stereo(A2.impact(-27, (70, 40), 0.25, 0.1, 3140)), th(34)); place(fx, np.stack([A2.shimmer(0.35, -32)] * 2, 1), th(34))
-    for e_ in (42, 44):
-        place(fx, A2.whoosh(0.14, -27, 3150 + e_, True) * np.array([[1.0, 0.25]], np.float32), th(e_) - 0.03)
-        place(fx, A2.whoosh(0.14, -27, 3160 + e_, True) * np.array([[0.25, 1.0]], np.float32), th(e_) - 0.01)
     place(fx, stereo(hum_rise(th(48) - th(46), -24, 90, 520)), th(46))
-    # the WONDERWALL title is struck out of light, letter by letter
-    for tx in E.TEXT:
-        if tx["style"] == "wonder":
-            for q in range(10): place(fx, stereo(zap(-31, 3170 + q, 4800, 2200, 0.05), -0.7 + 0.15 * q), tx["words"][0][1] + 1.52 * q / 10)
-    # the loop: the mist swells over the lens (a big airy swell, a reversed shimmer into frame 0)
-    place(fx, air(1.6, -22, 3180, 200, 5000), E.DUR - 1.6)
-    place(fx, rev(np.stack([A2.shimmer(0.9, -26)] * 2, 1)).astype(np.float32), E.DUR - 0.9)
-    place(fx, rev_swell(0.6, -25, 3181), E.DUR - 0.6)
     fx = fx * db(10.0)                                                         # rule 7: the master is loud (-12 dBFS RMS): lift the design
     duck = np.zeros(N + PRE, np.float32)                                      # the music gives way for the big hits
     for t_h in (E.th(13), E.th(19), E.th(E.E_WALL)): duck[I(t_h - 0.03) + PRE:I(t_h + 0.35) + PRE] = 1.0

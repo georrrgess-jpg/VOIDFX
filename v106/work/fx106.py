@@ -7,6 +7,7 @@
 #   mist_swirl     the mist rolls over the frame and clears onto the next shot (lightning flickers inside it)
 #   lightning_rod  a bolt strikes down beside the next face; the next shot burns open outward from the bolt
 #   wonderwall     FOCAL: the frame itself becomes the wall, trembles, and bursts toward the camera; he strides out
+#   tear_lens      (rev 2) her tear gathers under her jaw, falls toward the lens holding Barry's goodbye; we fall through it
 #   loop_mist      (tout) he walks back into the Speed Force; the mist rolls over the lens and clears on frame 0
 #   text           v9 captions (gold emphasis) on the sung words; WONDERWALL forged from light, letter by letter
 COBALT = np.array([1.00, 0.52, 0.16], np.float32)        # BGR Speed Force cobalt
@@ -45,7 +46,7 @@ def grade(img, s, f):
     return np.clip(o, 0, 1, out=o)
 
 # ---- the finish: halation, vignette, grain -------------------------------------------------------------------------
-def finish106(out, f, s, ff=None):
+def finish106(out, f, s, ff=None, fmw=1.0):
     small = cv2.resize(out, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
     hi_ = np.clip(small.max(2) - 0.68, 0, 1)
     bl = cv2.resize(cv2.GaussianBlur(hi_, (0, 0), 3) * 0.40 + cv2.GaussianBlur(hi_, (0, 0), 12) * 0.70, (W, H), interpolation=cv2.INTER_LINEAR)
@@ -53,7 +54,7 @@ def finish106(out, f, s, ff=None):
     if fb:                                                                                 # the halation stays off his face
         fm = np.zeros((H // 8, W // 8), np.float32); cv2.ellipse(fm, (int((fb[0] + fb[1]) / 16), int((fb[2] - (fb[1] - fb[0]) * 0.55) / 8)),
                                                                    (int((fb[1] - fb[0]) / 14) + 4, int((fb[1] - fb[0]) * 0.8 / 8) + 4), 0, 0, 360, 1.0, -1)
-        bl = bl * (1 - 0.85 * cv2.resize(cv2.GaussianBlur(fm, (0, 0), 3), (W, H)))
+        bl = bl * (1 - 0.85 * fmw * cv2.resize(cv2.GaussianBlur(fm, (0, 0), 3), (W, H)))
     o = np.empty(out.shape, np.float32); g = grain(f, 0.010)[..., 0]; v = VIG[..., 0]
     for ch in range(3):
         oc = o[..., ch]; np.multiply(bl, HALO_C[ch] * 0.42, out=oc); oc += out[..., ch]; oc *= v; oc += g
@@ -104,13 +105,20 @@ def mist_layer(img, s, f, person, amt):
     bg = (1 - np.clip(person * 1.15, 0, 1)) if person is not None else np.ones((H, W), np.float32)
     add = mist_rgb(dens * bg, wisp * bg, amt)
     o = img * (1 - 0.18 * amt * (dens * bg)[..., None]) + add
-    e = f / FPS / E.HB; ph = (e % 4) * E.HB
+    e = f / FPS / E.HB; ph = ((e - 2) % 4) * E.HB                                          # rev 2: on the half bar, never on frame 0
     if ph < 0.20:                                                                          # a cold flicker deep in the mist
-        cv = bolt_canvas(); rng = np.random.default_rng(int(e // 4) * 13 + 5)
+        k4 = int((e - 2) // 4) + 50                                                        # >= 0 for the loop's virtual frames too
+        cv = bolt_canvas(); rng = np.random.default_rng(k4 * 13 + 5)
         x0 = rng.uniform(W * 0.62, W * 0.95); put_bolt(cv, (x0, rng.uniform(-40, H * 0.15)), (x0 + rng.uniform(-200, 120), rng.uniform(H * 0.35, H * 0.6)),
-                                                       int(e // 4) * 7 + 3, 2, 0.30, 6, 2)
+                                                       k4 * 7 + 3, 2, 0.30, 6, 2)
         o = o + light_from(cv, 0.55 * amt * math.exp(-ph / 0.07), COBALT) * bg[..., None]
     return np.clip(o, 0, 1)
+
+def shiver(shape, f, seed):
+    """(jx, jy) in -1..1, smooth in time: every element on its own sine, 9-15 Hz, random phase."""
+    rng = np.random.default_rng(seed); t = f / FPS
+    fq = rng.uniform(9, 15, shape); p1 = rng.uniform(0, 2 * np.pi, shape); p2 = rng.uniform(0, 2 * np.pi, shape)
+    return np.sin(2 * np.pi * fq * t + p1).astype(np.float32), np.sin(2 * np.pi * fq * 1.13 * t + p2).astype(np.float32)
 
 # ---- THE WONDERWALL -----------------------------------------------------------------------------------------------
 WALL_COLS, WALL_ROWS = 6, 11
@@ -169,7 +177,7 @@ def wall_frame(f, built, crack, tremble=0.0):
         glow = np.clip(glow + cv.astype(np.float32) / 255 * 1.6 * crack, 0, 2)
     rgba = np.dstack([rgb * a_t[..., None], np.maximum(a_t, a_m)]).astype(np.float32); glow = glow.astype(np.float32)
     if tremble > 0:
-        jx = (np.random.default_rng(f).uniform(-1, 1, WALL_ROWS * WALL_COLS) * 3 * tremble).astype(np.float32)
+        jx = (shiver((WALL_ROWS * WALL_COLS,), f, 78)[0] * 3 * tremble).astype(np.float32)
         mx = (np.arange(w2, dtype=np.float32)[None, :] + np.where(idx >= 0, jx[np.maximum(idx, 0)], 0)).astype(np.float32)
         my = np.repeat(np.arange(h2, dtype=np.float32)[:, None], w2, 1)
         rgba = cv2.remap(rgba, mx, my, cv2.INTER_LINEAR); glow = cv2.remap(glow, mx, my, cv2.INTER_LINEAR)
@@ -222,7 +230,7 @@ def mist_cover(f, u):
     dens, wisp = mist_field(f / FPS, 2.0)
     rad = np.sqrt(((_GX - W / 2) / (W * 0.62)) ** 2 + ((_GY - H * 0.48) / (H * 0.62)) ** 2)
     field = 0.62 * np.clip(rad, 0, 1.3) + 0.38 * cv2.GaussianBlur(dens, (0, 0), 14)
-    return smooth_arr((field - (1.10 - 1.35 * u)) / 0.30), dens, wisp
+    return smooth_arr((field - (1.22 - 1.55 * u)) / 0.30), dens, wisp
 
 def mist_over(base, f, u):
     """the mist volume over base: the picture refracts and softens under it; never fully opaque (max ~85 %)."""
@@ -236,13 +244,17 @@ def mist_over(base, f, u):
     o = under * (1 - 0.72 * c3) + m * c3
     if 0.35 < u < 0.95:                                                                    # lightning inside the mist
         cv = bolt_canvas(); rng = np.random.default_rng(f // 3)
-        x0 = rng.uniform(W * 0.15, W * 0.85); put_bolt(cv, (x0, rng.uniform(H * 0.05, H * 0.3)), (x0 + rng.uniform(-250, 250), rng.uniform(H * 0.55, H * 0.9)), f // 3, 2, 0.3, 6, 2)
+        side = rng.random() < 0.5; x0 = rng.uniform(W * 0.04, W * 0.20) if side else rng.uniform(W * 0.80, W * 0.96)   # rev 2: at the edges,
+        put_bolt(cv, (x0, rng.uniform(H * 0.05, H * 0.3)), (x0 + rng.uniform(-60, 60), rng.uniform(H * 0.55, H * 0.9)), f // 3, 2, 0.3, 6, 2)  # never across a face
         o = o + light_from(cv, 0.35 * cov.mean() + 0.05, COBALT) * cov[..., None]
     return np.clip(o, 0, 1)
 
 def mist_swirl(A, B, j, f, sa, sb, pre=10, post=16):
-    if j < 0: return mist_over(A, f, ein((j + pre + 1) / (pre + 1), 1.6))
-    return mist_over(B, f, 1 - eout((j + 1) / post, 2.0))
+    if j < 0:
+        w = clamp((j + 5) / 10, 0, 1)                                                      # the last frames: B starts to show through
+        return mist_over(A if w <= 0 else A * (1 - w) + B * w, f, ein((j + pre + 1) / (pre + 1), 1.6))
+    w = clamp(0.5 + (j + 1) / 10, 0, 1)
+    return mist_over(B if w >= 1 else A * (1 - w) + B * w, f, 1 - eout(j / post, 2.0))
 TR2["mist_swirl"] = (mist_swirl, 10, 16)
 
 def lightning_rod(A, B, j, f, sa, sb, pre=6, post=20):
@@ -271,8 +283,7 @@ TR2["lightning_rod"] = (lightning_rod, 6, 20)
 def tile_split(img, f, amt, gap_light):
     """the frame as a wall: a tile grid with glowing mortar; tiles tremble by amt (px)."""
     tw, th_ = W // WALL_COLS, H // WALL_ROWS
-    rng = np.random.default_rng(f)
-    jx = rng.uniform(-1, 1, (WALL_ROWS, WALL_COLS)).astype(np.float32) * amt; jy = rng.uniform(-1, 1, (WALL_ROWS, WALL_COLS)).astype(np.float32) * amt
+    jx, jy = shiver((WALL_ROWS, WALL_COLS), f, 77); jx, jy = jx * amt, jy * amt
     ri = np.clip((_GY // th_).astype(np.int32), 0, WALL_ROWS - 1); off = (ri % 2) * (tw / 2)       # running bond
     xs = _GX + off; ci = np.clip((xs // tw).astype(np.int32), 0, WALL_COLS)
     jx = np.pad(jx, ((0, 0), (0, 1)), mode="wrap"); jy = np.pad(jy, ((0, 0), (0, 1)), mode="wrap")
@@ -351,8 +362,86 @@ def loop_mist(out, f, s):
     if f < f0: return out
     u = (f - f0 + 1) / n
     cover = smooth(u / 0.55) * (1 - smooth((u - 0.62) / 0.38))
-    under = out if u < 0.55 else edge106(SHOTS[0], "first")
+    w = loop_w(f)                                                                          # rev 2: a dissolve under the mist, not a switch
+    if w <= 0: under = out
+    else:
+        und = sf_virtual(f - E.DUR_F)
+        under = und if w >= 1 else out * (1 - w) + und * w
     return mist_over(under, f, cover)
+
+def loop_w(f):
+    """how far the picture under the loop's mist has become frame 0's (0 -> 1 while the mist is thickest)."""
+    f0 = fh(E.E_LOOP + 2); u = (f - f0 + 1) / (E.DUR_F - f0)
+    return smooth((u - 0.40) / 0.22) if f >= f0 else 0.0
+
+_LV = {}
+def sf_virtual(fv):
+    """frame 0's footage with its Speed Force mist at the virtual frame fv (< 0): the mist keeps drifting into frame 0."""
+    if "b" not in _LV: _LV["b"] = base11(SHOTS[0], SHOTS[0]["f0"])
+    img, person = _LV["b"]
+    return mist_layer(img, SHOTS[0], fv, person, SHOTS[0]["mist"])
+
+# ---- TEAR LENS (rev 2): her tear gathers under her jaw, swells, and falls toward the lens; inside it, Barry's goodbye.
+#      We fall through it: the frame is inside the drop (a magnifying lens relaxing flat) and a ripple runs out from it.
+def tear_lens(A, B, j, f, sa, sb, pre=36, post=18):
+    if j < 0:
+        u = (j + pre + 1) / pre                                                            # 1/pre .. 1 (lands on the cut)
+        fs = face_scr(sa, f) if sa.get("face") is not None else None
+        C0 = (fs[0] + 0.30 * fs[2], fs[1] + 0.29 * fs[2]) if fs else (W * 0.55, H * 0.55)      # under her jaw, beside the chin
+        Ct = (W * 0.5, H * 0.62)
+        if u < 0.42:                                                                       # it gathers on her jaw and hangs
+            g = smooth(u / 0.42); r = 4 + 30 * g; C = (C0[0], C0[1] + 10 * g); v = 0.0
+        else:                                                                              # it lets go and falls toward the lens
+            v = (u - 0.42) / 0.58; e_ = ein(v, 2.3)
+            r = 34 * math.exp(math.log(1500 / 34) * e_); C = (C0[0] + (Ct[0] - C0[0]) * ein(v, 1.6), C0[1] + (Ct[1] - C0[1]) * ein(v, 1.6))
+        fb = face_scr(sb, sb["f0"]) if sb.get("face") is not None else None
+        PB = (fb[0], fb[1]) if fb else (W / 2, H * 0.40)
+        k = smooth(v)
+        P_ = (PB[0] + (C[0] - PB[0]) * k, PB[1] + (C[1] - PB[1]) * k)                       # the drop holds his face, then the whole frame
+        mag = 1 + 5.0 * (1 - smooth((r - 34) / 520))
+        L = 0.42 - 0.17 * smooth(v)
+        return np.clip(drop_over(A, B, C, r, P_, mag, L, 1 - smooth((r - 220) / 700)), 0, 1)
+    v = (j + 1) / post; Ct = (W * 0.5, H * 0.62)
+    L = 0.25 * (1 - eout(v, 2.0))
+    dx, dy = _GX - Ct[0], _GY - Ct[1]; rr = np.sqrt(dx * dx + dy * dy) + 1e-3
+    m = 1 - L * np.clip(1 - (rr / 1500) ** 2, 0, 1)
+    R = 80 + 1500 * eout(v, 1.7); band = np.exp(-((rr - R) / 55.0) ** 2) * (1 - v)          # the ripple from where it landed
+    fb = face_box(sb, f)
+    if fb:                                                                                 # never across his face
+        cxf = (fb[0] + fb[1]) / 2; rx = (fb[1] - fb[0]) / 2 + 60; ry = (fb[1] - fb[0]) * 0.80 + 40
+        band = band * np.clip(np.sqrt(((_GX - cxf) / rx) ** 2 + ((_GY - (fb[2] - ry * 0.9)) / ry) ** 2) * 1.6 - 0.9, 0, 1)
+    disp = band * 24
+    mx = (Ct[0] + dx * m + dx / rr * disp).astype(np.float32); my = (Ct[1] + dy * m + dy / rr * disp).astype(np.float32)
+    o = cv2.remap(B, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    o = o + band[..., None] * (WCORE * 0.10)                                               # the ripple catches the light
+    return np.clip(o, 0, 1)
+TR2["tear_lens"] = (tear_lens, 36, 18)
+
+def drop_over(A, B, C, r, P_, mag, L, spec):
+    """a lit water drop of radius r at C over A; inside, B seen through it (centred on P_, minified by mag, bulged by L)."""
+    R_ = int(r * 1.15) + 6; xa, ya, xb, yb = max(0, int(C[0] - R_)), max(0, int(C[1] - R_ * 1.2)), min(W, int(C[0] + R_)), min(H, int(C[1] + R_))
+    if xb <= xa or yb <= ya: return A
+    gx, gy = _GX[ya:yb, xa:xb], _GY[ya:yb, xa:xb]
+    dx, dy = gx - C[0], (gy - C[1]) / (1 + 0.10 * (1 - smooth((r - 34) / 60)))                 # a hanging tear is slightly long
+    rho = np.sqrt(dx * dx + dy * dy) / r
+    inside = np.clip((1 - rho) * r / 1.2, 0, 1)                                            # anti-aliased edge
+    m = (1 - L * np.clip(1 - rho ** 2, 0, 1)) * mag
+    q = cv2.remap(B, (P_[0] + dx * m).astype(np.float32), (P_[1] + dy * m).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    edge_px = min(0.30 * r, 70.0); ed = np.clip((r - rho * r) / edge_px, 0, 1)
+    q = q * (0.45 + 0.55 * smooth_arr(ed))[..., None]                                      # the dark Fresnel edge
+    rim = np.exp(-(((1 - rho) * r) / max(1.2, 0.035 * r)) ** 2)                             # the thin bright rim: warm below, cold above
+    up = np.clip(-dy / (r + 1e-3), -1, 1)
+    q = q + rim[..., None] * (WGOLD * np.clip(0.5 - 0.5 * up, 0, 1)[..., None] + COBALT * np.clip(0.5 + 0.5 * up, 0, 1)[..., None]) * 0.55
+    hx, hy = dx / r + 0.34, dy / r + 0.40                                                  # the highlight (streetlight), and its caustic
+    q = q + (np.exp(-((hx / 0.16) ** 2 + (hy / 0.10) ** 2)) * 0.95 * spec)[..., None] * WCORE
+    cx_, cy_ = dx / r - 0.28, dy / r - 0.46
+    q = q + (np.exp(-((cx_ / 0.30) ** 2 + (cy_ / 0.16) ** 2)) * 0.35 * spec)[..., None] * WGOLD
+    o = A.copy(); a_ = inside[..., None]
+    if r < 300:                                                                            # its soft shadow on the skin below it
+        sh = np.exp(-((dx / (r * 1.1)) ** 2 + ((dy - r * 0.6) / (r * 0.8)) ** 2)) * 0.25 * (1 - inside) * (1 - smooth((r - 60) / 200))
+        o[ya:yb, xa:xb] *= (1 - sh)[..., None]
+    o[ya:yb, xa:xb] = o[ya:yb, xa:xb] * (1 - a_) + q * a_
+    return o
 
 # ---- text: v9 captions on the sung words (gold emphasis); WONDERWALL forged from light ---------------------------
 _WD = {}
@@ -451,8 +540,8 @@ def render(f):
     if s.get("tout") == "loop_mist": out = loop_mist(out, f, s)
     out = beat_fx(out, f)
     out = text106(out, f, s, False)
-    if s.get("tout") == "loop_mist" and (f - fh(E.E_LOOP + 2) + 1) / (E.DUR_F - fh(E.E_LOOP + 2)) >= 0.55:
-        out = finish106(out, f, SHOTS[0], 0)                                               # frame 0's own finish: the seam lands exactly
+    lw = loop_w(f) if s.get("tout") == "loop_mist" else 0.0
+    if lw > 0: out = finish106(out, f, SHOTS[0], 0, lw)                                      # frame 0's own finish, faded in: the seam lands exactly
     else: out = finish106(out, f, s)
     return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8)
 
