@@ -1,0 +1,281 @@
+{
+ "music_rms_db": -12.8,
+ "under": 12.0,
+ "rows": [
+  {
+   "name": "mist_swirl",
+   "kind": "transition",
+   "at": 2.07,
+   "t0": 1.77,
+   "t1": 2.52,
+   "music_db": -12.2,
+   "fx_peak_db": -25.0,
+   "fx_minus_music": -12.8,
+   "buried": true
+  },
+  {
+   "name": "strobe_echo",
+   "kind": "transition",
+   "at": 3.45,
+   "t0": 3.15,
+   "t1": 3.9,
+   "music_db": -12.4,
+   "fx_peak_db": -46.7,
+   "fx_minus_music": -34.3,
+   "buried": true
+  },
+  {
+   "name": "lightning_rod",
+   "kind": "transition",
+   "at": 4.48,
+   "t0": 4.18,
+   "t1": 4.93,
+   "music_db": -13.5,
+   "fx_peak_db": -13.8,
+   "fx_minus_music": -0.3,
+   "buried": false
+  },
+  {
+   "name": "lightning rod",
+   "kind": "set piece",
+   "at": 4.48,
+   "t0": 4.48,
+   "t1": 5.17,
+   "music_db": -14.3,
+   "fx_peak_db": -13.8,
+   "fx_minus_music": 0.6,
+   "buried": false
+  },
+  {
+   "name": "her tear",
+   "kind": "set piece",
+   "at": 5.17,
+   "t0": 5.17,
+   "t1": 6.21,
+   "music_db": -13.0,
+   "fx_peak_db": -14.0,
+   "fx_minus_music": -1.1,
+   "buried": false
+  },
+  {
+   "name": "tear_lens",
+   "kind": "transition",
+   "at": 5.86,
+   "t0": 5.56,
+   "t1": 6.31,
+   "music_db": -12.7,
+   "fx_peak_db": -13.9,
+   "fx_minus_music": -1.2,
+   "buried": false
+  },
+  {
+   "name": "clash106",
+   "kind": "transition",
+   "at": 6.89,
+   "t0": 6.59,
+   "t1": 7.34,
+   "music_db": -14.6,
+   "fx_peak_db": -10.5,
+   "fx_minus_music": 4.1,
+   "buried": false
+  },
+  {
+   "name": "saves me",
+   "kind": "set piece",
+   "at": 6.89,
+   "t0": 6.89,
+   "t1": 7.58,
+   "music_db": -14.1,
+   "fx_peak_db": -10.5,
+   "fx_minus_music": 3.5,
+   "buried": false
+  },
+  {
+   "name": "lightstreak",
+   "kind": "transition",
+   "at": 7.58,
+   "t0": 7.28,
+   "t1": 8.03,
+   "music_db": -12.5,
+   "fx_peak_db": -16.1,
+   "fx_minus_music": -3.6,
+   "buried": false
+  },
+  {
+   "name": "phase",
+   "kind": "transition",
+   "at": 8.27,
+   "t0": 7.97,
+   "t1": 8.72,
+   "music_db": -12.4,
+   "fx_peak_db": -21.8,
+   "fx_minus_music": -9.4,
+   "buried": false
+  },
+  {
+   "name": "speedforce_in",
+   "kind": "transition",
+   "at": 9.31,
+   "t0": 9.01,
+   "t1": 9.76,
+   "music_db": -12.4,
+   "fx_peak_db": -23.5,
+   "fx_minus_music": -11.0,
+   "buried": false
+  },
+  {
+   "name": "bolt_trace",
+   "kind": "transition",
+   "at": 10.0,
+   "t0": 9.7,
+   "t1": 10.45,
+   "music_db": -12.9,
+   "fx_peak_db": -24.5,
+   "fx_minus_music": -11.7,
+   "buried": false
+  },
+  {
+   "name": "whirlwind",
+   "kind": "transition",
+   "at": 11.03,
+   "t0": 10.73,
+   "t1": 11.48,
+   "music_db": -13.1,
+   "fx_peak_db": -19.5,
+   "fx_minus_music": -6.4,
+   "buried": false
+  },
+  {
+   "name": "the wall rises",
+   "kind": "set piece",
+   "at": 11.03,
+   "t0": 11.03,
+   "t1": 12.41,
+   "music_db": -12.2,
+   "fx_peak_db": -19.8,
+   "fx_minus_music": -7.6,
+   "buried": false
+  },
+  {
+   "name": "emblem_flash",
+   "kind": "transition",
+   "at": 12.07,
+   "t0": 11.77,
+   "t1": 12.52,
+   "music_db": -11.9,
+   "fx_peak_db": -26.1,
+   "fx_minus_music": -14.2,
+   "buried": true
+  },
+  {
+   "name": "dolly",
+   "kind": "transition",
+   "at": 12.76,
+   "t0": 12.46,
+   "t1": 13.21,
+   "music_db": -11.9,
+   "fx_peak_db": -23.6,
+   "fx_minus_music": -11.7,
+   "buried": false
+  },
+  {
+   "name": "lichtenberg",
+   "kind": "transition",
+   "at": 13.45,
+   "t0": 13.15,
+   "t1": 13.9,
+   "music_db": -12.0,
+   "fx_peak_db": -21.7,
+   "fx_minus_music": -9.6,
+   "buried": false
+  },
+  {
+   "name": "whip",
+   "kind": "transition",
+   "at": 14.48,
+   "t0": 14.18,
+   "t1": 14.93,
+   "music_db": -11.8,
+   "fx_peak_db": -19.0,
+   "fx_minus_music": -7.1,
+   "buried": false
+  },
+  {
+   "name": "strobe",
+   "kind": "transition",
+   "at": 15.51,
+   "t0": 15.21,
+   "t1": 15.96,
+   "music_db": -13.7,
+   "fx_peak_db": -24.9,
+   "fx_minus_music": -11.2,
+   "buried": false
+  },
+  {
+   "name": "perimeter",
+   "kind": "transition",
+   "at": 15.86,
+   "t0": 15.56,
+   "t1": 16.31,
+   "music_db": -13.9,
+   "fx_peak_db": -22.8,
+   "fx_minus_music": -8.9,
+   "buried": false
+  },
+  {
+   "name": "WONDERWALL burst",
+   "kind": "set piece",
+   "at": 16.2,
+   "t0": 16.2,
+   "t1": 17.58,
+   "music_db": -13.1,
+   "fx_peak_db": -6.9,
+   "fx_minus_music": 6.2,
+   "buried": false
+  },
+  {
+   "name": "wonderwall",
+   "kind": "transition",
+   "at": 16.55,
+   "t0": 16.25,
+   "t1": 17.0,
+   "music_db": -13.7,
+   "fx_peak_db": -6.4,
+   "fx_minus_music": 7.3,
+   "buried": false
+  },
+  {
+   "name": "light_leak",
+   "kind": "transition",
+   "at": 18.62,
+   "t0": 18.32,
+   "t1": 19.07,
+   "music_db": -12.5,
+   "fx_peak_db": -24.6,
+   "fx_minus_music": -12.1,
+   "buried": true
+  },
+  {
+   "name": "mist_swirl",
+   "kind": "transition",
+   "at": 20.0,
+   "t0": 19.7,
+   "t1": 20.45,
+   "music_db": -12.6,
+   "fx_peak_db": -46.7,
+   "fx_minus_music": -34.0,
+   "buried": true
+  },
+  {
+   "name": "the loop",
+   "kind": "set piece",
+   "at": 20.0,
+   "t0": 20.0,
+   "t1": 22.06,
+   "music_db": -13.8,
+   "fx_peak_db": -44.7,
+   "fx_minus_music": -30.9,
+   "buried": true
+  }
+ ]
+}

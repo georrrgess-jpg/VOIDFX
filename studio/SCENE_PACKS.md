@@ -4,6 +4,8 @@ Every file lives in `src/` under the name in the first column. That folder is no
 
 All times are **seconds in that file**. "w" is the YuNet face width in source pixels on a 1280×720 frame. Above roughly 400 the face is too wide for a 9:16 crop, and text has nowhere to go.
 
+**Lip-sync rule:** many lines in these packs are Dexter's inner-monologue narration. Before presenting a line as spoken on screen, run `python3 tools/lipcheck.py SRC t0 t1 OUT.jpg --vocals STEM.wav` and look at the sheet. If his lips don't move with the speech bars, it's voice-over (v101 was rejected for this).
+
 **Cached analysis** (copy it into a new edit instead of re-running):
 - shot lists: `studio/packs/shots_p9.json`, `shots_p10.json`, `v9/work/shots_tg.json`; `v2/work/shots_p2.json`, `shots_p3.json`; `v3/work/shots_p4.json`, `shots_p5.json`, `shots_dk.json`; `v6/work/shots_p6.json`; `v7/work/shots_p7.json`, `shots_p8.json`; `v5/work/shots_fa.json`, `shots_fb.json`;
 - transcripts: `studio/packs/tr_p9.json` (p10 has no audio); `v3/work/doakes_transcript.json`, `v6/work/tr_pack6.json`, `v7/work/tr_p8.json`, `v5/work/tr_pack_*.json`.
@@ -44,6 +46,28 @@ Every pack is 1280×720, including every one labelled 4K, 1440p or "4K TOPAZ" (t
 | `flash_s2.mp4` ("4K 60FPS") | 1.46 | 0.027 | 0.43 | Soft: prefer `flash_s2_topaz.mp4` for the same season |
 | `flash_s4.mp4` | 1.08 | 0.020 | 0.39 | Soft: pick the crispest moments, keep zoom low |
 | `pack4_aesthetic.mp4` | 1.70 | 0.064 | 0.36 | Softest (filtered/graded): wide shots, not close-ups |
+| `dexter_s1_hq.mp4` (S1, added 2026-11-08) | 2.00 | 0.036 | **0.73** | **Yes: the sharpest Dexter pack.** The same footage and timing as `pack8_s1.mp4` at 4.6× the bitrate (matched frames 30–41 dB). Use it instead of p8 |
+| `dexter_s4_hq.mp4` (S4, added 2026-11-08) | 1.80 | 0.033 | 0.62 | Yes. The same footage and timing as `pack9_s4_best.mp4` at 2.6× the bitrate. Use it instead of p9 |
+| `dexter_s2_b.mp4` (S2, added 2026-11-08) | 2.07 | 0.037 | 0.55 | Yes (new footage, 6:51) |
+| `dexter_s2_a.mp4` (S2, added 2026-11-08) | 1.98 | 0.036 | 0.50 | OK (new footage, 5:18) |
+| `dexter_mix_b.mp4` (labelled 1440p, really 720p; added 2026-11-08) | 1.72 | 0.031 | 0.48 | OK (new footage, 7:07) |
+
+### Packs added 2026-11-08 (the owner's link list, sent to both studios)
+Every link labelled 4K or 1440p is **1280×720**.
+- **Dexter (installed by the Dexter studio):**
+  - `dexter_s1_hq.mp4` and `dexter_s4_hq.mp4` are higher-bitrate copies of `pack8_s1` and `pack9_s4_best`, with the same frame timing. An EDL can switch `SRC` to them without retiming. This is the fix for v105's clip-quality gripe on those packs.
+  - `dexter_s2_a`, `dexter_s2_b` and `dexter_mix_b` are new footage; run `analyze.py` and the sharpness tool before using them.
+  - The "DEXTER MORGAN SCENE PACK 4K 60 FPS" link is byte-identical to `pack7_4k.mp4`.
+  - "voidfx THE PASSENGER S LOVE SONG" is the owner's posted v104, kept as `ref_v104_passenger_posted.mp4`.
+- **Flash (probed by the Dexter studio, left for the Flash studio to install):**
+  - "The flash scenepack all seasons 4K 60 FPS" is `flash_b.mp4`'s footage at 2.20 Mb/s (was 1.18).
+  - New footage:
+    - S1 (30 fps, 4:54, 1.11 Mb/s);
+    - S2 (30 fps, 2:27, 1.40 Mb/s);
+    - S2 (60 fps, 5:09, 1.46 Mb/s);
+    - S3 (30 fps, 2:16, 1.22 Mb/s);
+    - S5 (23.98 fps, 6:22, 1.37 Mb/s);
+    - Blitzkrieg (60 fps, 3:02, 2.06 Mb/s).
 
 ## Packs added 2026-11-08 (the owner's Google Drive list)
 
@@ -190,12 +214,12 @@ Uploaded as `Dexter_S4_4k_Scenepack_Dexter_Morgan_All_Best__Most_Popular_Clips_1
 | 161.0–162.4 | "This is his solution to remorse: suicide." | |
 | ~189–193 | "Hello, Dexter Morgan." (Trinity) | Over the office stare-down; spread timing, check the stem |
 | **212.8–214.8** | **"How is it I can kill people and feel no regret…"** | |
-| **223.0–224.0** | **"Hello, Arthur Mitchell."** | Over the gloved night shot (222.12–225.37), before the Trinity kill |
+| **223.0–224.0** | **"Hello, Arthur Mitchell."** | Over the gloved night shot (222.12–225.37), before the Trinity kill. Dexter's lips stay closed on that shot (Studio 2's lip sheet), so it's voice-over there; v9 rev 2 shows Arthur Mitchell instead |
 | **230.9–233.4** | **"I wonder if Rita's looking at this same moon."** | Over the moon (229.97) and looks-up (230.57) shots: a ready-made ending or loop line |
 
 ### `pack10_s4_24p.mp4` (key `p10`): S4 scene pack, 1280×720, **native 24 fps**, 3:04, 59 shots
 
-Uploaded as `Dexter_Morgan_Dexter_S4_Scenepack_4K_1.mp4`. A true 24p file: play it at its own cadence (`interp="hold"`, the renderer repeats frames at 60) and never flow-interpolate it. Longer shots than p9, with more lab, boat and daylight Miami material. Shot list: `studio/packs/shots_p10.json`.
+Uploaded as `Dexter_Morgan_Dexter_S4_Scenepack_4K_1.mp4`. **Its audio track is digital silence**, so it's picture only and has no dialogue. A true 24p file: play it at its own cadence (`interp="hold"`, the renderer repeats frames at 60) and never flow-interpolate it. Longer shots than p9, with more lab, boat and daylight Miami material. Shot list: `studio/packs/shots_p10.json`.
 
 | Time | Shot | Notes |
 |---|---|---|
@@ -396,6 +420,24 @@ Proven shots (fb):
 
 **Avoid:** the slow-mo run at the camera, and the floating shot.
 
+More proven fb shots (v102; YuNet face widths):
+- unmasked close-up, calm 37.12–38.55 (w259);
+- lightning crawling over unmasked Barry 83.80–85.08 (w161);
+- cowl pull 68.63–71.85 (w261);
+- **"How's this for power?"** 110.96–112.00 on the masked close-up 109.68–112.47 (w233). **On camera** (lip sheet `v102/frames/lip_power.jpg`); dialogue stem = Demucs of fb 100–140 s;
+- lightning throw 124.17–124.78 (one take, split by the detector at 124.37 on the flash);
+- scream with the lightning blast 127.63–129.15 (a 9:16 crop loses most of the blast);
+- lightning climbing his body (garage) 112.48–116.48;
+- street run into the lens 64.73–68.62 (one take split by lightning flashes; lock framing at x≈745);
+- sideways wall run 80.82–82.27 (`rot=True` fills 9:16);
+- lightning on his face 89.70–91.98 (lit white; `target≈0.33`);
+- dark, lit by his own lightning 52.82–54.35;
+- grin 56.05–58.32 (w315);
+- glowing eyes 116.50–119.38 (w337);
+- lateral sprint 4.28–6.22.
+
+For a consistent Barry, avoid the other speedsters and suits: the yellow suit (124.8–127.5), purple and green lightning (129–148), and the black suit with the blue chest (42–53).
+
 More fb shots, verified in v10 (fb is 24p in a 60 fps container: use `interp="hold"`; `blend` only under afterimages):
 
 | Time | Shot | Notes |
@@ -455,6 +497,22 @@ Every clip is a ~600×600 inset (x≈340–940, y≈60–660) over a blurred, sc
 
 ---
 
+### `flash_s4.mp4` (key `fs4`): "FLASH SEASON 4 SCENE PACK 4K 60FPS" (theflash_scenepacks), 1280×720, 60 fps, 3:06, 97 shots
+
+Uploaded with the v105 brief, stored for future Flash edits. Shot list: `studio/packs/shots_fs4.json`. It's a clean pack: no watermark seen, and no audio track (picture only). Highlights from the overview sheet (times are approximate; check the shot list):
+- **Suited Barry:** close-ups and three-quarter shots (about 29, 34, 61, 66, 71, 94, 127, 145, 164 s).
+- **Lightning:** lightning runs and speed trails (about 6, 75, 89, 154, 173–182 s); the burning finale at about 173–182 s.
+- **The office fight:** with speed lightning, about 38–57 s.
+- **Unmasked Barry:** about 52, 122, 136, 150, 159 s.
+- **The Thinker (DeVoe) in his chair:** about 113 and 168 s. Iris: about 117 s.
+
+### `reverse_flash.mp4` (key `rf`): "Reverse Flash CW Flash Scenepack, Head Tracked, Topazed 4k 60fps, With Intro Clips", 1280×720, 60 fps, 1:34, 56 shots
+
+Uploaded with the v105 brief, stored for future Flash edits. Shot list: `studio/packs/shots_rf.json`. It has no audio track.
+- **Contents:** Eobard Thawne / Harrison Wells, with the Reverse-Flash suit and red eyes at about 6, 10, 15, 31, 76, 81 and 83 s. It's head-tracked and framed in a centre window with blurred sides.
+- **Watermark:** "SCENEPACK LINK IN DESC" is burned into the bottom of every frame, so crop above it.
+- **Text cards to avoid:** about 39 s and 67 s ("Intro …"), and 85–94 s ("Likes … second scenepack", "Hope you enjoyed", "Music by").
+
 ## Songs (`src/`)
 
 | File | Uploaded as | Notes |
@@ -469,6 +527,8 @@ Every clip is a ~600×600 inset (x≈340–940, y≈60–660) over a blurred, sc
 | `need_it.mp3` | `Migos_-_Need_It…mp3` | 74 BPM (v3/v4) |
 | `duvet.mp3` | `B_a_-_Duvet_Lyrics.mp3` | 93 BPM, P=0.32211, offset 0.2085. Lyric is "you don't even **feel** a thing" |
 | `blood_theme.mp3` | `Blood_Theme_Instrumental.mp3` | Dexter theme; hard stop at 113.047 s |
+| `less_i_know.mp3` | `Tame_Impala_-_The_Less_I_Know_The_Better_Audio.mp3` | 116.99 BPM, P=0.25644, offset 0.0833; beats on the ODD half-beats. Drums enter 1.877 s (h7), bassline + band drop 10.084 s (h39), vocals from ~24.7 s (v101) |
+| `let_go.mp3` | `Ark_Patrol_-_Let_Go_Lyrics_ft._Veronika_Redd_and_now_you_wont_let_go.mp3` | 163.96 BPM, P=0.18297, offset 0.0366. Drop 1 at 52.73 s, **drop 2 at 140.56 s (+31 dB)**; breakdowns (bass + vocal chops) at 35.2 / 123.0 s, risers at 49.8 / 137.6 s. Hook "but now you won't let go" 32.4–33.5 s; the riser chops are ambiguous to Whisper, so don't caption them (v102) |
 | `matrix_funk_slowed.mp3` | `MATRIX_FUNK_SLOWED.mp3` | Slow again by ×1.12644 (vinyl) → 102.8 BPM |
 
 ## Other assets

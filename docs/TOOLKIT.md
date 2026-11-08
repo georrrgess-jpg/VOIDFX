@@ -1,6 +1,10 @@
 # voidfx toolkit: how an edit gets made (fast)
 
+<!-- Flash studio (Studio 1) -->
 The engine lives in the newest standard, `v11/work/` (BOP rev 4; `v10/`, `v7/`, `v6/` and `v4/` remain benchmarks). It contains every v4–v11 transition and graphic, the restored-source sampler, velocity with optical flow, the beat camera, the v9 text system and the v11 pieces (rival grade, red effects, bolt split, red eye dive, clash, rift, the procedural Reverse-Flash emblem and coin flip, the REVERSE loop, the beat moments). New edits copy it with `tools/new_edit.py`, then write their EDL and **their own frame function** (`render()` at the end of the renderer: grade, text, graphics, finish) and sound design. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
+
+<!-- Dexter studio (Studio 2) -->
+The engine is the newest standard, `v104/work/` (THE PASSENGER; see the handbook §0). `render104.py` contains every v4–v9 transition and graphic, and the edit's own section is spliced in from `fx104.py` by `splice.py`. That section carries FOREVER's toolkit and THE PASSENGER's on top of it (the last definitions win, so that section owns the grade, the frame function, the text and the finish). New edits copy all of it, plus THE PASSENGER's EDL as the worked template, with `tools/new_edit.py`. Then they rewrite the EDL, restyle their `fxN.py` (grade, palette, set pieces, frame) and the sound design, and run `python3 vN/work/splice.py` after each `fxN.py` change. **Copy the engine, not the look.** Every edit gets its own grade, type and transition mix. Owner preferences and lessons: `studio/VOIDFX_STUDIO.md`; sources: `studio/SCENE_PACKS.md`.
 
 ## 1. Pipeline and timings
 
@@ -11,7 +15,9 @@ Timings were measured on this 4-core box for a 26 s edit.
 | Scaffold | `python3 tools/new_edit.py N SLUG "TITLE"` | 1 s |
 | Map the song | `python3 tools/song_map.py src/SONG.mp3 vN/work` | 3 s |
 | Shot lists | `python3 vN/work/analyze.py src/PACK.mp4 TAG` (contact sheets, per-shot stats) | ~1 min per pack |
-| Dialogue / lyrics | `python3 tools/transcribe.py vN NAME MEDIA [--vad] [--start S --dur D]` | 1–3 min |
+| **Lyric recognition** | `python3 tools/lyrics.py vN src/SONG.mp3 START END "published lyrics \| line 2"`. Demucs vocals (cached), Whisper word times snapped to the real onsets, aligned to the published lyrics, unsung words left out, a ready `TEXT` caption block | ~1 min (+2 min Demucs the first time) |
+| Dialogue | `python3 tools/transcribe.py vN NAME MEDIA [--vad] [--start S --dur D]` | 1–3 min |
+| Edit-section change | edit `vN/work/fxN.py`, then `python3 vN/work/splice.py` | 1 s |
 | Voice under score | `python3 -m demucs -n htdemucs --two-stems=vocals -o vN/audio/sep CLIP.wav` | 15 s per 30 s clip |
 | Tracks and mattes | `bash tools/build.sh N prep` | ~35 s |
 | **Sharpness check** (Studio 2 rule) | `python3 tools/sharpness.py packs` before picking; `python3 tools/sharpness.py N` on the finished video (flags zoom > 10 % on 720p and shots under 0.80× the edit's median in-focus detail) | packs ~1 min; an edit ~40 s |
@@ -84,21 +90,23 @@ Every frame of the v2 render matches the shipped engine within the gate (worst p
   - LET'S GO on his chin (420);
   - the designed red radiate in the REVERSE loop (1198–1216).
 
-## 1c. The efficiency update (2026-11-08): fewer rounds, faster rounds
+## 1c. The efficiency update (both studios, merged into one toolchain on 2026-11-08): fewer rounds, faster rounds
+
+**Since the merge:** `build.sh N plan` (and `preflight.py N`) runs `tools/plan_check.py`, one report with both studios' checks; `studio/transitions.json` holds the generated fields (`preflight.py registry`) and the owner's curated verdicts (kept across rebuilds); `build.sh N rev` = audio → plan → video (only the changed frames) → qc + review pack → signoff → report, `ship` = rev + deliver. The Flash studio's half is the first table, the Dexter studio's the second.
 
 The owner: *"this process takes too long whether that be the revisions or the initial creation process"*, and quality must not drop. Most of an edit's time goes into owner rounds, and most owner notes repeat a rule we already had (v13 rev 1: the hero asset in every transition, too many sounds, swirls and whines). So the update checks the plan before the first render, then makes each round cheaper.
 
 | Tool | What it does |
 |---|---|
 | `tools/preflight.py N` · `build.sh N plan` (also at the end of `prep`) | The plan against the owner's standing rules, in seconds, before rendering. It reads the EDL, the renderer (imported without set-up: TR2 and a static call graph of every transition) and the sound events (`vN/audio/fx_events.json`, or a sandbox run of the audio builder).<br>**FAIL:**<ul><li>the hero asset (`HERO = [...]` in the EDL, or `--hero`) in more than 4 transitions;</li><li>no transition using `emblem_at` in a Flash edit;</li><li>a plain cut;</li><li>overlapping source ranges;</li><li>drone/swirl/whine/chime/bell/shine sounds;</li><li>a sound on a beat-camera hit away from a cut or set piece;</li><li>a transition the registry marks rejected.</li></ul>**WARN:**<ul><li>two shots from one source shot (`shots_<pack>.json`);</li><li>more than 12 effects;</li><li>more than 3 reverse swells;</li><li>z > 1.10;</li><li>held 24p/30p frames;</li><li>a repeated transition;</li><li>fewer than 3 set pieces;</li><li>an edit-local drawing helper reached by more than 4 transitions (the undeclared hero asset);</li><li>caches keyed on rounded arguments but filled from exact ones.</li></ul>**INFO:** the emblem transition, the library transitions to pull frames of, the text. Exit 1 on any FAIL. |
-| `studio/transitions.json` (shared, curated) · `studio/transitions_usage.json` (`preflight.py registry`, generated) | **The owner's verdict on each transition** (the Dexter studio's registry plus our Flash verdicts): `verdict` (liked / ok / rejected / banned), the owner's words, a `fix`, tags, hero `family`, and a `caution` note for technical traps (`bolt_trace`). Add each rejection the same turn. The usage file holds pre/post frames, the edits that used each transition and their verdicts. |
-| `tools/plan_check.py N` (the Dexter studio's; the shared gate) | Checks the EDL against the registry's verdicts, look-alike clips (thumbnail structure and colour ≥ 0.75), spins and dives landing without a tracked face, the loop and `SIGNATURE`, the hero family (`HERO_TINS`: WARN above 4, FAIL above 8), density, generic share and repeats, zoom, the spell-out grid, titles, holds with no beat, and the sound budget (grouped onsets on the effects stem: WARN above 16, FAIL above 30). `PLAN_ACCEPT` in the EDL accepts an item on purpose. Takes 1–5 s. |
+| `studio/transitions.json` (one file: generated by `preflight.py registry`, curated by both studios) | Every transition: pre/post frames, engines, the edits that used it, and **the owner's verdict** (`verdict` liked / ok / rejected / banned, his words in `evidence`, a `fix`, `tags` such as `generic`, `signature`, `black_occluder`, `leaks`, hero `family`, `studio`). Rebuilds keep the curated fields. Add each verdict the turn the owner gives it. |
+| `tools/plan_check.py N` (one report for both studios since the merge; it also runs preflight's checks) | Checks the EDL against the registry's verdicts, look-alike clips (thumbnail structure and colour ≥ 0.75), spins and dives landing without a tracked face, the loop and `SIGNATURE`, the hero family (`HERO_TINS`: WARN above 4, FAIL above 8), density, generic share and repeats, zoom, the spell-out grid, titles, holds with no beat, and the sound budget (grouped onsets on the effects stem: WARN above 16, FAIL above 30). `PLAN_ACCEPT` in the EDL accepts an item on purpose. Takes 1–5 s. |
 | `tools/signoff.py N` · `tools/report.py N` (the Dexter studio's) | Sign-off pages from the encode in 6 s: a row per transition (before, middle, the frame before the cut, the cut, after, end), the loop, the titles, the unexplained pops. The Measured block from the tools' outputs goes to `vN/work/measured.md`. |
 | `studio/OWNER_RULES.md` · `studio/WORKFLOW.md` · `studio/CRITIQUE_PROMPT.md` (the Dexter studio's) | The rules on one page; the fast loop with targets (at most 2 owner rounds, at most 2 full renders before a first delivery); the fresh-eyes critique, one agent that predicts the owner's notes before a delivery. |
 | `tools/codetrack.py` (inside `vrender.py`) | Change tracking for partial renders. A full render records the renderer functions that drew each frame (`sys.monitoring`, one event per function per frame; no measurable cost, identical pixels). Each function is keyed by its qualified name plus a hash of its own source, so moving code changes nothing. At the next `video`, a frame is dirty when it ran a function that was edited, removed or shadowed by a later layer, read a changed module value or EDL global, or ran a function that caches across frames (`global`, a module dict/list) and calls an edited one. Only those frames re-render, still verified bit-exact outside. A global no traced code reads (`SET_PIECES`, `VO`, audio knobs) renders nothing. Changed SRC/FPS/W/H/DUR_F, cut points, tracks, mattes, bands or helper modules still render in full, and so do changes reaching more than 70 % of the frames. `vrender.py N video --dry` shows what would re-render and why. |
 | `tools/review.py N` · `build.sh N review` (also at the end of `qc`) | The review pack from the encode: one row of 8 stills per transition window (TR2 pre/post), per `SET_PIECES` entry and for the wrap, with frames that faceqc or motionqc flagged boxed red. Output: `vN/frames/review_*.jpg`. It replaces hand-picked `sheet:` lists. |
 | `tools/song_prep.py N SONG [--h0 --h1]` · `build.sh N song:FILE[:H0:H1]` | In one command:<ul><li>the song map;</li><li>Demucs stems of the window ±8 s;</li><li>the grid fitted on the drum stem, against the map's period and its 2/3, 3/4, 4/3 and 3/2 relatives (v106's map locked to 4/3);</li><li>Whisper large-v3 words on the vocal stem (v13's full mix heard "girl" for "God"), in song seconds and edit half-beats;</li><li>loop-wrap scores (bar before H0 vs bar before H1) for the chosen and candidate windows.</li></ul>It writes `vN/work/song.json` and prints the EDL lines. |
-| `build.sh` | `plan` runs `plan_check` and `preflight`; a FAIL in either stops `video`, `video:A:B` and `fullvideo` (`PLAN_FORCE=1` overrides). `qc` runs `qcN`, `faceqc` and `motionqc` in parallel, then the review pack. `prep` starts `sr_prep` in the background (niced; skipped when the bands are current or it is already running). `ship` = audio plan video qc signoff report deliver. An edited `fxN.py` is re-spliced before any rendering step. The scaffold's `audio12.py` logs every `place()` from `main()` to `vN/audio/fx_events.json` (the audio itself is unchanged: identical md5 on v12). |
+| `build.sh` | `plan` runs `plan_check` (with preflight's checks inside); a FAIL stops `video`, `video:A:B` and `fullvideo` (`PLAN_FORCE=1` overrides). `qc` runs `qcN`, `faceqc` and `motionqc` in parallel, then the review pack. `prep` prints the plan check and starts `sr_prep` in the background. `rev` = audio plan video qc signoff report; `ship` = `rev` + deliver. An edited `fxN.py` is re-spliced before any rendering step. |
 
 **Measured (4 cores):**
 
@@ -119,6 +127,19 @@ The owner: *"this process takes too long whether that be the revisions or the in
 - **Declare `HERO`, `HERO_TINS`, `SIGNATURE` and `SET_PIECES` in the EDL** and run `plan` before `prep`. Fix every FAIL before the first render; each WARN is a decision, and the handoff says why one was kept.
 - **`render(f)` must be a pure function of `f`.** Compute cached values from the rounded key, never from the first caller's exact arguments (the v13 `doppler_row` pattern). Otherwise every partial render falls back to a full one.
 - **When the owner removes or dislikes a transition**, add the verdict to `studio/transitions.json` in the same turn (verdict, his words, the fix), then run `preflight.py registry`. Both studios' next plans then carry it.
+
+### 1c, the Dexter studio's half (`sync/EFFICIENCY_PLAN.md`, `studio/WORKFLOW.md`, `studio/OWNER_RULES.md`)
+
+| Command | What it does | Time |
+|---|---|---|
+| `build.sh N plan` / `tools/plan_check.py N [--edl PATH] [--json]` | The owner's recurring notes, checked on the EDL before any render, against `studio/transitions.json`. Runs automatically before `video`; a FAIL stops the render (`PLAN_ACCEPT = {"check": "why"}` in the EDL, or `PLAN_FORCE=1`). Optional EDL fields: `SIGNATURE`, `HERO_TINS` | 1–5 s |
+| `build.sh N rev` / `ship` | audio → plan → video → qc → signoff → report (→ deliver) | one render (partial when the change is local) |
+| `build.sh N signoff` / `tools/signoff.py N` | Review pages from the encode: every transition as a row (before, its middle, the frame before the cut, the cut, after, its end), the loop wrap, every text block, every UNEXPLAINED pop → `vN/frames/signoff_*.jpg` | 6 s |
+| `build.sh N report` / `tools/report.py N` | The Measured block → `vN/work/measured.md` | 1 s |
+| `build.sh N splice` | Re-splice `fxN.py` (automatic before any rendering step when `fxN.py` is newer) | 0 s |
+| `studio/CRITIQUE_PROMPT.md` | The fresh-eyes critique: one agent run that predicts the owner's notes from the rules and the sign-off pages | a few minutes |
+
+**The registry** (`studio/transitions.json`): every transition the owner has a verdict on (liked / ok / rejected / banned), with his words, the `fix` for a rejected one, tags (`black_occluder`, `face_gimmick`, `generic`, `signature`, `physical`, `lands_on_face`) and hero `family`. Add a verdict in the same turn the owner gives it.
 
 ## 2. Transitions (`tin=` on the incoming shot)
 
@@ -164,6 +185,9 @@ Each transition goes through something. Its sound lives in `audioN.py` (`if tin 
 | `blinds` (v9) | Backlit venetian slats rotate shut, then open on the next shot (staggered top to bottom) | — | Slat rattle ×2 |
 | `roll` (v9) | The world rolls 90° with rotational blur (lands on an upside-down shot) | — | Doppler whoosh, floor thud |
 | `smear` (v9) | Step-printed long-exposure echoes drag the frame, then settle | — | Tape-warble whoosh |
+| `projector_on`, `latex`, `frameslip`, `filmmelt`, `whip`, `hooddark`, `lavalamp`, `slidewipe`, `newsspin`, `papertear`, `oilwheel`, `tout="reel_end"` (v101, in `v101/work/fx101.py`) | 16 mm psych reel: projector strike-up and run-out (loop), a glove-stretch tear, a frame slip in the gate, a film burn-through (hero), a hood over the lens, lava-lamp blood blobs, a blood-slide glass wipe, a newspaper spin and tear, an oil-wheel light show. **v101's look was rejected; reuse transitions only if reworked** | — | Each has its own in `audio101.py` |
+| `rewind_in` + `tout="rewind_end"` (v102, in `v102/work/fx102.py`) | The loop as time travel: the last bar plays the whole edit backwards (35× at its peak, picture and sound together via `rew_pos`) and lands on frame 0, whose flash and smear settle into the first shot | — | The song runs backwards (band-limited), tape scrub, crackle |
+| `bolt_link`, `overcharge`, `strike`, `emblem`, `passby`, `smear` (light streaks), `impact`, `remnant` (soft) (v102) | A bolt out of the outgoing face's eye splits the frame; his own lightning floods the frame and the next shot burns in through gold; HERO strike (a frozen frame, a leader bolt, two impact frames, a shockwave); the emblem drawn in lightning, fly through the bolt; he passes the lens as a motion wipe; horizontal light streaks; a two-frame impact frame; converging time-remnants | Face track (`bolt_link`, `strike`); previous shot `freeze=True` (`strike`) | Zap / swell / thunder + time-stop / hum + whoosh / doppler / whoosh / hit / shimmer |
 | `phase` (v10 r3) | He vibrates through the frame: jittered chromatic copies, row shimmer, every edge lit gold; the next shot shows through for a few frames, then settles | — | Rising saw buzz, whoom |
 | `whirlwind` (v10 r3) | The frame twists into a spiral round the eye of a storm (angular blur, wind and debris torn round); the next shot unwinds out of it | — | Wind swirl circling the stereo field |
 | `lichtenberg` (v10 r3) | A branching lightning figure grows from his chest (stopping short of his face); the next shot opens inside the branches | — | Growing crackle, snap |
@@ -195,6 +219,157 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
 - `j < 0`: A is the live outgoing shot and B is the incoming shot's first frame.
 - `j >= 0`: A is the outgoing shot's last visible frame and B is the live incoming shot.
 
+### The v103 FOREVER transitions (the standard; in `fx103.py`, copied into every new edit's `fxN.py`)
+
+| tin | What it does | Extra EDL fields | Sound in `audio103.py` |
+|---|---|---|---|
+| `plastic_rip` | **THE RIP.** The kill-room plastic tears open down the middle on the drop and the flaps fly apart. Pair it with `plastic=(t0, t1)` on the outgoing shot (the sheet is pulled over the lens first). | `plastic=` on the previous shot | crinkle under the build, riser, tear, impact, whoosh |
+| `photo` / `photo_l` | The flash fires; the frame freezes into a crime-scene photo that is tossed right or left onto the next shot. Land it on a sung word. | none | flash whine and pop, shutter click, toss whoosh |
+| `shutter` | Six gunmetal camera blades snap shut over the shot and open on the next. | none | shutter ticks and a click |
+| `pupil_dive` | The camera dives into his eye (via YuNet's eye position); the pupil swallows the frame and a round iris opens on the next shot. | the outgoing shot needs a face track | reverse swell, rush, low boom, whoosh out |
+| `torch_blind` | A light in the outgoing shot (flashlight, lamp, headlights) flares into the lens and whites out the frame; the next shot burns in out of the glare, brightest parts first. | a hot light in the outgoing shot | flashlight click, swell, shimmer, bright hit |
+| `ripple` | A clear water drop falls, hits, and the rings refract open onto the next shot. | none | drip, bloop, bubbles |
+| `wave` | A rolling, refracting wall of sea spray washes across the lens. | none | wash and splash |
+| `bubbles_up` | A surge of rising bubbles sweeps up the frame. | none | bubble burst and whoosh |
+| `surface` (first shot) / `sink=True` (last shot) | The loop: it opens underwater rising to the surface (meniscus, droplets on the lens) and ends with the bag sinking into the same water. | `T_SURFACE`, `T_SPLASH` | surface break, splash, underwater low-pass across the wrap |
+| `strobe`, `roll`, `whip`, `whip_up`, `impact`, `lamp_on`, `light_sweep`, `wrap`, `zipper`, `rainfocus`, `logo_orig` | Engine moves used in FOREVER as connectors between the set pieces. | see the tables above | yes, each |
+
+### The v103 animation layers (EDL knobs and shot flags)
+
+| Knob / flag | What it does |
+|---|---|
+| `BEAT_PUNCH = [(k, strength), ...]` | `beat_fx`: the camera punches on the beat, a zoom kick with a stronger chromatic hit at strength ≥ 0.9. **Cover every section with drums** (the §0 target). |
+| `PULSE_K = [k, ...]` | `pulse_fx` and a heartbeat thump: the frame edges pulse red and the picture thumps on each beat of a quiet build (with a heartbeat sound). |
+| `flare=amt` | `anam_flare`: hot lights throw a long horizontal teal anamorphic streak. Keep it off faces (it was turned off on the night-drive shot because it crossed his eye). |
+| `swing=True` | `lamp_swing`: a kill-room lamp's pool of light sways across the shot. |
+| `plastic=(t0, t1)` | `plastic_sheet`: milky kill-room sheeting with swaying, light-catching folds is pulled over the lens between t0 and t1. |
+| `caustics=amt`, `snow=True`, `rain=True`, `moonglow=True` | water light, marine snow, rain on the glass, a glow on the moon. |
+| `TEXT` dicts | `style="cap"` (v9 keyline captions; `band=` for QC, optional `ys=`), `style="hero"` (per-letter title; `exit="bubbles"` or `"blood"`). Word times come from `tools/lyrics.py` (lyrics) or `transcribe.py` (dialogue), each on its sung or spoken time. |
+
+### From Studio 1's standards (v10 LET IT HAPPEN, v11 BOP): the motion pass, source restoration, the v11 engine
+
+These live on Studio 1's branch (`claude/gallant-planck-pqpczp`, read at `122013b`); this copy only records them. Fetch the code from there before relying on it.
+- **The motion pass (v10):** `tmap=vel(...)`, `lin=True` and `interp="flow"` on every hook or montage shot (a burst on the beat, smooth slow motion between), plus the beat camera (zoom punch, rotation kick, hit-frame blur and colour split) and light rays. In Studio 2's engine, the closest pieces are:
+  - `tmap` ramps (above 1.7x the engine adds shutter blur);
+  - `interp="flow"` (clean slow motion only; check the frames);
+  - `beat_fx`, `cam_float` and `anam_flare`;
+  - `sun_fx` rays.
+- **Source restoration (v10):** `tools/sr_prep.py N` with `tools/srnet.py`. It runs Real-ESRGAN compact through ONNX Runtime on the CPU, 2×, only over the horizontal band each frame is cropped from, in the background after prep. It writes `vN/sr/`, and the renderer uses a band when it covers the crop. This replaces the cubic or Lanczos blow-up and is the fix for the owner's v105 clip-quality note.
+- **The v11 engine:** v4–v11 with 91 transitions plus the audio builder. Its EDL template adds `E_BEAT` (where the beat drops in), `E_DIP` (the dip before the drop) and `E_LOOP` (where the loop set piece starts; the beat camera rests from there). New v11 pieces:
+  - THE RIFT (a focal set piece);
+  - the emblem coin flip (a lit, bevelled procedural emblem revealed on the tracked real one);
+  - beat moments: aura rings, time remnants, charge-up;
+  - heat haze, clash and `speedforce_in`;
+  - the REVERSE loop (`reverse_loop` + `loop_in`);
+  - `look="voltage"|"rival"`.
+- **Flash discipline (v11):** measure every flash in the encode; a flare keeps the picture (v11's rim flash went from mean luma 178 to 104). Studio 2's `qc105.py` (copied into every new edit) reports it in section 7b: white-out runs at mean luma ≥ 200, and flashes per second, failing above 3.
+
+### The Flash studio's techniques (from the v10 and v11 reports; code on Studio 1's branch)
+
+Each is described well enough to rebuild in Studio 2's engine.
+
+| Technique | Function (Studio 1) | How it works | Sound |
+|---|---|---|---|
+| Velocity ramps | `vel()` in the EDL template | speed = slow + burst·exp(−t/70 ms) on each beat, integrated to source time; flow in-betweens on restored frames | — |
+| Beat camera | `beat_bounce`, `shake`, `beat_fx` | about a 5–6% zoom punch and ±1° rotation kick per beat; zoom blur and colour split on the hit frames; type on top | a quiet swish per punch |
+| Emblem dive | `emblem_gate`, `drop_wave` | track the chest emblem with keyframes, flare it, zoom into the bolt, burst through into the next shot, then a refracting shockwave | whine, crack, sub, rush |
+| TIME PARTICLES | `time_particles` | the frozen frame breaks into fragments of its own pixels (edges first, people last), they hang in the stopped air, then rebuild as the next shot from a focus point on the beat | grains, shimmer, reversed grains into an impact |
+| Bullet time | (automatic on frozen holds) | parallax from the person matte plus a floor gradient, with a slow dolly push | — |
+| Speed Force loop | (v10 loop) | the lyric's letters run a ring that opens into a tunnel; panels of the edit's own moments fly past, newest to oldest, and frame 0 lands | the song rewinding (anti-aliased) |
+| Rival grade | `look="rival"` vs `"voltage"` | a second grade for the antagonist (red-shifted highlights, dark red shadows, red halation) | — |
+| Red phase | `red_phase` | jittered red ghost copies (face vibration) resolving into the next shot | crackle |
+| Red eye dive | `red_eye_dive` | find the brightest red point (an eye), dive in until the frame is red light, pull out of the next character's eye (face landmarks) | — |
+| BOLT SPLIT drop | `bolt_split` | a lightning-bolt seam cracks down beside the face; left half graded red, right gold; on the drop the seam sweeps across, tears the title apart, shockwave | crackle build, impact, thunder, sub drop |
+| THE RIFT (focal piece) | `rift` | a tear grows along a jagged diagonal below the face, opens with white-gold electric edges and light spill, the Speed Force churns inside, the camera flies through, and the next shot rushes out of the vanishing point | crack, a rip panned across, reversed swell into a sub drop, roar and whine, arrival impact |
+| Coin-flip emblem | `rf_emblem`, `coin_flip` | a procedural emblem (bevelled rim, groove, glossy disc with a reflection, emissive bolt with light spill) lit by the real emblem's brightness; the real emblem flips on its axis (found by a circle fit to its visible edge each frame), edge visible, suit filled in behind; flare at edge-on, shockwave and sparks on landing | spin whir, sizzle, metal ring |
+| REVERSE loop | `reverse_loop` | strike → flip → red radiates → an anticipation pull-back and accelerating dive into the black disc (speed-matched blur, radial colour fringes, rays, sparks, a red flare as the rim passes) → lands on frame 0 | power-down whine, tape-stop |
+| Beat moments | `aura`, `remnants`, `charge` | silhouette rings pulsing out on each beat; time-remnant copies splitting sideways and snapping back; lightning and dust gathering into the chest | one each |
+| Ideas for Dexter (from the Flash studio's reports) | — | rival grade → a cold grade for Trinity or Doakes; red phase → the Dark Passenger surfacing; red eye dive → into a lamp or a blood drop and out of the next subject's eye; BOLT SPLIT → a knife-edge or crack seam; THE RIFT → plastic sheeting or a wound tearing open into the kill room; coin flip → a Miami Metro badge flipping to a blood slide; beat moments → a red aura, ghost remnants, blood gathering; the Speed Force tunnel → a tunnel of case photos or slides; the CARRY OFF runner → a knife glint; depth particles masked off faces (`motes11`) → ash, dust, embers | — |
+| Also in Studio 1's catalogue | — | clash, strobe echo, bolt trace, heat haze, whip, dolly focus pull, emblem draw-on reveal, lens shatter, Lichtenberg lightning branches, perimeter lap, phase, whirlwind, speed slices, lightning tear | — |
+
+### The v104 THE PASSENGER toolkit (a standard; in `fx104.py`, carried in every new edit's `fxN.py`)
+
+| tin / flag | What it does | Sound in `audio104.py` |
+|---|---|---|
+| `graphic="ink_open"` (first shot) | The pickup: bare paper (frame 0 matches the loop's last frame). An ink sketch of the next shot draws itself, one stroke group per beat (`sketch_fx`), ink creeps in from the corners (`edge_seep`), and a drop forms, swells and falls (`drop_at`). | pen and brush scratches, a plink, a reverse swell |
+| `ink_bloom` | The drop lands on the downbeat: a crown of droplets, and the bloom spreads with fingered edges and an ink rim; the picture lives inside the ink. | splat, wet bloom, impact |
+| `ink_out=dict(k0)` (last shot) | The loop: the picture drains back into one blob on the same ghosted paper, which pulls into a drop and lifts away. | reverse swell, reversed plink |
+| `brush` + `brush=dict(ang, seed, red/white)` | A sumi brush band sweeps across: wet ragged front, dry bristly tail, the next shot behind it. Ivory reads on dark footage, red on light; black disappears on dark. | dry bristle swish |
+| `page_turn` | The frame turns over like a sketchbook page: paper on its back, a bright fold, cast shadows. | paper flip + whoosh |
+| `ink_bleed` | Ink blooms in from several points and retracts onto the next shot (it leaves gaps: no dead black frame). | reverse swell, wet bloom |
+| `spatter` + `spat=dict(k, x, y)` | A two-frame red impact; red ink spatter lands on the lens (organic body, elongated drops pointing away, gloss), hangs, then the heavy drops run. Place it off the face. | splat, impact, drips |
+| `passenger` set piece: `passenger=dict(k_rise, k_lunge, cut_y)` on a `seg=True` shot, then `tin="passenger"` on the next | A light comes on behind him and the wall goes to lit paper; his matte shadow (body only, above `cut_y`) is thrown beside him, with a crisp ink edge, a red rim, sway, breathing on the bass and rising smoke; two ember eyes open (masked behind him); push-in with a dutch tilt; the lunge pans to centre and both eyes rush the lens; the next shot surfaces through thinning ink. | lamp click, ember ignite, sub drop, rising drone, reverse swell, impact |
+| `window=dict(src, a, k_in, k_out)` on a `seg=True` shot | The silhouette: the world goes to paper, his body becomes a window into another shot, his face stays. | a breath of air |
+| `roll` / `quarter_roll` / `spin=(a0, a1)` | The rotation motif (the owner's favourite): a spin into an upside-down shot that keeps turning through its hold; a 90° roll into a rotational blur and out upright. | deep spin whoosh + swell |
+| `ghost=a` | Ink ghost trails: darker echoes of the last frames of motion (pair with a speed ramp in `tmap`). | (the cut's own) |
+| `motes=a`, `swash=dict(k0, k1, y)`, `flare=a` | Ink motes drifting in depth; an ivory brush swash painted behind a hero word; ivory anamorphic flares. | bristle swish for the swash |
+| always on | `cam_float` (a breathing camera on every hold), `beat_fx` (punches with radial motion blur on strong hits), the breathing vignette on `PHR`, `ink_drift` in the shadows. | — |
+
+### The v105 DRACULA toolkit (the newest standard; in `fx105.py`, copied into every new edit's `fxN.py`)
+
+Clip quality (the owner's v105 gripe): `tools/sharpness.py N --src` ranks the source crop of every shot (detail, upscale factor, pack bitrate; flags SOFT, ZOOM, LOWBIT) before the render; `tools/sharpness.py N` does the same on the encoded MP4.
+
+| tin / flag | What it does | Sound in `audio105.py` |
+|---|---|---|
+| `look="day"/"dusk"/"night"` | Per-shot grade: `day_grade` (bleached warm, teal shadows), `night_grade` (cold silver, crimson kept above `redthr`); `dusk_u` slides day → night across `SUN_K` (and back for `daybreak`). | sea air by day, wind and a B-flat drone by night |
+| `sun=(x, y)` on a day shot | A sun with light rays (the bright parts streaked away from it, quarter-res), a glow and lens ghosts (`sun_fx`). Dusk shots set it down the right edge, off the face. | — |
+| `sun_flare` | A flare crosses the frame at the sun's height and whites it out for a moment. | bright whoosh + glint |
+| `bat_burst` | The drop: a 3D cloud of bats pours out of the sky toward the lens, blacks out the frame against a crimson flash, and flies past (depth blur on the near ones). | reverse swell, sub impact, a burst of wings, chirps |
+| `bat_swarm` | A river of bats crosses in depth (parallax, size and blur by distance); a band of moonlight travels behind the column so they read; the cut rides its middle. | wings panned left to right |
+| `bloodmoon=dict(k0, k1)` on a `seg=True` shot | A procedural blood moon (maria, craters, limb darkening, the Earth's-shadow edge) rises behind his matte, with cloud, bats, a pulse and a red rim on him. | church-bell toll on B-flat |
+| `moon_iris` | A circular iris opens from the dark with a crimson rim. | reverse swell, toll, sub |
+| `coffin` | A height-map-lit lacquered coffin lid with a brass cross falls to the lens, slams (jolt, dust) and lifts away on the next shot. | hinge creak, wood thud, dust |
+| `daybreak=True` on the last shot + `seam_out` | Dawn light rises, the sun comes up low right, the frame burns white, then crossfades into frame 0 (which opens at `SEAM_W` white). | B-flat-minor chord swell, tail wrapped into frame 0 |
+| hero `exit="bats"` | The per-letter hero title (red flood) breaks into crimson bats that scatter sideways, away from the face. | a small flutter |
+| `fog=a` | Night fog drifting through the shot. | — |
+| `cape` | A Dracula cape sweeps across the lens: black satin in broad moving folds, a crimson lining turned out along the billowing edge, a lit hem, motion blur, a shadow thrown ahead; the next shot is behind it. | heavy cloth whoosh |
+| `mist` | He turns to mist: the shot softens and rises into billowing silver fog; the next condenses out of it, soft to sharp. | airy breath + hollow whoom |
+| `bat_pass` | One great bat flies out of the dark through the lens (soft when near, wing bones in the membrane, fine crimson edge); the cut is in its shadow; it dives out under the camera. | three heavy wingbeats, whoosh, chirps |
+| `motes=a` on a day shot | Sunlit dust: drifting motes, brighter near the sun, sharp far and soft near, kept behind him with the matte. | — |
+| `seg=True` on a sun shot | The sun sits behind him: disc and rays only from the sky, a light wrap on his near edge, ghosts dimmed by how much he covers. (rev 2 fix: the sun used to be laid over his hair.) | — |
+| `eclipse` | The sun goes out: the moon's black disc slides across with a streaming corona, the next shot inside it, a diamond-ring flash on its rim, then the disc swells to fill the frame. | reverse swell, deep impact, shimmer, low bell |
+| `card_flip` | A 3D card flip around the vertical axis against the bright blurred sky of both shots (a sun glint edge-on). | whoosh + flick |
+| `palm_sweep` | Procedural palm fronds sweep past the lens (depth blur, dappled light); the next shot comes in their shadow. | leaf rustle + whoosh |
+| `gather=True` (+ `seg`) | Bats gather in the sky behind him through the shot, more and more toward its end. | — |
+| `rim=a` (+ `seg`) | A pulsing crimson backlight on his edge. | — |
+| ASHES TO SUN (`daybreak` on the last shot; `ASH`, `SUN_T`, `seam_out`) | The loop: he burns like paper (char, glowing line, the street behind him, row-continued); 3,000 embers spiral into the sun at frame 0's sun position; the sun flares over the frame and the light collapses back into it, revealing frame 0. | crackle, hiss, riser, flare impact + shimmer, reverse swell, bloom on the loop |
+| `daybreak=True` + `seg=True` | He burns in the sunlight: a flickering hot rim on his edge, embers lifting off his hair and shoulders, then the white. Needs a shot with a clear silhouette (not a frame-filling close-up). | sizzle + crackle |
+| always on | `render_shot` upscale: Lanczos + a noise-gated luma detail boost (not AI super-resolution). `finish105`: warm or moonlit halation and a crimson bloom (skipped on logo frames). | — |
+
+### The v106 WONDERWALL toolkit (a standard; The Flash, on the v11 engine; in `v106/work/fx106.py`, spliced above the speed section of `render106.py`)
+Port by copying the functions into the edit's own section (`tools/splice_section.py`). Full recipes in `sync/handoffs/2026-11-08_dexter_v106_WONDERWALL_standard.md` §8.
+
+| Piece | Call | What it does |
+|---|---|---|
+| TEAR LENS | `tin="tear_lens"` (60 / 26 frames), `drop_over` | A lit water drop gathers on the outgoing face's jaw holding the next shot (minified, then the whole frame), hangs, falls toward the lens and fills the frame; the lens relaxes and a ripple runs out, masked off the incoming face. Give it ~1 s. |
+| Lightning rod | `tin="lightning_rod"` (6 / 20) | A leader flickers down beside the next face (330 px aside, never on it); the strike; the next shot burns open outward from the bolt with an ember rim. |
+| Clash below the face | `tin="clash106"` (10 / 14) | v11's clash with the collision 110 px under the face box and every spark masked off a face ellipse. |
+| Speed Force mist | `mist=1.0` (shot flag), `mist_swirl` (10 / 16), `mist_over`, `mist_field` | Drifting cobalt fractal mist behind the matte (sub-pixel drift, never wraps), a cold flicker on the half bar; as a transition, a refracting cover ≤ 88 % that closes from the edges and clears exactly, with the plates dissolving under it. |
+| THE WONDERWALL | `wall=1..3` (shot flag), `wall_tex`, `wall_frame`, `wall_state` | A running-bond wall of bevelled tiles cut from the edit's own source frames (warm sepia), gold mortar light breathing on the beat, in perspective behind the matte; rises tile by tile, cracks with lightning along the mortar, shivers before the burst. |
+| THE WONDERWALL burst | `tin="wonderwall"` (12 / 30), `tile_split`, `tiles_of` | The frame becomes the wall, then its tiles fly toward the camera from the centre (the ones over the face first), gold light and a shockwave behind them. |
+| Loop mist | `tout="loop_mist"` on the last shot, `loop_w`, `sf_virtual` | The mist rolls over the lens; the picture under it dissolves into frame 0's, whose background animation is rendered at the wrap's virtual negative frames; frame 0's finish fades in. Seam 0.14. |
+| Title forged from light | `style="wonder"` in `TEXT`, `text_wonder` | Bevelled white-gold letters with a cobalt glow, struck one by one over the sung word, phasing out as vibrating ghosts. |
+| Smooth shiver | `shiver(shape, f, seed)` | Per-element sines at 9–15 Hz for tremble (no per-frame random). |
+| WONDER grade + finish | `look="wonder"`, `grade`, `finish106` | Amber highs, cobalt shadows, milky blacks by `tone_lut`; halation kept off the face box (its weight can be faded, for the loop). |
+
+
+### The v107 ALL CAPS toolkit (the newest Dexter standard; on the v12 engine; in `v107/work/fx107.py`, spliced above the speed section of `render107.py`; every `--base v107` scaffold carries it)
+Restyle it in the new edit's `fxN.py` and re-splice with `tools/splice_section.py N vN/work/fxN.py --replace`. Full recipes in `sync/handoffs/2026-11-08_dexter_v107_ALL_CAPS_standard.md` §8.
+
+| Piece | Call | What it does |
+|---|---|---|
+| TABLOID grade + finish | `look="tabloid"`, `grade`, `finish107`, `redthr` (per shot) | Tone LUT; spot red kept above a per-shot red threshold (red-lit skin stays out); paper tint in the highlights; a misregistered red-plate ghost, a fine shadow screen, paper grain. |
+| HOT MOLASSES | `tin="molasses"` (36 / 24) | A viscous blood sheet pours down the lens: fingered leading edge with a bead, sliding undulations, refraction, absorption by thickness, gloss; drains from the top with a meniscus. |
+| HEADSPIN | `tin="headspin"` (20 / 24), `spin_about` | Two turns, multi-sample motion blur and radial blur; the incoming half turns about the incoming face's centre and lands at 0° on a centred face. |
+| THE FRONT PAGE | `tin="frontpage"` (82 / 28), `page_layers`, `page_with_photo`, `halftone` | The MIAMI GAZETTE (masthead, BAY HARBOR / BUTCHER in spot red, columns) spins in with his halftone photo and caption, lands, settles; we dive into the photo and its dots resolve. |
+| ALL CAPS stamp | `style="stamp"` in `TEXT`, `strip_canvas`, `text_stamp`, `banner_target` | A torn newsprint strip slaps on; letterpress letters on an even 16th grid, each landing on its hit (3-frame descent, ink spread, deboss, strip shake); at the cut it flies onto the real banner's DEXTER. |
+| Banner shot | `banner=True`, `banner_frame` | A 1.2× crop tracking the banner, the sky extended from the source's own top and bottom colours, so a wide sign fits whole in 9:16. |
+| Confetti | `pop=True` + `tin="confetti_pop"`, `conf_set`, `draw_confetti`, `pop_behind` | Lit, fluttering paper pieces with depth of field in the edit's palette; bursts in the sky, carries on behind the person matte. |
+| THE MASSES SPELL HIS NAME (loop) | `tout="name_loop"`, `name_targets`, `draw_pieces`, `name_loop` | ~1,050 confetti pieces swirl in from both sides at chest height and form a word (a text mask), hold through the drop-out bar, burst toward the lens and down while `frame0_plate()` dissolves in; the last frame is frame 0. |
+| PAGE TURN | `tin="page_turn107"` (14 / 12), `pt_back` | A true cylinder roll from the bottom-right corner: flat front, the rising quarter (front, foreshortened), the top of the roll and the turned part (newsprint back with the picture faintly showing through), the roll's shadow on the next shot. |
+| Edge-clamped colour split | `rgb_split`, `_shift_edge` | The beat-hit colour split repeats the edge column instead of wrapping (`np.roll` left a cyan/magenta edge line). |
+| Rejected in v107 (kept, working) | `press_flash`, `broadcast` (TV), `spatter_fx`, `rorschach` | Reuse only with the lessons: no black room around a screen; never converge on a face. |
+
 ## 3. Graphics and text
 
 - **v9 graphics and type** (`render9.py`, end of file):
@@ -225,6 +400,18 @@ The older v4/v5 transitions are still in the file and work as `tin` values: `kal
   - `vanish`: pixel-dust dissolve, timed by `VANISH_T0`.
 - **Montage** (`MONTAGE` half-beat range): beat bounce, glints, light leaks and hits on the downbeats.
 - **Finish:** bloom, anamorphic streak, VHS chroma bleed and scanlines, vignette, grain. The OSD is limited to PLAY ▶ at the start, ◀◀ REW at the end and ‖ PAUSE. **No SP counter or timecode.**
+
+- **v101 / v102 graphics (Studio 2).** These are built on the v7 engine, not v9: port a piece into the v9 engine before reusing it.
+  - v101 (look rejected): a liquid-light projection behind the person matte; prism silhouette echoes on bass accents; a 16 mm film finish.
+  - v102 (The Flash):
+    - `sarcs` lightning that hugs the silhouette (person-matte contour);
+    - `echoes` matte afterimages;
+    - `motes` frozen-time sparks in depth;
+    - `eyespark` arcs off the YuNet eye landmarks;
+    - `freeze` (a colour drain on a held frame);
+    - `rot` (a sideways source rotated to fill 9:16);
+    - an electrified slammed title.
+- **Is he really saying it?** Run `python3 tools/lipcheck.py SRC t0 t1 OUT.jpg --vocals STEM.wav [--stem-t0 S]`. It draws face and lip crops every 0.1 s with the speech level under them. The lips must move with the bars before a line is used as lip-synced. (An automatic mouth-motion score disagreed with known cases, so judge it by eye.)
 
 ## 4. Pitfalls that cost time in v6 (check these first)
 

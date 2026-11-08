@@ -1,0 +1,258 @@
+{
+ "edit": "v106",
+ "round": 3,
+ "stages": [
+  {
+   "t": "2026-11-08 03:02:01",
+   "round": 1,
+   "step": "prep",
+   "s": 108.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:03:55",
+   "round": 1,
+   "step": "prep",
+   "s": 105.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:14:17",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:14:39",
+   "round": 1,
+   "step": "audio",
+   "s": 11.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:14:54",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:50:01",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:55:51",
+   "round": 1,
+   "step": "video",
+   "s": 330.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 03:58:20",
+   "round": 1,
+   "step": "qc",
+   "s": 144.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:06:49",
+   "round": 1,
+   "step": "qc",
+   "s": 142.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:13:45",
+   "round": 1,
+   "step": "video",
+   "s": 299.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:16:03",
+   "round": 1,
+   "step": "qc",
+   "s": 138.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:21:52",
+   "round": 1,
+   "step": "video",
+   "s": 312.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:24:15",
+   "round": 1,
+   "step": "qc",
+   "s": 143.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:26:22",
+   "round": 1,
+   "step": "deliver",
+   "s": 69.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:42:18",
+   "round": 1,
+   "step": "prep",
+   "s": 102.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:43:20",
+   "round": 1,
+   "step": "audio",
+   "s": 11.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 04:59:52",
+   "round": 2,
+   "step": "video",
+   "s": 323.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:02:12",
+   "round": 2,
+   "step": "qc",
+   "s": 137.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:06:16",
+   "round": 2,
+   "step": "prep",
+   "s": 100.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:07:55",
+   "round": 2,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:13:06",
+   "round": 2,
+   "step": "video",
+   "s": 311.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:15:27",
+   "round": 2,
+   "step": "qc",
+   "s": 136.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:18:27",
+   "round": 2,
+   "step": "deliver",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:23:19",
+   "round": 2,
+   "step": "prep",
+   "s": 97.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:24:42",
+   "round": 2,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:29:51",
+   "round": 2,
+   "step": "video",
+   "s": 309.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:32:07",
+   "round": 2,
+   "step": "qc",
+   "s": 136.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 05:34:15",
+   "round": 2,
+   "step": "deliver",
+   "s": 99.0,
+   "rc": 0
+  }
+ ],
+ "notes": [
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "other",
+   "text": "remove like half of the sound effects mostly the tedious annoying ones like the emblem shine and the few near the end"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "quality",
+   "text": "do one more polish smooth over the animations"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "loop",
+   "text": "make sure the loop is seemless"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "density",
+   "text": "identify one space where these isn't anything happening and add a custom unique graphic into a cool transition"
+  },
+  {
+   "t": "2026-11-08 05:34:15",
+   "round": 3,
+   "cat": "other",
+   "text": "can you slow down the tear drop transition so it's more visible?"
+  }
+ ],
+ "catches": [
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "seam",
+   "text": "rev 1 loop switched the picture under the mist in one frame (diff 25.8 at 21.4 s) and froze the mist behind him"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "other",
+   "text": "mist transitions left the corners covered at u=0: pops at their ends (diff 29 at 20.27 s); 24p holds juddered"
+  },
+  {
+   "t": "2026-11-08 04:47:36",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "loop mist lightning crossed his face (frame 1306)"
+  }
+ ],
+ "round_starts": {
+  "2": "2026-11-08 04:47:32",
+  "3": "2026-11-08 05:34:15"
+ }
+}

@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # One-command build steps for edit vN (pipeline v2).  Usage: bash tools/build.sh N STEP [STEP ...]
-#   song:FILE[:H0:H1] song prep in one go (tools/song_prep.py)
-#   plan              the plan against the owner's rules: plan_check.py (shared gate) + preflight.py (Flash/code checks). Runs before
-#                     every video step; a FAIL in either stops the render unless PLAN_FORCE=1.    splice  re-splice fxN.py into renderN.py
-#   prep              source audit + face tracks + mattes + both plan checks (listed); starts the source restoration in the background
+#   song:FILE[:H0:H1] song prep in one go (tools/song_prep.py): map, stems, drum-stem grid, vocal-stem words, loop wrap, EDL lines
+#   prep              source audit + face tracks + mattes + the plan check (report only); starts the source restoration in the background
 #   audio             soundtrack (circular, mastered, AAC-checked) + effects-vs-music table
 #   auto              sheets around every cut (render server)   sheet:NAME:f,f  tiled stills of chosen frames (render server)
 #   strip:A:B         every 2nd frame A..B in one sheet         clip:A:B        frames A..B as a 540x960 MP4 with sound (render server)
@@ -12,17 +10,23 @@
 #   qc                ship checkpoint on the encoded MP4 + faces-vs-effects list + motion audit (dead spans, pops, judder)
 #                     + the review pack (a row of stills per transition, set piece and the wrap), all four in parallel
 #   review            the review pack alone            deliver   wait for the master and check it
-#   signoff           sign-off pages from the encode (every transition, the loop, the titles, unexplained pops) -> vN/frames/signoff_*
-#   report            the Measured block from the tools' outputs -> vN/work/measured.md
 #   golden            engine regression check (tools/golden.py N --check)              preview   whole edit at 30 fps / 540x960 (engine)
-#   ship = audio plan video qc signoff report deliver (one command per revision; the Dexter studio's loop)
-#   all  = prep audio plan auto video qc signoff report deliver.   Every step is logged to vN/work/metrics.json.
-#   An edited fxN.py is re-spliced automatically before any step that renders (sheet, strip, clip, auto, preview, video).
+#   plan              the plan against the owner's rules (tools/plan_check.py, which also runs preflight's checks); runs before
+#                     every video step and a FAIL stops the render (accept a check with PLAN_ACCEPT in the EDL, or PLAN_FORCE=1)
+#   signoff           larger review pages from the encode (transitions, the loop, titles, unexplained pops) for the critique
+#   report            the Measured block from the tools' outputs -> vN/work/measured.md            splice    re-splice fxN.py
+#   rev  = audio plan video qc signoff report           (a revision round: only the changed frames are re-rendered)
+#   ship = rev + deliver                                 all = prep audio plan auto video qc signoff report deliver
+#   An edited fxN.py is re-spliced automatically before any step that renders. Every step is logged to vN/work/metrics.json.
 set -euo pipefail
 N="$1"; shift; ROOT="$(cd "$(dirname "$0")/.." && pwd)"; V="v$N"; W="$ROOT/$V/work"
-[ "$#" -gt 0 ] || { sed -n '2,19p' "$0"; exit 1; }
-STEPS=("$@"); [ "${STEPS[0]}" = "all" ] && STEPS=(prep audio plan auto video qc signoff report deliver)
-[ "${STEPS[0]}" = "ship" ] && STEPS=(audio plan video qc signoff report deliver "${STEPS[@]:1}")
+[ "$#" -gt 0 ] || { sed -n '2,20p' "$0"; exit 1; }
+STEPS=("$@")
+case "${STEPS[0]}" in
+  all)  STEPS=(prep audio plan auto video qc signoff report deliver) ;;
+  rev)  STEPS=(audio plan video qc signoff report "${STEPS[@]:1}") ;;
+  ship) STEPS=(audio plan video qc signoff report deliver "${STEPS[@]:1}") ;;
+esac
 case "${STEPS[0]}" in song:*) SLUG="" ;; *) SLUG=$(cd "$W" && python3 -c "import edl$N as E; print(E.SLUG)") ;; esac
 T="$ROOT/tools"
 autosplice() {                                     # an edited fxN.py goes into renderN.py before anything renders
@@ -31,28 +35,21 @@ autosplice() {                                     # an edited fxN.py goes into 
   if [ -f "$W/splice.py" ]; then python3 "$W/splice.py" | tail -1        # v105-based edits
   else python3 "$T/splice_section.py" "$N" "$fx" --replace; fi
 }
-plangate() {                                       # both plan checks; a FAIL in either stops the render
-  local rc=0
-  python3 "$T/plan_check.py" "$N" > "$W/plan_check.log" 2> "$W/plan_check.err" || rc=1
-  python3 "$T/preflight.py" "$N" 2>&1 | grep -v "^loaded" > "$W/preflight.log" || rc=1
-  if [ $rc = 0 ]; then head -1 "$W/plan_check.log"; tail -1 "$W/preflight.log"; grep -E "^  WARN" "$W/preflight.log" || true; return 0; fi
-  cat "$W/plan_check.log"; cat "$W/preflight.log"
+plangate() {
+  python3 "$T/plan_check.py" "$N" > "$W/plan_check.log" 2> "$W/plan_check.err" && { head -1 "$W/plan_check.log"; return 0; }
+  cat "$W/plan_check.log"
   [ "${PLAN_FORCE:-0}" = "1" ] && { echo "   (PLAN_FORCE=1: rendering anyway)"; return 0; }
-  echo "   plan FAILED: fix the EDL, or accept a plan_check check with PLAN_ACCEPT in the EDL, or PLAN_FORCE=1 to render anyway"; exit 1
+  echo "   plan_check FAILED: fix the EDL, or accept a check with PLAN_ACCEPT in the EDL, or PLAN_FORCE=1 to render anyway"; exit 1
 }
 for s in "${STEPS[@]}"; do
-  t0=$(date +%s); echo "== $V: $s"
   case "$s" in sheet:*|strip:*|clip:*|auto|preview|video|video:*|fullvideo|plan|splice) autosplice ;; esac
+  t0=$(date +%s); echo "== $V: $s"
   case "$s" in
     song:*)    IFS=: read -r _ f h0 h1 <<< "$s"; python3 "$T/song_prep.py" "$N" "$f" ${h0:+--h0 $h0} ${h1:+--h1 $h1} ;;
-    plan)      plangate ;;
-    splice)    true ;;
-    signoff)   python3 "$T/signoff.py" "$N" ;;
-    report)    python3 "$T/report.py" "$N" ;;
     prep)      python3 "$T/check_sources.py" "$N" | grep -E "BAD|source ranges"
                python3 "$T/splice_section.py" "$N" --check
                python3 "$W/render$N.py" prep > "$W/prep.log" 2>&1; grep -E "track|seg " "$W/prep.log" | tail -40
-               python3 "$T/plan_check.py" "$N" 2>/dev/null | head -1 || true; python3 "$T/preflight.py" "$N" 2>&1 | grep -v "^loaded" || true
+               python3 "$T/plan_check.py" "$N" 2> "$W/plan_check.err" | head -12 || true
                SRP="$ROOT/$V/sr/prep.pid"
                if [ -f "$SRP" ] && kill -0 "$(cat "$SRP")" 2>/dev/null; then echo "   source restoration already running (pid $(cat "$SRP"))"
                elif python3 "$T/sr_prep.py" "$N" --count 2>/dev/null | grep -q "to process 0,"; then echo "   restored source bands are current"
@@ -65,6 +62,10 @@ for s in "${STEPS[@]}"; do
     strip:*)   IFS=: read -r _ a b <<< "$s"; python3 "$T/rsrv.py" "$N" strip "$a" "$b" ;;
     clip:*)    IFS=: read -r _ a b <<< "$s"; python3 "$T/rsrv.py" "$N" clip "$a" "$b" ;;
     preview)   python3 "$W/render$N.py" preview ;;
+    plan)      plangate ;;
+    splice)    true ;;
+    signoff)   python3 "$T/signoff.py" "$N" ;;
+    report)    python3 "$T/report.py" "$N" ;;
     video)     [[ " ${STEPS[*]} " == *" plan "* ]] || plangate
                python3 "$T/vrender.py" "$N" video > "$W/render.log" 2>&1 || { tail -5 "$W/render.log"; exit 1; }
                grep -E "render|verification|done|nothing" "$W/render.log" | tail -4 ;;

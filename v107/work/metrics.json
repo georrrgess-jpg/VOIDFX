@@ -1,0 +1,476 @@
+{
+ "edit": "v107",
+ "round": 4,
+ "stages": [
+  {
+   "t": "2026-11-08 16:57:35",
+   "round": 1,
+   "step": "prep",
+   "s": 23.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:10:11",
+   "round": 1,
+   "step": "audio",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:13:02",
+   "round": 1,
+   "step": "prep",
+   "s": 46.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:14:20",
+   "round": 1,
+   "step": "prep",
+   "s": 51.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:33:02",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:37:48",
+   "round": 1,
+   "step": "video",
+   "s": 286.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:40:15",
+   "round": 1,
+   "step": "qc",
+   "s": 141.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:44:54",
+   "round": 1,
+   "step": "prep",
+   "s": 22.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:53:09",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:57:41",
+   "round": 1,
+   "step": "video",
+   "s": 272.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 17:59:55",
+   "round": 1,
+   "step": "qc",
+   "s": 134.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:01:49",
+   "round": 1,
+   "step": "prep",
+   "s": 23.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:06:02",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:10:44",
+   "round": 1,
+   "step": "video",
+   "s": 282.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:12:54",
+   "round": 1,
+   "step": "qc",
+   "s": 130.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:20:47",
+   "round": 1,
+   "step": "video",
+   "s": 276.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:22:54",
+   "round": 1,
+   "step": "qc",
+   "s": 127.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:24:29",
+   "round": 1,
+   "step": "deliver",
+   "s": 57.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:44:42",
+   "round": 1,
+   "step": "prep",
+   "s": 29.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:49:04",
+   "round": 2,
+   "step": "audio",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:53:39",
+   "round": 2,
+   "step": "video",
+   "s": 275.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:55:49",
+   "round": 2,
+   "step": "qc",
+   "s": 130.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 18:59:41",
+   "round": 2,
+   "step": "qc",
+   "s": 75.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:06:51",
+   "round": 2,
+   "step": "video",
+   "s": 276.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:09:05",
+   "round": 2,
+   "step": "qc",
+   "s": 134.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:10:28",
+   "round": 2,
+   "step": "deliver",
+   "s": 72.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:37:06",
+   "round": 2,
+   "step": "audio",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:41:48",
+   "round": 3,
+   "step": "video",
+   "s": 282.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:44:00",
+   "round": 3,
+   "step": "qc",
+   "s": 132.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 19:45:27",
+   "round": 3,
+   "step": "deliver",
+   "s": 51.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:10:54",
+   "round": 4,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:15:45",
+   "round": 4,
+   "step": "video",
+   "s": 291.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:18:02",
+   "round": 4,
+   "step": "qc",
+   "s": 137.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:23:54",
+   "round": 4,
+   "step": "video",
+   "s": 272.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:26:06",
+   "round": 4,
+   "step": "qc",
+   "s": 132.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 20:27:28",
+   "round": 4,
+   "step": "deliver",
+   "s": 63.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:25:20",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:25:21",
+   "round": 4,
+   "step": "plan",
+   "s": 1.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:25:27",
+   "round": 4,
+   "step": "signoff",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:25:28",
+   "round": 4,
+   "step": "report",
+   "s": 1.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:25:37",
+   "round": 4,
+   "step": "plan",
+   "s": 1.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:26:49",
+   "round": 4,
+   "step": "qc",
+   "s": 72.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:29:12",
+   "round": 4,
+   "step": "sheet:t1:100,300,500,700,900,1100",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 22:29:16",
+   "round": 4,
+   "step": "sheet:t2:120,320,520,720,920,1120,1200,1250,1300,1316,0,40",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 23:13:56",
+   "round": 4,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 23:15:14",
+   "round": 4,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-08 23:15:20",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  }
+ ],
+ "notes": [
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "replace_shot",
+   "text": "the transition that occurs at 3 seconds in, I don't really like that. I like to replace it with a custom graphic into a really cool transition"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "other",
+   "text": "the head spin transition, I don't really like it because the final shot doesn't have a centered shot of Dexter"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "replace_shot",
+   "text": "I also don't like that you reuse the same clip around the 17-second mark ... and the 19-second mark"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "quality",
+   "text": "smooth out the ending part"
+  },
+  {
+   "t": "2026-11-08 18:47:38",
+   "round": 2,
+   "cat": "loop",
+   "text": "the loop is pretty low effort ... make the loop more creative with a unique graphic/animation and then do the transition"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "I don't like the transition at 3 seconds with the black bars."
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "text",
+   "text": "I also don't like how slow it writes dexters name in black near the end of the edit. Can you make it line up so it's not too fast and not too slow."
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "other",
+   "text": "I want you to implement one new really unique graphic/animation that you have not tried to create before to give this edit it's own custom flare."
+  },
+  {
+   "t": "2026-11-08 20:10:50",
+   "round": 4,
+   "cat": "plain_effect",
+   "text": "Can you get rid of the point of origin graphic/transition"
+  },
+  {
+   "t": "2026-11-08 20:10:50",
+   "round": 4,
+   "cat": "plain_effect",
+   "text": "remove and replace the black box transition from the 3 and a half second mark."
+  }
+ ],
+ "catches": [
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "other",
+   "text": "AAC end padding (~2 ms of silence) against a frame 0 that starts on a loud kick: a click at the wrap (step 0.61); fixed with a 2 ms fade each side"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "text_face",
+   "text": "five close-ups (stare, hazmat, con, shame, remember) put the face box in the caption band or past the frame edge; swapped for wider moments, one caption lowered"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "other",
+   "text": "flow refused on fast shots (hazmat, crowd) fell back to a held frame: 24p judder; now a blend"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "the confetti burst covered his face on the close-up; it now bursts in the sky over the banner and continues behind his matte"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "the banner shot's reflected padding mirrored the banner above and below; the sky is extended from its own colour"
+  },
+  {
+   "t": "2026-11-08 18:24:54",
+   "round": 1,
+   "cat": "other",
+   "text": "red-lit skin read as spot-red blood under the TABLOID grade (stare, poster, parade); per-shot redthr"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "spatter analysis: drops, strings and tag too small to read at phone size on the first stills; scaled 1.4-1.7x"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "Rorschach blot wings ran off the frame and read as a band; reshaped to a card that fits"
+  },
+  {
+   "t": "2026-11-08 19:37:22",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "the unfolding card went edge-on as a dark line through his nose; it now fades before 90 degrees"
+  },
+  {
+   "t": "2026-11-08 20:10:50",
+   "round": 4,
+   "cat": "other",
+   "text": "rev 3's POINT OF ORIGIN (strings converging on a target ring where his face appears) broke a recorded owner dislike: no gimmick-on-the-face effects such as lines converging on his face with a target ring; check CLAUDE.md dislikes before designing"
+  },
+  {
+   "t": "2026-11-08 20:19:22",
+   "round": 4,
+   "cat": "other",
+   "text": "beat-hit colour split wrapped the edge columns (np.roll): a 2-3 px cyan/magenta line on the frame edges on every beat hit since rev 1; now clamped at the edge"
+  }
+ ],
+ "round_starts": {
+  "2": "2026-11-08 18:47:38",
+  "3": "2026-11-08 19:37:22",
+  "4": "2026-11-08 20:10:50"
+ },
+ "verdict": {
+  "t": "2026-11-08 21:06:32",
+  "round": 4,
+  "verdict": "standard",
+  "words": "I like this edit make it a standard"
+ }
+}

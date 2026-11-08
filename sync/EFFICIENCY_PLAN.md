@@ -95,3 +95,26 @@ Adopt the above: the tools are shared and work on Flash EDLs (tested on v12, v13
 - **Renders per revision:** target 1.
 - **plan_check FAILs at the first `ship`:** target 0.
 - **Critique predictions that match the owner's actual notes:** recorded in each edit's handoff (the v107 rev 3 test: 1 of 1 HIGH predictions matched).
+
+## 6. Merged with the Flash studio's update (2026-11-08)
+
+The Flash studio answered the same request in parallel (`sync/handoffs/2026-11-08_flash_DEV_efficiency.md`). Their branch is merged into `dev/pipeline-v2` (`34a20d1`), and the two halves are one toolchain (`sync/handoffs/2026-11-08_dexter_DEV_efficiency-merge.md`).
+
+**Added from their side:**
+- **Change-tracked partial renders** (`tools/codetrack.py` in `vrender.py`): only the frames that ran edited code are re-rendered, verified bit-exact outside.
+- **`song_prep.py`** (`build.sh N song:`): song prep in one command.
+- **The review pack** (`review.py`, at the end of `qc`).
+- **`fx_events.json` sound-event logging.**
+- **Preflight's checks** inside the one plan report: the TR2 call graph, the emblem, source shots, cache determinism and sound kinds.
+
+**Measured on v107 (the Dexter engine):**
+
+| Step | Before | After |
+|---|---|---|
+| One transition edited, then re-rendered | full render, 272 s | **127 s** (26 frames found and drawn in 19 s; the rest is the full-video re-encode); edit + revert identical to the full render |
+| An audio-only change | full render | nothing re-rendered |
+| Plan check (both studios' checks) | — | 6–20 s |
+
+**Found on the way:**
+- **v107 `ht_grid()`:** it filled its cache from the exact pitch under a rounded key, so the pixels depended on render order. Fixed; the re-render differs only in a fine screen pattern, with no change in structure.
+- **`tv_off`:** our registry had it as "rejected", but the owner never judged it. It is now "caution".

@@ -23,11 +23,25 @@
    "uploaded_as": "Doakes_Catches_Dexter (scene)"
   },
   {
+   "file": "dracula.mp3",
+   "bytes": 4941041,
+   "sha256": "950920a6b5414b8b832e8d5ec809f68dee026bd16daff7efc1d195af3d706333",
+   "duration": "205.844898",
+   "uploaded_as": "Tame_Impala_-_Dracula_Lyrics.mp3"
+  },
+  {
    "file": "duvet.mp3",
    "bytes": 3122940,
    "sha256": "de5b8721137fa90be325f2cfd7e5bb921b52dc5b813a5c1a1d5727543ee37390",
    "duration": "203.807347",
    "uploaded_as": "B_a_-_Duvet_Lyrics.mp3"
+  },
+  {
+   "file": "everlong.mp3",
+   "bytes": 4066670,
+   "sha256": "e514a49bba03aa3e6d6e4a3e36ab99d2748f8bdfdd50d24d180e9ba81ed3fda3",
+   "duration": "254.145306",
+   "uploaded_as": "Foo_Fighters_-_Everlong_Lyrics.mp3"
   },
   {
    "file": "flash_a.mp4",
@@ -56,6 +70,20 @@
    "sha256": "171bb83480cbb801a779b7932ff3cc40051edb5052bdc807066d55d87ad52409",
    "duration": "158.772245",
    "uploaded_as": "Gunna_-_Him_All_Along_Official_Visualizer.mp3"
+  },
+  {
+   "file": "less_i_know.mp3",
+   "bytes": 3588439,
+   "sha256": "dede04098d0571914ea21119b8b424dedb74cb02bd986dad5d4348808365c12c",
+   "duration": "217.443265",
+   "uploaded_as": "Tame_Impala_-_The_Less_I_Know_The_Better_Audio.mp3"
+  },
+  {
+   "file": "let_go.mp3",
+   "bytes": 3970122,
+   "sha256": "9783e00e34723df93e359550cbaf3839e379d7d98ed17464d3c270625ddf966e",
+   "duration": "248.111020",
+   "uploaded_as": "Ark_Patrol_-_Let_Go_Lyrics_ft._Veronika_Redd_and_now_you_wont_let_go.mp3"
   },
   {
    "file": "let_it_happen.mp3",
@@ -177,6 +205,27 @@
    "uploaded_as": "4K_PACK.mp4 or topaz_Dexter_S1-S8.mp4 (v2 uploads)"
   },
   {
+   "file": "smooth_criminal.mp3",
+   "bytes": 4500070,
+   "sha256": "cb78a552b61b820e6dcf408a4c3fd3c2becd177377dae120bb2f6f291b8d0397",
+   "duration": "259.395918",
+   "uploaded_as": "Michael_Jackson_-_Smooth_Criminal_Lyrics.mp3"
+  },
+  {
+   "file": "still_love_you_rec.wav",
+   "bytes": 4426826,
+   "sha256": "b32adcc03f41248eddd2cc75f877868e557a9e6075a0997145b4f5c5b81a844c",
+   "duration": "23.055979",
+   "uploaded_as": "extracted from still_love_you_screenrec.mp4 (ffmpeg -vn, 48 kHz stereo PCM)"
+  },
+  {
+   "file": "still_love_you_screenrec.mp4",
+   "bytes": 21635188,
+   "sha256": "36f07525b6f3820209f91f6c27204c8dcc657f6b7c19fab150a5cd7bea2bfda5",
+   "duration": "23.063674",
+   "uploaded_as": "ScreenRecording_11-04-2026_18-23-11_1.mp4 (TikTok sound page: still love you (super slowed + reverb), GLM-RST)"
+  },
+  {
    "file": "trinity_goodbye.mp4",
    "bytes": 21768129,
    "sha256": "9a08ab615692e88b5f20b00dbdd8daa9c672c1be145e82b5a78a7880677de1d0",
@@ -210,6 +259,48 @@
    "sha256": "5141bfbd5fc85d9cd1726d599c709cd763c12c5925bf67b0e92b0691a49d2415",
    "duration": "35.955034",
    "uploaded_as": "the user's screen recording of Brent Faiyaz - Wish You Well (.mov)"
+  },
+  {
+   "file": "dexter_s1_hq.mp4",
+   "bytes": 109137490,
+   "sha256": "4e6568a7553a31fbd37ef00075b0891cf543bee59d03cbbfac383b8e34c0e74e",
+   "duration": "407.463764",
+   "uploaded_as": "Dexter 4k 60fps All Scenes Dexter Morgan (S1) Best & Most Popular Scenes for Edit - Scenepack.mp4"
+  },
+  {
+   "file": "dexter_s4_hq.mp4",
+   "bytes": 58947302,
+   "sha256": "ddcd795a10003f88e066d2fd52661d58ff678ab8ebcf478079f39b3bcf5c1d95",
+   "duration": "243.159365",
+   "uploaded_as": "Dexter (S4) 4k Scenepack Dexter Morgan All Best & Most Popular Clips.mp4"
+  },
+  {
+   "file": "dexter_s2_a.mp4",
+   "bytes": 84441984,
+   "sha256": "b65d15fbbfe660149e267b00033bb371529323ad81e0015450171a6ff7157dcf",
+   "duration": "317.974059",
+   "uploaded_as": "Dexter Morgan (S2) Scenepack 4K.mp4"
+  },
+  {
+   "file": "dexter_s2_b.mp4",
+   "bytes": 113278089,
+   "sha256": "983a89a333c87eb0b635f6e367de2e6bb0e0257c19c0aefeb2c4931032335121",
+   "duration": "410.621678",
+   "uploaded_as": "Dexter Morgan 4k All Scenes Dexter (Season 2) Best & Most Popular Scenes for Edit - Scenepack.mp4"
+  },
+  {
+   "file": "dexter_mix_b.mp4",
+   "bytes": 99087194,
+   "sha256": "1b68c2c204015790d2782a88699284740af82e70a41c63dcc4fc952c3ceb191b",
+   "duration": "427.432925",
+   "uploaded_as": "dexter scenpack (1440p).mp4"
+  },
+  {
+   "file": "ref_v104_passenger_posted.mp4",
+   "bytes": 35638494,
+   "sha256": "43882b5ff13f47299db7335fd684728c0b02ea89c6fb2747009e2aa3a08fbd3f",
+   "duration": "22.890667",
+   "uploaded_as": "voidfx THE PASSENGER S LOVE SONG.mp4"
   },
   {
    "file": "flash_s3.mp4",

@@ -14,8 +14,13 @@ Measures (contrast-independent):
   detail = sqrt(hf / mf) per tile (hf = luma - blur 1px, mf = blur 1px - blur 4px) on a half-res copy, 80th percentile over
            the tiles with real content, in the region where faces sit (x 15-85 %, y 8-68 %): it scores the in-focus
            subject, so a shallow depth-of-field background does not read as soft. Lower = softer.
-Flags: enlargement > 2.95x (more than ~10 % zoom on a 720p pack), or a finished shot below 0.80x the edit's median detail.
-Writes vN/work/sharpness.json.
+  abs    = mean |L - blur 1.2| / mean |L - blur 8| (the Dexter studio's absolute scale, brightness-independent): on a
+           finished 1080x1920 MP4, about 0.30 or more reads sharp and under 0.20 reads soft. It is comparable across edits;
+           `detail` is compared within an edit (vs median).
+Flags: enlargement > 2.95x (more than ~10 % zoom on a 720p pack), SOFT when a shot is below 0.80x the edit's median detail
+(or, on the finished MP4, under 0.20 on the absolute scale), LOWBIT when its pack is under 800 kb/s.
+Merged 2026-11-07 (pipeline v2, WP0) from both studios' tools: the Flash studio's tile/percentile detail and modes, the Dexter
+studio's absolute scale and LOWBIT. Writes vN/work/sharpness.json (or sharpness_src.json).
 """
 import os, sys, json, glob, math, subprocess, importlib
 import numpy as np, cv2
@@ -36,6 +41,12 @@ def detail(gray, tiles=6):
             m = mf[ys, xs].mean()
             if m > 4.0: vals.append(math.sqrt(hf[ys, xs].mean() / m))
     return float(np.percentile(vals, 80)) if vals else float("nan")
+
+
+def detail_abs(gray):
+    """the Dexter studio's absolute scale: fine detail over coarse structure (|L - blur 1.2| / |L - blur 8|)."""
+    L = gray.astype(np.float32) / 255
+    return float(np.abs(L - cv2.GaussianBlur(L, (0, 0), 1.2)).mean() / (np.abs(L - cv2.GaussianBlur(L, (0, 0), 8)).mean() + 1e-4))
 
 
 def probe(p):
@@ -69,7 +80,7 @@ def edit(n):
     sys.path.insert(0, f"{ROOT}/v{n}/work"); sys.argv = [sys.argv[0]]
     E = importlib.import_module(f"edl{n}")
     out_ = f"{ROOT}/v{n}/out/{E.SLUG}_voidfx_9x16.mp4"
-    meas = {}
+    meas = {}; absm = {}; kb = {}
     if os.path.exists(out_):
         cap = cv2.VideoCapture(out_); f = 0; want = {}
         for s in E.SHOTS:
@@ -80,25 +91,31 @@ def edit(n):
             if not ok: break
             if f in want:
                 g = cv2.cvtColor(fr, cv2.COLOR_BGR2GRAY); H_, W_ = g.shape
-                if g.mean() > 20: meas.setdefault(want[f], []).append(detail(g[int(H_ * 0.08):int(H_ * 0.68), int(W_ * 0.15):int(W_ * 0.85)]))
+                if g.mean() > 20:
+                    meas.setdefault(want[f], []).append(detail(g[int(H_ * 0.08):int(H_ * 0.68), int(W_ * 0.15):int(W_ * 0.85)]))
+                absm.setdefault(want[f], []).append(detail_abs(g))
             f += 1
-    med = float(np.median([np.median(v) for v in meas.values()])) if meas else None
+    med = float(np.nanmedian([np.nanmedian(v) for v in meas.values()])) if meas else None
     res = []
-    print(f"{'shot':10s} {'src':4s} {'max z':>6s} {'enlarge':>8s} {'detail':>7s} {'vs median':>9s}  flags")
+    print(f"{'shot':10s} {'src':4s} {'max z':>6s} {'enlarge':>8s} {'detail':>7s} {'vs median':>9s} {'abs':>6s} {'kbps':>6s}  flags")
     for s in E.SHOTS:
         src = s.get("src")
         if not src or src not in E.SRC: continue
         sh = E.SRC[src][3]; zmax = max(v for _, v in s.get("z", [(0, 1.0)]))
         enl = 1920.0 / sh * zmax
-        d = float(np.median(meas[s["n"]])) if s["n"] in meas else None
+        d = float(np.nanmedian(meas[s["n"]])) if s["n"] in meas else None
         rel = d / med if (d is not None and med) else None
+        ab = float(np.median(absm[s["n"]])) if s["n"] in absm else None
+        if src not in kb: kb[src] = probe(E.SRC[src][0])[3] / 1000
         flags = []
         if enl > 2.95: flags.append(f"zoom {100 * (zmax - 1):.0f}% on {sh}p")
-        if rel is not None and rel < 0.80: flags.append("SOFT")
-        res.append(dict(n=s["n"], src=src, zmax=zmax, enlarge=enl, detail=d, rel=rel, flags=flags))
-        print(f"{s['n']:10s} {src:4s} {zmax:6.2f} {enl:7.2f}x " + (f"{d:7.3f} {rel:8.2f}x" if d is not None else f"{'-':>7s} {'-':>9s}") + "  " + ", ".join(flags))
+        if (rel is not None and rel < 0.80) or (ab is not None and ab < 0.20): flags.append("SOFT")
+        if kb[src] < 800: flags.append("LOWBIT")
+        res.append(dict(n=s["n"], src=src, zmax=zmax, enlarge=enl, detail=d, rel=rel, abs=ab, kbps=kb[src], flags=flags))
+        print(f"{s['n']:10s} {src:4s} {zmax:6.2f} {enl:7.2f}x " + (f"{d:7.3f} {rel:8.2f}x" if d is not None else f"{'-':>7s} {'-':>9s}")
+              + (f" {ab:6.3f}" if ab is not None else f" {'-':>6s}") + f" {kb[src]:6.0f}  " + ", ".join(flags))
     json.dump(dict(median=med, shots=res), open(f"{ROOT}/v{n}/work/sharpness.json", "w"), indent=1)
-    soft = [r["n"] for r in res if r["flags"]]
+    soft = [r["n"] for r in res if "SOFT" in r["flags"] or any(f.startswith("zoom") for f in r["flags"])]
     print("flagged:", soft if soft else "none")
 
 

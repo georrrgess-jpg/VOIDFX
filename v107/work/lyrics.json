@@ -1,0 +1,4135 @@
+{
+ "song": "/home/user/voidfx-dev/src/all_caps.mp3",
+ "start": 0.0,
+ "end": 134.2,
+ "stem": "/home/user/voidfx-dev/v107/audio/sep/htdemucs/all_caps/vocals.wav",
+ "words": [
+  {
+   "word": "SO",
+   "line": 0,
+   "s": 22.5,
+   "e": 22.62,
+   "p": 0.06,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.3
+  },
+  {
+   "word": "NASTY",
+   "line": 0,
+   "s": 22.62,
+   "e": 23.1,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "THAT",
+   "line": 0,
+   "s": 23.1,
+   "e": 23.54,
+   "p": 0.79,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.4
+  },
+  {
+   "word": "IS",
+   "line": 0,
+   "s": 23.54,
+   "e": 23.7,
+   "p": 0.95,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "PROBABLY",
+   "line": 0,
+   "s": 23.7,
+   "e": 23.92,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.1
+  },
+  {
+   "word": "SOMEWHAT",
+   "line": 0,
+   "s": 23.92,
+   "e": 24.38,
+   "p": 0.88,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.7
+  },
+  {
+   "word": "OF",
+   "line": 0,
+   "s": 24.38,
+   "e": 24.64,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.5
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 24.64,
+   "e": 24.68,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -23.4
+  },
+  {
+   "word": "TRAVESTY",
+   "line": 0,
+   "s": 24.68,
+   "e": 25.26,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.7
+  },
+  {
+   "word": "HAVING",
+   "line": 0,
+   "s": 25.26,
+   "e": 25.52,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.9
+  },
+  {
+   "word": "ME",
+   "line": 0,
+   "s": 25.52,
+   "e": 25.8,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "THEN",
+   "line": 0,
+   "s": 25.8,
+   "e": 25.98,
+   "p": 0.23,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.8
+  },
+  {
+   "word": "HE",
+   "line": 0,
+   "s": 25.98,
+   "e": 26.1,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "TOLD",
+   "line": 0,
+   "s": 26.1,
+   "e": 26.3,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 26.3,
+   "e": 26.44,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "PEOPLE",
+   "line": 0,
+   "s": 26.44,
+   "e": 26.68,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.8
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 26.75,
+   "e": 26.9,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.7
+  },
+  {
+   "word": "CAN",
+   "line": 0,
+   "s": 26.9,
+   "e": 27.0,
+   "p": 0.75,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.9
+  },
+  {
+   "word": "CALL",
+   "line": 0,
+   "s": 27.0,
+   "e": 27.24,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "ME",
+   "line": 0,
+   "s": 27.24,
+   "e": 27.34,
+   "p": 0.02,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.1
+  },
+  {
+   "word": "YOUR",
+   "line": 0,
+   "s": 27.34,
+   "e": 27.58,
+   "p": 0.93,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.2
+  },
+  {
+   "word": "MAJESTY",
+   "line": 0,
+   "s": 27.58,
+   "e": 28.0,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.9
+  },
+  {
+   "word": "KEEP",
+   "line": 0,
+   "s": 28.0,
+   "e": 28.74,
+   "p": 0.83,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.7
+  },
+  {
+   "word": "YOUR",
+   "line": 0,
+   "s": 28.79,
+   "e": 28.98,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.7
+  },
+  {
+   "word": "BATTERY",
+   "line": 0,
+   "s": 28.98,
+   "e": 29.28,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.6
+  },
+  {
+   "word": "CHARGED",
+   "line": 0,
+   "s": 29.28,
+   "e": 29.76,
+   "p": 0.93,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.7
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 29.76,
+   "e": 30.3,
+   "p": 0.67,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.1
+  },
+  {
+   "word": "KNOW",
+   "line": 0,
+   "s": 30.34,
+   "e": 30.48,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.4
+  },
+  {
+   "word": "IT",
+   "line": 0,
+   "s": 30.48,
+   "e": 30.64,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.6
+  },
+  {
+   "word": "WON'T",
+   "line": 0,
+   "s": 30.64,
+   "e": 30.84,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.5
+  },
+  {
+   "word": "STICK",
+   "line": 0,
+   "s": 30.84,
+   "e": 31.1,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.4
+  },
+  {
+   "word": "YO",
+   "line": 0,
+   "s": 31.1,
+   "e": 31.38,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "AND",
+   "line": 0,
+   "s": 31.38,
+   "e": 31.78,
+   "p": 0.89,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "IT'S",
+   "line": 0,
+   "s": 31.78,
+   "e": 32.02,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.9
+  },
+  {
+   "word": "NOT",
+   "line": 0,
+   "s": 32.02,
+   "e": 32.14,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.5
+  },
+  {
+   "word": "HIS",
+   "line": 0,
+   "s": 32.14,
+   "e": 32.38,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.5
+  },
+  {
+   "word": "FAULT",
+   "line": 0,
+   "s": 32.38,
+   "e": 32.7,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.1
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 32.7,
+   "e": 32.86,
+   "p": 0.91,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.2
+  },
+  {
+   "word": "KICK",
+   "line": 0,
+   "s": 32.86,
+   "e": 33.1,
+   "p": 0.91,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.6
+  },
+  {
+   "word": "SLOW",
+   "line": 0,
+   "s": 33.1,
+   "e": 33.38,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.5
+  },
+  {
+   "word": "SHOULD",
+   "line": 0,
+   "s": 33.38,
+   "e": 33.9,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.0
+  },
+  {
+   "word": "HAVE",
+   "line": 0,
+   "s": 33.9,
+   "e": 34.06,
+   "p": 0.73,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.8
+  },
+  {
+   "word": "LET",
+   "line": 0,
+   "s": 34.06,
+   "e": 34.22,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.2
+  },
+  {
+   "word": "YOUR",
+   "line": 0,
+   "s": 34.22,
+   "e": 34.38,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.3
+  },
+  {
+   "word": "TRICK",
+   "line": 0,
+   "s": 34.38,
+   "e": 34.66,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.9
+  },
+  {
+   "word": "HOLD",
+   "line": 0,
+   "s": 34.66,
+   "e": 34.9,
+   "p": 0.86,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "CHICK",
+   "line": 0,
+   "s": 34.9,
+   "e": 35.18,
+   "p": 0.75,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "HOLDS",
+   "line": 0,
+   "s": 35.18,
+   "e": 35.48,
+   "p": 0.63,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.1
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 35.48,
+   "e": 35.64,
+   "p": 0.9,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.0
+  },
+  {
+   "word": "SICK",
+   "line": 0,
+   "s": 35.64,
+   "e": 35.88,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.0
+  },
+  {
+   "word": "BLOW",
+   "line": 0,
+   "s": 35.88,
+   "e": 36.12,
+   "p": 0.48,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.4
+  },
+  {
+   "word": "PLUS",
+   "line": 0,
+   "s": 36.12,
+   "e": 36.68,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.6
+  },
+  {
+   "word": "NOBODY",
+   "line": 0,
+   "s": 36.68,
+   "e": 36.96,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.3
+  },
+  {
+   "word": "COULDN'T",
+   "line": 0,
+   "s": 36.96,
+   "e": 37.46,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.5
+  },
+  {
+   "word": "DO",
+   "line": 0,
+   "s": 37.46,
+   "e": 37.6,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "NOTHING",
+   "line": 0,
+   "s": 37.6,
+   "e": 37.84,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "ONCE",
+   "line": 0,
+   "s": 37.84,
+   "e": 38.08,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.8
+  },
+  {
+   "word": "HE",
+   "line": 0,
+   "s": 38.08,
+   "e": 38.22,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.0
+  },
+  {
+   "word": "LET",
+   "line": 0,
+   "s": 38.22,
+   "e": 38.36,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 38.36,
+   "e": 38.54,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.4
+  },
+  {
+   "word": "BRICK",
+   "line": 0,
+   "s": 38.54,
+   "e": 38.76,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "GO",
+   "line": 0,
+   "s": 38.76,
+   "e": 38.98,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.5
+  },
+  {
+   "word": "AND",
+   "line": 0,
+   "s": 38.98,
+   "e": 39.6,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.0
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 39.6,
+   "e": 39.78,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.6
+  },
+  {
+   "word": "KNOW",
+   "line": 0,
+   "s": 39.78,
+   "e": 39.96,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.6
+  },
+  {
+   "word": "I",
+   "line": 0,
+   "s": 39.96,
+   "e": 40.16,
+   "p": 0.95,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.3
+  },
+  {
+   "word": "KNOW",
+   "line": 0,
+   "s": 40.16,
+   "e": 40.38,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.4
+  },
+  {
+   "word": "THAT'S",
+   "line": 0,
+   "s": 40.38,
+   "e": 40.64,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.7
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 40.64,
+   "e": 40.74,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.4
+  },
+  {
+   "word": "BUNCH",
+   "line": 0,
+   "s": 40.74,
+   "e": 40.96,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.8
+  },
+  {
+   "word": "OF",
+   "line": 0,
+   "s": 40.96,
+   "e": 41.1,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -18.0
+  },
+  {
+   "word": "SNOW",
+   "line": 0,
+   "s": 41.1,
+   "e": 41.42,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.2
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 41.42,
+   "e": 41.98,
+   "p": 0.78,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.3
+  },
+  {
+   "word": "BEAT",
+   "line": 0,
+   "s": 41.98,
+   "e": 42.16,
+   "p": 0.95,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.2
+  },
+  {
+   "word": "IS",
+   "line": 0,
+   "s": 42.16,
+   "e": 42.32,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "SO",
+   "line": 0,
+   "s": 42.32,
+   "e": 42.46,
+   "p": 0.93,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "BUTTER",
+   "line": 0,
+   "s": 42.46,
+   "e": 42.86,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "PEEP",
+   "line": 0,
+   "s": 42.86,
+   "e": 43.48,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.2
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 43.48,
+   "e": 43.6,
+   "p": 0.94,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -22.3
+  },
+  {
+   "word": "SLOW",
+   "line": 0,
+   "s": 43.6,
+   "e": 43.82,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.6
+  },
+  {
+   "word": "CUTTER",
+   "line": 0,
+   "s": 43.82,
+   "e": 44.18,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "AS",
+   "line": 0,
+   "s": 44.18,
+   "e": 44.42,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.6
+  },
+  {
+   "word": "HE",
+   "line": 0,
+   "s": 44.42,
+   "e": 44.58,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.6
+  },
+  {
+   "word": "UTTERED",
+   "line": 0,
+   "s": 44.58,
+   "e": 44.98,
+   "p": 0.9,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.5
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 44.98,
+   "e": 44.98,
+   "p": 0.64,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.3
+  },
+  {
+   "word": "FLOW",
+   "line": 0,
+   "s": 44.98,
+   "e": 45.24,
+   "p": 0.16,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.6
+  },
+  {
+   "word": "DON'T",
+   "line": 0,
+   "s": 45.24,
+   "e": 46.22,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.4
+  },
+  {
+   "word": "TALK",
+   "line": 0,
+   "s": 46.29,
+   "e": 46.34,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -10.6
+  },
+  {
+   "word": "ABOUT",
+   "line": 0,
+   "s": 46.34,
+   "e": 46.56,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "MY",
+   "line": 0,
+   "s": 46.56,
+   "e": 46.74,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "MOM",
+   "line": 0,
+   "s": 46.74,
+   "e": 46.96,
+   "p": 0.79,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.9
+  },
+  {
+   "word": "JOE",
+   "line": 0,
+   "s": 46.96,
+   "e": 47.24,
+   "p": 0.82,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.7
+  },
+  {
+   "word": "SOMETIMES",
+   "line": 0,
+   "s": 47.24,
+   "e": 47.78,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.6
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 47.84,
+   "e": 48.14,
+   "p": 0.44,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "RHYME",
+   "line": 0,
+   "s": 48.14,
+   "e": 48.34,
+   "p": 0.95,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.3
+  },
+  {
+   "word": "QUICK",
+   "line": 0,
+   "s": 48.34,
+   "e": 48.62,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.2
+  },
+  {
+   "word": "SOMETIMES",
+   "line": 0,
+   "s": 48.62,
+   "e": 49.02,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.0
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 49.02,
+   "e": 49.38,
+   "p": 0.92,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.8
+  },
+  {
+   "word": "RHYME",
+   "line": 0,
+   "s": 49.38,
+   "e": 49.58,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "SLOWER",
+   "line": 0,
+   "s": 49.58,
+   "e": 49.96,
+   "p": 0.53,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "VICE",
+   "line": 0,
+   "s": 49.96,
+   "e": 50.26,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "VERSA",
+   "line": 0,
+   "s": 50.26,
+   "e": 50.76,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "WHIP",
+   "line": 0,
+   "s": 50.76,
+   "e": 51.24,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.7
+  },
+  {
+   "word": "UP",
+   "line": 0,
+   "s": 51.24,
+   "e": 51.42,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.0
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 51.42,
+   "e": 51.56,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.3
+  },
+  {
+   "word": "SLICE",
+   "line": 0,
+   "s": 51.56,
+   "e": 51.74,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.9
+  },
+  {
+   "word": "OF",
+   "line": 0,
+   "s": 51.74,
+   "e": 51.92,
+   "p": 0.83,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.8
+  },
+  {
+   "word": "NICE",
+   "line": 0,
+   "s": 51.92,
+   "e": 52.08,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.3
+  },
+  {
+   "word": "FIRST",
+   "line": 0,
+   "s": 52.08,
+   "e": 52.4,
+   "p": 0.56,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "PIE",
+   "line": 0,
+   "s": 52.4,
+   "e": 52.7,
+   "p": 0.61,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "HIT",
+   "line": 0,
+   "s": 52.7,
+   "e": 53.0,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.0
+  },
+  {
+   "word": "IT",
+   "line": 0,
+   "s": 53.0,
+   "e": 53.14,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.9
+  },
+  {
+   "word": "ON",
+   "line": 0,
+   "s": 53.14,
+   "e": 53.26,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.6
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 53.26,
+   "e": 53.4,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.7
+  },
+  {
+   "word": "FIRST",
+   "line": 0,
+   "s": 53.4,
+   "e": 53.66,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.5
+  },
+  {
+   "word": "TRY",
+   "line": 0,
+   "s": 53.66,
+   "e": 53.92,
+   "p": 0.61,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.3
+  },
+  {
+   "word": "VILLAIN",
+   "line": 0,
+   "s": 53.92,
+   "e": 54.36,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.2
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 54.36,
+   "e": 54.82,
+   "p": 0.62,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.6
+  },
+  {
+   "word": "WORST",
+   "line": 0,
+   "s": 54.82,
+   "e": 55.06,
+   "p": 0.95,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.0
+  },
+  {
+   "word": "GUYS",
+   "line": 0,
+   "s": 55.06,
+   "e": 55.36,
+   "p": 0.45,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.9
+  },
+  {
+   "word": "SPOT",
+   "line": 0,
+   "s": 55.36,
+   "e": 55.72,
+   "p": 0.92,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.5
+  },
+  {
+   "word": "HOT",
+   "line": 0,
+   "s": 55.72,
+   "e": 56.02,
+   "p": 0.83,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.2
+  },
+  {
+   "word": "TRACKS",
+   "line": 0,
+   "s": 56.02,
+   "e": 56.36,
+   "p": 0.89,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "LIKE",
+   "line": 0,
+   "s": 56.36,
+   "e": 56.76,
+   "p": 0.83,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.4
+  },
+  {
+   "word": "SPOT",
+   "line": 0,
+   "s": 56.76,
+   "e": 57.06,
+   "p": 0.7,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 57.06,
+   "e": 57.26,
+   "p": 0.27,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.0
+  },
+  {
+   "word": "PAIR",
+   "line": 0,
+   "s": 57.26,
+   "e": 57.46,
+   "p": 0.94,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "OF",
+   "line": 0,
+   "s": 57.46,
+   "e": 57.56,
+   "p": 0.69,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.4
+  },
+  {
+   "word": "FAT",
+   "line": 0,
+   "s": 57.56,
+   "e": 57.74,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.4
+  },
+  {
+   "word": "ASSES",
+   "line": 0,
+   "s": 57.74,
+   "e": 58.26,
+   "p": 0.92,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.4
+  },
+  {
+   "word": "SHOTS",
+   "line": 0,
+   "s": 58.26,
+   "e": 58.62,
+   "p": 0.72,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.6
+  },
+  {
+   "word": "OF",
+   "line": 0,
+   "s": 58.62,
+   "e": 58.76,
+   "p": 0.95,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -18.4
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 58.76,
+   "e": 58.86,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.4
+  },
+  {
+   "word": "SCOTCH",
+   "line": 0,
+   "s": 58.86,
+   "e": 59.3,
+   "p": 0.91,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "FROM",
+   "line": 0,
+   "s": 59.3,
+   "e": 59.42,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.9
+  },
+  {
+   "word": "OUT",
+   "line": 0,
+   "s": 59.42,
+   "e": 59.58,
+   "p": 0.93,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 59.58,
+   "e": 59.74,
+   "p": 0.93,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "SQUARE",
+   "line": 0,
+   "s": 59.74,
+   "e": 59.98,
+   "p": 0.81,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "SHOT",
+   "line": 0,
+   "s": 59.98,
+   "e": 60.2,
+   "p": 0.87,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "GLASSES",
+   "line": 0,
+   "s": 60.2,
+   "e": 60.88,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "AND",
+   "line": 0,
+   "s": 60.88,
+   "e": 61.6,
+   "p": 0.92,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.6
+  },
+  {
+   "word": "HE",
+   "line": 0,
+   "s": 61.6,
+   "e": 61.74,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "WON'T",
+   "line": 0,
+   "s": 61.74,
+   "e": 62.02,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.7
+  },
+  {
+   "word": "STOP",
+   "line": 0,
+   "s": 62.02,
+   "e": 62.26,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.2
+  },
+  {
+   "word": "TILL",
+   "line": 0,
+   "s": 62.26,
+   "e": 62.54,
+   "p": 0.68,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.3
+  },
+  {
+   "word": "HE",
+   "line": 0,
+   "s": 62.54,
+   "e": 62.68,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "GOT",
+   "line": 0,
+   "s": 62.68,
+   "e": 62.86,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 62.86,
+   "e": 63.06,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.8
+  },
+  {
+   "word": "MASSES",
+   "line": 0,
+   "s": 63.06,
+   "e": 63.46,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "AND",
+   "line": 0,
+   "s": 63.46,
+   "e": 63.92,
+   "p": 0.82,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -18.9
+  },
+  {
+   "word": "SHOW",
+   "line": 0,
+   "s": 63.92,
+   "e": 64.08,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.1
+  },
+  {
+   "word": "THEM",
+   "line": 0,
+   "s": 64.08,
+   "e": 64.24,
+   "p": 0.21,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.2
+  },
+  {
+   "word": "WHAT",
+   "line": 0,
+   "s": 64.24,
+   "e": 64.4,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.1
+  },
+  {
+   "word": "THEY",
+   "line": 0,
+   "s": 64.4,
+   "e": 64.54,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.6
+  },
+  {
+   "word": "KNOW",
+   "line": 0,
+   "s": 64.54,
+   "e": 64.68,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.2
+  },
+  {
+   "word": "NOT",
+   "line": 0,
+   "s": 64.68,
+   "e": 64.94,
+   "p": 0.59,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.3
+  },
+  {
+   "word": "THROUGH",
+   "line": 0,
+   "s": 64.94,
+   "e": 65.14,
+   "p": 0.94,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "FLOWS",
+   "line": 0,
+   "s": 65.14,
+   "e": 65.38,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.7
+  },
+  {
+   "word": "OF",
+   "line": 0,
+   "s": 65.38,
+   "e": 65.54,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.2
+  },
+  {
+   "word": "HOT",
+   "line": 0,
+   "s": 65.54,
+   "e": 65.7,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.4
+  },
+  {
+   "word": "MOLASSES",
+   "line": 0,
+   "s": 65.7,
+   "e": 66.24,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.3
+  },
+  {
+   "word": "DO",
+   "line": 0,
+   "s": 66.24,
+   "e": 66.72,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -18.2
+  },
+  {
+   "word": "IT",
+   "line": 0,
+   "s": 66.72,
+   "e": 66.86,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -10.8
+  },
+  {
+   "word": "LIKE",
+   "line": 0,
+   "s": 66.86,
+   "e": 67.06,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.9
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 67.06,
+   "e": 67.2,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.9
+  },
+  {
+   "word": "ROBOT",
+   "line": 0,
+   "s": 67.2,
+   "e": 67.5,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "TO",
+   "line": 0,
+   "s": 67.55,
+   "e": 67.84,
+   "p": 0.83,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "HEADSPIN",
+   "line": 0,
+   "s": 67.84,
+   "e": 68.3,
+   "p": 0.86,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.2
+  },
+  {
+   "word": "TO",
+   "line": 0,
+   "s": 68.3,
+   "e": 68.48,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "BOOGALOO",
+   "line": 0,
+   "s": 68.48,
+   "e": 68.98,
+   "p": 0.86,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.4
+  },
+  {
+   "word": "TOOK",
+   "line": 0,
+   "s": 68.98,
+   "e": 69.38,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -18.4
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 69.38,
+   "e": 69.6,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "FEW",
+   "line": 0,
+   "s": 69.6,
+   "e": 69.8,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -18.1
+  },
+  {
+   "word": "MINUTES",
+   "line": 0,
+   "s": 69.8,
+   "e": 70.18,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "TO",
+   "line": 0,
+   "s": 70.18,
+   "e": 70.38,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.9
+  },
+  {
+   "word": "CONVINCE",
+   "line": 0,
+   "s": 70.38,
+   "e": 70.7,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.5
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 70.74,
+   "e": 70.96,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.4
+  },
+  {
+   "word": "AVERAGE",
+   "line": 0,
+   "s": 70.96,
+   "e": 71.18,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -10.9
+  },
+  {
+   "word": "BOOGALOO",
+   "line": 0,
+   "s": 71.18,
+   "e": 71.72,
+   "p": 0.81,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "IT'S",
+   "line": 0,
+   "s": 71.72,
+   "e": 72.44,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.1
+  },
+  {
+   "word": "UGLY",
+   "line": 0,
+   "s": 72.44,
+   "e": 72.72,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.7
+  },
+  {
+   "word": "LIKE",
+   "line": 0,
+   "s": 72.72,
+   "e": 73.02,
+   "p": 0.86,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.9
+  },
+  {
+   "word": "LOOK",
+   "line": 0,
+   "s": 73.02,
+   "e": 73.24,
+   "p": 0.79,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.4
+  },
+  {
+   "word": "AT",
+   "line": 0,
+   "s": 73.24,
+   "e": 73.38,
+   "p": 0.94,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.8
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 73.38,
+   "e": 73.58,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.3
+  },
+  {
+   "word": "IT'S",
+   "line": 0,
+   "s": 73.64,
+   "e": 73.84,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.7
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 73.84,
+   "e": 73.84,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -19.4
+  },
+  {
+   "word": "DAMN",
+   "line": 0,
+   "s": 73.84,
+   "e": 74.12,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.4
+  },
+  {
+   "word": "SHAME",
+   "line": 0,
+   "s": 74.12,
+   "e": 74.44,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.7
+  },
+  {
+   "word": "JUST",
+   "line": 0,
+   "s": 74.44,
+   "e": 74.98,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.8
+  },
+  {
+   "word": "REMEMBER",
+   "line": 0,
+   "s": 74.98,
+   "e": 75.34,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "ALL",
+   "line": 0,
+   "s": 75.34,
+   "e": 75.72,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "CAPS",
+   "line": 0,
+   "s": 75.72,
+   "e": 76.04,
+   "p": 0.83,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "WHEN",
+   "line": 0,
+   "s": 76.04,
+   "e": 76.38,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.0
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 76.38,
+   "e": 76.54,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "SPELL",
+   "line": 0,
+   "s": 76.54,
+   "e": 76.8,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.7
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 76.8,
+   "e": 77.0,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "MAN",
+   "line": 0,
+   "s": 77.0,
+   "e": 77.24,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "NAME",
+   "line": 0,
+   "s": 77.24,
+   "e": 77.68,
+   "p": 0.93,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "AND",
+   "line": 0,
+   "s": 88.55,
+   "e": 88.84,
+   "p": 0.09,
+   "note": "no lyrics given: CHECK against the published lyrics; QUIET: don't caption",
+   "db": -30.4
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 88.89,
+   "e": 89.06,
+   "p": 0.93,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.1
+  },
+  {
+   "word": "KNOW",
+   "line": 0,
+   "s": 89.06,
+   "e": 89.28,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.0
+  },
+  {
+   "word": "IT",
+   "line": 0,
+   "s": 89.28,
+   "e": 89.44,
+   "p": 0.71,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.4
+  },
+  {
+   "word": "LIKE",
+   "line": 0,
+   "s": 89.44,
+   "e": 89.58,
+   "p": 0.95,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.5
+  },
+  {
+   "word": "A",
+   "line": 0,
+   "s": 89.58,
+   "e": 89.78,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "POET",
+   "line": 0,
+   "s": 89.78,
+   "e": 90.04,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.7
+  },
+  {
+   "word": "LIKE",
+   "line": 0,
+   "s": 90.04,
+   "e": 90.26,
+   "p": 0.72,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.8
+  },
+  {
+   "word": "BABY",
+   "line": 0,
+   "s": 90.26,
+   "e": 90.56,
+   "p": 0.85,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.9
+  },
+  {
+   "word": "DOLL",
+   "line": 0,
+   "s": 90.61,
+   "e": 90.86,
+   "p": 0.68,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.4
+  },
+  {
+   "word": "I",
+   "line": 0,
+   "s": 90.86,
+   "e": 91.16,
+   "p": 0.44,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.7
+  },
+  {
+   "word": "BET",
+   "line": 0,
+   "s": 91.16,
+   "e": 91.3,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.9
+  },
+  {
+   "word": "SHE",
+   "line": 0,
+   "s": 91.3,
+   "e": 91.44,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.4
+  },
+  {
+   "word": "TRIED",
+   "line": 0,
+   "s": 91.44,
+   "e": 91.7,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "TO",
+   "line": 0,
+   "s": 91.7,
+   "e": 91.82,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "SAY",
+   "line": 0,
+   "s": 91.82,
+   "e": 92.0,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.9
+  },
+  {
+   "word": "SHE",
+   "line": 0,
+   "s": 92.0,
+   "e": 92.18,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.7
+  },
+  {
+   "word": "GAVE",
+   "line": 0,
+   "s": 92.18,
+   "e": 92.4,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "ME",
+   "line": 0,
+   "s": 92.4,
+   "e": 92.56,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "HER",
+   "line": 0,
+   "s": 92.56,
+   "e": 92.7,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.6
+  },
+  {
+   "word": "ALL",
+   "line": 0,
+   "s": 92.7,
+   "e": 92.94,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "SHE",
+   "line": 0,
+   "s": 92.94,
+   "e": 93.18,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.7
+  },
+  {
+   "word": "PLAYED",
+   "line": 0,
+   "s": 93.18,
+   "e": 93.5,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "BALL",
+   "line": 0,
+   "s": 93.5,
+   "e": 93.8,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.2
+  },
+  {
+   "word": "ALL",
+   "line": 0,
+   "s": 93.8,
+   "e": 94.48,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.4
+  },
+  {
+   "word": "BETS",
+   "line": 0,
+   "s": 94.48,
+   "e": 94.78,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.2
+  },
+  {
+   "word": "OFF",
+   "line": 0,
+   "s": 94.78,
+   "e": 95.08,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.9
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 95.08,
+   "e": 95.32,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.4
+  },
+  {
+   "word": "VILLAIN",
+   "line": 0,
+   "s": 95.32,
+   "e": 95.54,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.2
+  },
+  {
+   "word": "GOT",
+   "line": 0,
+   "s": 95.54,
+   "e": 95.76,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.3
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 95.76,
+   "e": 95.96,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.3
+  },
+  {
+   "word": "DICE",
+   "line": 0,
+   "s": 95.96,
+   "e": 96.22,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.9
+  },
+  {
+   "word": "RIGGED",
+   "line": 0,
+   "s": 96.22,
+   "e": 96.64,
+   "p": 0.89,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.4
+  },
+  {
+   "word": "AND",
+   "line": 0,
+   "s": 96.83,
+   "e": 96.88,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -21.3
+  },
+  {
+   "word": "THEY",
+   "line": 0,
+   "s": 96.88,
+   "e": 97.04,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.7
+  },
+  {
+   "word": "SAY",
+   "line": 0,
+   "s": 97.04,
+   "e": 97.24,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.1
+  },
+  {
+   "word": "HE",
+   "line": 0,
+   "s": 97.24,
+   "e": 97.4,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.4
+  },
+  {
+   "word": "ACCOSTED",
+   "line": 0,
+   "s": 97.4,
+   "e": 98.0,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.8
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 98.0,
+   "e": 98.08,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -20.1
+  },
+  {
+   "word": "MAN",
+   "line": 0,
+   "s": 98.08,
+   "e": 98.32,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.6
+  },
+  {
+   "word": "WITH",
+   "line": 0,
+   "s": 98.32,
+   "e": 98.56,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 98.56,
+   "e": 98.66,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.3
+  },
+  {
+   "word": "SLICED",
+   "line": 0,
+   "s": 98.66,
+   "e": 98.98,
+   "p": 0.84,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.9
+  },
+  {
+   "word": "WIG",
+   "line": 0,
+   "s": 98.98,
+   "e": 99.34,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.5
+  },
+  {
+   "word": "ALLEGEDLY",
+   "line": 0,
+   "s": 99.34,
+   "e": 99.96,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.8
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 99.96,
+   "e": 100.54,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "INVESTIGATION",
+   "line": 0,
+   "s": 100.54,
+   "e": 101.14,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.4
+  },
+  {
+   "word": "IS",
+   "line": 0,
+   "s": 101.14,
+   "e": 101.62,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.9
+  },
+  {
+   "word": "STILL",
+   "line": 0,
+   "s": 101.62,
+   "e": 101.82,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.9
+  },
+  {
+   "word": "ONGOING",
+   "line": 0,
+   "s": 101.82,
+   "e": 102.18,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "IN",
+   "line": 0,
+   "s": 102.18,
+   "e": 102.56,
+   "p": 0.83,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "THIS",
+   "line": 0,
+   "s": 102.56,
+   "e": 102.66,
+   "p": 0.91,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.0
+  },
+  {
+   "word": "PESKY",
+   "line": 0,
+   "s": 102.66,
+   "e": 103.02,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.0
+  },
+  {
+   "word": "NATION",
+   "line": 0,
+   "s": 103.1,
+   "e": 103.24,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.5
+  },
+  {
+   "word": "HE",
+   "line": 0,
+   "s": 103.24,
+   "e": 103.62,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.2
+  },
+  {
+   "word": "GOTS",
+   "line": 0,
+   "s": 103.62,
+   "e": 103.9,
+   "p": 0.91,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.0
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 103.9,
+   "e": 103.94,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -24.3
+  },
+  {
+   "word": "BEST",
+   "line": 0,
+   "s": 103.98,
+   "e": 104.2,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "CON",
+   "line": 0,
+   "s": 104.2,
+   "e": 104.44,
+   "p": 0.58,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.7
+  },
+  {
+   "word": "FLOWING",
+   "line": 0,
+   "s": 104.44,
+   "e": 104.94,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.5
+  },
+  {
+   "word": "THE",
+   "line": 0,
+   "s": 104.94,
+   "e": 105.34,
+   "p": 0.97,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -16.3
+  },
+  {
+   "word": "POT",
+   "line": 0,
+   "s": 105.34,
+   "e": 105.6,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.0
+  },
+  {
+   "word": "DOUBLES",
+   "line": 0,
+   "s": 105.6,
+   "e": 106.12,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.0
+  },
+  {
+   "word": "NOW",
+   "line": 0,
+   "s": 106.12,
+   "e": 106.68,
+   "p": 0.72,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -17.1
+  },
+  {
+   "word": "THEY",
+   "line": 0,
+   "s": 106.68,
+   "e": 106.88,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -11.5
+  },
+  {
+   "word": "REALLY",
+   "line": 0,
+   "s": 106.88,
+   "e": 107.06,
+   "p": 0.98,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -14.6
+  },
+  {
+   "word": "GOT",
+   "line": 0,
+   "s": 107.06,
+   "e": 107.4,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.9
+  },
+  {
+   "word": "TROUBLES",
+   "line": 0,
+   "s": 107.4,
+   "e": 107.8,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.8
+  },
+  {
+   "word": "MADMAN",
+   "line": 0,
+   "s": 107.9,
+   "e": 108.46,
+   "p": 0.7,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "NEVER",
+   "line": 0,
+   "s": 108.46,
+   "e": 108.8,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -12.2
+  },
+  {
+   "word": "GO",
+   "line": 0,
+   "s": 108.8,
+   "e": 109.1,
+   "p": 0.99,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.7
+  },
+  {
+   "word": "LIKE",
+   "line": 0,
+   "s": 109.1,
+   "e": 109.64,
+   "p": 0.96,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -15.9
+  },
+  {
+   "word": "SNOT",
+   "line": 0,
+   "s": 109.86,
+   "e": 110.4,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.2
+  },
+  {
+   "word": "BUBBLES",
+   "line": 0,
+   "s": 110.4,
+   "e": 110.8,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -13.6
+  },
+  {
+   "word": "THANK",
+   "line": 0,
+   "s": 110.8,
+   "e": 111.46,
+   "p": 0.16,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -18.6
+  },
+  {
+   "word": "YOU",
+   "line": 0,
+   "s": 111.46,
+   "e": 111.68,
+   "p": 1.0,
+   "note": "no lyrics given: CHECK against the published lyrics",
+   "db": -20.5
+  }
+ ],
+ "heard": [
+  {
+   "w": "so",
+   "s": 22.5,
+   "e": 22.62,
+   "p": 0.06
+  },
+  {
+   "w": "nasty",
+   "s": 22.62,
+   "e": 23.1,
+   "p": 0.96
+  },
+  {
+   "w": "that",
+   "s": 23.1,
+   "e": 23.54,
+   "p": 0.79
+  },
+  {
+   "w": "is",
+   "s": 23.54,
+   "e": 23.7,
+   "p": 0.95
+  },
+  {
+   "w": "probably",
+   "s": 23.7,
+   "e": 23.92,
+   "p": 0.98
+  },
+  {
+   "w": "somewhat",
+   "s": 23.92,
+   "e": 24.38,
+   "p": 0.88
+  },
+  {
+   "w": "of",
+   "s": 24.38,
+   "e": 24.64,
+   "p": 1.0
+  },
+  {
+   "w": "a",
+   "s": 24.64,
+   "e": 24.68,
+   "p": 1.0
+  },
+  {
+   "w": "travesty",
+   "s": 24.68,
+   "e": 25.26,
+   "p": 0.99
+  },
+  {
+   "w": "having",
+   "s": 25.26,
+   "e": 25.52,
+   "p": 0.98
+  },
+  {
+   "w": "me",
+   "s": 25.52,
+   "e": 25.8,
+   "p": 0.99
+  },
+  {
+   "w": "then",
+   "s": 25.8,
+   "e": 25.98,
+   "p": 0.23
+  },
+  {
+   "w": "he",
+   "s": 25.98,
+   "e": 26.1,
+   "p": 0.97
+  },
+  {
+   "w": "told",
+   "s": 26.1,
+   "e": 26.3,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 26.3,
+   "e": 26.44,
+   "p": 1.0
+  },
+  {
+   "w": "people",
+   "s": 26.44,
+   "e": 26.68,
+   "p": 1.0
+  },
+  {
+   "w": "you",
+   "s": 26.75,
+   "e": 26.9,
+   "p": 0.98
+  },
+  {
+   "w": "can",
+   "s": 26.9,
+   "e": 27.0,
+   "p": 0.75
+  },
+  {
+   "w": "call",
+   "s": 27.0,
+   "e": 27.24,
+   "p": 1.0
+  },
+  {
+   "w": "me",
+   "s": 27.24,
+   "e": 27.34,
+   "p": 0.02
+  },
+  {
+   "w": "your",
+   "s": 27.34,
+   "e": 27.58,
+   "p": 0.93
+  },
+  {
+   "w": "majesty",
+   "s": 27.58,
+   "e": 28.0,
+   "p": 0.99
+  },
+  {
+   "w": "keep",
+   "s": 28.0,
+   "e": 28.74,
+   "p": 0.83
+  },
+  {
+   "w": "your",
+   "s": 28.79,
+   "e": 28.98,
+   "p": 1.0
+  },
+  {
+   "w": "battery",
+   "s": 28.98,
+   "e": 29.28,
+   "p": 0.98
+  },
+  {
+   "w": "charged",
+   "s": 29.28,
+   "e": 29.76,
+   "p": 0.93
+  },
+  {
+   "w": "you",
+   "s": 29.76,
+   "e": 30.3,
+   "p": 0.67
+  },
+  {
+   "w": "know",
+   "s": 30.34,
+   "e": 30.48,
+   "p": 1.0
+  },
+  {
+   "w": "it",
+   "s": 30.48,
+   "e": 30.64,
+   "p": 0.98
+  },
+  {
+   "w": "won't",
+   "s": 30.64,
+   "e": 30.84,
+   "p": 1.0
+  },
+  {
+   "w": "stick",
+   "s": 30.84,
+   "e": 31.1,
+   "p": 1.0
+  },
+  {
+   "w": "yo",
+   "s": 31.1,
+   "e": 31.38,
+   "p": 0.98
+  },
+  {
+   "w": "and",
+   "s": 31.38,
+   "e": 31.78,
+   "p": 0.89
+  },
+  {
+   "w": "it's",
+   "s": 31.78,
+   "e": 32.02,
+   "p": 1.0
+  },
+  {
+   "w": "not",
+   "s": 32.02,
+   "e": 32.14,
+   "p": 1.0
+  },
+  {
+   "w": "his",
+   "s": 32.14,
+   "e": 32.38,
+   "p": 1.0
+  },
+  {
+   "w": "fault",
+   "s": 32.38,
+   "e": 32.7,
+   "p": 1.0
+  },
+  {
+   "w": "you",
+   "s": 32.7,
+   "e": 32.86,
+   "p": 0.91
+  },
+  {
+   "w": "kick",
+   "s": 32.86,
+   "e": 33.1,
+   "p": 0.91
+  },
+  {
+   "w": "slow",
+   "s": 33.1,
+   "e": 33.38,
+   "p": 1.0
+  },
+  {
+   "w": "should",
+   "s": 33.38,
+   "e": 33.9,
+   "p": 0.97
+  },
+  {
+   "w": "have",
+   "s": 33.9,
+   "e": 34.06,
+   "p": 0.73
+  },
+  {
+   "w": "let",
+   "s": 34.06,
+   "e": 34.22,
+   "p": 1.0
+  },
+  {
+   "w": "your",
+   "s": 34.22,
+   "e": 34.38,
+   "p": 0.96
+  },
+  {
+   "w": "trick",
+   "s": 34.38,
+   "e": 34.66,
+   "p": 1.0
+  },
+  {
+   "w": "hold",
+   "s": 34.66,
+   "e": 34.9,
+   "p": 0.86
+  },
+  {
+   "w": "chick",
+   "s": 34.9,
+   "e": 35.18,
+   "p": 0.75
+  },
+  {
+   "w": "holds",
+   "s": 35.18,
+   "e": 35.48,
+   "p": 0.63
+  },
+  {
+   "w": "a",
+   "s": 35.48,
+   "e": 35.64,
+   "p": 0.9
+  },
+  {
+   "w": "sick",
+   "s": 35.64,
+   "e": 35.88,
+   "p": 1.0
+  },
+  {
+   "w": "blow",
+   "s": 35.88,
+   "e": 36.12,
+   "p": 0.48
+  },
+  {
+   "w": "plus",
+   "s": 36.12,
+   "e": 36.68,
+   "p": 1.0
+  },
+  {
+   "w": "nobody",
+   "s": 36.68,
+   "e": 36.96,
+   "p": 1.0
+  },
+  {
+   "w": "couldn't",
+   "s": 36.96,
+   "e": 37.46,
+   "p": 1.0
+  },
+  {
+   "w": "do",
+   "s": 37.46,
+   "e": 37.6,
+   "p": 1.0
+  },
+  {
+   "w": "nothing",
+   "s": 37.6,
+   "e": 37.84,
+   "p": 1.0
+  },
+  {
+   "w": "once",
+   "s": 37.84,
+   "e": 38.08,
+   "p": 1.0
+  },
+  {
+   "w": "he",
+   "s": 38.08,
+   "e": 38.22,
+   "p": 0.98
+  },
+  {
+   "w": "let",
+   "s": 38.22,
+   "e": 38.36,
+   "p": 0.99
+  },
+  {
+   "w": "the",
+   "s": 38.36,
+   "e": 38.54,
+   "p": 1.0
+  },
+  {
+   "w": "brick",
+   "s": 38.54,
+   "e": 38.76,
+   "p": 0.98
+  },
+  {
+   "w": "go",
+   "s": 38.76,
+   "e": 38.98,
+   "p": 1.0
+  },
+  {
+   "w": "and",
+   "s": 38.98,
+   "e": 39.6,
+   "p": 1.0
+  },
+  {
+   "w": "you",
+   "s": 39.6,
+   "e": 39.78,
+   "p": 1.0
+  },
+  {
+   "w": "know",
+   "s": 39.78,
+   "e": 39.96,
+   "p": 1.0
+  },
+  {
+   "w": "i",
+   "s": 39.96,
+   "e": 40.16,
+   "p": 0.95
+  },
+  {
+   "w": "know",
+   "s": 40.16,
+   "e": 40.38,
+   "p": 1.0
+  },
+  {
+   "w": "that's",
+   "s": 40.38,
+   "e": 40.64,
+   "p": 1.0
+  },
+  {
+   "w": "a",
+   "s": 40.64,
+   "e": 40.74,
+   "p": 1.0
+  },
+  {
+   "w": "bunch",
+   "s": 40.74,
+   "e": 40.96,
+   "p": 1.0
+  },
+  {
+   "w": "of",
+   "s": 40.96,
+   "e": 41.1,
+   "p": 1.0
+  },
+  {
+   "w": "snow",
+   "s": 41.1,
+   "e": 41.42,
+   "p": 0.99
+  },
+  {
+   "w": "the",
+   "s": 41.42,
+   "e": 41.98,
+   "p": 0.78
+  },
+  {
+   "w": "beat",
+   "s": 41.98,
+   "e": 42.16,
+   "p": 0.95
+  },
+  {
+   "w": "is",
+   "s": 42.16,
+   "e": 42.32,
+   "p": 1.0
+  },
+  {
+   "w": "so",
+   "s": 42.32,
+   "e": 42.46,
+   "p": 0.93
+  },
+  {
+   "w": "butter",
+   "s": 42.46,
+   "e": 42.86,
+   "p": 0.97
+  },
+  {
+   "w": "peep",
+   "s": 42.86,
+   "e": 43.48,
+   "p": 0.96
+  },
+  {
+   "w": "the",
+   "s": 43.48,
+   "e": 43.6,
+   "p": 0.94
+  },
+  {
+   "w": "slow",
+   "s": 43.6,
+   "e": 43.82,
+   "p": 1.0
+  },
+  {
+   "w": "cutter",
+   "s": 43.82,
+   "e": 44.18,
+   "p": 0.98
+  },
+  {
+   "w": "as",
+   "s": 44.18,
+   "e": 44.42,
+   "p": 0.97
+  },
+  {
+   "w": "he",
+   "s": 44.42,
+   "e": 44.58,
+   "p": 0.97
+  },
+  {
+   "w": "uttered",
+   "s": 44.58,
+   "e": 44.98,
+   "p": 0.9
+  },
+  {
+   "w": "the",
+   "s": 44.98,
+   "e": 44.98,
+   "p": 0.64
+  },
+  {
+   "w": "flow",
+   "s": 44.98,
+   "e": 45.24,
+   "p": 0.16
+  },
+  {
+   "w": "don't",
+   "s": 45.24,
+   "e": 46.22,
+   "p": 1.0
+  },
+  {
+   "w": "talk",
+   "s": 46.29,
+   "e": 46.34,
+   "p": 1.0
+  },
+  {
+   "w": "about",
+   "s": 46.34,
+   "e": 46.56,
+   "p": 1.0
+  },
+  {
+   "w": "my",
+   "s": 46.56,
+   "e": 46.74,
+   "p": 1.0
+  },
+  {
+   "w": "mom",
+   "s": 46.74,
+   "e": 46.96,
+   "p": 0.79
+  },
+  {
+   "w": "joe",
+   "s": 46.96,
+   "e": 47.24,
+   "p": 0.82
+  },
+  {
+   "w": "sometimes",
+   "s": 47.24,
+   "e": 47.78,
+   "p": 1.0
+  },
+  {
+   "w": "you",
+   "s": 47.84,
+   "e": 48.14,
+   "p": 0.44
+  },
+  {
+   "w": "rhyme",
+   "s": 48.14,
+   "e": 48.34,
+   "p": 0.95
+  },
+  {
+   "w": "quick",
+   "s": 48.34,
+   "e": 48.62,
+   "p": 1.0
+  },
+  {
+   "w": "sometimes",
+   "s": 48.62,
+   "e": 49.02,
+   "p": 1.0
+  },
+  {
+   "w": "you",
+   "s": 49.02,
+   "e": 49.38,
+   "p": 0.92
+  },
+  {
+   "w": "rhyme",
+   "s": 49.38,
+   "e": 49.58,
+   "p": 0.97
+  },
+  {
+   "w": "slower",
+   "s": 49.58,
+   "e": 49.96,
+   "p": 0.53
+  },
+  {
+   "w": "vice",
+   "s": 49.96,
+   "e": 50.26,
+   "p": 0.99
+  },
+  {
+   "w": "versa",
+   "s": 50.26,
+   "e": 50.76,
+   "p": 1.0
+  },
+  {
+   "w": "whip",
+   "s": 50.76,
+   "e": 51.24,
+   "p": 1.0
+  },
+  {
+   "w": "up",
+   "s": 51.24,
+   "e": 51.42,
+   "p": 1.0
+  },
+  {
+   "w": "a",
+   "s": 51.42,
+   "e": 51.56,
+   "p": 0.99
+  },
+  {
+   "w": "slice",
+   "s": 51.56,
+   "e": 51.74,
+   "p": 1.0
+  },
+  {
+   "w": "of",
+   "s": 51.74,
+   "e": 51.92,
+   "p": 0.83
+  },
+  {
+   "w": "nice",
+   "s": 51.92,
+   "e": 52.08,
+   "p": 0.97
+  },
+  {
+   "w": "first",
+   "s": 52.08,
+   "e": 52.4,
+   "p": 0.56
+  },
+  {
+   "w": "pie",
+   "s": 52.4,
+   "e": 52.7,
+   "p": 0.61
+  },
+  {
+   "w": "hit",
+   "s": 52.7,
+   "e": 53.0,
+   "p": 0.96
+  },
+  {
+   "w": "it",
+   "s": 53.0,
+   "e": 53.14,
+   "p": 1.0
+  },
+  {
+   "w": "on",
+   "s": 53.14,
+   "e": 53.26,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 53.26,
+   "e": 53.4,
+   "p": 1.0
+  },
+  {
+   "w": "first",
+   "s": 53.4,
+   "e": 53.66,
+   "p": 1.0
+  },
+  {
+   "w": "try",
+   "s": 53.66,
+   "e": 53.92,
+   "p": 0.61
+  },
+  {
+   "w": "villain",
+   "s": 53.92,
+   "e": 54.36,
+   "p": 0.97
+  },
+  {
+   "w": "The",
+   "s": 54.36,
+   "e": 54.82,
+   "p": 0.62
+  },
+  {
+   "w": "worst",
+   "s": 54.82,
+   "e": 55.06,
+   "p": 0.95
+  },
+  {
+   "w": "guys",
+   "s": 55.06,
+   "e": 55.36,
+   "p": 0.45
+  },
+  {
+   "w": "spot",
+   "s": 55.36,
+   "e": 55.72,
+   "p": 0.92
+  },
+  {
+   "w": "hot",
+   "s": 55.72,
+   "e": 56.02,
+   "p": 0.83
+  },
+  {
+   "w": "tracks",
+   "s": 56.02,
+   "e": 56.36,
+   "p": 0.89
+  },
+  {
+   "w": "like",
+   "s": 56.36,
+   "e": 56.76,
+   "p": 0.83
+  },
+  {
+   "w": "spot",
+   "s": 56.76,
+   "e": 57.06,
+   "p": 0.7
+  },
+  {
+   "w": "a",
+   "s": 57.06,
+   "e": 57.26,
+   "p": 0.27
+  },
+  {
+   "w": "pair",
+   "s": 57.26,
+   "e": 57.46,
+   "p": 0.94
+  },
+  {
+   "w": "of",
+   "s": 57.46,
+   "e": 57.56,
+   "p": 0.69
+  },
+  {
+   "w": "fat",
+   "s": 57.56,
+   "e": 57.74,
+   "p": 0.99
+  },
+  {
+   "w": "asses",
+   "s": 57.74,
+   "e": 58.26,
+   "p": 0.92
+  },
+  {
+   "w": "Shots",
+   "s": 58.26,
+   "e": 58.62,
+   "p": 0.72
+  },
+  {
+   "w": "of",
+   "s": 58.62,
+   "e": 58.76,
+   "p": 0.95
+  },
+  {
+   "w": "the",
+   "s": 58.76,
+   "e": 58.86,
+   "p": 0.99
+  },
+  {
+   "w": "scotch",
+   "s": 58.86,
+   "e": 59.3,
+   "p": 0.91
+  },
+  {
+   "w": "from",
+   "s": 59.3,
+   "e": 59.42,
+   "p": 0.97
+  },
+  {
+   "w": "out",
+   "s": 59.42,
+   "e": 59.58,
+   "p": 0.93
+  },
+  {
+   "w": "the",
+   "s": 59.58,
+   "e": 59.74,
+   "p": 0.93
+  },
+  {
+   "w": "square",
+   "s": 59.74,
+   "e": 59.98,
+   "p": 0.81
+  },
+  {
+   "w": "shot",
+   "s": 59.98,
+   "e": 60.2,
+   "p": 0.87
+  },
+  {
+   "w": "glasses",
+   "s": 60.2,
+   "e": 60.88,
+   "p": 0.99
+  },
+  {
+   "w": "And",
+   "s": 60.88,
+   "e": 61.6,
+   "p": 0.92
+  },
+  {
+   "w": "he",
+   "s": 61.6,
+   "e": 61.74,
+   "p": 0.99
+  },
+  {
+   "w": "won't",
+   "s": 61.74,
+   "e": 62.02,
+   "p": 0.98
+  },
+  {
+   "w": "stop",
+   "s": 62.02,
+   "e": 62.26,
+   "p": 1.0
+  },
+  {
+   "w": "till",
+   "s": 62.26,
+   "e": 62.54,
+   "p": 0.68
+  },
+  {
+   "w": "he",
+   "s": 62.54,
+   "e": 62.68,
+   "p": 0.98
+  },
+  {
+   "w": "got",
+   "s": 62.68,
+   "e": 62.86,
+   "p": 0.99
+  },
+  {
+   "w": "the",
+   "s": 62.86,
+   "e": 63.06,
+   "p": 0.99
+  },
+  {
+   "w": "masses",
+   "s": 63.06,
+   "e": 63.46,
+   "p": 0.98
+  },
+  {
+   "w": "And",
+   "s": 63.46,
+   "e": 63.92,
+   "p": 0.82
+  },
+  {
+   "w": "show",
+   "s": 63.92,
+   "e": 64.08,
+   "p": 0.98
+  },
+  {
+   "w": "them",
+   "s": 64.08,
+   "e": 64.24,
+   "p": 0.21
+  },
+  {
+   "w": "what",
+   "s": 64.24,
+   "e": 64.4,
+   "p": 0.99
+  },
+  {
+   "w": "they",
+   "s": 64.4,
+   "e": 64.54,
+   "p": 1.0
+  },
+  {
+   "w": "know",
+   "s": 64.54,
+   "e": 64.68,
+   "p": 0.99
+  },
+  {
+   "w": "not",
+   "s": 64.68,
+   "e": 64.94,
+   "p": 0.59
+  },
+  {
+   "w": "through",
+   "s": 64.94,
+   "e": 65.14,
+   "p": 0.94
+  },
+  {
+   "w": "flows",
+   "s": 65.14,
+   "e": 65.38,
+   "p": 0.96
+  },
+  {
+   "w": "of",
+   "s": 65.38,
+   "e": 65.54,
+   "p": 0.98
+  },
+  {
+   "w": "hot",
+   "s": 65.54,
+   "e": 65.7,
+   "p": 1.0
+  },
+  {
+   "w": "molasses",
+   "s": 65.7,
+   "e": 66.24,
+   "p": 1.0
+  },
+  {
+   "w": "Do",
+   "s": 66.24,
+   "e": 66.72,
+   "p": 0.98
+  },
+  {
+   "w": "it",
+   "s": 66.72,
+   "e": 66.86,
+   "p": 0.97
+  },
+  {
+   "w": "like",
+   "s": 66.86,
+   "e": 67.06,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 67.06,
+   "e": 67.2,
+   "p": 0.96
+  },
+  {
+   "w": "robot",
+   "s": 67.2,
+   "e": 67.5,
+   "p": 0.98
+  },
+  {
+   "w": "to",
+   "s": 67.55,
+   "e": 67.84,
+   "p": 0.83
+  },
+  {
+   "w": "headspin",
+   "s": 67.84,
+   "e": 68.3,
+   "p": 0.86
+  },
+  {
+   "w": "to",
+   "s": 68.3,
+   "e": 68.48,
+   "p": 0.96
+  },
+  {
+   "w": "boogaloo",
+   "s": 68.48,
+   "e": 68.98,
+   "p": 0.86
+  },
+  {
+   "w": "Took",
+   "s": 68.98,
+   "e": 69.38,
+   "p": 0.99
+  },
+  {
+   "w": "a",
+   "s": 69.38,
+   "e": 69.6,
+   "p": 1.0
+  },
+  {
+   "w": "few",
+   "s": 69.6,
+   "e": 69.8,
+   "p": 1.0
+  },
+  {
+   "w": "minutes",
+   "s": 69.8,
+   "e": 70.18,
+   "p": 1.0
+  },
+  {
+   "w": "to",
+   "s": 70.18,
+   "e": 70.38,
+   "p": 1.0
+  },
+  {
+   "w": "convince",
+   "s": 70.38,
+   "e": 70.7,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 70.74,
+   "e": 70.96,
+   "p": 1.0
+  },
+  {
+   "w": "average",
+   "s": 70.96,
+   "e": 71.18,
+   "p": 1.0
+  },
+  {
+   "w": "boogaloo",
+   "s": 71.18,
+   "e": 71.72,
+   "p": 0.81
+  },
+  {
+   "w": "It's",
+   "s": 71.72,
+   "e": 72.44,
+   "p": 0.99
+  },
+  {
+   "w": "ugly",
+   "s": 72.44,
+   "e": 72.72,
+   "p": 1.0
+  },
+  {
+   "w": "like",
+   "s": 72.72,
+   "e": 73.02,
+   "p": 0.86
+  },
+  {
+   "w": "look",
+   "s": 73.02,
+   "e": 73.24,
+   "p": 0.79
+  },
+  {
+   "w": "at",
+   "s": 73.24,
+   "e": 73.38,
+   "p": 0.94
+  },
+  {
+   "w": "you",
+   "s": 73.38,
+   "e": 73.58,
+   "p": 1.0
+  },
+  {
+   "w": "it's",
+   "s": 73.64,
+   "e": 73.84,
+   "p": 1.0
+  },
+  {
+   "w": "a",
+   "s": 73.84,
+   "e": 73.84,
+   "p": 1.0
+  },
+  {
+   "w": "damn",
+   "s": 73.84,
+   "e": 74.12,
+   "p": 0.99
+  },
+  {
+   "w": "shame",
+   "s": 74.12,
+   "e": 74.44,
+   "p": 1.0
+  },
+  {
+   "w": "Just",
+   "s": 74.44,
+   "e": 74.98,
+   "p": 0.99
+  },
+  {
+   "w": "remember",
+   "s": 74.98,
+   "e": 75.34,
+   "p": 1.0
+  },
+  {
+   "w": "all",
+   "s": 75.34,
+   "e": 75.72,
+   "p": 0.97
+  },
+  {
+   "w": "caps",
+   "s": 75.72,
+   "e": 76.04,
+   "p": 0.83
+  },
+  {
+   "w": "when",
+   "s": 76.04,
+   "e": 76.38,
+   "p": 1.0
+  },
+  {
+   "w": "you",
+   "s": 76.38,
+   "e": 76.54,
+   "p": 1.0
+  },
+  {
+   "w": "spell",
+   "s": 76.54,
+   "e": 76.8,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 76.8,
+   "e": 77.0,
+   "p": 0.99
+  },
+  {
+   "w": "man",
+   "s": 77.0,
+   "e": 77.24,
+   "p": 0.99
+  },
+  {
+   "w": "name",
+   "s": 77.24,
+   "e": 77.68,
+   "p": 0.93
+  },
+  {
+   "w": "and",
+   "s": 88.55,
+   "e": 88.84,
+   "p": 0.09
+  },
+  {
+   "w": "you",
+   "s": 88.89,
+   "e": 89.06,
+   "p": 0.93
+  },
+  {
+   "w": "know",
+   "s": 89.06,
+   "e": 89.28,
+   "p": 0.99
+  },
+  {
+   "w": "it",
+   "s": 89.28,
+   "e": 89.44,
+   "p": 0.71
+  },
+  {
+   "w": "like",
+   "s": 89.44,
+   "e": 89.58,
+   "p": 0.95
+  },
+  {
+   "w": "a",
+   "s": 89.58,
+   "e": 89.78,
+   "p": 0.99
+  },
+  {
+   "w": "poet",
+   "s": 89.78,
+   "e": 90.04,
+   "p": 0.98
+  },
+  {
+   "w": "like",
+   "s": 90.04,
+   "e": 90.26,
+   "p": 0.72
+  },
+  {
+   "w": "baby",
+   "s": 90.26,
+   "e": 90.56,
+   "p": 0.85
+  },
+  {
+   "w": "doll",
+   "s": 90.61,
+   "e": 90.86,
+   "p": 0.68
+  },
+  {
+   "w": "i",
+   "s": 90.86,
+   "e": 91.16,
+   "p": 0.44
+  },
+  {
+   "w": "bet",
+   "s": 91.16,
+   "e": 91.3,
+   "p": 0.98
+  },
+  {
+   "w": "she",
+   "s": 91.3,
+   "e": 91.44,
+   "p": 0.99
+  },
+  {
+   "w": "tried",
+   "s": 91.44,
+   "e": 91.7,
+   "p": 0.99
+  },
+  {
+   "w": "to",
+   "s": 91.7,
+   "e": 91.82,
+   "p": 1.0
+  },
+  {
+   "w": "say",
+   "s": 91.82,
+   "e": 92.0,
+   "p": 1.0
+  },
+  {
+   "w": "she",
+   "s": 92.0,
+   "e": 92.18,
+   "p": 0.99
+  },
+  {
+   "w": "gave",
+   "s": 92.18,
+   "e": 92.4,
+   "p": 1.0
+  },
+  {
+   "w": "me",
+   "s": 92.4,
+   "e": 92.56,
+   "p": 1.0
+  },
+  {
+   "w": "her",
+   "s": 92.56,
+   "e": 92.7,
+   "p": 1.0
+  },
+  {
+   "w": "all",
+   "s": 92.7,
+   "e": 92.94,
+   "p": 0.97
+  },
+  {
+   "w": "she",
+   "s": 92.94,
+   "e": 93.18,
+   "p": 0.98
+  },
+  {
+   "w": "played",
+   "s": 93.18,
+   "e": 93.5,
+   "p": 0.99
+  },
+  {
+   "w": "ball",
+   "s": 93.5,
+   "e": 93.8,
+   "p": 0.96
+  },
+  {
+   "w": "all",
+   "s": 93.8,
+   "e": 94.48,
+   "p": 0.98
+  },
+  {
+   "w": "bets",
+   "s": 94.48,
+   "e": 94.78,
+   "p": 1.0
+  },
+  {
+   "w": "off",
+   "s": 94.78,
+   "e": 95.08,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 95.08,
+   "e": 95.32,
+   "p": 0.99
+  },
+  {
+   "w": "villain",
+   "s": 95.32,
+   "e": 95.54,
+   "p": 1.0
+  },
+  {
+   "w": "got",
+   "s": 95.54,
+   "e": 95.76,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 95.76,
+   "e": 95.96,
+   "p": 1.0
+  },
+  {
+   "w": "dice",
+   "s": 95.96,
+   "e": 96.22,
+   "p": 1.0
+  },
+  {
+   "w": "rigged",
+   "s": 96.22,
+   "e": 96.64,
+   "p": 0.89
+  },
+  {
+   "w": "and",
+   "s": 96.83,
+   "e": 96.88,
+   "p": 0.99
+  },
+  {
+   "w": "they",
+   "s": 96.88,
+   "e": 97.04,
+   "p": 1.0
+  },
+  {
+   "w": "say",
+   "s": 97.04,
+   "e": 97.24,
+   "p": 1.0
+  },
+  {
+   "w": "he",
+   "s": 97.24,
+   "e": 97.4,
+   "p": 1.0
+  },
+  {
+   "w": "accosted",
+   "s": 97.4,
+   "e": 98.0,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 98.0,
+   "e": 98.08,
+   "p": 1.0
+  },
+  {
+   "w": "man",
+   "s": 98.08,
+   "e": 98.32,
+   "p": 1.0
+  },
+  {
+   "w": "with",
+   "s": 98.32,
+   "e": 98.56,
+   "p": 1.0
+  },
+  {
+   "w": "the",
+   "s": 98.56,
+   "e": 98.66,
+   "p": 0.99
+  },
+  {
+   "w": "sliced",
+   "s": 98.66,
+   "e": 98.98,
+   "p": 0.84
+  },
+  {
+   "w": "wig",
+   "s": 98.98,
+   "e": 99.34,
+   "p": 0.99
+  },
+  {
+   "w": "allegedly",
+   "s": 99.34,
+   "e": 99.96,
+   "p": 0.99
+  },
+  {
+   "w": "the",
+   "s": 99.96,
+   "e": 100.54,
+   "p": 0.99
+  },
+  {
+   "w": "investigation",
+   "s": 100.54,
+   "e": 101.14,
+   "p": 1.0
+  },
+  {
+   "w": "is",
+   "s": 101.14,
+   "e": 101.62,
+   "p": 1.0
+  },
+  {
+   "w": "still",
+   "s": 101.62,
+   "e": 101.82,
+   "p": 1.0
+  },
+  {
+   "w": "ongoing",
+   "s": 101.82,
+   "e": 102.18,
+   "p": 0.99
+  },
+  {
+   "w": "in",
+   "s": 102.18,
+   "e": 102.56,
+   "p": 0.83
+  },
+  {
+   "w": "this",
+   "s": 102.56,
+   "e": 102.66,
+   "p": 0.91
+  },
+  {
+   "w": "pesky",
+   "s": 102.66,
+   "e": 103.02,
+   "p": 0.98
+  },
+  {
+   "w": "nation",
+   "s": 103.1,
+   "e": 103.24,
+   "p": 1.0
+  },
+  {
+   "w": "he",
+   "s": 103.24,
+   "e": 103.62,
+   "p": 1.0
+  },
+  {
+   "w": "gots",
+   "s": 103.62,
+   "e": 103.9,
+   "p": 0.91
+  },
+  {
+   "w": "the",
+   "s": 103.9,
+   "e": 103.94,
+   "p": 0.99
+  },
+  {
+   "w": "best",
+   "s": 103.98,
+   "e": 104.2,
+   "p": 1.0
+  },
+  {
+   "w": "con",
+   "s": 104.2,
+   "e": 104.44,
+   "p": 0.58
+  },
+  {
+   "w": "flowing",
+   "s": 104.44,
+   "e": 104.94,
+   "p": 0.98
+  },
+  {
+   "w": "the",
+   "s": 104.94,
+   "e": 105.34,
+   "p": 0.97
+  },
+  {
+   "w": "pot",
+   "s": 105.34,
+   "e": 105.6,
+   "p": 0.99
+  },
+  {
+   "w": "doubles",
+   "s": 105.6,
+   "e": 106.12,
+   "p": 1.0
+  },
+  {
+   "w": "now",
+   "s": 106.12,
+   "e": 106.68,
+   "p": 0.72
+  },
+  {
+   "w": "they",
+   "s": 106.68,
+   "e": 106.88,
+   "p": 0.98
+  },
+  {
+   "w": "really",
+   "s": 106.88,
+   "e": 107.06,
+   "p": 0.98
+  },
+  {
+   "w": "got",
+   "s": 107.06,
+   "e": 107.4,
+   "p": 1.0
+  },
+  {
+   "w": "troubles",
+   "s": 107.4,
+   "e": 107.8,
+   "p": 0.99
+  },
+  {
+   "w": "madman",
+   "s": 107.9,
+   "e": 108.46,
+   "p": 0.7
+  },
+  {
+   "w": "never",
+   "s": 108.46,
+   "e": 108.8,
+   "p": 1.0
+  },
+  {
+   "w": "go",
+   "s": 108.8,
+   "e": 109.1,
+   "p": 0.99
+  },
+  {
+   "w": "like",
+   "s": 109.1,
+   "e": 109.64,
+   "p": 0.96
+  },
+  {
+   "w": "snot",
+   "s": 109.86,
+   "e": 110.4,
+   "p": 1.0
+  },
+  {
+   "w": "bubbles",
+   "s": 110.4,
+   "e": 110.8,
+   "p": 1.0
+  },
+  {
+   "w": "Thank",
+   "s": 110.8,
+   "e": 111.46,
+   "p": 0.16
+  },
+  {
+   "w": "you",
+   "s": 111.46,
+   "e": 111.68,
+   "p": 1.0
+  }
+ ]
+}

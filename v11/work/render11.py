@@ -5296,12 +5296,18 @@ def draw_sprite(acc, spr, x, y, sc, rot, flip=1.0, blur=0.0, alpha=1.0, stretch=
     M[0, 2] = n / 2 - (M[0, 0] * w / 2 + M[0, 1] * h / 2); M[1, 2] = n / 2 - (M[1, 0] * w / 2 + M[1, 1] * h / 2)
     pm = np.dstack([spr[..., :3] * spr[..., 3:4], spr[..., 3:4]])                       # premultiplied: no dark fringes
     tile = cv2.warpAffine(pm, M, (n, n), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
-    if blur > 0.6: tile = cv2.GaussianBlur(tile, (0, 0), blur)
-    if flip < 0: tile[..., :3] *= 0.86                                                   # the back of the petal
     x0, y0 = int(x - n / 2), int(y - n / 2)
     xa, ya, xb, yb = max(0, x0), max(0, y0), min(W, x0 + n), min(H, y0 + n)
     if xb <= xa or yb <= ya: return
-    t_ = tile[ya - y0:yb - y0, xa - x0:xb - x0]; a = t_[..., 3:4] * alpha
+    if blur > 0.6:                                  # pipeline v2 (WP2 item 5): blur only the part that lands in the frame,
+        rad = int(blur * 4) + 2                     # plus the kernel's reach (OpenCV: 4 sigma for float), as a copy so the
+        ca, ra = max(0, xa - x0 - rad), max(0, ya - y0 - rad)          # borders are the tile's own: the same pixels, without
+        cb, rb = min(n, xb - x0 + rad), min(n, yb - y0 + rad)          # blurring a zoomed sprite's off-screen 90 %
+        part = cv2.GaussianBlur(np.ascontiguousarray(tile[ra:rb, ca:cb]), (0, 0), blur)
+        t_ = part[ya - y0 - ra:yb - y0 - ra, xa - x0 - ca:xb - x0 - ca]
+    else: t_ = tile[ya - y0:yb - y0, xa - x0:xb - x0]
+    if flip < 0: t_[..., :3] *= 0.86                                                     # the back of the petal
+    a = t_[..., 3:4] * alpha
     sub = acc[ya:yb, xa:xb]
     sub[..., :3] = sub[..., :3] * (1 - a) + t_[..., :3] * alpha; sub[..., 3:4] = sub[..., 3:4] * (1 - a) + a
 
@@ -9688,6 +9694,55 @@ def render_blocks(pool, frames, size=36):
         if len(q) >= 6: fs_, r = q.popleft(); yield from zip(fs_, r.get())
     while q: fs_, r = q.popleft(); yield from zip(fs_, r.get())
 
+
+#   6. FLOW CACHE  (Dexter studio, WP2 item 4) the DIS flow of each source pair (both directions, computed on the whole
+#                  source frame exactly as before) is stored once on disk as float32, cropped to the columns the pair's two
+#                  restored bands share (the only part sr_flow_part reads): vN/work/cache/flow/<source file>/i0_i1_xa_xb.npy,
+#                  ~4.8 MB a pair (v11: 345 pairs, 1.65 GB). Renders after the first, revisions and partial re-renders load it
+#                  (~2 ms) instead of computing it (~220 ms for the two directions). Exact: the stored numbers are the
+#                  computed ones. VFX_FLOW_CACHE=0 turns it off; deleting the folder is always safe.
+FLOW_DIR = f"{ROOT}/{E.VER}/work/cache/flow"
+FLOW_CACHE = os.environ.get("VFX_FLOW_CACHE", "1") != "0"
+_FLC = {}
+def flow_cols(pk, i0, i1, xa, xb):
+    """(2, H, xb - xa, 2): flow_pair(pk, i0, i1)'s two directions, columns xa..xb, from the disk cache when present."""
+    key = (pk, i0, i1, xa, xb)
+    if key in _FLC: return _FLC[key]
+    p = f"{FLOW_DIR}/{os.path.basename(E.SRC[pk][0])}/{i0}_{i1}_{xa}_{xb}.npy"; F = None
+    if FLOW_CACHE and os.path.exists(p):
+        try: F = np.load(p)
+        except Exception: F = None
+    if F is None:
+        F01, F10 = flow_pair(pk, i0, i1)
+        F = np.stack([F01[:, xa:xb], F10[:, xa:xb]])
+        if FLOW_CACHE:
+            try:
+                os.makedirs(os.path.dirname(p), exist_ok=True); tmp = f"{p[:-4]}.{os.getpid()}.tmp.npy"
+                np.save(tmp, F); os.replace(tmp, p)                                          # atomic: workers may race
+            except OSError: pass
+    if len(_FLC) > 16: _FLC.pop(next(iter(_FLC)))
+    _FLC[key] = F
+    return F
+
+def sr_flow_part(pk, i0, i1, a, x0, x1, y0, y1):
+    """the in-between frame at fraction a, built on the 2x bands with the low-res flow scaled up (flow from flow_cols)."""
+    b0, b1 = sr_band(pk, i0), sr_band(pk, i1)
+    for b in (b0, b1):
+        if b is None or b[0] > x0 or b[0] + b[1].shape[1] // 2 < x1: return None
+    xa = max(b0[0], b1[0]); xb = min(b0[0] + b0[1].shape[1] // 2, b1[0] + b1[1].shape[1] // 2)
+    F = flow_cols(pk, i0, i1, xa, xb)
+    f01, f10 = F[0][y0:y1, x0 - xa:x1 - xa], F[1][y0:y1, x0 - xa:x1 - xa]
+    Ft0 = -(1 - a) * a * f01 + a * a * f10; Ft1 = (1 - a) * (1 - a) * f01 - a * (1 - a) * f10
+    h2, w2 = 2 * (y1 - y0), 2 * (x1 - x0)
+    if (w2, h2) not in _GRD:
+        if len(_GRD) > 6: _GRD.clear()
+        gx, gy = np.meshgrid(np.arange(w2, dtype=np.float32), np.arange(h2, dtype=np.float32)); _GRD[(w2, h2)] = (gx, gy)
+    gx, gy = _GRD[(w2, h2)]; parts = []
+    for (xo, im), Ft in ((b0, Ft0), (b1, Ft1)):
+        F2 = cv2.resize(Ft, (w2, h2), interpolation=cv2.INTER_LINEAR) * 2
+        parts.append(cv2.remap(im, gx + 2 * (x0 - xo) + F2[..., 0], gy + 2 * y0 + F2[..., 1], cv2.INTER_LINEAR,
+                               borderMode=cv2.BORDER_REFLECT).astype(np.float32))
+    return parts[0] * (1 - a) + parts[1] * a
 
 # <<< pipeline v2: speed
 

@@ -5,15 +5,12 @@ of render and a round of feedback.
   python3 tools/preflight.py N                       # the EDL, the renderer's transitions, the sound events
   python3 tools/preflight.py N --hero bh_draw,bh_warp   # name the hero asset's drawing functions (or HERO = [...] in the EDL)
   python3 tools/preflight.py N --dir PATH            # check a copy of the work folder (e.g. an old revision from git)
-  python3 tools/preflight.py registry                # rebuild studio/transitions_usage.json (every transition, where defined and used)
+  python3 tools/preflight.py registry                # rebuild studio/transitions.json's generated fields (keeps the owner's verdicts)
+  (since the merge, `preflight.py N` runs tools/plan_check.py, which includes these checks; `--own` runs only these)
 
 Levels: FAIL = breaks a rule the owner has stated (fix before rendering); WARN = likely to draw a note (decide);
-INFO = review items (look at these in the sheets). Exit code 1 when anything FAILs. `build.sh N plan` runs it next to the
-Dexter studio's tools/plan_check.py (the shared gate: owner verdicts per transition from studio/transitions.json,
-look-alike clips, spins landing on faces, the signature graphic, density, the hero family); a FAIL in either stops `video`.
-This tool adds what needs the renderer's code or the audio builder's events: the hero asset by call graph (HERO), the
-emblem rule, sound kinds and sounds on beat hits, the same source shot twice, order-dependent caches, the registry's
-'caution' notes.
+INFO = review items (look at these in the sheets). Exit code 1 when anything FAILs. `build.sh N plan` runs it, and
+`build.sh N prep` runs it after the source audit.
 
 What it reads: edlN.py (shots, transitions, SET_PIECES, HERO, TEXT), renderN.py imported without set-up (the TR2
 registry and a static call graph of every transition), and the sound events: vN/audio/fx_events.json, written by the
@@ -25,10 +22,25 @@ import os, sys, json, types, re, ast, hashlib, importlib, subprocess, tempfile, 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, f"{ROOT}/tools")
 SCAFFOLD = f"{ROOT}/v12/work/render12.py"
-REG = f"{ROOT}/studio/transitions.json"            # the owner's verdicts (shared with the Dexter studio; curated)
-USAGE = f"{ROOT}/studio/transitions_usage.json"    # where each transition is defined and used (generated: `registry`)
+REG = f"{ROOT}/studio/transitions.json"
 VERDICT = {"v4": "standard", "v6": "standard", "v7": "standard", "v10": "standard", "v11": "standard", "v12": "standard",
-           "v13": "approved (not a standard)", "v8": "approved", "v9": "lacklustre"}
+           "v13": "approved (not a standard)", "v8": "approved", "v9": "lacklustre",
+           "v101": "rejected (style)", "v102": "lacklustre", "v103": "standard", "v104": "standard", "v105": "standard",
+           "v106": "standard", "v107": "standard"}
+CURATED = ("verdict", "tags", "evidence", "fix", "family", "studio")      # the owner's verdicts: kept across `registry` rebuilds
+# owner reception of individual transitions (from the handoffs); the registry carries these into every new plan
+KNOWN = {
+    "bolt_trace": ("leaks", "samples past its shot and shows the next pack shot (v13 rev 2 review); pull frames or don't use"),
+    "lens_drop": ("hero-kit", "v13 rev 1 singularity transition: 'the singularity is the primary object in every transition'"),
+    "photon_ring": ("hero-kit", "v13 rev 1 singularity transition"), "eye_horizon": ("hero-kit", "v13 rev 1 singularity transition"),
+    "accretion_whip": ("hero-kit", "v13 rev 1 singularity transition"), "spaghettify": ("hero-kit", "v13 rev 1 singularity transition"),
+    "emblem_horizon": ("rejected", "a black hole born in the emblem did not read as an emblem transition (v13 rev 1 -> 'make a emblem transition')"),
+    "frame_drag": ("hero-kit", "v13 rev 1 singularity transition"), "redshift_tr": ("hero-kit", "v13 rev 1 singularity transition"),
+    "emblem_split": ("approved", "v13 rev 2: the emblem's own bolt splits the frame"),
+    "ribbon": ("approved", "v13 rev 2 hero graphic that becomes the transition"),
+    "redact": ("rejected", "black occluder (v107: 'the black box transition')"),
+    "tv_off": ("caution", "a screen in a dark room read as a black box (v107)"),
+}
 OCCLUDER = re.compile(r"letterbox|black_?bars?|redact|blackout|black_box", re.I)
 BANNED_SFX = re.compile(r"\b(drone|swirl|whine|chime|bell|shimmer|shine|twinkle)\w*\s*\(", re.I)
 DRAWS = {"circle", "ellipse", "polylines", "line", "fillPoly", "fillConvexPoly", "remap", "warpAffine", "warpPerspective", "putText"}
@@ -139,7 +151,7 @@ def _sound_sandbox(n, wd, tmp):
 def check(n, wd, hero_cli):
     E, R = load(n, wd)
     F = funcs_of(R); TR2 = getattr(R, "TR2", {}); SH = E.SHOTS
-    reg = (json.load(open(REG)) if os.path.exists(REG) else {}).get("transitions", {})
+    reg = json.load(open(REG)) if os.path.exists(REG) else {}
     flash = any("flash" in str(v[0]).lower() for v in getattr(E, "SRC", {}).values())
     lib = scaffold_defs(); src_text = open(R.__file__).read()
     dur = E.DUR_F / E.FPS
@@ -212,10 +224,10 @@ def check(n, wd, hero_cli):
         em = sorted(t for t, fn in tfn.items() if "emblem_at" in reach(fn, F) or "emblem" in t)
         if not em: say("FAIL", "emblem", "no transition uses the tracked emblem (emblem_at): every Flash edit needs one (v12)")
         else: say("INFO", "emblem", f"emblem transition(s): {', '.join(em)}: the emblem's own bolt or shape must carry the move (v13 rule 2)")
-    for t in sorted(set(used)):                     # verdicts are plan_check's gate; the technical traps are listed here
-        r = reg.get(t) or {}
-        if r.get("caution"): say("WARN", "registry", f"'{t}': {r['caution']}")
-        if r.get("verdict") in ("rejected", "banned"): say("INFO", "registry", f"'{t}' was {r['verdict']} by the owner (plan_check FAILs it): {r.get('fix', '')}")
+    for t in sorted(set(used)):
+        st = KNOWN.get(t) or ((reg.get(t) or {}).get("status"), (reg.get(t) or {}).get("note"))
+        if st and st[0] == "rejected": say("FAIL", "registry", f"'{t}': {st[0]}: {st[1]}")
+        elif st and st[0] in ("leaks", "hero-kit", "caution"): say("WARN", "registry", f"'{t}': {st[0]}: {st[1]}")
         if OCCLUDER.search(t): say("WARN", "occluder", f"'{t}' looks like a black occluder (v107 rule 1: a cover must be content)")
     libt = sorted(t for t, fn in tfn.items() if fn_src_hash(fn) in lib.get(fn.__name__, set()))
     if libt: say("INFO", "library", f"library transitions (pull their frames before relying on them, v13 rule 5): {', '.join(libt)}")
@@ -234,6 +246,14 @@ def check(n, wd, hero_cli):
                 kv = ast.unparse(node.value)
                 if ("//" in kv or "round(" in kv or "int(" in kv) and any(p in kv for p in params):
                     body = ast.unparse(fd)
+                    # the fill block: flag only when it still uses the exact arguments (a fill computed from the key is fine)
+                    fills = [nd for nd in ast.walk(fd) if isinstance(nd, ast.If) and re.match(r"(key|k)\s+not\s+in\s+_\w+", ast.unparse(nd.test))]
+                    used_in_fill = {x.id for nd in fills for st in nd.body for x in ast.walk(st) if isinstance(x, ast.Name)}
+                    rounded = set()                                              # the arguments the key rounds (round(), int(), //)
+                    for x in ast.walk(node.value):
+                        if (isinstance(x, ast.Call) and getattr(x.func, "id", "") in ("round", "int")) or (isinstance(x, ast.BinOp) and isinstance(x.op, ast.FloorDiv)):
+                            rounded |= {y.id for y in ast.walk(x) if isinstance(y, ast.Name)}
+                    if fills and not (used_in_fill & (rounded & params)): continue
                     if re.search(r"if\s+(key|k)\s+not\s+in\s+_\w+", body):
                         say("WARN", "determinism", f"{nm}(): cache keyed on rounded arguments ({kv}) but filled from the exact ones: pixels depend on "
                             "which frame filled it, so partial re-renders can't verify bit-exact (compute the value from the rounded key)")
@@ -283,34 +303,42 @@ def _tr2_dump(n):
     print(json.dumps(out))
 
 def registry():
+    old = json.load(open(REG)) if os.path.exists(REG) else {}
     reg = {}
-    for n in (12, 13):
+    for n in (12, 13, 106, 107):
+        if not os.path.exists(f"{ROOT}/v{n}/work/render{n}.py"): continue
         r = subprocess.run([sys.executable, os.path.abspath(__file__), "_tr2", str(n)], capture_output=True, text=True)
         try: d = json.loads(r.stdout.strip().split("\n")[-1])
         except Exception: print(f"v{n}: {r.stderr[-300:]}"); continue
         for k, v in d.items():
             e = reg.setdefault(k, {"pre": v["pre"], "post": v["post"], "fn": v["fn"], "engines": [], "used_in": {}})
             e["engines"].append(f"v{n}")
-    for n in range(4, 14):
+    for n in list(range(4, 14)) + list(range(101, 108)):
         p = f"{ROOT}/v{n}/work/edl{n}.py"
         if not os.path.exists(p): continue
         for m in re.finditer(r'tin\s*=\s*"([A-Za-z0-9_]+)"', open(p).read()):
             t = m.group(1); e = reg.setdefault(t, {"engines": [], "used_in": {}})
             e["used_in"].setdefault(f"v{n}", 0); e["used_in"][f"v{n}"] += 1
-    ver = (json.load(open(REG)) if os.path.exists(REG) else {}).get("transitions", {})
     for k, e in reg.items():
-        e["edit_verdicts"] = {v: VERDICT.get(v, "?") for v in e["used_in"]}
-        e["owner_verdict"] = (ver.get(k) or {}).get("verdict", "unrated")
-    json.dump({"_about": "generated by `python3 tools/preflight.py registry`: every transition in the Flash engines (TR2 in v12, v13) "
-               "with its pre/post frames, the edits that used it and those edits' verdicts. The owner's verdict per transition is "
-               "curated in studio/transitions.json (shared with the Dexter studio); owner_verdict here is a copy for reading.",
-               "transitions": dict(sorted(reg.items()))}, open(USAGE, "w"), indent=1)
-    print(f"{USAGE}: {len(reg)} transitions, {sum(1 for e in reg.values() if e['owner_verdict'] != 'unrated')} with an owner verdict")
+        if k in KNOWN: e["status"], e["note"] = KNOWN[k]
+        elif any(VERDICT.get(v, "").startswith(("standard", "approved")) for v in e["used_in"]): e["status"] = "approved"
+        else: e.setdefault("status", "unused" if not e["used_in"] else "used")
+        e["verdicts"] = {v: VERDICT.get(v, "?") for v in e["used_in"]}
+    for k, e in old.get("transitions", {}).items():                      # keep the curated verdicts (and entries only they know)
+        tgt = reg.setdefault(k, {kk: vv for kk, vv in e.items() if kk not in CURATED})
+        for f in CURATED:
+            if f in e: tgt[f] = e[f]
+    doc = {"_about": old.get("_about", "the transition registry"), "families": old.get("families", {}), "transitions": dict(sorted(reg.items()))}
+    json.dump(doc, open(REG, "w"), indent=1, ensure_ascii=False)
+    print(f"{REG}: {len(reg)} transitions, {sum(1 for e in reg.values() if e.get('status') == 'approved')} used in approved edits")
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "_tr2": return _tr2_dump(int(sys.argv[2]))
     if len(sys.argv) > 1 and sys.argv[1] == "_sound": return _sound_sandbox(int(sys.argv[2]), sys.argv[3], sys.argv[4])
     if len(sys.argv) > 1 and sys.argv[1] == "registry": return registry()
+    if "--own" not in sys.argv:                                          # one report for both studios: plan_check runs these checks too
+        os.execv(sys.executable, [sys.executable, f"{ROOT}/tools/plan_check.py"] + sys.argv[1:])
+    sys.argv.remove("--own")
     ap = argparse.ArgumentParser(); ap.add_argument("n", type=int); ap.add_argument("--dir"); ap.add_argument("--hero")
     a = ap.parse_args()
     wd = os.path.abspath(a.dir) if a.dir else f"{ROOT}/v{a.n}/work"
