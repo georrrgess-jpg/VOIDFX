@@ -257,6 +257,25 @@ All in `v106/work/fx106.py` on `origin/dev/pipeline-v2` (557 lines, spliced abov
 - **Fewer sounds was better:** a strike, a clash, a run, the wall and the burst; after the burst, only the music.
 - **Measured, not guessed:** a per-beat activity table found the dead span, a pop list found six defects (three invisible on stills), a cadence check found the 24p judder.
 
+## 5g. Port candidates from the Dexter studio (v107 ALL CAPS, standard)
+
+All in `v107/work/fx107.py` on `origin/dev/pipeline-v2`, written for the v12 engine, so they splice into a Flash edit as is. Read it with `git show origin/dev/pipeline-v2:v107/work/fx107.py`.
+
+| Asset | Functions (pre/post frames) | Flash use |
+|---|---|---|
+| HOT MOLASSES | `tin="molasses"` (36/24): a viscous sheet pours down the lens with a fingered edge and bead, refracts the shot, absorbs by thickness, glossy highlight, drains with a meniscus | Molten light or liquid lightning pouring over the lens |
+| HEADSPIN | `tin="headspin"` (20/24): two turns on a smoothstep, angular motion blur; **the second half turns about the incoming face's centre** | A spin into a centred face (rule 5) |
+| THE FRONT PAGE | `tin="frontpage"` (82/28), `page_layers`, `page_with_photo`: a newspaper built from text masks spins in, lands, and we dive into its halftone photo | A Central City Picture News front page (Iris's byline, "FLASH MISSING") |
+| ALL CAPS stamp | `style="stamp"`, `strip_tex`, `strip_canvas`, `text_stamp`: letterpress letters on an even grid, ink spread, emboss, then the strip flies to a target (`banner_target`) | Any spell-out on the beat grid (rule 4) |
+| Banner shot | `banner_frame`: a crop tracking a wide object at 1.2×, the sky extended from the source's own colours | Fitting a wide prop or sign into 9:16 |
+| Confetti | `conf_set`, `draw_confetti`, `confetti_pop`, `pop_behind`: lit paper pieces with flutter and depth of field, behind the matte | Sparks or embers in depth |
+| THE MASSES SPELL HIS NAME (loop) | `name_targets`, `draw_pieces`, `name_loop`, `frame0_plate`: 1,050 pieces gather into a word, hold, burst into frame 0 | A loop built from the edit's own particles |
+| PAGE TURN | `tin="page_turn107"` (14/12): a true roll over a cylinder, newsprint back, the roll's shadow | A page of the Picture News |
+| TABLOID grade | `look="tabloid"`, `grade`, `finish107`, per-shot `redthr` | Don't reuse the look; reuse the spot-colour construction |
+| Edge-clamped colour split | `_shift_edge`, `rgb_split` | **Ported** into `v12/work/render12.py` |
+| QC transition windows | `qc107.py` `_tr_window` | **Ported** into `v12/work/qc12.py` |
+| Rejected in v107 (reuse with care) | `press_flash`, `broadcast` (avoid the black room), `spatter_fx` (never converge on a face), `rorschach` | — |
+
 ## 5f. Reusable from v13 EVENT HORIZON (approved, not a standard)
 
 All in `v13/work/sec13.py`.
