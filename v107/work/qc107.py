@@ -47,6 +47,19 @@ STARTS = [s["f0"] for s in E.SHOTS]
 def shot_of(f):
     import bisect
     return E.SHOTS[bisect.bisect_right(STARTS, f) - 1]["n"]
+def _tr_window():
+    # designed transition windows (the same set faceqc leaves out): a whip, a spin or a cover moves the face by design
+    ex = set()
+    try:
+        import render107 as RR; TR = getattr(RR, "TR2", {})
+    except Exception:
+        TR = {}
+    for s_ in E.SHOTS:
+        t_ = s_.get("tin")
+        if t_ in TR: ex.update(range(s_["f0"] - TR[t_][1], s_["f0"] + TR[t_][2]))
+        elif t_: ex.update(range(s_["f0"] - 8, s_["f0"] + 12))
+    return ex
+TRW = _tr_window(); in_tr = {}
 bad = {}; cnt = {}
 for f, fl in faces.items():
     big = [x for x in fl if x[2] >= 120]
@@ -57,7 +70,9 @@ for f, fl in faces.items():
     cnt[sn] = cnt.get(sn, 0) + 1
     cut = x < -0.08 * w or x + w > 1080 + 0.08 * w            # more than 8% of the face outside the frame
     off = not (0.18 * 1080 <= x + w / 2 <= 0.82 * 1080)
+    if (cut or off) and f in TRW: in_tr.setdefault(sn, []).append((f, "CUT" if cut else "OFF", int(x + w / 2), int(w))); continue
     if cut or off: bad.setdefault(sn, []).append((f, "CUT" if cut else "OFF", int(x + w / 2), int(w)))
+if in_tr: print("  inside designed transitions (listed, not counted):", {k: v for k, v in in_tr.items()})
 for sn in [s["n"] for s in E.SHOTS]:
     if sn in cnt:
         b = bad.get(sn, [])

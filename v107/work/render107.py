@@ -10802,7 +10802,7 @@ def tv_assets():
     scan = (1 - 0.10 * (np.arange(sh) % 3 == 0))[:, None].astype(np.float32)
     _TV["c"] = (cas, ch, scan, scr); return _TV["c"]
 
-def tv_frame(content, Z, mask_h, chy, static, glow=1.0, f=0, scan_a=1.0):
+def tv_frame(content, Z, mask_h, chy, static, glow=1.0, f=0, scan_a=1.0, glass=1.0):
     """content (a full frame) on the TV: Z = zoom of the TV (Z_FULL: the screen is the frame's width); mask_h = the
     visible height of the screen window in output px (letterbox closing/opening); chy 0..1 chyron in; static 0..1."""
     cas, ch, scan, scr = tv_assets()
@@ -10831,8 +10831,8 @@ def tv_frame(content, Z, mask_h, chy, static, glow=1.0, f=0, scan_a=1.0):
         roll = 0.5 + 0.5 * np.sin((_GY / H * 3 + f * 0.37) * 2 * math.pi)
         stc = (nz * 0.75 + 0.15) * (0.75 + 0.25 * roll)
         scr_img = scr_img * (1 - static) + stc[..., None] * PAPER * static
-    vig = 1 - 0.35 * np.clip(((_GX - W / 2) / (sw / 2 + 1)) ** 2 + ((_GY - H / 2) / (sh / 2 + 1)) ** 2, 0, 1) ** 1.5
-    refl = np.exp(-(((_GX - W / 2) * 0.6 + (_GY - H / 2 + sh * 0.25)) / (sw * 0.18 + 1)) ** 2) * 0.06       # a soft glass reflection
+    vig = 1 - 0.35 * glass * np.clip(((_GX - W / 2) / (sw / 2 + 1)) ** 2 + ((_GY - H / 2) / (sh / 2 + 1)) ** 2, 0, 1) ** 1.5
+    refl = np.exp(-(((_GX - W / 2) * 0.6 + (_GY - H / 2 + sh * 0.25)) / (sw * 0.18 + 1)) ** 2) * 0.06 * glass   # a soft glass reflection (fades with the letterbox)
     scr_img = scr_img * vig[..., None] + refl[..., None]
     # the room: dark, lit by the screen
     room = np.zeros((H, W, 3), np.float32) + INK * 0.6
@@ -10849,7 +10849,7 @@ def broadcast(A, B, j, f, sa, sb, pre=36, post=36):
         u = (j + pre + 1) / pre
         if u < 0.33:                                                                       # the picture closes into a TV image
             mh = H - (H - TV_H * Z_FULL) * smooth(u / 0.33)
-            return tv_frame(A, Z_FULL, mh, 0.0, 0.0, f=f, scan_a=smooth(u / 0.33))
+            return tv_frame(A, Z_FULL, mh, 0.0, 0.0, f=f, scan_a=smooth(u / 0.33), glass=smooth(u / 0.33))
         w = smooth((u - 0.33) / 0.50); Z = Z_FULL + (Zmin - Z_FULL) * w                     # the TV pulls back into a dark room
         st = smooth((u - 0.86) / 0.14) * 0.85                                              # the channel starts to flip
         return tv_frame(A, Z, TV_H * Z, smooth((u - 0.30) / 0.30), st, f=f)
@@ -10859,7 +10859,7 @@ def broadcast(A, B, j, f, sa, sb, pre=36, post=36):
         w = smooth((v - 0.14) / 0.56); Z = Zmin + (Z_FULL - Zmin) * w
         return tv_frame(B, Z, TV_H * Z, 1 - smooth((v - 0.20) / 0.30), st, f=f)
     w = smooth((v - 0.70) / 0.30); mh = TV_H * Z_FULL + (H - TV_H * Z_FULL) * w            # the screen opens to the frame
-    return tv_frame(B, Z_FULL, mh, 0.0, 0.0, f=f, scan_a=1 - w)
+    return tv_frame(B, Z_FULL, mh, 0.0, 0.0, f=f, scan_a=1 - w, glass=1 - w)
 TR2["broadcast"] = (broadcast, 36, 36)
 
 # ---- HEADSPIN onto a centred shot: the turn decelerates about his face -------------------------------------------------
