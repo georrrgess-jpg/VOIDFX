@@ -749,11 +749,9 @@ def main():
     place(fx, A2.whoosh(0.20, -24, 3302, True), t0["table"] - 0.08)
     # ---- SPATTER ANALYSIS: the spatter hits the lens (a wet burst); RORSCHACH: the blot blooms (a wet swell), a plop on
     # ---- the cut, the card swings open (a paper swish)
-    place(fx, stereo(splatter(-17, 3350)), 99 / E.FPS - 0.01)
-    place(fx, stereo(pour(0.40, -23, 3351)), 144 / E.FPS); place(fx, stereo(bloop(-19, 3352)), t0["shh"] - 0.01)
-    place(fx, stereo(swish(-21, 0.20, 3353), 0.5), (E.SHOTS[2]["f0"] + 14) / E.FPS)
-    # ---- redact: a marker stroke
-    place(fx, stereo(swish(-22, 0.18, 3305), 0.4), t0["lab"] - 0.08)
+    # rev 4: the spatter analysis and the Rorschach are gone; the cut to "shh" is on the downbeat (no sound)
+    # ---- the page turn: one paper flip
+    place(fx, stereo(flutter(0.34, -20, 3305, 16.0), 0.35), t0["lab"] - 0.20)
     # ---- HOT MOLASSES: the pour swells, a thick glug at the cut, it drips as it drains
     tm = t0["hazmat"]
     place(fx, stereo(pour(0.85, -17, 3306)), tm - 0.62); place(fx, stereo(bloop(-18, 3307)), tm - 0.02)

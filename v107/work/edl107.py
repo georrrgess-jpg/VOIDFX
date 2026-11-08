@@ -97,8 +97,8 @@ TB = dict(look="tabloid")
 shot("stare", "ds2b", 0, 4, 322.30, 323.20, z=[(0, 1.00), (1, 1.05)], interp="flow", seg=True, redthr=0.30, **TB)
 shot("table", "ds2b", 4, 8, 156.40, 157.80, z=[(0, 1.02), (1, 1.07)], tin="plastic_rip", face=None, cx=(640, 640), interp="flow", **TB)
 # ---- "AND SHOW 'EM WHAT THEY KNOW NOT THROUGH FLOWS OF HOT MOLASSES"
-shot("shh", "ds2b", 8, 11, 346.40, 347.50, z=[(0, 1.02), (1, 1.07)], tin="rorschach", interp="flow", **TB)
-shot("lab", "ds2b", 11, 14, 178.30, 179.40, z=[(0, 1.00), (1, 1.05)], tin="redact", interp="flow", **TB)
+shot("shh", "ds2b", 8, 11, 346.40, 347.50, z=[(0, 1.02), (1, 1.07)], interp="flow", **TB)   # rev 4: a clean cut on the downbeat
+shot("lab", "ds2b", 11, 14, 178.30, 179.40, z=[(0, 1.00), (1, 1.05)], tin="page_turn107", interp="flow", **TB)   # rev 4: the page turns (was the redaction boxes)
 shot("hazmat", "dmx", 14, 17, 94.95, 95.95, z=[(0, 1.04), (1, 1.00)], tin="molasses", interp="flow", **TB)
 # ---- "DO IT LIKE THE ROBOT TO HEADSPIN TO BOOGALOO"
 shot("robot", "dmx", 17, 20, 191.50, 194.30, z=[(0, 1.00), (1, 1.06)], tin="impact", face=None, cx=(560, 620), robot=True,

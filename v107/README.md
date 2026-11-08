@@ -80,6 +80,16 @@ From the engine: plastic rip, redact, impact, slam, whip, zipper, dolly; the bea
   Sound: a wet spatter burst, a short swell as the blot blooms, a plop on the cut, a paper swish as the card opens. These replace the four TV sounds.
 - **"How slow it writes Dexter's name in black ... make it line up so it's not too fast and not too slow."** D-E-X-T-E-R is now stamped on an even 16th-note grid (e44 → e46.5, one letter every 10 frames, the hi-hat rhythm), not one letter per sung word (uneven gaps of 0.19–0.33 s). The platen comes down in the 3 frames before each hit, so each letter lands on its beat, with the stamp sound on the same frame. The name is complete on "the", so "man name" plays over the whole word.
 
+## Rev 4 (owner notes)
+- **"Get rid of the point of origin graphic/transition."** The spatter analysis and the Rorschach that grew out of it are both removed (the code stays in `fx107.py`, unused). The kill table now plays clean and cuts to "shh" on the downbeat, and the beat camera punches the cut.
+  - Review lesson: the POINT OF ORIGIN, with strings converging on a target ring where his face appears, broke a recorded owner dislike: *no "gimmick on the face" effects (e.g. lines converging on his face with a target ring)*. Check the CLAUDE.md dislikes before designing a graphic.
+- **"Remove and replace the black box transition from the 3 and a half second mark."** The redaction boxes ("shh" → the lab) are replaced by a **PAGE TURN** (`page_turn107`, 14 + 12 frames). The frame is a page of the paper:
+  - it lifts at the bottom-right corner and rolls over a cylinder;
+  - its back is newsprint (three columns of body type, crossheads, rules) with the picture faintly showing through;
+  - it lies over itself as it turns, shades along the roll, casts a shadow on the lab shot underneath, and clears off the top-left corner.
+
+  This is a true roll, where v104's page turn was a flat fold. Sound: one paper flip.
+
 ## Measured (rev 3)
 - **QC:** 11/11 on the encode.
 - **Loudness:** −13.0 LUFS, true peak −3.4 dBTP after AAC.

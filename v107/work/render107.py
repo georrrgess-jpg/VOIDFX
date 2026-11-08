@@ -11218,6 +11218,84 @@ def rorschach(A, B, j, f, sa, sb, pre=RO_PRE, post=RO_POST):
     return unfold(Bm, B, math.pi / 2 * smooth((v - 0.5) / 0.45))
 TR2["rorschach"] = (rorschach, RO_PRE, RO_POST)
 
+# ============================================================================ v107 rev 4 (owner notes; overrides above)
+# ---- the POINT OF ORIGIN piece is gone: the kill table plays clean and cuts to "shh" on the downbeat ------------------
+base107 = _base107_r2                                                                       # no spatter analysis
+def beat_phase(f):                                                                          # the beat camera punches the e8 cut again
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    hook = (E.E_BEAT <= e < 54) and not (19 <= e < 23) and not (24 <= e < 28.5) and not (47 <= e < 50)
+    return ph, bi, hook, False
+
+# ---- PAGE TURN ("shh" -> the lab, replaces the redaction boxes): the frame is a page of the paper. It lifts at the
+# ---- bottom-right corner and rolls over a cylinder; its back is newsprint with the picture showing through; it lies
+# ---- over itself as it turns, casts a shadow on the lab shot underneath, and clears off the top-left corner. ------------
+PT_PRE, PT_POST = 14, 12
+_PT = {}
+def pt_back():
+    """the back of the page: newsprint (three columns of body type, rules) on the paper."""
+    if "b" in _PT: return _PT["b"]
+    paper, _, _ = page_layers(); ink = np.zeros((H, W), np.float32); rng = np.random.default_rng(1079)
+    words = ("residents were told to lock their doors as the task force widened the search along the bay and the "
+             "department asked anyone who saw a boat leave the marina after dark to call the tip line divers recovered "
+             "more bags from the water on monday and the medical examiner said the work was careful and practised").split()
+    cols = [(60, 352), (394, 686), (728, 1020)]
+    for ci, (x0, x1) in enumerate(cols):
+        y = 90 + (60 if ci == 1 else 0); wi = int(rng.integers(len(words)))
+        while y < H - 90:
+            if rng.random() < 0.05:
+                m = text_mask(" ".join(words[wi % len(words):wi % len(words) + 3]).upper(), F_XB, 34); put_mask(ink, squeeze(m, min(1.0, (x1 - x0) / m.shape[1])), x0, y)
+                y += 58; wi += 3; continue
+            line = []; wsum = 0
+            while True:
+                w = words[wi % len(words)]; wi += 1; tw = len(w) * 11 + 9
+                if wsum + tw > (x1 - x0): break
+                line.append(w); wsum += tw
+            m = text_mask(" ".join(line), F_BODY, 21); put_mask(ink, squeeze(m, min(1.0, (x1 - x0) / m.shape[1])), x0, y)
+            y += 29
+        if ci < 2: cv2.line(ink, (x1 + 21, 90), (x1 + 21, H - 90), 0.7, 1)
+    cv2.line(ink, (60, 64), (W - 60, 64), 1.0, 2)
+    _PT["b"] = (paper, ink); return _PT["b"]
+
+def page_turn107(A, B, j, f, sa, sb, pre=PT_PRE, post=PT_POST):
+    u = clamp((j + pre + 0.5) / (pre + post), 0, 1)
+    d = np.array([-0.62, -0.785], np.float32); d /= np.linalg.norm(d)                       # from the bottom-right corner to the top-left
+    s_ = (_GX - W) * d[0] + (_GY - H) * d[1]; smax = float(W * -d[0] + H * -d[1])
+    R = 60 + 70 * u; c = (smax + 1.7 * R + 60) * (0.5 - 0.5 * math.cos(math.pi * u ** 1.15))  # the roll line, easing in and out
+    def src(sig):                                                                            # screen point -> the page point at sigma
+        return (_GX + (sig - s_) * d[0]).astype(np.float32), (_GY + (sig - s_) * d[1]).astype(np.float32)
+    def inside(mx, my): return (mx >= 0) & (mx <= W - 1) & (my >= 0) & (my <= H - 1)
+    paper, ink = pt_back()
+    def back_at(mx, my, shade):
+        pa = cv2.remap(paper, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        ik = cv2.remap(ink, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)[..., None]
+        thru = cv2.remap(A, (W - 1 - mx).astype(np.float32), my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)   # show-through, mirrored
+        b = pa * (1 - 0.10 * (1 - lum(thru))[..., None]) * (1 - ik * 0.88) + INK * ik * 0.88
+        return b * shade[..., None]
+    o = B.copy()
+    # 1. the flat page (front) beyond the roll line
+    flat = s_ > c
+    o = np.where(flat[..., None], A, o)
+    # 2. the rising quarter of the roll (front side, seen foreshortened)
+    cyl = (s_ <= c) & (s_ >= c - R)
+    th1 = np.arcsin(np.clip((c - s_) / R, 0, 1)); mx, my = src(c - R * th1); ok1 = cyl & inside(mx, my)
+    fr = cv2.remap(A, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) * (0.55 + 0.45 * np.cos(th1))[..., None]
+    o = np.where(ok1[..., None], fr, o)
+    # 3. the top half of the roll (its back, on top of the rising quarter)
+    th2 = np.pi - th1; mx2, my2 = src(c - R * th2); ok2 = cyl & inside(mx2, my2)
+    bk = back_at(mx2, my2, (0.80 + 0.22 * np.sin(th2)).astype(np.float32))
+    o = np.where(ok2[..., None], bk, o)
+    # 4. the turned-over part lying flat on top of the page (its back), beyond the roll line
+    sig3 = 2 * c - np.pi * R - s_; mx3, my3 = src(sig3); ok3 = flat & (sig3 <= c - np.pi * R) & inside(mx3, my3)
+    bk3 = back_at(mx3, my3, np.full((H, W), 0.93, np.float32))
+    o = np.where(ok3[..., None], bk3, o)
+    # shadows: the roll on the lab shot underneath, the flap's edge on the page
+    uncov = s_ < c - R
+    sh1 = np.exp(-np.clip((c - R) - s_, 0, None) / 46) * uncov * 0.55 * (c > 2)
+    edge3 = ok3.astype(np.float32); sh2 = np.clip(cv2.GaussianBlur(edge3, (0, 0), 14) - edge3, 0, 1) * flat * (~ok3) * 0.9
+    o = o * (1 - sh1[..., None]) * (1 - sh2[..., None])
+    return np.clip(o, 0, 1)
+TR2["page_turn107"] = (page_turn107, PT_PRE, PT_POST)
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with
