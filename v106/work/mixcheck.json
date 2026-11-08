@@ -69,14 +69,14 @@
    "buried": false
   },
   {
-   "name": "time_particles",
+   "name": "lightstreak",
    "kind": "transition",
    "at": 7.58,
    "t0": 7.28,
    "t1": 8.03,
    "music_db": -12.5,
-   "fx_peak_db": -22.0,
-   "fx_minus_music": -9.5,
+   "fx_peak_db": -16.3,
+   "fx_minus_music": -3.8,
    "buried": false
   },
   {
