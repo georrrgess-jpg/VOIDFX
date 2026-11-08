@@ -80,3 +80,9 @@ v12/frames/
 v12/out/
 v12/work/*.npz
 v12/work/*.npy
+v13/work/*.log
+v13/audio/
+v13/frames/
+v13/out/
+v13/work/*.npz
+v13/work/*.npy
