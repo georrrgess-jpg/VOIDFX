@@ -110,8 +110,8 @@ shot("mangrove", "s1", 39, 41, 176.00, 176.90, z=[(0, 1.00), (1, 1.03)], tin="pr
 shot("lighter", "s1", 41, 43, 222.30, 223.20, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)   # he burns the photo
 shot("hammer", "s4", 43, 46, 222.30, 223.30, z=[(0, 1.00), (1, 1.04)], tin="burn109", interp="flow", **SP)   # the photo's fire burns the frame away
 shot("motion", "s4", 46, 48, 164.10, 165.00, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
-shot("drive", "s4", 48, 50, 0.50, 1.40, z=[(0, 1.00), (1, 1.03)], tin="roll", interp="flow", ev=0.4, **SP)   # red-lit, driving
-shot("syringe", "s4", 50, 52, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="flip", interp="flow", **SP)   # "no motion": the M99 takes him, his pulse
+shot("drive", "s4", 48, 50, 0.50, 1.40, z=[(0, 1.00), (1, 1.03)], tin="redwash109", interp="flow", ev=0.4, **SP)   # red-lit, driving
+shot("syringe", "s4", 50, 52, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="streetlight109", interp="flow", **SP)   # "no motion": the M99 takes him, his pulse
 shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], tin="ekg109", seg=True, interp="flow", tout="dust_loop109", **SP)   # the flatline opens on him
 SHOTS = S
 for s in SHOTS:

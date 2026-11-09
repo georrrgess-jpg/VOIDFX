@@ -12556,18 +12556,18 @@ def print109(A, B, j, f, sa, sb, pre=50, post=14):
     ap = smooth(q / 0.30)                                                 # the powder brush sweeps it in
     d = smooth((q - 0.44) / 0.56)                                         # the dive into the whorl
     S = math.exp(math.log(24.0) * ein(d, 2.0))
-    xc = x0 + (W / 2 - x0) * smooth(d / 0.6); yc = y0 + (H * 0.46 - y0) * smooth(d / 0.6)
+    xc = x0 + (W / 2 - x0) * smooth(d / 0.6); yc = y0 + (H * 0.68 - y0) * smooth(d / 0.6)   # into his chest, never his face
     ang = math.radians(-14) + 0.55 * ein(d, 1.5)
     lf = 0.34 / S ** 0.75
     ridge, mask, u, v, grn = fp_eval(xc, yc, S, ang, lf)
     sw = -380 + 800 * ap
     reveal = np.clip((sw - (u * 0.77 + v * 0.64)) / 70.0, 0, 1) if ap < 1 else 1.0
     win = mask * smooth((d - 0.04) / 0.36)                                # its grooves turn into a window
-    Bz = _zoom_about(B, 1 + 0.16 * (1 - d), W / 2, H * 0.46) if d < 0.999 else B
+    Bz = _zoom_about(B, 1 + 0.16 * (1 - d), W / 2, H * 0.68) if d < 0.999 else B
     base = A * (1 - (0.22 * mask * reveal * (1 - d))[..., None])
     o = base * (1 - win[..., None]) + Bz * win[..., None]
     als = 1 + 0.9 * np.exp(-(((u * 0.6 - v * 0.8) - (-420 + 900 * smooth((q - 0.22) / 0.25))) / 55.0) ** 2) * (d < 0.3)
-    rb = (1 - smooth((d - 0.50) / 0.50)) * (0.75 + 0.5 * (grn - 0.5)) * als   # a forensic light passes over it
+    rb = (1 - smooth((d - 0.38) / 0.45)) * (0.75 + 0.5 * (grn - 0.5)) * als   # a forensic light passes over it
     al = ridge * mask * reveal * rb
     glow = cv2.GaussianBlur(al, (0, 0), 3.0 + 4 * d)
     haze = mask * reveal * (1 - d) * 0.05 * grn
@@ -12793,6 +12793,32 @@ def render(f):
     out = title109(out, f)
     out = flash_governor(out)
     return (np.clip(finish109(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+
+# ---- the ending without spins (the owner removed the headspin for flow; the roll and the flip went with it) ----------
+# RED WASH (the kitchen -> the red-lit drive): brake-light red washes over the frame from the right, the kitchen sinks
+# into it and the red-lit drive comes up out of it.
+RED109 = np.array([0.05, 0.07, 0.92], np.float32)
+def redwash109(A, B, j, f, sa, sb, pre=8, post=12):
+    q = (j + pre + 0.5) / (pre + post); k = math.sin(math.pi * clamp(q, 0, 1)) ** 1.3
+    g = np.clip(0.60 + (_GX - W * (0.9 - 0.9 * smooth(q))) / (W * 0.7), 0, 1)[..., None]
+    w = smooth((q - 0.40) / 0.22); img = A * (1 - w) + B * w if 0 < w < 1 else (A if j < 0 else B)
+    L = lum(img)[..., None]
+    lit = (L * 1.5 + 0.10) * RED109
+    o = img * (1 - k * g * 0.95) + lit * (k * g * 0.95)
+    return np.clip(o, 0, 1)
+TR2["redwash109"] = (redwash109, 8, 12)
+
+# STREETLIGHT (the drive -> the syringe): a streetlight passes over the car: a soft band of cold light crosses the
+# frame diagonally upward, and the next shot is under it.
+def streetlight109(A, B, j, f, sa, sb, pre=8, post=10):
+    q = (j + pre + 0.5) / (pre + post); k = math.sin(math.pi * clamp(q, 0, 1))
+    sc = _GX * 0.42 - _GY * 0.91; lo, hi = -0.91 * H - 60, 0.42 * W + 60
+    p = hi + (lo - hi) * smooth(q)
+    band = np.exp(-((sc - p) / 170.0) ** 2)[..., None]
+    w = smooth((q - 0.42) / 0.16); img = A * (1 - w) + B * w if 0 < w < 1 else (A if j < 0 else B)
+    o = img * (1 + 1.05 * band * k) + band * k * np.array([0.20, 0.19, 0.17], np.float32)
+    return np.clip(o, 0, 1)
+TR2["streetlight109"] = (streetlight109, 8, 10)
 
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
