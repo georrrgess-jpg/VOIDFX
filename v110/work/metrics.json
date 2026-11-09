@@ -211,6 +211,62 @@
    "step": "sheet:fx3:1200,1212,1222,1230,1236,1241,1246,1252",
    "s": 18.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:25:20",
+   "round": 1,
+   "step": "audio",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:25:28",
+   "round": 1,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:32:13",
+   "round": 1,
+   "step": "video",
+   "s": 405.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:35:11",
+   "round": 1,
+   "step": "qc",
+   "s": 178.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:35:20",
+   "round": 1,
+   "step": "report",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:37:00",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:37:15",
+   "round": 1,
+   "step": "sheet:bulb:1135,1150,1165,1180,1195,1210",
+   "s": 15.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:37:39",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
   }
  ],
  "notes": [],
@@ -268,6 +324,18 @@
    "round": 1,
    "cat": "other",
    "text": "the first loop cards floated in a black void: the blood room drops away, frame 0's own light behind, the bed rises with melting edges"
+  },
+  {
+   "t": "2026-11-09 20:38:22",
+   "round": 1,
+   "cat": "other",
+   "text": "motionqc: a near-still span 19.2-20.4 s (the anguish shot at 0.49x): a bare bulb swings over him (2.4 grey levels/frame)"
+  },
+  {
+   "t": "2026-11-09 20:38:22",
+   "round": 1,
+   "cat": "other",
+   "text": "the title's letters strobed almost every frame as they died (sin at 90 rad/s): a 4 Hz flutter"
   }
  ],
  "round_starts": {

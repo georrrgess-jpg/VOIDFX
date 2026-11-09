@@ -36,7 +36,7 @@
    "buried": true
   },
   {
-   "name": "impact",
+   "name": "lightson110",
    "kind": "transition",
    "at": 3.04,
    "t0": 2.74,
@@ -124,7 +124,7 @@
    "buried": false
   },
   {
-   "name": "zipper",
+   "name": "double108",
    "kind": "transition",
    "at": 10.65,
    "t0": 10.35,
@@ -135,7 +135,7 @@
    "buried": false
   },
   {
-   "name": "shutter",
+   "name": "light_sweep108",
    "kind": "transition",
    "at": 11.26,
    "t0": 10.96,
@@ -146,7 +146,7 @@
    "buried": true
   },
   {
-   "name": "light_sweep",
+   "name": "wiper108",
    "kind": "transition",
    "at": 11.87,
    "t0": 11.57,
@@ -201,7 +201,7 @@
    "buried": true
   },
   {
-   "name": "eye_dive",
+   "name": "flicker109",
    "kind": "transition",
    "at": 14.61,
    "t0": 14.31,
@@ -223,7 +223,7 @@
    "buried": true
   },
   {
-   "name": "impact",
+   "name": "afterimage109",
    "kind": "transition",
    "at": 16.13,
    "t0": 15.83,
@@ -245,7 +245,7 @@
    "buried": true
   },
   {
-   "name": "whip",
+   "name": "slices",
    "kind": "transition",
    "at": 17.65,
    "t0": 17.35,
@@ -256,7 +256,7 @@
    "buried": true
   },
   {
-   "name": "smear",
+   "name": "streetlight109",
    "kind": "transition",
    "at": 18.26,
    "t0": 17.96,

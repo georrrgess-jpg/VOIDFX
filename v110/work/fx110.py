@@ -579,6 +579,17 @@ def text107(out, f, s, rides):
     return out
 
 # ---- the frame ----------------------------------------------------------------------------------------------------
+# ---- THE BULB (the anguish shot): a bare bulb above him swings on its cord; its pool of light swings across him and the
+# crucifix behind (the room breathes with it; no flicker)
+def bulb110(out, f, s):
+    t = (f - s["f0"]) / FPS; per = 4 * E.HB
+    k = smooth(t / 0.25)
+    x = W * 0.5 + W * 0.30 * math.sin(2 * math.pi * t / per - 0.6) * k
+    y = H * 0.20 - H * 0.03 * abs(math.cos(2 * math.pi * t / per - 0.6))
+    d2 = ((_GX - x) / (0.34 * W)) ** 2 + ((_GY - y) / (0.55 * H)) ** 2
+    m = 0.42 + 0.95 * np.exp(-d2)
+    return np.clip(out * m[..., None] + np.exp(-d2 * 3.0)[..., None] * AMB110 * 0.05, 0, 1)
+
 def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
     P = prev_shot(s); tin = s.get("tin")
@@ -2946,7 +2957,7 @@ def title110(out, f):
             if c == " ": x += 40 + 10; continue
             t_on = t_on_of(i); a = _tube(t, t_on, i)
             td = T_OUT + 0.055 * ((i * 7) % 11) * 0.5 + 0.02 * i                        # the brownout takes them one by one
-            if t > td: a *= max(0.0, 1 - smooth((t - td) / 0.10)) * (1 - 0.6 * (math.sin((t - td) * 90 + i) > 0))
+            if t > td: a *= max(0.0, 1 - smooth((t - td) / 0.14)) * (0.70 + 0.30 * math.cos((t - td) * 2 * math.pi * 4.0 + i))
             if a > 0.003:
                 mm = m.astype(np.float32) / (m.max() + 1e-6); h_, w_ = mm.shape; yy, xx = int(y), int(x)
                 ys, xs, ye, xe = max(0, yy), max(0, xx), min(H, yy + h_), min(W, xx + w_)
@@ -3245,8 +3256,9 @@ def fall110(out, f, s, person=None):
         o = o * (1 - np.clip(cv2.resize(a_, (W, H)), 0, 1)[..., None] * 0.5) + cv2.resize(rgb, (W, H)) * 0.7
     u = t * t * (3 - 2 * t)                                                           # frame 0 rises from below, the whole way, and we land in it
     sB = 0.16 + 0.84 * u; cyB = H * 0.82 + (H * 0.5 - H * 0.82) * u
-    cardB, mB = _card(F0, sB, W / 2, cyB, 0.0)
-    mB = cv2.GaussianBlur(mB, (0, 0), 2 + 26 * (1 - u)) * mB                          # its edges melt into its own light
+    cardB, _ = _card(F0, sB, W / 2, cyB, 0.0)
+    w2, h2 = W * sB / 2, H * sB / 2; fe = 2 + 0.22 * w2 * (1 - u)                      # its edges melt into its own light
+    mB = (np.clip((w2 - np.abs(_GX - W / 2)) / fe, 0, 1) * np.clip((h2 - np.abs(_GY - cyB)) / fe, 0, 1)).astype(np.float32)
     o = o * (1 - mB[..., None]) + cardB * mB[..., None]
     we = smooth((t - 0.90) / 0.10)
     return np.clip(o * (1 - we) + F0 * we, 0, 1)
@@ -3256,6 +3268,7 @@ def render(f):
     P = prev_shot(s); tin = s.get("tin")
     out, person = base108(s, f)
     if s["n"] == "light": out = light_scene110(out, f)
+    if s["n"] == "anguish": out = bulb110(out, f, s)
     if s["n"] == "fan" and not (n_ and kn >= -TR2["fan110"][1]):
         Pm = None if person is None else _pp_clean(np.clip(np.asarray(person, np.float32), 0, 1))
         out = fan_draw110(out, f, Pm)
