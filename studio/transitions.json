@@ -733,11 +733,12 @@
       "studio": "flash"
     },
     "time_particles": {
-      "verdict": "liked",
+      "verdict": "caution",
       "tags": [
         "signature"
       ],
-      "evidence": "v10 standard (replaced the glass shatter)",
+      "evidence": "v10 standard (replaced the glass shatter); v15 round 3: the owner asked to replace it ('where [Barry] kind of like breaks down into many pieces ... change that into another transition')",
+      "fix": "mid-way his face dissolves into noise; prefer a move that never takes the face apart (v15 replaced it with IGNITION)",
       "studio": "flash"
     },
     "time_slice": {

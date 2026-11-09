@@ -1,6 +1,6 @@
 {
  "edit": "v15",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-09 03:58:50",
@@ -526,6 +526,76 @@
    "step": "deliver",
    "s": 0.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:41:33",
+   "round": 3,
+   "step": "sheet:v15ig:1376,1380,1384,1388,1391,1393,1396,1399,1402,1405,1408,1411,1414,1418",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:42:26",
+   "round": 3,
+   "step": "sheet:v15ig2:1374,1380,1386,1390,1393,1396,1399,1402,1405,1408,1411,1414,1417,1421",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:43:00",
+   "round": 3,
+   "step": "sheet:v15ig3:1372,1373,1374,1386,1392,1396,1399,1402,1405,1408,1412,1420",
+   "s": 11.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:43:38",
+   "round": 3,
+   "step": "sheet:v15ig4:1386,1392,1395,1398,1400,1402,1404,1406,1408,1411",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:43:56",
+   "round": 3,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:44:03",
+   "round": 3,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:52:58",
+   "round": 3,
+   "step": "video",
+   "s": 535.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:55:34",
+   "round": 3,
+   "step": "qc",
+   "s": 155.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:55:41",
+   "round": 3,
+   "step": "report",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:57:30",
+   "round": 3,
+   "step": "deliver",
+   "s": 88.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -546,6 +616,18 @@
    "round": 2,
    "cat": "loop",
    "text": "the loop isn't particularly seamless; improve the loop's animation, make it more visually appealing and detailed"
+  },
+  {
+   "t": "2026-11-09 16:40:18",
+   "round": 3,
+   "cat": "replace_shot",
+   "text": "Second mark, where Gary kind of like breaks down into many pieces. I'd like you to change that into another transition"
+  },
+  {
+   "t": "2026-11-09 16:40:18",
+   "round": 3,
+   "cat": "other",
+   "text": "add a focal point graphic to the transition. This could be a custom transition or a custom graphic. The really, really smooth animation"
   }
  ],
  "catches": [
@@ -704,9 +786,16 @@
    "round": 2,
    "cat": "other",
    "text": "dust cloud front crossed the frame in 4 frames (pop at 1082); 14-frame roll-in with a leading front"
+  },
+  {
+   "t": "2026-11-09 16:57:30",
+   "round": 3,
+   "cat": "face_overlay",
+   "text": "ignition: the face bias on an extreme close-up stalled the burn, then fire holes opened in his face (too like the particle breakup the owner removed); the burn now passes the face as one soft edge, no scorch or white line on a face"
   }
  ],
  "round_starts": {
-  "2": "2026-11-09 15:07:56"
+  "2": "2026-11-09 15:07:56",
+  "3": "2026-11-09 16:40:18"
  }
 }

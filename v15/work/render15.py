@@ -11222,6 +11222,77 @@ def freefall(A, B, j, f, sa, sb, pre=6, post=10):
 TR2.update({"phone_flare": (phone_flare, 8, 12), "dust_cloud": (dust_cloud, 14, 12)})
 TR2.update({"freefall": (freefall, 6, 10)})
 
+# ---- IGNITION (the cold close-up -> through the fire): one ember catches and burns the frame open onto the fire ------
+_IGN = {}
+def ign_noise(q=4):
+    """the burn's fixed paper-like grain (three octaves): the front's shape comes from it, so the edge moves smoothly."""
+    if "n" not in _IGN:
+        rng = np.random.default_rng(2727); acc = np.zeros((H // q, W // q), F32)
+        for s_, w_ in ((38, 0.6), (14, 0.3), (5, 0.1)):
+            n_ = cv2.GaussianBlur(rng.random((H // q, W // q)).astype(F32), (0, 0), s_); acc += (n_ - n_.mean()) / (n_.std() + 1e-6) * w_
+        _IGN["n"] = acc
+    return _IGN["n"]
+
+IGN_P = (0.20, 0.86)                                                                       # where it catches (his shoulder, far from his face)
+def ign_R(x):
+    """the burn front's reach (in frame heights) at transition time x: nothing while the ember glows, then it spreads."""
+    return 1.60 * smooth(clamp((x - 0.27) / 0.62, 0, 1)) ** 1.10
+
+def ignition(A, B, j, f, sa, sb, pre=20, post=28):
+    """IGNITION: in the cold close-up a single ember catches on his shoulder: it glows, pulses on the beat and flares (the
+    focal point). Then it burns the frame open: a white-hot front with an orange glow and a scorched rim spreads out
+    from it, embers peel off the edge, and through the hole is the real fire he flies through. The front goes round his
+    face and takes it last, under a warm flash (no edge ever crosses a face)."""
+    q = 4; x = (j + pre) / (pre + post - 1); px, py = W * IGN_P[0], H * IGN_P[1]
+    gx, gy = np.meshgrid(np.arange(W // q, dtype=F32) * q, np.arange(H // q, dtype=F32) * q)
+    d = np.sqrt((gx - px) ** 2 + (gy - py) ** 2) / H
+    fmA = face_soft(sa, sa["f1"] - 1, 0.85, q); fmB = face_soft(sb, sb["f0"], 1.0, q)          # the face itself (an extreme close-up: not the frame)
+    fq = np.zeros((H // q, W // q), F32)
+    for fm_ in (fmA, fmB):
+        if fm_ is not None: fq = np.maximum(fq, cv2.resize(fm_[..., 0], (W // q, H // q)))
+    nz = ign_noise(q); fs_ = np.clip(fq * 1.5, 0, 1)
+    D = d * (1 + 0.30 * nz * (1 - fs_)) + 0.20 * fq                                           # no holes in a face: one soft edge passes over it
+    R = ign_R(x)
+    burned = np.clip((R - D) / (0.012 + 0.06 * fs_), 0, 1)
+    front = np.exp(-((D - R) / 0.010) ** 2) * (R > 0.002)
+    char = np.clip((R + 0.030 - D) / 0.020, 0, 1) * (1 - burned) * smooth(R / 0.03) * (1 - np.clip(fq * 1.6, 0, 1))   # no scorch before it burns, none on a face
+    heat = np.exp(-np.clip(D - R, 0, None) / 0.07) * (R > 0.002) * (1 - burned)
+    up = lambda m_: cv2.resize(m_.astype(F32), (W, H), interpolation=cv2.INTER_LINEAR)[..., None]
+    burned, front, char, heat, fu = up(burned), up(front), up(char), up(heat), up(fq)
+    o = A * (1 - 0.55 * char) * (1 + heat * np.array([0.05, 0.25, 0.55], F32))           # scorched rim, warmed paper ahead of it
+    o = o * (1 - burned) + B * burned
+    w = smooth(clamp((x - 0.72) / 0.22, 0, 1))                                             # whatever is left goes under a warm flash
+    if w > 0: o = o * (1 - w) + B * w
+    front = front * (1 - np.clip(fu * 1.6, 0, 1)) * (1 - w)                                 # the white-hot line never runs over a face
+    flash = math.exp(-((x - 0.82) / 0.08) ** 2) * 0.20
+    o = o + front * HOT * 1.1 + up(cv2.GaussianBlur(front[::q, ::q, 0], (0, 0), 3)) * AMBR * 1.2 + AMBR * flash
+    # the ember: the focal point (glows, pulses on the kick, flares, then becomes the front)
+    g = smooth(clamp(x / 0.10, 0, 1)) * (1 - smooth(clamp((x - 0.38) / 0.12, 0, 1)))
+    if g > 0.002:
+        e = e_of(f); kk = [k_ for k_ in (71.0, 71.5) if e >= k_]; pls = math.exp(-((e - kk[-1]) * E.HB) / 0.12) if kk else 0.0
+        r_ = 3 + 6 * smooth(clamp(x / 0.30, 0, 1)) + 5 * pls
+        dd = (_GX - px) ** 2 + (_GY - py) ** 2
+        core = np.exp(-dd / (2 * r_ ** 2)); bloom = np.exp(-dd / (2 * (r_ * 9) ** 2))
+        streak = np.exp(-((_GY - py) / (2.2 + r_ * 0.25)) ** 2) * np.exp(-np.abs(_GX - px) / (60 + 220 * g))
+        o = o + (core[..., None] * HOT * 1.6 + bloom[..., None] * AMBR * 0.75 + streak[..., None] * AMBR * 0.55) * g * (1 + 0.6 * pls)
+    # embers peeling off the burning edge (each on its own smooth path)
+    if 0.30 < x < 1.0:
+        rng = np.random.default_rng(2828); cv = np.zeros((H // 2, W // 2), F32)
+        for i in range(70):
+            ts, a_, sp, up_ = rng.uniform(0.30, 0.80), rng.uniform(-math.pi, 0.4), rng.uniform(0.10, 0.35), rng.uniform(0.15, 0.45)
+            age = x - ts
+            if age < 0 or age > 0.22: continue
+            r0 = ign_R(ts) * H * 0.92; sx_, sy_ = px + math.cos(a_) * r0, py + math.sin(a_) * r0
+            ex_ = sx_ + math.cos(a_) * sp * H * age; ey_ = sy_ + math.sin(a_) * sp * H * age - up_ * H * age * age * 4
+            ex0 = sx_ + math.cos(a_) * sp * H * max(0, age - 0.02); ey0 = sy_ + math.sin(a_) * sp * H * max(0, age - 0.02) - up_ * H * max(0, age - 0.02) ** 2 * 4
+            al = (1 - age / 0.22) ** 1.5
+            cv2.line(cv, (int(ex0 * 2), int(ey0 * 2)), (int(ex_ * 2), int(ey_ * 2)), al, 2, cv2.LINE_AA, shift=2)
+        cv = cv2.resize(cv2.GaussianBlur(cv, (0, 0), 0.8), (W, H))[..., None] * (1 - np.clip(fu * 1.6, 0, 1))
+        o = o + cv * HOT * 1.2 + cv2.GaussianBlur(cv[..., 0], (0, 0), 5)[..., None] * AMBR * 1.3
+    return np.clip(o, 0, 1)
+
+TR2.update({"ignition": (ignition, 20, 28)})
+
 def base15(s, f):
     if s["n"] == "still": return still_fx(s, f), None
     img, person = base11(s, f)

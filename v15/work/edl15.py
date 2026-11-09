@@ -109,7 +109,7 @@ shot("fly", "fbh", 64, 66.5, 119.60, 120.45, tin="emblem_clock", seg=True, face=
 shot("saves", "fbh", 66.5, 68, 127.70, 128.25, tin="afterimage15", seg=True, anim="shout")
 shot("runfs5", "fs5", 68, 70.5, 113.00, 113.85, tin="pendulum", seg=True, interp="hold")   # the source flickers frame to frame: held 24p at 1.05x
 shot("blue", "fbk", 70.5, 72, 124.75, 125.30, tin="whip", seg=True)
-shot("hero", "fs4", 72, 74.5, 174.85, 175.75, tin="time_particles", seg=True, face=None, cx=(800, 760), tmap=vel(72, 74.5, 174.85, 175.75), lin=True, anim="embers", face_hint=(410, 640, 150))   # through the fire
+shot("hero", "fs4", 72, 74.5, 174.85, 175.75, tin="ignition", seg=True, face=None, cx=(800, 760), tmap=vel(72, 74.5, 174.85, 175.75), lin=True, anim="embers", face_hint=(410, 640, 150))   # through the fire
 U76 = (76 - 74.5) / 5.5                       # time stops once more on "don't" (e76): the source holds (the lenses still clear)
 shot("alone", "fbh", 74.5, 80, 147.40, 147.88, tin="dolly", seg=True, tmap=[(0, 147.40), (U76, 147.88), (1, 147.88)], lin=True, z=[(0, 1.00), (1, 1.08)])
 

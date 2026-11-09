@@ -69,7 +69,7 @@ The hero is time itself: the timepiece (the emblem clock) and stopped time (the 
 | 66.5–68 | he shouts into the lightning; *the shout* (arcs and sparks on the kick) | AFTERIMAGE |
 | 68–70.5 | velocity run (S5), face-tracked | **PENDULUM** (the frame swings out like a clock's pendulum, the run swings in and settles) |
 | 70.5–72 | masked, blue-grey | WHIP |
-| 72–74.5 | through the fire (S4); *embers* | TIME PARTICLES |
+| 72–74.5 | through the fire (S4); *embers* | **IGNITION** (round 3: one ember catches on his shoulder, pulses, and burns the frame open onto the fire) |
 | 74.5–80 | alone, masked; then **REWIND** down the corridor of memories into frame 0 | dolly |
 
 27 designed transitions and the loop in 25.8 s, plus eight in-shot animations (in italics), each motivated by its shot and kept off faces.
@@ -84,7 +84,7 @@ The hero is time itself: the timepiece (the emblem clock) and stopped time (the 
 - **Text:** none.
 
 ## Sound
-The song straight and circular (pre-roll crossfade, mastered on a wrapped copy, measured after AAC). **Eight quiet
+The song straight and circular (pre-roll crossfade, mastered on a wrapped copy, measured after AAC). **Nine quiet
 effects**, none on beats:
 - a phone buzz (the call);
 - a whoosh (the streak);
@@ -93,6 +93,7 @@ effects**, none on beats:
 - a sub boom (time restarts);
 - a gust (the wind);
 - a watch-crown ratchet into a sweep (the emblem clock);
+- a soft whoosh as the burn catches (IGNITION);
 - a reversed whoosh (the rewind into frame 0).
 
 ## Measured (round 2)

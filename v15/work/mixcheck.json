@@ -317,19 +317,19 @@
    "t0": 22.44,
    "t1": 23.19,
    "music_db": -14.1,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -165.9,
+   "fx_peak_db": -47.6,
+   "fx_minus_music": -33.5,
    "buried": true
   },
   {
-   "name": "time_particles",
+   "name": "ignition",
    "kind": "transition",
    "at": 23.22,
    "t0": 22.92,
    "t1": 23.67,
    "music_db": -13.5,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -166.5,
+   "fx_peak_db": -25.9,
+   "fx_minus_music": -12.4,
    "buried": true
   },
   {
