@@ -253,6 +253,55 @@
    "step": "plan",
    "s": 6.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:23:18",
+   "round": 1,
+   "step": "video",
+   "s": 190.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:26:00",
+   "round": 1,
+   "step": "qc",
+   "s": 162.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:26:07",
+   "round": 1,
+   "step": "report",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:29:44",
+   "round": 1,
+   "step": "video:1300:1440",
+   "s": 204.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:32:32",
+   "round": 1,
+   "step": "qc",
+   "s": 164.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:32:39",
+   "round": 1,
+   "step": "report",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:34:18",
+   "round": 1,
+   "step": "deliver",
+   "s": 84.0,
+   "rc": 0
   }
  ],
  "notes": [],
@@ -328,6 +377,12 @@
    "round": 1,
    "cat": "other",
    "text": "window_hop/whip_up mirrored edges (BORDER_REFLECT); replicate/strip"
+  },
+  {
+   "t": "2026-11-09 21:34:28",
+   "round": 1,
+   "cat": "seam",
+   "text": "a partial re-render missed the loop frames: they draw frame 0's shot (frame_virtual), whose z keys changed; the tracker re-rendered only the roof shot; forced video:1300:1440 (a tracker gap for WP2b)"
   }
  ]
 }

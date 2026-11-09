@@ -2,11 +2,11 @@
  "file": "/home/user/VOIDFX/v16/out/going_home_voidfx_9x16.mp4",
  "frames": 1440,
  "activity_hb": [
-  1.26,
-  1.58,
-  1.82,
-  1.9,
-  2.56,
+  1.23,
+  1.54,
+  1.78,
+  1.89,
+  2.58,
   3.84,
   6.76,
   4.15,
@@ -29,9 +29,9 @@
   10.89,
   4.28,
   7.06,
-  3.68,
-  4.95,
-  4.23,
+  3.82,
+  4.58,
+  4.24,
   12.76,
   4.57,
   6.88,
@@ -63,10 +63,10 @@
   1.95,
   1.45,
   1.79,
-  2.42,
-  3.67,
-  3.0,
-  14.91,
+  2.08,
+  4.16,
+  3.25,
+  14.83,
   3.67,
   2.98,
   5.14,
@@ -78,10 +78,10 @@
   2.23,
   4.16,
   3.07,
-  0.9,
-  0.62,
-  0.55,
-  0.51
+  0.96,
+  0.83,
+  0.78,
+  0.62
  ],
  "dead": [
   {
@@ -91,7 +91,7 @@
     76,
     79
    ],
-   "mean": 0.65
+   "mean": 0.8
   }
  ],
  "pops": [
@@ -215,8 +215,8 @@
   {
    "f": 505,
    "t": 8.417,
-   "d": 29.6,
-   "med": 3.7,
+   "d": 18.8,
+   "med": 4.7,
    "kind": "cut",
    "near": "streak_pass @ 504",
    "hb_off": 1
@@ -224,8 +224,8 @@
   {
    "f": 506,
    "t": 8.433,
-   "d": 25.4,
-   "med": 3.7,
+   "d": 17.0,
+   "med": 4.7,
    "kind": "UNEXPLAINED",
    "near": "streak_pass @ 504",
    "hb_off": 2
@@ -312,15 +312,6 @@
    "hb_off": 8
   },
   {
-   "f": 1104,
-   "t": 18.4,
-   "d": 11.2,
-   "med": 1.3,
-   "kind": "UNEXPLAINED",
-   "near": null,
-   "hb_off": 6
-  },
-  {
    "f": 1260,
    "t": 21.0,
    "d": 7.9,
@@ -358,8 +349,8 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 1.54,
-   "p80": 1.86,
-   "ratio": 1.21,
+   "p80": 1.82,
+   "ratio": 1.18,
    "flag": false
   },
   {
@@ -477,9 +468,9 @@
    "repeat_frac": 0.12,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 3.19,
+   "p20": 3.18,
    "p80": 5.4,
-   "ratio": 1.69,
+   "ratio": 1.7,
    "flag": false
   },
   {
@@ -487,11 +478,11 @@
    "f0": 504,
    "f1": 540,
    "interp": "flow",
-   "repeat_frac": 0.0,
+   "repeat_frac": 0.04,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 0.86,
-   "p80": 1.21,
+   "p20": 0.87,
+   "p80": 1.2,
    "ratio": 1.39,
    "flag": false
   },
@@ -607,15 +598,15 @@
    "f0": 1008,
    "f1": 1152,
    "interp": "flow",
-   "repeat_frac": 0.13,
+   "repeat_frac": 0.11,
    "cadence_frames": 26,
    "cadence_range": [
     1014,
     1045
    ],
    "p20": 1.08,
-   "p80": 3.53,
-   "ratio": 3.28,
+   "p80": 3.79,
+   "ratio": 3.52,
    "flag": false
   },
   {
@@ -627,8 +618,8 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 1.55,
-   "p80": 3.41,
-   "ratio": 2.19,
+   "p80": 3.42,
+   "ratio": 2.2,
    "flag": false
   },
   {
@@ -655,15 +646,15 @@
    "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 0.62,
-   "p80": 2.84,
-   "ratio": 4.6,
+   "p20": 0.82,
+   "p80": 2.85,
+   "ratio": 3.46,
    "flag": false
   }
  ],
  "loop": {
-  "wrap_step": 0.66,
-  "local_median": 0.78,
+  "wrap_step": 0.63,
+  "local_median": 0.83,
   "spike": false
  }
 }

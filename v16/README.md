@@ -85,11 +85,42 @@ in 9 moments**, none on beats but the drop's set piece:
 - a reversed whoosh into frame 0 (HOME LIGHT).
 
 ## Measured
-MEASURED_V16
+- **QC:** 11/11 on the encode.
+- **Loudness:** −13.4 LUFS, true peak −4.2 dBTP after AAC.
+- **Loop seam:** blurred difference **0.10** (gate ≤ 1). The picture step across the wrap is 0.63, against 0.83 for the
+  frames around it. Frame 0's slow push-in runs on through the loop's last second, so the camera keeps moving across
+  the wrap.
+- **Flashes:** none over the limit; no white-outs.
+- **Motion audit:** every pop is a cut, a beat, the hold cadence or a designed move (one in the streak pass's blur).
+- **Dead span:** one by design: the loop's last 1.2 s, the slow push into frame 0 with the city's windows breathing.
+- **Judder:** two shots keep their own cadence on purpose:
+  - the charge (HOLD ON), whose source is strobe-cut, so slow flow ghosted it;
+  - the S5 run under LONG EXPOSURE (18 % repeated frames).
+- **Faces vs effects:** 9 small flags (3–7 % of the face box). Two are false positives, where the lamp's grille was read
+  as a face. The rest are lightning near the charge's shoulders.
+- **plan_check:** 0 FAIL, 1 WARN (the charge's own cadence, deliberate).
+- **Density:** 23 designed transitions and the loop in 24.0 s (0.96/s), nearly all custom; 10 lean effects.
 
 ## How it was made
 - **Song prep:** the whole song prepped (stems, Whisper large-v3 on the vocal stem, the grid fitted on the drum stem).
   The window is the last verse into the final chorus: the song's one drumless section and the drums' return on "home".
 - **THE SIGNAL:** the lamp's lens is fitted per source frame (a bright-disc ellipse fit; the camera drifts about 50 px)
   and the bolt stencil in it is traced as a polygon on the source (`SIG_TRACK`, `SIG_BOLT` in the EDL).
-- **Caught before delivery:** CATCHES_V16
+- **Caught before delivery:** the fresh-eyes critique and the sign-off review, fixed before delivery:
+  - **WINDOW HOP:** it went into the same city shot, and the window looked pasted on (a white frame, edge bands,
+    mirrored texture). A different shot is now inside a warm, soft-edged window.
+  - **The 9 s whip:** the library whip ran a static line through his nose and mirrored his face. It is now a custom
+    DROP WHIP, and WHIP UP no longer mirrors either.
+  - **HOLD ON:** its source is strobe-cut, and slow flow ghosted it. It now plays its own cadence, with a stronger
+    draw-back.
+  - **THE SIGNAL:** the bolt's edges cut across his face, and the glare was flat grey. His face now sits inside the
+    bolt's blade, the bolt's edge glows, and the light is warm.
+  - **The beam:** at first it was hidden (the face guard covered the whole close-up). Then it crossed his jaw on the cut.
+    It is now kept behind his matte.
+  - **The loop:**
+    - the Flash faded in as a ghost, so he now appears solid on the beat;
+    - two seconds were on one back shot, so the loop starts at e74 and the camera keeps moving across the wrap;
+    - a partial re-render missed the loop frames (they draw frame 0's shot), so the seam failed once. They were forced
+      and re-measured.
+  - **Soft dissolves:** they now switch under light at its peak (headlights, lamplight, a new flare sweep). LONG
+    EXPOSURE retracts into points of light. One more verse cut was added (a shot and its reverse).
