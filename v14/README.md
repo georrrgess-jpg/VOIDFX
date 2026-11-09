@@ -4,106 +4,115 @@
 feeling; transitions; few, quiet sound effects so the song isn't overshadowed; a cool overlay that isn't overbearing, so
 the clips stay clear; high quality, with custom graphics, animations and transitions.
 
-**The first edit made start to finish on the efficiency update's loop** (`song:` → EDL → `plan` → `prep` → stills on
-the render server → `rev`/`ship` → the fresh-eyes critique). Rounds and renders are logged in `work/metrics.json`.
+**Round 2 (the owner's notes on rev 1, all applied in rev 2):**
+1. "I want barry waking up for the first time to be the focal point of and in the beginning of the edit": **THE WAKE**
+   now opens the edit.
+2. "I want the achievement in the attached image to appear in a satifying visually appealing pop up animation": **THE
+   ACHIEVEMENT** pops up on his gasp.
+3. "the flash symbol on the crest is not an actual lightning bolt and is in the wrong shape": the S1 emblem runs off the
+   bottom of every S1 frame, and rev 1's push mirrored the missing half into a "<" chevron. The bolt is now drawn from a
+   polygon **traced on the real S1 bolt** (a point-symmetric zigzag with a step, its tips past the ring at the upper
+   right and lower left), checked against three source frames.
+4. "the emblem transition is too fast ... slow it down and make it more pronounced": **EMBLEM GLINT** runs 2.1 s (rev 1:
+   0.5 s).
+5. "remove or change up the picture frame/photo transition graphic ... too slow and repeats multiple times": the print
+   is used **once, fast** (PRINT DIVE, 0.4 s on screen; rev 1 had the print 4 times, the first for 1.9 s).
+6. "implement a brand new custom graphic and transition/animation": **THE LENSBALL**.
 
 ## Concept: KEEPSAKES
-Nostalgia as a box of instant photos. Barry, now (S5, golden window light), looks back, and the years develop in front of
-him like instant prints: waking from the coma, the CSI lab, the first suit in the sun, laughing in S.T.A.R. Labs, Iris
-by the water, the loft, the sea run at sunset, then the family ballgame, laughing in the S5 suit, the tux, and today.
-- **The hero object is the print** (cream card, thick bottom border, paper grain, gloss, a soft shadow). It is a motif in
-  three places: the signature, THE ALBUM, and the loop (v13 rule 1).
-- **Real phenomenon:** instant-film development. The image rises out of the milky reagent, cool and flat first, then warm
-  and full.
+Nostalgia for where it all began. The night Barry woke from the coma opens the edit, an achievement marks it ("The
+Beginning?"), the years run as memories, and in the song's pause his memories sit in a glass ball he looks back
+through. The loop returns to the dark medical bay where he wakes again: the question mark is answered by the loop.
+- **The hero object is the lensball:** a glass ball lens. A real ball lens shows the scene behind it upside down,
+  squeezed toward the rim; that inversion is the transition (we fall in and the picture turns upright).
 
 ## The song
-- **Window:** song 196.56 → 222.48 s (h728 → h824, 25.92 s). It has three parts:
-  - the build;
-  - the quiet pause (single piano notes on e30, e34, e38 and e42);
-  - the full theme returning at e46 (song 208.97 s), the part people remember.
-- **Grid:** no drums in this stretch, so it was fitted on the music stem. P = 0.26997 s, offset 0.0100 s, checked against the piano onsets.
+- **Window:** song 196.56 → 222.48 s (h728 → h824, 25.92 s): the build, the quiet pause (single piano notes on e30,
+  e34, e38 and e42), and the full theme returning at e46 (song 208.97 s), the part people remember.
+- **Grid:** no drums in this stretch, so it was fitted on the music stem. P = 0.26997 s, offset 0.0100 s, checked
+  against the piano onsets. Strong onsets in the build (spectral flux): e4, e10, e12, e14, e16, e22, e26.
 - **Loop wrap:** music spectral correlation 0.906, the best of the candidate windows.
 
 ## Structure (edit half-beat e = 0.27 s)
 | e | Shot | In |
 |---|---|---|
-| 0–10 | NOW: S5 Barry in golden window light; **the signature print** rises beside him, develops, and we fall into it | the loop |
-| 10–14 | wake (S1: waking from the coma) | PRINT DIVE |
+| 0–10 | **THE WAKE** (S1): the dark medical bay at S.T.A.R. Labs, the lights flicker on, he gasps awake (slow motion) | the loop (LIGHTS ON) |
+| 10–14 | woke (S1, the S.T.A.R. Labs sweater) | FOCUS RACK (his eyes finding focus) |
 | 14–20 | lab (S1 CSI lab) | DOUBLE EXPOSURE |
-| 20–26 | hood (the first suit, gold backlight) | SUN FLARE (the lab window's light) |
+| 20–26 | hood (the first suit, gold backlight) | **PRINT DIVE** (the print, once: flicks in, we fall into it) |
 | 26–30 | laugh (S1 suit, laughing) | FILM BURN |
-| 30–46 | **THE ALBUM** (focal set piece; see below) | SHUTTER FREEZE |
-| 46–52 | the sea run at sunset (S1) | ALBUM OUT (out of the last print, as the theme returns) |
-| 52–58 | shore: the Flash walks out of the water | RIPPLE |
-| 58–62 | the S1 emblem | FOCUS RACK |
-| 62–68 | S3 Barry smiling | **EMBLEM GLINT** (the emblem transition) |
-| 68–74 | the ballgame (S5) | SPEED WHIP |
-| 74–80 | laughing in the S5 suit | LIGHT LEAK |
-| 80–86 | the tux | dolly |
-| 86–96 | today; **the loop**: the frame becomes a print and slides away over frame 0 | MEMORY ECHO |
+| 30–46 | **THE LENSBALL** (focal set piece, the song's pause; see below) | LENS IN |
+| 46–52 | the sea run at sunset, the sun on the water (S1) | **LENS DIVE** (the signature) |
+| 52–56 | shore: the Flash walks out of the water | RIPPLE |
+| 56–64 | the S1 emblem (the camera finds it) | SUN FLARE (the shore's sunset) |
+| 64–70 | S3 Barry smiling | **EMBLEM GLINT** (2.1 s) |
+| 70–76 | the ballgame (S5) | SPEED WHIP |
+| 76–82 | S3 sunglasses | LIGHT LEAK |
+| 82–88 | the tux | dolly |
+| 88–96 | today (S5); **the loop**: the lights flicker out | MEMORY ECHO |
 
-**THE ALBUM**, in the song's pause:
-1. On the first note, a soft shutter flash: the laugh freezes and shrinks into a print. The room behind goes to warm bokeh.
-2. On each of the next three notes a print lands, with a little bounce, and develops: Iris and Barry by the water (S1), the loft (S3), and the sea at sunset.
-3. On the pickup (e44) the camera falls into the last print, and the theme returns full-frame on the sea run.
+**THE WAKE + THE ACHIEVEMENT** (e0–e14): the room is dim and cool, its screens glowing. The lights flicker on in a
+fluorescent stutter, he rises into frame in slow motion, and on his gasp (e4, a strong onset) the owner's toast pops up
+below his face: "Achievement Made!" in yellow, "The Beginning?" in white. It is drawn from code in our own 5×7 pixel
+font and a 16×16 crate icon of our own, nearest-neighbour at 6 px a pixel, in a dark grey box with a light grey,
+notch-cornered border. The pop:
+- the box springs up from below with an overshoot (scale 0.62 → 1.10 → 1.0);
+- the crate bounces in with a wobble;
+- the title hops in letter by letter, then the second line;
+- a stepped pixel shine crosses it, with a warm glow as it lands.
 
-The freeze starts exactly on the laugh's last frame, and the dive ends exactly on the sea run's first frame.
+It holds through the cut and slides away on e13.
 
-**EMBLEM GLINT:** the camera finds the S1 emblem. A glint runs down its own gold bolt (the bolt's pixels, found in the
-frame) and the bolt lights up. The emblem's light blooms, and the next memory grows out of the emblem (v13 rule 2).
+**THE LENSBALL** (e30–e46):
+1. On the pause's first note the laugh shot curls into a glass ball and turns upside down inside it. Barry now (S5,
+   golden window light) is behind it, out of focus, with warm bokeh drifting.
+2. On each soft note (e34, e38, e42) the ball turns to another memory, with a glint crossing the glass and a breath in
+   its size: Iris and Barry by the water (S1), the loft (S3), the sea at sunset.
+3. On the pickup (e44) we fall into the ball and the picture turns upright as the theme returns full-frame on the sun
+   over the water; he runs in.
+
+The glass is drawn per pixel: a barrel-squeezed, inverted view of the memory; rim dispersion; a dark Fresnel edge that
+mirrors the room; a window highlight, a sharp specular and a back-lit rim.
+
+**EMBLEM GLINT** (e58–e65, 2.1 s), on the real S1 emblem, tracked on the source (template match, smoothed):
+1. The camera pushes slowly down onto the emblem (to 1.45×, with shallow focus).
+2. It sharpens into the drawn emblem, laid exactly over the real one:
+   - the disc keeps the shot's own red;
+   - the gold ring and the traced bolt are bevelled and lit from the upper left;
+   - the bolt casts a contact shadow.
+3. A glint runs down the bolt's zigzag and lights it from tip to tip, and a light runs round the ring.
+4. Gold lightning crawls off the bolt's edges.
+5. The disc opens on his face as the bolt dissolves into light, and we fly through the ring.
+
+Below the frame, the suit is the bottom band with the emblem inpainted out, mirrored down, so nothing is reflected.
+
+**The loop:**
+1. On the last strong notes (e92, e94) the lights of the last memory flicker, and the dark medical bay flashes through
+   for a few frames each time.
+2. The lights go out, and what is left at the wrap is frame 0's dark room.
+3. There the lights flicker back on and he wakes again.
 
 ## Look: SUNFADE under a SUPER 8 HAZE
-- **The grade:** golden hour on faded film:
-  - lifted warm blacks, cream-gold highlights, a warm cast through the mids;
-  - lowered saturation, with blues fading most (the S1 to S5 footage sits in one look);
-  - skin protected.
-- **The overlay, kept low:**
-  - fine grain;
-  - a sub-pixel gate weave (whole sine cycles over the edit, so the wrap has no step);
-  - halation round the highlights;
-  - two slow warm light leaks at the frame edges, away from faces;
-  - a faint exposure flicker;
-  - a few dust specks and the occasional hair, kept off the face.
-- **Designed beats:** the light breathes on the piano's strong notes after the return, and the camera breathes 0.6 % with it. There is no sound on any of them.
-- **Text:** none.
+- **The grade:** golden hour on faded film: lifted warm blacks, cream-gold highlights, a warm cast through the mids,
+  lowered saturation with blues fading most, skin protected.
+- **The overlay, kept low:** fine and coarse grain, a sub-pixel gate weave (whole sine cycles over the edit), halation,
+  two slow warm edge leaks away from faces, a faint exposure flicker, a few dust specks and the occasional hair, a
+  Super 8 gate.
+- **Text:** none, except the owner's achievement toast (drawn clean on top of the film).
 
 ## Sound
 The song, straight and circular: the pre-roll crossfades into the end, it is mastered on a wrapped copy, and it is
-measured after AAC. **Four quiet effects in all**, each 12–15 dB under the music:
-- a paper slide into the signature print;
-- a soft shutter click when the memory freezes;
-- an air rise into the theme's return;
-- a paper slide as the loop's print leaves.
+measured after AAC. **Five quiet effects in all**, 8–15 dB under the music, none on beats or small transitions:
+- the breath he takes as he wakes;
+- a soft swish and a round low thock as the achievement pops up (no chime);
+- a paper flick as the print comes in;
+- an air rise as we fall into the ball and the theme returns;
+- a faint crackle on the emblem that ends in a low whoomp as the disc opens.
 
-There is no sound on beats or small transitions.
+## Measured (rev 2, on the encoded MP4)
+MEASURED_REV2
 
-## Measured (rev 1, the first delivery, on the encoded MP4)
-- **QC:** ship checkpoint 11/11 PASS.
-- **Loudness:** −13.9 LUFS, true peak −4.6 dBTP after AAC.
-- **Loop seam:** blurred difference 0.18 (gate ≤ 1); audio seam step 0.040; picture wrap step 0.61 against a local median of 2.62.
-- **Motion audit:** no dead spans, no judder, 1 pop (a cut), no unexplained pops. 0 flashes, 0 white-outs.
-- **Faces vs effects:** 21 flags in 5 runs, all designed. 4 are in THE ALBUM, where the prints land over the blurred face behind them; 1 is the loop's print forming (1512–1516).
-- **Sharpness:** SOFT flags on two shots.
-  - **album:** its background is defocused by design; the prints themselves are sharp.
-  - **emblem:** 0.90× the median. It is the S1 pack at 1.1 Mb/s, pushed in 1.3× for the glint.
-  - Every source frame was restored (`sr_prep`, 498 frames).
-- **Plan check:** 0 FAIL, 1 WARN (the album is the laugh shot frozen; by design).
-- **Sound:** 4 placed effects, 12–15 dB under the music.
-
-## How it was made (the efficiency pilot)
-- **Song to delivery:** about 1 h 30 min. This includes:
-  - song prep (2 min);
-  - restoring 498 source frames (about 25 min, in the background);
-  - 14 still sheets on the render server (3 min in all).
-- **Renders before delivery:** 2 full and 1 partial (the change-tracked partial: 22 frames re-rendered and 30 verified bit-exact, 174 s against about 350 s for a full render). QC ran 3 times, 10 min in all.
-- **Caught before delivery:**
-  - **The studio's own sign-off review:** the film burn's rim and ragged edge on his face, the sun flare's 3-frame crossfade (a pop at 326), the memory echo's double faces.
-  - **The fresh-eyes critique** (`studio/CRITIQUE_PROMPT.md`):
-    - the overlay was invisible at phone size; it is now coarser grain, readable dust, stronger edge leaks and a Super 8 gate;
-    - the theme's return was blurry, unframed water; the sea run and shore are now reframed on him;
-    - the loop repeated the freeze; it is now a print that drops away;
-    - the emblem's disc read as a dark hole, close to the rejected emblem_horizon; it now fills with gold and opens on his lit face;
-    - the album prints were small and stayed milky too long;
-    - the two laughing-in-suit shots looked alike; the S5 laugh became the S3 sunglasses shot;
-    - the whip had a scan-line streak and mirrored edges;
-    - the signature print had a faint grey rectangle as it arrived.
+## How it was made
+- **Rev 1:** about 1 h 30 min from the song to delivery, 2 full renders and 1 partial.
+- **Rev 2:** REV2_TIME.
+- **Caught before delivery:** REV2_CATCHES.
