@@ -14122,6 +14122,51 @@ def tilt110(A, B, j, f, sa, sb, pre=9, post=12):
     return np.clip(_vblur_shift(B, -0.40 * H * (1 - e), 0.30 * H * (1 - e)), 0, 1)
 TR2["tilt110"] = (tilt110, 9, 12)
 
+# ---- rev 2, after the motion audit: the bulb swings wider and faster (the span was near still once the beat camera
+# calmed), the swinging light's extra light fades out before the cut (a brightness step), a soft matched dissolve into
+# the last shot (the smear jumped)
+BULB_AMP, BULB_PER = 0.40, 3.0
+def _bulb_xy(sa, f):
+    t = (f - sa["f0"]) / FPS; per = BULB_PER * E.HB
+    x = W * 0.5 + W * BULB_AMP * math.sin(2 * math.pi * t / per - 0.6)
+    y = H * 0.20 - H * 0.04 * abs(math.cos(2 * math.pi * t / per - 0.6))
+    return x, y
+
+def bulb110(out, f, s):
+    t = (f - s["f0"]) / FPS
+    k = smooth(t / 0.25)
+    x, y = _bulb_xy(s, f); x = W * 0.5 + (x - W * 0.5) * k
+    d2 = ((_GX - x) / (0.32 * W)) ** 2 + ((_GY - y) / (0.52 * H)) ** 2
+    m = 0.32 + 1.10 * np.exp(-d2)
+    return np.clip(out * m[..., None] + np.exp(-d2 * 3.0)[..., None] * AMB110 * 0.06, 0, 1)
+
+def swinglight110(A, B, j, f, sa, sb, pre=44, post=26):
+    q = (j + pre + 0.5) / (pre + post)
+    bx, by = _bulb_xy(sa, f)
+    c = smooth((q - 0.20) / 0.80)
+    cx = bx + (W * 0.55 - bx) * c; cy = (by + 0.22 * H) + (H * 0.42 - (by + 0.22 * H)) * c
+    r = 120 + 2300 * ein(smooth((q - 0.12) / 0.86), 1.8)
+    d = np.sqrt(((_GX - cx) / 0.85) ** 2 + (_GY - cy) ** 2)
+    m = np.clip((r - d) / (0.55 * r + 90), 0, 1); m = m * m * (3 - 2 * m)
+    m = np.maximum(m, smooth((q - 0.88) / 0.11))
+    Az = _zoom_about(A, 1 + 0.05 * smooth(q), W / 2, H * 0.40)
+    Bz = _zoom_about(B, 1 + 0.10 * (1 - smooth(q)), cx, cy)
+    extra = 1 - smooth((q - 0.62) / 0.33)                                                 # the pool's extra light is gone by the cut's end
+    lit = 1 + (0.35 * np.exp(-(d / (0.65 * r + 40)) ** 2) - 0.20) * extra
+    showB = smooth((r - 380.0) / 520.0)
+    inner = Az * (1.0 + 0.35 * np.exp(-(d / (0.6 * r + 30)) ** 2))[..., None] * (1 - showB) + np.clip(Bz * lit[..., None], 0, 1) * showB
+    o = Az * (1 - 0.55 * smooth(q)) * (1 - m[..., None]) + inner * m[..., None]
+    halo = np.exp(-((d - r) / (0.18 * r + 30)) ** 2) * extra * 0.10
+    return np.clip(o + halo[..., None] * AMB110, 0, 1)
+
+def glide110(A, B, j, f, sa, sb, pre=16, post=16):
+    """a soft matched dissolve: both pictures drift up together, eased, no jump."""
+    q = (j + pre + 0.5) / (pre + post); z = smooth(q)
+    Ad = _zoom_about(A, 1 + 0.04 * z, W / 2, H * 0.40)
+    Bd = _zoom_about(B, 1 + 0.04 * (1 - z), W / 2, H * 0.40)
+    w = smooth((q - 0.25) / 0.50)
+    return np.clip(Ad * (1 - w) + Bd * w, 0, 1)
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with

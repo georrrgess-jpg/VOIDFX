@@ -115,7 +115,7 @@ shot("anguish", "p1", 62, 68, 164.00, 164.90, z=[(0, 1.00), (1, 1.04)], tin="dol
 # ---- "Mommy?" (e68-e79): the blood room; the loop falls into bed
 shot("bloodwall", "dmx", 68, 72, 111.80, 112.90, z=[(0, 1.00), (1, 1.05)], tin="swinglight110", interp="flow", **SP)   # the blood-spattered wall, in the bulb's light
 shot("bloodroom2", "dmx", 72, 74, 110.05, 110.75, z=[(0, 1.00), (1, 1.03)], tin="tilt110", interp="flow", **SP)   # "Mommy?": he looks up at the blood
-shot("lookup", "dmx", 74, 79, 122.90, 124.30, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="flow", tout="driploop110", **SP)
+shot("lookup", "dmx", 74, 79, 122.90, 124.30, z=[(0, 1.00), (1, 1.04)], tin="glide110", interp="flow", tout="driploop110", **SP)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

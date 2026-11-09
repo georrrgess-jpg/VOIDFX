@@ -701,6 +701,55 @@
    "step": "plan",
    "s": 10.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:04:10",
+   "round": 3,
+   "step": "video",
+   "s": 547.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:06:55",
+   "round": 3,
+   "step": "qc",
+   "s": 165.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:07:05",
+   "round": 3,
+   "step": "report",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:09:44",
+   "round": 3,
+   "step": "deliver",
+   "s": 159.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:10:30",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:10:38",
+   "round": 3,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:10:49",
+   "round": 3,
+   "step": "sheet:u1:1150,1165,1180,1195,1210,1225,1255,1262,1268,1338,1346,1354",
+   "s": 11.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -939,6 +988,24 @@
    "round": 3,
    "cat": "other",
    "text": "the glide's luma dissolve double-exposed two faces: a motion-blurred tilt up to the blood"
+  },
+  {
+   "t": "2026-11-09 22:11:03",
+   "round": 3,
+   "cat": "other",
+   "text": "motionqc: the bulb span went near-still once the beat camera calmed: the bulb swings wider and faster"
+  },
+  {
+   "t": "2026-11-09 22:11:03",
+   "round": 3,
+   "cat": "seam",
+   "text": "motionqc: a brightness step as the swinging light ended (its extra light stayed to the last frame): it fades out before the cut"
+  },
+  {
+   "t": "2026-11-09 22:11:03",
+   "round": 3,
+   "cat": "other",
+   "text": "motionqc: the smear into the last shot jumped: a soft matched dissolve"
   }
  ],
  "round_starts": {
