@@ -267,6 +267,153 @@
    "step": "splice",
    "s": 0.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:44:06",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:44:49",
+   "round": 1,
+   "step": "prep",
+   "s": 42.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:45:13",
+   "round": 1,
+   "step": "sheet:s1:400,405,410,414,418,424,430,436",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:45:19",
+   "round": 1,
+   "step": "sheet:s2:500,520,532,538,541,543,545,547,549,552,560",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:45:25",
+   "round": 1,
+   "step": "sheet:s3:812,822,830,836,840,844,848,852,856",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:45:32",
+   "round": 1,
+   "step": "sheet:s4:1380,1390,1398,1406,1414,1422,1430,1438,1441",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:45:41",
+   "round": 1,
+   "step": "sheet:s5:182,186,262,300,330,350,365,380,860,900,1000,1022,1040,1290,1310",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:46:16",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:46:26",
+   "round": 1,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:46:43",
+   "round": 1,
+   "step": "sheet:s6:428,431,434,437,440,444",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:46:51",
+   "round": 1,
+   "step": "sheet:s7:1010,1018,1026,1032,1040,1050",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:46:55",
+   "round": 1,
+   "step": "sheet:s8:1390,1400,1410,1420,1430,1440",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:48:17",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:48:27",
+   "round": 1,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:48:42",
+   "round": 1,
+   "step": "sheet:s6:428,431,434,437,440,444",
+   "s": 15.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:48:46",
+   "round": 1,
+   "step": "sheet:s7:1010,1018,1026,1032,1040,1050",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:48:51",
+   "round": 1,
+   "step": "sheet:s8:1390,1400,1410,1420,1430,1440",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:48:55",
+   "round": 1,
+   "step": "sheet:s9:300,545,548,840,844,1240",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:49:19",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:49:29",
+   "round": 1,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:49:46",
+   "round": 1,
+   "step": "sheet:s10:436,440,443,1395,1405,1415",
+   "s": 17.0,
+   "rc": 0
   }
  ],
  "notes": [],
@@ -336,6 +483,66 @@
    "round": 1,
    "cat": "other",
    "text": "the title's letters strobed almost every frame as they died (sin at 90 rad/s): a 4 Hz flutter"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "critique: the barrel's drawn ring sat on his lower face with the next shot's mouth inside: a push into the real muzzle, the light bursts out of it"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: the drop was a static close-up then a washed-out flash: a fan blade sweeps across the lens as the cover, the blades' light crosses him (off his face)"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "seam",
+   "text": "critique: the loop read as a hard-edged card in a dark room: frame 0 melts into its own out-of-focus light, streaks and falling drops"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: four look-alike three-quarter close-ups (warm, interior, lamp, night): the red neon and the kill-room wide replace two; the blood room gets a second angle (density)"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "critique: developer108's concentric rings on his face and the red screen's black lower third: the kill-room wide with frost instead"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: a near-black frame at 3.03 s (lights off): it dims to 40 %"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "text_face",
+   "text": "critique: the title killed its letters while 'power' was still sung: it holds to e19.3, line 1 larger"
+  },
+  {
+   "t": "2026-11-09 20:50:02",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "the library plastic burst puts a starburst on his face: frost108"
+  },
+  {
+   "t": "2026-11-09 20:50:03",
+   "round": 1,
+   "cat": "other",
+   "text": "the falling-asleep shift mirrored the fan-room face into a second copy (BORDER_REFLECT): replicate the edge"
+  },
+  {
+   "t": "2026-11-09 20:50:03",
+   "round": 1,
+   "cat": "other",
+   "text": "duplicated toolkit (an edit anchored on the first 'def render' of an older section): rebuilt, the v110 section unique"
   }
  ],
  "round_starts": {

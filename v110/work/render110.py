@@ -13069,7 +13069,7 @@ def beat_phase(f):
     return ph, bi, hook, False
 
 # ---- the mains (the hero): the room light that fails on "I'm losing power" and surges back on the drop
-T_IM, T_LOSING, T_POWER, T_OUT = E.th(10.2), E.th(13.37), E.th(16.33), E.th(16.95)
+T_IM, T_LOSING, T_POWER, T_OUT = E.th(10.2), E.th(13.37), E.th(16.33), E.th(19.3)
 def _dips(t, t0, depth, n=3, gap=0.045):
     v = 1.0
     for k in range(n):
@@ -13103,9 +13103,9 @@ def _tube(t, t_on, i):
 
 def title110(out, f):
     t = f / FPS
-    if t < T_IM - 0.02 or t > E.th(18.6): return out
+    if t < T_IM - 0.02 or t > E.th(21.2): return out
     if "m" not in _TT110:
-        l1 = [(c, text_mask(c, F_BLACK, 112) if c != " " else None) for c in "I'M LOSING"]; l2 = [(c, text_mask(c, F_BLACK, 205)) for c in "POWER"]
+        l1 = [(c, text_mask(c, F_BLACK, 138) if c != " " else None) for c in "I'M LOSING"]; l2 = [(c, text_mask(c, F_BLACK, 205)) for c in "POWER"]
         _TT110["m"] = (l1, l2)
     l1, l2 = _TT110["m"]
     lay = np.zeros((H, W), np.float32)
@@ -13122,8 +13122,8 @@ def title110(out, f):
                 ys, xs, ye, xe = max(0, yy), max(0, xx), min(H, yy + h_), min(W, xx + w_)
                 if ye > ys and xe > xs: lay[ys:ye, xs:xe] = np.maximum(lay[ys:ye, xs:xe], mm[ys - yy:ye - yy, xs - xx:xe - xx] * a)
             x += m.shape[1] + 10
-    place(l1, H * 0.655, lambda i: T_IM if i < 3 else T_LOSING + 0.012 * (i - 4))
-    place(l2, H * 0.712, lambda i: T_POWER + 0.012 * i)
+    place(l1, H * 0.640, lambda i: T_IM if i < 3 else T_LOSING + 0.012 * (i - 4))
+    place(l2, H * 0.708, lambda i: T_POWER + 0.012 * i)
     if lay.max() < 0.003: return out
     g1 = cv2.GaussianBlur(lay, (0, 0), 8); g2 = cv2.GaussianBlur(cv2.resize(lay, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 7)
     g2 = cv2.resize(g2, (W, H), interpolation=cv2.INTER_LINEAR)
@@ -13181,18 +13181,25 @@ def fogwipe110(A, B, j, f, sa, sb, pre=20, post=22):
     return np.clip(img * (1 - dens[..., None]) + fogc * dens[..., None], 0, 1)
 TR2["fogwipe110"] = (fogwipe110, 20, 22)
 
-# ---- NOD OFF (asleep -> the fan room): his head goes back, the picture drifts down and falls out of focus into the
-# dark; the fan room rises out of the blur, cold blue.
-def nodoff110(A, B, j, f, sa, sb, pre=18, post=24):
-    q = (j + pre + 0.5) / (pre + post)
+# ---- FALLING ASLEEP (asleep -> the fan room): his head goes back and we fall with it: the picture drops away upward with
+# vertical motion blur, and the fan room rises into place from below (the fall the loop repeats)
+def _vblur_shift(img, dy, streak):
+    o = cv2.warpAffine(img, np.float32([[1, 0, 0], [0, 1, dy]]), (W, H), borderMode=cv2.BORDER_REPLICATE) if abs(dy) > 0.2 else img   # never mirror a face
+    L = int(abs(streak) / 4)
+    if L < 2: return o
+    sm = cv2.resize(o, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    sm = cv2.filter2D(sm, -1, np.ones((L, 1), np.float32) / L, borderType=cv2.BORDER_REPLICATE)   # a continuous vertical streak
+    return cv2.resize(sm, (W, H), interpolation=cv2.INTER_LINEAR)
+
+def nodoff110(A, B, j, f, sa, sb, pre=12, post=14):
     if j < 0:
-        u = smooth((j + pre + 0.5) / pre); sig = 16 * u; dark = 1 - 0.55 * u; dy = 46 * u; img = A
-    else:
-        u = 1 - smooth((j + 0.5) / post); sig = 16 * u; dark = 1 - 0.55 * u; dy = -46 * u; img = B
-    if abs(dy) > 0.3: img = cv2.warpAffine(img, np.float32([[1, 0, 0], [0, 1, dy]]), (W, H), borderMode=cv2.BORDER_REFLECT)
-    if sig > 0.4: img = cv2.resize(cv2.GaussianBlur(cv2.resize(img, (W // 2, H // 2), interpolation=cv2.INTER_AREA), (0, 0), sig / 2), (W, H))
-    return np.clip(img * dark, 0, 1)
-TR2["nodoff110"] = (nodoff110, 18, 24)
+        u = (j + pre + 0.5) / pre; e = ein(u, 2.4)
+        o = _vblur_shift(A, -0.55 * H * e, -0.30 * H * e * 1.4)
+        return np.clip(o * (1 - 0.25 * e), 0, 1)
+    v = (j + 0.5) / post; e = 1 - (1 - smooth(v)) ** 2
+    o = _vblur_shift(B, 0.45 * H * (1 - e), -0.22 * H * (1 - e))
+    return np.clip(o * (0.75 + 0.25 * e), 0, 1)
+TR2["nodoff110"] = (nodoff110, 12, 14)
 
 # ---- THROUGH THE FAN (the drop, the signature). The fan room: an industrial fan behind him throws blue light through
 # its blades. Through the break the power is low (the light flickers, the blades turn slowly); in the last bar it surges
@@ -13235,27 +13242,51 @@ def fan_beams110(f, open_=0.0):
     fall = np.exp(-d / (1.5 * H)) * (0.75 + 0.5 * _fan_haze())
     return (1 - shadow) * fall, shadow
 
-def fan_draw110(img, f, P, surge=0.0):
+def _face_keep(s_, f):
+    fs = face_scr(s_, f)
+    if not fs: return 1.0
+    return np.clip(np.sqrt(((_GX - fs[0]) / (0.70 * fs[2])) ** 2 + ((_GY - fs[1]) / (0.95 * fs[2])) ** 2) - 0.75, 0, 1)
+
+def fan_draw110(img, f, P, surge=0.0, keep=1.0):
     pw = _fan_power(f) + surge
     lit, shadow = fan_beams110(f)
     behind = 1 - (P if P is not None else 0)
     near = np.exp(-(((_GX - FAN_L[0] * W) / (0.55 * W)) ** 2 + ((_GY - FAN_L[1] * H) / (0.35 * H)) ** 2))   # the haze round the light
-    o = img * (1 - (0.40 * shadow * behind)[..., None])                               # the blades' shadows sweep the room
-    o = o + ((lit * 0.55 + near * 0.30) * pw * behind)[..., None] * FAN_COL
+    onhim = (P if P is not None else 0) * keep                                          # the blades' light across him, off his face
+    o = img * (1 - (0.42 * shadow * behind + 0.32 * shadow * onhim)[..., None])
+    o = o + ((lit * 0.62 + near * 0.32) * pw * behind + lit * 0.18 * pw * onhim)[..., None] * FAN_COL
     return np.clip(o, 0, 1)
+
+FAN_HUB = (1.10 * W, -0.04 * H)
+def _blade_mask(theta, width=0.42):
+    """a blade passing right in front of the lens: the sector of angle width about theta (from the hub off the top
+    right), soft and motion-blurred."""
+    a = np.arctan2(_GY - FAN_HUB[1], _GX - FAN_HUB[0])
+    da = np.mod(a - theta + np.pi, 2 * np.pi) - np.pi
+    return np.clip((width / 2 - np.abs(da)) / 0.10, 0, 1)
 
 def fan110(A, B, j, f, sa, sb, pre=70, post=28):
     P = _person(sa, f) if j < 0 else _person(sa, sa["f1"] - 1)
     P = np.zeros((H, W), np.float32) if P is None else _pp_clean(P)
+    keep = _face_keep(sa, f if j < 0 else sa["f1"] - 1)
+    th0, th1 = math.radians(78), math.radians(196)                                   # the blade sweeps the whole frame
+    jb = (j + 7.5) / 13.0                                                             # frames -7 .. +5 around the drop
+    theta = th0 + (th1 - th0) * smooth(jb)
+    passed = np.clip((np.mod(np.arctan2(_GY - FAN_HUB[1], _GX - FAN_HUB[0]), 2 * np.pi) - theta) / -0.06, 0, 1) if 0 < jb < 1 else None
     if j < 0:
-        fl = math.exp(-((j + 0.5) / 2.2) ** 2) * 0.9                                   # the surge peaks on the drop
-        o = fan_draw110(A, f, P, surge=0.0)
+        surge = 0.35 * smooth((j + 24) / 20.0)                                        # the light flares as the fan races
+        o = fan_draw110(A, f, P, surge=surge, keep=keep)
     else:
-        fl = math.exp(-((j + 0.5) / 5.0) ** 1.3)
-        k = 1 - smooth((j + 0.5) / post)                                               # the kill room still under the last of the beams
+        k = 1 - smooth((j + 0.5) / post)
         lit, shadow = fan_beams110(f)
-        o = B * (1 - (0.30 * shadow * k)[..., None]) + (lit * 0.35 * k)[..., None] * FAN_COL
-    o = o * (1 + 1.4 * fl) + fl * 0.30 * FAN_COL
+        o = B * (1 - (0.30 * shadow * k)[..., None]) + (lit * 0.30 * k)[..., None] * FAN_COL
+    if 0 < jb < 1:
+        Bl = B * (1 - (0.25 * fan_beams110(f)[1])[..., None])
+        side = np.clip((theta - np.mod(np.arctan2(_GY - FAN_HUB[1], _GX - FAN_HUB[0]), 2 * np.pi)) / 0.08, 0, 1)   # behind the blade: the kill room
+        o = o * (1 - side[..., None]) + Bl * side[..., None] if j < 0 else o
+        bm = _blade_mask(theta)
+        rim = np.clip(_blade_mask(theta, 0.50) - bm, 0, 1)
+        o = o * (1 - 0.92 * bm[..., None]) + bm[..., None] * np.array([0.05, 0.05, 0.06], np.float32) + rim[..., None] * FAN_COL * 0.35
     return np.clip(o, 0, 1)
 TR2["fan110"] = (fan110, 70, 28)
 
@@ -13271,30 +13302,25 @@ def _muzzle(sa, f):
 def barrel110(A, B, j, f, sa, sb, pre=40, post=18):
     q = (j + pre + 0.5) / (pre + post)
     mx, my, r0 = _muzzle(sa, f if j < 0 else sa["f1"] - 1)
-    qd = smooth((q - 0.30) / 0.64)
-    Z = math.exp(math.log(3.0) * ein(qd, 1.6))                                       # the camera pushes into the muzzle
-    if Z > 1.002:
-        Az = (_zoom_about(A, Z, mx, my) + _zoom_about(A, Z * 1.06, mx, my)) / 2
-    else: Az = A
-    rB = r0 * Z * math.exp(math.log(48.0) * ein(qd, 2.3))                            # the bore opens past the lens
-    d = np.sqrt((_GX - mx) ** 2 + (_GY - my) ** 2) + 1e-3; th = np.arctan2(_GY - my, _GX - mx)
-    inside = np.clip((rB - d) / max(1.5, rB * 0.03), 0, 1)
-    zt = np.log(np.maximum(rB, 1.0) / np.maximum(d, 1.0)) + 3.2 * qd                 # depth down the barrel, flowing past
-    land = 0.5 + 0.5 * np.cos(6 * (th + 0.62 * zt))                                   # six lands and grooves, twisting
-    spec = np.exp(-((np.mod(th - 0.9 + np.pi, 2 * np.pi) - np.pi) / 0.55) ** 2)      # the light from the far end catches one side
-    depth = np.exp(-0.42 * (zt - 3.2 * qd))
-    rif = smooth((rB - 70) / 160.0)                                                  # the rifling reads only once the bore is big
-    wall = ((0.06 + (0.40 * land ** 4 + 0.20 * spec * land) * rif) * depth)[..., None] * np.array([0.64, 0.62, 0.60], np.float32)
-    ef = 0.05 + 0.95 * smooth((qd - 0.30) / 0.70)
-    re = rB * ef
-    exitm = np.clip((re - d) / max(2.0, re * 0.06), 0, 1)
-    glowx = np.exp(-((d - re) / max(4.0, re * 0.25)) ** 2) * (d > re) * inside
-    Bz = _zoom_about(B, 1 + 0.25 * (1 - qd), mx, my) if qd < 0.999 else B
-    tun = wall + glowx[..., None] * np.array([0.75, 0.80, 0.85], np.float32) * 0.22
-    tun = tun * (1 - exitm[..., None]) + Bz * exitm[..., None]
-    o = Az * (1 - inside[..., None]) + tun * inside[..., None]
-    end = smooth((q - 0.90) / 0.08)
-    return np.clip(o * (1 - end) + B * end, 0, 1)
+    qd = smooth((q - 0.25) / 0.55)
+    Z = math.exp(math.log(4.5) * ein(qd, 1.7))                                       # the camera pushes into the real muzzle
+    Az = (_zoom_about(A, Z, mx, my) + _zoom_about(A, Z * 1.05, mx, my)) / 2 if Z > 1.002 else A
+    rB = r0 * Z
+    d = np.sqrt((_GX - mx) ** 2 + (_GY - my) ** 2)
+    lg = smooth((q - 0.30) / 0.30)                                                    # a light at the end of the barrel
+    rl = rB * (0.25 + 0.65 * lg)
+    glow = np.exp(-(d / max(2.0, rl)) ** 2) * lg
+    burst = smooth((q - 0.62) / 0.36)                                                 # it bursts out of the muzzle and fills the frame
+    rw = rB * 0.9 + (math.hypot(W, H) * 1.05) * ein(burst, 1.8)
+    win = np.clip((rw - d) / max(4.0, 0.10 * rw), 0, 1) * (burst > 0)
+    sharp = smooth((q - 0.78) / 0.20)
+    Bs = B if sharp >= 0.999 else cv2.resize(cv2.GaussianBlur(cv2.resize(B, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6 * (1 - sharp) + 0.3), (W, H))
+    Bs = Bs * (1 - sharp) + B * sharp if 0 < sharp < 1 else Bs
+    lift = (1 - sharp) * 0.35
+    Bl = np.clip(Bs + lift * np.array([0.85, 0.88, 0.92], np.float32) * (1 - d[..., None] / (rw + 1)), 0, 1)
+    o = Az + glow[..., None] * np.array([0.80, 0.86, 0.95], np.float32) * 0.70
+    o = o * (1 - win[..., None]) + Bl * win[..., None]
+    return np.clip(o, 0, 1)
 TR2["barrel110"] = (barrel110, 40, 18)
 
 # ---- THE FOLD (the night street -> the red screen): the dream bends the world: the bottom half of the night street
@@ -13396,31 +13422,47 @@ def fall110(out, f, s, person=None):
     if f >= last: return frame0_plate108().copy()
     t = (f - FALL_F0) / (last - FALL_F0)
     F0 = frame0_plate108()
-    if "bgF" not in _L110:
-        _L110["bgF"] = cv2.resize(cv2.GaussianBlur(cv2.resize(F0, (W // 8, H // 8), interpolation=cv2.INTER_AREA), (0, 0), 5), (W, H)) * 0.50
-    bg = _L110["bgF"]
-    ta = ein(t, 1.7); dy = -1.05 * H * ta; spd = 1.7 * ta / max(t, 1e-3) * 0.06 * H     # the blood room drops away above us
-    acc = np.zeros_like(out)
-    for k in range(5):
-        acc += cv2.warpAffine(out, np.float32([[1, 0, 0], [0, 1, dy - k * spd * 0.25]]), (W, H), borderMode=cv2.BORDER_CONSTANT)
-    A2 = acc / 5; mA = np.clip((H + dy - _GY) / 40.0, 0, 1)[..., None] * (1 - smooth(t / 0.62))
-    o = bg * (1 - mA) + A2 * mA
-    rng = np.random.default_rng(1103); n = 40                                        # drops of blood fall with us, rushing up past the lens
-    xs = rng.uniform(0.05 * W, 0.95 * W, n); zs = rng.uniform(0.3, 1.0, n); ph = rng.uniform(0, 1, n)
-    yy = (ph - t * (0.9 + 1.6 * zs)) % 1.0 * (H * 1.3) - 0.15 * H
-    al = (np.clip(t / 0.15, 0, 1) * (1 - smooth((t - 0.70) / 0.22)) * (0.35 + 0.65 * zs)).astype(np.float32)
-    cols = np.tile(np.array([[0.05, 0.06, 0.60]], np.float32), (n, 1))
-    for k in range(4):
-        rgb, a_ = splat109(xs, yy + k * 14 * zs, cols, al * 0.5, q=2, sig=1.6 + 2.0 * (1 - zs.mean()))
-        o = o * (1 - np.clip(cv2.resize(a_, (W, H)), 0, 1)[..., None] * 0.5) + cv2.resize(rgb, (W, H)) * 0.7
-    u = t * t * (3 - 2 * t)                                                           # frame 0 rises from below, the whole way, and we land in it
-    sB = 0.16 + 0.84 * u; cyB = H * 0.82 + (H * 0.5 - H * 0.82) * u
-    cardB, _ = _card(F0, sB, W / 2, cyB, 0.0)
-    w2, h2 = W * sB / 2, H * sB / 2; fe = 2 + 0.22 * w2 * (1 - u)                      # its edges melt into its own light
+    u = t * t * (3 - 2 * t)
+    sB = 0.22 + 0.78 * u; cyB = H * 0.80 + (H * 0.5 - H * 0.80) * u
+    M = np.float32([[sB, 0, W / 2 * (1 - sB)], [0, sB, cyB - H / 2 * sB]])
+    cardR = cv2.warpAffine(F0, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    halo = cv2.resize(cv2.GaussianBlur(cv2.resize(cardR, (W // 8, H // 8), interpolation=cv2.INTER_AREA), (0, 0), 3), (W, H))
+    w2, h2 = W * sB / 2, H * sB / 2; fe = 3 + 0.95 * w2 * (1 - u)
     mB = (np.clip((w2 - np.abs(_GX - W / 2)) / fe, 0, 1) * np.clip((h2 - np.abs(_GY - cyB)) / fe, 0, 1)).astype(np.float32)
-    o = o * (1 - mB[..., None]) + cardB * mB[..., None]
+    bg = halo * (0.75 + 0.25 * u)                                                     # frame 0's own light all round (out of focus)
+    o = bg * (1 - mB[..., None]) + cardR * mB[..., None]
+    ta = ein(t, 1.6); dy = -1.10 * H * ta                                             # the blood room drops away above us
+    A2 = _vblur_shift(out, dy, -0.25 * H * min(1.0, 3.0 * t))
+    mA = (np.clip((H + dy - _GY) / 60.0, 0, 1) * (1 - smooth(t / 0.70)))[..., None]
+    o = o * (1 - mA) + A2 * mA
+    rng = np.random.default_rng(1103)                                                 # we are falling: light streaks rush up past
+    sx = rng.uniform(0.04 * W, 0.96 * W, 14); sp = rng.uniform(1.2, 2.6, 14); ph = rng.uniform(0, 1, 14)
+    st = np.zeros((H, W), np.float32)
+    for x_, v_, p_ in zip(sx, sp, ph):
+        yc = ((p_ - t * v_) % 1.0) * 1.6 * H - 0.3 * H; ln = 0.22 * H * v_
+        cv2.line(st, (int(x_), int(yc)), (int(x_), int(yc + ln)), 1.0, 3, cv2.LINE_AA)
+    st = cv2.GaussianBlur(st, (0, 0), 3) * (smooth(t / 0.15) * (1 - smooth((t - 0.70) / 0.22)))
+    o = o + st[..., None] * AMB110 * 0.30
+    dx = rng.uniform(0.06 * W, 0.94 * W, 18); dz = rng.uniform(0.4, 1.0, 18); dp = rng.uniform(0, 1, 18)   # drops of blood fall with us
+    dr = np.zeros((H, W), np.float32)
+    for x_, z_, p_ in zip(dx, dz, dp):
+        yc = ((p_ - t * (0.8 + 1.4 * z_)) % 1.0) * 1.4 * H - 0.2 * H
+        cv2.ellipse(dr, (int(x_), int(yc)), (int(2 + 4 * z_), int(26 + 60 * z_)), 0, 0, 360, 1.0, -1, cv2.LINE_AA)   # falling fast: streaks
+    dr = cv2.GaussianBlur(dr, (0, 0), 2.5) * (smooth(t / 0.12) * (1 - smooth((t - 0.65) / 0.25))) * 0.75
+    o = o * (1 - 0.80 * dr[..., None]) + dr[..., None] * np.array([0.02, 0.02, 0.30], np.float32)
     we = smooth((t - 0.90) / 0.10)
     return np.clip(o * (1 - we) + F0 * we, 0, 1)
+
+# ---- THE BULB (the anguish shot): a bare bulb above him swings on its cord; its pool of light swings across him and the
+# crucifix behind (the room breathes with it; no flicker)
+def bulb110(out, f, s):
+    t = (f - s["f0"]) / FPS; per = 4 * E.HB
+    k = smooth(t / 0.25)
+    x = W * 0.5 + W * 0.30 * math.sin(2 * math.pi * t / per - 0.6) * k
+    y = H * 0.20 - H * 0.03 * abs(math.cos(2 * math.pi * t / per - 0.6))
+    d2 = ((_GX - x) / (0.34 * W)) ** 2 + ((_GY - y) / (0.55 * H)) ** 2
+    m = 0.42 + 0.95 * np.exp(-d2)
+    return np.clip(out * m[..., None] + np.exp(-d2 * 3.0)[..., None] * AMB110 * 0.05, 0, 1)
 
 def render(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
@@ -13430,7 +13472,7 @@ def render(f):
     if s["n"] == "anguish": out = bulb110(out, f, s)
     if s["n"] == "fan" and not (n_ and kn >= -TR2["fan110"][1]):
         Pm = None if person is None else _pp_clean(np.clip(np.asarray(person, np.float32), 0, 1))
-        out = fan_draw110(out, f, Pm)
+        out = fan_draw110(out, f, Pm, keep=_face_keep(s, f))
     if tin in TR2 and k < TR2[tin][2] and P is not None:
         out = TR2[tin][0](edge108(P, "last"), out, k, f, P, s)
     if n_ is not None:
@@ -13445,10 +13487,10 @@ def render(f):
 # ---- LIGHTS ON (the doorway -> the light on "I'm"): the hall goes dark and the tube above him blinks on with the word
 def lightson110(A, B, j, f, sa, sb, pre=8, post=16):
     if j < 0:
-        u = smooth((j + pre + 0.5) / pre); return np.clip(A * (1 - 0.85 * u), 0, 1)
+        u = smooth((j + pre + 0.5) / pre); return np.clip(A * (1 - 0.60 * u), 0, 1)
     jj = j + 0.5
-    lv = 0.15 + 0.85 * smooth((jj - 2.5) / 1.5)
-    lv *= (1 - 0.70 * math.exp(-((jj - 6.5) / 1.1) ** 2)) * (1 - 0.40 * math.exp(-((jj - 10.5) / 1.0) ** 2))
+    lv = 0.40 + 0.60 * smooth((jj - 2.5) / 1.5)
+    lv *= (1 - 0.50 * math.exp(-((jj - 6.5) / 1.1) ** 2)) * (1 - 0.30 * math.exp(-((jj - 10.5) / 1.0) ** 2))
     m = 1 - (1 - lv) * (0.55 + 0.45 * (1 - _GY / H))                                  # the light falls from above
     return np.clip(B * m[..., None], 0, 1)
 TR2["lightson110"] = (lightson110, 8, 16)

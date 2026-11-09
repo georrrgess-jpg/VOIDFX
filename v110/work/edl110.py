@@ -105,15 +105,16 @@ shot("drive", "s1", 39, 41, 316.00, 316.90, z=[(0, 1.00), (1, 1.03)], tin="wiper
 shot("dark", "s4", 41, 43, 117.50, 118.40, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)
 shot("aim", "ds2b", 43, 46, 369.40, 370.12, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)       # he aims down the lens: THE BARREL
 shot("warm", "dmx", 46, 48, 159.30, 160.20, z=[(0, 1.00), (1, 1.03)], tin="barrel110", interp="flow", **SP)
-shot("interior", "ds2b", 48, 50, 166.90, 167.80, z=[(0, 1.00), (1, 1.03)], tin="flicker109", interp="flow", **SP)   # the power fails again
+shot("neon", "ds2b", 48, 50, 203.80, 204.50, z=[(0, 1.00), (1, 1.03)], tin="flicker109", interp="flow", **SP)   # the power fails again: red neon
 shot("lamp", "ds2b", 50, 53, 290.90, 291.90, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
 shot("night", "ds2a", 53, 56, 188.00, 189.30, z=[(0, 1.00), (1, 1.03)], tin="afterimage109", interp="flow", **SP)   # the sleepwalker leaves an after-image
-shot("redscreen", "s1", 56, 58, 81.00, 81.90, z=[(0, 1.00), (1, 1.03)], tin="developer108", interp="flow", **SP)   # the red screen develops like a darkroom print
+shot("killwide", "p1", 56, 58, 135.30, 136.10, z=[(0, 1.00), (1, 1.03)], tin="frost108", face=None, cx=(560, 640), interp="flow", **SP)   # the kill room, cold: rime forms and thaws
 shot("cabin", "p1", 58, 60, 176.60, 177.50, z=[(0, 1.00), (1, 1.03)], tin="slices", interp="flow", **SP)
 shot("closeup", "s4", 60, 62, 161.10, 161.90, z=[(0, 1.00), (1, 1.03)], tin="streetlight109", interp="flow", **SP)
 shot("anguish", "p1", 62, 68, 164.00, 164.90, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)      # THE SPATTER
 # ---- "Mommy?" (e68-e79): the blood room; the loop falls into bed
-shot("bloodroom", "dmx", 68, 74, 105.70, 107.30, z=[(0, 1.00), (1, 1.04)], tin="spatter110", interp="flow", **SP)
+shot("bloodroom", "dmx", 68, 71, 105.70, 106.70, z=[(0, 1.00), (1, 1.04)], tin="spatter110", interp="flow", **SP)
+shot("bloodroom2", "dmx", 71, 74, 109.95, 110.95, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)   # "Mommy?": the swing carries on
 shot("lookup", "dmx", 74, 79, 122.90, 124.30, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="flow", tout="fall110", **SP)
 SHOTS = S
 for s in SHOTS:
