@@ -41,9 +41,9 @@ LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
 SET_PIECES = [("the flashlight", th(2), th(4)), ("MATERIALISE", th(5), th(8)), ("PHANTOM", th(10), th(13.5)),
-              ("the hunt", th(30), th(36)), ("the vanishing", th(52.5), th(56))]
+              ("the surveillance", th(27), th(31)), ("the vanishing", th(52.5), th(56))]
 SIGNATURE = ["materialize109"]
-HERO = ["mist109"]                          # the phantom mist: the drop, the vanish, the loop
+HERO = ["mist_veil"]                        # the phantom mist: the drop, the vanish, the loop
 HERO_TINS = ["materialize109", "vanish109"]
 PLAN_ACCEPT = {}
 VO_STEM = None; VO_STEM_T0 = 0.0
@@ -89,28 +89,28 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 SP = dict(look="spectral109")
 shot("open", "p1", 0, 3, 186.40, 187.60, z=[(0, 1.00), (1, 1.05)], interp="flow", ev=0.6, **SP)                 # he walks out of the dark (frame 0)
 shot("flash", "s4", 3, 6, 184.70, 185.90, z=[(0, 1.00), (1, 1.04)], tin="flashlight109", interp="flow", **SP)
-shot("drop", "p7", 6, 9, 0.05, 1.10, z=[(0, 1.06), (1, 1.00)], tin="materialize109", seg=True, interp="flow", **SP)   # the red kill room
+shot("drop", "p7", 6, 9, 0.05, 1.10, z=[(0, 1.06), (1, 1.00)], tin="materialize109", seg=True, interp="flow", ev=0.6, **SP)   # the red kill room
 shot("hood", "s1", 9, 11, 302.20, 303.10, z=[(0, 1.00), (1, 1.04)], tin="afterimage109", interp="blend", **SP)
 shot("double", "s4", 11, 13, 157.10, 158.00, z=[(0, 1.00), (1, 1.03)], tin="mirror109", interp="flow", **SP)   # PHANTOM: his double
-shot("shades", "p5", 13, 15, 39.85, 40.45, z=[(0, 1.00), (1, 1.04)], tin="time_particles", interp="flow", **SP)
-shot("walk", "s1", 15, 17, 230.75, 231.65, z=[(0, 1.00), (1, 1.04)], tin="tantrum109", interp="flow", **SP)   # "tantrum": the phone glitch
-shot("sunset", "s1", 17, 19, 401.70, 402.60, z=[(0, 1.00), (1, 1.04)], tin="light_sweep108", interp="flow", **SP)
-shot("anthem", "s4", 19, 21, 41.00, 41.95, z=[(0, 1.00), (1, 1.04)], tin="facematch108", interp="flow", **SP)
-shot("hazmat", "dmx", 21, 24, 94.95, 95.85, z=[(0, 1.04), (1, 1.00)], tin="slices", interp="flow", **SP)
-shot("table", "s4", 24, 26, 38.20, 39.10, z=[(0, 1.00), (1, 1.04)], tin="surface", face=None, cx=(640, 640), interp="flow", **SP)
-shot("gloves", "p1", 26, 28, 102.20, 102.80, z=[(0, 1.00), (1, 1.04)], tin="luminol108", interp="flow", **SP)
-shot("tape", "p7", 28, 30, 22.55, 23.65, z=[(0, 1.00), (1, 1.04)], tin="tape109", seg=True, interp="blend", **SP)
+shot("chain", "p1", 13, 15, 171.10, 171.75, z=[(0, 1.00), (1, 1.04)], tin="time_particles", interp="flow", **SP)   # the chain-link stare
+shot("walk", "s1", 15, 17, 230.75, 231.65, z=[(0, 1.00), (1, 1.04)], tin="tantrum109", interp="flow", ev=0.6, **SP)   # "tantrum": the phone glitch
+shot("night", "p5", 17, 19, 31.45, 32.35, z=[(0, 1.00), (1, 1.04)], tin="flicker109", interp="flow", **SP)   # the night walk
+shot("anthem", "s4", 19, 21, 41.00, 41.95, z=[(0, 1.00), (1, 1.04)], tin="headspin", interp="flow", **SP)
+shot("hazmat", "dmx", 21, 24, 94.95, 95.85, z=[(0, 1.04), (1, 1.00)], tin="slices", interp="blend", **SP)
+shot("table", "s4", 24, 26, 102.95, 103.85, z=[(0, 1.00), (1, 1.04)], tin="surface", interp="flow", **SP)   # the plastic-wrapped table
+shot("gloves", "p1", 26, 28, 102.20, 102.80, z=[(0, 1.00), (1, 1.04)], tin="polaroid", interp="flow", ev=0.7, **SP)
+shot("tape", "p7", 28, 30, 22.55, 23.65, z=[(0, 1.00), (1, 1.04)], tin="cctv109", seg=True, interp="blend", **SP)
 shot("hall", "s1", 30, 32, 349.40, 350.30, z=[(0, 1.00), (1, 1.04)], tin="vanish109", seg=True, interp="flow", **SP)
-shot("garden", "s4", 32, 34, 80.90, 81.80, z=[(0, 1.00), (1, 1.04)], tin="mist109", interp="flow", **SP)   # "the only one that I'm hunting"
-shot("dock", "s4", 34, 36, 73.80, 74.80, z=[(0, 1.00), (1, 1.04)], tin="sink108", interp="flow", **SP)
+shot("garden", "s4", 32, 34, 80.90, 81.80, z=[(0, 1.00), (1, 1.04)], tin="page_turn107", interp="flow", **SP)   # "the only one that I'm hunting"
+shot("dock", "s4", 34, 36, 73.80, 74.80, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
 shot("hunt", "s1", 36, 39, 355.40, 356.40, z=[(0, 1.00), (1, 1.04)], tin="molasses108", interp="flow", **SP)
-shot("cage", "ds2a", 39, 41, 226.60, 227.40, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)   # "if you talk shit": Doakes
+shot("cage", "ds2a", 39, 41, 226.60, 227.40, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="blend", **SP)   # "if you talk shit": Doakes
 shot("doakes", "dmx", 41, 43, 11.00, 11.70, z=[(0, 1.02), (1, 1.06)], tin="impact", interp="flow", **SP)
-shot("mansion", "s1", 43, 46, 358.45, 359.35, z=[(0, 1.00), (1, 1.04)], tin="developer108", interp="blend", **SP)
+shot("hammer", "s4", 43, 46, 222.30, 223.30, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)   # gloved, the hammer
 shot("motion", "s4", 46, 48, 164.10, 165.00, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
-shot("knife", "s4", 48, 50, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="flow", **SP)
-shot("smirk", "s1", 50, 52, 344.40, 345.30, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)
-shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], tin="roll", seg=True, interp="flow", tout="vanish_loop109", **SP)
+shot("knife", "s4", 48, 50, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="flip", interp="flow", **SP)
+shot("drive", "s4", 50, 52, 0.50, 1.40, z=[(0, 1.00), (1, 1.03)], tin="roll", interp="flow", ev=0.4, **SP)   # red-lit, driving
+shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], tin="dolly", seg=True, interp="flow", tout="vanish_loop109", **SP)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

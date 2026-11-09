@@ -2052,7 +2052,7 @@ def flashlight109(A, B, j, f, sa, sb, pre=10, post=14):
     R = 260 + 1900 * ein(clamp((q - 0.55) / 0.45, 0, 1), 2.0)
     d = np.sqrt(((_GX - cx) / 1.0) ** 2 + ((_GY - cy) / 1.15) ** 2)
     beam = np.clip(1 - d / R, 0, 1) ** 0.8; hot = np.exp(-(d / (R * 0.25)) ** 2)
-    dark = 1.0 - 0.70 * smooth(q / 0.25) + 0.70 * smooth((q - 0.85) / 0.15)                   # the light drops smoothly, then returns
+    dark = 1.0 - 0.45 * smooth(q / 0.25) + 0.45 * smooth((q - 0.85) / 0.15)                   # the light drops smoothly, then returns
     lit = beam[..., None] * (1 + 0.35 * hot[..., None])
     o = img * np.clip(dark + (1 - dark) * lit, 0, 1.3) + hot[..., None] * np.array([0.10, 0.14, 0.16], np.float32) * (1 - dark)
     return np.clip(o, 0, 1)
@@ -2160,8 +2160,9 @@ def vanish_loop109(out, f, s, person=None):
     t = (f - f0) / (f1 - f0); n = mistfield(f, speed=3.0)
     P_ = person.astype(np.float32) if person is not None else np.zeros((H, W), np.float32)
     gone = np.clip((smooth(t / 0.6) * 1.3 - n) / 0.15, 0, 1) * P_
-    o = out * (1 - gone[..., None]) + MIST109 * 0.5 * gone[..., None]
-    fill = smooth((t - 0.30) / 0.40); clear = smooth((t - 0.70) / 0.28)
+    soft = cv2.resize(cv2.GaussianBlur(cv2.resize(out, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H))
+    o = out * (1 - gone[..., None]) + (soft * 0.55 + MIST109 * 0.35) * gone[..., None]
+    fill = smooth((t - 0.25) / 0.35) * 0.85; clear = smooth((t - 0.50) / 0.46)                  # frame 0 shows through early
     o = mist_veil(o, fill * (1 - clear), f, 3.0)
     f0p = frame0_plate108()
     if clear > 0: o = o * (1 - clear) + mist_veil(f0p, fill * (1 - clear), f, 3.0) * clear
@@ -2208,3 +2209,63 @@ def render(f):
     out = title109(out, f)
     out = flash_governor(out)
     return (np.clip(finish109(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+
+# ---- v109, after the fresh-eyes critique: two new transitions; the mist without outlines or holes ------------------
+# FLICKER: the light fails: the frame breathes dim and bright on an uneven filament rhythm, the next shot shows through
+# the flicker, and the light steadies on it.
+def flicker109(A, B, j, f, sa, sb, pre=10, post=12):
+    q = (j + pre + 0.5) / (pre + post); env = math.sin(math.pi * clamp(q, 0, 1))
+    fl = 0.5 + 0.5 * math.sin(f * 1.9) * math.sin(f * 0.73 + 1.1)                                  # an uneven filament
+    bright = 1.0 - env * (0.55 - 0.40 * fl)
+    w = smooth((q - 0.42) / 0.16); img = A * (1 - w) + B * w if 0 < w < 1 else (A if j < 0 else B)
+    L = lum(img)[..., None]
+    o = img * bright + (L * np.array([0.55, 0.75, 0.95], np.float32) - img) * env * 0.25          # a warm bulb cast while it fails
+    return np.clip(o, 0, 1)
+TR2["flicker109"] = (flicker109, 10, 12)
+
+# SURVEILLANCE: the city watches for him. The frame turns into a surveillance feed (cold grey-green, scanlines, a little
+# barrel, noise), a tracking bar rolls down through it and the next shot is behind the bar; the feed snaps back clean.
+def cctv109(A, B, j, f, sa, sb, pre=10, post=12):
+    q = (j + pre + 0.5) / (pre + post); k = math.sin(math.pi * clamp(q, 0, 1)) ** 0.7
+    by = -0.2 * H + 1.4 * H * smooth(q)                                                            # the tracking bar
+    behind = np.clip((by - _GY) / 40.0, 0, 1)
+    img = A * (1 - behind[..., None]) + B * behind[..., None]
+    r2 = ((_GX - W / 2) / W) ** 2 + ((_GY - H / 2) / H) ** 2
+    img = _remap(img, W / 2 + (_GX - W / 2) * (1 - 0.06 * k * r2), H / 2 + (_GY - H / 2) * (1 - 0.06 * k * r2))
+    L = lum(img)[..., None]
+    feed = L * np.array([0.78, 0.92, 0.80], np.float32) * (0.85 + 0.15 * (np.sin(_GY * 1.6) > 0)[..., None])
+    feed = feed + (np.random.default_rng(1910 + f).random((H, W), dtype=np.float32)[..., None] - 0.5) * 0.06
+    bar = np.exp(-((_GY - by) / 26.0) ** 2)[..., None] * 0.22
+    o = img * (1 - k) + feed * k + bar * k
+    return np.clip(o, 0, 1)
+TR2["cctv109"] = (cctv109, 10, 12)
+
+def materialize109(A, B, j, f, sa, sb, pre=20, post=40):
+    """rev: he forms out of an even, pale mist (no outline, no dark holes)."""
+    if j < 0:
+        u = (j + pre + 0.5) / pre
+        return np.clip(mist_veil(A * (1 - 0.30 * u), smooth(u) * 0.90, f, 2.0), 0, 1)
+    v = (j + 0.5) / post; per = _person(sb, f)
+    n = cv2.GaussianBlur(mistfield(f, speed=2.0), (0, 0), 10)
+    form = np.clip((ein(v, 1.2) * 1.5 - (1 - n) * 0.9) / 0.40, 0, 1); form = form * form * (3 - 2 * form)
+    room = smooth((v - 0.30) / 0.70)
+    P_ = per if per is not None else np.ones((H, W), np.float32)
+    m = form * P_ + room * (1 - P_)
+    soft = cv2.resize(cv2.GaussianBlur(cv2.resize(B, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 5), (W, H))
+    fog = soft * 0.40 + MIST109 * 0.42 * (1 - smooth(v / 0.95))
+    o = fog * (1 - m[..., None]) + B * m[..., None]
+    return np.clip(o, 0, 1)
+TR2["materialize109"] = (materialize109, 20, 40)
+
+def vanish109(A, B, j, f, sa, sb, pre=14, post=8):
+    """rev: he thins into pale mist where he stands (no outline, no dark holes), and the next shot."""
+    if j < 0:
+        u = (j + pre + 0.5) / pre; per = _person(sa, f)
+        n = cv2.GaussianBlur(mistfield(f, speed=3.0), (0, 0), 10)
+        gone = np.clip((smooth(u) * 1.4 - n) / 0.35, 0, 1) * (per if per is not None else 0)
+        soft = cv2.resize(cv2.GaussianBlur(cv2.resize(A, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H))
+        o = A * (1 - gone[..., None]) + (soft * 0.55 + MIST109 * 0.35) * gone[..., None]
+        return np.clip(mist_veil(o, smooth((u - 0.6) / 0.4) * 0.7, f, 3.0), 0, 1)
+    v = (j + 0.5) / post
+    return np.clip(mist_veil(B, (1 - smooth(v)) * 0.7, f, 3.0), 0, 1)
+TR2["vanish109"] = (vanish109, 14, 8)
