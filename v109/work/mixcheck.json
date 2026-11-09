@@ -240,8 +240,8 @@
    "t0": 17.27,
    "t1": 18.02,
    "music_db": -8.3,
-   "fx_peak_db": -30.7,
-   "fx_minus_music": -22.4,
+   "fx_peak_db": -28.1,
+   "fx_minus_music": -19.8,
    "buried": true
   },
   {
@@ -251,8 +251,8 @@
    "t0": 18.13,
    "t1": 18.88,
    "music_db": -6.0,
-   "fx_peak_db": -23.7,
-   "fx_minus_music": -17.8,
+   "fx_peak_db": -23.1,
+   "fx_minus_music": -17.2,
    "buried": true
   },
   {
@@ -286,28 +286,6 @@
    "music_db": -5.9,
    "fx_peak_db": -46.0,
    "fx_minus_music": -40.1,
-   "buried": true
-  },
-  {
-   "name": "the flatline",
-   "kind": "set piece",
-   "at": 21.6,
-   "t0": 21.6,
-   "t1": 22.46,
-   "music_db": -6.4,
-   "fx_peak_db": -45.9,
-   "fx_minus_music": -39.5,
-   "buried": true
-  },
-  {
-   "name": "ekg109",
-   "kind": "transition",
-   "at": 22.29,
-   "t0": 21.99,
-   "t1": 22.74,
-   "music_db": -6.5,
-   "fx_peak_db": -48.0,
-   "fx_minus_music": -41.5,
    "buried": true
   },
   {
