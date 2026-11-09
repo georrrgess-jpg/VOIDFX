@@ -1024,7 +1024,6 @@ def main110():
     place(fx, stereo(A2.impact(-6, (50, 26), 0.9, 0.3, 4102)), td); place(fx, stereo(sub_drop(-8, 0.8, 62, 26)), td + 0.01)
     place(fx, A2.whoosh(0.55, -18, 4103, True), t0["warm"] - 0.48)                                   # THE BARREL
     place(fx, A2.whoosh(0.70, -22, 4104, True), t0["bloodwall"] - 0.55)                                # rev 2: the swinging light carries the blood room in
-    place(fx, stereo(neon_buzz(0.40, -21)), td + 0.01)                                               # rev 1: the title's tubes ignite on the drop
     place(fx, stereo(scrub(0.16, -20, 4106, 4500)), t0["dark"] - 0.06)                                # rev 1: the print tears
     ti = E.th(74.6) + 0.36 * (E.DUR - E.th(74.6))                                                     # rev 1: THE DRIP lands
     place(fx, stereo(drip(-16, 4107)), ti - 0.01)

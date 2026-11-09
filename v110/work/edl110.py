@@ -39,7 +39,7 @@ BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
-SET_PIECES = [("POWER FAILURE", th(10), th(21)), ("THROUGH THE FAN + I'M LOSING POWER", th(24), th(34.5)), ("THE BARREL", th(43.5), th(47)),
+SET_PIECES = [("POWER FAILURE", th(10), th(21)), ("THROUGH THE FAN", th(24), th(31)), ("THE BARREL", th(43.5), th(47)),
               ("THE SWINGING LIGHT", th(65), th(70)), ("THE DRIP (loop)", th(74.6), th(79))]
 SIGNATURE = ["fan110"]
 HERO = ["power_light110"]                  # the failing / surging light: the title, the brownout, the fan
@@ -122,7 +122,7 @@ for s in SHOTS:
 
 # ---- text (the approved v9 construction): style = cap | carry | bound | charge | slam | echo | hero | speed | <your own>
 #      words=[(WORD, edit t, line 0|1)] on the sung onsets, end=t, emph=[...]; rides=True draws it before the transition
-TEXT = []                                   # the one title is drawn by title110 (fx110.py)
+TEXT = []                                   # no text (rev 3: the owner removed I'M LOSING POWER)
 CAPS = []; CAP_Y = (1385, 1490); END_CAP = []
 CLOSE_T = None; DROP_TITLE = None; VANISH_T0 = None
 MONTAGE = (2, E_LOOP)

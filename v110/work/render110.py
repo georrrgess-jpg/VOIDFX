@@ -14169,6 +14169,10 @@ def glide110(A, B, j, f, sa, sb, pre=16, post=16):
 TR2["swinglight110"] = (swinglight110, 44, 26)                                         # register the rev 2 versions
 TR2["glide110"] = (glide110, 16, 16)
 
+# ============================================================================ v110 rev 3 (the owner: "remove the I'm losing power")
+def title110(out, f):
+    return out                                                                         # no text in the final edit
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with
