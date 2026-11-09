@@ -87,3 +87,22 @@ the last drop, the drop of blood), `work/audio108.py` (the v108 section: `music1
   alike → the woods; the whip's gold streak crossed his mouth → removed; SPECIMEN showed hair, not a face, inside the glass
   → the incoming face is framed in it; the loop drop read as a marble → it falls down the dark beside him. One claim was
   not a defect: the "coil" at the left edge in SURFACE is the backlit trunk behind him in the source.
+
+## Revision 1 (the owner's notes, 2026-11-09)
+*"I generally like the edit. … merge that slide graphic slash animation and merge it with one of the actual slides from
+that scene … I generally like when on the beat the clip like kind of jumps up and down with the beat, but in this edit I
+would like for you to remove that just for this edit … add a lot more transition and unique graphics with custom
+animated transitions … a lot of smooth transitions and creative ones so the edit flows all together."*
+
+- **SPECIMEN with the real slide.** The upper slide in his hands (its own blood smear and frosted label, cut from the
+  frame) lifts toward the lens, swings up so its clear end lies over his eye and magnifies it, the green stare appears in
+  the glass, and the slide fills the lens on "DOOMSDAY". Where it was, the picture is filled from its surroundings, and his
+  face goes soft behind the slide (depth of field). The CG slide and its bead are gone.
+- **No beat bounce** anywhere in this edit (no zoom punch, kick or hit-frame blur). Recorded as a v108 exception, not a
+  new rule.
+- **Seven new custom transitions**, each its own idea and smooth: *haze* (Miami heat shimmer), *diffusion* (cognac-red dye
+  spreading through water on "turn H2O to cognac"), *double vision* (the M99 takes hold), *luminol* (the light drops and
+  blue forensic glow blooms around him, never on his face), *face match* (his face slides and scales onto the next face
+  and they dissolve), *developer* (a print develops under the red safelight into the red desk), *sink* (the water rises
+  over the lens and drains off the last shot). Three new shots (a Miami street, the car, a blood-slide close-up): 22 shots,
+  21 transitions + the loop (was 19 / 18). Generic connectors are down to 6.
