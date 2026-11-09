@@ -1,7 +1,7 @@
 # The owner's rules, on one page (both studios)
 
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
-(v4–v14, v101–v107) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
+(v4–v14, v101–v109) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
 Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
@@ -18,6 +18,9 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 - **Drawn-looking props** next to footage: blood, slides, knives, tape only when motivated by the shot or lyric, brief, physically lit, off the face (v103). **[eye]**
 - **Droplets on the lens or a wavy heat-haze warp as a transition** (v108 rev 2: *"remove the water droplet filter"*, *"the squiggle, swirl, weird animation"*). **[plan]** registry
 - Outro / title cards, watermarks, labels, name tags, counters, timecodes, CJK lines; a recoloured logo. **[plan]** `logo_uv` banned
+- **Interface / HUD overlays drawn over the footage**: a heart-monitor trace, readouts, timers (v6's VHS counter; v109 rev 2: *"change the heart monitor … You don't have to replace this with anything"*). A frame treatment (v109's surveillance feed) is fine; a widget parked on the picture is not. **[plan]** registry (`ekg109` rejected)
+- **Spins in a smooth, dark edit**: v109 rev 1 removed the headspin for flow (*"I don't really like how that flows with this edit"*), and the roll and flip at its end went with it. Spins belong to kinetic edits, once. **[eye]**
+- **A mirrored pack shot**: read any text in the frame (v109: p7's tape read SSORƆ TON OD); flip it back with `hflip=True` (v109 base). **[eye]**
 - A line shown as spoken when the lips don't match (v101); captions on words the song isn't singing (v103).
 - Chimes, bells, shimmers, drones, swirls, whines, a swell on every move (v12, v106, v13). **[plan]** sound kinds (a WARN: v107 shipped one swirl)
 
@@ -36,6 +39,10 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 11. **The style matched to the song** (v14 standard, *"a different style ... but is still really good"*): on a calm, nostalgic song, a calm edit (slower set pieces on the song's structure, a breathing camera, ~5 quiet effects, a low overlay) is right; v10–v12's density and beat camera are for energetic songs.
 12. **A liked transition used once, fast; an emblem transition ~2 s with stages; the owner's named moment opens the edit** (v14 rev 2: the print *"too slow and repeats multiple times"*; the emblem *"too fast"*; *"barry waking up ... the focal point of and in the beginning"*). An asset the owner supplies as a reference is built faithfully in our own drawing, with a designed pop (the achievement toast).
 13. **The owner's concept boards are built from the shot's own props**: lift, tilt or move the real object (v108: the real slide pivots up in his fingers) rather than a CG copy beside it (*"merge that slide graphic … with one of the actual slides from that scene"*). Board choices (text, timing) apply to that edit only; ask when the rest is left open.
+14. **A focal point mid-edit, besides the drop**: one centrepiece graphic that plays for ~1 s with its own motion and depth (behind him through his matte, in front of him, never across the face) and then *becomes* the transition (v109 rev 3: *"it's just missing one more focal point … one more really, really cool, custom, unique graphic into a transition … the finishing touch"* → THE PHANTOM'S TRAIL, then the verdict; the same ask as v13's light ribbon). **[plan]** `SET_PIECES`
+15. **A flow of graphics that become transitions**: in the back half, chain two or three graphic → transition moments, each graphic on its shot for ~0.5–1 s first (v109 rev 1: *"a cool flow where there's unique graphics appearing and then transitions from those graphics"* → the fingerprint dive, the photo's fire; approved).
+16. **A prop's effect starts on the prop, tracked**: the fire comes out of the real burning photo (its flame's foot tracked through the shot), burns the photo first, then the frame (v109 rev 2: *"make it stem from the actual picture that's burning and try to make it tied into that transition"*). Extends 13 to every prop-motivated transition.
+17. **Keep the edit on Dexter; supporting characters only when the concept needs them, and swap soft or busy shots for sharp "texture" clips** (fire, foliage, rust; the high-bitrate S1/S4 packs) (v109 rev 1: *"remove the clips with dokes and replace them with other high-quality texture clips"*).
 
 ## 3. Text
 - Dexter: every clearly sung line captioned word by word on its sung onset, in the v9 style (heavy caps, keyline, red emphasis, eased in). Flash: text is optional and titles must earn their place (v12 removed both).
@@ -51,4 +58,5 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 - Apply **every** note in one pass, then `plan_check`, stills, one render, `ship`.
 - **A slot that has failed twice gets no new graphic concept**: a kinetic physical transition or a clean cut on the downbeat with the beat camera's punch (v107: press flash → TV → point of origin, then the clean cut was approved).
 - When the owner removes or dislikes something, add the verdict to `studio/transitions.json` in the same turn, so neither studio repeats it.
+- **"Improve the loop / the ending"** (v109 rev 1): a fade or a fog is not enough; the loop needs animated physics (v109's gust: dust from his own matte, the same gust re-forms frame 0 head first, no dark gap), and the ending's connectors must be smooth and motivated, not a run of library spins.
 - "Lacklustre" means motion and polish, not more overlays (v10). "Add transitions/graphics" means new cuts with themed transitions, not effects stacked on shots (v105).

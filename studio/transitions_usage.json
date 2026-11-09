@@ -2059,7 +2059,7 @@
     "v8": "approved",
     "v103": "standard"
    },
-   "owner_verdict": "liked"
+   "owner_verdict": "rejected"
   },
   "ramp": {
    "pre": 6,
@@ -2794,7 +2794,7 @@
    "edit_verdicts": {
     "v103": "standard"
    },
-   "owner_verdict": "unrated"
+   "owner_verdict": "liked"
   },
   "tape_in": {
    "engines": [],

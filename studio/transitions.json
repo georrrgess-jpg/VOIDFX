@@ -218,7 +218,8 @@
     "generic"
    ],
    "evidence": "v107 rev 1 (replaced by a whip when the headspin changed)",
-   "studio": "dexter"
+   "studio": "dexter",
+   "caution": "v109 rev 1: removed with the headspin (two spins at the end of a smooth, dark edit; the critique's call, the owner approved the result)"
   },
   "focus_rack": {
    "verdict": "ok",
@@ -295,7 +296,7 @@
     "lands_on_face",
     "signature"
    ],
-   "evidence": "v107 rev 2: rejected while it landed off-centre ('the final shot doesn't have a centered shot of Dexter'); kept once it landed on a centred face; v109 rev 1: removed for flow in PHANTOM, replaced by phantom_pass109",
+   "evidence": "v107 rev 2: rejected while it landed off-centre ('the final shot doesn't have a centered shot of Dexter'); kept once it landed on a centred face; v109 rev 1: removed for flow in PHANTOM, replaced by phantom_pass109 (the standard)",
    "fix": "rotate the incoming half about the incoming face and land on a centred face",
    "studio": "dexter",
    "caution": "v109 rev 1: the owner removed it from PHANTOM (\"I don't really like how that flows with this edit\"): a hard spin broke the ghostly, smooth flow of a dark, slow-swagger edit. It stays liked (v107); use it where the edit is kinetic, and once (v14 rule 4)."
@@ -601,7 +602,8 @@
     "generic"
    ],
    "evidence": "v9 generic filler; v104 liked the upside-down roll",
-   "studio": "both"
+   "studio": "both",
+   "caution": "v109 rev 1: removed with the headspin (two spins at the end of a smooth, dark edit; the critique's call, the owner approved the result)"
   },
   "rorschach": {
    "verdict": "rejected",
@@ -1051,6 +1053,141 @@
    "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
    "studio": "flash",
    "tags": []
+  },
+  "flashlight109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v109 first delivery, no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "materialize109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v109 signature on the drop (he forms out of mist in the red kill room), no note in 3 rounds; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'",
+   "caution": "the mist is v109's hero: materialise, vanish and the pass carry it; keep it to 2-4 appearances (v13 rule)"
+  },
+  "afterimage109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v109, no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "mirror109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v109 (a glass pane slides across, the next shot through it), no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "tantrum109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v109 (the phone glitch on 'tantrum'), no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "flicker109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v109 (the light fails), no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "cctv109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v109 (the city's surveillance feed, a tracking bar), no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "vanish109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v109 (he thins into mist where he stands), no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "phantom_pass109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v109 rev 1, replacing the headspin ('I don't really like how that flows with this edit ... a brand new, unique, and creative transition'): he walks at us, turns see-through, the camera passes through his silhouette; no further note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'",
+   "caution": "needs a clean, steady matte: close holes and take the max over neighbouring frames, or the rim rings small holes"
+  },
+  "print109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v109 rev 1, the owner's 'unique graphics appearing and then transitions from those graphics': a latent fingerprint dusted on below his face, a forensic light over it, the dive into its whorl; no further note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'",
+   "caution": "dive into his chest, never centre the rings on the incoming face (a target)"
+  },
+  "burn109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "evidence": "v109 rev 1 (the frame burns from the lighter's flame), rev 2: 'make it stem from the actual picture that's burning and try to make it tied into that transition' -> the flame's foot tracked on the real photo, the photo burns through first (the next shot inside it), then spills onto the frame; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'",
+   "fix": "start a prop's effect on the prop itself, tracked through the shot; never at an untracked point near it"
+  },
+  "ekg109": {
+   "verdict": "rejected",
+   "studio": "dexter",
+   "tags": [
+    "overlay"
+   ],
+   "evidence": "v109 rev 2: 'I'd like you to change the heart monitor on the 21-second mark. You don't have to replace this with anything.' A monitor trace drawn over the frame (an interface overlay, like v6's removed VHS counter)",
+   "fix": "no HUD or interface overlays; a clean cut on the downbeat with the camera's punch was approved in its place"
+  },
+  "redwash109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v109 rev 1, replacing a roll (spins after the headspin note): brake-light red washes over the frame into the red-lit drive; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "streetlight109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v109 rev 1, replacing a flip: a streetlight passes over the car; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "dust_loop109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v109 rev 1: the mist-fade loop was rejected ('the end flow of the edit and into the loop. I don't really like that part ... more unique and creative with better animations'); THE GUST: he blows away as glowing dust (body first, face last), the same gust carries dust in that settles head-first into frame 0; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+  },
+  "vanish_loop109": {
+   "verdict": "rejected",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v109 rev 1: a grey mist fill-and-clear into frame 0 ('I don't really like that part ... improve the loop, make it more unique and creative with better animations')",
+   "fix": "the loop needs real animated motion (particles, physics) that builds frame 0 from its own picture: dust_loop109"
+  },
+  "trail109": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v109 rev 3, the owner: 'it's just missing one more focal point ... one more really, really cool, custom, unique graphic into a transition ... the finishing touch' -> THE PHANTOM'S TRAIL, a ribbon of red light that circles him (behind him through his matte, in front of his waist) and dives into the next shot; then v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'",
+   "caution": "keep it off the face (orbit the chest and waist); the first build (a thin line and a red flash) was not enough: bold silk, a white-hot core, a second strand, a dive that swells into a window"
   }
  },
  "families": {
