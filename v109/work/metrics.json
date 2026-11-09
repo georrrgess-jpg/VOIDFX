@@ -456,6 +456,48 @@
    "step": "sheet:wash:1228,1231,1234,1237,1240,1284,1286,1288",
    "s": 15.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:57:14",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:58:28",
+   "round": 2,
+   "step": "prep",
+   "s": 74.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:58:53",
+   "round": 2,
+   "step": "sheet:r2a:475,480,483,486,489,494,740,756,830,845,1190,1210",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:59:05",
+   "round": 2,
+   "step": "sheet:r2b:1333,1336,1339,1342,1346,1350,1372,1380,1388,1396,1404,1412,1418,1424,1430",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:59:30",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:59:50",
+   "round": 2,
+   "step": "sheet:r2c:481,483,485,830,1200,1418,1422",
+   "s": 20.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -520,6 +562,42 @@
    "round": 2,
    "cat": "framing",
    "text": "the pass's matte had holes and specks (rings of rim light): closed and cleaned"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the fingerprint whorl centred on the incoming face (a target): the dive goes into his chest"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: a whip, a roll and a flip in the last 2 s (spins, like the removed headspin): red wash and streetlight instead"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the p7 tape shot is mirrored (DO NOT CROSS reads backwards): flipped back"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the garden shot looked like the night walk; the kitchen lunge was off-centre and soft: the police-lot stare and the container"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "seam",
+   "text": "critique: the gust went dark for 0.5 s and re-formed in dark chips: overlap, a faint frame 0 under the dust, his face goes last"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "restyle",
+   "text": "the cold grade read sunburnt skin as blood on the two new day shots: redthr 0.30"
   }
  ],
  "round_starts": {

@@ -2325,23 +2325,26 @@ def _pp_clean(P):
 def phantom_pass109(A, B, j, f, sa, sb, pre=16, post=14):
     q = (j + pre + 0.5) / (pre + post)
     (cx, cy), Plast = _pp_anchor(sa)
-    P = _person(sa, f) if j < 0 else Plast
+    if j < 0:                                                             # steadied: a matte that drops a limb for a frame
+        ms = [m for m in (_person(sa, ff) for ff in (f - 2, f, min(f + 2, sa["f1"] - 1))) if m is not None]
+        P = np.maximum.reduce(ms) if ms else None
+    else: P = Plast
     P = np.zeros((H, W), np.float32) if P is None else _pp_clean(P)
     a = smooth(q / 0.42)                                                  # he turns translucent
     z = smooth((q - 0.32) / 0.58)                                         # we pass through him
     Z = math.exp(math.log(14.0) * ein(z, 2.2))
     if Z > 1.002:
-        Az = (_zoom_about(A, Z, cx, cy) + _zoom_about(A, Z * 1.05, cx, cy) + _zoom_about(A, Z * 1.10, cx, cy)) / 3
+        Az = (_zoom_about(A, Z, cx, cy) + _zoom_about(A, Z * 1.025, cx, cy)) / 2
         Pz = _zoom_about(P, Z, cx, cy, cv2.BORDER_CONSTANT)
     else: Az, Pz = A, P
     bz = 1 + 0.12 * (1 - smooth(q))
     Bz = _zoom_about(B, bz, W / 2, H * 0.42) if bz > 1.0005 else B
-    ghost = mist_veil(Bz, 0.45 * (1 - z), f, 1.5)
-    op = np.clip(Pz * np.clip(0.80 * a + smooth((q - 0.45) / 0.25), 0, 1), 0, 1)
-    op = np.maximum(op, smooth((q - 0.52) / 0.33))                        # the rest of the garden goes as we pass
+    ghost = mist_veil(Bz, 0.30 * (1 - z), f, 1.5)
+    op = np.clip(Pz * np.clip(0.88 * a + smooth((q - 0.40) / 0.20), 0, 1), 0, 1)
+    op = np.maximum(op, smooth((q - 0.80) / 0.15))                        # his silhouette sweeps the garden away
     o = Az * (1 - op[..., None]) + ghost * op[..., None]
     Pb = cv2.GaussianBlur(Pz, (0, 0), 5.0)
-    rim = np.clip(Pb * (1 - Pb) * 4, 0, 1) * a * (1 - smooth(z / 0.35))
+    rim = np.clip(Pb * (1 - Pb) * 4, 0, 1) * a * (1 - smooth((z - 0.25) / 0.45))     # the edge of him, lit, as it sweeps out
     o = np.clip(o, 0, 1); rc = rim[..., None] * CYAN109 * 0.26
     return np.clip(1 - (1 - o) * (1 - rc), 0, 1)                          # a screen: the rim never blows out a highlight
 TR2["phantom_pass109"] = (phantom_pass109, 16, 14)
@@ -2408,7 +2411,7 @@ def print109(A, B, j, f, sa, sb, pre=50, post=14):
     base = A * (1 - (0.22 * mask * reveal * (1 - d))[..., None])
     o = base * (1 - win[..., None]) + Bz * win[..., None]
     als = 1 + 0.9 * np.exp(-(((u * 0.6 - v * 0.8) - (-420 + 900 * smooth((q - 0.22) / 0.25))) / 55.0) ** 2) * (d < 0.3)
-    rb = (1 - smooth((d - 0.38) / 0.45)) * (0.75 + 0.5 * (grn - 0.5)) * als   # a forensic light passes over it
+    rb = (1 - smooth((d - 0.38) / 0.45)) * np.clip(0.62 + 1.1 * (grn - 0.5), 0.2, 1.2) * als     # dusted powder, grainy   # a forensic light passes over it
     al = ridge * mask * reveal * rb
     glow = cv2.GaussianBlur(al, (0, 0), 3.0 + 4 * d)
     haze = mask * reveal * (1 - d) * 0.05 * grn
@@ -2484,11 +2487,16 @@ def ekg109(A, B, j, f, sa, sb, pre=40, post=18):
     fsplit0 = sb["f0"] - 5; s = smooth((f - fsplit0) / (sb["f0"] + post - 1 - fsplit0))
     so = 1 - (1 - s) ** 3
     o = B if s <= 0 else _zoom_about(B, 1 + 0.06 * (1 - s), W / 2, y0)
+    lid = 1 - 0.55 * ((_GX[0] - W / 2) / (W / 2)) ** 2                     # an eye: wider in the middle than at the corners
     if s < 1:                                                              # the picture opens along the line
-        dt_, db_ = -(y0 + 40) * so, (H - y0 + 40) * so
-        top = A if s <= 0 else cv2.warpAffine(A, np.float32([[1, 0, 0], [0, 1, dt_]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
-        bot = A if s <= 0 else cv2.warpAffine(A, np.float32([[1, 0, 0], [0, 1, db_]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
-        mt = np.clip((y0 + dt_ - _GY) / 1.5 + 0.5, 0, 1)[..., None]; mb = np.clip((_GY - (y0 + db_)) / 1.5 + 0.5, 0, 1)[..., None]
+        if s <= 0: top = bot = A; ytop = ybot = np.full(W, y0, np.float32)
+        else:
+            dtx = -(y0 + 60) * np.clip(so * lid + so ** 3 * (1 - lid), 0, 1.2)      # the corners catch up at the end
+            dbx = (H - y0 + 60) * np.clip(so * lid + so ** 3 * (1 - lid), 0, 1.2)
+            ytop = (y0 + dtx).astype(np.float32); ybot = (y0 + dbx).astype(np.float32)
+            top = cv2.remap(A, _GX, (_GY - dtx[None, :]).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+            bot = cv2.remap(A, _GX, (_GY - dbx[None, :]).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        mt = np.clip((ytop[None, :] - _GY) / 3.0 + 0.5, 0, 1)[..., None]; mb = np.clip((_GY - ybot[None, :]) / 3.0 + 0.5, 0, 1)[..., None]
         o = top * mt + bot * mb + o * (1 - mt - mb)
     cv = np.zeros((H, W), np.float32)
     head = xh(f)
@@ -2505,8 +2513,9 @@ def ekg109(A, B, j, f, sa, sb, pre=40, post=18):
                 cv += 1.2 * np.exp(-(((_GX - head) ** 2 + (_GY - hy) ** 2) / (2 * 5.0 ** 2)))
     flat = smooth((f - (fsplit0 - 10)) / 10.0) * (1 - s)                  # the flat line brightens, then rides the edges
     if flat > 0:
-        for yy in ((y0, ) if s <= 0 else (y0 - (y0 + 40) * so, y0 + (H - y0 + 40) * so)):
-            cv += flat * 0.9 * np.exp(-((_GY - yy) / 1.6) ** 2)
+        rows = (np.full(W, y0, np.float32),) if s <= 0 else (ytop, ybot)
+        for yy in rows:
+            cv += flat * (0.9 if s <= 0 else 0.6 * (1 - s)) * np.exp(-((_GY - yy[None, :]) / 1.6) ** 2)
     g1 = cv2.GaussianBlur(cv, (0, 0), 5); g2 = cv2.GaussianBlur(cv, (0, 0), 18)
     on = smooth((j + pre + 0.5) / 3.0)
     o = o * (1 - 0.15 * on * smooth((head) / 200.0) * (1 - s)) + (cv[..., None] * np.array([0.96, 0.98, 0.90], np.float32)
@@ -2537,10 +2546,12 @@ def _dl_setup(s):
     def field(P, n, rev):
         ys, xs = np.nonzero(P[::4, ::4] > 0.5)
         x0, x1 = (xs.min() * 4, xs.max() * 4) if len(xs) else (0, W)
-        dirt = np.clip((_GX - x0) / max(1, x1 - x0), 0, 1)
-        return (1 - dirt if rev else dirt) * 0.62 + n * 0.38
-    rA = 0.44 * field(PA, nA, False)                                       # release: the left side first
-    aB = 0.52 + 0.42 * field(P0, nB, True)                                 # arrival: the right side first
+        y0, y1 = (ys.min() * 4, ys.max() * 4) if len(ys) else (0, H)
+        dirt = np.clip((_GX - x0) / max(1, x1 - x0), 0, 1); vy = np.clip((_GY - y0) / max(1, y1 - y0), 0, 1)
+        if rev: return (1 - dirt) * 0.30 + vy * 0.40 + n * 0.30            # frame 0: from the right, his head first
+        return dirt * 0.30 + (1 - vy) * 0.40 + n * 0.30                    # the stare: from the left, his body first, his face last
+    rA = 0.46 * field(PA, nA, False)
+    aB = 0.38 + 0.50 * field(P0, nB, True)
     def sample(P, img, step, fld):
         gy, gx = np.mgrid[0:H:step, 0:W:step].astype(np.float32)
         gx += rng.random(gx.shape, dtype=np.float32) * step; gy += rng.random(gy.shape, dtype=np.float32) * step
@@ -2576,11 +2587,13 @@ def dust_loop109(out, f, s, person=None):
     D = _dl_setup(s); TL = (last - DL_F0) / FPS
     t = (f - DL_F0) / (last - DL_F0)
     P = np.zeros((H, W), np.float32) if person is None else np.clip(np.asarray(person, np.float32), 0, 1)
-    bgA = _fill_bg(out, P); wb = smooth((t - 0.30) / 0.45)
+    bgA = _fill_bg(out, P); wb = smooth((t - 0.22) / 0.45)
     o = bgA * (1 - wb) + D["bgB"] * wb
     rel = np.clip((t - D["rA"]) / 0.07, 0, 1); rel = rel * rel * (3 - 2 * rel)
     Rm = P * (1 - rel); o = o * (1 - Rm[..., None]) + out * Rm[..., None]
     fm = np.clip((t - D["aB"]) / 0.07, 0, 1); fm = fm * fm * (3 - 2 * fm)
+    ghost = D["P0"] * (1 - fm) * 0.50 * smooth((t - 0.30) / 0.25)          # a faint frame 0 gathers under the dust
+    o = o * (1 - ghost[..., None]) + D["F0"] * ghost[..., None]
     Fm = D["P0"] * fm; o = o * (1 - Fm[..., None]) + D["F0"] * Fm[..., None]
     eA = np.clip(P * rel * (1 - rel) * 4, 0, 1); eB = np.clip(D["P0"] * fm * (1 - fm) * 4, 0, 1)
     o = o + cv2.GaussianBlur(eA + eB, (0, 0), 1.5)[..., None] * CYAN109 * 0.22
@@ -2660,3 +2673,12 @@ def streetlight109(A, B, j, f, sa, sb, pre=8, post=10):
     o = img * (1 + 1.05 * band * k) + band * k * np.array([0.20, 0.19, 0.17], np.float32)
     return np.clip(o, 0, 1)
 TR2["streetlight109"] = (streetlight109, 8, 10)
+
+# ---- a mirrored pack shot, flipped back (p7's tape shot reads DO NOT CROSS backwards) --------------------------------
+_base108_pre109r1 = base108
+def base108(s, f):
+    img, person = _base108_pre109r1(s, f)
+    if s.get("hflip"):
+        img = np.ascontiguousarray(img[:, ::-1])
+        if person is not None: person = np.ascontiguousarray(np.asarray(person)[:, ::-1])
+    return img, person

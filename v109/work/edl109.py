@@ -101,15 +101,15 @@ shot("anthem", "s4", 19, 21, 41.00, 41.95, z=[(0, 1.00), (1, 1.04)], tin="phanto
 shot("hazmat", "dmx", 21, 24, 94.95, 95.85, z=[(0, 1.04), (1, 1.00)], tin="slices", interp="blend", **SP)
 shot("table", "s4", 24, 26, 102.95, 103.85, z=[(0, 1.00), (1, 1.04)], tin="surface", interp="flow", **SP)   # the plastic-wrapped table
 shot("gloves", "p1", 26, 28, 102.20, 102.80, z=[(0, 1.00), (1, 1.04)], tin="polaroid", interp="flow", ev=0.7, **SP)
-shot("tape", "p7", 28, 30, 22.55, 23.65, z=[(0, 1.00), (1, 1.04)], tin="cctv109", seg=True, interp="blend", **SP)
+shot("tape", "p7", 28, 30, 22.55, 23.65, z=[(0, 1.00), (1, 1.04)], tin="cctv109", seg=True, interp="blend", hflip=True, **SP)   # the pack mirrored it (DO NOT CROSS read backwards)
 shot("hall", "s1", 30, 32, 349.40, 350.30, z=[(0, 1.00), (1, 1.04)], tin="vanish109", seg=True, interp="flow", **SP)
-shot("garden", "s4", 32, 34, 80.90, 81.80, z=[(0, 1.00), (1, 1.04)], tin="page_turn107", interp="flow", **SP)   # "the only one that I'm hunting"
+shot("police", "s4", 32, 34, 48.40, 49.30, z=[(0, 1.00), (1, 1.03)], tin="page_turn107", interp="flow", redthr=0.30, **SP)   # "the only one that I'm hunting": the predator's look
 shot("dock", "s4", 34, 36, 73.80, 74.80, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
 shot("hunt", "s1", 36, 39, 355.40, 356.40, z=[(0, 1.00), (1, 1.04)], tin="molasses108", interp="flow", **SP)
 shot("mangrove", "s1", 39, 41, 176.00, 176.90, z=[(0, 1.00), (1, 1.03)], tin="print109", interp="flow", **SP)   # through his print: the mangroves
 shot("lighter", "s1", 41, 43, 222.30, 223.20, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)   # he burns the photo
 shot("hammer", "s4", 43, 46, 222.30, 223.30, z=[(0, 1.00), (1, 1.04)], tin="burn109", interp="flow", **SP)   # the photo's fire burns the frame away
-shot("motion", "s4", 46, 48, 164.10, 165.00, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
+shot("container", "s1", 46, 48, 371.70, 372.60, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", redthr=0.30, **SP)   # the rusted container
 shot("drive", "s4", 48, 50, 0.50, 1.40, z=[(0, 1.00), (1, 1.03)], tin="redwash109", interp="flow", ev=0.4, **SP)   # red-lit, driving
 shot("syringe", "s4", 50, 52, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="streetlight109", interp="flow", **SP)   # "no motion": the M99 takes him, his pulse
 shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], tin="ekg109", seg=True, interp="flow", tout="dust_loop109", **SP)   # the flatline opens on him

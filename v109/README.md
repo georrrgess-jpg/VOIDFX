@@ -70,11 +70,24 @@ animations."*
   2. **THE PHOTO'S FIRE** (18.4 s): the fire in his hand catches the frame: the picture burns away from the photo (a
      white-hot lip, glowing paper, a thin char, sparks) onto the hammer.
   3. **THE HEART MONITOR** (21.4 s, "you've never got no motion"): the M99 takes him (the syringe shot); a monitor trace
-     sweeps under his chin, beats twice on the claps, flatlines, and the flat line opens like an eye onto his stare.
-- **The ending, re-cut for flow:** whip → roll → flip (the old knife/drive order swapped so the syringe leads into the
-  flatline); the beat camera rests from the monitor on (smooth endings).
-- **The loop, THE GUST** (from 22.7 s, "you've never got no action"): he blows away as glowing dust, the side the wind
-  hits first (fine motes, a few near flakes rushing past the lens, the room darkening to frame 0's dark); the same gust
-  brings new dust in from the right that decelerates and settles into frame 0's figure, which resolves exactly on the wrap.
+     sweeps under his chin, beats twice on the claps, flatlines, and the flat line opens like an eye (a curved lid,
+     wider in the middle) onto his stare.
+- **The ending, re-cut for flow, with no spins** (the roll and the flip went with the headspin): the hammer → a whip →
+  **the rusted shipping container** (S1) → **RED WASH** (brake-light red washes over the frame into the red-lit drive) →
+  **STREETLIGHT** (a streetlight passes over the car into the syringe shot) → the heart monitor → his stare. The syringe
+  now leads into the flatline; the beat camera rests from the monitor on (smooth endings).
+- **The loop, THE GUST** (from 22.7 s, "you've never got no action"): he blows away as glowing dust, his body first and
+  his face last (fine motes, a few near flakes rushing past the lens, the room darkening to frame 0's dark); while he is
+  still going, the same gust brings new dust in from the right that decelerates and settles into frame 0's figure, head
+  first, which resolves exactly on the wrap.
   Replaces the grey mist fade.
+- **Also:** the garden shot looked like the night walk, so it is now the police-lot stare (S4, "the only one that I'm
+  hunting"); the kitchen lunge (soft, off-centre) is the container; the tape shot came mirrored in the pack (DO NOT
+  CROSS read backwards) and is flipped back; the two new day shots keep their skin out of the blood-red channel.
 - **Sound (12 events):** a pass whoosh, the fire, the gust; the tape whoosh and the dock bloop are gone.
+- **Caught before delivery:** a cold rim speck on a backlit ear (screen blend); the print first sat on his neck and its
+  whorl dived onto the incoming face (now his chest); the monitor's spikes reached his chin; the first burn edge read
+  as a white outline (real embers now); the gust first eroded in blobby cells, went dark for 0.5 s and re-formed in dark
+  chips (finer, overlapped, his face goes last, a faint frame 0 under the dust); the pass's matte dropped a shoulder
+  for a frame (steadied over neighbours). The fresh-eyes critique predicted the spins at the end, the target-like whorl,
+  the mirrored tape, the look-alike garden and the flatline's straight slit (now an eye-shaped lid).
