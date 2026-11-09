@@ -110,9 +110,39 @@ measured after AAC. **Five quiet effects in all**, 8–15 dB under the music, no
 - a faint crackle on the emblem that ends in a low whoomp as the disc opens.
 
 ## Measured (rev 2, on the encoded MP4)
-MEASURED_REV2
+- **QC:** ship checkpoint 12/12 PASS on the encoded MP4 (format, decode, loudness, no frozen runs, face centring, no
+  text over faces, no clicks at cuts or the seam, seam matched and on frame 0, same length, no white-outs).
+- **Loudness:** −13.9 LUFS, true peak −4.7 dBTP after AAC.
+- **Loop seam:** blurred difference 0.19 (gate ≤ 1); audio seam step 0.039; picture wrap step 0.58 against a local
+  median of 1.89.
+- **Motion audit:** no dead spans, no judder. 10 pops: 1 cut, 1 beat, 1 cadence, 4 flashes, and 3 listed as unexplained,
+  all checked:
+  - 1494 and 1527 are the loop's designed light flickers (the dark bay flashing through on e92 and e94);
+  - 771 is the source itself: he bursts into the sea-run frame with 22–32 grey levels of change per source frame.
+- **Faces vs effects:** 34 flags in 2 runs, both in THE LENSBALL (510–522, 620–674): the defocused window light bleeding
+  into the edge of his silhouette behind the glass (a lens blur, not a graphic). The bokeh is masked off his face.
+- **Sharpness:** SOFT on one shot, the emblem (0.86× the median): the S1 pack at 1.1 Mb/s. During the push the emblem
+  itself is the drawn, crisp one. The lensball's background is defocused by design (0.82×, not flagged). Every source
+  frame was restored (`sr_prep`).
+- **Plan check:** 0 FAIL, 2 WARN; both WARNs are the registry cautions recorded this round for `emblem_glint` and
+  `print_dive`.
+- **Sound:** 5 placed effects, 8–15 dB under the music; none on beats or small transitions.
 
 ## How it was made
 - **Rev 1:** about 1 h 30 min from the song to delivery, 2 full renders and 1 partial.
-- **Rev 2:** REV2_TIME.
-- **Caught before delivery:** REV2_CATCHES.
+- **Rev 2 (the owner's six notes):** about 2 h 30 min. This includes re-prep (1.5 min), 26 still sheets on the render
+  server (5 min), 2 full renders (13.4 min) and QC twice (6.6 min). Most of the time went into building the new pieces.
+- **Caught before delivery (rev 2):**
+  - **The studio's stills:**
+    - the loop's room frames were dimmed twice (darker than frame 0);
+    - the lit bolt blew out to white and crossed his face as the disc opened;
+    - the real bolt's tip showed through as the drawn one dissolved;
+    - the print touched his jaw;
+    - the return landed on water just after the sun left the frame;
+    - a pale blur sat in the dark frame 0.
+  - **The fresh-eyes critique** (`studio/CRITIQUE_PROMPT.md`):
+    - the lensball's halo was clipped to its bounding box, so a square showed round the glass;
+    - the loop read as a flicker to near black, so the room now stays visible;
+    - lightning crawled over the incoming face in the emblem's opening;
+    - the first second was an empty dark room and a smeared rise; his face is now in by frame 20;
+    - the memories sat off-centre in the ball; each face is now centred in the glass.
