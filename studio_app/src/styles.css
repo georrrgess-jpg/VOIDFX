@@ -1496,3 +1496,6 @@ kbd { font: 600 10.5px var(--font-mono); padding: 2px 6px; border-radius: 5px; b
 .lf-sw { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.15); transition: transform 0.25s var(--ease-spring), box-shadow 0.2s; }
 .lf-sw:hover { transform: scale(1.12); }
 .lf-sw.is-on { box-shadow: 0 0 0 2px var(--void), 0 0 0 4px currentColor, 0 0 14px rgba(255, 255, 255, 0.3); border-color: #fff; }
+.crit-cmp { margin: 0; padding: 10px 14px; border-radius: 12px; font-size: 13px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); }
+.crit-cmp.v-better { border-color: rgba(82, 214, 160, 0.4); background: rgba(82, 214, 160, 0.08); }
+.crit-cmp.v-worse { border-color: rgba(255, 97, 112, 0.4); background: rgba(255, 97, 112, 0.08); }

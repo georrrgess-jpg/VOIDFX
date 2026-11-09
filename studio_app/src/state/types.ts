@@ -346,6 +346,8 @@ export interface Critique {
   brief: string;
   /** How each point of the previous round was carried out, as the critic saw it. */
   followUp?: FollowUp[];
+  /** This round judged side by side against the best earlier version (its round), and the difference. */
+  comparison?: { base: number; verdict: 'better' | 'same' | 'worse'; delta: number; why: string };
   /** The few biggest changes that would take the edit to 8 or more, with their gains. */
   path?: PathStep[];
   /** The owner's own score of the same round, and what they said: the critic calibrates to it. */

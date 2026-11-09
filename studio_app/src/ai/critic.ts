@@ -188,9 +188,11 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     ? last.notes.map(n => ({ id: n.id, text: n.text, at: n.at, plan: n.plan, check: n.status ? `${n.status}${n.check ? `: ${n.check}` : ''}` : undefined }))
     : prevCrit ? prevCrit.issues.map((i, k) => ({ id: `P${k + 1}`, text: issueLine(i), at: i.at })) : [];
 
+  // the best earlier version: this round is judged against it side by side, so the score moves by what changed
+  const base = rounds.filter(r => r.critique && r.snapshot && r.n < (last?.n ?? job.round)).sort((a, b) => b.critique!.score - a.critique!.score)[0];
   io.step('render', { state: 'run' });
   const maxImg = Math.max(0, Math.min(maxImagesFor('extra'), 9));
-  const stdImgs = maxImg >= 6 ? await standardSheets(standards.filter(s => s.kind === 'video' && s.state === 'ready'), 2) : [];
+  const stdImgs = maxImg >= 6 && !base ? await standardSheets(standards.filter(s => s.kind === 'video' && s.state === 'ready'), 2) : [];
   const budget = Math.max(0, maxImg - stdImgs.length);
   const { sweep, close, tframes } = filmstrip(ws, Math.max(20, (budget - 1) * 20), follow.filter(f => f.at !== undefined).map(f => ({ id: f.id, at: f.at! })));
   const p = ws.project;
@@ -210,7 +212,15 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
   if (motionSheets[0]) motionSheets[0].caption = 'MOTION STRIPS: consecutive frames 1/12 s apart at the hook (HOOK), across the drop (DROP), and across the loop (the last second of the edit, LAST FRAME, then FRAME 0 and the first 0.4 s): judge movement, rhythm and the loop landing from these, as a viewer would see them play';
   const closeSheets = budget > 1 && close.length ? await timelineSheets(p, ws.media(), close.map(c => c.t), 30, 1, io.signal, p.width / p.height < 1 ? 300 : 220, close.map(c => c.label)) : [];
   if (closeSheets[0]) closeSheets[0].caption = `${close.some(c => /^[NP]\d/.test(c.label)) ? 'the moments of the points this round was asked to fix (labelled with their ids), then ' : ''}every transition as three frames (a: just before, b: the middle, c: just after), labelled with the transition name and timeline time`;
-  const images = [...sweepSheets, ...closeSheets, ...motionSheets, ...stdImgs];
+  // the same moments of the best earlier version
+  let beforeSheets: Sheet[] = [];
+  if (base?.snapshot && budget >= 3) {
+    const bp = base.snapshot, bd = projectDuration(bp);
+    const bt = sweep.filter((_, i) => i % Math.max(1, Math.ceil(sweep.length / 20)) === 0).slice(0, 20).map(t => Math.min(bd - 0.01, t));
+    beforeSheets = await timelineSheets(bp, ws.media(), bt, 20, 1, io.signal, undefined, bt.map(t => `BEFORE ${t.toFixed(2)}s`)).catch(() => [] as Sheet[]);
+    for (const sh of beforeSheets) sh.caption = `BEFORE: round ${base.n}, the best version so far (scored ${base.critique!.score.toFixed(1)}), at the same timeline times as the sweep of this round`;
+  }
+  const images = [...sweepSheets, ...beforeSheets, ...closeSheets, ...motionSheets, ...stdImgs].slice(0, Math.max(maxImg, 1));
   io.step('render', { state: images.length ? 'done' : 'skip', detail: images.length ? `${sweep.length + close.length} frames on ${images.length} sheets` : 'images not available here' });
 
   io.step('measure', { state: 'run' });
@@ -234,6 +244,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
     ownerLedger(rounds) ? `${ownerLedger(rounds)}\nNever write an issue or a fix that undoes or contradicts these; where the owner chose something (a song section, a look, a shot, a text style), judge how well it is done, not whether it was chosen. A point that conflicts with them is left out.` : '',
     await calibrationText(),
     tasteText() ? `THE OWNER'S OWN NOTES ON RECENT EDITS (their taste, across projects)\n${tasteText(3000)}` : '',
+    base ? `COMPARISON WITH THE BEST VERSION SO FAR: round ${base.n}, scored ${base.critique!.score.toFixed(1)} (${CRITIC_AREAS.filter(a => base.critique!.scores[a.id] !== undefined).map(a => `${a.id} ${base.critique!.scores[a.id]}`).join(', ')}). The BEFORE images show it at the same times as this round's sweep. Judge this round AGAINST it, the way a viewer comparing the two would: area by area, is this version better, the same, or worse, and by how much? That comparison sets the score: this round's score is ${base.critique!.score.toFixed(1)} plus your overall delta, and each area is its old score plus its delta. Credit what got better, mark down what got worse, and do not re-judge what did not change: an unchanged area keeps its score. Report it in "comparison".` : '',
     prevCrit?.path?.length ? `YOUR PATH TO 8 LAST ROUND (check each step in the frames; a step not done stays on the path, first)\n${prevCrit.path.map(s => `- +${s.gain.toFixed(1)}${s.at !== undefined ? ` @ ${s.at.toFixed(2)}s` : ''}: ${s.change}`).join('\n')}` : '',
     prevCrit?.issues?.length ? `YOUR POINTS LAST ROUND (stay consistent: never ask for the opposite of a point that was carried out, and do not move the goalposts on a point that is now fixed)\n${prevCrit.issues.slice(0, 12).map(i => `- [${i.severity}${i.at !== undefined ? ` @ ${i.at.toFixed(2)}s` : ''}] ${i.problem.slice(0, 160)} Fix: ${i.fix.slice(0, 140)}`).join('\n')}` : '',
     rounds.filter(r => r.critique && r.n !== last?.n).length ? `EARLIER CRITIQUES\n${rounds.filter(r => r.critique && r.n !== last?.n).map(r => `Round ${r.n}: ${r.critique!.score}/10, "${r.critique!.headline}"`).join('\n')}` : '',
@@ -255,6 +266,7 @@ export async function critiqueEdit(job: Job, ws: Workspace, io: JobIO): Promise<
  "issues": [{"severity": "critical" | "major" | "minor", "at": seconds or null, "area": one of ${CRITIC_AREAS.map(a => a.id).join('/')}, "problem": "what is wrong and why it hurts the edit", "fix": "exactly what to change", "gain": the score this fix is worth when done well (0.1-1.5), "lesson": "for critical and major issues: the general rule it breaks, one sentence true for any edit (no clip ids or times), so the studio can learn it"}],
  "versus": "two or three sentences: how it stands against the owner's benchmarks and the best TikTok edits of this kind",${follow.length ? `
  "followUp": [{"id": "${follow[0].id}", "status": "fixed" | "partly" | "not", "comment": "what the frames show"}],` : ''}
+"comparison": ${base ? '{"verdict": "better" | "same" | "worse", "delta": -2.0 to +2.0, "areas": {"hook": delta, ...every area}, "why": "what changed between the versions"}' : 'null'},
  "path": [{"change": "one big change, a section rebuilt or a set piece redesigned, in the studio's terms", "at": start seconds or null, "to": end seconds or null, "gain": the score it is worth}],
  "brief": "the write-up for the editor's next round: numbered, imperative instructions in priority order (the path first), each with its time and the studio tool that does it, ready to paste"}
 THE PATH TO 8: three to five changes, biggest first, whose gains add up to what takes this edit to 8 or more. Think in sections and set pieces (rebuild the hook, redesign the drop, make the loop a set piece, one look across the edit), not in tweaks. Issues: up to 10; merge points that share a cause into one; every issue names its gain. Order issues by gain.`,
@@ -265,6 +277,24 @@ THE PATH TO 8: three to five changes, biggest first, whose gains add up to what 
   });
   const crit = parseCritique(r.text, job.round, projectDuration(p), model, follow.map(f => ({ id: f.id, text: f.text })), prevCrit?.score);
   if (!crit) throw { code: 'invalid_json' };
+  // judged against the best version so far: the score is that version's score plus what changed
+  const cmp: any = (parseJson(r.text) as any)?.comparison;
+  if (base?.critique && cmp && typeof cmp === 'object' && Number.isFinite(Number(cmp.delta))) {
+    const b = base.critique;
+    const d = Math.max(-2, Math.min(2, Number(cmp.delta)));
+    const areas: Record<string, number> = { ...crit.scores };
+    for (const a of CRITIC_AREAS) {
+      const old = b.scores[a.id];
+      const ad = Number(cmp.areas?.[a.id]);
+      if (old !== undefined) areas[a.id] = Math.max(0, Math.min(10, Math.round((old + (Number.isFinite(ad) ? Math.max(-2.5, Math.min(2.5, ad)) : 0)) * 10) / 10));
+    }
+    crit.scores = areas;
+    let s = Math.round((b.score + d) * 10) / 10;
+    if (crit.issues.some(i => i.severity === 'critical')) s = Math.min(s, Math.max(7, b.score));
+    crit.score = Math.max(0, Math.min(10, s));
+    crit.verdict = crit.score >= 8.5 ? 'ready' : crit.score >= 7 ? 'close' : 'not ready';
+    crit.comparison = { base: base.n, verdict: ['better', 'same', 'worse'].includes(cmp.verdict) ? cmp.verdict : d > 0.05 ? 'better' : d < -0.05 ? 'worse' : 'same', delta: Math.round(d * 10) / 10, why: String(cmp.why || '').slice(0, 600) };
+  }
   // the studio learns from it: serious findings go into the lessons every later edit is directed with
   // (the critic's general rule when it wrote one; else the problem's first sentence)
   const raw: any = parseJson(r.text);

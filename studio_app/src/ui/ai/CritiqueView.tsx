@@ -48,6 +48,9 @@ export function CritiqueView(props: {
         </div>
       </header>
 
+      {crit.comparison && (
+        <p class={`crit-cmp v-${crit.comparison.verdict}`}><b>{crit.comparison.verdict === 'better' ? 'Better' : crit.comparison.verdict === 'worse' ? 'Worse' : 'About the same'} than round {crit.comparison.base}</b> ({crit.comparison.delta >= 0 ? '+' : ''}{crit.comparison.delta.toFixed(1)}), judged side by side. {crit.comparison.why}</p>
+      )}
       {!sel && <OwnerScore crit={crit} projectId={projectId} />}
 
       {Object.keys(crit.scores).length > 0 && (

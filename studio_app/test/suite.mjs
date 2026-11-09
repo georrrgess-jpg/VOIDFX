@@ -124,6 +124,7 @@ await ctx.addInitScript(() => {
               ],
               versus: 'Below v7.', brief: '1. Rebuild the first second.\n2. Snap every cut.',
               path: [{ change: 'Rebuild the hook as a set piece.', at: 0, to: 1.5, gain: 1.0 }, { change: 'Make the loop a push landing.', at: null, gain: 0.6 }],
+              ...(full.includes('COMPARISON WITH THE BEST VERSION') ? (call.compared = true, { comparison: { verdict: 'better', delta: 0.9, areas: { hook: 2, rhythm: 1, transitions: 0.5, motion: 1, text: 0, sound: 1, concept: 1, picture: 1, loop: 2.5 }, why: 'The hook and the loop were rebuilt.' } }) : {}),
               ...(follow.length ? { followUp: follow.map((id, i) => ({ id, status: i % 2 ? 'partly' : 'fixed', comment: 'checked' })) } : {}),
             }), opts);
           }
@@ -297,6 +298,8 @@ if (on('build') && on('revise')) {
   const rb = await S(() => ({ rebuild: !!window.__sawRebuild, path: !!window.__sawPath, fresh: window.__calls.filter(c => c.critic).every(c => c.fresh !== false) }));
   check('revisions clear the weakest sections and rebuild them; the path to 8 leads the notes', rb.rebuild && rb.path, JSON.stringify(rb));
   check('the critic scores each round fresh (no building up from the last score)', rb.fresh, JSON.stringify(rb));
+  const cmp = await page.evaluate(async pid => { const r = await window.__voidfx.getRecord(pid); return (r.rounds || []).map(x => x.critique && { n: x.n, score: x.critique.score, cmp: x.critique.comparison }); }, pid);
+  check('later rounds are judged side by side against the best version; the score is its score plus the difference', cmp.some(c => c?.cmp && c.cmp.base === 1 && Math.abs(c.score - 7.1) < 0.01), JSON.stringify(cmp));
   check('automatic round ran after the critique', !!r3 && r3.kind === 'revise' && r3.notes?.every(n => n.from === 'critic') && !!r3.crit, JSON.stringify(r3 && { notes: r3.notes?.length, crit: r3.crit?.score }));
   const rc = await S(() => window.__reviseCalls || []);
   check('revision: one call writes every note; when it runs out of time two calls share the notes at the same effort', rc.filter(c => c.part).length === 2 && rc.every(c => c.effort === 'high'), JSON.stringify(rc));
