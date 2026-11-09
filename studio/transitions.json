@@ -295,9 +295,10 @@
     "lands_on_face",
     "signature"
    ],
-   "evidence": "v107 rev 2: rejected while it landed off-centre ('the final shot doesn't have a centered shot of Dexter'); kept once it landed on a centred face",
+   "evidence": "v107 rev 2: rejected while it landed off-centre ('the final shot doesn't have a centered shot of Dexter'); kept once it landed on a centred face; v109 rev 1: removed for flow in PHANTOM, replaced by phantom_pass109",
    "fix": "rotate the incoming half about the incoming face and land on a centred face",
-   "studio": "dexter"
+   "studio": "dexter",
+   "caution": "v109 rev 1: the owner removed it from PHANTOM (\"I don't really like how that flows with this edit\"): a hard spin broke the ghostly, smooth flow of a dark, slow-swagger edit. It stays liked (v107); use it where the edit is kinetic, and once (v14 rule 4)."
   },
   "heat_haze": {
    "verdict": "liked",

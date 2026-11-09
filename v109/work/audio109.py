@@ -975,11 +975,12 @@ def main109():
     place(fx, stereo(A2.impact(-5, (50, 26), 0.9, 0.3, 3903)), td); place(fx, stereo(sub_drop(-7, 0.9, 60, 25)), td + 0.01)
     place(fx, A2.whoosh(0.50, -20, 3904, True) * np.array([[0.8, 1.0]], np.float32), th(10.2))        # PHANTOM condenses
     place(fx, stereo(buzz(0.30, -18, 90, 180, 3905), 0.2), t0["walk"] - 0.12)                        # the phone's tantrum
-    place(fx, A2.whoosh(0.22, -18, 3906, False), t0["tape"] - 0.10)                                   # the tape
+    place(fx, A2.whoosh(0.34, -19, 3912, True), t0["anthem"] - 0.26)                                  # rev 1: we pass through him
     place(fx, A2.whoosh(0.45, -19, 3907, True), t0["hall"] - 0.25)                                    # the vanish
-    place(fx, A2.whoosh(0.30, -19, 3908, False), t0["dock"] - 0.20); place(fx, stereo(bloop(-22, 3909)), t0["dock"] + 0.05)
+    place(fx, A2.whoosh(0.30, -19, 3908, False), t0["dock"] - 0.20)
     place(fx, stereo(pour(0.50, -20, 3910)), t0["hunt"] - 0.35)
-    tl = th(52.6); place(fx, A2.whoosh(E.DUR - tl - 0.05, -18, 3911, True), tl)                       # the vanishing
+    place(fx, stereo(fire_whoosh(-18, 0.70, 3913)), t0["hammer"] - 0.42)                               # rev 1: the photo's fire
+    tl = th(53.0); place(fx, A2.whoosh(E.DUR - tl - 0.05, -18, 3911, True), tl)                       # rev 1: THE GUST
     fx = fx * db(10.0)
     duck = np.zeros(N + PRE, np.float32); duck[I(td - 0.03) + PRE:I(td + 0.35) + PRE] = 1.0
     duck = np.convolve(duck, np.hanning(I(0.12)) / np.hanning(I(0.12)).sum(), "same")

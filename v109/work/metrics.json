@@ -1,6 +1,6 @@
 {
  "edit": "v109",
- "round": 1,
+ "round": 2,
  "stages": [
   {
    "t": "2026-11-09 04:02:57",
@@ -246,11 +246,228 @@
    "step": "deliver",
    "s": 126.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:31:21",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:31:35",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:32:55",
+   "round": 2,
+   "step": "prep",
+   "s": 80.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:33:21",
+   "round": 2,
+   "step": "sheet:pass:470,476,481,485,488,491,495,500",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:33:44",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:02",
+   "round": 2,
+   "step": "sheet:pass:472,477,481,484,487,490,494,499",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:08",
+   "round": 2,
+   "step": "sheet:print:966,976,984,990,995,999,1003,1008,1013",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:39",
+   "round": 2,
+   "step": "sheet:p484:483,484,485",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:19",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:37",
+   "round": 2,
+   "step": "sheet:burn:1081,1087,1092,1097,1101,1105,1109,1114,1119",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:44",
+   "round": 2,
+   "step": "sheet:ekg:1298,1304,1309,1314,1320,1326,1331,1335,1339,1344,1349,1354",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:54",
+   "round": 2,
+   "step": "sheet:dust:1366,1374,1381,1388,1395,1402,1409,1416,1423,1430,1436,1439",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:36:52",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:11",
+   "round": 2,
+   "step": "sheet:burn:1081,1087,1092,1097,1101,1105,1109,1114,1119",
+   "s": 19.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:25",
+   "round": 2,
+   "step": "sheet:dust:1366,1372,1378,1384,1390,1396,1402,1408,1414,1420,1426,1432",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:29",
+   "round": 2,
+   "step": "sheet:pass:472,477,481,484,487,490,494,499",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:32",
+   "round": 2,
+   "step": "sheet:print:958,966,974,982,990,996,1000,1004,1009,1014",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:17",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:25",
+   "round": 2,
+   "step": "audio",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:35",
+   "round": 2,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:50",
+   "round": 2,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:58",
+   "round": 2,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
   }
  ],
- "notes": [],
- "catches": [],
+ "notes": [
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "plain_effect",
+   "text": "the head spin transition. I don't really like how that flows with this edit, so I'd like you to remove that and replace it with a brand new, unique, and creative transition"
+  },
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "replace_shot",
+   "text": "remove the clips with dokes and replace them with other high-quality texture clips"
+  },
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "density",
+   "text": "make a cool flow where there's unique graphics appearing and then transitions from those graphics"
+  },
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "loop",
+   "text": "improve ... the end flow of the edit and into the loop. I don't really like that part. ... make it more unique and creative with better animations"
+  }
+ ],
+ "catches": [
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the pass's cold rim stacked on a backlit ear made a white speck on his face (frame 484): screen blend"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the fingerprint first sat on his neck under the chin: moved down to his shirt"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the monitor's QRS spikes reached his chin: the baseline lowered, the spikes shortened"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "the first burn edge was a thin white outline (read as lightning): real ember colours, a rough edge, orange sparks"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "the first gust eroded in blobby outlined cells and filled the frame with haze: finer noise, softer front, sparser motes"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "framing",
+   "text": "the pass's matte had holes and specks (rings of rim light): closed and cleaned"
+  }
+ ],
  "round_starts": {
-  "1": "2026-11-09 05:23:02"
+  "1": "2026-11-09 05:23:02",
+  "2": "2026-11-09 15:23:07"
  }
 }

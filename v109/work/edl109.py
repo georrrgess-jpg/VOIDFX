@@ -3,8 +3,10 @@
 Concept: PHANTOM. "Rocked out like a phantom": the Bay Harbor Butcher is a ghost the city hunts and never sees. He walks
 out of the dark (frame 0), a flashlight finds him, and on the drop he materialises out of mist in the red kill room. The
 hook is his ghost work: after-images, his double in a reflection, the phone glitching on "tantrum", vanishing between
-frames, the crime-scene tape, the night hunt ("the only one that I'm hunting"), Doakes ("if you talk shit"). The loop:
-he dissolves into mist and the mist clears on frame 0, where he walks out of the dark again.
+frames, the crime-scene tape, the night hunt ("the only one that I'm hunting"). Rev 1 (owner notes): we pass through
+him instead of the headspin; the Doakes shots are gone (the mangroves, the burning photo); the ending is a chain of
+graphics that become the transitions (his fingerprint, the photo's fire, the heart monitor's flatline); the loop: he
+blows away as glowing dust and the same gust carries the dust into frame 0, where he walks out of the dark again.
 Look: SPECTRAL (silver-blue night, inky blacks, cold cyan highlights with a faint ghost bloom; only blood red survives).
 Text: one designed title, PHANTOM, on the sung word (the lyrics are explicit: titles, not captions, v11 rule).
 Song: src/phantom.mp3 (1:50), 70.0 BPM on the drum stem (the auto map read 93.3 = 4/3), window h24->h80 (10.478 ->
@@ -35,13 +37,13 @@ HDROP = 6; DROP_HB = HDROP; T_STOP = DUR   # the beat drops (13.05 s): the phant
 E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0
 STUT_GAPS, STUT_HITS = [], []
 E_BEAT, E_DIP = 6, 4                       # the beat camera from the drop
-E_LOOP = 52                                # the loop: he dissolves into mist, which clears on frame 0
+E_LOOP = 53                                # the loop: he blows away as glowing dust; the gust carries it into frame 0
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
 SET_PIECES = [("the flashlight", th(2), th(4)), ("MATERIALISE", th(5), th(8)), ("PHANTOM", th(10), th(13.5)),
-              ("the surveillance", th(27), th(31)), ("the vanishing", th(52.5), th(56))]
+              ("the surveillance", th(27), th(31)), ("the flatline", th(50.4), th(52.4)), ("THE GUST (loop)", th(53), th(56))]
 SIGNATURE = ["materialize109"]
 HERO = ["mist_veil"]                        # the phantom mist: the drop, the vanish, the loop
 HERO_TINS = ["materialize109", "vanish109"]
@@ -87,15 +89,15 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
     return ks
 
 SP = dict(look="spectral109")
-shot("open", "p1", 0, 3, 186.40, 187.60, z=[(0, 1.00), (1, 1.05)], interp="flow", ev=0.6, **SP)                 # he walks out of the dark (frame 0)
+shot("open", "p1", 0, 3, 186.40, 187.60, z=[(0, 1.00), (1, 1.05)], interp="flow", ev=0.6, seg=True, **SP)                 # he walks out of the dark (frame 0)
 shot("flash", "s4", 3, 6, 184.70, 185.90, z=[(0, 1.00), (1, 1.04)], tin="flashlight109", interp="flow", **SP)
 shot("drop", "p7", 6, 9, 0.05, 1.10, z=[(0, 1.06), (1, 1.00)], tin="materialize109", seg=True, interp="flow", ev=0.6, **SP)   # the red kill room
 shot("hood", "s1", 9, 11, 302.20, 303.10, z=[(0, 1.00), (1, 1.04)], tin="afterimage109", interp="blend", **SP)
 shot("double", "s4", 11, 13, 157.10, 158.00, z=[(0, 1.00), (1, 1.03)], tin="mirror109", interp="flow", **SP)   # PHANTOM: his double
 shot("chain", "p1", 13, 15, 171.10, 171.75, z=[(0, 1.00), (1, 1.04)], tin="time_particles", interp="flow", **SP)   # the chain-link stare
 shot("walk", "s1", 15, 17, 230.75, 231.65, z=[(0, 1.00), (1, 1.04)], tin="tantrum109", interp="flow", ev=0.6, **SP)   # "tantrum": the phone glitch
-shot("night", "p5", 17, 19, 31.45, 32.35, z=[(0, 1.00), (1, 1.04)], tin="flicker109", interp="flow", **SP)   # the night walk
-shot("anthem", "s4", 19, 21, 41.00, 41.95, z=[(0, 1.00), (1, 1.04)], tin="headspin", interp="flow", **SP)
+shot("night", "p5", 17, 19, 31.45, 32.35, z=[(0, 1.00), (1, 1.04)], tin="flicker109", seg=True, interp="flow", **SP)   # he walks at us...   # the night walk
+shot("anthem", "s4", 19, 21, 41.00, 41.95, z=[(0, 1.00), (1, 1.04)], tin="phantom_pass109", interp="flow", **SP)   # ...and we pass through him
 shot("hazmat", "dmx", 21, 24, 94.95, 95.85, z=[(0, 1.04), (1, 1.00)], tin="slices", interp="blend", **SP)
 shot("table", "s4", 24, 26, 102.95, 103.85, z=[(0, 1.00), (1, 1.04)], tin="surface", interp="flow", **SP)   # the plastic-wrapped table
 shot("gloves", "p1", 26, 28, 102.20, 102.80, z=[(0, 1.00), (1, 1.04)], tin="polaroid", interp="flow", ev=0.7, **SP)
@@ -104,13 +106,13 @@ shot("hall", "s1", 30, 32, 349.40, 350.30, z=[(0, 1.00), (1, 1.04)], tin="vanish
 shot("garden", "s4", 32, 34, 80.90, 81.80, z=[(0, 1.00), (1, 1.04)], tin="page_turn107", interp="flow", **SP)   # "the only one that I'm hunting"
 shot("dock", "s4", 34, 36, 73.80, 74.80, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
 shot("hunt", "s1", 36, 39, 355.40, 356.40, z=[(0, 1.00), (1, 1.04)], tin="molasses108", interp="flow", **SP)
-shot("cage", "ds2a", 39, 41, 226.60, 227.40, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="blend", **SP)   # "if you talk shit": Doakes
-shot("doakes", "dmx", 41, 43, 11.00, 11.70, z=[(0, 1.02), (1, 1.06)], tin="impact", interp="flow", **SP)
-shot("hammer", "s4", 43, 46, 222.30, 223.30, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)   # gloved, the hammer
+shot("mangrove", "s1", 39, 41, 176.00, 176.90, z=[(0, 1.00), (1, 1.03)], tin="print109", interp="flow", **SP)   # through his print: the mangroves
+shot("lighter", "s1", 41, 43, 222.30, 223.20, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)   # he burns the photo
+shot("hammer", "s4", 43, 46, 222.30, 223.30, z=[(0, 1.00), (1, 1.04)], tin="burn109", interp="flow", **SP)   # the photo's fire burns the frame away
 shot("motion", "s4", 46, 48, 164.10, 165.00, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
-shot("knife", "s4", 48, 50, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="flip", interp="flow", **SP)
-shot("drive", "s4", 50, 52, 0.50, 1.40, z=[(0, 1.00), (1, 1.03)], tin="roll", interp="flow", ev=0.4, **SP)   # red-lit, driving
-shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], tin="dolly", seg=True, interp="flow", tout="vanish_loop109", **SP)
+shot("drive", "s4", 48, 50, 0.50, 1.40, z=[(0, 1.00), (1, 1.03)], tin="roll", interp="flow", ev=0.4, **SP)   # red-lit, driving
+shot("syringe", "s4", 50, 52, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="flip", interp="flow", **SP)   # "no motion": the M99 takes him, his pulse
+shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], tin="ekg109", seg=True, interp="flow", tout="dust_loop109", **SP)   # the flatline opens on him
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

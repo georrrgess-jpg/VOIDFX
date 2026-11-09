@@ -12429,6 +12429,371 @@ def vanish109(A, B, j, f, sa, sb, pre=14, post=8):
     return np.clip(mist_veil(B, (1 - smooth(v)) * 0.7, f, 3.0), 0, 1)
 TR2["vanish109"] = (vanish109, 14, 8)
 
+# ============================================================================ v109 rev 1 (the owner's notes, 2026-11-09)
+# "the head spin transition ... replace it with a brand new, unique, and creative transition"; "remove the clips with
+# dokes and replace them with other high-quality texture clips"; "a cool flow where there's unique graphics appearing and
+# then transitions from those graphics"; "improve ... the end flow of the edit and into the loop ... more unique and
+# creative with better animations". The ending is now one chain: his FINGERPRINT (we dive through the whorl), the
+# photo's FIRE (the frame burns away from the burning photo), the HEART MONITOR (his pulse under the M99 flatlines and
+# the line opens like an eye on his stare), and THE GUST (he blows away as glowing dust; the same gust carries the dust
+# into frame 0). The graphics share the edit's cold ghost-light.
+
+def _zoom_about(img, Z, cx, cy, border=cv2.BORDER_REFLECT):
+    M = np.float32([[Z, 0, cx * (1 - Z)], [0, Z, cy * (1 - Z)]])
+    return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=border)
+
+def splat109(xs, ys, cols, al, q=2, sig=0.8):
+    """additive splat of points (full-res px) with bilinear weights into a 1/q buffer, blurred by sig (1/q px)."""
+    w_, h_ = W // q, H // q
+    x = xs / q - 0.5; y = ys / q - 0.5
+    x0 = np.floor(x).astype(np.int64); y0 = np.floor(y).astype(np.int64)
+    fx = (x - x0).astype(np.float32); fy = (y - y0).astype(np.float32)
+    rgb = np.zeros((3, h_ * w_), np.float32); a = np.zeros(h_ * w_, np.float32)
+    for dx, dy, wt in ((0, 0, (1 - fx) * (1 - fy)), (1, 0, fx * (1 - fy)), (0, 1, (1 - fx) * fy), (1, 1, fx * fy)):
+        xi = x0 + dx; yi = y0 + dy; ok = (xi >= 0) & (xi < w_) & (yi >= 0) & (yi < h_)
+        if not ok.any(): continue
+        idx = yi[ok] * w_ + xi[ok]; ww = (wt * al)[ok]
+        a += np.bincount(idx, ww, h_ * w_).astype(np.float32)
+        for c in range(3): rgb[c] += np.bincount(idx, ww * cols[ok, c], h_ * w_).astype(np.float32)
+    rgb = np.ascontiguousarray(rgb.reshape(3, h_, w_).transpose(1, 2, 0)); a = a.reshape(h_, w_)
+    if sig > 0: rgb = cv2.GaussianBlur(rgb, (0, 0), sig); a = cv2.GaussianBlur(a, (0, 0), sig)
+    return rgb, a
+
+# ---- PHANTOM PASS (replaces the headspin, e19): he walks at us through the night garden; his body turns to a ghost
+# (the next shot shows through him, a thin mist inside, a cold rim on his outline), and the camera passes through him:
+# his silhouette opens past the lens onto the next shot.
+_PP = {}
+def _pp_anchor(s_):
+    if s_["n"] not in _PP:
+        P = _person(s_, s_["f1"] - 1)
+        P = np.zeros((H, W), np.float32) if P is None else P
+        ys, xs = np.nonzero(P[::8, ::8] > 0.5)
+        if len(xs) < 30:
+            fs = face_scr(s_, s_["f1"] - 1); c = (fs[0], fs[1] + 300) if fs else (W / 2, H * 0.55)
+        else: c = (float(np.mean(xs) * 8), float(np.percentile(ys, 40) * 8))
+        _PP[s_["n"]] = (c, _pp_clean(P))
+    return _PP[s_["n"]]
+
+def _pp_clean(P):
+    """the matte without holes or specks: a close at 1/4 res, then soft."""
+    sm = cv2.resize(P, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
+    sm = cv2.morphologyEx(cv2.morphologyEx(sm, cv2.MORPH_CLOSE, k), cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+    return np.clip(cv2.GaussianBlur(cv2.resize(sm, (W, H), interpolation=cv2.INTER_LINEAR), (0, 0), 3.0), 0, 1)
+
+def phantom_pass109(A, B, j, f, sa, sb, pre=16, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    (cx, cy), Plast = _pp_anchor(sa)
+    P = _person(sa, f) if j < 0 else Plast
+    P = np.zeros((H, W), np.float32) if P is None else _pp_clean(P)
+    a = smooth(q / 0.42)                                                  # he turns translucent
+    z = smooth((q - 0.32) / 0.58)                                         # we pass through him
+    Z = math.exp(math.log(14.0) * ein(z, 2.2))
+    if Z > 1.002:
+        Az = (_zoom_about(A, Z, cx, cy) + _zoom_about(A, Z * 1.05, cx, cy) + _zoom_about(A, Z * 1.10, cx, cy)) / 3
+        Pz = _zoom_about(P, Z, cx, cy, cv2.BORDER_CONSTANT)
+    else: Az, Pz = A, P
+    bz = 1 + 0.12 * (1 - smooth(q))
+    Bz = _zoom_about(B, bz, W / 2, H * 0.42) if bz > 1.0005 else B
+    ghost = mist_veil(Bz, 0.45 * (1 - z), f, 1.5)
+    op = np.clip(Pz * np.clip(0.80 * a + smooth((q - 0.45) / 0.25), 0, 1), 0, 1)
+    op = np.maximum(op, smooth((q - 0.52) / 0.33))                        # the rest of the garden goes as we pass
+    o = Az * (1 - op[..., None]) + ghost * op[..., None]
+    Pb = cv2.GaussianBlur(Pz, (0, 0), 5.0)
+    rim = np.clip(Pb * (1 - Pb) * 4, 0, 1) * a * (1 - smooth(z / 0.35))
+    o = np.clip(o, 0, 1); rc = rim[..., None] * CYAN109 * 0.26
+    return np.clip(1 - (1 - o) * (1 - rc), 0, 1)                          # a screen: the rim never blows out a highlight
+TR2["phantom_pass109"] = (phantom_pass109, 16, 14)
+
+# ---- FINGERPRINT (the hunt -> the mangroves): a latent print is dusted onto the glass below his face (a brush sweep
+# of silver powder, the ridges glow cold), then we dive into its whorl: the print turns as it grows past the lens, the
+# next shot fills its grooves, and the ridges thin away.
+_FP = {}
+def fp_tex():
+    if "w" not in _FP:
+        rng = np.random.default_rng(1931)
+        def nz(sig, n=512):
+            a_ = rng.standard_normal((n, n)).astype(np.float32)
+            a_ = cv2.GaussianBlur(np.tile(a_, (3, 3)), (0, 0), sig)[n:2 * n, n:2 * n]
+            return (a_ - a_.mean()) / (a_.std() + 1e-6)
+        _FP["w"] = nz(46); _FP["b"] = nz(6); _FP["g"] = rng.random((512, 512)).astype(np.float32)
+    return _FP
+
+FP_PER = 12.5
+def fp_eval(xc, yc, S, ang, line_frac):
+    T = fp_tex(); ca, sn = math.cos(ang), math.sin(ang)
+    dx = _GX - xc; dy = _GY - yc
+    u = (dx * ca + dy * sn) / S; v = (-dx * sn + dy * ca) / S
+    tu = (u + 320) * (512 / 640); tv = (v + 320) * (512 / 640)
+    wob = cv2.remap(T["w"], tu, tv, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    brk = cv2.remap(T["b"], tu, tv, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    grn = cv2.remap(T["g"], tu, tv, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    re = np.sqrt(u * u + (v / 1.28) ** 2)
+    phi = re + FP_PER * np.arctan2(v, u) / (2 * np.pi) + 7.0 * wob
+    wbt = np.clip((v - 70) / 150.0, 0, 1); wbt = wbt * wbt * (3 - 2 * wbt)            # the base of the print runs across
+    phi = phi * (1 - wbt) + (v * 1.05 + 26 * np.sin(u / 95.0) + 7.0 * wob + 40) * wbt
+    c = np.cos(2 * np.pi * phi / FP_PER)
+    thr = math.cos(math.pi * line_frac)
+    ridge = np.clip((c - thr) / max(0.05, (1 - thr) * 0.55), 0, 1)
+    ridge *= np.clip((brk + 2.0) / 0.4, 0, 1)                                       # ridge endings
+    ridge *= np.clip(re / 10.0, 0, 1) * 0.6 + 0.4                                  # a soft core
+    rr = np.sqrt((u / 200.0) ** 2 + (v / 262.0) ** 2) + 0.06 * wob
+    mask = np.clip((1.0 - rr) / 0.10, 0, 1)
+    return ridge, mask, u, v, grn
+
+FP_COL = np.array([0.93, 0.94, 0.92], np.float32)
+_FPP = {}
+def _fp_place(sa):
+    if sa["n"] not in _FPP:
+        fs = face_scr(sa, sa["f1"] - 1)
+        y0 = clamp((fs[1] + 0.95 * fs[2] + 520) if fs else H * 0.80, 1380, 1560)
+        _FPP[sa["n"]] = (W * 0.69, y0)
+    return _FPP[sa["n"]]
+
+def print109(A, B, j, f, sa, sb, pre=50, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    x0, y0 = _fp_place(sa)
+    ap = smooth(q / 0.30)                                                 # the powder brush sweeps it in
+    d = smooth((q - 0.44) / 0.56)                                         # the dive into the whorl
+    S = math.exp(math.log(24.0) * ein(d, 2.0))
+    xc = x0 + (W / 2 - x0) * smooth(d / 0.6); yc = y0 + (H * 0.46 - y0) * smooth(d / 0.6)
+    ang = math.radians(-14) + 0.55 * ein(d, 1.5)
+    lf = 0.34 / S ** 0.75
+    ridge, mask, u, v, grn = fp_eval(xc, yc, S, ang, lf)
+    sw = -380 + 800 * ap
+    reveal = np.clip((sw - (u * 0.77 + v * 0.64)) / 70.0, 0, 1) if ap < 1 else 1.0
+    win = mask * smooth((d - 0.04) / 0.36)                                # its grooves turn into a window
+    Bz = _zoom_about(B, 1 + 0.16 * (1 - d), W / 2, H * 0.46) if d < 0.999 else B
+    base = A * (1 - (0.22 * mask * reveal * (1 - d))[..., None])
+    o = base * (1 - win[..., None]) + Bz * win[..., None]
+    als = 1 + 0.9 * np.exp(-(((u * 0.6 - v * 0.8) - (-420 + 900 * smooth((q - 0.22) / 0.25))) / 55.0) ** 2) * (d < 0.3)
+    rb = (1 - smooth((d - 0.50) / 0.50)) * (0.75 + 0.5 * (grn - 0.5)) * als   # a forensic light passes over it
+    al = ridge * mask * reveal * rb
+    glow = cv2.GaussianBlur(al, (0, 0), 3.0 + 4 * d)
+    haze = mask * reveal * (1 - d) * 0.05 * grn
+    o = o * (1 - al[..., None] * 0.8) + al[..., None] * FP_COL * 0.95 + (glow * 0.45 + haze)[..., None] * CYAN109
+    return np.clip(o, 0, 1)
+TR2["print109"] = (print109, 50, 14)
+
+# ---- THE PHOTO'S FIRE (the burning photo -> the hammer): the fire in his hand catches the frame; the picture burns away
+# from the photo outward (a white-hot edge, a thin char, a scorch), sparks lift off the edge, the next shot is behind.
+_BN = {}
+def _bn_setup(sa, pre):
+    if sa["n"] not in _BN:
+        img = base108(sa, sa["f1"] - pre)[0]
+        L = cv2.GaussianBlur(cv2.resize(lum(img), (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6)
+        yy, xx = np.unravel_index(int(np.argmax(L)), L.shape)
+        ox, oy = xx * 4.0 - 60, min(yy * 4.0 + 430, H * 0.86)                 # the photo in his hand, under the flame
+        n1 = _up(nz108(1941, 10)); n2 = _up(nz108(1942, 3)); n3 = _up(nz108(1944, 1.2))
+        D = np.sqrt((_GX - ox) ** 2 + ((_GY - oy) * np.where(_GY < oy, 0.8, 1.05)) ** 2) + 170 * (n1 - 0.5) + 70 * (n2 - 0.5) \
+            + 26 * (n3 - 0.5)
+        rng = np.random.default_rng(1943); n = 260
+        sp = dict(th=rng.uniform(0, 2 * np.pi, n), d=rng.uniform(30, float(D.max()), n), dx=rng.uniform(-60, 60, n),
+                  rise=rng.uniform(260, 620, n), life=rng.uniform(0.22, 0.45, n), sz=rng.uniform(0.6, 1.4, n))
+        _BN[sa["n"]] = (ox, oy, D.astype(np.float32), float(D.max()) + 40, sp)
+    return _BN[sa["n"]]
+
+def burn109(A, B, j, f, sa, sb, pre=26, post=16):
+    q = (j + pre + 0.5) / (pre + post)
+    ox, oy, D, Rmax, sp = _bn_setup(sa, pre)
+    Rq = lambda qq: -20 + (Rmax + 20) * ein(clamp(qq, 0, 1), 1.45)
+    s_ = D - Rq(q)                                                         # < 0 burnt
+    hole = np.clip(-s_ / 3.0 + 0.5, 0, 1)
+    char = np.clip(1 - s_ / 24.0, 0, 1) * (1 - hole)
+    scorch = np.clip(1 - (s_ - 24) / 90.0, 0, 1) * (s_ > 0)
+    a = A * (1 - (0.22 * scorch)[..., None]) + (0.05 * scorch)[..., None] * np.array([0.0, 0.10, 0.30], np.float32)
+    a = a * (1 - char[..., None] * 0.85) + char[..., None] * np.array([0.02, 0.03, 0.05], np.float32)
+    o = a * (1 - hole[..., None]) + B * hole[..., None]
+    live = float(Rq(q) > 0) * (1 - smooth((q - 0.94) / 0.06))
+    core = np.exp(-((s_ - 2) / 2.5) ** 2) * live                          # the white-hot lip
+    ember = np.exp(-((s_ - 6) / 9.0) ** 2) * live * (0.7 + 0.6 * _up(nz108(1945, 1.5)))   # glowing paper behind it
+    glow = cv2.GaussianBlur(ember, (0, 0), 10)
+    o = o + core[..., None] * np.array([0.70, 0.90, 1.0], np.float32) * 0.85 + ember[..., None] * np.array([0.06, 0.34, 1.0], np.float32) * 0.75 \
+        + glow[..., None] * np.array([0.03, 0.20, 0.80], np.float32) * 0.45
+    t = (j + pre + 0.5) / FPS; xs, ys, al = [], [], []                    # sparks lift off the edge
+    for i in range(len(sp["th"])):
+        qq = (sp["d"][i] + 20) / (Rmax + 20); qi = qq ** (1 / 1.45)          # when the front reaches it
+        age = t - qi * (pre + post) / FPS
+        if 0 <= age < sp["life"][i]:
+            x = ox + sp["d"][i] * math.cos(sp["th"][i]) * 0.9 + sp["dx"][i] * age * 3
+            y = oy + sp["d"][i] * math.sin(sp["th"][i]) * 0.9 - sp["rise"][i] * age
+            xs.append(x); ys.append(y); al.append(sp["sz"][i] * math.exp(-age / (0.4 * sp["life"][i])))
+    if xs:
+        cols = np.tile(np.array([[0.35, 0.70, 1.0]], np.float32), (len(xs), 1))
+        rgb, aa = splat109(np.array(xs), np.array(ys), cols, np.array(al, np.float32), q=2, sig=1.2)
+        o = o + cv2.resize(rgb, (W, H), interpolation=cv2.INTER_LINEAR) * 3.0
+    return np.clip(o, 0, 1)
+TR2["burn109"] = (burn109, 26, 16)
+
+# ---- THE HEART MONITOR ("you've never got no motion"; the M99 takes him -> his stare): a cold monitor trace sweeps
+# across under his face, beats twice on the claps, flatlines; the flat line opens like an eye onto his stare.
+EKG_Y = 0.78
+def ekg_wave(x, beats):
+    y = np.zeros_like(x)
+    for xb, amp in beats:
+        d = x - xb
+        y += amp * (-0.10 * np.exp(-((d + 58) / 13) ** 2) + 0.20 * np.exp(-((d + 10) / 4.5) ** 2)
+                    - 1.00 * np.exp(-(d / 5.0) ** 2) + 0.40 * np.exp(-((d - 11) / 5.5) ** 2) - 0.20 * np.exp(-((d - 62) / 18) ** 2))
+    return y
+
+def ekg109(A, B, j, f, sa, sb, pre=40, post=18):
+    fs0 = sb["f0"] - pre; y0 = H * EKG_Y; spd = (W + 80) / 31.0
+    xh = lambda ff: -40 + spd * (ff - fs0)
+    beats = [(xh(E.fe(E.th(50.62))), 190.0), (xh(E.fe(E.th(51.06))), 235.0)]
+    fsplit0 = sb["f0"] - 5; s = smooth((f - fsplit0) / (sb["f0"] + post - 1 - fsplit0))
+    so = 1 - (1 - s) ** 3
+    o = B if s <= 0 else _zoom_about(B, 1 + 0.06 * (1 - s), W / 2, y0)
+    if s < 1:                                                              # the picture opens along the line
+        dt_, db_ = -(y0 + 40) * so, (H - y0 + 40) * so
+        top = A if s <= 0 else cv2.warpAffine(A, np.float32([[1, 0, 0], [0, 1, dt_]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+        bot = A if s <= 0 else cv2.warpAffine(A, np.float32([[1, 0, 0], [0, 1, db_]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+        mt = np.clip((y0 + dt_ - _GY) / 1.5 + 0.5, 0, 1)[..., None]; mb = np.clip((_GY - (y0 + db_)) / 1.5 + 0.5, 0, 1)[..., None]
+        o = top * mt + bot * mb + o * (1 - mt - mb)
+    cv = np.zeros((H, W), np.float32)
+    head = xh(f)
+    if s <= 0:
+        xs = np.arange(0, int(min(W, head)) + 1, 2, dtype=np.float32)
+        if len(xs) > 1:
+            ys = y0 + ekg_wave(xs, beats)
+            pts = np.round(np.stack([xs, ys], 1) * 8).astype(np.int32)
+            cv2.polylines(cv, [pts], False, 1.0, 3, cv2.LINE_AA, shift=3)
+            age = np.clip((head - _GX[0]) / spd, 0, None)
+            cv *= (0.30 + 0.70 * np.exp(-age / 9.0))[None, :]
+            if 0 <= head <= W:
+                hy = float(y0 + ekg_wave(np.array([head], np.float32), beats)[0])
+                cv += 1.2 * np.exp(-(((_GX - head) ** 2 + (_GY - hy) ** 2) / (2 * 5.0 ** 2)))
+    flat = smooth((f - (fsplit0 - 10)) / 10.0) * (1 - s)                  # the flat line brightens, then rides the edges
+    if flat > 0:
+        for yy in ((y0, ) if s <= 0 else (y0 - (y0 + 40) * so, y0 + (H - y0 + 40) * so)):
+            cv += flat * 0.9 * np.exp(-((_GY - yy) / 1.6) ** 2)
+    g1 = cv2.GaussianBlur(cv, (0, 0), 5); g2 = cv2.GaussianBlur(cv, (0, 0), 18)
+    on = smooth((j + pre + 0.5) / 3.0)
+    o = o * (1 - 0.15 * on * smooth((head) / 200.0) * (1 - s)) + (cv[..., None] * np.array([0.96, 0.98, 0.90], np.float32)
+         + (g1 * 0.8 + g2 * 0.5)[..., None] * CYAN109) * on
+    return np.clip(o, 0, 1)
+TR2["ekg109"] = (ekg109, 40, 18)
+
+# ---- THE GUST (the loop): on "action" he blows away as glowing dust, the side the wind hits first; the gust carries
+# the dust left and up (a few near flakes rush past the lens), the room darkens to frame 0's dark, and the same gust
+# brings new dust in from the right that settles, decelerating, into frame 0's figure; frame 0 resolves exactly.
+DL_F0 = E.fe(E.th(53.0))
+_DL = {}
+def _fill_bg(img, P):
+    q = 4; small = cv2.resize(img, (W // q, H // q), interpolation=cv2.INTER_AREA)
+    ps = cv2.resize(P, (W // q, H // q), interpolation=cv2.INTER_AREA)
+    wgt = np.clip(1 - ps * 1.4, 0, 1) ** 2
+    num = cv2.GaussianBlur(small * wgt[..., None], (0, 0), 16); den = cv2.GaussianBlur(wgt, (0, 0), 16) + 1e-4
+    fill = cv2.resize(num / den[..., None], (W, H), interpolation=cv2.INTER_LINEAR)
+    return img * (1 - P[..., None]) + fill * P[..., None]
+
+def _dl_setup(s):
+    if "A" in _DL: return _DL
+    IA, PA = base108(s, DL_F0); PA = np.clip(np.asarray(PA, np.float32), 0, 1)
+    F0 = frame0_plate108(); P0 = _person(SHOTS[0], SHOTS[0]["f0"])
+    P0 = np.zeros((H, W), np.float32) if P0 is None else P0
+    rng = np.random.default_rng(1956)
+    nA = _up(nz108(1971, 6) * 0.45 + nz108(1975, 1.6) * 0.55); nB = _up(nz108(1972, 6) * 0.45 + nz108(1976, 1.6) * 0.55)
+    def field(P, n, rev):
+        ys, xs = np.nonzero(P[::4, ::4] > 0.5)
+        x0, x1 = (xs.min() * 4, xs.max() * 4) if len(xs) else (0, W)
+        dirt = np.clip((_GX - x0) / max(1, x1 - x0), 0, 1)
+        return (1 - dirt if rev else dirt) * 0.62 + n * 0.38
+    rA = 0.44 * field(PA, nA, False)                                       # release: the left side first
+    aB = 0.52 + 0.42 * field(P0, nB, True)                                 # arrival: the right side first
+    def sample(P, img, step, fld):
+        gy, gx = np.mgrid[0:H:step, 0:W:step].astype(np.float32)
+        gx += rng.random(gx.shape, dtype=np.float32) * step; gy += rng.random(gy.shape, dtype=np.float32) * step
+        ix = np.clip(gx.astype(int), 0, W - 1); iy = np.clip(gy.astype(int), 0, H - 1)
+        k = P[iy, ix] > 0.5
+        x, y = gx[k], gy[k]; ix, iy = ix[k], iy[k]
+        col = img[iy, ix].astype(np.float32); Lc = lum(col[None])[0][:, None]
+        col = col * 0.50 + CYAN109[None] * (0.35 + 0.65 * Lc) * 0.85
+        return dict(x=x, y=y, col=col, t=fld[iy, ix], near=rng.random(len(x)) < 0.035, sp=rng.uniform(0.8, 1.25, len(x)).astype(np.float32))
+    sw = [_up(nz108(1973, 14)) - 0.5, _up(nz108(1974, 14)) - 0.5]
+    _DL.update(A=sample(PA, IA, 6, rA), B=sample(P0, F0, 6, aB), rA=rA, aB=aB, P0=P0, F0=F0, bgB=_fill_bg(F0, P0),
+               sw=[cv2.resize(m, (W // 8, H // 8), interpolation=cv2.INTER_AREA) for m in sw])
+    return _DL
+
+DL_WIND = np.array([-1.0, -0.42], np.float32) / math.hypot(1.0, 0.42)
+def _dl_flight(x, y, tau, sign, sw):
+    """positions after tau seconds of flight from (x, y) along the gust (sign -1 = backwards from an arrival)."""
+    from scipy.ndimage import map_coordinates
+    px, py = x.copy(), y.copy(); dt = tau / 6.0
+    for k in range(6):
+        tk = tau * (k + 0.5) / 6.0
+        spd = 260 + 1150 * np.clip(tk / 0.40, 0, 1)
+        c = np.stack([np.clip(py / 8, 0, H / 8 - 1), np.clip(px / 8, 0, W / 8 - 1)])
+        vx = DL_WIND[0] * spd + map_coordinates(sw[0], c, order=1) * 700
+        vy = DL_WIND[1] * spd + map_coordinates(sw[1], c, order=1) * 700
+        px = px + sign * vx * dt; py = py + sign * vy * dt
+    return px, py
+
+def dust_loop109(out, f, s, person=None):
+    last = E.DUR_F - 1
+    if f < DL_F0: return out
+    if f >= last: return frame0_plate108().copy()
+    D = _dl_setup(s); TL = (last - DL_F0) / FPS
+    t = (f - DL_F0) / (last - DL_F0)
+    P = np.zeros((H, W), np.float32) if person is None else np.clip(np.asarray(person, np.float32), 0, 1)
+    bgA = _fill_bg(out, P); wb = smooth((t - 0.30) / 0.45)
+    o = bgA * (1 - wb) + D["bgB"] * wb
+    rel = np.clip((t - D["rA"]) / 0.07, 0, 1); rel = rel * rel * (3 - 2 * rel)
+    Rm = P * (1 - rel); o = o * (1 - Rm[..., None]) + out * Rm[..., None]
+    fm = np.clip((t - D["aB"]) / 0.07, 0, 1); fm = fm * fm * (3 - 2 * fm)
+    Fm = D["P0"] * fm; o = o * (1 - Fm[..., None]) + D["F0"] * Fm[..., None]
+    eA = np.clip(P * rel * (1 - rel) * 4, 0, 1); eB = np.clip(D["P0"] * fm * (1 - fm) * 4, 0, 1)
+    o = o + cv2.GaussianBlur(eA + eB, (0, 0), 1.5)[..., None] * CYAN109 * 0.22
+    layers = []
+    pa = D["A"]; tau = (t - pa["t"]) * TL; k = tau > 0
+    if k.any():
+        x, y = _dl_flight(pa["x"][k], pa["y"][k], tau[k] * pa["sp"][k], 1.0, D["sw"])
+        al = np.clip(tau[k] / 0.04, 0, 1) * np.exp(-tau[k] / 0.30) * (0.45 + 1.2 * np.exp(-tau[k] / 0.08))
+        layers.append((x, y, pa["col"][k], al.astype(np.float32), pa["near"][k], tau[k]))
+    pb = D["B"]; tb = (pb["t"] - t) * TL; k = (tb > 0) & (tb < 0.75)
+    if k.any():
+        x, y = _dl_flight(pb["x"][k], pb["y"][k], tb[k] * pb["sp"][k], -1.0, D["sw"])
+        al = np.clip((0.60 - tb[k]) / 0.20, 0, 1) * np.clip(tb[k] / 0.06, 0, 1) * (0.45 + 1.0 * np.exp(-tb[k] / 0.10))
+        layers.append((x, y, pb["col"][k], al.astype(np.float32), pb["near"][k], tb[k]))
+    if layers:
+        X = np.concatenate([l[0] for l in layers]); Y = np.concatenate([l[1] for l in layers])
+        C = np.concatenate([l[2] for l in layers]); AL = np.concatenate([l[3] for l in layers])
+        NR = np.concatenate([l[4] for l in layers]); TU = np.concatenate([l[5] for l in layers])
+        far = ~NR
+        rgb, aa = splat109(X[far], Y[far], C[far], AL[far] * 1.6, q=2, sig=0.55)
+        dust = cv2.resize(rgb, (W, H), interpolation=cv2.INTER_LINEAR); da = cv2.resize(aa, (W, H), interpolation=cv2.INTER_LINEAR)
+        if NR.any():                                                       # near flakes rush past the lens, soft and big
+            gx = W / 2 + (X[NR] - W / 2) * (1 + 1.6 * TU[NR]); gy = H / 2 + (Y[NR] - H / 2) * (1 + 1.6 * TU[NR])
+            r2, a2 = splat109(gx, gy, C[NR], AL[NR] * 3.0, q=4, sig=2.6)
+            dust = dust + cv2.resize(r2, (W, H), interpolation=cv2.INTER_LINEAR)
+        glow = cv2.GaussianBlur(cv2.resize(dust, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 5)
+        o = o * (1 - np.clip(da, 0, 1)[..., None] * 0.30) + dust * 0.85 + cv2.resize(glow, (W, H)) * 0.45
+    o = mist_veil(o, 0.07 * math.sin(math.pi * t), f, 2.5)
+    we = smooth((t - 0.90) / 0.10)
+    return np.clip(o * (1 - we) + D["F0"] * we, 0, 1)
+
+def beat_phase(f):
+    """rev 1: the beat camera rests through the pass, the print and the ending (from the monitor on)."""
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    hook = (E.E_BEAT + 2 <= e < 49.5) and not (10 <= e < 13.5) and not (18.5 <= e < 19.5) and not (29.5 <= e < 31) \
+        and not (37.4 <= e < 40)
+    return ph, bi, hook, False
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    out, person = base108(s, f)
+    if tin in TR2 and k < TR2[tin][2] and P is not None:
+        out = TR2[tin][0](edge108(P, "last"), out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge108(n_, "first"), kn, f, s, n_)
+    if s.get("tout") == "vanish_loop109": out = vanish_loop109(out, f, s, person)
+    if s.get("tout") == "dust_loop109": out = dust_loop109(out, f, s, person)
+    out = beat_fx(out, f)
+    out = title109(out, f)
+    out = flash_governor(out)
+    return (np.clip(finish109(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with

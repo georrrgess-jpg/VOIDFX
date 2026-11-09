@@ -113,14 +113,14 @@
    "buried": true
   },
   {
-   "name": "headspin",
+   "name": "phantom_pass109",
    "kind": "transition",
    "at": 8.14,
    "t0": 7.84,
    "t1": 8.59,
    "music_db": -6.2,
-   "fx_peak_db": -46.2,
-   "fx_minus_music": -40.0,
+   "fx_peak_db": -22.8,
+   "fx_minus_music": -16.6,
    "buried": true
   },
   {
@@ -163,8 +163,8 @@
    "t0": 11.57,
    "t1": 13.29,
    "music_db": -7.2,
-   "fx_peak_db": -22.3,
-   "fx_minus_music": -15.1,
+   "fx_peak_db": -24.3,
+   "fx_minus_music": -17.1,
    "buried": true
   },
   {
@@ -174,8 +174,8 @@
    "t0": 11.7,
    "t1": 12.45,
    "music_db": -5.8,
-   "fx_peak_db": -22.3,
-   "fx_minus_music": -16.4,
+   "fx_peak_db": -44.4,
+   "fx_minus_music": -38.6,
    "buried": true
   },
   {
@@ -207,9 +207,9 @@
    "t0": 14.27,
    "t1": 15.02,
    "music_db": -6.1,
-   "fx_peak_db": -17.2,
-   "fx_minus_music": -11.1,
-   "buried": false
+   "fx_peak_db": -23.2,
+   "fx_minus_music": -17.1,
+   "buried": true
   },
   {
    "name": "molasses108",
@@ -223,7 +223,7 @@
    "buried": true
   },
   {
-   "name": "smear",
+   "name": "print109",
    "kind": "transition",
    "at": 16.71,
    "t0": 16.41,
@@ -234,25 +234,25 @@
    "buried": true
   },
   {
-   "name": "impact",
+   "name": "smear",
    "kind": "transition",
    "at": 17.57,
    "t0": 17.27,
    "t1": 18.02,
    "music_db": -8.3,
-   "fx_peak_db": -46.0,
-   "fx_minus_music": -37.7,
+   "fx_peak_db": -30.7,
+   "fx_minus_music": -22.4,
    "buried": true
   },
   {
-   "name": "dolly",
+   "name": "burn109",
    "kind": "transition",
    "at": 18.43,
    "t0": 18.13,
    "t1": 18.88,
    "music_db": -6.0,
-   "fx_peak_db": -46.6,
-   "fx_minus_music": -40.7,
+   "fx_peak_db": -23.7,
+   "fx_minus_music": -17.8,
    "buried": true
   },
   {
@@ -267,7 +267,7 @@
    "buried": true
   },
   {
-   "name": "flip",
+   "name": "roll",
    "kind": "transition",
    "at": 20.57,
    "t0": 20.27,
@@ -278,7 +278,7 @@
    "buried": true
   },
   {
-   "name": "roll",
+   "name": "flip",
    "kind": "transition",
    "at": 21.43,
    "t0": 21.13,
@@ -289,25 +289,36 @@
    "buried": true
   },
   {
-   "name": "dolly",
+   "name": "the flatline",
+   "kind": "set piece",
+   "at": 21.6,
+   "t0": 21.6,
+   "t1": 22.46,
+   "music_db": -6.4,
+   "fx_peak_db": -45.9,
+   "fx_minus_music": -39.5,
+   "buried": true
+  },
+  {
+   "name": "ekg109",
    "kind": "transition",
    "at": 22.29,
    "t0": 21.99,
    "t1": 22.74,
    "music_db": -6.5,
-   "fx_peak_db": -40.5,
-   "fx_minus_music": -34.0,
+   "fx_peak_db": -48.0,
+   "fx_minus_music": -41.5,
    "buried": true
   },
   {
-   "name": "the vanishing",
+   "name": "THE GUST (loop)",
    "kind": "set piece",
-   "at": 22.5,
-   "t0": 22.5,
+   "at": 22.71,
+   "t0": 22.71,
    "t1": 24.0,
-   "music_db": -8.5,
-   "fx_peak_db": -23.0,
-   "fx_minus_music": -14.5,
+   "music_db": -8.9,
+   "fx_peak_db": -23.1,
+   "fx_minus_music": -14.2,
    "buried": true
   }
  ]

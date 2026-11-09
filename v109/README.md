@@ -49,3 +49,32 @@ music ducked 3 dB under the drop.
 ## Measured
 See `work/measured.md`: QC SHIP, −13.1 LUFS / −3.1 dBTP after AAC, loop wrap step 0.79 (seam ≤ 1), no dead spans, no
 judder; 3 flagged pops are designed motion (the impact, the roll) or real motion in the source (the hazmat shot).
+
+## Revision 1 (the owner's notes, 2026-11-09)
+*"I relatively like this edit … the head spin transition. I don't really like how that flows with this edit … replace it
+with a brand new, unique, and creative transition … remove the clips with dokes and replace them with other high-quality
+texture clips … make a cool flow where there's unique graphics appearing and then transitions from those graphics … the
+end flow of the edit and into the loop. I don't really like that part … make it more unique and creative with better
+animations."*
+
+- **The headspin → PHANTOM PASS** (e19, 7.9 s): he walks at us through the night garden; his body turns to a ghost (the
+  next shot shows through him in a thin mist, a cold rim on his outline), and the camera passes through him: his
+  silhouette opens past the lens onto the grin. The headspin keeps its `liked` verdict, with a caution in the registry.
+- **No Doakes:** the cage and the Doakes close-up are gone. In their place, two of the sharpest S1 shots (the 2.0 Mb/s
+  `dexter_s1_hq`): **the mangroves** (he stalks through the leaves at us) and **the burning photo** (he burns it with a lighter).
+- **The graphic flow (the ending is one chain):** each graphic appears on its shot, plays as a graphic, then becomes the
+  transition, in the edit's cold ghost-light:
+  1. **FINGERPRINT** (16.7 s): a latent print is dusted onto the glass below his face (a powder sweep, then a forensic
+     light passes over the ridges); we dive into its whorl, it turns as it grows past the lens and the mangroves fill its
+     grooves.
+  2. **THE PHOTO'S FIRE** (18.4 s): the fire in his hand catches the frame: the picture burns away from the photo (a
+     white-hot lip, glowing paper, a thin char, sparks) onto the hammer.
+  3. **THE HEART MONITOR** (21.4 s, "you've never got no motion"): the M99 takes him (the syringe shot); a monitor trace
+     sweeps under his chin, beats twice on the claps, flatlines, and the flat line opens like an eye onto his stare.
+- **The ending, re-cut for flow:** whip → roll → flip (the old knife/drive order swapped so the syringe leads into the
+  flatline); the beat camera rests from the monitor on (smooth endings).
+- **The loop, THE GUST** (from 22.7 s, "you've never got no action"): he blows away as glowing dust, the side the wind
+  hits first (fine motes, a few near flakes rushing past the lens, the room darkening to frame 0's dark); the same gust
+  brings new dust in from the right that decelerates and settles into frame 0's figure, which resolves exactly on the wrap.
+  Replaces the grey mist fade.
+- **Sound (12 events):** a pass whoosh, the fire, the gust; the tape whoosh and the dock bloop are gone.
