@@ -60,6 +60,38 @@ type SampleFn = ((input: any, opts?: any) => Promise<{ text: string; truncated: 
 let sample: SampleFn | null = null;
 /** Text budget per call (the runtime's limit, less a margin for the request's own framing). */
 let promptLimit = 240 * 1024;
+/** What one call may carry in images (from the runtime's limits). */
+const imageLimit = { count: 20, bytes: 20e6, types: ['image/jpeg', 'image/png'] as string[] };
+
+/** Images within the runtime's limits: at most its count per call, each under its file-size limit
+ * (re-encoded smaller when one is too big). The first images (the edit's own frames) are kept. */
+async function fitImages(images: Sheet[]): Promise<Blob[]> {
+  // maxInputBytes is the largest single file accepted: each image stays well under it
+  const per = imageLimit.bytes * 0.8;
+  const out: Blob[] = [];
+  for (const s of images.slice(0, imageLimit.count)) {
+    let b = s.blob;
+    if (!imageLimit.types.includes(b.type) || b.size > per) b = await shrink(b, per * 0.7).catch(() => b);
+    if (b.size <= imageLimit.bytes) out.push(b);
+  }
+  return out;
+}
+
+async function shrink(b: Blob, target: number): Promise<Blob> {
+  const bmp = await createImageBitmap(b);
+  let scale = Math.min(1, Math.sqrt(target / Math.max(1, b.size)) * 1.1);
+  let out = b;
+  for (let i = 0; i < 4; i++) {
+    const c = document.createElement('canvas');
+    c.width = Math.max(64, Math.round(bmp.width * scale)); c.height = Math.max(64, Math.round(bmp.height * scale));
+    c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
+    out = await new Promise<Blob>((res, rej) => c.toBlob(x => (x ? res(x) : rej(new Error('encode'))), 'image/jpeg', 0.8));
+    if (out.size <= target) break;
+    scale *= 0.75;
+  }
+  bmp.close();
+  return out;
+}
 
 /**
  * Each level: how hard Opus thinks on every call, how many times it reviews rendered frames, and how
@@ -105,6 +137,7 @@ export async function initDirector() {
     return;
   }
   const lim = await sample.limits().catch(() => null);
+  if (lim?.images) { imageLimit.count = lim.images.maxCount || imageLimit.count; imageLimit.bytes = lim.images.maxInputBytes || imageLimit.bytes; imageLimit.types = lim.images.mediaTypes || imageLimit.types; }
   if (lim?.maxPromptBytes) promptLimit = Math.max(64 * 1024, Math.min(250 * 1024, lim.maxPromptBytes - 8 * 1024));
   store.setDirector({ available: 'yes', images: !!lim?.images, maxImages: lim?.images?.maxCount ?? 0 });
 }
@@ -193,7 +226,7 @@ export async function ask(io: JobIO, input: string | Turn[], images: Sheet[], ef
       io.step(label, { detail: ops ? `writing… ${ops} operations so far` : 'writing…' });
     },
   };
-  if (images.length && store.state.director.images) opts.images = images.map(s => s.blob);
+  if (images.length && store.state.director.images) opts.images = await fitImages(images);
   const res = await sample(fitted, opts);
   const model = res.modelApplied || `${res.modelTierApplied} tier`;
   io.model(model);
@@ -221,6 +254,12 @@ export async function askSafe(io: JobIO, input: string | Turn[], images: Sheet[]
       return await ask(io, cur, imgs, eff, label, describe);
     } catch (e: any) {
       const code = e?.code;
+      if (code === 'image_rejected' && !io.signal.aborted && imgs.length) {
+        io.step(label, { detail: 'an image was refused; asking again with fewer, smaller images' });
+        imgs = imgs.length > 2 ? imgs.slice(0, Math.ceil(imgs.length / 2)) : [];
+        cur = withTail(input, imgs.length ? ` (Only the first ${imgs.length} images listed are attached this time.)` : ' (No images are attached this time: work from the text, the timeline and the measurements.)');
+        continue;
+      }
       if ((code !== 'empty_completion' && code !== 'upstream_error') || io.signal.aborted) throw e;
       tries++;
       if (code === 'upstream_error') {
@@ -1217,6 +1256,7 @@ export async function reviseEdit(job: Job, ws: Workspace, io: JobIO): Promise<Ro
     const st = after.flatMap(x => x.stats || []);
     for (const n of rn) { const b = st.find(x => Math.abs(x.t - before.get(n.id)!.t) < 1e-3); if (b) before.set(n.id, b); }
     sheets.splice(timeSheets.length, 0, ...rebuild.board);
+    if (sheets.length > Math.max(maxImg, timeSheets.length + rebuild.board.length)) sheets.length = Math.max(maxImg, timeSheets.length + rebuild.board.length);
   }
   io.step('look', { state: sheets.length ? 'done' : 'skip', detail: `${sheets.length} image${sheets.length === 1 ? '' : 's'}${rebuild.windows.length ? ` · ${rebuild.windows.length} section${rebuild.windows.length > 1 ? 's' : ''} cleared for a rebuild` : ''}` });
 
