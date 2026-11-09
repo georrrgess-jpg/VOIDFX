@@ -12912,6 +12912,99 @@ def beat_phase(f):
         and not (37.4 <= e < 40) and not (49.5 <= e < 50.4)
     return ph, bi, hook, False
 
+# ============================================================================ v109 rev 3 (the owner's notes)
+# "it's just missing one more focal point ... one more really, really cool, custom, unique graphic into a transition ...
+# the finishing touch". THE PHANTOM'S TRAIL (the dock -> the night hunt; replaces the reused hot molasses): a ribbon of
+# blood-red light, the only colour the phantom leaves, streaks in out of the dark and circles him: behind his shoulders
+# (his matte hides it) and in front of his waist, never across his face; it twists like silk, white-hot at its core,
+# and sheds embers; then it breaks from the orbit and dives at the lens, widening until the next shot is inside it.
+TR_RED = np.array([0.10, 0.09, 0.96], np.float32); TR_HOT = np.array([0.80, 0.88, 1.0], np.float32)
+_TRL = {}
+def _trail_frame(sa):
+    if sa["n"] not in _TRL:
+        P = _person(sa, sa["f1"] - 1); P = np.zeros((H, W), np.float32) if P is None else P
+        ys, xs = np.nonzero(P[::8, ::8] > 0.5)
+        if len(xs) > 30: cx = float(np.median(xs) * 8); ytop = float(np.percentile(ys, 3) * 8); ybot = float(np.percentile(ys, 97) * 8)
+        else: cx, ytop, ybot = W / 2, H * 0.2, H
+        fs = face_scr(sa, sa["f1"] - 1); fy = fs[1] if fs else ytop + 0.08 * H
+        _TRL[sa["n"]] = (cx, fy, ybot)
+    return _TRL[sa["n"]]
+
+def _trail_pos(t, cx, fy, ybot, td):
+    """the head on screen at time t (s): x, y, perspective scale p, in front (z > 0) or behind him."""
+    t = np.asarray(t, np.float64)
+    th_ = -2.2 + 2 * np.pi * 1.3 * t / td                                     # ~1.3 turns before the dive
+    rin = 1 + 2.0 * np.exp(-np.clip(t, 0, None) / 0.10)                       # it spirals in from far out
+    yc = min(fy + 0.36 * H, ybot - 0.10 * H)                                  # the orbit: his chest and waist
+    Z = np.sin(th_); X = 0.37 * W * rin * np.cos(th_)
+    Y = yc + 0.075 * H * Z - 0.10 * H * np.clip(-Z, 0, 1)                     # front low (waist), back high (shoulders)
+    p = 1.0 / (1 - 0.30 * Z)
+    x = cx + X * p; y = H * 0.5 + (Y - H * 0.5) * p
+    b = np.clip((t - td) / 0.30, 0, 1); b = b * b * (3 - 2 * b)             # the dive: through his chest, out past the lens
+    xd = cx + 0.06 * W + 0.95 * W * b ** 1.6; yd = yc + 0.05 * H + 0.30 * H * b ** 1.6
+    return x * (1 - b) + xd * b, y * (1 - b) + yd * b, p * (1 - b) + (1 + 9 * b * b) * b, Z * (1 - b) + b
+
+def trail109(A, B, j, f, sa, sb, pre=42, post=18):
+    cx, fy, ybot = _trail_frame(sa)
+    t = (j + pre + 0.5) / FPS; T = (pre + post) / FPS; td = pre / FPS - 0.14
+    P = _person(sa, f) if j < 0 else _person(sa, sa["f1"] - 1)
+    P = np.zeros((H, W), np.float32) if P is None else _pp_clean(P)
+    L = 0.55; tau = np.linspace(0, L, 180)                                    # the trail: the head's last 0.55 s
+    lb = np.zeros((H, W), np.float32); lf = np.zeros((H, W), np.float32)
+    for dt_, dy_, wsc, bri, ph in ((0.0, 0.0, 1.0, 1.0, 0.4), (0.07, 0.035 * H, 0.42, 0.70, 2.1)):   # the ribbon and a thin companion strand
+        xs, ys, p, Z = _trail_pos(t - dt_ - tau, cx, fy, ybot, td); ys = ys + dy_ * (1 - np.clip((t - dt_ - tau - td) / 0.2, 0, 1))
+        ok = (t - dt_ - tau) >= 0
+        tw = np.abs(np.cos(2 * np.pi * (1.7 * (t - tau)) + ph))                # the silk twists: flat (wide, bright) / edge-on
+        wd = 56 * wsc * p * (0.22 + 0.78 * tw) * (1 - 0.70 * tau / L)
+        fade = bri * (1 - tau / L) ** 1.2 * (0.55 + 0.45 * tw) * (1 - smooth((t - td - 0.22) / 0.14))
+        seg = [i for i in range(len(tau) - 1) if ok[i] and ok[i + 1] and wd[i] < 900 and fade[i] > 0.01]
+        for wk, vk in ((1.0, 0.42), (0.62, 0.74), (0.24, 1.08)):                # red silk, a brighter middle, a white-hot core
+            for i in seg:
+                cvs = lf if Z[i] > 0 else lb
+                cv2.line(cvs, (int(round(xs[i] * 4)), int(round(ys[i] * 4))), (int(round(xs[i + 1] * 4)), int(round(ys[i + 1] * 4))),
+                         float(vk * fade[i]), int(max(1, round(wd[i] * wk))), cv2.LINE_AA, shift=2)
+    lb = lb * (1 - P)                                                          # behind him: his body hides it
+    allL = lb + lf
+    def col(Lm):
+        Lm = np.clip(Lm, 0, 1.2)[..., None]
+        return TR_RED * np.clip(Lm * 1.9, 0, 1) + (TR_HOT - TR_RED) * np.clip((Lm - 0.62) * 2.4, 0, 1)
+    g1 = cv2.GaussianBlur(allL, (0, 0), 10)
+    g2 = cv2.resize(cv2.GaussianBlur(cv2.resize(allL, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 10), (W, H))
+    light = col(allL) + (g1 * 0.85 + g2 * 1.3)[..., None] * TR_RED
+    o = A * (1 - 0.20 * smooth(t / 0.15))                                      # the night deepens around it
+    o = 1 - (1 - np.clip(o, 0, 1)) * (1 - np.clip(light, 0, 1))
+    bw = 3600 * ein(clamp((t - td - 0.08) / 0.30, 0, 1), 1.7)                 # the dive: the ribbon swells behind its head, the next shot inside
+    if bw > 3:
+        tb_ = np.linspace(0.03, 0.24, 48); hx, hy, _, _ = _trail_pos(t - tb_, cx, fy, ybot, td)
+        pts = np.round(np.stack([hx, hy], 1) * 4).astype(np.int32)
+        win = np.zeros((H, W), np.float32); cv2.polylines(win, [pts], False, 1.0, int(min(5000, bw)), cv2.LINE_AA, shift=2)
+        win = cv2.GaussianBlur(win, (0, 0), 3.0)
+        win = np.maximum(win, smooth((t - (T - 0.07)) / 0.06))
+        rim = cv2.GaussianBlur(np.clip(win * (1 - win) * 4, 0, 1), (0, 0), 2.5) * (1 - smooth((t - (T - 0.10)) / 0.08))
+        Bz = _zoom_about(B, 1 + 0.08 * (1 - smooth((t - td) / (T - td))), W / 2, H * 0.5)
+        o = o * (1 - win[..., None]) + Bz * win[..., None]
+        o = 1 - (1 - o) * (1 - np.clip(rim[..., None] * (TR_RED + (TR_HOT - TR_RED) * 0.70) * 1.3
+                                       + cv2.GaussianBlur(rim, (0, 0), 16)[..., None] * TR_RED * 1.3, 0, 1))
+    rng = np.random.default_rng(1961); n = 220                                 # embers shed from the head
+    tb = rng.uniform(0.05, td + 0.12, n); age = t - tb; k = (age >= 0) & (age < 0.40)
+    if k.any():
+        hx, hy, hp, hz = _trail_pos(tb[k], cx, fy, ybot, td)
+        ex = hx + rng.uniform(-110, 110, n)[k] * age[k]; ey = hy + 420 * age[k] ** 2 + rng.uniform(-50, 50, n)[k] * age[k]
+        al = (np.exp(-age[k] / 0.15) * rng.uniform(0.5, 1.3, n)[k]).astype(np.float32)
+        hide = (hz < 0) & (P[np.clip(ey, 0, H - 1).astype(int), np.clip(ex, 0, W - 1).astype(int)] > 0.5)
+        al = (al * ~hide).astype(np.float32)
+        rgb, _ = splat109(ex, ey, np.tile(np.array([[0.30, 0.50, 1.0]], np.float32), (int(k.sum()), 1)), al, q=2, sig=1.1)
+        o = o + cv2.resize(rgb, (W, H), interpolation=cv2.INTER_LINEAR) * 2.6
+    return np.clip(o, 0, 1)
+TR2["trail109"] = (trail109, 42, 18)
+
+def beat_phase(f):
+    """rev 3: the camera also rests while the trail circles him and dives (e33.6-36.4)."""
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    hook = (E.E_BEAT + 2 <= e < 52.6) and not (10 <= e < 13.5) and not (18.5 <= e < 19.5) and not (29.5 <= e < 31) \
+        and not (33.6 <= e < 36.4) and not (37.4 <= e < 40) and not (49.5 <= e < 50.4)
+    return ph, bi, hook, False
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with

@@ -42,7 +42,7 @@ BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
-SET_PIECES = [("the flashlight", th(2), th(4)), ("MATERIALISE", th(5), th(8)), ("PHANTOM", th(10), th(13.5)),
+SET_PIECES = [("the flashlight", th(2), th(4)), ("THE PHANTOM'S TRAIL", th(34.2), th(36.4)), ("MATERIALISE", th(5), th(8)), ("PHANTOM", th(10), th(13.5)),
               ("the surveillance", th(27), th(31)), ("THE GUST (loop)", th(53), th(56))]
 SIGNATURE = ["materialize109"]
 HERO = ["mist_veil"]                        # the phantom mist: the drop, the vanish, the loop
@@ -104,8 +104,8 @@ shot("gloves", "p1", 26, 28, 102.20, 102.80, z=[(0, 1.00), (1, 1.04)], tin="pola
 shot("tape", "p7", 28, 30, 22.55, 23.65, z=[(0, 1.00), (1, 1.04)], tin="cctv109", seg=True, interp="blend", hflip=True, **SP)   # the pack mirrored it (DO NOT CROSS read backwards)
 shot("hall", "s1", 30, 32, 349.40, 350.30, z=[(0, 1.00), (1, 1.04)], tin="vanish109", seg=True, interp="flow", **SP)
 shot("police", "s4", 32, 34, 48.40, 49.30, z=[(0, 1.00), (1, 1.03)], tin="page_turn107", interp="flow", redthr=0.30, **SP)   # "the only one that I'm hunting": the predator's look
-shot("dock", "s4", 34, 36, 73.80, 74.80, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)
-shot("hunt", "s1", 36, 39, 355.40, 356.40, z=[(0, 1.00), (1, 1.04)], tin="molasses108", interp="flow", **SP)
+shot("dock", "s4", 34, 36, 73.80, 74.80, z=[(0, 1.00), (1, 1.04)], tin="whip", seg=True, interp="flow", **SP)   # the phantom's trail circles him
+shot("hunt", "s1", 36, 39, 355.40, 356.40, z=[(0, 1.00), (1, 1.04)], tin="trail109", interp="flow", **SP)   # ...and dives at the lens
 shot("mangrove", "s1", 39, 41, 176.00, 176.90, z=[(0, 1.00), (1, 1.03)], tin="print109", interp="flow", **SP)   # through his print: the mangroves
 shot("lighter", "s1", 41, 43, 222.30, 223.20, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)   # he burns the photo
 shot("hammer", "s4", 43, 46, 222.30, 223.30, z=[(0, 1.00), (1, 1.04)], tin="burn109", interp="flow", **SP)   # the photo's fire burns the frame away

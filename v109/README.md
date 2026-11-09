@@ -102,3 +102,15 @@ transition graphic … stem from the actual picture that's burning and try to ma
   the shot on four keyframes): an ember catches on the photo's corner, a ragged hole burns through the photo with the
   hammer shot inside it, and the fire spills off the photo's edges and burns the frame away (white-hot lip, glowing
   paper, char, sparks). The fire sound starts when the photo catches.
+
+## Revision 3 (the owner's notes)
+*"I really like this edit still, but I think it's just missing one more focal point. I would like for you to add one more
+really, really cool, custom, unique graphic into a transition … Just try to add one more piece that really is the
+finishing touch."*
+- **THE PHANTOM'S TRAIL** (14.7–15.7 s, the dock into the night hunt; replaces the hot-molasses pour reused from v108):
+  a ribbon of blood-red light, the only colour this grade keeps and the only trace the phantom leaves, streaks in out of
+  the dark and spirals around him, with a thinner companion strand. It passes behind his shoulders (his matte hides it)
+  and in front of his waist, never across his face. It twists like silk, white-hot at its core, and sheds embers. Then
+  its head breaks from the orbit and dives through his chest at the lens, and the ribbon swells behind it into a
+  glowing-edged window with the next shot inside, until it fills the frame. The beat camera rests while it plays; one
+  rising whoosh into the dive (the pour and the dock whoosh are gone, 11 effects).

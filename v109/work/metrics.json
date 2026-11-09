@@ -1,6 +1,6 @@
 {
  "edit": "v109",
- "round": 3,
+ "round": 4,
  "stages": [
   {
    "t": "2026-11-09 04:02:57",
@@ -631,6 +631,69 @@
    "step": "deliver",
    "s": 160.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:15:39",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:17:02",
+   "round": 4,
+   "step": "prep",
+   "s": 83.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:17:30",
+   "round": 4,
+   "step": "sheet:trail:886,891,896,901,906,911,915,919,922,925,928,932,937,942",
+   "s": 22.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:18:30",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:18:46",
+   "round": 4,
+   "step": "sheet:trail:886,891,896,901,906,911,915,919,922,925,928,931,935,940",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:19:17",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:19:33",
+   "round": 4,
+   "step": "sheet:trail:891,898,904,910,915,919,922,925,928,931,935,940",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:19:51",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:20:04",
+   "round": 4,
+   "step": "sheet:trail:919,922,924,926,928,931",
+   "s": 13.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -669,6 +732,12 @@
    "round": 3,
    "cat": "plain_effect",
    "text": "make the fire transition graphic ... stem from the actual picture that's burning and try to make it tied into that transition"
+  },
+  {
+   "t": "2026-11-09 17:14:56",
+   "round": 4,
+   "cat": "density",
+   "text": "it's just missing one more focal point ... add one more really, really cool, custom, unique graphic into a transition ... the finishing touch"
   }
  ],
  "catches": [
@@ -749,11 +818,18 @@
    "round": 3,
    "cat": "drawn_asset",
    "text": "the photo's first burnt hole was a clean quad (read as a rectangle): ragged photo edge, the fire spills out sooner"
+  },
+  {
+   "t": "2026-11-09 17:20:19",
+   "round": 4,
+   "cat": "drawn_asset",
+   "text": "the trail's first ribbon was a thin line and its dive a red flash: a bold two-strand silk ribbon, a band that swells behind the head with the next shot inside"
   }
  ],
  "round_starts": {
   "1": "2026-11-09 05:23:02",
   "2": "2026-11-09 15:23:07",
-  "3": "2026-11-09 16:37:38"
+  "3": "2026-11-09 16:37:38",
+  "4": "2026-11-09 17:14:56"
  }
 }

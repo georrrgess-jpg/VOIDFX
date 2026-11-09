@@ -977,8 +977,7 @@ def main109():
     place(fx, stereo(buzz(0.30, -18, 90, 180, 3905), 0.2), t0["walk"] - 0.12)                        # the phone's tantrum
     place(fx, A2.whoosh(0.34, -19, 3912, True), t0["anthem"] - 0.26)                                  # rev 1: we pass through him
     place(fx, A2.whoosh(0.45, -19, 3907, True), t0["hall"] - 0.25)                                    # the vanish
-    place(fx, A2.whoosh(0.30, -19, 3908, False), t0["dock"] - 0.20)
-    place(fx, stereo(pour(0.50, -20, 3910)), t0["hunt"] - 0.35)
+    place(fx, A2.whoosh(0.62, -17, 3914, True), t0["hunt"] - 0.50)                                    # rev 3: THE PHANTOM'S TRAIL dives
     place(fx, stereo(fire_whoosh(-18, 0.75, 3913)), t0["hammer"] - 0.48)                               # rev 2: the photo catches, the frame burns
     tl = th(53.0); place(fx, A2.whoosh(E.DUR - tl - 0.05, -18, 3911, True), tl)                       # rev 1: THE GUST
     fx = fx * db(10.0)
