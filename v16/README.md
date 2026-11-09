@@ -91,22 +91,35 @@ in 10 moments**, none on beats but the drop's set piece; the new transitions are
 - the signal's heavy switch (THE SIGNAL), and a soft whoosh through the bolt;
 - a soft reversed whoosh at the pull-back's fastest moment (HOME LIGHT); the song carries the wrap.
 
-## Measured
+## Measured (round 2)
 - **QC:** 11/11 on the encode.
 - **Loudness:** −13.4 LUFS, true peak −4.2 dBTP after AAC.
-- **Loop seam:** blurred difference **0.10** (gate ≤ 1). The picture step across the wrap is 0.63, against 0.83 for the
-  frames around it. Frame 0's slow push-in runs on through the loop's last second, so the camera keeps moving across
-  the wrap.
+- **Loop seam:** blurred difference **0.12** (gate ≤ 1). The picture step across the wrap is 0.72, against 1.14 for the
+  frames around it: the rooftop footage and its push-in run on across the wrap.
 - **Flashes:** none over the limit; no white-outs.
-- **Motion audit:** every pop is a cut, a beat, the hold cadence or a designed move (one in the streak pass's blur).
-- **Dead span:** one by design: the loop's last 1.2 s, the slow push into frame 0 with the city's windows breathing.
-- **Judder:** two shots keep their own cadence on purpose:
-  - the charge (HOLD ON), whose source is strobe-cut, so slow flow ghosted it;
-  - the S5 run under LONG EXPOSURE (18 % repeated frames).
-- **Faces vs effects:** 9 small flags (3–7 % of the face box). Two are false positives, where the lamp's grille was read
-  as a face. The rest are lightning near the charge's shoulders.
-- **plan_check:** 0 FAIL, 1 WARN (the charge's own cadence, deliberate).
-- **Density:** 23 designed transitions and the loop in 24.0 s (0.96/s), nearly all custom; 10 lean effects.
+- **Motion audit:** 28 pops, every one a cut, a beat, the charge's own cadence or a designed flash; no dead span.
+- **Judder:** one shot keeps its own cadence on purpose: the charge (HOLD ON), whose source is strobe-cut.
+- **Faces vs effects:** 16 flags in 5 runs.
+  - The charge's lightning at the shoulders (as in round 1).
+  - The lamp's grille, read as a face.
+  - The loop, where the face box is the loft shot's own while its picture is shrinking into the window (no effect is on a
+    face).
+- **plan_check:** 0 FAIL, 1 WARN (the charge's own cadence, deliberate). One false positive accepted: the hero call graph
+  reaches `home_light` through `edge15` -> `base16`.
+- **Density:** 26 designed transitions and the loop in 24.0 s (1.12/s), nearly all custom; 11 lean effects.
+- **Caught before delivery (round 2):**
+  - The plan check caught a new loft two-shot that matched the final shot; it was swapped.
+  - The loop's virtual frames ghosted another shot (a speed estimate divided by ~0).
+  - The window in frame 0 was two merged bokeh blobs that glared.
+  - The fresh-eyes critique ranked the first round-2 hop and loop HIGH: they magnified the 720p footage 20–60× into mush.
+    Both were rebuilt with parallax.
+  - Other critique and QC catches:
+    - a look-alike masked close-up was swapped;
+    - the bar run was re-framed so the Flash emerges;
+    - the new transitions were too faint and were strengthened;
+    - the signal's plates lingered and now clear within 0.2 s;
+    - the first run's flickering matte popped the trails and was replaced by a head path;
+    - an older one-frame pop in FOCUS PULL was fixed.
 
 ## Round 2 (the owner's notes, all applied in one pass)
 > "I felt like there wasn't enough transitions or creative graphics or animations throughout … try to have that fast

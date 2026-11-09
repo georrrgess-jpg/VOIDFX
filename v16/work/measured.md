@@ -1,9 +1,9 @@
 - **QC:** 11/11 on the encode (11 distinct checks).
 - **Loudness:** -13.4 LUFS, true peak -4.2 dBTP after AAC.
-- **Loop seam:** blurred difference 0.12 (gate ≤ 1); audio seam step 0.0134; picture wrap step 0.72 vs local median 1.22.
+- **Loop seam:** blurred difference 0.12 (gate ≤ 1); audio seam step 0.0134; picture wrap step 0.72 vs local median 1.14.
 - **Flashes:** 0 events, at most 0 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
-- **Faces vs effects:** 21 flags in 6 runs: 418–426, 800–800, 1080–1084, 1340–1356, 1366–1366, 1376–1386.
-- **Motion audit:** 32 pops (UNEXPLAINED 2, beat 4, cadence 10, cut 15, flash 1); UNEXPLAINED at [326, 800] (check signoff_pops.jpg); dead spans 0; judder flags 1.
+- **Faces vs effects:** 16 flags in 5 runs: 418–426, 1080–1084, 1340–1346, 1354–1360, 1374–1374.
+- **Motion audit:** 28 pops (beat 4, cadence 10, cut 13, flash 1); dead spans 0; judder flags 1.
 - **plan_check:** 0 FAIL, 1 WARN; WARN: [smoothness] 'charge' holds 24p frames (interp=hold): judder between 60p shots (v106 rule 5).
-- **Effort this round (2):** 1 renders (7.0 min), QC 2.6 min.
+- **Effort this round (2):** 3 renders (20.1 min), QC 5.0 min.
