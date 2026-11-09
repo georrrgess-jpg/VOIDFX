@@ -98,7 +98,7 @@ shot("still", "fbh", 32, 40, 10.75, 10.78, tin="time_stop", seg=True, z=[(0, 1.0
 shot("eyes", "fbh", 40, 42.5, 116.60, 117.52, tin="time_restart", seg=True)
 shot("iris", "fs4", 42.5, 46.5, 117.25, 118.30, tin="eye_iris15", seg=True)                      # S4: Iris at work (her life)
 shot("look", "fs1", 46.5, 50.5, 236.00, 237.50, tin="speed_whip15", seg=True, tmap=vel(46.5, 50.5, 236.00, 237.50), lin=True, flowmax=30, flowfall="blend")
-shot("sunrun", "fs4", 50.5, 53, 2.55, 3.70, tin="turn_away", seg=True, tmap=vel(50.5, 53, 2.55, 3.70), lin=True)   # he turns away and runs
+shot("sunrun", "fs4", 50.5, 53, 2.55, 3.70, tin="turn_away", seg=True, tmap=vel(50.5, 53, 2.55, 3.70), lin=True, flowmax=60)   # he turns away and runs
 shot("hair", "fs1", 53, 56, 237.80, 238.76, tin="wind_gust", seg=True)
 shot("trail", "fs1", 56, 58.5, 238.85, 239.65, tin="smear", seg=True, face=None, cx=(700, 560), flowmax=30, flowfall="blend")
 shot("emblem", "fbh", 58.5, 64, 92.30, 93.45, tin="focus_rack15", seg=True, z=[(0, 1.00), (1, 1.00)])

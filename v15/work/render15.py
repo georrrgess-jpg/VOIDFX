@@ -10688,13 +10688,13 @@ def time_restart(A, B, j, f, sa, sb, pre=14, post=24):
         u = (j + pre) / pre
         lum = lum8(A); hot = np.clip((lum - 0.62) / 0.25, 0, 1)[..., None] * nf
         glow = cv2.GaussianBlur(hot[..., 0], (0, 0), 8 + 46 * u)[..., None] * nf
-        o = A * (1 + (0.6 + 1.6 * ein(u, 1.6)) * hot) + glow * AMBR * (0.5 + 1.4 * ein(u, 1.4))
+        o = A * (1 + 2.2 * ein(u, 1.4) * hot) + glow * AMBR * (1.9 * ein(u, 1.3))                  # from nothing: no step at its start
         return np.clip(radial_blur(np.clip(o, 0, 1), cx, cy, 1.0, 1.0 + 0.16 * ein(u, 2.4), 7), 0, 1)
     v = (j + 1) / post; k = 0.16 * (1 - eout(v, 2.2))
     Bz = zoom_about(B, W / 2, H * 0.42, 1.0 + 0.07 * (1 - eout(v, 2.0)))
     lumB = lum8(Bz)[..., None]; sat = smooth(clamp(v / 0.55, 0, 1))
     Bc = Bz * sat + lumB * np.array([1.08, 0.99, 0.92], F32) * (1 - sat)                         # the colour floods back
-    w = smooth(clamp((j + 1) / 4, 0, 1))
+    w = smooth(clamp((j + 1) / 6, 0, 1))
     if w < 1:
         Ab = edge15(sa, "last"); lumA = lum8(Ab); hotA = np.clip((lumA - 0.62) / 0.25, 0, 1)[..., None] * nf
         Ab = np.clip(Ab * (1 + 2.2 * hotA) + cv2.GaussianBlur(hotA[..., 0], (0, 0), 54)[..., None] * nf * AMBR * 1.9, 0, 1)

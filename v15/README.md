@@ -90,9 +90,46 @@ effects**, none on beats:
 - a reversed whoosh (the rewind into frame 0).
 
 ## Measured
-MEASURED_V15
+- **QC:** 11/11 on the encode (format, decode, loudness, frozen runs, face centring, text, clicks, loop seam, length, flashes).
+- **Loudness:** −13.0 LUFS, true peak −4.5 dBTP after AAC.
+- **Loop seam:** blurred difference 0.26 (gate ≤ 1); picture wrap step 0.9 vs a local median of 3.42; audio seam step 0.043.
+- **Flashes:** none over the limit; no white-outs.
+- **Motion audit:** 35 pops, all explained: 10 cuts, 7 beat hits, 13 hold cadence, and 5 the audit couldn't label:
+  - three are the beat camera's punches on the e6.5 kicks (126, 591, 1055);
+  - two are inside designed moves (the speed whip, 897; the smear's start, 1082).
+- **Dead span:** one, the frozen strike (10.6–12.6 s, mean 1.2 grey levels). It is TIME STOPS by design: nine kick steps, hanging drops, pulsing bolts.
+- **Judder:** one flag, `runfs5`. Its source flickers frame to frame, so it holds its 24p frames at 1.05× (the handbook's rule for fast motion).
+- **Faces vs effects:** 28 flags in the frozen moment (634–686) and one at 1494. Both are the slow camera drift through a frozen frame, not an overlay; the drops and glow are masked off the face.
+- **plan_check:** 0 FAIL, 3 WARN, each one decided:
+  - strike/still is one continuous moment by design;
+  - `runfs5` is held on purpose (above);
+  - `hair` sits next to `look` in the S1 source but is a different shot (the Flash, then Iris).
+- **Density:** 26 designed transitions and the loop in 25.8 s; generic connectors 15 %; the hero in 4 transitions.
 
 ## How it was made
 - **Song prep:** the song map found no drops (steady lo-fi energy), so the whole song was prepped (stems, Whisper,
   grid). The window was chosen by hand: the bar-energy profile showed one structural moment, the drum break at 67.2 s.
-- **Caught before delivery:** CATCHES_V15
+- **Caught before delivery:** the fresh-eyes critique and the sign-off review, fixed in one pass before delivery:
+  - **look-alike shots:** the two Iris shots read as one clip, so `iris` is now S4 Iris at work. The second dark masked
+    face-on shot became the S4 fire flight.
+  - **the loop:** it was a soft ring wipe ("low effort"), so it was rebuilt as time stopping once more and the REWIND
+    through the edit's memories.
+  - **the emblem clock's bolt:** cutting it out by colour missed its pale faces, which left a ghost bolt on the disc. It
+    is now traced as a polygon, the disc is filled from its own white, and the hand has a rotational motion blur.
+  - **effects on faces:**
+    - the eye transition's veins crossed his face;
+    - the restart's ring left a ghosted double face;
+    - the time slice's seams split faces;
+    - drops and a glow sat on his face in the frozen moment;
+    - the strike bolt crossed the lab shot's face.
+  - **rhythm and density:**
+    - four cuts after the return were off the kicks;
+    - the `look` hold sat near the static floor, so a city-run insert now carries the TURN AWAY;
+    - the v13 panel port became PENDULUM.
+  - **render defects:**
+    - a static hairline in the whip up;
+    - ghosted copies in VIBRATE;
+    - a focus-rack snap;
+    - the opening's judder;
+    - the source's RGB flicker in the last shot's lenses (the shot now freezes before it);
+    - the ratchet anchored to the wrong shot after a rename.
