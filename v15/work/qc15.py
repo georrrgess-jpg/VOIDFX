@@ -59,6 +59,8 @@ def _tr_window():
         t_ = s_.get("tin")
         if t_ in TR: ex.update(range(s_["f0"] - TR[t_][1], s_["f0"] + TR[t_][2]))
         elif t_: ex.update(range(s_["f0"] - 8, s_["f0"] + 12))
+    for nm, t0, t1 in getattr(E, "SET_PIECES", []):                                         # v15: the loop is the transition into
+        if nm == "loop": ex.update(range(int(round(getattr(E, "LOOP_E1", 0) * E.HB * E.FPS)) or int(round(t0 * E.FPS)), E.DUR_F))   # frame 0 (memory cards fly past)
     return ex
 TRW = _tr_window(); in_tr = {}
 bad = {}; cnt = {}

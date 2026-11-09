@@ -95,22 +95,23 @@ effects**, none on beats:
 - a watch-crown ratchet into a sweep (the emblem clock);
 - a reversed whoosh (the rewind into frame 0).
 
-## Measured
-- **QC:** 11/11 on the encode (format, decode, loudness, frozen runs, face centring, text, clicks, loop seam, length, flashes).
+## Measured (round 2)
+- **QC:** 11/11 on the encode.
 - **Loudness:** −13.0 LUFS, true peak −4.5 dBTP after AAC.
-- **Loop seam:** blurred difference 0.26 (gate ≤ 1); picture wrap step 0.9 vs a local median of 3.42; audio seam step 0.043.
-- **Flashes:** none over the limit; no white-outs.
-- **Motion audit:** 35 pops, all explained: 10 cuts, 7 beat hits, 13 hold cadence, and 5 the audit couldn't label:
-  - three are the beat camera's punches on the e6.5 kicks (126, 591, 1055);
-  - two are inside designed moves (the speed whip, 897; the smear's start, 1082).
-- **Dead span:** one, the frozen strike (10.6–12.6 s, mean 1.2 grey levels). It is TIME STOPS by design: nine kick steps, hanging drops, pulsing bolts.
-- **Judder:** one flag, `runfs5`. Its source flickers frame to frame, so it holds its 24p frames at 1.05× (the handbook's rule for fast motion).
-- **Faces vs effects:** 28 flags in the frozen moment (634–686) and one at 1494. Both are the slow camera drift through a frozen frame, not an overlay; the drops and glow are masked off the face.
-- **plan_check:** 0 FAIL, 3 WARN, each one decided:
-  - strike/still is one continuous moment by design;
-  - `runfs5` is held on purpose (above);
-  - `hair` sits next to `look` in the S1 source but is a different shot (the Flash, then Iris).
-- **Density:** 26 designed transitions and the loop in 25.8 s; generic connectors 15 %; the hero in 4 transitions.
+- **Loop seam:** blurred difference **0.13** (round 1: 0.26; gate ≤ 1). The picture step across the wrap is 0.78, smaller
+  than the frames around it (1.89), so it reads as continuous motion.
+- **Dead spans:** none (round 1: the freeze, 10.6–12.6 s).
+- **Motion audit:** every pop is a cut, a beat hit, the hold cadence or a designed move:
+  - the bullet-time camera steps 1–2 frames after the drum-fill kicks (641–747);
+  - the dust cloud's gust front (1077–1080);
+  - the speed whip.
+- **Judder:** two shots keep their source cadence on purpose: the S4 city run (a stutter-cut source) and the S5 run (its
+  source flickers frame to frame).
+- **Faces vs effects:** 6 flags. 634–638 is the time-stop front passing over the frozen frame; 1478–1482 is the camera
+  flying through the last moment. Both are transition frames.
+- **plan_check:** 0 FAIL, 3 WARN, each one decided (strike/still is one moment by design; the two held runs; `hair` is a
+  different shot next to `look` in the S1 source).
+- **Density:** 28 designed transitions and the loop in 25.8 s, plus eight in-shot animations; generic connectors 2 of 28.
 
 ## How it was made
 - **Song prep:** the song map found no drops (steady lo-fi energy), so the whole song was prepped (stems, Whisper,
