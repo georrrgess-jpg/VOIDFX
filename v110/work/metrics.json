@@ -869,6 +869,34 @@
    "step": "plan",
    "s": 9.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:43:47",
+   "round": 4,
+   "step": "video",
+   "s": 370.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:46:26",
+   "round": 4,
+   "step": "qc",
+   "s": 159.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:46:35",
+   "round": 4,
+   "step": "report",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:49:06",
+   "round": 4,
+   "step": "deliver",
+   "s": 150.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -1144,5 +1172,11 @@
   "2": "2026-11-09 21:14:38",
   "3": "2026-11-09 21:49:19",
   "4": "2026-11-09 22:37:07"
+ },
+ "verdict": {
+  "t": "2026-11-09 22:49:37",
+  "round": 4,
+  "verdict": "standard",
+  "words": "I would like for you to remove the I'm losing power, and then upon completion, you can make the edit as standard."
  }
 }
