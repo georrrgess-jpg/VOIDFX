@@ -13495,6 +13495,463 @@ def lightson110(A, B, j, f, sa, sb, pre=8, post=16):
     return np.clip(B * m[..., None], 0, 1)
 TR2["lightson110"] = (lightson110, 8, 16)
 
+# ============================================================================ v110 rev 1 (the owner's notes)
+# "the splatter transition ... smoother and more seamless"; "the loop is really poor ... completely change the loop and
+# take a different avenue ... custom transitions and graphics"; "I'm losing power text ... incorporate it as more of a beat
+# drop"; "most of the transitions ... lackluster ... more unique and creative"; "the doorway transition at 16 seconds ...
+# the lines transition at 17 seconds ... replace them". New: the title slams in on the drop with the power surge; BOKEH,
+# TEAR, CURTAIN, PLASTIC ROLL, BRUSH; a smooth seep for the spatter; THE NEON SLEEPER loop.
+
+# ---- I'M LOSING POWER, on the drop: the power surges back and the words slam on with it (white-hot, a shock ripple
+# through the frame), surge on each beat of the bar, then lose power letter by letter.
+_TS = {}
+def _title_layer(sc):
+    if "l1" not in _TS:
+        _TS["l1"] = [(c, text_mask(c, F_BLACK, 118) if c != " " else None) for c in "I'M LOSING"]
+        _TS["l2"] = [(c, text_mask(c, F_BLACK, 250)) for c in "POWER"]
+    return _TS["l1"], _TS["l2"]
+
+def title110(out, f):
+    t = f / FPS; T0 = E.th(30); T_DIE = E.th(33.3)
+    if t < T0 - 0.001 or t > E.th(34.8): return out
+    k = t - T0
+    l1, l2 = _title_layer(1)
+    lay = np.zeros((H, W), np.float32)
+    def place(letters, y, gap):
+        wsum = sum((m.shape[1] if m is not None else 46) for c, m in letters) + gap * (len(letters) - 1); x = (W - wsum) / 2
+        for i, (c, m) in enumerate(letters):
+            if m is None: x += 46 + gap; continue
+            a = 1.0
+            td = T_DIE + 0.07 * ((i * 5) % 7) + 0.03 * i
+            if t > td: a *= max(0.0, 1 - smooth((t - td) / 0.16)) * (0.72 + 0.28 * math.cos((t - td) * 2 * math.pi * 4.0 + i))
+            if a > 0.003:
+                mm = m.astype(np.float32) / (m.max() + 1e-6); h_, w_ = mm.shape; yy, xx = int(y), int(x)
+                ys, xs, ye, xe = max(0, yy), max(0, xx), min(H, yy + h_), min(W, xx + w_)
+                if ye > ys and xe > xs: lay[ys:ye, xs:xe] = np.maximum(lay[ys:ye, xs:xe], mm[ys - yy:ye - yy, xs - xx:xe - xx] * a)
+            x += m.shape[1] + gap
+    place(l1, H * 0.615, 10); place(l2, H * 0.680, 12)
+    cx, cy = W / 2, H * 0.70
+    sc = 1 + 0.38 * math.exp(-k / 0.045)                                              # the slam
+    if sc > 1.003:
+        lays = [cv2.warpAffine(lay, np.float32([[s_, 0, cx * (1 - s_)], [0, s_, cy * (1 - s_)]]), (W, H)) for s_ in (sc, 1 + (sc - 1) * 0.6, 1 + (sc - 1) * 0.3)]
+        lay = (lays[0] + lays[1] + lays[2]) / 3
+    surge = 0.0
+    for eb in (30, 32, 34):                                                           # the tube surges on each beat
+        dk = t - E.th(eb)
+        if dk >= 0: surge = max(surge, math.exp(-dk / 0.10))
+    if k < 0.32:                                                                      # a shock ripple through the picture
+        rs = 120 + 1500 * (k / 0.32); d = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2) + 1e-3
+        amp = 16 * (1 - k / 0.32) * np.exp(-((d - rs) / 46.0) ** 2)
+        out = cv2.remap(out, (_GX + amp * (_GX - cx) / d).astype(np.float32), (_GY + amp * (_GY - cy) / d).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    hot = math.exp(-k / 0.09)
+    g1 = cv2.GaussianBlur(lay, (0, 0), 7)
+    g2 = cv2.resize(cv2.GaussianBlur(cv2.resize(lay, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H), interpolation=cv2.INTER_LINEAR)
+    core = np.array([0.82, 0.93, 1.0], np.float32) * (1 - 0.5 * hot) + np.array([1.0, 1.0, 1.0], np.float32) * 0.5 * hot
+    o = out * (1 - 0.88 * lay[..., None]) + lay[..., None] * core * (0.92 + 0.08 * surge) \
+        + (g1 * (0.55 + 0.35 * surge) + g2 * (0.85 + 0.6 * surge + 0.8 * hot))[..., None] * AMB110 * 0.55
+    return np.clip(o, 0, 1)
+
+# ---- BOKEH (the marina -> the doorway): the marina's city lights fall out of focus into big soft discs; the next shot's
+# lamp light comes back into focus out of them.
+_DISC = {}
+def _disc(r):
+    r = max(1, int(round(r)))
+    if r not in _DISC:
+        k = np.zeros((2 * r + 1, 2 * r + 1), np.float32); cv2.circle(k, (r, r), r, 1.0, -1, cv2.LINE_AA); _DISC[r] = k / k.sum()
+    return _DISC[r]
+
+def bokeh110(A, B, j, f, sa, sb, pre=14, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    dq = math.sin(math.pi * clamp(q, 0, 1)) ** 0.8
+    w = smooth((j + 3) / 6.0); img = A * (1 - w) + B * w
+    if dq < 0.02: return img
+    q4 = cv2.resize(img, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    L = lum(q4)
+    hdr = np.power(np.clip(q4, 0, 1), 2.2) * (1 + 9 * np.clip((L - 0.45) * 2.5, 0, 1))[..., None]
+    bl = cv2.filter2D(hdr, -1, _disc(1 + 13 * dq), borderType=cv2.BORDER_REFLECT)
+    o4 = np.power(np.clip(bl, 0, 1), 1 / 2.2)
+    o = cv2.resize(o4, (W, H), interpolation=cv2.INTER_LINEAR)
+    m = clamp(dq * 2.2, 0, 1)
+    return np.clip(img * (1 - m) + o * m, 0, 1)
+TR2["bokeh110"] = (bokeh110, 14, 14)
+
+# ---- TEAR (the drive -> the dark street): the picture is a print; it tears down one side and the print is pulled away
+# (the face stays whole on its piece), the next shot under it.
+_TR = {}
+def _tear_x():
+    if "x" not in _TR:
+        rng = np.random.default_rng(1131)
+        y = np.arange(H, dtype=np.float32)
+        n1 = np.interp(y, np.linspace(0, H, 14), rng.uniform(-1, 1, 14)); n2 = np.interp(y, np.linspace(0, H, 90), rng.uniform(-1, 1, 90))
+        _TR["x"] = (0.20 * W + 34 * n1 + 9 * n2).astype(np.float32)
+        _TR["fib"] = rng.random((H, 64)).astype(np.float32)
+    return _TR["x"], _TR["fib"]
+
+def tear110(A, B, j, f, sa, sb, pre=10, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    xt, fib = _tear_x(); xt2 = xt[:, None]
+    front = -0.10 * H + 1.25 * H * smooth(q / 0.38)
+    torn = smooth01((front - _GY[:, :1]) / 140.0)                                      # the tear runs down first
+    pull = ein(clamp((q - 0.22) / 0.78, 0, 1), 1.6)
+    sR = (1.25 * W * pull) * torn; sL = (0.32 * W * pull) * torn
+    srcR = _GX - sR; srcL = _GX + sL
+    mR = np.clip((srcR - xt2) / 1.5 + 0.5, 0, 1); mL = np.clip((xt2 - srcL) / 1.5 + 0.5, 0, 1)
+    aR = cv2.remap(A, srcR.astype(np.float32), _GY, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    aL = cv2.remap(A, srcL.astype(np.float32), _GY, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    gapL = srcL - xt2; gapR = srcR - xt2
+    shadow = 1 - 0.45 * (np.exp(-np.clip(gapR, 0, None) * 0 - np.clip(-gapR, 0, None) / 40.0) * (gapR < 0) + np.exp(-np.clip(gapL, 0, None) / 40.0) * (gapL > 0)) * torn
+    o = B * np.clip(shadow, 0.4, 1)[..., None]
+    o = o * (1 - mR[..., None]) + aR * mR[..., None]
+    o = o * (1 - mL[..., None]) + aL * mL[..., None]
+    fx = cv2.resize(fib, (W, H), interpolation=cv2.INTER_NEAREST)
+    edge = (np.exp(-((srcR - xt2) / 4.0) ** 2) * mR + np.exp(-((xt2 - srcL) / 4.0) ** 2) * mL) * torn * (0.55 + 0.45 * fx)
+    o = o * (1 - 0.8 * edge[..., None]) + edge[..., None] * np.array([0.86, 0.90, 0.93], np.float32) * 0.85
+    return np.clip(o, 0, 1)
+TR2["tear110"] = (tear110, 10, 14)
+
+# ---- CURTAIN (the doorway -> the night street): the sheer curtain behind him blows in across the lens on the night
+# air, backlit by the lamp; behind it the night street.
+CURT_COL = np.array([0.62, 0.78, 0.92], np.float32)
+def curtain110(A, B, j, f, sa, sb, pre=18, post=18):
+    q = (j + pre + 0.5) / (pre + post)
+    lead = -0.35 * W + 2.80 * W * smooth(q)
+    yy = _GY / H
+    edge = lead + 110 * np.sin(2 * np.pi * (yy * 1.2 - q * 1.4)) + 50 * np.sin(2 * np.pi * (yy * 3.1 + q * 2.2))
+    trail = edge - 1.30 * W
+    inside = np.clip((edge - _GX) / 70.0, 0, 1) * np.clip((_GX - trail) / 120.0, 0, 1)
+    wB = np.clip((edge - _GX) / (1.30 * W), 0, 1); wB = wB * wB * (3 - 2 * wB)
+    base = A * (1 - wB[..., None]) + B * wB[..., None]
+    ph = (_GX - lead * 0.55) / 120.0 + 0.9 * np.sin(_GY / 300.0 + q * 5.0)
+    fold = 0.5 + 0.5 * np.sin(2 * np.pi * ph)
+    dens = inside * (0.50 + 0.28 * fold)
+    soft = cv2.resize(cv2.GaussianBlur(cv2.resize(base, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 4), (W, H))
+    fab = soft * 0.45 + CURT_COL * (0.22 + 0.22 * fold)[..., None]
+    o = base * (1 - dens[..., None]) + fab * dens[..., None]
+    return np.clip(o + (inside * fold ** 6 * 0.10)[..., None] * AMB110, 0, 1)
+TR2["curtain110"] = (curtain110, 18, 18)
+
+# ---- PLASTIC ROLL (the night street -> the kill room): kill-room plastic sheeting unrolls down over the lens (clear,
+# crinkled, catching the light); behind it the street becomes the kill room; the sheet runs on down and away.
+def plasticroll110(A, B, j, f, sa, sb, pre=16, post=16):
+    q = (j + pre + 0.5) / (pre + post)
+    yb = -0.05 * H + 2.45 * H * smooth(q); yt = yb - 1.30 * H
+    inside = np.clip((yb - _GY) / 6.0, 0, 1) * np.clip((_GY - yt) / 40.0, 0, 1)
+    wB = np.clip((yb - _GY) / (1.30 * H), 0, 1); wB = wB * wB * (3 - 2 * wB)
+    base = A * (1 - wB[..., None]) + B * wB[..., None]
+    if "pc" not in _TR:
+        n = _up(nz108(1132, 2.2)); gy, gx = np.gradient(n)
+        _TR["pc"] = (gx * 900, gy * 900, n)
+    gx, gy, n = _TR["pc"]
+    sh = int(clamp(yb, -H, 3 * H)) % H                                                  # the crinkles travel with the sheet
+    gxs = np.roll(gx, sh, axis=0); gys = np.roll(gy, sh, axis=0)
+    ref = cv2.remap(base, (_GX + 12 * gxs * inside).astype(np.float32), (_GY + 12 * gys * inside).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    spec = np.clip(-0.6 * gxs - 0.8 * gys, 0, None) ** 2 * 0.9
+    o = base * (1 - inside[..., None]) + (ref * 0.86 + 0.05 + spec[..., None] * np.array([0.9, 0.9, 0.85], np.float32)) * inside[..., None]
+    roll = np.exp(-((_GY - (yb - 14)) / 9.0) ** 2) * (yb > 0)                          # the roll's bright edge
+    return np.clip(o + roll[..., None] * np.array([0.55, 0.58, 0.60], np.float32) * 0.6, 0, 1)
+TR2["plasticroll110"] = (plasticroll110, 16, 16)
+
+# ---- BRUSH (the kill room -> the cabin): two dry-brush strokes of dark red sweep across and paint the next shot in.
+def brush110(A, B, j, f, sa, sb, pre=12, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    if "bn" not in _TR:
+        rng = np.random.default_rng(1133); s_ = rng.standard_normal((64, 1024)).astype(np.float32)
+        s_ = cv2.GaussianBlur(s_, (0, 0), sigmaX=40, sigmaY=0.8); s_ = (s_ - s_.min()) / (s_.max() - s_.min())
+        _TR["bn"] = s_
+    bn = _TR["bn"]; m = np.zeros((H, W), np.float32); rim = np.zeros((H, W), np.float32)
+    for k, (ang, c0, wid, t0, t1) in enumerate(((-32, 0.36, 0.62, 0.00, 0.55), (-32, 0.82, 0.70, 0.30, 0.90))):
+        a = math.radians(ang); ux, uy = math.cos(a), math.sin(a)
+        cxk, cyk = W * 0.5, H * c0
+        along = (_GX - cxk) * ux + (_GY - cyk) * uy; dn = -(_GX - cxk) * uy + (_GY - cyk) * ux
+        head = -1.2 * W + 2.6 * W * smooth((q - t0) / (t1 - t0))
+        st = cv2.remap(bn, ((dn / (wid * H) + 0.5) * 63).astype(np.float32), ((along + 1.3 * W) / (2.6 * W) * 1023).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        half = wid * H / 2
+        mk = np.clip((half - np.abs(dn) + 90 * (st - 0.5)) / 5.0, 0, 1) * np.clip((head - along + 60 * (st - 0.5)) / 8.0, 0, 1)
+        dry = np.clip((st - 0.18) / 0.12, 0, 1)                                         # dry streaks inside
+        mk = mk * (0.25 + 0.75 * dry) * np.clip((head - along) / 140.0, 0, 1) + mk * np.clip((head - along - 140) / 200.0, 0, 1) * (1 - (0.25 + 0.75 * dry))
+        m = np.maximum(m, np.clip(mk, 0, 1))
+        rim = np.maximum(rim, np.clip(1 - np.abs(np.abs(dn) - half) / 26.0, 0, 1) * np.clip((head - along) / 30.0, 0, 1))
+    m = np.maximum(m, smooth((q - 0.86) / 0.14))
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    o = o * (1 - 0.35 * rim[..., None] * (1 - m[..., None] * 0.5)) + rim[..., None] * np.array([0.03, 0.03, 0.30], np.float32) * 0.5 * (1 - smooth((q - 0.86) / 0.14))
+    return np.clip(o, 0, 1)
+TR2["brush110"] = (brush110, 12, 14)
+
+# ---- THE SPATTER, smooth: the cast-off lands softly along the swing; the blood room seeps in from its blood with a wide,
+# soft front and a slow push that runs on through the cut (no hard edges, no seam).
+def spatter110(A, B, j, f, sa, sb, pre=34, post=30):
+    q = (j + pre + 0.5) / (pre + post)
+    m, D = _spatter_mask(sb)
+    px, py = 1.20 * W, 1.30 * H
+    ang = np.arctan2(_GY - py, _GX - px)
+    front = -1.95 + (-3.05 + 1.95) * smooth(q / 0.50)
+    sweep = np.clip((ang - front) / 0.30, 0, 1); sweep = sweep * sweep * (3 - 2 * sweep)
+    keep = _face_keep(sa, f if j < 0 else sa["f1"] - 1)
+    red = m * sweep * keep * 0.85
+    Rr = -200 + 2000 * ein(clamp((q - 0.30) / 0.66, 0, 1), 1.3)
+    room = np.clip((Rr - D) / 260.0, 0, 1); room = room * room * (3 - 2 * room)
+    room = np.maximum(room, smooth((q - 0.72) / 0.26))
+    za = 1 + 0.05 * smooth(q); zb = 1 + 0.05 * (1 - smooth(q))                          # one continuous push through the cut
+    Az = _zoom_about(A, za, W / 2, H * 0.45); Bz = _zoom_about(B, zb, W / 2, H * 0.45)
+    o = Az * (1 - room[..., None]) + Bz * room[..., None]
+    wet = Bz * 0.92 + np.array([0.01, 0.01, 0.05], np.float32)
+    rr = (red * (1 - room))[..., None]
+    return np.clip(o * (1 - rr) + wet * rr, 0, 1)
+TR2["spatter110"] = (spatter110, 34, 30)
+
+# ---- THE NEON SLEEPER (the loop): on the second "Mommy?" the blood room loses power and goes dark; a neon tube draws
+# the outline of him lying in bed (frame 0's own silhouette), flickers on like the title, and frame 0 lights up from the
+# outline outward until it is the first frame again.
+NEON_F0 = E.fh(75.0)
+_NL = {}
+def _neon_setup():
+    if "c" not in _NL:
+        F0 = frame0_plate108(); P0 = _person(SHOTS[0], SHOTS[0]["f0"])
+        P0 = np.zeros((H, W), np.float32) if P0 is None else _pp_clean(P0)
+        cs, _ = cv2.findContours((P0 > 0.5).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        c = max(cs, key=cv2.contourArea)[:, 0, :].astype(np.float32)
+        c = c[np.argsort(np.arctan2(c[:, 1] - c[:, 1].mean(), c[:, 0] - c[:, 0].mean()))] if False else c
+        sm = np.stack([np.convolve(np.r_[c[-8:, i], c[:, i], c[:8, i]], np.ones(17) / 17, "valid") for i in range(2)], 1)
+        seg = np.sqrt((np.diff(sm, axis=0) ** 2).sum(1)); cum = np.r_[0, np.cumsum(seg)]
+        start = int(np.argmin(sm[:, 1]))                                                 # start at the top of his head
+        _NL.update(c=np.roll(sm, -start, axis=0), cum=None, F0=F0, P0=P0,
+                   Dout=cv2.distanceTransform(((P0 <= 0.5) * 255).astype(np.uint8), cv2.DIST_L2, 5).astype(np.float32))
+        cc = _NL["c"]; seg = np.sqrt((np.diff(cc, axis=0) ** 2).sum(1)); _NL["cum"] = np.r_[0, np.cumsum(seg)]
+    return _NL
+
+def neonloop110(out, f, s, person=None):
+    last = E.DUR_F - 1
+    if f < NEON_F0: return out
+    if f >= last: return frame0_plate108().copy()
+    t = (f - NEON_F0) / (last - NEON_F0); D = _neon_setup(); F0 = D["F0"]
+    lv = 1 - 0.70 * smooth(t / 0.30)                                                     # the blood room loses power
+    for tk, dd in ((0.08, 0.35), (0.16, 0.30)):
+        lv *= 1 - dd * math.exp(-((t - tk) / 0.018) ** 2)
+    o = out * lv
+    p = smooth((t - 0.12) / 0.42)                                                        # the tube draws his outline
+    cv = np.zeros((H, W), np.float32)
+    if p > 0:
+        n = int(np.searchsorted(D["cum"], p * D["cum"][-1]))
+        pts = D["c"][:max(2, n)]
+        cv2.polylines(cv, [np.round(pts * 8).astype(np.int32)], False, 1.0, 4, cv2.LINE_AA, shift=3)
+        if p < 1:
+            hx, hy = pts[-1]
+            cv += 1.4 * np.exp(-(((_GX - hx) ** 2 + (_GY - hy) ** 2) / (2 * 9.0 ** 2)))
+    on = 0.55 + 0.45 * smooth((t - 0.50) / 0.10)
+    for tk, dd in ((0.53, 0.7), (0.58, 0.5)):                                            # it flickers fully on
+        on *= 1 - dd * math.exp(-((t - tk) / 0.012) ** 2)
+    fade = 1 - smooth((t - 0.84) / 0.13)
+    cv = cv * on * fade
+    R = -40 + 1500 * ein(clamp((t - 0.58) / 0.36, 0, 1), 1.4)                           # frame 0 lights up from the outline outward
+    fill = np.clip((R - D["Dout"]) / 160.0, 0, 1) * smooth((t - 0.56) / 0.12)
+    fill = np.maximum(fill, smooth((t - 0.90) / 0.09))
+    o = o * (1 - fill[..., None]) + F0 * fill[..., None]
+    g1 = cv2.GaussianBlur(cv, (0, 0), 6); g2 = cv2.resize(cv2.GaussianBlur(cv2.resize(cv, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 7), (W, H))
+    o = o * (1 - 0.85 * np.clip(cv, 0, 1)[..., None]) + cv[..., None] * np.array([0.82, 0.93, 1.0], np.float32) + (g1 * 0.7 + g2 * 1.0)[..., None] * AMB110 * 0.55
+    we = smooth((t - 0.93) / 0.07)
+    return np.clip(o * (1 - we) + F0 * we, 0, 1)
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    out, person = base108(s, f)
+    if s["n"] == "light": out = light_scene110(out, f)
+    if s["n"] == "anguish": out = bulb110(out, f, s)
+    if s["n"] == "fan" and not (n_ and kn >= -TR2["fan110"][1]):
+        Pm = None if person is None else _pp_clean(np.clip(np.asarray(person, np.float32), 0, 1))
+        out = fan_draw110(out, f, Pm, keep=_face_keep(s, f))
+    if tin in TR2 and k < TR2[tin][2] and P is not None:
+        out = TR2[tin][0](edge108(P, "last"), out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge108(n_, "first"), kn, f, s, n_)
+    if s.get("tout") == "neonloop110": out = neonloop110(out, f, s, person)
+    out = beat_fx(out, f)
+    out = title110(out, f)
+    out = flash_governor(out)
+    return (np.clip(finish110(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+
+# ---- rev 1, after the stills: softer curtain folds (no stripes), a subtle crinkle on the plastic, no red line left by
+# the brush, a clean outline for the neon sleeper
+def curtain110(A, B, j, f, sa, sb, pre=18, post=18):
+    q = (j + pre + 0.5) / (pre + post)
+    lead = -0.35 * W + 2.80 * W * smooth(q)
+    yy = _GY / H
+    edge = lead + 110 * np.sin(2 * np.pi * (yy * 1.2 - q * 1.4)) + 50 * np.sin(2 * np.pi * (yy * 3.1 + q * 2.2))
+    trail = edge - 1.30 * W
+    inside = np.clip((edge - _GX) / 90.0, 0, 1) * np.clip((_GX - trail) / 160.0, 0, 1)
+    wB = np.clip((edge - _GX) / (1.30 * W), 0, 1); wB = wB * wB * (3 - 2 * wB)
+    base = A * (1 - wB[..., None]) + B * wB[..., None]
+    ph = (_GX - lead * 0.55) / 430.0 + 0.35 * np.sin(_GY / 520.0 + q * 3.0)
+    fold = 0.5 + 0.5 * np.sin(2 * np.pi * ph)                                          # broad, soft folds
+    dens = inside * (0.52 + 0.10 * fold)
+    soft = cv2.resize(cv2.GaussianBlur(cv2.resize(base, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6), (W, H))
+    fab = soft * 0.50 + CURT_COL * (0.24 + 0.08 * fold)[..., None]
+    o = base * (1 - dens[..., None]) + fab * dens[..., None]
+    lit = np.exp(-((_GX - (edge - 60)) / 90.0) ** 2) * inside                          # the backlit leading edge
+    return np.clip(o + lit[..., None] * AMB110 * 0.10, 0, 1)
+TR2["curtain110"] = (curtain110, 18, 18)
+
+def plasticroll110(A, B, j, f, sa, sb, pre=16, post=16):
+    q = (j + pre + 0.5) / (pre + post)
+    yb = -0.05 * H + 2.45 * H * smooth(q); yt = yb - 1.30 * H
+    inside = np.clip((yb - _GY) / 10.0, 0, 1) * np.clip((_GY - yt) / 80.0, 0, 1)
+    wB = np.clip((yb - _GY) / (1.30 * H), 0, 1); wB = wB * wB * (3 - 2 * wB)
+    base = A * (1 - wB[..., None]) + B * wB[..., None]
+    if "pc2" not in _TR:
+        n = _up(nz108(1134, 7)); gy, gx = np.gradient(cv2.GaussianBlur(n, (0, 0), 6))
+        sc = 1.0 / (np.abs(gx).max() + np.abs(gy).max() + 1e-6)
+        _TR["pc2"] = (gx * sc, gy * sc)
+    gx, gy = _TR["pc2"]
+    sh = int(clamp(yb, -H, 3 * H)) % H
+    gxs = np.roll(gx, sh, axis=0); gys = np.roll(gy, sh, axis=0)
+    ref = cv2.remap(base, (_GX + 10 * gxs * inside).astype(np.float32), (_GY + 10 * gys * inside).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    spec = np.clip(-0.6 * gxs - 0.8 * gys, 0, None) ** 2 * 0.22
+    o = base * (1 - inside[..., None]) + (ref * 0.88 + 0.04 + spec[..., None] * np.array([0.9, 0.9, 0.85], np.float32)) * inside[..., None]
+    roll = np.exp(-((_GY - (yb - 14)) / 10.0) ** 2) * (yb > 0)
+    return np.clip(o + roll[..., None] * np.array([0.55, 0.58, 0.60], np.float32) * 0.35, 0, 1)
+TR2["plasticroll110"] = (plasticroll110, 16, 16)
+
+def brush110(A, B, j, f, sa, sb, pre=12, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    if "bn" not in _TR:
+        rng = np.random.default_rng(1133); s_ = rng.standard_normal((64, 1024)).astype(np.float32)
+        s_ = cv2.GaussianBlur(s_, (0, 0), sigmaX=40, sigmaY=0.8); s_ = (s_ - s_.min()) / (s_.max() - s_.min())
+        _TR["bn"] = s_
+    bn = _TR["bn"]; m = np.zeros((H, W), np.float32); wet = np.zeros((H, W), np.float32)
+    for k, (ang, c0, wid, t0, t1) in enumerate(((-32, 0.36, 0.62, 0.00, 0.55), (-32, 0.82, 0.70, 0.30, 0.90))):
+        a = math.radians(ang); ux, uy = math.cos(a), math.sin(a)
+        cxk, cyk = W * 0.5, H * c0
+        along = (_GX - cxk) * ux + (_GY - cyk) * uy; dn = -(_GX - cxk) * uy + (_GY - cyk) * ux
+        head = -1.2 * W + 2.6 * W * smooth((q - t0) / (t1 - t0))
+        st = cv2.remap(bn, ((dn / (wid * H) + 0.5) * 63).astype(np.float32), ((along + 1.3 * W) / (2.6 * W) * 1023).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        half = wid * H / 2
+        mk = np.clip((half - np.abs(dn) + 90 * (st - 0.5)) / 5.0, 0, 1) * np.clip((head - along + 60 * (st - 0.5)) / 8.0, 0, 1)
+        dry = np.clip((st - 0.18) / 0.12, 0, 1)
+        mk = mk * (0.25 + 0.75 * dry) * np.clip((head - along) / 140.0, 0, 1) + mk * np.clip((head - along - 140) / 200.0, 0, 1) * (1 - (0.25 + 0.75 * dry))
+        m = np.maximum(m, np.clip(mk, 0, 1))
+        wet = np.maximum(wet, np.clip(mk, 0, 1) * np.exp(-np.clip(head - along, 0, None) / 120.0))   # wet paint only at the brush head
+    m = np.maximum(m, smooth((q - 0.86) / 0.14))
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    return np.clip(o * (1 - 0.25 * wet[..., None]) + wet[..., None] * np.array([0.03, 0.03, 0.28], np.float32) * 0.35, 0, 1)
+TR2["brush110"] = (brush110, 12, 14)
+
+def _neon_setup():
+    if "c" not in _NL:
+        F0 = frame0_plate108(); P0 = _person(SHOTS[0], SHOTS[0]["f0"])
+        P0 = np.zeros((H, W), np.float32) if P0 is None else P0
+        sm = cv2.resize(P0, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+        nl, lab, stats, _ = cv2.connectedComponentsWithStats((sm > 0.5).astype(np.uint8))
+        big = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA])) if nl > 1 else 0
+        sm = (lab == big).astype(np.float32)
+        sm = cv2.GaussianBlur(sm, (0, 0), 10)
+        P0c = cv2.resize((sm > 0.5).astype(np.float32), (W, H), interpolation=cv2.INTER_LINEAR)
+        cs, _ = cv2.findContours((P0c > 0.5).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        c = max(cs, key=cv2.contourArea)[:, 0, :].astype(np.float32)
+        on = (c[:, 0] > 8) & (c[:, 0] < W - 9) & (c[:, 1] > 8) & (c[:, 1] < H - 9)        # leave out the frame's own edges
+        runs, cur = [], []
+        for i in range(len(c)):
+            if on[i]: cur.append(c[i])
+            elif cur: runs.append(cur); cur = []
+        if cur: runs.append(cur)
+        if len(runs) > 1 and on[0] and on[-1]: runs[0] = runs[-1] + runs[0]; runs = runs[:-1]
+        path = np.array(max(runs, key=len), np.float32)
+        k = 15; path = np.stack([np.convolve(np.r_[[path[0, i]] * k, path[:, i], [path[-1, i]] * k], np.ones(2 * k + 1) / (2 * k + 1), "valid") for i in range(2)], 1)
+        if path[0, 0] > path[-1, 0]: path = path[::-1]                                  # draw it left to right, over his head
+        seg = np.sqrt((np.diff(path, axis=0) ** 2).sum(1))
+        _NL.update(c=path, cum=np.r_[0, np.cumsum(seg)], F0=F0, P0=P0c,
+                   Dout=cv2.distanceTransform(((P0c <= 0.5) * 255).astype(np.uint8), cv2.DIST_L2, 5).astype(np.float32))
+    return _NL
+
+def neonloop110(out, f, s, person=None):
+    last = E.DUR_F - 1
+    if f < NEON_F0: return out
+    if f >= last: return frame0_plate108().copy()
+    t = (f - NEON_F0) / (last - NEON_F0); D = _neon_setup(); F0 = D["F0"]
+    lv = 1 - 0.86 * smooth(t / 0.28)                                                     # the blood room loses power
+    for tk, dd in ((0.07, 0.35), (0.15, 0.30)):
+        lv *= 1 - dd * math.exp(-((t - tk) / 0.018) ** 2)
+    o = out * lv
+    p = smooth((t - 0.20) / 0.36)                                                        # the tube draws his outline in the dark
+    cv = np.zeros((H, W), np.float32)
+    if p > 0:
+        n = int(np.searchsorted(D["cum"], p * D["cum"][-1]))
+        pts = D["c"][:max(2, n)]
+        cv2.polylines(cv, [np.round(pts * 8).astype(np.int32)], False, 1.0, 5, cv2.LINE_AA, shift=3)
+        if p < 1:
+            hx, hy = pts[-1]
+            cv += 1.5 * np.exp(-(((_GX - hx) ** 2 + (_GY - hy) ** 2) / (2 * 10.0 ** 2)))
+    on = 0.55 + 0.45 * smooth((t - 0.56) / 0.08)
+    for tk, dd in ((0.58, 0.7), (0.62, 0.5)):                                            # it flickers fully on
+        on *= 1 - dd * math.exp(-((t - tk) / 0.012) ** 2)
+    fade = 1 - smooth((t - 0.84) / 0.13)
+    cv = cv * on * fade
+    R = -40 + 1500 * ein(clamp((t - 0.62) / 0.33, 0, 1), 1.4)                           # frame 0 lights up from the outline outward
+    fill = np.clip((R - D["Dout"]) / 180.0, 0, 1) * smooth((t - 0.60) / 0.12)
+    fill = np.maximum(fill, smooth((t - 0.90) / 0.09))
+    o = o * (1 - fill[..., None]) + F0 * fill[..., None]
+    g1 = cv2.GaussianBlur(cv, (0, 0), 6); g2 = cv2.resize(cv2.GaussianBlur(cv2.resize(cv, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 7), (W, H))
+    o = o * (1 - 0.85 * np.clip(cv, 0, 1)[..., None]) + cv[..., None] * np.array([0.82, 0.93, 1.0], np.float32) + (g1 * 0.7 + g2 * 1.0)[..., None] * AMB110 * 0.55
+    we = smooth((t - 0.93) / 0.07)
+    return np.clip(o * (1 - we) + F0 * we, 0, 1)
+
+# ---- THE DRIP (the loop, rev 1): as he looks up, one drop of blood falls in the dark beside his head (lit, refracting,
+# stretched by its speed); it lands, the blood room becomes a liquid surface, the ripples run out from the impact and the
+# bed (frame 0) comes up through them as through water; the surface calms on frame 0.
+DRIP_F0 = E.fh(74.6)
+DRIP_X, DRIP_Y = 0.84 * W, 0.82 * H
+def driploop110(out, f, s, person=None):
+    last = E.DUR_F - 1
+    if f < DRIP_F0: return out
+    if f >= last: return frame0_plate108().copy()
+    t = (f - DRIP_F0) / (last - DRIP_F0); F0 = frame0_plate108()
+    ti = 0.36                                                                           # the impact
+    o = out * (1 - 0.45 * smooth(t / ti))
+    if t < ti:                                                                          # the drop falls beside him
+        u = t / ti; y = -0.06 * H + (DRIP_Y + 0.06 * H) * u * u
+        o = blood_drop108(o.copy(), DRIP_X, y, 40.0, stretch=1.0 + 1.0 * u, tint=1.0, gloss=1.6)
+        return np.clip(o, 0, 1)
+    v = (t - ti) / (1 - ti)
+    d = np.sqrt((_GX - DRIP_X) ** 2 + ((_GY - DRIP_Y) * 1.15) ** 2) + 1e-3
+    R = 60 + 2300 * ein(v, 0.62)
+    decay = (1 - smooth((v - 0.35) / 0.55))
+    wave = np.zeros_like(d)
+    for k_, (lag, amp) in enumerate(((0, 1.0), (110, 0.7), (220, 0.45), (330, 0.25))):
+        rr = R - lag
+        if rr > 0: wave += amp * np.exp(-((d - rr) / 55.0) ** 2) * np.sin((d - rr) / 16.0)
+    disp = 22 * wave * decay
+    reveal = np.clip((R * 0.82 - d) / 220.0, 0, 1); reveal = reveal * reveal * (3 - 2 * reveal)
+    reveal = np.maximum(reveal, smooth((v - 0.45) / 0.25))
+    base = o * (1 - reveal[..., None]) + F0 * reveal[..., None]
+    mx = (_GX + disp * (_GX - DRIP_X) / d).astype(np.float32); my = (_GY + disp * (_GY - DRIP_Y) / d).astype(np.float32)
+    r_ = cv2.remap(base, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    crest = np.clip(wave, 0, 1) * decay
+    r_ = r_ * (1 + 0.10 * crest[..., None])                                                # light catching the crests (no drawn rings)
+    splash = math.exp(-((t - ti) / 0.05) ** 2) * np.exp(-(((_GX - DRIP_X) ** 2 + (_GY - DRIP_Y) ** 2) / (2 * 28.0 ** 2)))
+    r_ = r_ + splash[..., None] * np.array([0.06, 0.06, 0.45], np.float32)
+    we = smooth((t - 0.93) / 0.07)
+    return np.clip(r_ * (1 - we) + F0 * we, 0, 1)
+
+def render(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    out, person = base108(s, f)
+    if s["n"] == "light": out = light_scene110(out, f)
+    if s["n"] == "anguish": out = bulb110(out, f, s)
+    if s["n"] == "fan" and not (n_ and kn >= -TR2["fan110"][1]):
+        Pm = None if person is None else _pp_clean(np.clip(np.asarray(person, np.float32), 0, 1))
+        out = fan_draw110(out, f, Pm, keep=_face_keep(s, f))
+    if tin in TR2 and k < TR2[tin][2] and P is not None:
+        out = TR2[tin][0](edge108(P, "last"), out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge108(n_, "first"), kn, f, s, n_)
+    if s.get("tout") == "driploop110": out = driploop110(out, f, s, person)
+    out = beat_fx(out, f)
+    out = title110(out, f)
+    out = flash_governor(out)
+    return (np.clip(finish110(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with

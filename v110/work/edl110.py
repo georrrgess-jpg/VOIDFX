@@ -39,8 +39,8 @@ BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
-SET_PIECES = [("POWER FAILURE", th(10), th(21)), ("THROUGH THE FAN", th(24), th(31)), ("THE BARREL", th(43.5), th(47)),
-              ("THE SPATTER", th(66), th(69)), ("THE FALL (loop)", th(75), th(79))]
+SET_PIECES = [("POWER FAILURE", th(10), th(21)), ("THROUGH THE FAN + I'M LOSING POWER", th(24), th(34.5)), ("THE BARREL", th(43.5), th(47)),
+              ("THE SPATTER", th(66), th(70)), ("THE DRIP (loop)", th(74.6), th(79))]
 SIGNATURE = ["fan110"]
 HERO = ["power_light110"]                  # the failing / surging light: the title, the brownout, the fan
 HERO_TINS = ["lightson110", "brownout110", "fan110"]
@@ -90,7 +90,7 @@ SP = dict(look="sleep110")
 shot("bed", "ds2a", 0, 3, 20.40, 21.30, z=[(0, 1.00), (1, 1.03)], interp="flow", seg=True, **SP)             # frame 0: awake, staring up
 shot("yard", "dmx", 3, 6, 254.20, 255.20, z=[(0, 1.00), (1, 1.03)], tin="headlight110", interp="flow", **SP)   # a car's light crosses the bed
 shot("marina", "p1", 6, 8, 123.20, 124.00, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
-shot("doorway", "ds2b", 8, 10, 393.10, 393.80, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)
+shot("doorway", "ds2b", 8, 10, 393.10, 393.80, z=[(0, 1.00), (1, 1.03)], tin="bokeh110", interp="flow", **SP)
 # ---- POWER FAILURE (e10-e21): "I'm losing power"; the light above him fails, the bass goes
 shot("light", "p1", 10, 17, 147.00, 148.20, z=[(0, 1.00), (1, 1.04)], tin="lightson110", interp="flow", **SP)   # the tube blinks on with "I'm"; the title
 shot("fog", "ds2b", 17, 21, 140.30, 141.70, z=[(0, 1.02), (1, 1.00)], tin="brownout110", interp="flow", **SP)
@@ -102,20 +102,20 @@ shot("victim", "s1", 33, 35, 390.50, 391.40, z=[(0, 1.00), (1, 1.03)], tin="face
 shot("plastic", "ds2b", 35, 37, 159.30, 160.30, z=[(0, 1.00), (1, 1.03)], tin="double108", interp="flow", **SP)   # drugged: double vision
 shot("green", "s1", 37, 39, 152.20, 153.00, z=[(0, 1.00), (1, 1.03)], tin="light_sweep108", interp="flow", **SP)
 shot("drive", "s1", 39, 41, 316.00, 316.90, z=[(0, 1.00), (1, 1.03)], tin="wiper108", interp="flow", **SP)   # the car: the wiper
-shot("dark", "s4", 41, 43, 117.50, 118.40, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)
-shot("aim", "ds2b", 43, 46, 369.40, 370.12, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)       # he aims down the lens: THE BARREL
+shot("dark", "s4", 41, 43, 117.50, 118.40, z=[(0, 1.00), (1, 1.03)], tin="tear110", interp="flow", **SP)
+shot("aim", "ds2b", 43, 46, 369.40, 370.12, z=[(0, 1.00), (1, 1.03)], tin="fronds108", interp="flow", **SP)   # he aims through the bamboo: THE BARREL
 shot("warm", "dmx", 46, 48, 159.30, 160.20, z=[(0, 1.00), (1, 1.03)], tin="barrel110", interp="flow", **SP)
 shot("neon", "ds2b", 48, 50, 203.80, 204.50, z=[(0, 1.00), (1, 1.03)], tin="flicker109", interp="flow", **SP)   # the power fails again: red neon
 shot("lamp", "ds2b", 50, 53, 290.90, 291.90, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
-shot("night", "ds2a", 53, 56, 188.00, 189.30, z=[(0, 1.00), (1, 1.03)], tin="afterimage109", interp="flow", **SP)   # the sleepwalker leaves an after-image
-shot("killwide", "p1", 56, 58, 135.30, 136.10, z=[(0, 1.00), (1, 1.03)], tin="frost108", face=None, cx=(560, 640), interp="flow", **SP)   # the kill room, cold: rime forms and thaws
-shot("cabin", "p1", 58, 60, 176.60, 177.50, z=[(0, 1.00), (1, 1.03)], tin="slices", interp="flow", **SP)
+shot("night", "ds2a", 53, 56, 188.00, 189.30, z=[(0, 1.00), (1, 1.03)], tin="curtain110", interp="flow", **SP)   # the curtain blows across
+shot("killwide", "p1", 56, 58, 135.30, 136.10, z=[(0, 1.00), (1, 1.03)], tin="plasticroll110", face=None, cx=(560, 640), interp="flow", **SP)   # the kill room: its plastic unrolls
+shot("cabin", "p1", 58, 60, 176.60, 177.50, z=[(0, 1.00), (1, 1.03)], tin="brush110", interp="flow", **SP)
 shot("closeup", "s4", 60, 62, 161.10, 161.90, z=[(0, 1.00), (1, 1.03)], tin="streetlight109", interp="flow", **SP)
 shot("anguish", "p1", 62, 68, 164.00, 164.90, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)      # THE SPATTER
 # ---- "Mommy?" (e68-e79): the blood room; the loop falls into bed
 shot("bloodroom", "dmx", 68, 71, 105.70, 106.70, z=[(0, 1.00), (1, 1.04)], tin="spatter110", interp="flow", **SP)
 shot("bloodroom2", "dmx", 71, 74, 109.95, 110.95, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)   # "Mommy?": the swing carries on
-shot("lookup", "dmx", 74, 79, 122.90, 124.30, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="flow", tout="fall110", **SP)
+shot("lookup", "dmx", 74, 79, 122.90, 124.30, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="flow", tout="driploop110", **SP)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

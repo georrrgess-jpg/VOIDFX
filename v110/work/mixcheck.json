@@ -25,7 +25,7 @@
    "buried": true
   },
   {
-   "name": "dolly",
+   "name": "bokeh110",
    "kind": "transition",
    "at": 2.43,
    "t0": 2.13,
@@ -91,14 +91,14 @@
    "buried": true
   },
   {
-   "name": "THROUGH THE FAN",
+   "name": "THROUGH THE FAN + I'M LOSING POWER",
    "kind": "set piece",
    "at": 7.3,
    "t0": 7.3,
-   "t1": 9.43,
-   "music_db": -12.9,
-   "fx_peak_db": -3.8,
-   "fx_minus_music": 9.1,
+   "t1": 10.5,
+   "music_db": -11.1,
+   "fx_peak_db": -3.9,
+   "fx_minus_music": 7.2,
    "buried": false
   },
   {
@@ -108,7 +108,7 @@
    "t0": 8.83,
    "t1": 9.58,
    "music_db": -11.4,
-   "fx_peak_db": -4.3,
+   "fx_peak_db": -4.4,
    "fx_minus_music": 7.1,
    "buried": false
   },
@@ -157,18 +157,18 @@
    "buried": true
   },
   {
-   "name": "smear",
+   "name": "tear110",
    "kind": "transition",
    "at": 12.48,
    "t0": 12.18,
    "t1": 12.93,
    "music_db": -8.8,
-   "fx_peak_db": -46.9,
-   "fx_minus_music": -38.1,
+   "fx_peak_db": -21.5,
+   "fx_minus_music": -12.7,
    "buried": true
   },
   {
-   "name": "dolly",
+   "name": "fronds108",
    "kind": "transition",
    "at": 13.08,
    "t0": 12.78,
@@ -223,7 +223,7 @@
    "buried": true
   },
   {
-   "name": "afterimage109",
+   "name": "curtain110",
    "kind": "transition",
    "at": 16.13,
    "t0": 15.83,
@@ -234,7 +234,7 @@
    "buried": true
   },
   {
-   "name": "frost108",
+   "name": "plasticroll110",
    "kind": "transition",
    "at": 17.04,
    "t0": 16.74,
@@ -245,7 +245,7 @@
    "buried": true
   },
   {
-   "name": "slices",
+   "name": "brush110",
    "kind": "transition",
    "at": 17.65,
    "t0": 17.35,
@@ -282,10 +282,10 @@
    "kind": "set piece",
    "at": 20.08,
    "t0": 20.08,
-   "t1": 20.99,
-   "music_db": -8.7,
+   "t1": 21.3,
+   "music_db": -8.8,
    "fx_peak_db": -21.2,
-   "fx_minus_music": -12.5,
+   "fx_minus_music": -12.4,
    "buried": true
   },
   {
@@ -322,15 +322,15 @@
    "buried": true
   },
   {
-   "name": "THE FALL (loop)",
+   "name": "THE DRIP (loop)",
    "kind": "set piece",
-   "at": 22.82,
-   "t0": 22.82,
+   "at": 22.7,
+   "t0": 22.7,
    "t1": 24.04,
-   "music_db": -9.4,
-   "fx_peak_db": -22.5,
-   "fx_minus_music": -13.1,
-   "buried": true
+   "music_db": -9.5,
+   "fx_peak_db": -15.4,
+   "fx_minus_music": -5.8,
+   "buried": false
   }
  ]
 }

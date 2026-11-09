@@ -1025,7 +1025,10 @@ def main110():
     place(fx, stereo(A2.impact(-6, (50, 26), 0.9, 0.3, 4102)), td); place(fx, stereo(sub_drop(-8, 0.8, 62, 26)), td + 0.01)
     place(fx, A2.whoosh(0.55, -18, 4103, True), t0["warm"] - 0.48)                                   # THE BARREL
     place(fx, stereo(splatter(-17, 4104)), t0["bloodroom"] - 0.30)                                    # the spatter arrives
-    tl = E.th(75.6); place(fx, A2.whoosh(E.DUR - tl - 0.04, -19, 4105, True), tl)                     # THE FALL into bed
+    place(fx, stereo(neon_buzz(0.40, -21)), td + 0.01)                                               # rev 1: the title's tubes ignite on the drop
+    place(fx, stereo(scrub(0.16, -20, 4106, 4500)), t0["dark"] - 0.06)                                # rev 1: the print tears
+    ti = E.th(74.6) + 0.36 * (E.DUR - E.th(74.6))                                                     # rev 1: THE DRIP lands
+    place(fx, stereo(drip(-16, 4107)), ti - 0.01)
     fx = fx * db(10.0)
     duck = np.zeros(N + PRE, np.float32); duck[I(td - 0.03) + PRE:I(td + 0.35) + PRE] = 1.0
     duck = np.convolve(duck, np.hanning(I(0.12)) / np.hanning(I(0.12)).sum(), "same")

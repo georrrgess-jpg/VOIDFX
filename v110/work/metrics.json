@@ -1,6 +1,6 @@
 {
  "edit": "v110",
- "round": 1,
+ "round": 2,
  "stages": [
   {
    "t": "2026-11-09 19:42:52",
@@ -456,9 +456,159 @@
    "step": "deliver",
    "s": 177.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:16:19",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:16:26",
+   "round": 2,
+   "step": "audio",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:16:35",
+   "round": 2,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:16:54",
+   "round": 2,
+   "step": "sheet:r1:140,144,148,151,154,158,548,552,556,565,580,600",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:16:59",
+   "round": 2,
+   "step": "sheet:r2:712,716,720,724,728,738,745,752,766,774,778,786",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:17:03",
+   "round": 2,
+   "step": "sheet:r3:950,958,966,972,978,988,1010,1016,1022,1028,1034,1044",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:17:07",
+   "round": 2,
+   "step": "sheet:r4:1048,1054,1058,1062,1068,1074,1200,1212,1222,1232,1242,1256",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:17:11",
+   "round": 2,
+   "step": "sheet:r5:1370,1382,1392,1398,1404,1410,1416,1422,1428,1434,1438,1441",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:18:24",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:18:37",
+   "round": 2,
+   "step": "sheet:r6:960,966,972,1012,1018,1024,1054,1060,1066",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:18:41",
+   "round": 2,
+   "step": "sheet:r5:1370,1385,1395,1402,1408,1414,1420,1426,1432,1441",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:20:09",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:20:14",
+   "round": 2,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:20:23",
+   "round": 2,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:20:35",
+   "round": 2,
+   "step": "sheet:r7:1376,1384,1392,1398,1402,1406,1410,1416,1422,1428,1434,1441",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:20:54",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:21:07",
+   "round": 2,
+   "step": "sheet:r7:1372,1380,1388,1392,1396,1400,1404,1410,1416,1424,1432,1441",
+   "s": 13.0,
+   "rc": 0
   }
  ],
- "notes": [],
+ "notes": [
+  {
+   "t": "2026-11-09 21:14:38",
+   "round": 2,
+   "cat": "plain_effect",
+   "text": "I don't like the splatter transition at the end. I would like for you to make it smoother and more seamless"
+  },
+  {
+   "t": "2026-11-09 21:14:38",
+   "round": 2,
+   "cat": "loop",
+   "text": "the loop is really poor. I would like for you to completely change the loop and take a different avenue ... custom transitions and graphics"
+  },
+  {
+   "t": "2026-11-09 21:14:38",
+   "round": 2,
+   "cat": "text",
+   "text": "I'm losing power text. I like it, but I don't really like how it appears ... doesn't really flow well with the song ... incorporate it as more of a beat drop, or ... a more creative way"
+  },
+  {
+   "t": "2026-11-09 21:14:38",
+   "round": 2,
+   "cat": "density",
+   "text": "most of the transitions right now are kind of lackluster. I would like for you to incorporate more unique and creative transitions"
+  },
+  {
+   "t": "2026-11-09 21:14:38",
+   "round": 2,
+   "cat": "plain_effect",
+   "text": "I also don't really like the doorway transition that appears at 16 seconds, and I don't really like the lines transition at 17 seconds ... replace them with more transitions that are more visually appealing and different"
+  }
+ ],
  "catches": [
   {
    "t": "2026-11-09 20:00:44",
@@ -585,9 +735,40 @@
    "round": 1,
    "cat": "other",
    "text": "duplicated toolkit (an edit anchored on the first 'def render' of an older section): rebuilt, the v110 section unique"
+  },
+  {
+   "t": "2026-11-09 21:21:20",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "the first new curtain's folds read as stripes (the 'lines' the owner dislikes): broad soft folds"
+  },
+  {
+   "t": "2026-11-09 21:21:20",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "the plastic roll's crinkle was a harsh black-and-white noise: a smooth crinkle field, a weak sheen"
+  },
+  {
+   "t": "2026-11-09 21:21:20",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the brush left a red rim line across his face: wet paint only at the brush head"
+  },
+  {
+   "t": "2026-11-09 21:21:20",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the neon-sleeper loop: the top-down matte gave a squiggle or a ring around his face: replaced by THE DRIP"
+  },
+  {
+   "t": "2026-11-09 21:21:21",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "THE DRIP's red crest tint drew rings: removed (refraction only); the drop moved beside his head"
   }
  ],
  "round_starts": {
-  "1": "2026-11-09 21:04:59"
+  "1": "2026-11-09 21:04:59",
+  "2": "2026-11-09 21:14:38"
  }
 }
