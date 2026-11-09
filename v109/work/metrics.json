@@ -1,0 +1,890 @@
+{
+ "edit": "v109",
+ "round": 4,
+ "stages": [
+  {
+   "t": "2026-11-09 04:02:57",
+   "round": 1,
+   "step": "song:src/phantom.mp3:24:96",
+   "s": 186.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:06:23",
+   "round": 1,
+   "step": "song:src/phantom.mp3:24:80",
+   "s": 183.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:10:59",
+   "round": 1,
+   "step": "prep",
+   "s": 49.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:11:03",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:11:10",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:11:44",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:12:05",
+   "round": 1,
+   "step": "audio",
+   "s": 21.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:12:12",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:12:37",
+   "round": 1,
+   "step": "sheet:a:70,77,84,138,150,158,172,190,231,285,300,330",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:12:53",
+   "round": 1,
+   "step": "sheet:b:380,386,392,712,720,728,760,768,775,815,823,832",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:13:21",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:13:37",
+   "round": 1,
+   "step": "sheet:c:0,20,160,168,176,184,290,300,310,320,330,345",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:14:01",
+   "round": 1,
+   "step": "audio",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:14:08",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:23:16",
+   "round": 1,
+   "step": "video",
+   "s": 548.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:26:31",
+   "round": 1,
+   "step": "qc",
+   "s": 195.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:26:39",
+   "round": 1,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:29:29",
+   "round": 1,
+   "step": "prep",
+   "s": 122.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:42:28",
+   "round": 1,
+   "step": "prep",
+   "s": 77.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:42:29",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:42:36",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:43:04",
+   "round": 1,
+   "step": "sheet:d:170,180,432,440,486,494,672,714,724,818,828,1400",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:55:55",
+   "round": 1,
+   "step": "prep",
+   "s": 45.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:04:43",
+   "round": 1,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:04:49",
+   "round": 1,
+   "step": "plan",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:10:06",
+   "round": 1,
+   "step": "video",
+   "s": 317.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:12:48",
+   "round": 1,
+   "step": "qc",
+   "s": 162.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:12:55",
+   "round": 1,
+   "step": "report",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:14:58",
+   "round": 1,
+   "step": "deliver",
+   "s": 123.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:15:00",
+   "round": 1,
+   "step": "audio",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:15:07",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:17:47",
+   "round": 1,
+   "step": "video",
+   "s": 160.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:20:25",
+   "round": 1,
+   "step": "qc",
+   "s": 158.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:20:32",
+   "round": 1,
+   "step": "report",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:22:38",
+   "round": 1,
+   "step": "deliver",
+   "s": 126.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:31:21",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:31:35",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:32:55",
+   "round": 2,
+   "step": "prep",
+   "s": 80.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:33:21",
+   "round": 2,
+   "step": "sheet:pass:470,476,481,485,488,491,495,500",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:33:44",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:02",
+   "round": 2,
+   "step": "sheet:pass:472,477,481,484,487,490,494,499",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:08",
+   "round": 2,
+   "step": "sheet:print:966,976,984,990,995,999,1003,1008,1013",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:39",
+   "round": 2,
+   "step": "sheet:p484:483,484,485",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:19",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:37",
+   "round": 2,
+   "step": "sheet:burn:1081,1087,1092,1097,1101,1105,1109,1114,1119",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:44",
+   "round": 2,
+   "step": "sheet:ekg:1298,1304,1309,1314,1320,1326,1331,1335,1339,1344,1349,1354",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:35:54",
+   "round": 2,
+   "step": "sheet:dust:1366,1374,1381,1388,1395,1402,1409,1416,1423,1430,1436,1439",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:36:52",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:11",
+   "round": 2,
+   "step": "sheet:burn:1081,1087,1092,1097,1101,1105,1109,1114,1119",
+   "s": 19.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:25",
+   "round": 2,
+   "step": "sheet:dust:1366,1372,1378,1384,1390,1396,1402,1408,1414,1420,1426,1432",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:29",
+   "round": 2,
+   "step": "sheet:pass:472,477,481,484,487,490,494,499",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:37:32",
+   "round": 2,
+   "step": "sheet:print:958,966,974,982,990,996,1000,1004,1009,1014",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:17",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:25",
+   "round": 2,
+   "step": "audio",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:35",
+   "round": 2,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:50",
+   "round": 2,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:39:58",
+   "round": 2,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:46:45",
+   "round": 2,
+   "step": "video",
+   "s": 407.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:49:31",
+   "round": 2,
+   "step": "qc",
+   "s": 166.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:49:41",
+   "round": 2,
+   "step": "report",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:50:52",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:51:02",
+   "round": 2,
+   "step": "plan",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:51:21",
+   "round": 2,
+   "step": "sheet:end:1226,1230,1234,1238,1244,1278,1282,1286,1290,1294,996,1000,1004,1008",
+   "s": 19.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:51:38",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:51:53",
+   "round": 2,
+   "step": "sheet:wash:1228,1231,1234,1237,1240,1284,1286,1288",
+   "s": 15.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:57:14",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:58:28",
+   "round": 2,
+   "step": "prep",
+   "s": 74.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:58:53",
+   "round": 2,
+   "step": "sheet:r2a:475,480,483,486,489,494,740,756,830,845,1190,1210",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:59:05",
+   "round": 2,
+   "step": "sheet:r2b:1333,1336,1339,1342,1346,1350,1372,1380,1388,1396,1404,1412,1418,1424,1430",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:59:30",
+   "round": 2,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:59:50",
+   "round": 2,
+   "step": "sheet:r2c:481,483,485,830,1200,1418,1422",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:01:28",
+   "round": 2,
+   "step": "audio",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:01:37",
+   "round": 2,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:08:09",
+   "round": 2,
+   "step": "video",
+   "s": 392.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:10:51",
+   "round": 2,
+   "step": "qc",
+   "s": 162.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:11:01",
+   "round": 2,
+   "step": "report",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:13:37",
+   "round": 2,
+   "step": "deliver",
+   "s": 156.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:14:02",
+   "round": 2,
+   "step": "sheet:tapecheck:722,726,730,734,738,742",
+   "s": 2.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:08",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:17",
+   "round": 3,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:33",
+   "round": 3,
+   "step": "sheet:fire:1076,1081,1085,1089,1093,1097,1101,1105,1108,1112,1116,1121",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:34",
+   "round": 3,
+   "step": "sheet:cut52:1328,1334,1336,1337,1338,1342",
+   "s": 1.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:58",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:40:11",
+   "round": 3,
+   "step": "sheet:fire:1078,1082,1085,1088,1091,1094,1097,1100,1104,1108,1113,1118",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:40:34",
+   "round": 3,
+   "step": "audio",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:40:42",
+   "round": 3,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:47:04",
+   "round": 3,
+   "step": "video",
+   "s": 382.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:49:57",
+   "round": 3,
+   "step": "qc",
+   "s": 173.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:50:07",
+   "round": 3,
+   "step": "report",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:52:47",
+   "round": 3,
+   "step": "deliver",
+   "s": 160.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:15:39",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:17:02",
+   "round": 4,
+   "step": "prep",
+   "s": 83.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:17:30",
+   "round": 4,
+   "step": "sheet:trail:886,891,896,901,906,911,915,919,922,925,928,932,937,942",
+   "s": 22.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:18:30",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:18:46",
+   "round": 4,
+   "step": "sheet:trail:886,891,896,901,906,911,915,919,922,925,928,931,935,940",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:19:17",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:19:33",
+   "round": 4,
+   "step": "sheet:trail:891,898,904,910,915,919,922,925,928,931,935,940",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:19:51",
+   "round": 4,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:20:04",
+   "round": 4,
+   "step": "sheet:trail:919,922,924,926,928,931",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:20:24",
+   "round": 4,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:20:33",
+   "round": 4,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:27:04",
+   "round": 4,
+   "step": "video",
+   "s": 391.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:29:56",
+   "round": 4,
+   "step": "qc",
+   "s": 172.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:30:06",
+   "round": 4,
+   "step": "report",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:32:43",
+   "round": 4,
+   "step": "deliver",
+   "s": 157.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 17:55:33",
+   "round": 4,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  }
+ ],
+ "notes": [
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "plain_effect",
+   "text": "the head spin transition. I don't really like how that flows with this edit, so I'd like you to remove that and replace it with a brand new, unique, and creative transition"
+  },
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "replace_shot",
+   "text": "remove the clips with dokes and replace them with other high-quality texture clips"
+  },
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "density",
+   "text": "make a cool flow where there's unique graphics appearing and then transitions from those graphics"
+  },
+  {
+   "t": "2026-11-09 15:23:07",
+   "round": 2,
+   "cat": "loop",
+   "text": "improve ... the end flow of the edit and into the loop. I don't really like that part. ... make it more unique and creative with better animations"
+  },
+  {
+   "t": "2026-11-09 16:37:38",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "change the heart monitor on the 21-second mark. You don't have to replace this with anything"
+  },
+  {
+   "t": "2026-11-09 16:37:38",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "make the fire transition graphic ... stem from the actual picture that's burning and try to make it tied into that transition"
+  },
+  {
+   "t": "2026-11-09 17:14:56",
+   "round": 4,
+   "cat": "density",
+   "text": "it's just missing one more focal point ... add one more really, really cool, custom, unique graphic into a transition ... the finishing touch"
+  }
+ ],
+ "catches": [
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the pass's cold rim stacked on a backlit ear made a white speck on his face (frame 484): screen blend"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the fingerprint first sat on his neck under the chin: moved down to his shirt"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "the monitor's QRS spikes reached his chin: the baseline lowered, the spikes shortened"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "the first burn edge was a thin white outline (read as lightning): real ember colours, a rough edge, orange sparks"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "the first gust eroded in blobby outlined cells and filled the frame with haze: finer noise, softer front, sparser motes"
+  },
+  {
+   "t": "2026-11-09 15:40:24",
+   "round": 2,
+   "cat": "framing",
+   "text": "the pass's matte had holes and specks (rings of rim light): closed and cleaned"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the fingerprint whorl centred on the incoming face (a target): the dive goes into his chest"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: a whip, a roll and a flip in the last 2 s (spins, like the removed headspin): red wash and streetlight instead"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the p7 tape shot is mirrored (DO NOT CROSS reads backwards): flipped back"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the garden shot looked like the night walk; the kitchen lunge was off-centre and soft: the police-lot stare and the container"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "seam",
+   "text": "critique: the gust went dark for 0.5 s and re-formed in dark chips: overlap, a faint frame 0 under the dust, his face goes last"
+  },
+  {
+   "t": "2026-11-09 16:00:02",
+   "round": 2,
+   "cat": "restyle",
+   "text": "the cold grade read sunburnt skin as blood on the two new day shots: redthr 0.30"
+  },
+  {
+   "t": "2026-11-09 16:40:27",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "the photo's first burnt hole was a clean quad (read as a rectangle): ragged photo edge, the fire spills out sooner"
+  },
+  {
+   "t": "2026-11-09 17:20:19",
+   "round": 4,
+   "cat": "drawn_asset",
+   "text": "the trail's first ribbon was a thin line and its dive a red flash: a bold two-strand silk ribbon, a band that swells behind the head with the next shot inside"
+  }
+ ],
+ "round_starts": {
+  "1": "2026-11-09 05:23:02",
+  "2": "2026-11-09 15:23:07",
+  "3": "2026-11-09 16:37:38",
+  "4": "2026-11-09 17:14:56"
+ },
+ "verdict": {
+  "t": "2026-11-09 17:50:30",
+  "round": 4,
+  "verdict": "standard",
+  "words": "I like this edit, make it a standard."
+ }
+}

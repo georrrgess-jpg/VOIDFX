@@ -95,7 +95,8 @@
       "plain motion-blurred rewind"
     ],
     "wrap_step": "no frame-difference spike across the wrap (tools/motionqc.py)",
-    "shows_destination_early": "frame 0 visible at the end of the move the whole way, growing to fill on a smooth landing, the surround turning into frame 0's own light; never a giant card fading in from behind the camera, no second time-stop (v15 round 2: 'the loop isn't particularly seamless'; the corridor REWIND approved, seam 0.13)"
+    "shows_destination_early": "frame 0 visible at the end of the move the whole way, growing to fill on a smooth landing, the surround turning into frame 0's own light; never a giant card fading in from behind the camera, no second time-stop (v15 round 2: 'the loop isn't particularly seamless'; the corridor REWIND approved, seam 0.13)",
+    "physics": "the loop needs real animated physics that builds frame 0 from its own picture, with no dark gap; a mist fade is not enough (v109 rev 1; THE GUST approved)"
   },
   "structure": {
     "cold_open_frac": [
@@ -133,7 +134,11 @@
     "signature_read_time": "a signature graphic transition gets ~1 s on screen and a graphic >= ~8 % of the frame width; move the cut to the next sung word to make room (v106 rev 3)",
     "covers": "cover transitions are exactly 0 at u=0 and full at u=1, continuous across the cut, plates dissolved under the cover; pre-roll progress reaches 1 before the cut (j/pre) (v106)",
     "never_take_a_face_apart": "no particle dissolve, fire holes, scorch or line across a face; a burn or cover passes a face as one soft edge (v15 round 3; time_particles -> caution)",
-    "focal_point": "a transition the owner wants to focus has one small, bright, motivated focal point that grows into the move; every part a smooth function of time (v15 round 3 IGNITION)"
+    "focal_point": "a transition the owner wants to focus has one small, bright, motivated focal point that grows into the move; every part a smooth function of time (v15 round 3 IGNITION)",
+    "focal_point_mid_edit": "one centrepiece graphic mid-edit besides the drop, ~1 s with its own motion and depth (behind him through the matte, in front, off the face), that becomes the transition (v109 rev 3; v13 light ribbon; v15 EMBLEM CLOCK and IGNITION)",
+    "prop_effect_starts_on_prop": "a burn, pour or shatter starts on the real, tracked prop: the object first, then the frame (v109 rev 2)",
+    "spins": "spins, rolls and flips only in kinetic edits, one of each kind; never in a smooth, dark or calm edit (v109 rev 1; v15 shipped one flip and one swing)",
+    "no_hud_overlays": "no monitor traces, readouts or timers drawn over the footage; a frame treatment (a surveillance feed) is fine (v109 rev 2; v6 VHS counter)"
   },
   "dialogue": {
     "max_lines": 2,

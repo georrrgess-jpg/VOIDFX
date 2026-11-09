@@ -528,6 +528,20 @@ All in `v15/work/sec15.py` (the v12 engine plus this section); the bolt polygon 
 | Kinetic moves | `turn_away` (3D card flip), `pendulum`, `freefall`, `phone_flare`, `dust_cloud`, `vibrate`, `streak_pass`, `strike_cut`, `wind_gust` | Exact at both ends (`/(pre+post-1)`) |
 | In-shot animations | `ANIMS` (`a_bokeh`, `a_urge`, `a_grit`, `a_shout`, `a_embers`, `a_flares`, `a_current`, `a_remnants`), `off_face`, `face_soft`, `body_only` | `anim=` on a shot; `face_hint=` for a face YuNet can't see; `expo=` lifts a dark source |
 
+
+## 5j. Port candidates from the Dexter studio (v109 PHANTOM, standard)
+
+The code is in `v109/work/fx109.py` (merged from `dev/pipeline-v2`). They port to the v12 engine through `fxN.py` and `splice_section.py`. They need `_person`, `face_scr`, `nz108`, `_up`, `splat109` and `_pp_clean` from the v108 and v109 sections. Handoff: `sync/handoffs/2026-11-09_dexter_v109_PHANTOM_standard.md`.
+
+| Asset | Function | Flash use |
+|---|---|---|
+| THE PHANTOM'S TRAIL (a 3D ribbon orbiting the matte, silk width, white-hot core, a dive that swells into a window) | `trail109` | A gold lightning ribbon round Barry's chest and waist that dives into the next shot (the v13 light ribbon, with depth through the matte) |
+| The prop-born burn (a tracked origin, a burn-time field inside a ragged prop mask) | `burn109` | A burning letter, photo or map; compare v15 IGNITION (an ember on the body) |
+| FINGERPRINT (a procedural print, a forensic light, a dive into the whorl) | `print109` | A forensic beat (S1 CSI Barry); dive into the chest, never the face |
+| PHANTOM PASS (a see-through body, then a camera move through the silhouette) | `phantom_pass109` | A walk toward the camera; needs `_pp_clean` |
+| THE GUST (loop: release/arrival fields, flight along a gust and swirl field) | `dust_loop109` | A loop where Barry leaves as dust and frame 0 re-forms |
+| `splat109`, `hflip`, `redthr` | | Particles; mirrored packs; a one-colour grade |
+
 ## 5f. Reusable from v13 EVENT HORIZON (approved, not a standard)
 
 All in `v13/work/sec13.py`.

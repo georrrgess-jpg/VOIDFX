@@ -148,6 +148,7 @@ v14/out/
 v14/work/*.npz
 v14/work/*.npy
 v14/sr/
+<<<<<<< HEAD
 v15/work/*.log
 v15/audio/
 v15/frames/
@@ -155,3 +156,12 @@ v15/out/
 v15/work/*.npz
 v15/work/*.npy
 v15/sr/
+=======
+v109/work/*.log
+v109/audio/
+v109/frames/
+v109/out/
+v109/work/*.npz
+v109/work/*.npy
+v109/sr/
+>>>>>>> origin/dev/pipeline-v2
