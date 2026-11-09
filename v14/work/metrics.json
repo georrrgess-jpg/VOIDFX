@@ -1,6 +1,6 @@
 {
  "edit": "v14",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-09 00:06:24",
@@ -435,6 +435,55 @@
    "step": "deliver",
    "s": 94.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:07:16",
+   "round": 3,
+   "step": "sheet:r4ball:486,500,520,600,612,642,700,725,738,745",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:07:32",
+   "round": 3,
+   "step": "audio",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:07:39",
+   "round": 3,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:14:26",
+   "round": 3,
+   "step": "video",
+   "s": 407.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:17:51",
+   "round": 3,
+   "step": "qc",
+   "s": 205.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:18:00",
+   "round": 3,
+   "step": "report",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:20:21",
+   "round": 3,
+   "step": "deliver",
+   "s": 141.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -473,6 +522,12 @@
    "round": 2,
    "cat": "density",
    "text": "implement a brand new custom graphic and transition/animation"
+  },
+  {
+   "t": "2026-11-09 03:07:02",
+   "round": 3,
+   "cat": "other",
+   "text": "the little circle orb thing that switches between the pictures ... I would like for it to face upright so that Barry's face is facing upwards"
   }
  ],
  "catches": [
@@ -532,6 +587,7 @@
   }
  ],
  "round_starts": {
-  "2": "2026-11-09 01:46:46"
+  "2": "2026-11-09 01:46:46",
+  "3": "2026-11-09 03:07:02"
  }
 }

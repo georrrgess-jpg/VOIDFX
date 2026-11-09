@@ -420,7 +420,7 @@ def ball_rest(f):
         if d >= 0: pulse = max(pulse, math.exp(-d / 0.25) * min(1.0, d / 0.05))
     cx = BALL_C[0] + 4 * math.sin(2 * math.pi * t / 3.1 + 1.0); cy = BALL_C[1] + 7 * math.sin(2 * math.pi * t / 2.4)
     creep = 1 + 0.07 * smooth(clamp((t - E.th(E.E_BALL)) / (E.th(44) - E.th(E.E_BALL)), 0, 1))        # we drift toward the glass
-    return cx, cy, BALL_R * creep * (1 + 0.025 * pulse), 180.0 + 2.5 * math.sin(2 * math.pi * t / 2.8)
+    return cx, cy, BALL_R * creep * (1 + 0.025 * pulse), 2.5 * math.sin(2 * math.pi * t / 2.8)      # upright (the owner, round 3)
 
 def lens_entry(bg, L, q, f):
     """the laugh is drawn into the glass: from the plain frame (q = 0) to the resting ball (q = 1), the ball shrinks out
@@ -468,7 +468,7 @@ def ball_fx(s, f):
     content = content * (1 - w_) + full * w_ if w_ > 0 else content
     R_ = math.exp(math.log(R) + (math.log(R_FULL) - math.log(R)) * e_)
     bgz = zoom_about(bg, cx, cy, 1 + 0.6 * ein(q, 2.0))
-    return lens_ball(bgz, content, cx + (W / 2 - cx) * e_, cy + (H / 2 - cy) * e_, R_, phi + (360 - phi) * smooth(clamp((q - 0.08) / 0.84, 0, 1)),
+    return lens_ball(bgz, content, cx + (W / 2 - cx) * e_, cy + (H / 2 - cy) * e_, R_, phi * (1 - smooth(clamp((q - 0.08) / 0.84, 0, 1))),
                      BALL_K * (1 - e_), BALL_RC + (R_ - BALL_RC) * e_, ccx + (W / 2 - ccx) * e_, ccy + (H / 2 - ccy) * e_, 1 - smooth(clamp((q - 0.45) / 0.55, 0, 1)), None)
 
 def lens_in(A, B, j, f, sa, sb, pre=LB_IN[0], post=LB_IN[1]):

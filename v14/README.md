@@ -23,8 +23,8 @@ the clips stay clear; high quality, with custom graphics, animations and transit
 Nostalgia for where it all began. The night Barry woke from the coma opens the edit, an achievement marks it ("The
 Beginning?"), the years run as memories, and in the song's pause his memories sit in a glass ball he looks back
 through. The loop returns to the dark medical bay where he wakes again: the question mark is answered by the loop.
-- **The hero object is the lensball:** a glass ball lens. A real ball lens shows the scene behind it upside down,
-  squeezed toward the rim; that inversion is the transition (we fall in and the picture turns upright).
+- **The hero object is the lensball:** a glass ball that holds his memories, squeezed toward the rim like a real ball
+  lens. Round 3 (the owner: "face upright so that Barry's face is facing upwards"): the memories are upright in the glass.
 
 ## The song
 - **Window:** song 196.56 → 222.48 s (h728 → h824, 25.92 s): the build, the quiet pause (single piano notes on e30,
@@ -64,14 +64,13 @@ notch-cornered border. The pop:
 It holds through the cut and slides away on e13.
 
 **THE LENSBALL** (e30–e46):
-1. On the pause's first note the laugh shot curls into a glass ball and turns upside down inside it. Barry now (S5,
+1. On the pause's first note the laugh shot curls into a glass ball, upright inside it. Barry now (S5,
    golden window light) is behind it, out of focus, with warm bokeh drifting.
 2. On each soft note (e34, e38, e42) the ball turns to another memory, with a glint crossing the glass and a breath in
    its size: Iris and Barry by the water (S1), the loft (S3), the sea at sunset.
-3. On the pickup (e44) we fall into the ball and the picture turns upright as the theme returns full-frame on the sun
-   over the water; he runs in.
+3. On the pickup (e44) we fall into the ball as the theme returns full-frame on the sun over the water; he runs in.
 
-The glass is drawn per pixel: a barrel-squeezed, inverted view of the memory; rim dispersion; a dark Fresnel edge that
+The glass is drawn per pixel: a barrel-squeezed view of the memory, upright; rim dispersion; a dark Fresnel edge that
 mirrors the room; a window highlight, a sharp specular and a back-lit rim.
 
 **EMBLEM GLINT** (e58–e65, 2.1 s), on the real S1 emblem, tracked on the source (template match, smoothed):
@@ -109,12 +108,12 @@ measured after AAC. **Five quiet effects in all**, 8–15 dB under the music, no
 - an air rise as we fall into the ball and the theme returns;
 - a faint crackle on the emblem that ends in a low whoomp as the disc opens.
 
-## Measured (rev 2, on the encoded MP4)
+## Measured (rev 2 + the round-3 upright lensball, on the encoded MP4)
 - **QC:** ship checkpoint 12/12 PASS on the encoded MP4 (format, decode, loudness, no frozen runs, face centring, no
   text over faces, no clicks at cuts or the seam, seam matched and on frame 0, same length, no white-outs).
 - **Loudness:** −13.9 LUFS, true peak −4.7 dBTP after AAC.
-- **Loop seam:** blurred difference 0.19 (gate ≤ 1); audio seam step 0.039; picture wrap step 0.58 against a local
-  median of 1.89.
+- **Loop seam:** blurred difference 0.13 (gate ≤ 1); audio seam step 0.039; picture wrap step 0.4 against a local
+  median of 1.89 (round 3 render).
 - **Motion audit:** no dead spans, no judder. 10 pops: 1 cut, 1 beat, 1 cadence, 4 flashes, and 3 listed as unexplained,
   all checked:
   - 1494 and 1527 are the loop's designed light flickers (the dark bay flashing through on e92 and e94);
