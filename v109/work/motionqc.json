@@ -31,7 +31,7 @@
   14.37,
   3.18,
   8.03,
-  7.13,
+  7.12,
   2.46,
   5.73,
   7.77,
@@ -43,21 +43,21 @@
   5.88,
   8.49,
   6.29,
-  5.65,
-  8.96,
-  4.46,
+  5.66,
+  8.67,
+  3.44,
   1.65,
   2.57,
   7.41,
   3.9,
   2.23,
   1.67,
-  4.92,
-  2.25,
-  4.1,
+  4.82,
+  0.83,
+  3.43,
   5.41,
   5.85,
-  1.85
+  1.86
  ],
  "dead": [],
  "pops": [
@@ -137,7 +137,7 @@
    "f": 1183,
    "t": 19.717,
    "d": 60.8,
-   "med": 7.8,
+   "med": 7.7,
    "kind": "cut",
    "near": "whip @ 1183",
    "hb_off": 0
@@ -150,6 +150,24 @@
    "kind": "UNEXPLAINED",
    "near": "redwash109 @ 1234",
    "hb_off": -6
+  },
+  {
+   "f": 1337,
+   "t": 22.283,
+   "d": 33.0,
+   "med": 2.0,
+   "kind": "cut",
+   "near": "cut @ 1337",
+   "hb_off": 0
+  },
+  {
+   "f": 1338,
+   "t": 22.3,
+   "d": 10.3,
+   "med": 2.4,
+   "kind": "cut",
+   "near": "cut @ 1337",
+   "hb_off": 1
   }
  ],
  "judder": [
@@ -188,7 +206,7 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 1.37,
-   "p80": 3.16,
+   "p80": 3.17,
    "ratio": 2.31,
    "flag": false
   },
@@ -201,8 +219,8 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 5.42,
-   "p80": 9.41,
-   "ratio": 1.74,
+   "p80": 9.4,
+   "ratio": 1.73,
    "flag": false
   },
   {
@@ -213,9 +231,9 @@
    "repeat_frac": 0.05,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.45,
-   "p80": 3.11,
-   "ratio": 2.15,
+   "p20": 1.44,
+   "p80": 3.1,
+   "ratio": 2.16,
    "flag": false
   },
   {
@@ -226,9 +244,9 @@
    "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 4.07,
+   "p20": 4.06,
    "p80": 15.68,
-   "ratio": 3.85,
+   "ratio": 3.86,
    "flag": false
   },
   {
@@ -239,9 +257,9 @@
    "repeat_frac": 0.0,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 5.34,
+   "p20": 5.35,
    "p80": 7.57,
-   "ratio": 1.42,
+   "ratio": 1.41,
    "flag": false
   },
   {
@@ -253,8 +271,8 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 6.38,
-   "p80": 8.71,
-   "ratio": 1.37,
+   "p80": 8.7,
+   "ratio": 1.36,
    "flag": false
   },
   {
@@ -295,7 +313,7 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 1.94,
-   "p80": 6.5,
+   "p80": 6.49,
    "ratio": 3.34,
    "flag": false
   },
@@ -317,12 +335,12 @@
    "f0": 720,
    "f1": 771,
    "interp": "blend",
-   "repeat_frac": 0.0,
+   "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 5.32,
-   "p80": 10.18,
-   "ratio": 1.91,
+   "p20": 5.31,
+   "p80": 10.19,
+   "ratio": 1.92,
    "flag": false
   },
   {
@@ -335,7 +353,7 @@
    "cadence_range": null,
    "p20": 1.28,
    "p80": 1.52,
-   "ratio": 1.2,
+   "ratio": 1.19,
    "flag": false
   },
   {
@@ -346,7 +364,7 @@
    "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 3.07,
+   "p20": 3.08,
    "p80": 5.33,
    "ratio": 1.73,
    "flag": false
@@ -359,7 +377,7 @@
    "repeat_frac": 0.0,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 6.97,
+   "p20": 6.96,
    "p80": 10.81,
    "ratio": 1.55,
    "flag": false
@@ -373,7 +391,7 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 1.98,
-   "p80": 2.72,
+   "p80": 2.71,
    "ratio": 1.37,
    "flag": false
   },
@@ -387,7 +405,7 @@
    "cadence_range": null,
    "p20": 3.66,
    "p80": 8.62,
-   "ratio": 2.36,
+   "ratio": 2.35,
    "flag": false
   },
   {
@@ -398,9 +416,9 @@
    "repeat_frac": 0.07,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 3.39,
-   "p80": 11.0,
-   "ratio": 3.24,
+   "p20": 3.4,
+   "p80": 9.78,
+   "ratio": 2.88,
    "flag": false
   },
   {
@@ -412,8 +430,8 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 1.02,
-   "p80": 2.38,
-   "ratio": 2.33,
+   "p80": 2.37,
+   "ratio": 2.32,
    "flag": false
   },
   {
@@ -447,12 +465,12 @@
    "f0": 1286,
    "f1": 1337,
    "interp": "flow",
-   "repeat_frac": 0.0,
+   "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 0.88,
-   "p80": 1.23,
-   "ratio": 1.39,
+   "p20": 0.83,
+   "p80": 0.95,
+   "ratio": 1.14,
    "flag": false
   },
   {
@@ -460,12 +478,12 @@
    "f0": 1337,
    "f1": 1440,
    "interp": "flow",
-   "repeat_frac": 0.0,
+   "repeat_frac": 0.01,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.3,
+   "p20": 2.35,
    "p80": 6.81,
-   "ratio": 2.96,
+   "ratio": 2.9,
    "flag": false
   }
  ],
