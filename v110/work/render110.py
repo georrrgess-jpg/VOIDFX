@@ -13952,6 +13952,176 @@ def render(f):
     out = flash_governor(out)
     return (np.clip(finish110(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
 
+# ============================================================================ v110 rev 2 (the owner's notes)
+# "the beginning window graphic ... isn't really necessary" (the headlight panes: gone, a gentle push); "I'm losing power
+# ... phase it in ... I'm losing, and then power would be when it drops ... I'm losing would already be written"; "the
+# blood spatter scene ... smoother or more cinematic" (THE SWINGING LIGHT into the blood wall, a glide); "the gun
+# transition ... more seamless and smoother"; "the beginning of the beat drop ... shake a little bit too much ... reduce
+# the shaking/beat jump" (no impact shake, the camera rests through the drop bar, half the punch after).
+
+# ---- the beat camera, calmer: rests through the drop's first bar (the title), half the punch and kick after it
+def beat_phase(f):
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    hook = (34 <= e < 68) and not (42.6 <= e < 47.5) and not (51.5 <= e < 57.5) and not (64.5 <= e < 68)
+    return ph, bi, hook, False
+
+def beat_bounce(f):
+    ph, bi, hook, rival = beat_phase(f)
+    return 1 + 0.022 * math.exp(-ph / 0.10) if hook else 1.0
+
+def shake(f):
+    dx, dy, rot = _shake_v10(f)
+    ph, bi, hook, rival = beat_phase(f)
+    if hook: rot += (0.35 if bi % 2 else -0.35) * math.exp(-ph / 0.13)
+    return dx, dy, rot
+
+def beat_fx(out, f):
+    ph, bi, hook, rival = beat_phase(f)
+    if not hook or ph > 0.05: return out
+    k = math.exp(-ph / 0.025)
+    return np.clip(rgb_split(radial_blur(out, W / 2, H * 0.46, 1.0, 1.0 + 0.015 * k, 3), 3 * k), 0, 1)
+
+def init_hits():
+    HITS.clear()                                                                       # no impact shake on the drop or the loop
+
+# ---- I'M LOSING POWER, phased: "I'M LOSING" is written into the dark of the fan room during the last bar of the break,
+# letter by letter like weak tubes catching (dim, flickering with the fan's low power); on the drop "POWER" slams on
+# with the surge and the whole line comes up to full; then it loses power letter by letter.
+T_PH0 = E.th(24.8)                                                                     # the first letter catches
+def title110(out, f):
+    t = f / FPS; T0 = E.th(30); T_DIE = E.th(33.3)
+    if t < T_PH0 - 0.001 or t > E.th(34.8): return out
+    l1, l2 = _title_layer(1)
+    lay = np.zeros((H, W), np.float32)
+    low = 0.50 + 0.10 * math.sin(t * 23.0) * math.sin(t * 7.1 + 0.4)                    # the fan's brown power
+    up = smooth((t - T0) / 0.06)                                                         # full power on the drop
+    def place(letters, y, gap, a_of):
+        wsum = sum((m.shape[1] if m is not None else 46) for c, m in letters) + gap * (len(letters) - 1); x = (W - wsum) / 2
+        for i, (c, m) in enumerate(letters):
+            if m is None: x += 46 + gap; continue
+            a = a_of(i)
+            td = T_DIE + 0.07 * ((i * 5) % 7) + 0.03 * i
+            if t > td: a *= max(0.0, 1 - smooth((t - td) / 0.16)) * (0.72 + 0.28 * math.cos((t - td) * 2 * math.pi * 4.0 + i))
+            if a > 0.003:
+                mm = m.astype(np.float32) / (m.max() + 1e-6); h_, w_ = mm.shape; yy, xx = int(y), int(x)
+                ys, xs, ye, xe = max(0, yy), max(0, xx), min(H, yy + h_), min(W, xx + w_)
+                if ye > ys and xe > xs: lay[ys:ye, xs:xe] = np.maximum(lay[ys:ye, xs:xe], mm[ys - yy:ye - yy, xs - xx:xe - xx] * a)
+            x += m.shape[1] + gap
+    step = E.HB / 2                                                                       # one letter per 16th
+    def a1(i):
+        k = i - (1 if i > 3 else 0)                                                       # the space takes no step
+        tc = T_PH0 + k * step
+        if t < tc: return 0.0
+        catch = smooth((t - tc) / 0.05) * (1 - 0.65 * math.exp(-((t - tc - 0.07) / 0.018) ** 2)) * (1 - 0.4 * math.exp(-((t - tc - 0.14) / 0.018) ** 2))
+        return catch * (low * (1 - up) + 1.0 * up)
+    place(l1, H * 0.615, 10, a1)
+    lay2 = np.zeros((H, W), np.float32)
+    if t >= T0:
+        lay_keep = lay; lay = lay2
+        place(l2, H * 0.680, 12, lambda i: 1.0)
+        lay2 = lay; lay = lay_keep
+        k = t - T0; sc = 1 + 0.30 * math.exp(-k / 0.05)                                   # POWER slams in
+        cx, cy = W / 2, H * 0.72
+        if sc > 1.003:
+            lays = [cv2.warpAffine(lay2, np.float32([[s_, 0, cx * (1 - s_)], [0, s_, cy * (1 - s_)]]), (W, H)) for s_ in (sc, 1 + (sc - 1) * 0.6, 1 + (sc - 1) * 0.3)]
+            lay2 = (lays[0] + lays[1] + lays[2]) / 3
+        lay = np.maximum(lay, lay2)
+    surge = 0.0
+    for eb in (30, 32, 34):
+        dk = t - E.th(eb)
+        if dk >= 0: surge = max(surge, math.exp(-dk / 0.10))
+    hot = math.exp(-max(0.0, t - T0) / 0.09) if t >= T0 else 0.0
+    g1 = cv2.GaussianBlur(lay, (0, 0), 7)
+    g2 = cv2.resize(cv2.GaussianBlur(cv2.resize(lay, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 8), (W, H), interpolation=cv2.INTER_LINEAR)
+    core = np.array([0.82, 0.93, 1.0], np.float32) * (1 - 0.5 * hot) + np.array([1.0, 1.0, 1.0], np.float32) * 0.5 * hot
+    o = out * (1 - 0.88 * lay[..., None]) + lay[..., None] * core * (0.92 + 0.08 * surge) \
+        + (g1 * (0.55 + 0.35 * surge) + g2 * (0.85 + 0.6 * surge + 0.8 * hot))[..., None] * AMB110 * (0.35 + 0.20 * up)
+    return np.clip(o, 0, 1)
+
+# ---- THE BARREL, seamless: one continuous push into the muzzle; a soft light grows in the bore; the next shot opens
+# inside the bore through a wide, feathered edge and keeps the same forward motion (it starts pushed in about the bore and
+# settles), with a little radial motion blur at the fastest moment; no hard ring, no burst.
+def barrel110(A, B, j, f, sa, sb, pre=36, post=26):
+    q = (j + pre + 0.5) / (pre + post)
+    mx, my, r0 = _muzzle(sa, f if j < 0 else sa["f1"] - 1)
+    z = smooth(q)
+    ZA = math.exp(math.log(6.0) * ein(z, 1.5))
+    speed = math.sin(math.pi * clamp(q, 0, 1)) ** 2                                       # fastest in the middle
+    def push(img, Z, cx, cy):
+        if Z < 1.002: return img
+        if speed < 0.2: return _zoom_about(img, Z, cx, cy)
+        return (_zoom_about(img, Z, cx, cy) + _zoom_about(img, Z * (1 + 0.03 * speed), cx, cy) + _zoom_about(img, Z * (1 + 0.06 * speed), cx, cy)) / 3
+    Az = push(A, ZA, mx, my)
+    rB = r0 * ZA
+    op = ein(smooth((q - 0.30) / 0.62), 2.0)
+    rw = rB * 0.85 + 1.25 * math.hypot(W, H) * op
+    d = np.sqrt((_GX - mx) ** 2 + (_GY - my) ** 2)
+    feather = 0.55 * rw + 30
+    win = np.clip((rw - d) / feather + 0.5, 0, 1); win = win * win * (3 - 2 * win)
+    win = np.maximum(win, smooth((q - 0.86) / 0.12))
+    ZB = 1 + 0.45 * (1 - smooth((q - 0.30) / 0.70))                                      # the next shot keeps moving forward
+    cbx = mx + (W / 2 - mx) * smooth(q); cby = my + (H * 0.45 - my) * smooth(q)
+    Bz = push(B, ZB, cbx, cby)
+    glow = np.exp(-(d / max(6.0, rB * (0.6 + 2.0 * op))) ** 2) * math.sin(math.pi * clamp((q - 0.20) / 0.70, 0, 1))
+    LIGHT = np.array([0.80, 0.88, 0.96], np.float32)
+    showB = smooth((rw - 260.0) / 520.0)                                                  # light first; the next shot only once the bore is big
+    inner = LIGHT * (0.55 + 0.35 * np.exp(-(d / max(8.0, 0.6 * rw)) ** 2))[..., None]
+    content = inner * (1 - showB) + Bz * showB
+    o = Az * (1 - win[..., None]) + content * win[..., None]
+    o = o + glow[..., None] * LIGHT * 0.30
+    return np.clip(o, 0, 1)
+TR2["barrel110"] = (barrel110, 36, 26)
+
+# ---- THE SWINGING LIGHT (the anguish shot -> the blood wall): the bare bulb's pool of light swings across him, and on
+# its last swing the pool carries the blood room inside it: it grows as it comes toward us, the blood-spattered wall lit in
+# it, the dark around it falling away, until it fills the frame. Soft-edged, one continuous push.
+def _bulb_xy(sa, f):
+    t = (f - sa["f0"]) / FPS; per = 4 * E.HB
+    x = W * 0.5 + W * 0.30 * math.sin(2 * math.pi * t / per - 0.6)
+    y = H * 0.20 - H * 0.03 * abs(math.cos(2 * math.pi * t / per - 0.6))
+    return x, y
+
+def swinglight110(A, B, j, f, sa, sb, pre=44, post=26):
+    q = (j + pre + 0.5) / (pre + post)
+    bx, by = _bulb_xy(sa, f)
+    c = smooth((q - 0.20) / 0.80)
+    cx = bx + (W * 0.55 - bx) * c; cy = (by + 0.22 * H) + (H * 0.42 - (by + 0.22 * H)) * c   # the pool, below the bulb
+    r = 120 + 2300 * ein(smooth((q - 0.12) / 0.86), 1.8)
+    d = np.sqrt(((_GX - cx) / 0.85) ** 2 + (_GY - cy) ** 2)
+    m = np.clip((r - d) / (0.55 * r + 90), 0, 1); m = m * m * (3 - 2 * m)
+    m = np.maximum(m, smooth((q - 0.88) / 0.11))
+    Az = _zoom_about(A, 1 + 0.05 * smooth(q), W / 2, H * 0.40)
+    Bz = _zoom_about(B, 1 + 0.10 * (1 - smooth(q)), cx, cy)
+    lit = 0.80 + 0.35 * np.exp(-(d / (0.65 * r + 40)) ** 2)
+    showB = smooth((r - 380.0) / 520.0)                                                   # small pool: just his own light; the blood room once it is big
+    inner = Az * (1.0 + 0.35 * np.exp(-(d / (0.6 * r + 30)) ** 2))[..., None] * (1 - showB) + np.clip(Bz * lit[..., None], 0, 1) * showB
+    o = Az * (1 - 0.55 * smooth(q)) * (1 - m[..., None]) + inner * m[..., None]
+    halo = np.exp(-((d - r) / (0.18 * r + 30)) ** 2) * (1 - smooth((q - 0.80) / 0.18)) * 0.10
+    return np.clip(o + halo[..., None] * AMB110, 0, 1)
+TR2["swinglight110"] = (swinglight110, 44, 26)
+
+# ---- GLIDE (the blood wall -> him looking up at the blood): a slow, matched drift: both pictures rise together, the
+# bright of the next one arriving first (a luma dissolve), soft.
+def glide110(A, B, j, f, sa, sb, pre=16, post=16):
+    q = (j + pre + 0.5) / (pre + post); z = smooth(q)
+    Ad = cv2.warpAffine(A, np.float32([[1 + 0.04 * z, 0, -W / 2 * 0.04 * z], [0, 1 + 0.04 * z, -H * 0.45 * 0.04 * z - 70 * z]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+    Bd = cv2.warpAffine(B, np.float32([[1, 0, 0], [0, 1, 70 * (1 - z)]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+    LB = cv2.GaussianBlur(lum(Bd), (0, 0), 12)
+    w = np.clip((z * 1.6 - 0.3) + (LB - 0.5) * 0.9, 0, 1); w = w * w * (3 - 2 * w)
+    w = np.maximum(w, smooth((q - 0.85) / 0.14)) * (1 - (q < 0.02))
+    return np.clip(Ad * (1 - w[..., None]) + Bd * w[..., None], 0, 1)
+TR2["glide110"] = (glide110, 16, 16)
+
+# ---- TILT (the blood wall -> him looking up at the blood): the camera tilts up fast to the ceiling's blood, motion-
+# blurred, onto him looking up at it (replaces the glide's double exposure)
+def tilt110(A, B, j, f, sa, sb, pre=9, post=12):
+    if j < 0:
+        u = (j + pre + 0.5) / pre; e = ein(u, 2.2)
+        return np.clip(_vblur_shift(A, 0.40 * H * e, 0.34 * H * e), 0, 1)
+    v = (j + 0.5) / post; e = 1 - (1 - smooth(v)) ** 2.2
+    return np.clip(_vblur_shift(B, -0.40 * H * (1 - e), 0.30 * H * (1 - e)), 0, 1)
+TR2["tilt110"] = (tilt110, 9, 12)
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with

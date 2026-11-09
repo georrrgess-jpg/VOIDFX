@@ -3,14 +3,14 @@
  "under": 12.0,
  "rows": [
   {
-   "name": "headlight110",
+   "name": "dolly",
    "kind": "transition",
    "at": 0.91,
    "t0": 0.61,
    "t1": 1.36,
    "music_db": -11.1,
-   "fx_peak_db": -26.1,
-   "fx_minus_music": -15.0,
+   "fx_peak_db": -46.6,
+   "fx_minus_music": -35.5,
    "buried": true
   },
   {
@@ -278,36 +278,36 @@
    "buried": true
   },
   {
-   "name": "THE SPATTER",
+   "name": "THE SWINGING LIGHT",
    "kind": "set piece",
-   "at": 20.08,
-   "t0": 20.08,
+   "at": 19.78,
+   "t0": 19.78,
    "t1": 21.3,
-   "music_db": -8.8,
-   "fx_peak_db": -21.2,
-   "fx_minus_music": -12.4,
+   "music_db": -8.9,
+   "fx_peak_db": -24.7,
+   "fx_minus_music": -15.8,
    "buried": true
   },
   {
-   "name": "spatter110",
+   "name": "swinglight110",
    "kind": "transition",
    "at": 20.69,
    "t0": 20.39,
    "t1": 21.14,
    "music_db": -9.2,
-   "fx_peak_db": -20.9,
-   "fx_minus_music": -11.7,
-   "buried": false
+   "fx_peak_db": -24.7,
+   "fx_minus_music": -15.5,
+   "buried": true
   },
   {
-   "name": "whip",
+   "name": "glide110",
    "kind": "transition",
-   "at": 21.6,
-   "t0": 21.3,
-   "t1": 22.05,
-   "music_db": -9.0,
-   "fx_peak_db": -45.9,
-   "fx_minus_music": -36.9,
+   "at": 21.91,
+   "t0": 21.61,
+   "t1": 22.36,
+   "music_db": -9.6,
+   "fx_peak_db": -46.1,
+   "fx_minus_music": -36.5,
    "buried": true
   },
   {

@@ -1018,13 +1018,12 @@ def main110():
     fx += stereo(norm(bq(noise(n, 1990), "low", 140, 2) + 0.08 * np.sin(2 * np.pi * 44 * tt), -46))
     t0 = {s_["n"]: s_["t0"] for s_ in E.SHOTS}; F = E.FPS
     td = E.th(E.HDROP)                                                                                 # the drop (the power surges)
-    place(fx, A2.whoosh(0.60, -21, 4101, True) * np.array([[0.7, 1.0]], np.float32), t0["yard"] - 0.38)   # a car's light passes over the bed
     place(fx, stereo(neon_buzz(0.45, -24)), E.th(10.2) - 0.02)                                        # the tube lights on "I'm"
     place(fx, stereo(rev(hum_rise(0.85, -20, 90, 330))), t0["fog"] - 0.32)                            # the brownout: the power dies
     place(fx, stereo(hum_rise(1.05, -21, 70, 260)), td - 1.05)                                        # the fan spins up: the power surges back
     place(fx, stereo(A2.impact(-6, (50, 26), 0.9, 0.3, 4102)), td); place(fx, stereo(sub_drop(-8, 0.8, 62, 26)), td + 0.01)
     place(fx, A2.whoosh(0.55, -18, 4103, True), t0["warm"] - 0.48)                                   # THE BARREL
-    place(fx, stereo(splatter(-17, 4104)), t0["bloodroom"] - 0.30)                                    # the spatter arrives
+    place(fx, A2.whoosh(0.70, -22, 4104, True), t0["bloodwall"] - 0.55)                                # rev 2: the swinging light carries the blood room in
     place(fx, stereo(neon_buzz(0.40, -21)), td + 0.01)                                               # rev 1: the title's tubes ignite on the drop
     place(fx, stereo(scrub(0.16, -20, 4106, 4500)), t0["dark"] - 0.06)                                # rev 1: the print tears
     ti = E.th(74.6) + 0.36 * (E.DUR - E.th(74.6))                                                     # rev 1: THE DRIP lands

@@ -1,6 +1,6 @@
 {
  "edit": "v110",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-09 19:42:52",
@@ -617,6 +617,76 @@
    "step": "deliver",
    "s": 166.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:51:26",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:52:23",
+   "round": 3,
+   "step": "prep",
+   "s": 57.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:52:28",
+   "round": 3,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:52:56",
+   "round": 3,
+   "step": "sheet:t1:40,55,62,480,500,515,530,540,546,548,552,560",
+   "s": 21.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:53:03",
+   "round": 3,
+   "step": "sheet:t2:806,814,822,828,834,840,846,852,858,866",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:53:10",
+   "round": 3,
+   "step": "sheet:t3:1180,1196,1206,1216,1226,1236,1246,1256,1266,1300,1312,1324",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:53:44",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:53:53",
+   "round": 3,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:54:11",
+   "round": 3,
+   "step": "sheet:t2:822,828,832,836,840,844,850",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:54:17",
+   "round": 3,
+   "step": "sheet:t3:1196,1206,1216,1226,1236,1306,1310,1314,1318,1322",
+   "s": 6.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -649,6 +719,36 @@
    "round": 2,
    "cat": "plain_effect",
    "text": "I also don't really like the doorway transition that appears at 16 seconds, and I don't really like the lines transition at 17 seconds ... replace them with more transitions that are more visually appealing and different"
+  },
+  {
+   "t": "2026-11-09 21:49:19",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "the beginning window graphic at the start of the edit isn't really necessary"
+  },
+  {
+   "t": "2026-11-09 21:49:19",
+   "round": 3,
+   "cat": "text",
+   "text": "I'm losing power ... phase it in ... I'm losing, and then power would be when it drops. And the text for I'm losing would already be written"
+  },
+  {
+   "t": "2026-11-09 21:49:20",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "the blood spatter scene near the end of the edit still isn't quite adequate ... smoother or more cinematic"
+  },
+  {
+   "t": "2026-11-09 21:49:20",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "improve the gun transition to be more seamless and smoother"
+  },
+  {
+   "t": "2026-11-09 21:49:20",
+   "round": 3,
+   "cat": "other",
+   "text": "the beginning of the beat drop, the scenes shake a little bit too much ... reduce the shaking/beat jump"
   }
  ],
  "catches": [
@@ -807,10 +907,29 @@
    "round": 2,
    "cat": "face_overlay",
    "text": "THE DRIP's red crest tint drew rings: removed (refraction only); the drop moved beside his head"
+  },
+  {
+   "t": "2026-11-09 21:54:41",
+   "round": 3,
+   "cat": "face_overlay",
+   "text": "the barrel's bore showed the next shot's mouth while small: light first, the face once the bore is big"
+  },
+  {
+   "t": "2026-11-09 21:54:41",
+   "round": 3,
+   "cat": "face_overlay",
+   "text": "the swinging light's small pool put the blood wall's red on his lips: his own light first, the blood room once the pool is big"
+  },
+  {
+   "t": "2026-11-09 21:54:41",
+   "round": 3,
+   "cat": "other",
+   "text": "the glide's luma dissolve double-exposed two faces: a motion-blurred tilt up to the blood"
   }
  ],
  "round_starts": {
   "1": "2026-11-09 21:04:59",
-  "2": "2026-11-09 21:14:38"
+  "2": "2026-11-09 21:14:38",
+  "3": "2026-11-09 21:49:19"
  }
 }

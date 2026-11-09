@@ -40,7 +40,7 @@ LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
 SET_PIECES = [("POWER FAILURE", th(10), th(21)), ("THROUGH THE FAN + I'M LOSING POWER", th(24), th(34.5)), ("THE BARREL", th(43.5), th(47)),
-              ("THE SPATTER", th(66), th(70)), ("THE DRIP (loop)", th(74.6), th(79))]
+              ("THE SWINGING LIGHT", th(65), th(70)), ("THE DRIP (loop)", th(74.6), th(79))]
 SIGNATURE = ["fan110"]
 HERO = ["power_light110"]                  # the failing / surging light: the title, the brownout, the fan
 HERO_TINS = ["lightson110", "brownout110", "fan110"]
@@ -88,7 +88,7 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 SP = dict(look="sleep110")
 # ---- the sleepwalk (e0-e10): he lies awake; he walks through the night half asleep
 shot("bed", "ds2a", 0, 3, 20.40, 21.30, z=[(0, 1.00), (1, 1.03)], interp="flow", seg=True, **SP)             # frame 0: awake, staring up
-shot("yard", "dmx", 3, 6, 254.20, 255.20, z=[(0, 1.00), (1, 1.03)], tin="headlight110", interp="flow", **SP)   # a car's light crosses the bed
+shot("yard", "dmx", 3, 6, 254.20, 255.20, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)
 shot("marina", "p1", 6, 8, 123.20, 124.00, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
 shot("doorway", "ds2b", 8, 10, 393.10, 393.80, z=[(0, 1.00), (1, 1.03)], tin="bokeh110", interp="flow", **SP)
 # ---- POWER FAILURE (e10-e21): "I'm losing power"; the light above him fails, the bass goes
@@ -113,8 +113,8 @@ shot("cabin", "p1", 58, 60, 176.60, 177.50, z=[(0, 1.00), (1, 1.03)], tin="brush
 shot("closeup", "s4", 60, 62, 161.10, 161.90, z=[(0, 1.00), (1, 1.03)], tin="streetlight109", interp="flow", **SP)
 shot("anguish", "p1", 62, 68, 164.00, 164.90, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)      # THE SPATTER
 # ---- "Mommy?" (e68-e79): the blood room; the loop falls into bed
-shot("bloodroom", "dmx", 68, 71, 105.70, 106.70, z=[(0, 1.00), (1, 1.04)], tin="spatter110", interp="flow", **SP)
-shot("bloodroom2", "dmx", 71, 74, 109.95, 110.95, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **SP)   # "Mommy?": the swing carries on
+shot("bloodwall", "dmx", 68, 72, 111.80, 112.90, z=[(0, 1.00), (1, 1.05)], tin="swinglight110", interp="flow", **SP)   # the blood-spattered wall, in the bulb's light
+shot("bloodroom2", "dmx", 72, 74, 110.05, 110.75, z=[(0, 1.00), (1, 1.03)], tin="tilt110", interp="flow", **SP)   # "Mommy?": he looks up at the blood
 shot("lookup", "dmx", 74, 79, 122.90, 124.30, z=[(0, 1.00), (1, 1.04)], tin="smear", interp="flow", tout="driploop110", **SP)
 SHOTS = S
 for s in SHOTS:
