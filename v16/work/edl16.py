@@ -81,31 +81,41 @@ def shot(n, src, e0, e1, a, b, **kw):
              z=kw.pop("z", [(0, 1.00), (1, 1.04)]), face=kw.pop("face", "largest"), interp=kw.pop("interp", "flow"))
     d.update(kw); S.append(d)
 
+class LinZ(list):
+    """zoom keys read as a straight line (constant speed, valid outside 0..1: the roof's push runs on through the loop's
+    virtual frames, so the camera keeps moving across the wrap)."""
+    linear = True
+
 # ---- the drumless verse (e0-e24): the rooftop, Iris, the hold-on
-shot("roof", "fs5", 0, 4, 138.20, 139.70, tin="loop_in16", seg=True, face=None, cx=(720, 700), lin=True, z=[(-1, 1.00), (0, 1.05), (1, 1.10)], anim="twinkle")   # the push-in runs on through the loop's virtual frames
+shot("roof", "fs5", 0, 4, 138.64, 139.60, tin="loop_in16", seg=True, face=None, cx=(720, 700), lin=True, tmap=[(-1.5, 137.20), (0, 138.64), (1, 139.60)], tneg=True,
+     z=LinZ([(0, 1.06), (1, 1.10)]), anim="twinkle")   # the footage and the push-in run on through the loop's virtual frames (the shot starts at 137.14)
 shot("thinks", "fbh", 4, 6, 136.55, 137.30, tin="bokeh_drift", seg=True, anim="flares")                            # he thinks of her, the night in bokeh behind him
 shot("looks", "fs1", 6, 8, 230.40, 231.20, tin="flare_sweep", seg=True, look="dusk")                         # Barry looks at her
 shot("iris", "fs1", 8, 12, 233.95, 234.95, tin="reflection", seg=True, look="dusk")                                  # "who you could be"
 shot("mask", "fs3", 12, 16, 59.40, 60.70, tin="headlight_pass", seg=True, anim="flares")
-shot("couple", "fs3", 16, 18, 120.80, 121.40, tin="bolt_split", seg=True)                                          # "Oh, just hold on": the two of them at night
-shot("eyes", "fs1", 18, 19.5, 291.95, 292.70, tin="focus_pull", seg=True, face=None, cx=(343, 343))           # his eye fills with lightning (v12-proven)                                                  # the lightning sparks in his eyes
-shot("charge", "fs5", 19.5, 24, 114.30, 116.30, tin="light_warp", seg=True, tmap=slow(19.5, 24, 114.30, 116.30, 0.9), lin=True, interp="hold")   # strobe-cut source: its own cadence   # HOLD ON draws back from e20
-# ---- the drums are back on "home" (e24): the run home through the night city
+shot("couple", "fs3", 16, 18, 120.80, 121.40, tin="bolt_split", seg=True, anim="flares")                          # "Oh, just hold on": the two of them at night
+shot("eyes", "fs1", 18, 19.5, 291.95, 292.70, tin="focus_pull", seg=True, face=None, cx=(343, 343))           # his eye fills with lightning (v12-proven)
+shot("charge", "fs5", 19.5, 24, 114.30, 116.30, tin="light_warp", seg=True, tmap=slow(19.5, 24, 114.30, 116.30, 0.9), lin=True, interp="hold")   # strobe-cut source: its own cadence; HOLD ON draws back from e20
+# ---- the drums are back on "home" (e24): the run home through the night city, his face and the suit in every other shot
 shot("run", "fs2", 24, 26, 144.60, 145.90, tin="release", seg=True, face=None, cx=(1040, 1060), tmap=vel(24, 26, 144.60, 145.90), lin=True, flowmax=40, flowfall="blend")
-shot("fpv", "fbk", 26, 28, 61.30, 62.30, tin="bolt_trail", seg=True, face=None, cx=(640, 640), tmap=vel(26, 28, 61.30, 62.30), lin=True)   # down the street toward home
-shot("close", "fs2", 28, 30, 107.30, 108.00, tin="streak_pass", seg=True)
+shot("faceA", "fbh", 26, 28, 53.70, 54.30, tin="arc_jump", seg=True, tmap=vel(26, 28, 53.70, 54.30, lo=0.7, hi=1.6), lin=True, flowmax=40, flowfall="blend")   # masked, the lightning crackling round him
+shot("close", "fs2", 28, 30, 107.30, 108.00, tin="streak_pass", seg=True)                                       # masked close-up
 shot("wet", "fs2", 30, 32, 77.20, 78.20, tin="drop_whip", seg=True, face=None, cx=(840, 820), flowmax=40, flowfall="blend")
 shot("night", "fbk", 32, 34, 136.15, 136.85, tin="ramp", seg=True, anim="flares")
-shot("star", "fs2", 34, 36, 109.60, 110.25, tin="light_flare", seg=True, face=None, cx=(980, 1000), flowmax=40, flowfall="blend")
-shot("city", "fbk", 36, 38, 69.95, 70.80, tin="whip_up15", seg=True, face=None, cx=(700, 640), tmap=vel(36, 38, 69.95, 70.80), lin=True)
-shot("van", "fbh", 38, 40, 106.55, 107.25, tin="window_hop", seg=True)                                           # inside the window: the S5 suit by the van
-# ---- LONG EXPOSURE (the focal piece): the shutter opens on his run; the trails become the city's lights
-shot("lrun", "fs5", 40, 48, 119.20, 121.05, tin="city_dive", seg=True, face=None, cx=(930, 860), tmap=slow(40, 48, 119.20, 121.05, 0.2), lin=True, flowmax=90, flowfall="blend")
-shot("alone", "fs3", 48, 52, 115.00, 116.60, tin="long_exposure", seg=True, anim="windows")                          # "It's hard to do these things alone"
-shot("alonec", "fs3", 52, 56, 39.75, 40.55, tin="face_match", seg=True)
+shot("faceB", "fbh", 34, 36, 84.45, 85.05, tin="light_flare", seg=True, anim="sparks")                         # Barry in the suit, lightning round him; sparks drift off it
+shot("city", "fbk", 36, 39, 69.95, 70.95, tin="whip_up15", seg=True, face=None, cx=(700, 640), tmap=vel(36, 39, 69.95, 70.95, beats=[36]), lin=True, anim="twinkle")
+shot("van", "fbh", 39, 42, 106.40, 107.40, tin="window_hop", seg=True)                           # inside the window: the S5 suit by the van
+# ---- LONG EXPOSURE (the focal piece): the shutter opens on his run and stays open across the cut
+shot("lrun", "fs5", 42, 45, 119.20, 120.60, tin="city_dive", seg=True, face=None, cx=(930, 860), lin=True, flowmax=90, flowfall="blend")
+shot("lrun2", "fbk", 45, 48, 2.30, 3.40, tin="exposure_cut", seg=True, face=None, cx=(600, 520), lin=True, flowmax=60, flowfall="blend", lexg=0.40)   # the lightning tears through the bar
+shot("alone", "fs3", 48, 50, 115.00, 116.00, tin="long_exposure", seg=True, anim="windows")                          # "It's hard to do these things alone"
+shot("alone2", "fs3", 50, 52, 126.00, 126.70, tin="time_lapse", seg=True, anim="windows")                          # the world rushes past; he stands still
+shot("eyes2", "fbh", 52, 54, 117.40, 118.00, tin="sky_strike", seg=True)                                          # the lightning answers: it is in his eyes
+shot("lookup", "fs2", 54, 56, 37.00, 37.60, tin="afterglow", seg=True)                                         # Barry at night; the lightning stays burnt on the eye a moment
+shot("alonec", "fs3", 56, 58, 39.75, 40.35, tin="face_match", seg=True)                                        # the eye line carried over
 # ---- THE SIGNAL (the emblem transition): the real Flash signal lamp, its bolt the doorway home
-shot("signal", "fs2", 56, 64, 45.40, 48.40, tin="beam_call", seg=True, face=None, cx=(640, 640), tmap=slow(56, 64, 45.40, 48.40, 0.3), lin=True, z=[(0, 1.00), (1, 1.08)], flowmax=60)
-# ---- home (e64-e80): the loft, Iris, the two of them; the loop pulls home back into the city
+shot("signal", "fs2", 58, 64, 45.80, 48.40, tin="beam_call", seg=True, face=None, cx=(640, 640), tmap=slow(58, 64, 45.80, 48.40, 0.3), lin=True, z=[(0, 1.00), (1, 1.07)], flowmax=60)
+# ---- home (e64-e80): the loft, the two of them, Iris; the loop pulls home back out through a window of the city
 shot("loft", "fs3", 64, 68, 41.50, 43.50, tin="emblem_signal", seg=True, look="home", anim="motes")                         # "Just hold on"
 shot("iriskit", "fs3", 68, 72, 49.40, 50.35, tin="lamplight", seg=True, look="home", anim="motes")                        # "hold on, we're going"
 shot("home", "fs3", 72, 80, 50.60, 52.60, tin="turn_pan", seg=True, look="home", tmap=slow(72, 80, 50.60, 52.60, 0.4), lin=True, z=[(0, 1.00), (1, 1.04)], anim="motes")   # "home ... going home"
@@ -115,15 +125,18 @@ SIG_TRACK = [(45.4, 617.6, 470.7, 188.8), (45.483, 614.5, 476.5, 188.9), (45.567
 SIG_BOLT = [(0.512, -0.762), (0.148, -0.347), (0.391, -0.338), (0.004, 0.011), (0.263, 0.022), (-0.691, 0.700),
             (-0.249, 0.212), (-0.477, 0.208), (-0.095, -0.150), (-0.342, -0.157)]   # the stencil bolt, traced (lens radii)
 
-HOME_WIN = (158.0, 770.0, 22.0)                # the lit window in frame 0 the loft pulls back into (x, y, height; measured on frame 0)
-SET_PIECES = [("hold_on", th(18), th(26)), ("long_exposure", th(42), th(50)), ("emblem_signal", th(56), th(66)), ("loop", th(74), th(80))]
+HOME_WIN = (112.0, 781.0, 57.0, 32.0)          # the lit window in frame 0 the loft pulls back out of (x, y, width, height; measured on frame 0)
+SET_PIECES = [("hold_on", th(18), th(26)), ("long_exposure", th(42), th(50)), ("emblem_signal", th(58), th(66)), ("loop", th(74), th(80))]
+WH_TRACK = [(70.3, 748.1, 419.5), (70.3333, 750.0, 423.7), (70.3667, 751.8, 427.7), (70.4, 751.8, 427.8), (70.4333, 753.6, 431.6), (70.4667, 755.5, 435.0), (70.5, 757.5, 438.2), (70.5333, 759.4, 441.0), (70.5667, 759.4, 441.0), (70.6, 761.5, 443.6), (70.6333, 763.5, 446.0), (70.6667, 765.5, 448.3), (70.7, 767.7, 450.4), (70.7333, 767.7, 450.4), (70.7667, 770.0, 452.2), (70.8, 772.2, 453.7), (70.8333, 774.6, 455.1), (70.8667, 777.1, 456.4), (70.9, 777.1, 456.4), (70.9333, 779.6, 457.1)]   # WINDOW HOP: the lit window in the city shot (flash_blitzkrieg.mp4), tracked backward with LK on the source (t, x, y)
+WH_SIZE = (7.2, 5.4)                            # its half width, half height in source px
 HERO = ["home_light"]
 HERO_TINS = ["emblem_signal", "window_hop", "loop_in16"]
 SIGNATURE = ["long_exposure", "emblem_signal"]
 PLAN_ACCEPT = {
     "dead:charge": "HOLD ON: from e20 the shot is drawn back like a slingshot (pinch, tremble, lightning gathering) on the claps, released on the drop",
     "sig_time:long_exposure": "the long exposure runs in the shot from e42 (the shutter opens, the trails build for 1.8 s) before the cut carries them into the city lights",
-    "dead:home": "the loop: from e76 HOME LIGHT pulls the loft back into a lit window of frame 0's city, in motion every frame",
+    "dead:home": "the loop: from e74 HOME LIGHT pulls the camera back out of the loft's window into frame 0's city, in motion every frame",
+    "pf:hero motif:the hero asset (home_light) is drawn by ": "a call-graph false positive: these transitions read the neighbouring shot's edge frame (edge15 -> base16), and base16 only calls home_light for the 'home' shot; the home light appears in WINDOW HOP, THE SIGNAL and the loop (HERO_TINS)",
 }
 SHOTS = S
 for s in SHOTS:

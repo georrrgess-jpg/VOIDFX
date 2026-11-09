@@ -747,11 +747,12 @@ def main():
     place(fx, stereo(mono_(A2.impact(-10, (56, 30), 0.45, 0.30, 1603))), th(24))                               # RELEASE on "home"
     place(fx, stereo(mono_(sub_drop(-12, 0.6, 62, 28))), th(24) + 0.01)
     place(fx, stereo(mono_(A2.whoosh(0.30, -13, 1604, True)), 0.35), t0["close"] - 0.14)                      # STREAK PASS
-    place(fx, stereo(shutter(-2, 1605)), th(42))                                                              # LONG EXPOSURE: the shutter opens
+    wg = rev(mono_(A2.whoosh(0.70, -16, 1610, False))); place(fx, stereo(wg), th(39) - len(wg) / SR + 0.12)   # WINDOW HOP: the glide into the window
+    place(fx, stereo(shutter(-2, 1605)), th(42.5))                                                            # LONG EXPOSURE: the shutter opens
     place(fx, stereo(shutter(-4, 1606, True)), th(48) - 0.02)                                                 # and closes
-    place(fx, stereo(lamp_clunk(-4, 1607)), th(56.6))                                                         # THE SIGNAL switched on
+    place(fx, stereo(lamp_clunk(-4, 1607)), th(58.6))                                                         # THE SIGNAL switched on
     sg = A2.whoosh(0.55, -7, 1608, True); place(fx, sg.astype(np.float32), th(64) - 0.30)                     # through the bolt, home
-    rw = rev(A2.whoosh(0.85, -9, 1609, True)); place(fx, rw.astype(np.float32), E.DUR - 0.04 - len(rw) / SR) # HOME LIGHT: into frame 0
+    rw = rev(A2.whoosh(0.85, -10, 1609, True)); place(fx, rw.astype(np.float32), E.th(77.4) - len(rw) / SR)  # HOME LIGHT: the pull back out of the window, at its fastest
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))
     wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
     full = mus + fx

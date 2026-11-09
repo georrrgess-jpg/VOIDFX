@@ -10,15 +10,17 @@ The fastest man alive can run anywhere, but every run ends at the same place.
   thinks of Iris ("I know exactly who you could be", her face rising in the night glass).
 - **HOLD ON (the set piece on the drop):** "Oh, just hold on, we're going home": the shot is drawn back like a slingshot,
   straining, lightning gathering on him. The drums slam back exactly on "home" and it releases into the run.
-- **The run home:** through the night city, cut on the beat.
-- **LONG EXPOSURE (the focal piece):** the shutter stays open on his run; his lightning paints light trails around him
-  that settle into the city's own lights.
-- **"It's hard to do these things alone":** alone; a searchlight sweeps the sky behind him.
+- **The run home:** through the night city, cut on the beat, his face or the suit in every other shot.
+- **WINDOW HOP (~11 s):** the camera glides into one lit window of the falling city, and he is inside it.
+- **LONG EXPOSURE (the focal piece):** the shutter stays open on two runs; his lightning paints light trails that carry
+  across the cut and settle into the city's own lights.
+- **"It's hard to do these things alone":** the world streams past him while he stands still; lightning answers.
 - **THE SIGNAL (the emblem transition):** the real Flash signal lamp (S2). We push into it; through the bolt in its
   lens is home, his face inside the bolt's blade; the bolt opens past the frame and we are in the loft.
 - **Home:** the loft, Iris, Barry in warm lamplight.
-- **The loop (HOME LIGHT):** on the beat at e74 we are back out through the loft's window: he stands on the rooftop in
-  front of it, and home shrinks into one lit window of the city behind him: frame 0.
+- **The loop (HOME LIGHT):** the reverse of WINDOW HOP. From e74 the camera pulls back out of the loft through its
+  window: the loft becomes one lit window of the night city, he comes in solid in front of it, and its light is all
+  that is left: frame 0.
 
 The hero is the HOME LIGHT (a lit window, a lamp): frame 0's windows, WINDOW HOP, the signal's lamp into the loft's lamp,
 and the loop.
@@ -41,29 +43,33 @@ and the loop.
 | 0–4 | the Flash on a rooftop over the night city (S5); *the city's windows breathe* | the loop |
 | 4–6 | he thinks of her (S5 suit); *flares* | **BOKEH DRIFT** (the city's lights swell into discs and settle) |
 | 6–8 | Barry looks at her (S1) | **FLARE SWEEP** (a warm streetlight flare sweeps low across the lens) |
-| 8–12 | Iris (S1), the reverse shot | **REFLECTION** (her face rises in the night glass; his shot falls back into the dark) |
+| 8–12 | Iris (S1), the reverse shot | **REFLECTION** (her face rises in the night glass) |
 | 12–16 | masked, at night (S3); *streetlight flares* | **HEADLIGHT PASS** (a car's lights sweep across the lens) |
-| 16–18 | Barry at night, "Oh, just hold on" (S3) | BOLT SPLIT (beside his face) |
+| 16–18 | Barry at night, "Oh, just hold on" (S3); *flares* | BOLT SPLIT |
 | 18–19.5 | his eye fills with lightning (S1) | **FOCUS PULL** |
-| 19.5–24 | the charge (S5, its own strobe-cut cadence); **HOLD ON** from e20: drawn back like a slingshot | **LIGHT WARP** (the lights stretch into speed lines) |
+| 19.5–24 | the charge (S5, its own strobe-cut cadence); **HOLD ON** from e20 | **LIGHT WARP** |
 | 24–26 | the run (S2) | **RELEASE** on "home": the run blasts out at us |
-| 26–28 | down the street toward home (Blitzkrieg) | **BOLT TRAIL** (his lightning stretches into the street's speed trails) |
+| 26–28 | *new:* masked, lightning crackling round him | **ARC JUMP** (a bolt leaps from his run to his lightning) |
 | 28–30 | masked close-up (S2) | STREAK PASS |
-| 30–32 | the lightning run on a wet street (S2) | **DROP WHIP** (the camera drops off his face to the street) |
+| 30–32 | the lightning run on a wet street (S2) | **DROP WHIP** |
 | 32–34 | masked under street lights (S4); *flares* | RAMP |
-| 34–36 | lightning past S.T.A.R. Labs (S2) | **LIGHT FLARE** |
-| 36–38 | the city from below, falling fire (Blitzkrieg) | WHIP UP |
-| 38–40 | the S5 suit by the van (S5) | **WINDOW HOP** (a dolly into one lit window of the falling city; he is inside it) |
-| 40–48 | the run (S5); **LONG EXPOSURE** from e42 | **CITY DIVE** (into a light trail over the city) |
-| 48–52 | alone, at night (S3); *the windows breathe* | **LONG EXPOSURE** (the shutter closes: the trails retract into points of light) |
-| 52–56 | alone, close (S3) | **FACE MATCH** (the push in lands on the close-up's eye line) |
-| 56–64 | the Flash signal (S2), warming up | **BEAM CALL** (a searchlight sweeps the sky behind him) |
-| 64–68 | the loft (S3); *warm dust in the lamplight* | **THE SIGNAL** (through the bolt, home: his face inside its blade) |
-| 68–72 | Iris in the loft (S3); *dust* | **LAMPLIGHT** (the lamp's glow carries us across the room) |
-| 72–80 | Barry home with the ice; from e74 **HOME LIGHT** into frame 0 | **TURN PAN** (from her to him) |
+| 34–36 | *new:* Barry in the suit, lightning round him; *sparks fly off his shoulders* | **LIGHT FLARE** |
+| 36–39 | the city from below, falling fire (Blitzkrieg); *the windows breathe* | WHIP UP |
+| 39–42 | the S5 suit by the van | **WINDOW HOP** (rebuilt: ~1 s, tracked, a warm lit window) |
+| 42–45 | the run (S5); **LONG EXPOSURE** from e42.5 | **CITY DIVE** |
+| 45–48 | *new:* the lightning tears through the bar (Blitzkrieg) | **EXPOSURE CUT** (the shutter stays open across the cut) |
+| 48–50 | alone, at night (S3); *the windows breathe* | **LONG EXPOSURE** (the trails retract into points of light) |
+| 50–52 | *new:* Barry in a suit at night (S3) | **TIME LAPSE** (the world streams past, he stands still) |
+| 52–54 | *new:* lightning in his eyes | **SKY STRIKE** (a bolt cracks down behind him) |
+| 54–56 | *new:* Barry at night (S2) | **AFTERGLOW** (the lightning stays burnt on the eye a moment) |
+| 56–58 | alone, close (S3) | **FACE MATCH** (eye line to eye line) |
+| 58–64 | the Flash signal (S2), warming up | **BEAM CALL** (a searchlight sweeps the sky behind him) |
+| 64–68 | the loft (S3); *warm dust in the lamplight* | **THE SIGNAL** (through the bolt, home) |
+| 68–72 | Iris in the loft (S3); *dust* | **LAMPLIGHT** |
+| 72–80 | Barry home with the ice; from e74 **HOME LIGHT** into frame 0 | **TURN PAN** |
 
-23 designed transitions and the loop in 24.0 s, plus in-shot animations (in italics), each motivated by its shot and kept
-off faces.
+26 designed transitions and the loop in 24.0 s (1.12/s), plus in-shot animations (in italics), each motivated by its
+shot and kept off faces.
 
 ## Look: AFTER HOURS
 - **The grade:** the night is teal ink with sodium-amber lights and the suit's red kept rich; Iris at dusk; home in warm
@@ -75,14 +81,15 @@ off faces.
 - **Text:** none.
 
 ## Sound
-The song straight and circular (pre-roll crossfade, mastered on a wrapped copy, measured after AAC). **Lean: 10 effects
-in 9 moments**, none on beats but the drop's set piece:
+The song straight and circular (pre-roll crossfade, mastered on a wrapped copy, measured after AAC). **Lean: 11 effects
+in 10 moments**, none on beats but the drop's set piece; the new transitions are silent:
 - a car passing (HEADLIGHT PASS);
 - HOLD ON: a reversed rush drawn back, then an impact and a sub drop on "home";
 - a whoosh (STREAK PASS);
+- a soft air glide into the window (WINDOW HOP, new);
 - a camera shutter opening and closing (LONG EXPOSURE);
 - the signal's heavy switch (THE SIGNAL), and a soft whoosh through the bolt;
-- a reversed whoosh into frame 0 (HOME LIGHT).
+- a soft reversed whoosh at the pull-back's fastest moment (HOME LIGHT); the song carries the wrap.
 
 ## Measured
 - **QC:** 11/11 on the encode.

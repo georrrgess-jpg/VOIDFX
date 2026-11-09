@@ -113,7 +113,7 @@
    "buried": false
   },
   {
-   "name": "bolt_trail",
+   "name": "arc_jump",
    "kind": "transition",
    "at": 7.8,
    "t0": 7.5,
@@ -174,30 +174,30 @@
    "t0": 10.5,
    "t1": 11.25,
    "music_db": -11.2,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -168.8,
+   "fx_peak_db": -44.1,
+   "fx_minus_music": -32.8,
    "buried": true
   },
   {
    "name": "window_hop",
    "kind": "transition",
-   "at": 11.4,
-   "t0": 11.1,
-   "t1": 11.85,
-   "music_db": -11.6,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -168.4,
+   "at": 11.7,
+   "t0": 11.4,
+   "t1": 12.15,
+   "music_db": -9.5,
+   "fx_peak_db": -29.8,
+   "fx_minus_music": -20.4,
    "buried": true
   },
   {
    "name": "city_dive",
    "kind": "transition",
-   "at": 12.0,
-   "t0": 11.7,
-   "t1": 12.45,
-   "music_db": -9.7,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -170.3,
+   "at": 12.6,
+   "t0": 12.3,
+   "t1": 13.05,
+   "music_db": -10.0,
+   "fx_peak_db": -26.4,
+   "fx_minus_music": -16.4,
    "buried": true
   },
   {
@@ -212,6 +212,17 @@
    "buried": true
   },
   {
+   "name": "exposure_cut",
+   "kind": "transition",
+   "at": 13.5,
+   "t0": 13.2,
+   "t1": 13.95,
+   "music_db": -9.4,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -170.6,
+   "buried": true
+  },
+  {
    "name": "long_exposure",
    "kind": "transition",
    "at": 14.4,
@@ -223,7 +234,18 @@
    "buried": true
   },
   {
-   "name": "face_match",
+   "name": "time_lapse",
+   "kind": "transition",
+   "at": 15.0,
+   "t0": 14.7,
+   "t1": 15.45,
+   "music_db": -13.0,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -167.0,
+   "buried": true
+  },
+  {
+   "name": "sky_strike",
    "kind": "transition",
    "at": 15.6,
    "t0": 15.3,
@@ -234,25 +256,47 @@
    "buried": true
   },
   {
-   "name": "beam_call",
+   "name": "afterglow",
+   "kind": "transition",
+   "at": 16.2,
+   "t0": 15.9,
+   "t1": 16.65,
+   "music_db": -12.6,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -167.4,
+   "buried": true
+  },
+  {
+   "name": "face_match",
    "kind": "transition",
    "at": 16.8,
    "t0": 16.5,
    "t1": 17.25,
    "music_db": -10.4,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -169.6,
+   "buried": true
+  },
+  {
+   "name": "beam_call",
+   "kind": "transition",
+   "at": 17.4,
+   "t0": 17.1,
+   "t1": 17.85,
+   "music_db": -12.0,
    "fx_peak_db": -13.4,
-   "fx_minus_music": -3.0,
+   "fx_minus_music": -1.4,
    "buried": false
   },
   {
    "name": "emblem_signal",
    "kind": "set piece",
-   "at": 16.8,
-   "t0": 16.8,
+   "at": 17.4,
+   "t0": 17.4,
    "t1": 19.8,
-   "music_db": -11.6,
+   "music_db": -11.7,
    "fx_peak_db": -13.4,
-   "fx_minus_music": -1.8,
+   "fx_minus_music": -1.7,
    "buried": false
   },
   {
@@ -295,9 +339,9 @@
    "t0": 22.2,
    "t1": 24.0,
    "music_db": -11.4,
-   "fx_peak_db": -22.9,
-   "fx_minus_music": -11.5,
-   "buried": false
+   "fx_peak_db": -24.1,
+   "fx_minus_music": -12.6,
+   "buried": true
   }
  ]
 }

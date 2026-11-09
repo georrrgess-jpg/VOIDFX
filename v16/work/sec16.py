@@ -21,6 +21,30 @@ if E.VER == "v16":
     for _s in E.SHOTS:
         _s.setdefault("target", 0.42 if _s.get("look", "night") == "night" else 0.46)
 
+_keys_at_pre16 = keys_at
+def keys_at(keys, u):
+    """LinZ keys (EDL) read as a straight line, valid outside 0..1: the roof's push keeps one speed across the wrap."""
+    if getattr(keys, "linear", False):
+        (u0, v0), (u1, v1) = keys[0], keys[-1]; return v0 + (v1 - v0) * (u - u0) / (u1 - u0)
+    return _keys_at_pre16(keys, u)
+
+_tmap_pre16 = tmap
+def tmap(s, u):
+    """tneg shots (the roof) read their source before u = 0 too (the tmap's first key sits at negative u): the loop's
+    virtual frames show the real rooftop footage running on into frame 0, not a held frame."""
+    if u < 0 and s.get("tneg"):
+        ks = s["tmap"]; return float(np.interp(u, [k[0] for k in ks], [k[1] for k in ks]))
+    return _tmap_pre16(s, u)
+
+_src_time_pre16 = src_time
+def src_time(s, f):
+    """tneg shots: the speed estimate at negative u without the 0..1 clamp (it divided by ~0 there and the sampler
+    smeared frames of another shot into the loop's virtual frames)."""
+    if s.get("tneg") and f < s["f0"] + 2:
+        n = max(1, s["f1"] - s["f0"]); u = (f - s["f0"]) / n; du = 1.0 / n
+        return tmap(s, u), u, abs(tmap(s, u + du) - tmap(s, u - du)) / (2 * du * n / FPS)
+    return _src_time_pre16(s, f)
+
 def shift_img(img, dx, dy=0.0):
     M = np.float32([[1, 0, dx], [0, 1, dy]]); return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
@@ -53,7 +77,7 @@ def lumf(img): return img[..., 0] * 0.114 + img[..., 1] * 0.587 + img[..., 2] * 
 LOOKS16 = {"night": dict(sh=(0.052, 0.022, -0.012), hi=(-0.034, 0.012, 0.044), sat=0.90),
            "dusk": dict(sh=(0.034, 0.012, -0.004), hi=(-0.046, 0.006, 0.052), sat=0.92),
            "home": dict(sh=(-0.008, 0.010, 0.030), hi=(-0.052, 0.012, 0.052), sat=0.96)}
-E_EV16 = {"iris": -0.30, "signal": -0.10, "thinks": -0.45, "lrun": -0.30}
+E_EV16 = {"iris": -0.30, "signal": -0.10, "thinks": -0.45, "lrun": -0.30, "lrun2": -0.35}
 _LUTS = {}
 def lut16():
     if "n" not in _LUTS:
@@ -86,7 +110,7 @@ def grade(img, s, f):
 
 # ---- the finish: a pro-mist halation, a faint anamorphic streak on the brightest lights, fine grain ---------------------
 _FIN = {}
-def finish16(out, f, s):
+def finish16(out, f, s, mix=None):
     if "v" not in _FIN:
         grain(0, 0.012); _FIN["v"] = np.repeat(0.80 + 0.20 * VIG, 3, axis=2)
     k = ("g", f % 6)
@@ -99,7 +123,8 @@ def finish16(out, f, s):
     addc(o, bl, HALO, 0.36)                                                                     # the halation round every light
     pt = np.clip(mx - 0.80, 0, 1) * 3.0
     st = cv2.resize(cv2.GaussianBlur(pt, (0, 0), sigmaX=30, sigmaY=0.5), (W, H))
-    addc(o, st, TUNG if s.get("look") == "home" else CYAN, 0.30)                                # the night-drive streak
+    m_ = mix if mix is not None else (0.0 if s.get("look") == "home" else 1.0)
+    addc(o, st, TUNG * (1 - m_) + CYAN * m_, 0.30)                                              # the night-drive streak
     o *= _FIN["v"]; o += _FIN[k]
     return np.clip(o, 0, 1, out=o)
 
@@ -394,7 +419,8 @@ def city_dive(A, B, j, f, sa, sb, pre=8, post=10):
     return np.clip(o * (1 + 0.25 * (1 - v) ** 2), 0, 1)
 
 # ---- LONG EXPOSURE (the focal piece, e42 -> e48 and into "alone"): the shutter stays open on his run ------------------
-E_LEX0 = 42.0
+E_LEX0 = 42.5
+E_LEX1 = 48.0
 _LEX = {}
 def lex_hi(s, k, q=4):
     """the lights of frame k of the run (his lightning), at quarter resolution."""
@@ -409,9 +435,11 @@ def lex_hi(s, k, q=4):
     return _LEX[k]
 
 def lex_z(s, k):
-    """the lens creeps in while the shutter is open, so even the still lights draw trails (a zoom burst)."""
-    f0 = fh(E_LEX0); return 1.0 + 0.32 * clamp((k - f0) / max(1, s["f1"] - f0), 0, 1)
+    """the lens creeps in while the shutter is open, so even the still lights draw trails (a zoom burst); one creep over
+    both runs (the shutter stays open across the cut)."""
+    f0 = fh(E_LEX0); return 1.0 + 0.40 * clamp((k - f0) / max(1, fh(E_LEX1) - f0), 0, 1)
 
+_LEXC = {}
 def lex_layer(s, f, q=4, win=40, d=0.93):
     f0 = fh(E_LEX0); acc = np.zeros((H // q, W // q, 3), F32)
     if f < f0: return acc
@@ -420,16 +448,22 @@ def lex_layer(s, f, q=4, win=40, d=0.93):
         h = lex_hi(s, k, q); sc = lex_z(s, k) / zf
         if abs(sc - 1) > 1e-4: h = cv2.warpAffine(h, cv2.getRotationMatrix2D((cx, cy), 0, sc), (W // q, H // q), flags=cv2.INTER_LINEAR, borderValue=0)
         np.maximum(acc, h * (d ** (f - k)), out=acc)
+    if s["n"] == "lrun2":                                                                       # EXPOSURE CUT: the first run's trails stay on
+        s1 = shot_by("lrun"); k1 = s1["f1"] - 1
+        if q not in _LEXC: _LEXC[q] = lex_layer(s1, k1, q, win, d)
+        sc = lex_z(s1, k1) / zf
+        c = cv2.warpAffine(_LEXC[q], cv2.getRotationMatrix2D((cx, cy), 0, sc), (W // q, H // q), flags=cv2.INTER_LINEAR, borderValue=0)
+        np.maximum(acc, c * (0.965 ** (f - k1)), out=acc)
     return acc
 
 def long_exposure_fx(img, person, s, f):
     e = e_of(f)
     if e < E_LEX0: return img
-    g = smooth(clamp((e - E_LEX0) / 1.2, 0, 1)); sw = smooth(clamp((e - 46.0) / 2.0, 0, 1))
+    g = smooth(clamp((e - E_LEX0) / 1.2, 0, 1)); sw = smooth(clamp((e - 46.0) / 2.0, 0, 1)) * s.get("lexk", 1.0)
     lay = cv2.resize(lex_layer(s, f), (W, H), interpolation=cv2.INTER_LINEAR)
     glow = cv2.GaussianBlur(lay, (0, 0), 6)
     pm = 0.0 if person is None else np.clip(person * 1.2, 0, 1)[..., None]
-    o = img * (1 - 0.42 * g - 0.10 * sw) + (lay * 1.6 + glow * 0.9) * (g + 0.35 * sw) * (1 - 0.55 * pm)   # light passes behind him
+    o = img * (1 - 0.42 * g - 0.10 * sw) + (lay * 1.6 + glow * 0.9) * (g + 0.35 * sw) * (1 - 0.92 * pm) * s.get("lexg", 1.0)   # light passes behind him
     return np.clip(o, 0, 1)
 
 def long_exposure(A, B, j, f, sa, sb, pre=12, post=18):
@@ -442,7 +476,8 @@ def long_exposure(A, B, j, f, sa, sb, pre=12, post=18):
     w = smooth(clamp(v / 0.45, 0, 1))
     hiB = B * np.clip((lumf(B) - 0.45) / 0.3, 0, 1)[..., None]
     bump = math.sin(math.pi * clamp(v, 0, 1))
-    keep = face_keep(sb, sb["f0"], 1.3)
+    keep = face_keep(sb, sb["f0"], 1.3); pmB = PERSON.get(f)
+    if pmB is not None: keep = keep * (1 - np.clip(cv2.GaussianBlur(pmB, (0, 0), 3) * 1.2, 0, 1))[..., None]   # the trails go behind him
     o = A * (1 - w) + B * w + (lay * 1.2 + cv2.GaussianBlur(hiB, (0, 0), 10) * 0.9 * bump) * (keep if not isinstance(keep, float) else 1.0)
     return np.clip(o, 0, 1)
 
@@ -514,7 +549,7 @@ def lens_rays(img, X, Y, R, bolt_m, amt, q=4):
 
 def signal_fx(img, s, f):
     """the lamp warms up: the lens glows brighter (the bolt stays dark) and throws rays (e57 -> e64)."""
-    e = e_of(f); g = smooth(clamp((e - 56.5) / 5.0, 0, 1))
+    e = e_of(f); g = smooth(clamp((e - 58.3) / 3.4, 0, 1))
     if g <= 0: return img
     X, Y, R = sig_lens(s, f); bm = poly_mask(bolt_poly(X, Y, R), 1.0)
     disc = disc_mask16(X, Y, R * 0.95, 3)
@@ -588,33 +623,54 @@ def frame_virtual(fv, with_person=False):
 def home_cam(t):
     t = clamp(t, 0, 1); return t * t * t * (t * (6 * t - 15) + 10)
 
+_HLS = {}
+def home_win(fv):
+    """frame 0's lit window (HOME_WIN, measured on frame 0) on screen at the roof's virtual frame fv: fixed on the
+    source, so it rides the roof's own push."""
+    s0 = SHOTS[0]
+    if "src" not in _HLS:
+        t, u, _ = src_time(s0, 0); cx_, cy_, ch_ = frame_geom(s0, 0, t, u)[:3]; sc0 = W / (ch_ * 9 / 16)
+        wx, wy, ww, wh = E.HOME_WIN; _HLS["src"] = ((wx - W / 2) / sc0 + cx_, (wy - H / 2) / sc0 + cy_, ww / sc0, wh / sc0)
+    x, y, ww, wh = _HLS["src"]; X, Y, sc = to_screen(s0, fv, x, y); return X, Y, ww * sc, wh * sc
+
 def home_light(img, f, s):
-    """THE HOME LIGHT (the hero): home is one of the lights. The loft shrinks back through its window, glowing warm,
-    and settles into a lit window of the night city behind him on the rooftop: frame 0, which is there the whole time."""
-    f0 = fh(E.E_LOOP); N = s["f1"] - f0
+    """THE HOME LIGHT (the loop, e74 -> frame 0, on "going home"): the camera pulls back out of the loft through its
+    window. The loft is the window: the night city of frame 0 opens round it (the real rooftop footage at frame 0's
+    virtual frames, its push-in running on), the window shrinks into one lit window of the city, he comes in solid in
+    front of it, and its light is all that is left: frame 0. The reverse of WINDOW HOP. The pull starts and lands at rest
+    (a smootherstep in log zoom), so the roof's own slow push carries the camera across the wrap."""
+    f0 = fh(E.E_LOOP); N = E.DUR_F - f0
     if f < f0: return img
-    t = (f - f0) / (N - 1); p = home_cam(t)
-    under, pm0 = frame_virtual(f - E.DUR_F, True)
-    wx, wy, wh = E.HOME_WIN
-    sc = math.exp(math.log(wh / H) * p)                                                         # a constant-speed pull back
-    pp = 1 - (1 - p) ** 2.2; cx = W / 2 + (wx - W / 2) * pp; cy = H / 2 + (wy - H / 2) * pp       # out to the side first, then away
-    sur = defocus16(under, 18 * (1 - smooth(clamp(t / 0.7, 0, 1))))
-    if pm0 is not None: sur = sur * (1 - pm0[..., None]) + under * pm0[..., None]                # he is sharp, in front; the city behind him soft
-    M = np.float32([[sc, 0, cx - sc * W / 2], [0, sc, cy - sc * H / 2]])
-    card = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    m = cv2.warpAffine(np.ones((H, W), F32), M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    fade = 1 - smooth(clamp((t - 0.88) / 0.12, 0, 1))                                           # the window's light is all that is left
-    if pm0 is not None:
-        m = cv2.GaussianBlur(m, (0, 0), 1.0 + 5.0 * sc) if f > f0 else m
-        if f > f0: m = m * (1 - np.clip(pm0 * 1.2, 0, 1))                                       # on the beat we are out of the window: he is in front of it
-    glow = cv2.GaussianBlur(m, (0, 0), 6 + 40 * sc) * (1 - m)
-    o = sur * (1 - (m * fade)[..., None]) + card * (m * fade)[..., None]
-    addc(o, glow * fade, TUNG, 0.55)
-    if sc < 0.2:
-        d2 = (_GX - cx) ** 2 + (_GY - cy) ** 2
-        addc(o, np.exp(-d2 / (2 * (wh * 0.9) ** 2)).astype(F32) * fade * smooth(clamp((0.2 - sc) / 0.15, 0, 1)), TUNG, 0.35)
-    k = 0.05 * (1 - smooth(clamp(t / 0.8, 0, 1))) * smooth(clamp(t / 0.15, 0, 1))
-    if k > 0.003: o = radial_blur(o, cx, cy, 1.0, 1.0 - k, 6)
+    t = (f - f0) / N; e = home_cam(t)                                                           # t = 1 is frame 0
+    fv = f - E.DUR_F; world, pm0 = frame_virtual(fv, True)
+    wx, wy, ww, wh = home_win(fv)
+    fade = 1 - smooth(clamp((t - 0.80) / 0.20, 0, 1))                                           # the light is all that is left
+    bm = soft_rect(wx, wy, ww / 2 - 4, wh / 2 - 4, 6.0)
+    world = world * (1 - 0.72 * bm * fade)[..., None]                                          # the window's light is in the card now
+    Z0 = H / wh; lz = math.log(Z0) * (1 - e); Z = math.exp(lz); pr = lz / math.log(Z0)
+    cx, cy = wx + (W / 2 - wx) * pr, wy + (H / 2 - wy) * pr                                     # where the window is on screen
+    if Z > 1.0005:
+        M = np.float32([[Z, 0, cx - Z * wx], [0, Z, cy - Z * wy]])
+        wz = cv2.warpAffine(world, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        pz = cv2.warpAffine(pm0, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT) if pm0 is not None else None
+    else:
+        wz, pz = world, pm0
+    r = 9 * smooth(clamp((lz - 0.7) / 1.6, 0, 1))
+    if r > 0.6: wz = defocus16(wz, r)                                                           # up close, the city is soft
+    kh = 0.40 * smooth(clamp((lz - 0.8) / 1.5, 0, 1))
+    if kh > 0.003: wz = wz * (1 - kh * np.clip((lumf(wz) - 0.45) / 0.40, 0, 1))[..., None]    # a giant bokeh disc would glare
+    asp = W / H + (ww / wh - W / H) * smooth(clamp((e - 0.04) / 0.50, 0, 1))                   # the frame's shape -> the window's
+    hh = wh / 2 * Z; hw = hh * asp; cs = max(2 * hw / W, 2 * hh / H)                            # the loft fills the window
+    card = cv2.warpAffine(img, np.float32([[cs, 0, cx - cs * W / 2], [0, cs, cy - cs * H / 2]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) if abs(cs - 1) > 1e-3 else img
+    fe = (1.5 + 0.05 * min(hw, hh)) * smooth(clamp(t / 0.12, 0, 1)) + 1e-3
+    m = soft_rect(cx, cy, hw - fe, hh - fe, fe)                                                 # the edge feathers inward (nothing outside the loft)
+    if pz is not None and t > 0: m = m * (1 - np.clip(pz * 1.15, 0, 1))                       # he stands in front of the window
+    mf = (m * fade)[..., None]
+    o = wz * (1 - mf) + card * mf
+    glow = cv2.GaussianBlur(m, (0, 0), 4 + 0.16 * min(hw, hh)) * (1 - m)
+    addc(o, glow, TUNG, 0.70 * fade * smooth(clamp(t / 0.10, 0, 1)))                            # the window's warm light round it
+    spd = 30 * t * t * (1 - t) * (1 - t) / 1.875
+    if spd > 0.05: o = radial_blur(o, cx, cy, 1.0, 1.0 - 0.035 * spd, 8)                       # the pull's motion
     return np.clip(o, 0, 1)
 
 def loop_in16(out, f, k):
@@ -635,30 +691,171 @@ def bolt_trail(A, B, j, f, sa, sb, pre=6, post=10):
     o = hblur(base, 2 + 60 * k) * (1 - 0.45 * k) + st * 0.6 * k
     return np.clip(o, 0, 1)
 
-# ---- WINDOW HOP (the city -> more city): one lit window grows, and the next shot is inside it (the home light motif) ----
-WH_P, WH_HW, WH_HH = (903.0, 1216.0), 17.0, 12.0                                            # a lit window on the right-hand tower
-def window_hop(A, B, j, f, sa, sb, pre=10, post=12):
-    """WINDOW HOP: we dolly into one lit window of the falling city; it grows to the frame and the next shot of the city is
-    what's inside it (the home-light motif: every lit window is somebody's home)."""
-    x = (j + pre) / (pre + post - 1); px, py = WH_P
-    z = math.exp(math.log(400.0) * ein(clamp(x, 0, 1), 2.0))
-    tx, ty = px + (W / 2 - px) * smooth(x), py + (H / 2 - py) * smooth(x)                       # the window drifts to the centre
+# ---- WINDOW HOP (the falling city -> him by the van, ~1 s): one lit window of the tower holds the next shot ------------
+WH_PRE, WH_POST = 36, 24
+def wh_point(s, f):
+    """the tracked window (WH_TRACK, source px) on screen for shot s at frame f, with its half size."""
+    t, _, _ = src_time(s, f); T = E.WH_TRACK; ts = [a_[0] for a_ in T]
+    x = float(np.interp(t, ts, [a_[1] for a_ in T])); y = float(np.interp(t, ts, [a_[2] for a_ in T]))
+    X, Y, sc = to_screen(s, f, x, y); return X, Y, E.WH_SIZE[0] * sc, E.WH_SIZE[1] * sc
+
+def soft_rect(cx, cy, hw, hh, fe):
+    """1 inside the rect, a soft edge of width fe outside it (outward feather)."""
+    dx = np.abs(_GX - cx) - hw; dy = np.abs(_GY - cy) - hh
+    return (np.clip(1 - dx / fe, 0, 1) * np.clip(1 - dy / fe, 0, 1)).astype(F32)
+
+def window_hop(A, B, j, f, sa, sb, pre=WH_PRE, post=WH_POST):
+    """WINDOW HOP: the camera glides into one lit window of the falling city (a log-zoom with an eased start and landing),
+    the window drifting to the centre and opening to the frame's shape; inside it the next shot is waiting in warm light
+    behind the glass, the city rushes softly away round it, and we are inside. A is live until the cut (the window is
+    tracked on the source), B is live after it; B lands exactly at scale 1."""
+    N = pre + post - 1; x = clamp((j + pre) / N, 0, 1)
+    ff = f if j < 0 else sa["f1"] - 1
+    px, py, hw0, hh0 = wh_point(sa, ff)
+    e = home_cam(x)                                                                             # zero speed at both ends
+    Zend = (H / 2) / hh0; lz = math.log(Zend) * e; z = math.exp(lz)
+    dr = smooth(clamp(e * 1.12, 0, 1)); tx, ty = px + (W / 2 - px) * dr, py + (H / 2 - py) * dr  # the window drifts to the centre
+    asp = hw0 / hh0 + (W / H - hw0 / hh0) * smooth(clamp((e - 0.30) / 0.50, 0, 1))             # and opens to the frame's shape
+    hh = hh0 * z; hw = hh * asp
+    kw = smooth(clamp(e / 0.30, 0, 1))
+    if kw > 0.002:                                                                              # its cold glass warms to a lamp-lit home window
+        wm = soft_rect(px, py, hw0 + 1, hh0 + 1, 2.5)[..., None] * kw
+        A = A * (1 - 0.75 * wm) + (TUNG * 0.55 + AMBR * 0.10) * wm
     M = np.float32([[z, 0, tx - z * px], [0, z, ty - z * py]])
     Az = cv2.warpAffine(A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-    k = 0.10 * math.sin(math.pi * clamp(x, 0, 1))
-    if k > 0.004: Az = radial_blur(Az, tx, ty, 1.0, 1.0 + k, 8)
-    hw, hh = WH_HW * z, WH_HH * z; fe_ = 3 + 0.08 * hw
-    m = (np.clip((hw - np.abs(_GX - tx)) / fe_ + 0.5, 0, 1) * np.clip((hh - np.abs(_GY - ty)) / fe_ + 0.5, 0, 1)).astype(F32)
-    m = cv2.GaussianBlur(m, (0, 0), 1.5 + 0.04 * hw)
-    m = np.maximum(m, smooth(clamp((x - 0.62) / 0.22, 0, 1)))                                    # exactly the next shot before the end
-    bs = max(hw * 2 / W, hh * 2 / H, 0.02)
-    Bz = cv2.warpAffine(B, np.float32([[bs, 0, tx - bs * W / 2], [0, bs, ty - bs * H / 2]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE) if bs < 1 else B
+    spd = 30 * x * x * (1 - x) * (1 - x) / 1.875                                                # the zoom's speed, 0..1
+    if spd > 0.05: Az = radial_blur(Az, tx, ty, 1.0, 1.0 + 0.045 * spd, 8)                     # the city rushes away round it
+    Az = Az * (1 - 0.50 * e)
+    bs = max(2 * hw / W, 2 * hh / H)                                                           # B fills the window (exactly 1 at the end)
+    Bz = cv2.warpAffine(B, np.float32([[bs, 0, tx - bs * W / 2], [0, bs, ty - bs * H / 2]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) if bs < 0.999 else B
+    gl = 1 - smooth(clamp((x - 0.25) / 0.60, 0, 1))                                             # behind the glass, in warm light
+    if gl > 0.002:
+        band = np.exp(-((((_GX - tx) * 0.55 + (_GY - ty) * 0.83) / max(hw, 1.0) - (-1.6 + 3.2 * x)) / 0.35) ** 2).astype(F32)
+        Bz = Bz * (1 - 0.22 * gl) + TUNG * 0.10 * gl
+        addc(Bz, band, HOT * 0.5 + TUNG * 0.5, 0.16 * gl)                                       # the glass catches the light
+    fe = (1.5 + 0.10 * min(hw, hh)) * (1 - smooth(clamp((x - 0.80) / 0.20, 0, 1))) + 1e-3
+    m = soft_rect(tx, ty, hw - fe, hh - fe, fe)                                                 # the edge feathers inward
     o = Az * (1 - m[..., None]) + Bz * m[..., None]
-    glow = cv2.GaussianBlur(m, (0, 0), 6 + 0.25 * hw) * (1 - m) * (1 - smooth(clamp((x - 0.5) / 0.3, 0, 1)))
-    addc(o, glow, TUNG, 0.9)                                                                     # the window's warm light spills out
+    sp_ = 1 - smooth(clamp((x - 0.55) / 0.40, 0, 1))                                            # the warm light spills out round it
+    if sp_ > 0.002:
+        glow = cv2.GaussianBlur(m, (0, 0), 3 + 0.20 * min(hw, hh)) * (1 - m)
+        addc(o, glow, AMBR * 0.5 + TUNG * 0.5, 0.75 * sp_)
     return np.clip(o, 0, 1)
 
-TR2.update({"drop_whip": (drop_whip, 6, 8), "flare_sweep": (flare_sweep, 8, 10), "focus_pull": (focus_pull, 8, 10), "bolt_trail": (bolt_trail, 6, 10), "window_hop": (window_hop, 10, 12)})
+# ---- ARC JUMP (the run -> him, the lightning crackling round him): a bolt leaps from his run to his lightning ----------
+def arc_jump(A, B, j, f, sa, sb, pre=6, post=10):
+    x = (j + pre) / (pre + post - 1)
+    if _HO.get("aj_n") != sb["n"]:
+        _HO["aj_n"] = sb["n"]; _HO["aj"] = (hi_point(edge15(sa, "last"), sa, sa["f1"] - 1, 0.62), hi_point(edge15(sb, "first"), sb, sb["f0"], 0.62))
+    (ax, ay), (bx, by) = _HO["aj"]
+    grow = eout(clamp(x / 0.42, 0, 1), 2.2); ex, ey = ax + (bx - ax) * grow, ay + (by - ay) * grow
+    w = smooth(clamp((x - 0.40) / 0.14, 0, 1)); o = A * (1 - w) + B * w
+    cv = bolt_canvas()
+    for k_ in range(2):
+        put_bolt(cv, (ax, ay), (ex + 12 * k_, ey - 9 * k_), 4400 + 7 * k_ + 3 * (f // 2), 3 - k_, 0.30, 6, 1)
+    fade = 1 - smooth(clamp((x - 0.55) / 0.45, 0, 1))
+    keep = face_keep(sa if w < 0.5 else sb, sa["f1"] - 1 if w < 0.5 else sb["f0"], 1.35)
+    o = o + light_rgb(cv, 0.95 * fade, HOT, AMBR) * (keep if not isinstance(keep, float) else 1.0)
+    pk = math.exp(-((x - 0.47) / 0.11) ** 2)
+    return np.clip(o * (1 - 0.22 * pk) + AMBR * 0.20 * pk, 0, 1)                               # its flash covers the switch
+
+# ---- EXPOSURE CUT (run -> run, the shutter still open): the frame drags sideways, the trails stay on ----------------------
+def exposure_cut(A, B, j, f, sa, sb, pre=4, post=8):
+    q = (j + pre) / (pre + post - 1); sp = math.sin(math.pi * clamp(q, 0, 1))
+    w = smooth(clamp((q - 0.25) / 0.45, 0, 1)); o = A * (1 - w) + B * w                      # a double exposure, the way film does it
+    o = zoom_about(o, W / 2, H * 0.45, 1 + 0.05 * sp)
+    return np.clip(hblur(o, 2 + 150 * sp), 0, 1)
+
+# ---- TIME LAPSE ("hard to do these things alone"): the night streams past him while he stands still ------------------
+def time_lapse(A, B, j, f, sa, sb, pre=12, post=12):
+    x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1)) ** 1.2
+    live, s_ = (A, sa) if j < 0 else (B, sb)
+    pm = PERSON.get(f)
+    if pm is None:
+        fk = face_keep(s_, f, 1.6); pm = (1 - fk[..., 0]) if not isinstance(fk, float) else np.zeros((H, W), F32)
+    pm = cv2.GaussianBlur(np.clip(pm * 1.15, 0, 1), (0, 0), 2)[..., None]
+    bg = hblur(live, int(2 + 220 * k))
+    hi = live * np.clip((lumf(live) - 0.42) * 2.6, 0, 1)[..., None]
+    trails = hblur(hi, int(2 + 640 * k)) * 2.6 * k
+    o = (bg + trails * (TUNG * 0.5 + 0.5)) * (1 - pm) + live * pm                               # he stays sharp, the world streams
+    pk = math.exp(-((x - 0.5) / 0.10) ** 2)
+    return np.clip(o * (1 + 0.10 * pk), 0, 1)
+
+# ---- SKY STRIKE (alone -> the lightning in his eyes): a bolt cracks down behind him, and in its light he is charged -----
+def sky_strike(A, B, j, f, sa, sb, pre=10, post=8):
+    if j >= 0:
+        v = (j + 1) / post; return np.clip(B * (1 + 0.28 * (1 - v) ** 2) + AMBR * 0.10 * (1 - v) ** 2, 0, 1)
+    u = (j + pre) / pre
+    fs = face_scr(sa, f) if sa.get("face") is not None else None
+    fx_, fw_ = (fs[0], fs[2]) if fs else (W / 2, 160)
+    side = 1 if fx_ < W / 2 else -1
+    bx = clamp(fx_ + side * 2.3 * fw_, 90, W - 90); p0 = (bx - side * 120, -30); p1 = (bx + side * 40, H * 0.66)
+    grow = eout(clamp(u / 0.45, 0, 1), 2.0); pe = (p0[0] + (p1[0] - p0[0]) * grow, p0[1] + (p1[1] - p0[1]) * grow)
+    cv = bolt_canvas(); put_bolt(cv, p0, pe, 5150 + (f // 2), 4, 0.32, 7, 2)
+    fl = 0.75 + 0.25 * math.sin(f * 2.1)
+    pm = PERSON.get(f); behind = 1.0 if pm is None else (1 - np.clip(cv2.dilate(pm, np.ones((7, 7), np.uint8)) * 1.3, 0, 1))[..., None]
+    lt = light_rgb(cv, 1.1 * fl, HOT, AMBR)
+    lift = 0.45 * ein(u, 1.6)                                                                    # the night lights up behind him
+    o = A + (lt + A * lift * fl) * behind
+    if pm is not None:
+        rim = np.clip(cv2.GaussianBlur(pm, (0, 0), 3) - pm * 0.8, 0, 1)[..., None]              # his edge catches it
+        o = o + rim * AMBR * 0.5 * ein(u, 1.5)
+    return np.clip(o, 0, 1)
+
+# ---- MOTE DRIFT (the loft -> Barry home): the lamplit dust thickens into a warm drift across the lens --------------------
+def mote_drift(A, B, j, f, sa, sb, pre=10, post=12):
+    x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
+    w = smooth(clamp((x - 0.40) / 0.20, 0, 1)); base = defocus16(A * (1 - w) + B * w, 20 * k ** 1.3)
+    rng = np.random.default_rng(6616); lay = np.zeros((H // 4, W // 4), F32); cx = -0.5 * W + 2.0 * W * smooth(x)
+    for i in range(80):
+        dx, yy, rr, a_ = rng.normal(0, 240), rng.uniform(-200, H + 200), rng.uniform(12, 50), rng.uniform(0.35, 1.0)
+        px_ = cx + dx + 0.35 * (yy - H / 2); py_ = yy - 160 * x
+        cv2.circle(lay, (int(px_ / 4 * 4), int(py_ / 4 * 4)), max(1, int(rr / 4 * 4)), a_, -1, cv2.LINE_AA, shift=2)
+    lay = cv2.resize(cv2.GaussianBlur(lay, (0, 0), 2.5), (W, H))[..., None]
+    keep = face_keep(sa if w < 0.5 else sb, sa["f1"] - 1 if w < 0.5 else sb["f0"], 1.3)
+    return np.clip(base + lay * TUNG * 0.60 * k * keep, 0, 1)
+
+# ---- in-shot: SUIT CURRENT (the masked close-up) and SPARKS (lightning shedding sparks off his shoulders) ----------------
+def a_current(img, person, s, f):
+    return off_face(edge_arcs(img, f, body_only(person, s, f), 0.8, 1701), img, s, f, 1.2)
+
+def a_sparks(img, person, s, f):
+    """SPARKS: his lightning sheds sparks off his shoulders that arc out and fall (analytic paths, off the face)."""
+    fs = face_scr(s, f) if s.get("face") is not None else None
+    if not fs: return img
+    fx_, fy_, fw_ = fs[:3]; t = (f - s["f0"]) / FPS; T = (s["f1"] - s["f0"]) / FPS
+    rng = np.random.default_rng(2626); cv = np.zeros((H // 2, W // 2), F32)
+    for i in range(54):
+        side = -1 if i % 2 else 1; tb = rng.uniform(-0.6, T); life = rng.uniform(0.45, 0.85); age = t - tb
+        ox, oy = fx_ + side * fw_ * rng.uniform(0.75, 1.25), fy_ + fw_ * rng.uniform(1.05, 1.7)
+        vx, vy = side * rng.uniform(260, 700), -rng.uniform(150, 520)
+        if not (0 <= age <= life): continue
+        def pos(a_): return ox + vx * a_, oy + vy * a_ + 0.5 * 1100 * a_ * a_
+        x1, y1 = pos(age); x0, y0 = pos(max(0.0, age - 0.035))
+        cv2.line(cv, (int(x0 / 2 * 4), int(y0 / 2 * 4)), (int(x1 / 2 * 4), int(y1 / 2 * 4)), float(1 - age / life) ** 0.7, 2, cv2.LINE_AA, shift=2)
+    cv = cv2.resize(cv2.GaussianBlur(cv, (0, 0), 0.6), (W, H))[..., None]
+    o = img + cv * HOT * 1.6 + cv2.GaussianBlur(cv[..., 0], (0, 0), 5)[..., None] * AMBR * 2.2
+    return off_face(np.clip(o, 0, 1), img, s, f, 1.05)
+
+ANIMS.update({"current": a_current, "sparks": a_sparks})
+
+# ---- AFTERGLOW (the lightning in his eyes -> him alone at night): the cut lands on the beat and the lightning stays burnt
+# on the eye a moment, spreading and fading (off his face)
+def afterglow(A, B, j, f, sa, sb, pre=2, post=16):
+    if j < 0: return np.clip(A * (1 + 0.10 * (j + pre + 1) / pre), 0, 1)
+    v = (j + 1) / post
+    if _HO.get("ag_n") != sa["n"]:
+        L = lumf(edge15(sa, "last")); _HO["ag_n"] = sa["n"]; _HO["ag"] = cv2.GaussianBlur(np.clip((L - 0.70) / 0.25, 0, 1), (0, 0), 2.0)
+    lay = cv2.GaussianBlur(_HO["ag"], (0, 0), 1 + 9 * v) * (1 - v) ** 1.8
+    keep = face_keep(sb, f, 0.95)
+    if not isinstance(keep, float): lay = lay * keep[..., 0]
+    o = B.copy(); addc(o, lay.astype(F32), AMBR * 0.8 + HOT * 0.2, 0.85)
+    return np.clip(o, 0, 1)
+
+TR2.update({"arc_jump": (arc_jump, 6, 10), "exposure_cut": (exposure_cut, 4, 8), "time_lapse": (time_lapse, 12, 12),
+            "sky_strike": (sky_strike, 10, 8), "mote_drift": (mote_drift, 10, 12), "afterglow": (afterglow, 2, 16)})
+
+TR2.update({"drop_whip": (drop_whip, 6, 8), "flare_sweep": (flare_sweep, 8, 10), "focus_pull": (focus_pull, 8, 10), "bolt_trail": (bolt_trail, 6, 10), "window_hop": (window_hop, WH_PRE, WH_POST)})
 
 TR2.update({"bokeh_drift": (bokeh_drift, 10, 14), "reflection": (reflection, 16, 12), "headlight_pass": (headlight_pass, 10, 10),
             "light_warp": (light_warp, 8, 10), "release": (release, 4, 12), "streak_pass": (streak_pass, 5, 7),
@@ -673,7 +870,7 @@ def base16(s, f):
     if s.get("anim") in ANIMS: img = ANIMS[s["anim"]](img, person, s, f)
     n = s["n"]
     if n == "charge": img = hold_on(img, person, s, f)
-    elif n == "lrun": img = long_exposure_fx(img, person, s, f)
+    elif n in ("lrun", "lrun2"): img = long_exposure_fx(img, person, s, f)
     elif n == "signal": img = signal_fx(img, s, f)
     elif n == "home": img = home_light(img, f, s)
     return img, person
@@ -684,8 +881,11 @@ def edge15(S_, which):
     if key not in _B16:
         if len(_B16) > 8: _B16.clear()
         fr = S_["f0"] if which == "first" else S_["f1"] - 1
-        _B16[key] = base16(S_, fr)[0]
-    return _B16[key]
+        _B16[key] = base16(S_, fr)
+    return _B16[key][0]
+
+def edge_person(S_, which):
+    edge15(S_, which); return _B16[(S_["n"], which)][1]
 
 PERSON = {}
 def prefinish(f):
@@ -702,5 +902,5 @@ def prefinish(f):
 
 def render(f):
     s = shot_at(f); out = flash_governor(beat_fx(prefinish(f), f))
-    fin_s = SHOTS[0] if (s["n"] == "home" and f >= s["f1"] - 1) else s
-    return (np.clip(finish16(out, f, fin_s), 0, 1) * 255 + 0.5).astype(np.uint8)
+    f0 = fh(E.E_LOOP); mix = home_cam((f - f0) / (E.DUR_F - f0)) if (s["n"] == "home" and f >= f0) else None
+    return (np.clip(finish16(out, f, s, mix), 0, 1) * 255 + 0.5).astype(np.uint8)
