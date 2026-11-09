@@ -207,19 +207,30 @@
    "t0": 14.27,
    "t1": 15.02,
    "music_db": -6.1,
-   "fx_peak_db": -23.2,
-   "fx_minus_music": -17.1,
+   "fx_peak_db": -38.7,
+   "fx_minus_music": -32.6,
    "buried": true
   },
   {
-   "name": "molasses108",
+   "name": "THE PHANTOM'S TRAIL",
+   "kind": "set piece",
+   "at": 14.66,
+   "t0": 14.66,
+   "t1": 15.6,
+   "music_db": -6.1,
+   "fx_peak_db": -21.8,
+   "fx_minus_music": -15.7,
+   "buried": true
+  },
+  {
+   "name": "trail109",
    "kind": "transition",
    "at": 15.43,
    "t0": 15.13,
    "t1": 15.88,
    "music_db": -6.0,
-   "fx_peak_db": -18.4,
-   "fx_minus_music": -12.3,
+   "fx_peak_db": -21.9,
+   "fx_minus_music": -15.9,
    "buried": true
   },
   {
