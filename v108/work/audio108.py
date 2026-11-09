@@ -902,7 +902,7 @@ def main108():
     ts = t0["release"]
     place(fx, A2.whoosh(0.26, -24, 3801, True) * np.array([[1.0, 0.5]], np.float32), ts - 26 / F)
     place(fx, stereo(creak(0.40, -17, 3802), -0.2), ts - 21 / F)
-    place(fx, stereo(snap(-13, 3803), 0.25), ts + 4 / F); place(fx, A2.whoosh(0.22, -21, 3804, False), ts + 5 / F)
+    place(fx, stereo(snap(-13, 3803), 0.25), ts + 4 / F)
     # ---- the drop-out: one reverse swell into DOOMSDAY; SPECIMEN: the glass tick at entry, the bass impact on the reveal
     td = t0["reveal"]
     place(fx, RS(0.55, -15, 3810), td - 0.55)
@@ -913,12 +913,10 @@ def main108():
     place(fx, stereo(pour(0.60, -18, 3820)), tw - 0.40); place(fx, stereo(bloop(-19, 3821)), tw - 0.01)
     # ---- the ice truck: frost forms (a brittle crackle), a soft crack on the cut
     tb = t0["brother"]
-    place(fx, stereo(ice(0.30, -18, 3830), -0.3), tb - 0.27); place(fx, stereo(tick(-22, 3831)), tb)
+    place(fx, stereo(ice(0.30, -18, 3830), -0.3), tb - 0.27)
     # ---- the tomb: the roll (a low whoosh); the photo (a shutter); into his eye; the zipper on "bagged"
     place(fx, A2.whoosh(0.20, -18, 3840, True), t0["tomb"] - 0.10)
-    place(fx, stereo(shutter_ticks(-14, 2, 0.05, 3841), 0.2), t0["badge"] - 0.08)
-    place(fx, RS(0.30, -18, 3842), t0["wrote"] - 0.28)
-    place(fx, stereo(shutter_ticks(-15, 16, 0.014, 3843), -0.2), t0["bagged"] - 0.20)
+    place(fx, A2.whoosh(0.22, -20, 3843, False) * np.array([[1.0, 0.6]], np.float32), t0["bagged"] - 0.12)   # the wiper
     # ---- the loop: the last drop falls toward the lens (a soft airy fall); frame 0 is quiet
     tl = th(68.6)
     place(fx, A2.whoosh(E.DUR - tl - 0.08, -17, 3850, True) * np.array([[0.7, 1.0]], np.float32), tl)

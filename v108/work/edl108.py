@@ -105,7 +105,7 @@ SU = dict(look="surface108")                # the mask: warm, bleached pastel Mi
 UN = dict(look="under108")                  # under the surface: cold steel and teal, only blood red survives
 def V(e0, e1, a, b): return dict(tmap=vel(e0, e1, a, b, lo=0.55, hi=1.9), lin=True, interp="flow")
 # ---- "...SAVE ME THE TROUBLE, YO / WATCH YOUR OWN BACK, CAME IN AND GO OUT ALONE, BLACK": the mask (frame 0 is the loop's landing)
-shot("mask", "s1", 0, 4, 307.30, 308.70, z=[(0, 1.00), (1, 1.04)], interp="flow", **SU)
+shot("mask", "s1", 0, 4, 406.00, 407.30, z=[(0, 1.00), (1, 1.04)], interp="flow", **SU)   # the sunset smile
 shot("palms", "s1", 4, 8, 64.30, 65.80, z=[(0, 1.02), (1, 1.06)], tin="light_sweep", interp="flow", **SU)
 shot("tension", "s1", 8, 12, 376.62, 377.92, z=[(0, 1.00), (1, 1.05)], tin="whip", interp="flow", **SU)
 # ---- "STAY IN THE ZONE": SURFACE, the plastic stretches over the calm picture and peels away to the darker Dexter
@@ -131,11 +131,11 @@ shot("whos", "s1", 48, 52, 283.32, 284.45, z=[(0, 1.00), (1, 1.03)], tin="whip",
 # ---- "I WROTE THIS ONE IN B-C-D-C-O SECTION": into his eye, out at the red desk; the light table
 shot("wrote", "s1", 52, 56, 78.20, 79.70, z=[(0, 1.00), (1, 1.05)], tin="eye_dive", interp="flow", **UN)
 shot("section", "s4", 56, 59, 145.82, 146.70, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 640), interp="flow", **UN)
-# ---- "IF YOU DON'T BELIEVE ME, GO GET BAGGED AND CHECKED IN": the night drive; the bags on the boat, the body-bag zipper
+# ---- "IF YOU DON'T BELIEVE ME, GO GET BAGGED AND CHECKED IN": the night drive; the bags on the boat; the windshield wiper wipes the drive away
 shot("believe", "s1", 59, 64, 316.00, 317.70, z=[(0, 1.00), (1, 1.05)], tin="smear", interp="flow", **UN)
-shot("bagged", "p5", 64, 68, 51.75, 53.30, z=[(0, 1.00), (1, 1.04)], tin="zipper", interp="flow", **UN)
+shot("bagged", "p5", 64, 68, 51.75, 53.30, z=[(0, 1.00), (1, 1.04)], tin="wiper", interp="flow", **UN)
 # ---- the loop: he looks up; the last drop falls toward the lens with frame 0 inside it (the camera rests)
-shot("lookup", "s1", 68, 72, 355.40, 356.80, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", tout="last_drop", **UN)
+shot("lookup", "s4", 68, 72, 230.75, 232.15, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", tout="last_drop", **UN)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

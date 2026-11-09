@@ -141,8 +141,8 @@
    "t0": 11.02,
    "t1": 11.77,
    "music_db": -14.2,
-   "fx_peak_db": -26.9,
-   "fx_minus_music": -12.7,
+   "fx_peak_db": -46.2,
+   "fx_minus_music": -32.0,
    "buried": true
   },
   {
@@ -185,9 +185,9 @@
    "t0": 16.05,
    "t1": 16.8,
    "music_db": -14.3,
-   "fx_peak_db": -20.3,
-   "fx_minus_music": -6.0,
-   "buried": false
+   "fx_peak_db": -45.8,
+   "fx_minus_music": -31.5,
+   "buried": true
   },
   {
    "name": "slam",
@@ -212,15 +212,15 @@
    "buried": true
   },
   {
-   "name": "zipper",
+   "name": "wiper",
    "kind": "transition",
    "at": 20.13,
    "t0": 19.83,
    "t1": 20.58,
    "music_db": -12.4,
-   "fx_peak_db": -23.2,
-   "fx_minus_music": -10.8,
-   "buried": false
+   "fx_peak_db": -27.0,
+   "fx_minus_music": -14.6,
+   "buried": true
   },
   {
    "name": "dolly",

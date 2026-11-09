@@ -1205,7 +1205,7 @@ def grade(img, s, f):
             v *= 1 + hi * (PASTEL[ch] / 0.98 - 1) * 0.8
             o[..., ch] = v
     else:
-        red = np.clip((Rc - 1.25 * np.maximum(Gc, Bc) - s.get("redthr", 0.12)) * 3.0, 0, 1)          # blood, not skin
+        red = np.clip((Rc - 1.85 * np.maximum(Gc, Bc) - s.get("redthr", 0.05)) * 3.0, 0, 1)          # blood, not skin
         skin = np.clip((Rc - Bc) * 1.8, 0, 1) * (1 - red)
         sat = 0.26 + 0.14 * skin + 0.95 * red
         sh = (1 - L) ** 2
@@ -1218,11 +1218,11 @@ def grade(img, s, f):
 
 def finish108(out, f, s=None):
     L = lum(out)
-    q = cv2.resize(np.clip(L - 0.72, 0, 1), (W // 8, H // 8), interpolation=cv2.INTER_AREA)
+    q = cv2.resize(np.clip(L - 0.80, 0, 1), (W // 8, H // 8), interpolation=cv2.INTER_AREA)
     hal = cv2.resize(cv2.GaussianBlur(q, (0, 0), 6), (W, H), interpolation=cv2.INTER_LINEAR)
     g = grain(f, 0.012)[..., 0]; v = VIG[..., 0]
     o = np.empty(out.shape, np.float32)
-    for ch, k in enumerate((0.10, 0.16, 0.30)):                                                # a warm-red halation
+    for ch, k in enumerate((0.07, 0.08, 0.09)):                                                # a soft, near-neutral halation
         oc = o[..., ch]; np.copyto(oc, out[..., ch]); oc += hal * k; oc *= v; oc += g
     return np.clip(o, 0, 1, out=o)
 
@@ -1506,13 +1506,13 @@ def last_drop(out, f, s):
     if f < f0: return out
     t = (f - f0) / (f1 - f0)
     if f >= f1: return frame0_plate108().copy()
-    fall = ein(clamp(t / 0.62, 0, 1), 1.7)                                                       # it falls toward the lens, clear of his face
-    cx = W * 0.22 + (W * 0.30 - W * 0.22) * fall; cy = -80 + (H * 0.52 + 80) * fall
-    r = 22 + 130 * fall
-    grow = ein(clamp((t - 0.48) / 0.48, 0, 1), 2.4)                                               # then it reaches the lens
+    fall = eout(clamp(t / 0.40, 0, 1), 1.6)                                                      # it drops into the dark above his head
+    cx = W * 0.85; cy = -70 + (H * 0.20 + 70) * fall                                            # in the dark beside his head
+    r = 18 + 40 * fall
+    grow = ein(clamp((t - 0.36) / 0.60, 0, 1), 2.2)                                               # then it falls toward the lens
     r = r + grow * (R_FULL - r)
     cx = cx + (W / 2 - cx) * grow; cy = cy + (H / 2 - cy) * grow
-    stretch = 1.0 + 0.30 * (1 - grow) * smooth(t / 0.3)
+    stretch = 1.0 + 0.25 * (1 - grow) * (1 - smooth((t - 0.25) / 0.2))
     iw = smooth((t - 0.30) / 0.45)                                                                # frame 0's smile inside it
     tint = 1.0 - smooth((t - 0.50) / 0.42); gloss = 1.0 - smooth((grow - 0.55) / 0.40)
     base = out
