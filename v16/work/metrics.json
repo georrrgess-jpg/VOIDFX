@@ -414,6 +414,83 @@
    "step": "video",
    "s": 417.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:40:15",
+   "round": 2,
+   "step": "qc",
+   "s": 154.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:40:22",
+   "round": 2,
+   "step": "report",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:50:10",
+   "round": 2,
+   "step": "video",
+   "s": 399.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:51:46",
+   "round": 2,
+   "step": "sheet:chk:1150,1158,1164,1170,1175,1180,460,463,466,468,470,472",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:56:24",
+   "round": 2,
+   "step": "prep",
+   "s": 154.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:57:20",
+   "round": 2,
+   "step": "sheet:fix1:672,684,692,700,708,716,1340,1352,1364,1376,1390,1410",
+   "s": 19.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:58:13",
+   "round": 2,
+   "step": "sheet:fix2:1334,1344,1354,1364,1374,1384,1396,1410,1424,1439,0,710",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 23:00:05",
+   "round": 2,
+   "step": "sheet:fix3:464,467,520,830,850,862,932,938,974,980,1156,1162",
+   "s": 33.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 23:01:38",
+   "round": 2,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 23:01:46",
+   "round": 2,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 23:01:52",
+   "round": 2,
+   "step": "plan",
+   "s": 6.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -556,6 +633,24 @@
    "round": 2,
    "cat": "other",
    "text": "AFTERGLOW invisible (the face guard covered the whole close-up) and SPARKS born off his shoulders; both re-fitted"
+  },
+  {
+   "t": "2026-11-09 23:00:33",
+   "round": 2,
+   "cat": "other",
+   "text": "fresh-eyes critique (HIGH): WINDOW HOP and HOME LIGHT magnified the 720p sources 20-60x into mush; rebuilt with parallax (the camera <= 3x / the city <= 1.8x, the window itself rushes up or flies back), the city readable throughout"
+  },
+  {
+   "t": "2026-11-09 23:00:33",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: a masked close-up looked like two earlier ones (swapped for Barry firing lightning); the bar run showed no face (re-ranged so the Flash emerges, re-framed); arc jump, afterglow and sky strike too faint (strengthened); the signal's cream plates lingered (cleared within 0.2 s, light falloff)"
+  },
+  {
+   "t": "2026-11-09 23:00:33",
+   "round": 2,
+   "cat": "seam",
+   "text": "the first run's matte flickered (2% to 47% of the frame) and popped the trails at frame 800; trails now keep off a tracked head path instead"
   }
  ],
  "round_starts": {

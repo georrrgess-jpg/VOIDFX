@@ -50,14 +50,14 @@ and the loop.
 | 19.5–24 | the charge (S5, its own strobe-cut cadence); **HOLD ON** from e20 | **LIGHT WARP** |
 | 24–26 | the run (S2) | **RELEASE** on "home": the run blasts out at us |
 | 26–28 | *new:* masked, lightning crackling round him | **ARC JUMP** (a bolt leaps from his run to his lightning) |
-| 28–30 | masked close-up (S2) | STREAK PASS |
+| 28–30 | *new:* Barry fires the lightning from his hand | STREAK PASS |
 | 30–32 | the lightning run on a wet street (S2) | **DROP WHIP** |
 | 32–34 | masked under street lights (S4); *flares* | RAMP |
 | 34–36 | *new:* Barry in the suit, lightning round him; *sparks fly off his shoulders* | **LIGHT FLARE** |
 | 36–39 | the city from below, falling fire (Blitzkrieg); *the windows breathe* | WHIP UP |
-| 39–42 | the S5 suit by the van | **WINDOW HOP** (rebuilt: ~1 s, tracked, a warm lit window) |
+| 39–42 | the S5 suit by the van | **WINDOW HOP** (rebuilt: ~1 s, tracked, the window rushes up to fill the frame) |
 | 42–45 | the run (S5); **LONG EXPOSURE** from e42.5 | **CITY DIVE** |
-| 45–48 | *new:* the lightning tears through the bar (Blitzkrieg) | **EXPOSURE CUT** (the shutter stays open across the cut) |
+| 45–48 | *new:* the lightning tears through the bar and the Flash comes out of it (Blitzkrieg) | **EXPOSURE CUT** (the shutter stays open across the cut) |
 | 48–50 | alone, at night (S3); *the windows breathe* | **LONG EXPOSURE** (the trails retract into points of light) |
 | 50–52 | *new:* Barry in a suit at night (S3) | **TIME LAPSE** (the world streams past, he stands still) |
 | 52–54 | *new:* lightning in his eyes | **SKY STRIKE** (a bolt cracks down behind him) |
@@ -107,6 +107,32 @@ in 10 moments**, none on beats but the drop's set piece; the new transitions are
   as a face. The rest are lightning near the charge's shoulders.
 - **plan_check:** 0 FAIL, 1 WARN (the charge's own cadence, deliberate).
 - **Density:** 23 designed transitions and the loop in 24.0 s (0.96/s), nearly all custom; 10 lean effects.
+
+## Round 2 (the owner's notes, all applied in one pass)
+> "I felt like there wasn't enough transitions or creative graphics or animations throughout … try to have that fast
+> flow transition to transition feel … smooth the loop at the end, just make it more seamless and try to dial in that
+> theme for the loop … in the middle-ish of the edit, there feels like there's not a lot of scenes that include Barry's
+> face or the flash … smooth the transition that occurs around the 11-second mark with the window. I'd like for you to
+> slow it down and kind of just make it more seamless and polish it."
+
+- **Density and flow:** 23 → 26 designed transitions plus the loop (0.96 → 1.12/s). The new ones are all custom: ARC JUMP,
+  EXPOSURE CUT, TIME LAPSE, SKY STRIKE, AFTERGLOW. There is a new in-shot animation (SPARKS).
+- **Barry and the Flash mid-edit:** six new face shots between 7.8 and 17 s replace the faceless street, the S.T.A.R. Labs
+  pass and one masked close-up. Every shot from 7.8 to 17 s but the run, the wet street and the city shows his face or the
+  suit.
+- **WINDOW HOP (~11 s):**
+  - 0.37 s → 1.0 s.
+  - The window is tracked on the source (LK optical flow, `WH_TRACK`).
+  - The camera's own glide stays ≤ 3× into the 720p tower, so the city stays readable and rushes past in motion blur.
+  - The window itself rushes up to fill the frame, opening from its shape to the frame's.
+  - The van shot waits inside behind warm glass, and it lands at exactly scale 1.
+- **HOME LIGHT (the loop):**
+  - It is now the reverse of WINDOW HOP, with parallax. The loft (close to the lens) shrinks and flies back into one lit
+    window of frame 0's city.
+  - The city (far) is readable from the first frame of the pull and pulls back gently (≤ 1.8×).
+  - The background is the real rooftop footage. The roof shot now reads its source before u = 0 (`tneg`) and pushes in
+    at one constant speed (`LinZ`), so footage and camera both run on across the wrap.
+  - The window's light is all that is left: frame 0.
 
 ## How it was made
 - **Song prep:** the whole song prepped (stems, Whisper large-v3 on the vocal stem, the grid fitted on the drum stem).

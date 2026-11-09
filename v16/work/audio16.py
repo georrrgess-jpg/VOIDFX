@@ -746,7 +746,7 @@ def main():
     hr = rev(mono_(A2.whoosh(1.15, -14, 1602, True))); place(fx, stereo(hr), th(24) - len(hr) / SR)          # HOLD ON: drawn back
     place(fx, stereo(mono_(A2.impact(-10, (56, 30), 0.45, 0.30, 1603))), th(24))                               # RELEASE on "home"
     place(fx, stereo(mono_(sub_drop(-12, 0.6, 62, 28))), th(24) + 0.01)
-    place(fx, stereo(mono_(A2.whoosh(0.30, -13, 1604, True)), 0.35), t0["close"] - 0.14)                      # STREAK PASS
+    place(fx, stereo(mono_(A2.whoosh(0.30, -13, 1604, True)), 0.35), t0["blast"] - 0.14)                      # STREAK PASS
     wg = rev(mono_(A2.whoosh(0.70, -16, 1610, False))); place(fx, stereo(wg), th(39) - len(wg) / SR + 0.12)   # WINDOW HOP: the glide into the window
     place(fx, stereo(shutter(-2, 1605)), th(42.5))                                                            # LONG EXPOSURE: the shutter opens
     place(fx, stereo(shutter(-4, 1606, True)), th(48) - 0.02)                                                 # and closes

@@ -77,7 +77,7 @@ def lumf(img): return img[..., 0] * 0.114 + img[..., 1] * 0.587 + img[..., 2] * 
 LOOKS16 = {"night": dict(sh=(0.052, 0.022, -0.012), hi=(-0.034, 0.012, 0.044), sat=0.90),
            "dusk": dict(sh=(0.034, 0.012, -0.004), hi=(-0.046, 0.006, 0.052), sat=0.92),
            "home": dict(sh=(-0.008, 0.010, 0.030), hi=(-0.052, 0.012, 0.052), sat=0.96)}
-E_EV16 = {"iris": -0.30, "signal": -0.10, "thinks": -0.45, "lrun": -0.30, "lrun2": -0.35}
+E_EV16 = {"iris": -0.30, "signal": -0.10, "thinks": -0.45, "lrun": -0.30, "lrun2": -0.05}
 _LUTS = {}
 def lut16():
     if "n" not in _LUTS:
@@ -456,14 +456,25 @@ def lex_layer(s, f, q=4, win=40, d=0.93):
         np.maximum(acc, c * (0.965 ** (f - k1)), out=acc)
     return acc
 
+def head_mask(s, f):
+    """a soft ellipse over a head path given on the shot (u, x, y, w) where the matte is too unsteady to use."""
+    hp = s.get("head")
+    if not hp: return None
+    u = (f - s["f0"]) / max(1, s["f1"] - s["f0"]); us = [k[0] for k in hp]
+    x, y, w_ = (float(np.interp(u, us, [k[i] for k in hp])) for i in (1, 2, 3))
+    if w_ < 8: return None
+    q = 4; m = np.zeros((H // q, W // q), F32)
+    cv2.ellipse(m, (int(x / q * 4), int(y / q * 4)), (int(w_ * 0.80 / q * 4), int(w_ * 1.05 / q * 4)), 0, 0, 360, 1.0, -1, cv2.LINE_AA, shift=2)
+    return cv2.resize(cv2.GaussianBlur(m, (0, 0), w_ * 0.22 / q), (W, H))[..., None]
+
 def long_exposure_fx(img, person, s, f):
     e = e_of(f)
     if e < E_LEX0: return img
     g = smooth(clamp((e - E_LEX0) / 1.2, 0, 1)); sw = smooth(clamp((e - 46.0) / 2.0, 0, 1)) * s.get("lexk", 1.0)
     lay = cv2.resize(lex_layer(s, f), (W, H), interpolation=cv2.INTER_LINEAR)
     glow = cv2.GaussianBlur(lay, (0, 0), 6)
-    pm = 0.0 if person is None else np.clip(person * 1.2, 0, 1)[..., None]
-    o = img * (1 - 0.42 * g - 0.10 * sw) + (lay * 1.6 + glow * 0.9) * (g + 0.35 * sw) * (1 - 0.92 * pm) * s.get("lexg", 1.0)   # light passes behind him
+    hm = head_mask(s, f); keep = 1.0 if hm is None else (1 - hm)                               # off his face (the matte flickers on this shot)
+    o = img * (1 - 0.42 * g - 0.10 * sw) + (lay * 1.6 + glow * 0.9) * (g + 0.35 * sw) * keep * s.get("lexg", 1.0)
     return np.clip(o, 0, 1)
 
 def long_exposure(A, B, j, f, sa, sb, pre=12, post=18):
@@ -589,7 +600,10 @@ def emblem_signal(A, B, j, f, sa, sb, pre=SIG_PRE, post=SIG_POST):
     else:
         Bz = zoom_about(B, W / 2, H * 0.47, 1.10 if j < 0 else 1.10 - 0.10 * eout((j + 1) / post, 2.0))
     m = bm * bw
-    if j >= 0: m = np.maximum(m, smooth(clamp(((j + 1) / post - 0.35) / 0.65, 0, 1)))   # exactly home by the end
+    if j >= 0: m = np.maximum(m, smooth(clamp(((j + 1) / post - 0.05) / 0.45, 0, 1)))   # home within ~0.2 s of the cut
+    if j >= 0:                                                                                  # the lens glare falls off like light, not a flat plate
+        d2 = ((_GX - W / 2) ** 2 + (_GY - H * 0.47) ** 2) / (0.55 * H) ** 2
+        Ac = Ac * (0.62 + 0.38 * np.exp(-d2)).astype(F32)[..., None]
     o = Ac * (1 - m[..., None]) + Bz * m[..., None]
     rim = np.clip(cv2.GaussianBlur(bm, (0, 0), 3 + 2 * z) - bm, 0, 1) * bw * (1 - (smooth((j + 1) / post) if j >= 0 else 0))
     addc(o, rim, TUNG, 3.0); addc(o, cv2.GaussianBlur(rim, (0, 0), 8), AMBR, 1.2)                   # the bolt's edge glows
@@ -633,12 +647,14 @@ def home_win(fv):
         wx, wy, ww, wh = E.HOME_WIN; _HLS["src"] = ((wx - W / 2) / sc0 + cx_, (wy - H / 2) / sc0 + cy_, ww / sc0, wh / sc0)
     x, y, ww, wh = _HLS["src"]; X, Y, sc = to_screen(s0, fv, x, y); return X, Y, ww * sc, wh * sc
 
+HL_ZW = 1.8                                                                                  # the far city's pull back (the roof footage: keep it small)
 def home_light(img, f, s):
     """THE HOME LIGHT (the loop, e74 -> frame 0, on "going home"): the camera pulls back out of the loft through its
-    window. The loft is the window: the night city of frame 0 opens round it (the real rooftop footage at frame 0's
-    virtual frames, its push-in running on), the window shrinks into one lit window of the city, he comes in solid in
-    front of it, and its light is all that is left: frame 0. The reverse of WINDOW HOP. The pull starts and lands at rest
-    (a smootherstep in log zoom), so the roof's own slow push carries the camera across the wrap."""
+    window, with parallax. The loft is close to the lens: it shrinks fast and flies back into one lit window of the
+    night city; the city of frame 0 is far: it is there, readable, from the moment the loft starts to shrink, and pulls
+    back gently (the real rooftop footage at frame 0's virtual frames, its push-in running on). He stands solid in front
+    of the window; its light is all that is left: frame 0. The reverse of WINDOW HOP. Every part starts and lands at
+    rest (smootherstep), so the roof's own slow push carries the camera across the wrap."""
     f0 = fh(E.E_LOOP); N = E.DUR_F - f0
     if f < f0: return img
     t = (f - f0) / N; e = home_cam(t)                                                           # t = 1 is frame 0
@@ -646,31 +662,32 @@ def home_light(img, f, s):
     wx, wy, ww, wh = home_win(fv)
     fade = 1 - smooth(clamp((t - 0.80) / 0.20, 0, 1))                                           # the light is all that is left
     bm = soft_rect(wx, wy, ww / 2 - 4, wh / 2 - 4, 6.0)
-    world = world * (1 - 0.72 * bm * fade)[..., None]                                          # the window's light is in the card now
-    Z0 = H / wh; lz = math.log(Z0) * (1 - e); Z = math.exp(lz); pr = lz / math.log(Z0)
-    cx, cy = wx + (W / 2 - wx) * pr, wy + (H / 2 - wy) * pr                                     # where the window is on screen
-    if Z > 1.0005:
-        M = np.float32([[Z, 0, cx - Z * wx], [0, Z, cy - Z * wy]])
-        wz = cv2.warpAffine(world, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    world = world * (1 - 0.72 * bm * fade)[..., None]                                          # the window's light is in the loft now
+    PX, PY = W * 0.42, H * 0.45; Zw = HL_ZW ** (1 - e)
+    if Zw > 1.0005:
+        M = np.float32([[Zw, 0, PX - Zw * PX], [0, Zw, PY - Zw * PY]])
+        wz = cv2.warpAffine(world, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
         pz = cv2.warpAffine(pm0, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT) if pm0 is not None else None
+        r = 7 * (Zw - 1) / (HL_ZW - 1)
+        if r > 0.6:
+            soft = defocus16(wz, r)                                                             # the city behind him out of focus, he isn't
+            wz = soft if pz is None else soft * (1 - pz[..., None]) + wz * pz[..., None]
     else:
         wz, pz = world, pm0
-    r = 9 * smooth(clamp((lz - 0.7) / 1.6, 0, 1))
-    if r > 0.6: wz = defocus16(wz, r)                                                           # up close, the city is soft
-    kh = 0.40 * smooth(clamp((lz - 0.8) / 1.5, 0, 1))
-    if kh > 0.003: wz = wz * (1 - kh * np.clip((lumf(wz) - 0.45) / 0.40, 0, 1))[..., None]    # a giant bokeh disc would glare
+    Wx, Wy = PX + Zw * (wx - PX), PY + Zw * (wy - PY)                                           # the window, where the city has it now
+    hh = (H / 2) ** (1 - e) * (wh / 2 * Zw) ** e                                               # the loft: full frame -> the window
+    q = smooth(clamp(e / 0.80, 0, 1)); cx, cy = W / 2 + (Wx - W / 2) * q, H / 2 + (Wy - H / 2) * q
     asp = W / H + (ww / wh - W / H) * smooth(clamp((e - 0.04) / 0.50, 0, 1))                   # the frame's shape -> the window's
-    hh = wh / 2 * Z; hw = hh * asp; cs = max(2 * hw / W, 2 * hh / H)                            # the loft fills the window
+    hw = hh * asp; cs = max(2 * hw / W, 2 * hh / H)
     card = cv2.warpAffine(img, np.float32([[cs, 0, cx - cs * W / 2], [0, cs, cy - cs * H / 2]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) if abs(cs - 1) > 1e-3 else img
     fe = (1.5 + 0.05 * min(hw, hh)) * smooth(clamp(t / 0.12, 0, 1)) + 1e-3
     m = soft_rect(cx, cy, hw - fe, hh - fe, fe)                                                 # the edge feathers inward (nothing outside the loft)
-    if pz is not None and t > 0: m = m * (1 - np.clip(pz * 1.15, 0, 1))                       # he stands in front of the window
-    mf = (m * fade)[..., None]
+    mf = (m * fade)[..., None]                                                                  # (the window lands beside his arm, never behind him)
     o = wz * (1 - mf) + card * mf
     glow = cv2.GaussianBlur(m, (0, 0), 4 + 0.16 * min(hw, hh)) * (1 - m)
     addc(o, glow, TUNG, 0.70 * fade * smooth(clamp(t / 0.10, 0, 1)))                            # the window's warm light round it
     spd = 30 * t * t * (1 - t) * (1 - t) / 1.875
-    if spd > 0.05: o = radial_blur(o, cx, cy, 1.0, 1.0 - 0.035 * spd, 8)                       # the pull's motion
+    if spd > 0.05: o = radial_blur(o, cx, cy, 1.0, 1.0 - 0.030 * spd, 8)                       # the pull's motion
     return np.clip(o, 0, 1)
 
 def loop_in16(out, f, k):
@@ -679,7 +696,7 @@ def loop_in16(out, f, k):
 # ---- FOCUS PULL (the two of them -> his eyes): the lens racks off her and finds him ------------------------------------
 def focus_pull(A, B, j, f, sa, sb, pre=8, post=10):
     x = (j + pre) / (pre + post - 1); r = 34 * math.sin(math.pi * clamp(x, 0, 1)) ** 1.3
-    w = smooth(clamp((x - 0.40) / 0.2, 0, 1))
+    w = smooth(clamp((x - 0.32) / 0.36, 0, 1))
     return np.clip(defocus16(A, r) * (1 - w) + defocus16(B, r) * w, 0, 1)
 
 # ---- BOLT TRAIL (the run -> down the street): his lightning stretches ahead into the street's speed trails -------------
@@ -704,28 +721,28 @@ def soft_rect(cx, cy, hw, hh, fe):
     dx = np.abs(_GX - cx) - hw; dy = np.abs(_GY - cy) - hh
     return (np.clip(1 - dx / fe, 0, 1) * np.clip(1 - dy / fe, 0, 1)).astype(F32)
 
+WH_ZA = 3.0                                                                                  # the camera's own glide into the tower (720p: keep it small)
 def window_hop(A, B, j, f, sa, sb, pre=WH_PRE, post=WH_POST):
-    """WINDOW HOP: the camera glides into one lit window of the falling city (a log-zoom with an eased start and landing),
-    the window drifting to the centre and opening to the frame's shape; inside it the next shot is waiting in warm light
-    behind the glass, the city rushes softly away round it, and we are inside. A is live until the cut (the window is
-    tracked on the source), B is live after it; B lands exactly at scale 1."""
+    """WINDOW HOP: the camera glides toward one lit window of the falling city (an eased glide, never more than ~3x into
+    the 720p frame, so the tower stays readable and rushes past in motion blur) while the window itself rushes up to
+    fill the frame like something close to the lens, opening from its own shape to the frame's; the next shot waits
+    inside in warm light behind the glass, its light blooming out round the opening, and we are inside. A is live
+    until the cut (the window is tracked on the source), B is live after it and lands exactly at scale 1."""
     N = pre + post - 1; x = clamp((j + pre) / N, 0, 1)
     ff = f if j < 0 else sa["f1"] - 1
     px, py, hw0, hh0 = wh_point(sa, ff)
     e = home_cam(x)                                                                             # zero speed at both ends
-    Zend = (H / 2) / hh0; lz = math.log(Zend) * e; z = math.exp(lz)
-    dr = smooth(clamp(e * 1.12, 0, 1)); tx, ty = px + (W / 2 - px) * dr, py + (H / 2 - py) * dr  # the window drifts to the centre
+    Za = math.exp(math.log(WH_ZA) * e)
+    dr = smooth(clamp(e * 1.15, 0, 1))
+    ax = clamp(px + (W / 2 - px) * dr, W - Za * (W - px), Za * px)                             # the tower never leaves its edges
+    ay = clamp(py + (H / 2 - py) * dr, H - Za * (H - py), Za * py)
+    Az = cv2.warpAffine(A, np.float32([[Za, 0, ax - Za * px], [0, Za, ay - Za * py]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    spd = 30 * x * x * (1 - x) * (1 - x) / 1.875
+    if spd > 0.05: Az = radial_blur(Az, ax, ay, 1.0, 1.0 + 0.05 * spd, 8)                       # the city rushes past
+    Gend = (H / 2) / (hh0 * WH_ZA); G = math.exp(math.log(Gend) * smooth(clamp((e - 0.15) / 0.85, 0, 1)))
+    q2 = smooth(clamp((e - 0.20) / 0.70, 0, 1)); tx, ty = ax + (W / 2 - ax) * q2, ay + (H / 2 - ay) * q2   # the opening comes to the centre
     asp = hw0 / hh0 + (W / H - hw0 / hh0) * smooth(clamp((e - 0.30) / 0.50, 0, 1))             # and opens to the frame's shape
-    hh = hh0 * z; hw = hh * asp
-    kw = smooth(clamp(e / 0.30, 0, 1))
-    if kw > 0.002:                                                                              # its cold glass warms to a lamp-lit home window
-        wm = soft_rect(px, py, hw0 + 1, hh0 + 1, 2.5)[..., None] * kw
-        A = A * (1 - 0.75 * wm) + (TUNG * 0.55 + AMBR * 0.10) * wm
-    M = np.float32([[z, 0, tx - z * px], [0, z, ty - z * py]])
-    Az = cv2.warpAffine(A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-    spd = 30 * x * x * (1 - x) * (1 - x) / 1.875                                                # the zoom's speed, 0..1
-    if spd > 0.05: Az = radial_blur(Az, tx, ty, 1.0, 1.0 + 0.045 * spd, 8)                     # the city rushes away round it
-    Az = Az * (1 - 0.50 * e)
+    hh = hh0 * Za * G; hw = hh * asp
     bs = max(2 * hw / W, 2 * hh / H)                                                           # B fills the window (exactly 1 at the end)
     Bz = cv2.warpAffine(B, np.float32([[bs, 0, tx - bs * W / 2], [0, bs, ty - bs * H / 2]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) if bs < 0.999 else B
     gl = 1 - smooth(clamp((x - 0.25) / 0.60, 0, 1))                                             # behind the glass, in warm light
@@ -736,10 +753,10 @@ def window_hop(A, B, j, f, sa, sb, pre=WH_PRE, post=WH_POST):
     fe = (1.5 + 0.10 * min(hw, hh)) * (1 - smooth(clamp((x - 0.80) / 0.20, 0, 1))) + 1e-3
     m = soft_rect(tx, ty, hw - fe, hh - fe, fe)                                                 # the edge feathers inward
     o = Az * (1 - m[..., None]) + Bz * m[..., None]
-    sp_ = 1 - smooth(clamp((x - 0.55) / 0.40, 0, 1))                                            # the warm light spills out round it
+    sp_ = math.sin(math.pi * clamp(x / 0.9, 0, 1)) ** 1.2                                       # its light blooms out round it
     if sp_ > 0.002:
-        glow = cv2.GaussianBlur(m, (0, 0), 3 + 0.20 * min(hw, hh)) * (1 - m)
-        addc(o, glow, AMBR * 0.5 + TUNG * 0.5, 0.75 * sp_)
+        glow = cv2.GaussianBlur(m, (0, 0), 4 + 0.18 * min(hw, hh)) * (1 - m)
+        addc(o, glow, AMBR * 0.45 + TUNG * 0.55, 0.55 * sp_)
     return np.clip(o, 0, 1)
 
 # ---- ARC JUMP (the run -> him, the lightning crackling round him): a bolt leaps from his run to his lightning ----------
@@ -752,10 +769,11 @@ def arc_jump(A, B, j, f, sa, sb, pre=6, post=10):
     w = smooth(clamp((x - 0.40) / 0.14, 0, 1)); o = A * (1 - w) + B * w
     cv = bolt_canvas()
     for k_ in range(2):
-        put_bolt(cv, (ax, ay), (ex + 12 * k_, ey - 9 * k_), 4400 + 7 * k_ + 3 * (f // 2), 3 - k_, 0.30, 6, 1)
+        put_bolt(cv, (ax, ay), (ex + 14 * k_, ey - 10 * k_), 4400 + 7 * k_ + 3 * (f // 2), 7 - 3 * k_, 0.30, 6, 1)
+    hx = cv2.GaussianBlur(np.exp(-(((_GX - ex) ** 2 + (_GY - ey) ** 2) / (2 * 40.0 ** 2))).astype(F32), (0, 0), 2) * math.sin(math.pi * clamp(x / 0.55, 0, 1))
     fade = 1 - smooth(clamp((x - 0.55) / 0.45, 0, 1))
     keep = face_keep(sa if w < 0.5 else sb, sa["f1"] - 1 if w < 0.5 else sb["f0"], 1.35)
-    o = o + light_rgb(cv, 0.95 * fade, HOT, AMBR) * (keep if not isinstance(keep, float) else 1.0)
+    o = o + (light_rgb(cv, 1.25 * fade, HOT, AMBR) + hx[..., None] * (HOT * 0.6 + AMBR * 0.6)) * (keep if not isinstance(keep, float) else 1.0)   # the bolt's head
     pk = math.exp(-((x - 0.47) / 0.11) ** 2)
     return np.clip(o * (1 - 0.22 * pk) + AMBR * 0.20 * pk, 0, 1)                               # its flash covers the switch
 
@@ -791,11 +809,11 @@ def sky_strike(A, B, j, f, sa, sb, pre=10, post=8):
     side = 1 if fx_ < W / 2 else -1
     bx = clamp(fx_ + side * 2.3 * fw_, 90, W - 90); p0 = (bx - side * 120, -30); p1 = (bx + side * 40, H * 0.66)
     grow = eout(clamp(u / 0.45, 0, 1), 2.0); pe = (p0[0] + (p1[0] - p0[0]) * grow, p0[1] + (p1[1] - p0[1]) * grow)
-    cv = bolt_canvas(); put_bolt(cv, p0, pe, 5150 + (f // 2), 4, 0.32, 7, 2)
+    cv = bolt_canvas(); put_bolt(cv, p0, pe, 5150 + (f // 2), 7, 0.32, 7, 3)
     fl = 0.75 + 0.25 * math.sin(f * 2.1)
     pm = PERSON.get(f); behind = 1.0 if pm is None else (1 - np.clip(cv2.dilate(pm, np.ones((7, 7), np.uint8)) * 1.3, 0, 1))[..., None]
-    lt = light_rgb(cv, 1.1 * fl, HOT, AMBR)
-    lift = 0.45 * ein(u, 1.6)                                                                    # the night lights up behind him
+    lt = light_rgb(cv, 1.5 * fl, HOT, AMBR)
+    lift = 0.60 * ein(u, 1.6)                                                                    # the night lights up behind him
     o = A + (lt + A * lift * fl) * behind
     if pm is not None:
         rim = np.clip(cv2.GaussianBlur(pm, (0, 0), 3) - pm * 0.8, 0, 1)[..., None]              # his edge catches it
@@ -841,19 +859,19 @@ ANIMS.update({"current": a_current, "sparks": a_sparks})
 
 # ---- AFTERGLOW (the lightning in his eyes -> him alone at night): the cut lands on the beat and the lightning stays burnt
 # on the eye a moment, spreading and fading (off his face)
-def afterglow(A, B, j, f, sa, sb, pre=2, post=16):
-    if j < 0: return np.clip(A * (1 + 0.10 * (j + pre + 1) / pre), 0, 1)
+def afterglow(A, B, j, f, sa, sb, pre=4, post=18):
+    if j < 0: return np.clip(A * (1 + 0.22 * ein((j + pre + 1) / pre, 1.5)), 0, 1)              # his lightning flares
     v = (j + 1) / post
     if _HO.get("ag_n") != sa["n"]:
         L = lumf(edge15(sa, "last")); _HO["ag_n"] = sa["n"]; _HO["ag"] = cv2.GaussianBlur(np.clip((L - 0.70) / 0.25, 0, 1), (0, 0), 2.0)
-    lay = cv2.GaussianBlur(_HO["ag"], (0, 0), 1 + 9 * v) * (1 - v) ** 1.8
+    lay = np.clip(cv2.GaussianBlur(_HO["ag"], (0, 0), 1.5 + 7 * v) * 1.8, 0, 1) * (1 - v) ** 1.6
     keep = face_keep(sb, f, 0.95)
     if not isinstance(keep, float): lay = lay * keep[..., 0]
-    o = B.copy(); addc(o, lay.astype(F32), AMBR * 0.8 + HOT * 0.2, 0.85)
+    o = B.copy(); addc(o, lay.astype(F32), AMBR * 0.8 + HOT * 0.2, 1.3)
     return np.clip(o, 0, 1)
 
 TR2.update({"arc_jump": (arc_jump, 6, 10), "exposure_cut": (exposure_cut, 4, 8), "time_lapse": (time_lapse, 12, 12),
-            "sky_strike": (sky_strike, 10, 8), "mote_drift": (mote_drift, 10, 12), "afterglow": (afterglow, 2, 16)})
+            "sky_strike": (sky_strike, 10, 8), "mote_drift": (mote_drift, 10, 12), "afterglow": (afterglow, 4, 18)})
 
 TR2.update({"drop_whip": (drop_whip, 6, 8), "flare_sweep": (flare_sweep, 8, 10), "focus_pull": (focus_pull, 8, 10), "bolt_trail": (bolt_trail, 6, 10), "window_hop": (window_hop, WH_PRE, WH_POST)})
 

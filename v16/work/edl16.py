@@ -99,15 +99,17 @@ shot("charge", "fs5", 19.5, 24, 114.30, 116.30, tin="light_warp", seg=True, tmap
 # ---- the drums are back on "home" (e24): the run home through the night city, his face and the suit in every other shot
 shot("run", "fs2", 24, 26, 144.60, 145.90, tin="release", seg=True, face=None, cx=(1040, 1060), tmap=vel(24, 26, 144.60, 145.90), lin=True, flowmax=40, flowfall="blend")
 shot("faceA", "fbh", 26, 28, 53.70, 54.30, tin="arc_jump", seg=True, tmap=vel(26, 28, 53.70, 54.30, lo=0.7, hi=1.6), lin=True, flowmax=40, flowfall="blend")   # masked, the lightning crackling round him
-shot("close", "fs2", 28, 30, 107.30, 108.00, tin="streak_pass", seg=True)                                       # masked close-up
+shot("blast", "fbh", 28, 30, 127.55, 128.15, tin="streak_pass", seg=True)                                       # Barry fires the lightning from his hand
 shot("wet", "fs2", 30, 32, 77.20, 78.20, tin="drop_whip", seg=True, face=None, cx=(840, 820), flowmax=40, flowfall="blend")
 shot("night", "fbk", 32, 34, 136.15, 136.85, tin="ramp", seg=True, anim="flares")
 shot("faceB", "fbh", 34, 36, 84.45, 85.05, tin="light_flare", seg=True, anim="sparks")                         # Barry in the suit, lightning round him; sparks drift off it
 shot("city", "fbk", 36, 39, 69.95, 70.95, tin="whip_up15", seg=True, face=None, cx=(700, 640), tmap=vel(36, 39, 69.95, 70.95, beats=[36]), lin=True, anim="twinkle")
 shot("van", "fbh", 39, 42, 106.40, 107.40, tin="window_hop", seg=True)                           # inside the window: the S5 suit by the van
 # ---- LONG EXPOSURE (the focal piece): the shutter opens on his run and stays open across the cut
-shot("lrun", "fs5", 42, 45, 119.20, 120.60, tin="city_dive", seg=True, face=None, cx=(930, 860), lin=True, flowmax=90, flowfall="blend")
-shot("lrun2", "fbk", 45, 48, 2.30, 3.40, tin="exposure_cut", seg=True, face=None, cx=(600, 520), lin=True, flowmax=60, flowfall="blend", lexg=0.40)   # the lightning tears through the bar
+shot("lrun", "fs5", 42, 45, 119.20, 120.60, tin="city_dive", seg=True, face=None, cx=(930, 860), lin=True, flowmax=90, flowfall="blend",
+     head=[(0.0, 294, 904, 211), (0.22, 326, 855, 203), (0.44, 408, 833, 214), (0.67, 480, 810, 214), (1.0, 535, 798, 214)])   # his masked head on screen (YuNet on the render; the end extrapolated): the trails keep off it
+shot("lrun2", "fbk", 45, 48, 2.95, 3.95, tin="exposure_cut", seg=True, face=None, cx=(620, 330), lin=True, flowmax=60, flowfall="blend", lexg=0.30,
+     head=[(0.45, 200, 895, 0), (0.55, 230, 900, 200), (0.70, 330, 915, 220), (0.85, 470, 928, 238), (1.0, 525, 936, 245)])   # the lightning tears through the bar; the Flash comes out of it   # the lightning tears through the bar
 shot("alone", "fs3", 48, 50, 115.00, 116.00, tin="long_exposure", seg=True, anim="windows")                          # "It's hard to do these things alone"
 shot("alone2", "fs3", 50, 52, 126.00, 126.70, tin="time_lapse", seg=True, anim="windows")                          # the world rushes past; he stands still
 shot("eyes2", "fbh", 52, 54, 117.40, 118.00, tin="sky_strike", seg=True)                                          # the lightning answers: it is in his eyes
