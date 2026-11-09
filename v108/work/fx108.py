@@ -1585,3 +1585,278 @@ def light_sweep108(A, B, j, f, sa, sb, n=9):
     o = A * (1 - side) + B * side
     return np.clip(o * (1 + 0.55 * band) + band * (SODIUM * 0.18 + WARMW * 0.10), 0, 1)
 TR2["light_sweep108"] = (light_sweep108, 9, 9)
+
+# ============================================================================ v108 rev 1 (owner notes, 2026-11-09)
+# 1. SPECIMEN merged with the real slide: the slide in his hands (its own smear and frosted label, cut from the frame)
+#    lifts toward the lens, swings up so its clear end lies over his eye and magnifies it; the next shot appears in the
+#    clear glass; the slide comes to the lens and fills it. His face behind goes soft as the slide comes near.
+# 2. No beat bounce in this edit (the owner: "remove that just for this edit"): no zoom punch, kick or hit-frame blur.
+# 3. More custom transitions, smooth and creative (below).
+def beat_phase(f):
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    return ph, bi, False, False
+
+SP_PRE, SP_POST = 18, 14
+SR_C = np.array([280.0, 995.0], np.float32)       # the real upper slide at f1 - SP_PRE (measured on the frame)
+SR_L, SR_HH = 430.0, 150.0                         # half length (it runs off the left edge), half height
+SR_SMEAR = (-13.0, 2.0, 135.0)                     # the blood smear: local centre and radius
+SR_LABEL = (185.0, 417.0, -172.0, 133.0)           # the frosted label: local a0, a1, b0, b1
+_SRT = {}
+def sr_tex(sa):
+    """the real slide's features (smear + label) as a local-coordinate texture with alpha, and the screen mask of them
+    at their original place (for the fill once the slide has left)."""
+    if sa["n"] not in _SRT:
+        A0 = base108(sa, sa["f1"] - SP_PRE)[0]
+        L, hh = int(SR_L), int(SR_HH) + 30
+        bb, aa = np.mgrid[-hh:hh, -L:L].astype(np.float32)
+        tex = _remap(A0, SR_C[0] + aa, SR_C[1] + bb, cv2.BORDER_REPLICATE)
+        sm = np.clip((SR_SMEAR[2] - np.sqrt((aa - SR_SMEAR[0]) ** 2 + (bb - SR_SMEAR[1]) ** 2)) / 6.0, 0, 1)
+        a0, a1, b0, b1 = SR_LABEL
+        lb = np.clip(np.minimum.reduce([aa - a0, a1 - aa, bb - b0, b1 - bb]) / 5.0, 0, 1)
+        alpha = np.maximum(sm, lb).astype(np.float32)
+        body = np.clip(np.minimum(SR_L - np.abs(aa), SR_HH + 28 - np.abs(bb)) / 6.0, 0, 1)            # the whole glass leaves
+        scr = np.zeros((H, W), np.float32)
+        x0, y0 = int(SR_C[0]) - L, int(SR_C[1]) - hh
+        ys, xs = slice(max(0, y0), min(H, y0 + 2 * hh)), slice(max(0, x0), min(W, x0 + 2 * L))
+        scr[ys, xs] = np.maximum(alpha, body)[ys.start - y0:ys.stop - y0, xs.start - x0:xs.stop - x0]
+        scr = cv2.GaussianBlur(cv2.dilate(scr, np.ones((31, 31), np.uint8)), (0, 0), 6)
+        _SRT[sa["n"]] = (tex, alpha, scr)
+    return _SRT[sa["n"]]
+
+def sp_eye_r(sa):
+    """the eye the slide's clear end lands on: the one on the right of the frame (the slide's far end runs off up-right)."""
+    key = ("r", sa["n"])
+    if key not in _SPX:
+        fs = face_scr(sa, sa["f1"] - 3)
+        _SPX[key] = (W * 0.70, H * 0.27) if fs is None else tuple(float(v) for v in max((fs[3], fs[4]), key=lambda q: q[0]))
+    return _SPX[key]
+
+def specimen(A, B, j, f, sa, sb, pre=SP_PRE, post=SP_POST):
+    ex, ey = sp_eye_r(sa); tex, alpha, scr = sr_tex(sa)
+    lens_a = -300.0                                                                      # the clear end of the slide
+    if j < 0:
+        u = (j + pre + 0.5) / pre
+        k1 = smooth(u / 0.34); k2 = smooth((u - 0.30) / 0.46)                             # lift toward the lens, then swing up
+        sc = 1.0 + 0.25 * k1 + 0.20 * k2; ang = math.radians(-8 * k1 - 22 * k2)
+        lp0 = SR_C + np.array([lens_a, 0.0], np.float32)                                 # where the clear end starts
+        lift = np.array([0.0, -70.0], np.float32) * k1
+        lp = (lp0 + lift) * (1 - k2) + np.array([ex, ey], np.float32) * k2
+        M = 1.0 + 0.85 * smooth((u - 0.45) / 0.40)                                        # it magnifies his eye
+        cin = smooth((u - 0.80) / 0.20); dof = 3.2 * smooth(u / 0.8); gone = smooth(u / 0.30)
+    else:
+        v = (j + 0.5) / post
+        sc = 1.45 * (1 + 4.5 * ein(clamp(v / 0.85, 0, 1), 2.2)); ang = math.radians(-30)
+        lp = np.array([ex, ey], np.float32); M = 1.85 - 0.85 * smooth(v / 0.9); cin = 1.0; dof = 3.2; gone = 1.0
+    ca, sn = math.cos(ang), math.sin(ang)
+    uax = np.array([ca, sn], np.float32); nax = np.array([-sn, ca], np.float32)
+    C = lp - uax * lens_a * sc                                                           # the slide's centre on screen
+    dxp, dyp = _GX - C[0], _GY - C[1]
+    la = (dxp * uax[0] + dyp * uax[1]) / sc; lb = (dxp * nax[0] + dyp * nax[1]) / sc       # local coordinates
+    rr = 22.0
+    ad = np.abs(lb) - (SR_HH - rr); sd_ = np.abs(la) - (SR_L - rr)
+    dist = (np.sqrt(np.maximum(ad, 0) ** 2 + np.maximum(sd_, 0) ** 2) + np.minimum(np.maximum(ad, sd_), 0) - rr) * sc
+    inside = np.clip(0.5 - dist, 0, 1)
+    # what's behind: his face, the features filled where the slide has left, soft as the slide comes near
+    base = A if j < 0 else A
+    if gone > 0:
+        q = 4; sm_ = cv2.resize(scr, (W // q, H // q), interpolation=cv2.INTER_AREA); keep = 1 - np.clip(sm_ * 1.5, 0, 1)
+        bq_ = cv2.resize(base, (W // q, H // q), interpolation=cv2.INTER_AREA)                   # normalized convolution: the
+        num = cv2.GaussianBlur(bq_ * keep[..., None], (0, 0), 14); den = cv2.GaussianBlur(keep, (0, 0), 14)[..., None]   # surroundings, smoothly
+        Af = cv2.resize(num / np.maximum(den, 1e-3), (W, H), interpolation=cv2.INTER_CUBIC)
+        base = base * (1 - scr[..., None] * gone) + Af * scr[..., None] * gone
+    outside = _blur(base, dof)
+    if inside.max() <= 0: return outside if j < 0 else B
+    bev = 20.0 * max(1.0, sc ** 0.5)
+    edge = np.clip(1 + dist / bev, 0, 1) * (dist <= 0)
+    pull = edge ** 2 * 40.0
+    nxb = np.where(ad > sd_, np.sign(lb), 0.0)
+    gx_ = nxb * nax[0] + (1 - np.abs(nxb)) * np.sign(la) * uax[0]
+    gy_ = nxb * nax[1] + (1 - np.abs(nxb)) * np.sign(la) * uax[1]
+    mx = lp[0] + (_GX - lp[0]) / M + gx_ * pull; my = lp[1] + (_GY - lp[1]) / M + gy_ * pull
+    glass = _remap(base, mx, my)
+    if cin > 0:
+        sa_n_for_b[sb["n"]] = sa["n"]; bx, by = sp_eye_b(sb); kk = smooth((j + 0.5) / post) if j >= 0 else 0.0
+        ox = bx + (lp[0] - bx) * kk; oy = by + (lp[1] - by) * kk
+        inb = cv2.remap(B, (ox + (_GX - lp[0]) + gx_ * pull).astype(np.float32), (oy + (_GY - lp[1]) + gy_ * pull).astype(np.float32),
+                        cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        glass = glass * (1 - cin) + inb * cin
+    tintc = np.array([0.94, 0.98, 0.93], np.float32)
+    glass = glass * (1 - edge[..., None] * 0.40) + glass * tintc * edge[..., None] * 0.40
+    hi = np.exp(-((dist + bev * 0.30) / (bev * 0.18)) ** 2) * (lb < 0) * 0.50 + np.exp(-((dist + bev * 0.55) / (bev * 0.25)) ** 2) * (lb > 0) * 0.16
+    glass = glass + hi[..., None] * np.array([0.96, 0.98, 1.0], np.float32)
+    # the slide's own smear and label ride on the glass (soft and fading as it comes to the lens)
+    ft = cv2.remap(tex, (la + SR_L).astype(np.float32), (lb + SR_HH + 30).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    fa = cv2.remap(alpha, (la + SR_L).astype(np.float32), (lb + SR_HH + 30).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    fade = 1.0 if j < 0 else 1 - smooth((j + 0.5) / (post * 0.5))
+    if sc > 1.6: ft = _blur(ft, (sc - 1.6) * 3.0)
+    fa = fa * inside * fade
+    glass = glass * (1 - fa[..., None]) + ft * fa[..., None]
+    o = outside * (1 - inside[..., None]) + glass * inside[..., None]
+    return np.clip(o, 0, 1)
+TR2["specimen"] = (specimen, SP_PRE, SP_POST)
+
+# ---- rev 1: new custom transitions (smooth, each its own idea) -------------------------------------------------------
+_NZ = {}
+def nz108(seed, sig, q=4):
+    """a smooth, wrapping noise texture at 1/q resolution, normalised to 0..1 (deterministic)."""
+    key = (seed, sig, q)
+    if key not in _NZ:
+        n = np.random.default_rng(seed).standard_normal((H // q, W // q)).astype(np.float32)
+        n = cv2.GaussianBlur(np.tile(n, (3, 3)), (0, 0), sig)[H // q:2 * (H // q), W // q:2 * (W // q)]   # wraps
+        _NZ[key] = (n - n.min()) / (n.max() - n.min() + 1e-6)
+    return _NZ[key]
+
+def _up(m): return cv2.resize(m, (W, H), interpolation=cv2.INTER_CUBIC)
+
+# HAZE: Miami heat. The picture shimmers in rising heat waves; the next shot condenses out of the shimmer.
+def haze108(A, B, j, f, sa, sb, pre=10, post=12):
+    q = (j + pre + 0.5) / (pre + post); amp = math.sin(math.pi * clamp(q, 0, 1)) ** 1.4; t = f / FPS
+    dx = (np.sin(_GY * 0.040 - t * 9.0) * 0.6 + np.sin(_GY * 0.019 + _GX * 0.011 - t * 6.0)) * 16 * amp
+    dy = np.sin(_GX * 0.028 + _GY * 0.010 + t * 7.0) * 7 * amp
+    w = smooth((q - 0.35) / 0.30)
+    a = _remap(A, _GX + dx, _GY + dy) if w < 1 else None; b = _remap(B, _GX - dx * 0.8, _GY + dy) if w > 0 else None
+    o = b if a is None else (a if b is None else a * (1 - w) + b * w)
+    o = _blur(o, 2.2 * amp) * (1 + 0.05 * amp)
+    return np.clip(o, 0, 1)
+TR2["haze108"] = (haze108, 10, 12)
+
+# DIFFUSION: "turn H2O to cognac". A cloud of cognac-red spreads through the frame like dye in water (turbulent, rising,
+# fine wisps at its front); the next shot is inside the cloud.
+DIFC = np.array([0.10, 0.30, 0.66], np.float32)          # BGR cognac / thinned blood
+def diffusion108(A, B, j, f, sa, sb, pre=16, post=18):
+    q = (j + pre + 0.5) / (pre + post); t = f / FPS
+    h4, w4 = H // 4, W // 4
+    yy, xx = np.mgrid[0:h4, 0:w4].astype(np.float32)
+    n1, n2 = nz108(1101, 18), nz108(1102, 6)
+    off = int(t * 60) % h4
+    adv1 = np.roll(n1, -off // 2, axis=0); adv2 = np.roll(n2, -off, axis=0)                   # it rises as it spreads
+    D = np.sqrt(((xx - w4 * 0.50) / w4) ** 2 + ((yy - h4 * 1.08) / h4 * 0.9) ** 2) * 1.20
+    D = D + (adv1 - 0.5) * 0.55 + (adv2 - 0.5) * 0.16
+    lvl = -0.05 + 1.85 * ein(q, 1.20)
+    m = np.clip((lvl - D) / 0.22, 0, 1); m = m * m * (3 - 2 * m)
+    band = np.exp(-((lvl - D - 0.06) / 0.16) ** 2) * (0.45 + 0.55 * adv2)
+    dens = np.clip((lvl - D) / 0.45, 0, 1) * (0.6 + 0.4 * adv1)                                 # the dye's body
+    gy, gx = np.gradient(cv2.GaussianBlur(D, (0, 0), 1.5))
+    M_, BD = _up(m), _up(band); GX_, GY_ = _up(gx * band), _up(gy * band)
+    a = _remap(A, _GX + GX_ * 260, _GY + GY_ * 260); b = _remap(B, _GX - GX_ * 160, _GY - GY_ * 160)
+    DN = _up(dens) * (1 - smooth((j + 0.5) / post) if j >= 0 else 1.0)
+    o = a * (1 - M_[..., None]) + b * M_[..., None]
+    tint = np.clip(BD * 0.45 + DN * 0.40, 0, 0.7)[..., None]
+    o = o * (1 - tint) + (o * 0.35 + DIFC * 0.75) * tint                                          # translucent cognac, not a line
+    return np.clip(o, 0, 1)
+TR2["diffusion108"] = (diffusion108, 16, 18)
+
+# DOUBLE VISION: the M99 takes hold. The picture doubles and sways apart, soft; the next shot arrives doubled and pulls
+# back into focus.
+def double108(A, B, j, f, sa, sb, pre=12, post=14):
+    k = smooth((j + pre + 0.5) / (pre * 0.7)) if j < 0 else 1 - smooth((j + 0.5) / post)
+    w = smooth((j + 3.5) / 7.0)
+    def dbl(img):
+        d = 78 * k; r = 1.6 * k * math.sin(f * 0.21)
+        M1 = cv2.getRotationMatrix2D((W / 2, H * 0.42), r, 1 + 0.03 * k); M1[0, 2] += d
+        M2 = cv2.getRotationMatrix2D((W / 2, H * 0.42), -r, 1 + 0.03 * k); M2[0, 2] -= d
+        a = cv2.warpAffine(img, M1, (W, H), borderMode=cv2.BORDER_REFLECT); b = cv2.warpAffine(img, M2, (W, H), borderMode=cv2.BORDER_REFLECT)
+        return _blur(a * 0.5 + b * 0.5, 3.5 * k)
+    o = dbl(A) if w <= 0 else (dbl(B) if w >= 1 else dbl(A) * (1 - w) + dbl(B) * w)
+    return np.clip(o * (1 - 0.10 * k), 0, 1)
+TR2["double108"] = (double108, 12, 14)
+
+# DEVELOPER: the darkroom. Red safelight falls over the frame and the tray's liquid ripples; the next shot develops out
+# of a pale print, gaining contrast, and the safelight lifts.
+SAFE = np.array([0.10, 0.16, 0.95], np.float32)
+def developer108(A, B, j, f, sa, sb, pre=8, post=18):
+    t = f / FPS; r = np.sqrt((_GX - W * 0.5) ** 2 + (_GY - H * 0.45) ** 2)
+    if j < 0:
+        u = (j + pre + 0.5) / pre; red = smooth(u); rip = smooth(u) * 8; img = A; dev = 1.0
+    else:
+        v = (j + 0.5) / post; red = 1 - smooth((v - 0.45) / 0.55); rip = 8 * (1 - smooth(v / 0.8)); img = B; dev = ein(clamp(v / 0.80, 0, 1), 1.3)
+    wave = np.sin(r * 0.045 - t * 14) * rip
+    img = _remap(img, _GX + wave * (_GX - W * 0.5) / (r + 1), _GY + wave * (_GY - H * 0.45) / (r + 1))
+    if j >= 0:
+        paper = np.float32(0.80)
+        img = paper + (np.clip((img - 0.5) * (0.55 + 0.45 * dev) + 0.5 - 0.06 * (1 - dev), 0, 1) - paper) * (0.50 + 0.50 * dev)
+    L = lum(img)[..., None]
+    o = img * (1 - 0.55 * red) + L * SAFE * 0.85 * red
+    return np.clip(o, 0, 1)
+TR2["developer108"] = (developer108, 8, 18)
+
+# LUMINOL: the forensic spray. The light drops (not to black), the blue-white glow of luminol blooms in splatter where the
+# blood was, and the next shot is in the glow; the glow spreads over the frame and fades to the picture.
+LUMC = np.array([1.00, 0.62, 0.22], np.float32)
+_LU = {}
+def lu_field():
+    """a wide luminol spray: hundreds of drops and smears across the frame (dense in clusters, thin between)."""
+    if "g" not in _LU:
+        rng = np.random.default_rng(1103); h4, w4 = H // 4, W // 4; g = np.zeros((h4, w4), np.float32)
+        cl = [(rng.uniform(0.05, 0.95) * w4, rng.uniform(0.05, 0.95) * h4) for _ in range(9)]
+        for k in range(420):
+            cx, cy = cl[k % 9]; sp = rng.uniform(10, 70)
+            x, y = int(cx + rng.normal(0, sp)), int(cy + rng.normal(0, sp * 1.3)); r_ = max(1, int(rng.exponential(2.2)))
+            cv2.circle(g, (x, y), r_, float(rng.uniform(0.5, 1.0)), -1, cv2.LINE_AA)
+            if rng.random() < 0.12: cv2.line(g, (x, y), (x + int(rng.normal(0, 4)), y + int(rng.uniform(8, 30))), 0.7, 1, cv2.LINE_AA)   # drips
+        g = cv2.GaussianBlur(g, (0, 0), 0.8) + cv2.GaussianBlur(g, (0, 0), 5) * 0.8
+        _LU["g"] = np.clip(g / np.percentile(g[g > 0.01], 95), 0, 1.3)
+    return _LU["g"]
+
+def luminol108(A, B, j, f, sa, sb, pre=10, post=18):
+    g = lu_field(); n = nz108(1104, 10)
+    if j < 0:
+        u = (j + pre + 0.5) / pre; dim = 0.45 * smooth(u); lvl = -0.1 + 0.55 * smooth((u - 0.3) / 0.7); img = A
+    else:
+        v = (j + 0.5) / post; dim = 0.45 * (1 - smooth((v - 0.35) / 0.65)); lvl = 0.40 + 0.9 * ein(v, 1.2); img = B
+    field = g * 0.85 + n * 0.30
+    fs = face_scr(sb, sb["f0"]); h4, w4 = H // 4, W // 4
+    if fs is not None:                                                                        # keep the glow off his face
+        yy, xx = np.mgrid[0:h4, 0:w4].astype(np.float32)
+        fm = np.clip((np.sqrt((xx - fs[0] / 4) ** 2 + ((yy - fs[1] / 4) * 0.8) ** 2) - fs[2] / 4 * 0.55) / (fs[2] / 4 * 0.25), 0, 1)
+        field = field * fm + (lvl > 0.9) * (1 - fm) * field
+    m = np.clip((field - (1.0 - lvl)) / 0.18, 0, 1); M_ = _up(m)
+    glow = _up(np.clip(m * (0.6 + 0.4 * g), 0, 1)) * (1 - smooth((j + 0.5) / post) if j >= 0 else 1.0)
+    L = lum(img)[..., None]
+    dark = img * (1 - dim) * (1 - 0.4 * dim) + L * np.array([0.30, 0.22, 0.18], np.float32) * dim * 0.4
+    lit = (B if j >= 0 else A) * (0.55 + 0.45 * (1 - glow[..., None])) + LUMC * L * glow[..., None] * 0.55
+    if j < 0: lit = dark + LUMC * glow[..., None] * 0.42
+    o = dark * (1 - M_[..., None]) + lit * M_[..., None]
+    o = o + glow[..., None] * LUMC * 0.40 * (1 - M_[..., None] * 0.4)                             # the glow itself, blue
+    return np.clip(o + cv2.GaussianBlur(glow, (0, 0), 18)[..., None] * LUMC * 0.14, 0, 1)
+TR2["luminol108"] = (luminol108, 10, 18)
+
+# FACE MATCH: one face becomes the next. The outgoing frame slides and scales so his face lands where the next shot's
+# face is, they dissolve through each other, and the next shot settles to its own framing.
+def facematch108(A, B, j, f, sa, sb, pre=8, post=10):
+    fa = face_scr(sa, sa["f1"] - 1); fb = face_scr(sb, sb["f0"])
+    if fa is None or fb is None: fa = fb = (W / 2, H * 0.42, 500.0)
+    s_ = clamp(fb[2] / max(fa[2], 1.0), 0.6, 1.7)
+    def warp(img, cx, cy, sc, tx, ty):
+        M = np.float32([[sc, 0, tx - cx * sc], [0, sc, ty - cy * sc]])
+        return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    if j < 0:
+        u = smooth((j + pre + 0.5) / pre)
+        a = warp(A, fa[0], fa[1], 1 + (s_ - 1) * u, fa[0] + (fb[0] - fa[0]) * u, fa[1] + (fb[1] - fa[1]) * u)
+        w = smooth((j + 3.5) / 7.0); o = a if w <= 0 else a * (1 - w) + B * w
+        return np.clip(_blur(o, 1.5 * math.sin(math.pi * u)), 0, 1)
+    v = smooth((j + 0.5) / post)
+    a = warp(A, fa[0], fa[1], s_, fb[0], fb[1])
+    w = smooth((j + 3.5) / 7.0); b = B
+    return np.clip(a * (1 - w) + b * w if w < 1 else b, 0, 1)
+TR2["facematch108"] = (facematch108, 8, 10)
+
+# SINK: "go get bagged and checked in". The water rises over the lens (a meniscus, refraction, caustic light); under the
+# surface the next shot comes up, and the water drains off it.
+WATC = np.array([0.62, 0.70, 0.52], np.float32)
+def sink108(A, B, j, f, sa, sb, pre=14, post=18):
+    t = f / FPS
+    if j < 0: yw = H * (1.05 - 1.15 * ein((j + pre + 0.5) / pre, 1.4)); img = A
+    else: yw = H * (-0.10 + 1.20 * ein((j + 0.5) / post, 1.6)); img = B
+    surf = yw + 22 * np.sin(_GX * 0.011 + t * 5.0) + 9 * np.sin(_GX * 0.031 - t * 7.0)
+    under = (_GY > surf) if j < 0 else (_GY < surf)                                              # rising / draining
+    d = (_GY - surf) if j < 0 else (surf - _GY)
+    m = np.clip(d / 6.0 + 0.5, 0, 1)
+    wob = np.sin(_GY * 0.02 + t * 6) * 10 + np.sin(_GX * 0.017 - t * 4) * 6
+    uw = _remap(img, _GX + wob, _GY + wob * 0.5)
+    ca = (np.abs(np.sin(_GX * 0.013 + np.sin(_GY * 0.011 + t * 3) * 2.0)) * np.abs(np.sin(_GY * 0.012 - t * 2.4))) ** 6
+    uw = uw * WATC + ca[..., None] * 0.10 + 0.02
+    men = np.exp(-(d / 5.0) ** 2) * 0.35
+    o = img * (1 - m[..., None]) + uw * m[..., None] + men[..., None] * np.array([0.9, 0.95, 1.0], np.float32)
+    return np.clip(o, 0, 1)
+TR2["sink108"] = (sink108, 14, 18)

@@ -804,6 +804,24 @@
    ],
    "evidence": "v7 body-bag zipper; v107 standard",
    "studio": "dexter"
+  },
+  "specimen": {
+   "verdict": "ok",
+   "tags": [
+    "physical",
+    "signature"
+   ],
+   "studio": "dexter",
+   "evidence": "v108 rev 1, the owner's own concept: 'I generally like the edit … merge that slide graphic/animation with one of the actual slides from that scene' → the real slide is lifted from his hands (its smear and label cut from the frame), not a CG slide with a bead",
+   "fix": "build it from a real prop in the shot, not a CG copy"
+  },
+  "surface": {
+   "verdict": "ok",
+   "tags": [
+    "physical"
+   ],
+   "studio": "dexter",
+   "evidence": "v108, the owner's own concept (kill-room plastic stretched over the calm shot, peeled diagonally to the darker one); 'I generally like the edit', no note on it"
   }
  },
  "families": {

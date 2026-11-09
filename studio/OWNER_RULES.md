@@ -24,9 +24,10 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 3. **Lean sound**: about 10–12 sound events in 20–23 s, layered only at the set pieces, small transitions silent, nothing on beat punches or letters; v107's 28 placed effects is the ceiling (cut in v12, v106, v13). **[plan]** > 16 warns, > 30 fails
 4. **No headspace**: no span over ~1 s without a cut, a transition or a designed beat (v104, v106). **[plan]** estimate **[qc]** motionqc
 5. **A concept from the song's own words or the character's history**, carried by one hero object through picture, text and loop; the hero is a **motif** (2–4 appearances), not every transition (v11, v13). **[plan]** families
-6. **Physical, kinetic transitions** from the character's world (rip, pour, spin, zipper, page, eye dive, shutter, emblem/prop), each a different idea; generic moves (whip, slam, impact, dolly, smear) are filler between them. 16–20 designed transitions in ~22 s. **[plan]** density, generic share, repeats
+6. **Physical, kinetic transitions** from the character's world (rip, pour, spin, zipper, page, eye dive, shutter, emblem/prop), each a different idea; generic moves (whip, slam, impact, dolly, smear) are filler between them. 16–20 designed transitions in ~22 s. **[plan]** density, generic share, repeats v108 rev 1 asked again for *"a lot more transition and unique graphics with custom animated transitions … smooth transitions and creative ones so the edit flows"*: replace generic connectors with custom, smooth ones.
 7. **Faces centred and whole**; spins and dives land on a centred, tracked face (v107). **[plan] [qc]**
 8. **The motion pass**: speed ramps with clean flow on hook shots, the beat camera (punch, kick, blur), smooth sub-pixel motion, no judder (v10, v106). **[qc]** judder
+   - *v108 exception (not a new rule):* the owner turned the beat camera off for DOOMSDAY (*"I generally like when on the beat the clip … jumps up and down with the beat, but in this edit I would like for you to remove that just for this edit"*): a slow, menacing edit may flow better without the punch. Keep it the default.
 9. **Restored, sharp sources**: `sr_prep`, zoom ≤ 1.10 on 720p, no SOFT shot on a hero moment (v105). **[plan]** zoom **[qc]** sharpness
 10. **A smooth ending**: the beat camera rests through the break, fewer and longer cuts (v107).
 

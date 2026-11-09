@@ -900,7 +900,6 @@ def main108():
     t0 = {s_["n"]: s_["t0"] for s_ in E.SHOTS}; F = E.FPS
     # ---- SURFACE: the sheet is pulled over (a soft swish), it stretches (the creak), it lets go (the snap) and peels
     ts = t0["release"]
-    place(fx, A2.whoosh(0.26, -24, 3801, True) * np.array([[1.0, 0.5]], np.float32), ts - 26 / F)
     place(fx, stereo(creak(0.40, -17, 3802), -0.2), ts - 21 / F)
     place(fx, stereo(snap(-13, 3803), 0.25), ts + 4 / F)
     # ---- the drop-out: one reverse swell into DOOMSDAY; SPECIMEN: the glass tick at entry, the bass impact on the reveal
@@ -915,9 +914,10 @@ def main108():
     tb = t0["brother"]
     place(fx, stereo(ice(0.30, -18, 3830), -0.3), tb - 0.27)
     # ---- the tomb: the roll (a low whoosh); the photo (a shutter); into his eye; the zipper on "bagged"
-    place(fx, A2.whoosh(0.20, -18, 3840, True), t0["tomb"] - 0.10)
+    place(fx, stereo(pour(0.55, -21, 3844)), t0["syringe"] - 0.30)                                  # rev 1: the water turns (diffusion)
     place(fx, A2.whoosh(0.22, -20, 3843, False) * np.array([[1.0, 0.6]], np.float32), t0["bagged"] - 0.12)   # the wiper
     # ---- the loop: the last drop falls toward the lens (a soft airy fall); frame 0 is quiet
+    place(fx, A2.whoosh(0.30, -19, 3845, False), t0["lookup"] - 0.20); place(fx, stereo(bloop(-22, 3846)), t0["lookup"] + 0.05)   # under the surface
     tl = th(68.6)
     place(fx, A2.whoosh(E.DUR - tl - 0.08, -17, 3850, True) * np.array([[0.7, 1.0]], np.float32), tl)
     fx = fx * db(10.0)                                                                         # rule 7: DOOM's master is loud

@@ -58,8 +58,8 @@ VO = []                                    # music only
 SET_PIECES = [("SURFACE", th(10.5), th(14)), ("SPECIMEN", th(21), th(23.5)), ("the ice truck", th(26.5), th(29.5)),
               ("the last drop", th(68.5), th(72))]
 SIGNATURE = ["specimen"]                    # the owner's concept: the slide crosses his face, the next shot inside the glass
-HERO = ["blood_drop108"]                    # the slide's drop: SPECIMEN and the loop (a motif, 2 appearances)
-HERO_TINS = ["specimen"]
+HERO = ["blood_drop108"]                    # the drop of blood: the loop (SPECIMEN now uses the real slide)
+HERO_TINS = []
 PLAN_ACCEPT = {"sig_time:specimen": "the owner specified SPECIMEN at 0.3-0.5 s; the real slide is on screen in his hands for 1.26 s before it"}
 VO_STEM = None; VO_STEM_T0 = 0.0
 
@@ -105,15 +105,16 @@ SU = dict(look="surface108")                # the mask: warm, bleached pastel Mi
 UN = dict(look="under108")                  # under the surface: cold steel and teal, only blood red survives
 def V(e0, e1, a, b): return dict(tmap=vel(e0, e1, a, b, lo=0.55, hi=1.9), lin=True, interp="flow")
 # ---- "...SAVE ME THE TROUBLE, YO / WATCH YOUR OWN BACK, CAME IN AND GO OUT ALONE, BLACK": the mask (frame 0 is the loop's landing)
-shot("mask", "s1", 0, 4, 406.00, 407.30, z=[(0, 1.00), (1, 1.04)], interp="flow", **SU)   # the sunset smile
-shot("palms", "s1", 4, 8, 64.30, 65.80, z=[(0, 1.02), (1, 1.06)], tin="light_sweep108", interp="flow", **SU)
-shot("tension", "s1", 8, 12, 376.62, 377.92, z=[(0, 1.00), (1, 1.05)], tin="whip", interp="flow", **SU)
+shot("mask", "s1", 0, 3, 406.00, 407.10, z=[(0, 1.00), (1, 1.04)], interp="flow", **SU)   # the sunset smile
+shot("palms", "s1", 3, 6, 64.30, 65.40, z=[(0, 1.02), (1, 1.06)], tin="light_sweep108", interp="flow", **SU)
+shot("day2", "s1", 6, 9, 168.00, 169.00, z=[(0, 1.00), (1, 1.04)], tin="haze108", interp="flow", **SU)       # rev 1: the Miami heat
+shot("tension", "s1", 9, 12, 376.95, 377.92, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", **SU)
 # ---- "STAY IN THE ZONE": SURFACE, the plastic stretches over the calm picture and peels away to the darker Dexter
 shot("release", "s4", 12, 16, 117.50, 118.90, z=[(0, 1.06), (1, 1.00)], tin="surface", interp="flow", **UN)
-# ---- "TURN H2O TO COGNAC": the drums drop out; the M99; he holds the slide to the light
-shot("syringe", "s1", 16, 18, 142.40, 143.20, z=[(0, 1.00), (1, 1.04)], tin="impact", interp="flow", **UN)   # the M99
-shot("enter", "s1", 18, 22, 262.40, 263.80, z=[(0, 1.00), (1, 1.06)], tin="whip", interp="flow", **UN)
-# ---- "ON DOOMSDAY": SPECIMEN, the slide crosses his face, the next shot is inside the glass, then fills the frame
+# ---- "TURN H2O TO COGNAC": the drums drop out; the water turns (diffusion); the M99 (double vision); the slide to the light
+shot("syringe", "s1", 16, 18, 142.40, 143.20, z=[(0, 1.00), (1, 1.04)], tin="diffusion108", interp="flow", **UN)   # the M99
+shot("enter", "s1", 18, 22, 262.40, 263.80, z=[(0, 1.00), (1, 1.06)], tin="double108", interp="flow", **UN)
+# ---- "ON DOOMSDAY": SPECIMEN, the real slide lifts from his hands, crosses his eye, the next shot inside it, fills the lens
 shot("reveal", "s1", 22, 25, 152.20, 153.20, z=[(0, 1.04), (1, 1.00)], tin="specimen", interp="flow", **UN)
 # ---- "EVER SINCE THE WOMB": the shipping container he was born in
 shot("womb", "s1", 25, 28, 371.60, 372.70, z=[(0, 1.06), (1, 1.10)], tin="molasses108", interp="flow", **UN)
@@ -121,21 +122,23 @@ shot("womb", "s1", 25, 28, 371.60, 372.70, z=[(0, 1.06), (1, 1.10)], tin="molass
 shot("brother", "s1", 28, 32, 390.45, 391.95, z=[(0, 1.00), (1, 1.04)], tin="frost108", interp="flow", **UN)
 # ---- "THAT'S WHAT MY TOMB SAY": lying face up
 shot("tomb", "s4", 32, 36, 124.50, 125.90, z=[(0, 1.00), (1, 1.05)], tin="roll", interp="flow", **UN)
-# ---- "RIGHT ABOVE MY GOVERNMENT, DUMILE NAME": Miami Metro, the badge; the grin by the squad car
+# ---- "RIGHT ABOVE MY GOVERNMENT, DUMILE NAME": Miami Metro, the badge; luminol onto the grin; the car
 shot("badge", "p7", 36, 40, 14.60, 16.10, z=[(0, 1.00), (1, 1.04)], tin="polaroid", interp="flow", **UN)
-shot("name", "s4", 40, 44, 46.95, 48.40, z=[(0, 1.00), (1, 1.05)], tin="slam", interp="flow", **UN)
+shot("name", "s4", 40, 42, 46.95, 47.65, z=[(0, 1.00), (1, 1.04)], tin="luminol108", interp="flow", **UN)
+shot("car", "s4", 42, 44, 88.20, 88.90, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **UN)
 # ---- "EITHER UNMARKED OR ENGRAVED": into the woods with the axe
 shot("unmarked", "s4", 44, 48, 136.80, 138.20, z=[(0, 1.00), (1, 1.05)], tin="rainfocus", interp="flow", **UN)   # the woods with the axe (the Trinity hike): an unmarked grave
-# ---- "HEY, WHO'S TO SAY?": he turns and smirks at the lens
-shot("whos", "s1", 48, 52, 283.32, 284.45, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **UN)
-# ---- "I WROTE THIS ONE IN B-C-D-C-O SECTION": into his eye, out at the red desk; the light table
-shot("wrote", "s1", 52, 56, 78.20, 79.70, z=[(0, 1.00), (1, 1.05)], interp="flow", **UN)   # rev: a clean downbeat cut with the punch (the eye dive went black)
-shot("section", "s4", 56, 59, 145.82, 146.70, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 640), interp="blend", **UN)
-# ---- "IF YOU DON'T BELIEVE ME, GO GET BAGGED AND CHECKED IN": the night drive; the bags on the boat; the windshield wiper wipes the drive away
+# ---- "HEY, WHO'S TO SAY?": his face becomes the smirk at the lens
+shot("whos", "s1", 48, 52, 283.32, 284.45, z=[(0, 1.00), (1, 1.03)], tin="facematch108", interp="flow", **UN)
+# ---- "I WROTE THIS ONE IN B-C-D-C-O SECTION": the darkroom develops the red desk; the slide; the light table
+shot("wrote", "s1", 52, 55, 78.20, 79.30, z=[(0, 1.00), (1, 1.05)], tin="developer108", interp="flow", **UN)
+shot("slides2", "s1", 55, 57, 45.60, 46.30, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **UN)
+shot("section", "s4", 57, 59, 145.82, 146.50, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 640), interp="blend", **UN)
+# ---- "IF YOU DON'T BELIEVE ME, GO GET BAGGED AND CHECKED IN": the night drive; the wiper onto the bags; under the surface
 shot("believe", "s1", 59, 64, 316.00, 317.70, z=[(0, 1.00), (1, 1.05)], tin="smear", interp="flow", **UN)
 shot("bagged", "p5", 64, 68, 51.75, 53.30, z=[(0, 1.00), (1, 1.04)], tin="wiper", interp="flow", **UN)
-# ---- the loop: he looks up; the last drop falls toward the lens with frame 0 inside it (the camera rests)
-shot("lookup", "s4", 68, 72, 230.75, 232.15, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", tout="last_drop", **UN)
+# ---- the loop: under the surface; he looks up; the last drop falls toward the lens with frame 0 inside it
+shot("lookup", "s4", 68, 72, 230.75, 232.15, z=[(0, 1.00), (1, 1.03)], tin="sink108", interp="flow", tout="last_drop", **UN)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
