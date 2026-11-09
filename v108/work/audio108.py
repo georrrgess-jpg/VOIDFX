@@ -914,6 +914,7 @@ def main108():
     tb = t0["brother"]
     place(fx, stereo(ice(0.30, -18, 3830), -0.3), tb - 0.27)
     # ---- the tomb: the roll (a low whoosh); the photo (a shutter); into his eye; the zipper on "bagged"
+    place(fx, leaves(0.45, -19, 3847), t0["day2"] - 0.24)                                            # rev 2: the fronds sweep past
     place(fx, stereo(pour(0.55, -21, 3844)), t0["syringe"] - 0.30)                                  # rev 1: the water turns (diffusion)
     place(fx, A2.whoosh(0.22, -20, 3843, False) * np.array([[1.0, 0.6]], np.float32), t0["bagged"] - 0.12)   # the wiper
     # ---- the loop: the last drop falls toward the lens (a soft airy fall); frame 0 is quiet

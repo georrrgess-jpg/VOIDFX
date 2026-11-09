@@ -517,12 +517,13 @@
    "studio": "dexter"
   },
   "rainfocus": {
-   "verdict": "liked",
+   "verdict": "rejected",
    "tags": [
     "physical"
    ],
-   "evidence": "v8 liked 'rain focus pull'",
-   "studio": "dexter"
+   "evidence": "v8 liked 'rain focus pull'; v108 rev 2: 'remove the water droplet filter at 14 seconds'",
+   "studio": "dexter",
+   "fix": "a smooth push or a motivated physical transition; no droplets on the lens"
   },
   "ramp": {
    "verdict": "liked",
@@ -822,6 +823,15 @@
    ],
    "studio": "dexter",
    "evidence": "v108, the owner's own concept (kill-room plastic stretched over the calm shot, peeled diagonally to the darker one); 'I generally like the edit', no note on it"
+  },
+  "haze108": {
+   "verdict": "rejected",
+   "tags": [
+    "generic"
+   ],
+   "studio": "dexter",
+   "evidence": "v108 rev 2: 'I also do not like the first transition that's kind of like the squiggle, swirl, weird animation'",
+   "fix": "a physical foreground pass (v108 fronds108: sunlit palm fronds sweep across the lens)"
   }
  },
  "families": {

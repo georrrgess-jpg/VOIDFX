@@ -113,3 +113,14 @@ animated transitions … a lot of smooth transitions and creative ones so the ed
   below the collar; the 3 s shot is a calm day shot from another scene (it looked like the container scene); the palms
   shot starts after the passer-by; the wiper is slower (its one-frame jump is gone); skin no longer turns red in three
   shots. QC: SHIP, 11 pops all cuts, no dead spans, no judder.
+
+## Revision 2 (the owner's notes)
+*"I'd like for you to remove the water droplet filter at 14 seconds … I also do not like the first transition that's kind
+of like the squiggle, swirl, weird animation. I like to replace it with a creative, unique transition."*
+- **14 s:** the rain-on-the-lens transition into the woods is gone; a smooth push instead. `rainfocus` is now rejected in
+  `studio/transitions.json`.
+- **The heat haze at 1.9 s** is replaced by **FRONDS**: sunlit palm fronds (backlit, out of focus, three depths with
+  parallax and motion blur) sweep across the lens as we pass under the palms he stands beneath; the cut is behind the
+  nearest frond, with a soft leaf rustle. `haze108` is rejected in the registry.
+- Note for the render-speed work: registering a new transition in `TR2` makes change tracking re-render every frame
+  (`render` reads `TR2`), so a one-transition swap still costs a full render.

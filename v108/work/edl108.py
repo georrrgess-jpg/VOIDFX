@@ -107,7 +107,7 @@ def V(e0, e1, a, b): return dict(tmap=vel(e0, e1, a, b, lo=0.55, hi=1.9), lin=Tr
 # ---- "...SAVE ME THE TROUBLE, YO / WATCH YOUR OWN BACK, CAME IN AND GO OUT ALONE, BLACK": the mask (frame 0 is the loop's landing)
 shot("mask", "s1", 0, 3, 406.00, 407.10, z=[(0, 1.00), (1, 1.04)], interp="flow", **SU)   # the sunset smile
 shot("palms", "s1", 3, 6, 65.00, 66.10, z=[(0, 1.02), (1, 1.06)], tin="light_sweep108", interp="flow", **SU)
-shot("day2", "s1", 6, 9, 168.00, 169.00, z=[(0, 1.00), (1, 1.04)], tin="haze108", interp="flow", **SU)       # rev 1: the Miami heat
+shot("day2", "s1", 6, 9, 168.00, 169.00, z=[(0, 1.00), (1, 1.04)], tin="fronds108", interp="flow", **SU)     # rev 2: palm fronds sweep across the lens (was the heat haze)
 shot("tension", "s4", 9, 12, 7.70, 8.70, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", **SU)   # rev 1b: a calm day shot from another scene
 # ---- "STAY IN THE ZONE": SURFACE, the plastic stretches over the calm picture and peels away to the darker Dexter
 shot("release", "s4", 12, 16, 117.50, 118.90, z=[(0, 1.06), (1, 1.00)], tin="surface", interp="flow", **UN)
@@ -127,7 +127,7 @@ shot("badge", "p7", 36, 40, 14.60, 16.10, z=[(0, 1.00), (1, 1.04)], tin="polaroi
 shot("name", "s4", 40, 42, 46.95, 47.65, z=[(0, 1.00), (1, 1.04)], tin="luminol108", interp="flow", redthr=0.20, **UN)
 shot("car", "s4", 42, 44, 88.20, 88.90, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", redthr=0.20, **UN)
 # ---- "EITHER UNMARKED OR ENGRAVED": into the woods with the axe
-shot("unmarked", "s4", 44, 48, 136.80, 138.20, z=[(0, 1.00), (1, 1.05)], tin="rainfocus", interp="flow", **UN)   # the woods with the axe (the Trinity hike): an unmarked grave
+shot("unmarked", "s4", 44, 48, 136.80, 138.20, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", **UN)   # rev 2: a smooth push (no rain on the lens); the woods with the axe (the Trinity hike): an unmarked grave
 # ---- "HEY, WHO'S TO SAY?": his face becomes the smirk at the lens
 shot("whos", "s1", 48, 52, 283.32, 284.45, z=[(0, 1.00), (1, 1.03)], tin="facematch108", interp="flow", **UN)
 # ---- "I WROTE THIS ONE IN B-C-D-C-O SECTION": the darkroom develops the red desk; the slide; the light table

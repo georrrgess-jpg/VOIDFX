@@ -14,14 +14,14 @@
    "buried": true
   },
   {
-   "name": "haze108",
+   "name": "fronds108",
    "kind": "transition",
    "at": 1.89,
    "t0": 1.59,
    "t1": 2.34,
    "music_db": -12.2,
-   "fx_peak_db": -46.4,
-   "fx_minus_music": -34.2,
+   "fx_peak_db": -28.0,
+   "fx_minus_music": -15.8,
    "buried": true
   },
   {
@@ -179,7 +179,7 @@
    "buried": true
   },
   {
-   "name": "rainfocus",
+   "name": "dolly",
    "kind": "transition",
    "at": 13.84,
    "t0": 13.54,

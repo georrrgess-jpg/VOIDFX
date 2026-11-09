@@ -1920,3 +1920,60 @@ TR2["sink108"] = (sink108, 14, 18)
 def wiper108(A, B, j, f, sa, sb):
     return wiper(A, B, j, f, sa, sb, pre=12, post=16)
 TR2["wiper108"] = (wiper108, 12, 16)
+
+# ============================================================================ v108 rev 2 (owner notes)
+# The heat haze ("the squiggle, swirl, weird animation") is replaced by FRONDS: sunlit palm fronds sweep across the lens in
+# the foreground (we pass under the palms he stands beneath), three depths with parallax and motion blur; the cut is
+# behind the nearest frond. The rain-on-the-lens transition at 14 s is gone (a smooth push instead).
+_FD = {}
+def fd_frond(seed, length, lw, curve):
+    """one palm frond as an rgba sprite (its own pixel space): a curved rachis with tapered leaflets on both sides, lit by
+    the sun behind it (translucent yellow-green edges, darker veins)."""
+    key = (seed, length, lw, curve)
+    if key not in _FD:
+        rng = np.random.default_rng(seed); Wd, Hd = int(length * 1.15), int(length * 0.75)
+        a = np.zeros((Hd, Wd), np.float32); shade = np.zeros((Hd, Wd), np.float32)
+        n = 34; pts = []
+        for i in range(n + 1):
+            u = i / n; x = Wd * 0.05 + u * length; y = Hd * 0.5 + curve * length * (u - 0.5) ** 2 - curve * length * 0.25
+            pts.append((x, y))
+        for i in range(1, n):
+            (x, y), (x2, y2) = pts[i], pts[i + 1]; ang = math.atan2(y2 - y, x2 - x)
+            for side in (-1, 1):
+                L = lw * (0.55 + 0.45 * math.sin(math.pi * i / n)) * rng.uniform(0.85, 1.1)
+                la = ang + side * math.radians(rng.uniform(48, 62)) + side * 0.25 * i / n
+                ex, ey = x + math.cos(la) * L, y + math.sin(la) * L
+                mx, my = (x + ex) / 2, (y + ey) / 2; ln = L / 2; wd = max(3, L * 0.075)
+                cv2.ellipse(a, (int(mx), int(my)), (int(ln), int(wd)), math.degrees(la), 0, 360, 1.0, -1, cv2.LINE_AA)
+                cv2.line(shade, (int(x), int(y)), (int(ex), int(ey)), 1.0, max(1, int(wd * 0.25)), cv2.LINE_AA)
+        cv2.polylines(a, [np.int32(pts)], False, 1.0, max(3, int(lw * 0.05)), cv2.LINE_AA)
+        a = cv2.GaussianBlur(a, (0, 0), 0.8)
+        rim = np.clip(a - cv2.erode(a, np.ones((5, 5), np.uint8)), 0, 1)                        # backlit edges
+        col = np.empty((Hd, Wd, 3), np.float32)
+        base = np.array([0.05, 0.16, 0.10], np.float32); lit = np.array([0.20, 0.62, 0.55], np.float32)   # backlit: dark leaves, glowing edges
+        g = np.linspace(0, 1, Wd, dtype=np.float32)[None, :] * 0.6 + 0.2
+        for c in range(3): col[..., c] = base[c] + (lit[c] - base[c]) * (g * 0.35 + rim * 0.9) - shade * 0.03
+        _FD[key] = (np.clip(col, 0, 1), np.clip(a, 0, 1))
+    return _FD[key]
+
+def fronds108(A, B, j, f, sa, sb, pre=14, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    w = smooth((j + 3.5) / 7.0)                                                               # the shots dissolve behind the leaves
+    o = A * (1 - w) + B * w if 0 < w < 1 else (A if j < 0 else B).copy()
+    for k, (seed, length, lw, curve, depth, y0, rot) in enumerate(((1201, 1500, 300, 0.25, 0.55, 0.30, -14),
+                                                                  (1202, 2300, 470, 0.18, 0.80, 0.62, 10),
+                                                                  (1203, 3200, 680, 0.12, 1.00, 0.48, -6))):
+        col, a = fd_frond(seed, length, lw, curve)
+        sc = 0.55 + 0.45 * depth; sw = int(col.shape[1] * sc)
+        x = W * 0.5 + (0.5 - q) * (W + sw) * (0.9 + 0.5 * depth)                                   # each frond is centred on the cut; near ones faster
+        M = cv2.getRotationMatrix2D((col.shape[1] / 2, col.shape[0] / 2), rot, sc)
+        M[0, 2] += x - col.shape[1] / 2 + sw / 2 * 0; M[1, 2] += H * y0 - col.shape[0] / 2
+        cw = cv2.warpAffine(col, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0))
+        aw = cv2.warpAffine(a, M, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
+        blur = int(6 + 40 * depth)                                                                    # motion blur along the sweep
+        kx = np.ones((1, blur), np.float32) / blur
+        cw = cv2.filter2D(cw, -1, kx); aw = cv2.filter2D(aw, -1, kx)
+        dof = 1.5 + 11.0 * depth ** 2; cw = _blur(cw, dof); aw = _blur(aw, dof)                       # the near frond is far out of focus
+        o = o * (1 - aw[..., None]) + cw * aw[..., None]
+    return np.clip(o, 0, 1)
+TR2["fronds108"] = (fronds108, 14, 14)
