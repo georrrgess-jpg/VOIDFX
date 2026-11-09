@@ -155,8 +155,122 @@
    "step": "plan",
    "s": 9.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 19:56:43",
+   "round": 1,
+   "step": "auto",
+   "s": 71.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 19:58:57",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 19:59:08",
+   "round": 1,
+   "step": "plan",
+   "s": 11.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 19:59:26",
+   "round": 1,
+   "step": "sheet:fx1:40,47,51,54,56,176,179,182,184,186,189,192",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 19:59:34",
+   "round": 1,
+   "step": "sheet:fx2:596,600,606,612,640,645,648,652,825,834,840,845,850",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 19:59:39",
+   "round": 1,
+   "step": "sheet:fx3:1205,1215,1225,1235,1243,1250,1255",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:00:08",
+   "round": 1,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 20:00:26",
+   "round": 1,
+   "step": "sheet:fx3:1200,1212,1222,1230,1236,1241,1246,1252",
+   "s": 18.0,
+   "rc": 0
   }
  ],
  "notes": [],
- "catches": []
+ "catches": [
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "the first fan was a drawn disc with blades parked on the frame: rebuilt as the light behind him through turning blades, a surge cut on the drop"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "the first fold was a solid black void (the flap's back faces were culled): the fold dropped, the darkroom developer onto the red screen"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "other",
+   "text": "the zipper, the shutter and the eye dive fill the frame with black (the owner's black-occluder rule): double vision, a light sweep, the flicker"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "other",
+   "text": "the impact's negative frame twice in a slowed, dreamy edit: LIGHTS ON on 'I'm' and an after-image"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "seam",
+   "text": "the headlight dissolve snapped back to the bed for one frame before the cut (w = 1 returned A): the dissolve is centred on the cut"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "the barrel's rifling read as a gold fan icon at small size: gun-metal, the rifling only once the bore is big"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "other",
+   "text": "the spatter mask took the blood on his suit and the room came in as a plain dissolve: the walls only, the room seeps out from the blood"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "other",
+   "text": "the fan room's first frames are ghosted in the pack (259.6-259.8 s): the shot starts at 260.75 and blends"
+  },
+  {
+   "t": "2026-11-09 20:00:44",
+   "round": 1,
+   "cat": "other",
+   "text": "the first loop cards floated in a black void: the blood room drops away, frame 0's own light behind, the bed rises with melting edges"
+  }
+ ],
+ "round_starts": {
+  "1": "2026-11-09 20:00:44"
+ }
 }

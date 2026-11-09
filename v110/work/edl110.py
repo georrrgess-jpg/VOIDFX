@@ -43,7 +43,7 @@ SET_PIECES = [("POWER FAILURE", th(10), th(21)), ("THROUGH THE FAN", th(24), th(
               ("THE SPATTER", th(66), th(69)), ("THE FALL (loop)", th(75), th(79))]
 SIGNATURE = ["fan110"]
 HERO = ["power_light110"]                  # the failing / surging light: the title, the brownout, the fan
-HERO_TINS = ["brownout110", "fan110"]
+HERO_TINS = ["lightson110", "brownout110", "fan110"]
 PLAN_ACCEPT = {}
 VO_STEM = None; VO_STEM_T0 = 0.0
 
@@ -92,25 +92,25 @@ shot("yard", "dmx", 3, 6, 254.20, 255.20, z=[(0, 1.00), (1, 1.03)], tin="headlig
 shot("marina", "p1", 6, 8, 123.20, 124.00, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
 shot("doorway", "ds2b", 8, 10, 393.10, 393.80, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)
 # ---- POWER FAILURE (e10-e21): "I'm losing power"; the light above him fails, the bass goes
-shot("light", "p1", 10, 17, 147.00, 148.20, z=[(0, 1.00), (1, 1.04)], tin="impact", interp="flow", **SP)       # the title, the failing light
+shot("light", "p1", 10, 17, 147.00, 148.20, z=[(0, 1.00), (1, 1.04)], tin="lightson110", interp="flow", **SP)   # the tube blinks on with "I'm"; the title
 shot("fog", "ds2b", 17, 21, 140.30, 141.70, z=[(0, 1.02), (1, 1.00)], tin="brownout110", interp="flow", **SP)
 shot("asleep", "s4", 21, 24, 143.60, 144.90, z=[(0, 1.00), (1, 1.04)], tin="fogwipe110", interp="flow", **SP)  # his eyes close
 shot("fan", "ds2b", 24, 30, 260.75, 261.70, z=[(0, 1.00), (1, 1.06)], tin="nodoff110", seg=True, interp="blend", **SP)   # the fan flickers: no flow (v15); the earlier frames are ghosted in the pack
 # ---- the hunt (e30-e68): the drop dives through the fan into the kill room
 shot("killroom", "ds2a", 30, 33, 223.90, 225.10, z=[(0, 1.04), (1, 1.00)], tin="fan110", interp="flow", **SP)
 shot("victim", "s1", 33, 35, 390.50, 391.40, z=[(0, 1.00), (1, 1.03)], tin="facematch108", interp="flow", **SP)
-shot("plastic", "ds2b", 35, 37, 159.30, 160.30, z=[(0, 1.00), (1, 1.03)], tin="zipper", interp="flow", **SP)
-shot("green", "s1", 37, 39, 152.20, 153.00, z=[(0, 1.00), (1, 1.03)], tin="shutter", interp="flow", **SP)
-shot("drive", "s1", 39, 41, 316.00, 316.90, z=[(0, 1.00), (1, 1.03)], tin="light_sweep", interp="flow", **SP)
+shot("plastic", "ds2b", 35, 37, 159.30, 160.30, z=[(0, 1.00), (1, 1.03)], tin="double108", interp="flow", **SP)   # drugged: double vision
+shot("green", "s1", 37, 39, 152.20, 153.00, z=[(0, 1.00), (1, 1.03)], tin="light_sweep108", interp="flow", **SP)
+shot("drive", "s1", 39, 41, 316.00, 316.90, z=[(0, 1.00), (1, 1.03)], tin="wiper108", interp="flow", **SP)   # the car: the wiper
 shot("dark", "s4", 41, 43, 117.50, 118.40, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)
 shot("aim", "ds2b", 43, 46, 369.40, 370.12, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)       # he aims down the lens: THE BARREL
 shot("warm", "dmx", 46, 48, 159.30, 160.20, z=[(0, 1.00), (1, 1.03)], tin="barrel110", interp="flow", **SP)
-shot("interior", "ds2b", 48, 50, 166.90, 167.80, z=[(0, 1.00), (1, 1.03)], tin="eye_dive", interp="flow", **SP)
+shot("interior", "ds2b", 48, 50, 166.90, 167.80, z=[(0, 1.00), (1, 1.03)], tin="flicker109", interp="flow", **SP)   # the power fails again
 shot("lamp", "ds2b", 50, 53, 290.90, 291.90, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
-shot("night", "ds2a", 53, 56, 188.00, 189.30, z=[(0, 1.00), (1, 1.03)], tin="impact", interp="flow", **SP)      # THE FOLD
+shot("night", "ds2a", 53, 56, 188.00, 189.30, z=[(0, 1.00), (1, 1.03)], tin="afterimage109", interp="flow", **SP)   # the sleepwalker leaves an after-image
 shot("redscreen", "s1", 56, 58, 81.00, 81.90, z=[(0, 1.00), (1, 1.03)], tin="developer108", interp="flow", **SP)   # the red screen develops like a darkroom print
-shot("cabin", "p1", 58, 60, 176.60, 177.50, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
-shot("closeup", "s4", 60, 62, 161.10, 161.90, z=[(0, 1.00), (1, 1.03)], tin="smear", interp="flow", **SP)
+shot("cabin", "p1", 58, 60, 176.60, 177.50, z=[(0, 1.00), (1, 1.03)], tin="slices", interp="flow", **SP)
+shot("closeup", "s4", 60, 62, 161.10, 161.90, z=[(0, 1.00), (1, 1.03)], tin="streetlight109", interp="flow", **SP)
 shot("anguish", "p1", 62, 68, 164.00, 164.90, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)      # THE SPATTER
 # ---- "Mommy?" (e68-e79): the blood room; the loop falls into bed
 shot("bloodroom", "dmx", 68, 74, 105.70, 107.30, z=[(0, 1.00), (1, 1.04)], tin="spatter110", interp="flow", **SP)

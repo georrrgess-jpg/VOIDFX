@@ -2976,8 +2976,8 @@ def headlight110(A, B, j, f, sa, sb, pre=30, post=16):
     c = p0 + (p1 - p0) * (0.06 + 0.88 * q)
     m = _pane(c[0], c[1], 0.66 * W, 0.30 * H, ang) + 0.55 * _pane(c[0] - 0.16 * W, c[1] + 0.05 * H, 0.50 * W, 0.24 * H, ang)
     m = np.clip(m, 0, 1.3)
-    w = smooth((q - 0.44) / 0.16); img = A * (1 - w) + B * w if 0 < w < 1 else (A if j < 0 else B)
-    o = img * (1 + 0.95 * m[..., None]) + m[..., None] * AMB110 * 0.07
+    w = smooth((j + 6) / 12.0); img = A * (1 - w) + B * w
+    o = img * (1 + 0.80 * m[..., None]) + m[..., None] * AMB110 * 0.06
     return np.clip(o, 0, 1)
 TR2["headlight110"] = (headlight110, 30, 16)
 
@@ -3003,7 +3003,7 @@ def fogwipe110(A, B, j, f, sa, sb, pre=20, post=22):
     n1 = _up(nz108(1101, 12)); n2 = _up(nz108(1102, 4))
     sh = int(f * 6) % W; n = np.roll(n1, -sh, axis=1) * 0.65 + np.roll(n2, -int(f * 11) % W, axis=1) * 0.35
     xf = -350 + (W + 700) * smooth(q / 0.52)
-    dens = np.clip((xf - (W - _GX) + (n - 0.5) * 520) / 320.0, 0, 1) * 0.95
+    dens = np.clip((xf - (W - _GX) + (n - 0.5) * 520) / 320.0, 0, 1) * 0.85
     dens = dens * (1 - smooth((q - 0.50) / 0.50))
     img = A if j < 0 else B
     soft = cv2.resize(cv2.GaussianBlur(cv2.resize(img, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 5), (W, H))
@@ -3113,13 +3113,14 @@ def barrel110(A, B, j, f, sa, sb, pre=40, post=18):
     land = 0.5 + 0.5 * np.cos(6 * (th + 0.62 * zt))                                   # six lands and grooves, twisting
     spec = np.exp(-((np.mod(th - 0.9 + np.pi, 2 * np.pi) - np.pi) / 0.55) ** 2)      # the light from the far end catches one side
     depth = np.exp(-0.42 * (zt - 3.2 * qd))
-    wall = ((0.10 + 0.50 * land ** 4) * depth + 0.22 * spec * depth * land)[..., None] * np.array([0.80, 0.86, 0.96], np.float32)
+    rif = smooth((rB - 70) / 160.0)                                                  # the rifling reads only once the bore is big
+    wall = ((0.06 + (0.40 * land ** 4 + 0.20 * spec * land) * rif) * depth)[..., None] * np.array([0.64, 0.62, 0.60], np.float32)
     ef = 0.05 + 0.95 * smooth((qd - 0.30) / 0.70)
     re = rB * ef
     exitm = np.clip((re - d) / max(2.0, re * 0.06), 0, 1)
     glowx = np.exp(-((d - re) / max(4.0, re * 0.25)) ** 2) * (d > re) * inside
     Bz = _zoom_about(B, 1 + 0.25 * (1 - qd), mx, my) if qd < 0.999 else B
-    tun = wall + glowx[..., None] * AMB110 * 0.35
+    tun = wall + glowx[..., None] * np.array([0.75, 0.80, 0.85], np.float32) * 0.22
     tun = tun * (1 - exitm[..., None]) + Bz * exitm[..., None]
     o = Az * (1 - inside[..., None]) + tun * inside[..., None]
     end = smooth((q - 0.90) / 0.08)
@@ -3163,36 +3164,44 @@ TR2["fold110"] = (fold110, 36, 18)
 # spatter on the blood room's walls appears over him along the arc of a swing (cast-off), wet and dark, kept off his
 # face; then the room fills in around it.
 _SPT = {}
+def smooth01(x):
+    x = np.clip(x, 0, 1); return x * x * (3 - 2 * x)
+
 def _spatter_mask(sb):
     if sb["n"] not in _SPT:
         Bf = base108(sb, sb["f0"])[0]
         Bc, Gc, Rc = Bf[..., 0], Bf[..., 1], Bf[..., 2]
         m = np.clip((Rc - 1.25 * np.maximum(Gc, Bc) - 0.04) * 4.0, 0, 1)
-        m = cv2.GaussianBlur(cv2.dilate(m, np.ones((3, 3), np.uint8)), (0, 0), 1.2)
-        _SPT[sb["n"]] = m.astype(np.float32)
+        walls = np.maximum((_GX < 0.38 * W).astype(np.float32), 1 - smooth01((_GY - 0.36 * H) / (0.10 * H)))   # the walls, not his suit
+        m = cv2.GaussianBlur(cv2.dilate(m * walls, np.ones((5, 5), np.uint8)), (0, 0), 1.2)
+        seeds = (m > 0.3).astype(np.uint8)
+        D = cv2.distanceTransform(255 - seeds * 255, cv2.DIST_L2, 5).astype(np.float32) + 90 * (_up(nz108(1120, 6)) - 0.5)
+        _SPT[sb["n"]] = (m.astype(np.float32), D)
     return _SPT[sb["n"]]
 
 def spatter110(A, B, j, f, sa, sb, pre=40, post=22):
+    """the blood room's own wall spatter lands over him along the arc of a swing (cast-off), then the room seeps in
+    outward from the blood."""
     q = (j + pre + 0.5) / (pre + post)
-    m = _spatter_mask(sb)
+    m, D = _spatter_mask(sb)
     px, py = 1.20 * W, 1.30 * H
     ang = np.arctan2(_GY - py, _GX - px)                                          # the swing's arc, from the lower right
-    a0, a1 = -1.95, -3.05
-    front = a0 + (a1 - a0) * smooth(q / 0.62)
-    sweep = np.clip((ang - front) / -0.05, 0, 1) if True else None
-    sweep = np.clip((front - ang) / 0.06 * -1, 0, 1)
+    front = -1.95 + (-3.05 + 1.95) * smooth(q / 0.45)
     sweep = np.clip((ang - front) / 0.06, 0, 1)
     fs = face_scr(sa, f if j < 0 else sa["f1"] - 1)
     keep = 1.0
     if fs:
-        fx_, fy_, fw_ = fs[0], fs[1], fs[2]
-        keep = 1 - np.clip(1.25 - np.sqrt(((_GX - fx_) / (0.75 * fw_)) ** 2 + ((_GY - fy_) / (0.95 * fw_)) ** 2), 0, 1)
-    red = m * sweep * keep * (1 - smooth((q - 0.70) / 0.30))
-    room = smooth((q - 0.45) / 0.50)
+        keep = 1 - np.clip(1.25 - np.sqrt(((_GX - fs[0]) / (0.75 * fs[2])) ** 2 + ((_GY - fs[1]) / (0.95 * fs[2])) ** 2), 0, 1)
+    red = m * sweep * keep
+    Rr = -60 + 1700 * ein(clamp((q - 0.38) / 0.58, 0, 1), 1.5)                     # the room seeps out from the blood
+    room = np.clip((Rr - D) / 45.0, 0, 1)
+    room = np.maximum(room, smooth((q - 0.94) / 0.05))
     Bz = _zoom_about(B, 1 + 0.06 * (1 - smooth(q)), W / 2, H / 2) if q < 0.999 else B
-    wet = (Bz * 0.85 + np.array([0.02, 0.02, 0.10], np.float32)) 
-    o = A * (1 - room) + Bz * room
-    o = o * (1 - red[..., None]) + wet * red[..., None]
+    o = A * (1 - room[..., None]) + Bz * room[..., None]
+    wet = Bz * 0.9 + np.array([0.01, 0.01, 0.06], np.float32)
+    o = o * (1 - (red * (1 - room))[..., None]) + wet * (red * (1 - room))[..., None]
+    edge = np.clip((Rr - D) / 45.0, 0, 1); edge = np.clip(edge * (1 - edge) * 4, 0, 1) * (Rr > 0)
+    o = o * (1 - 0.35 * edge[..., None])                                             # a dark, wet seam on the seeping edge
     return np.clip(o, 0, 1)
 TR2["spatter110"] = (spatter110, 40, 22)
 
@@ -3260,3 +3269,14 @@ def render(f):
     out = title110(out, f)
     out = flash_governor(out)
     return (np.clip(finish110(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+
+# ---- LIGHTS ON (the doorway -> the light on "I'm"): the hall goes dark and the tube above him blinks on with the word
+def lightson110(A, B, j, f, sa, sb, pre=8, post=16):
+    if j < 0:
+        u = smooth((j + pre + 0.5) / pre); return np.clip(A * (1 - 0.85 * u), 0, 1)
+    jj = j + 0.5
+    lv = 0.15 + 0.85 * smooth((jj - 2.5) / 1.5)
+    lv *= (1 - 0.70 * math.exp(-((jj - 6.5) / 1.1) ** 2)) * (1 - 0.40 * math.exp(-((jj - 10.5) / 1.0) ** 2))
+    m = 1 - (1 - lv) * (0.55 + 0.45 * (1 - _GY / H))                                  # the light falls from above
+    return np.clip(B * m[..., None], 0, 1)
+TR2["lightson110"] = (lightson110, 8, 16)
