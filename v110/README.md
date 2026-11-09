@@ -18,16 +18,19 @@ half before the drop.
   fluorescent tube; the mains dip on each word; the brownout kills the letters one by one and the room goes dark into the
   fog. He falls asleep (his eyes close in the fog, his head goes back, the picture drifts down out of focus).
 - **THE SURGE** (the drop, the signature): in the fan room the light behind him flickers brown through the turning
-  blades while the bass is gone; in the last bar the fan spins up and the power surges back; on the drop he flares into the
-  light and we are in the kill room (the Dark Passenger awake), the blades' shadows still sweeping it.
+  blades while the bass is gone (their light and shadow sweep the room and his shirt, never his face); in the last bar
+  the fan spins up and the light flares; on the drop one blade sweeps right across the lens and behind it is the kill
+  room (the Dark Passenger awake), the blades' shadows still sweeping it.
 - The hunt: Brian's table, the plastic (double vision, drugged), the green screen, the drive (the wiper), the bamboo.
-- **THE BARREL** (the focal point): he raises the pistol through the bamboo until it points down the lens; we dive into
-  the muzzle (gun-metal rifling twisting past) and the light at the end of the barrel is his stare.
+- **THE BARREL** (the focal point): he raises the pistol through the bamboo until it points down the lens; the camera
+  pushes into the real muzzle, a light grows at the end of the barrel, and it bursts out of the bore and fills the frame
+  as his stare.
 - The power fails again (the flicker), an after-image, the red screen developing like a darkroom print.
 - **THE SPATTER** (into the blood room, the child's *"Mommy?"*): the blood room's own wall spatter lands over him along
   the arc of a swing, and the room seeps in outward from the blood.
-- **THE FALL** (the loop): on the second *"Mommy?"* the blood room drops away above us, drops of blood fall with us, and
-  the bed rises from below the whole way, frame 0's own picture, until we land in it: he is awake again.
+- **THE FALL** (the loop): on the second *"Mommy?"* the blood room drops away above us, light streaks and drops of blood
+  rush past, and frame 0 rises from below the whole way, melting into its own out-of-focus light, until we land in it: he
+  is awake again.
 
 ## Song
 `src/sleepwalker_slowed.mp3` (4:18). 98.6 BPM (the drum stem agrees with the map). Window h162 → h241 (49.39 → 73.43 s,
@@ -38,10 +41,10 @@ half before the drop.
 **3 A.M.:** sodium amber highlights, navy shadows, a soft dream bloom and softened frame edges; blood stays red. One
 title, I'M LOSING POWER (heavy caps, a tube's cream core and an amber glow), on the sung words.
 
-## Transitions (24 + the loop)
+## Transitions (25 + the loop)
 New: headlight110, lightson110, brownout110, fogwipe110, nodoff110, fan110 (THE SURGE), barrel110 (THE BARREL),
 spatter110 (THE SPATTER), fall110 (THE FALL). Liked library pieces: facematch108, double108, light_sweep108, wiper108,
-flicker109, afterimage109, developer108, slices, streetlight109. Connectors: whip ×2, dolly ×3, smear ×2. The beat camera
+flicker109, afterimage109, frost108, slices, streetlight109. Connectors: whip ×2, dolly ×3, smear ×2. The beat camera
 runs from the drop and rests through the barrel, the developer and the ending.
 
 ## Sound
@@ -57,3 +60,12 @@ master, the music ducked 3 dB under the drop.
 - The headlight dissolve snapped back to the bed for one frame; the barrel's rifling read as a gold fan icon; the spatter
   took the blood on his suit and the room came in as a plain dissolve; the fan room's first frames are ghosted in the
   pack; the first loop floated cards in a black void. All fixed.
+
+## Before delivery: the fresh-eyes critique
+It predicted, and the studio fixed before sending: the barrel's drawn ring on his face (now the real muzzle); a drop that
+was a static close-up and a washed-out flash (now a fan blade across the lens); a loop that read as a card in a dark room
+(now frame 0 melting into its own light); four look-alike close-ups (the red neon, the kill-room wide, a second blood-room
+angle); target-like rings and a black lower third (the red-screen shot replaced, frost into the kill room); a near-black
+frame at 3 s; the title dying while "power" was still sung (it holds now); a still span at 19–20 s (a swinging bulb). On
+the way: the library plastic burst put a starburst on his face (replaced), and the falling-asleep shift mirrored a face
+(edge replication now). Transitions: 25 + the loop.
