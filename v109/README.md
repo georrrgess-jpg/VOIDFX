@@ -91,3 +91,14 @@ animations."*
   chips (finer, overlapped, his face goes last, a faint frame 0 under the dust); the pass's matte dropped a shoulder
   for a frame (steadied over neighbours). The fresh-eyes critique predicted the spins at the end, the target-like whorl,
   the mirrored tape, the look-alike garden and the flatline's straight slit (now an eye-shaped lid).
+
+## Revision 2 (the owner's notes)
+*"I like this edit a lot, but there's one thing I would like for you to change. I'd like you to change the heart monitor
+on the 21-second mark. You don't have to replace this with anything. And then I also would like for you to make the fire
+transition graphic … stem from the actual picture that's burning and try to make it tied into that transition."*
+- **The heart monitor is gone.** The syringe shot cuts clean to his stare on the downbeat (22.3 s) with the beat camera's
+  punch; the camera runs through the syringe shot and rests for the loop.
+- **THE PHOTO BURNS.** The fire now starts where the real flame touches the photo in his hand (its foot tracked through
+  the shot on four keyframes): an ember catches on the photo's corner, a ragged hole burns through the photo with the
+  hammer shot inside it, and the fire spills off the photo's edges and burns the frame away (white-hot lip, glowing
+  paper, char, sparks). The fire sound starts when the photo catches.

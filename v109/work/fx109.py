@@ -2682,3 +2682,73 @@ def base108(s, f):
         img = np.ascontiguousarray(img[:, ::-1])
         if person is not None: person = np.ascontiguousarray(np.asarray(person)[:, ::-1])
     return img, person
+
+# ============================================================================ v109 rev 2 (the owner's notes)
+# "change the heart monitor on the 21-second mark. You don't have to replace this with anything" -> it is gone: a clean
+# cut on the downbeat (e52) with the beat camera's punch. "make the fire transition graphic ... stem from the actual
+# picture that's burning and try to make it tied into that transition" -> THE PHOTO BURNS: the fire starts where the real
+# flame touches the photo in his hand (tracked through the shot), eats through the photo first (the next shot shows
+# through the burnt photo), then spills off the photo's edges and burns the frame away.
+BN_KEYS = [(1080, 0.800, 0.672), (1089, 0.830, 0.647), (1097, 0.780, 0.645), (1105, 0.750, 0.660)]   # the flame's foot on the photo
+def _bn_flame(f):
+    fs = [k[0] for k in BN_KEYS]
+    return (float(np.interp(f, fs, [k[1] for k in BN_KEYS])) * W, float(np.interp(f, fs, [k[2] for k in BN_KEYS])) * H)
+
+_BP = {}
+def _bp_setup():
+    if "T" not in _BP:
+        fx0, fy0 = _bn_flame(BN_KEYS[0][0])
+        quad = np.array([[fx0 - 0.31 * W, fy0 - 0.065 * H], [fx0 + 0.035 * W, fy0 - 0.010 * H],
+                         [fx0 + 0.12 * W, fy0 + 0.42 * H], [fx0 - 0.34 * W, fy0 + 0.42 * H]], np.float32)
+        m = np.zeros((H, W), np.uint8); cv2.fillConvexPoly(m, np.round(quad).astype(np.int32), 255)
+        n1 = _up(nz108(1951, 10)) - 0.5; n2 = _up(nz108(1952, 3)) - 0.5; n3 = _up(nz108(1953, 1.2)) - 0.5
+        m = cv2.remap(m, _GX + 70 * n2, _GY + 70 * (_up(nz108(1954, 3)) - 0.5), cv2.INTER_LINEAR)   # a ragged photo, not a box
+        photo = cv2.GaussianBlur(m.astype(np.float32) / 255, (0, 0), 6)
+        d0 = np.sqrt((_GX - fx0) ** 2 + ((_GY - fy0) * 1.1) ** 2)
+        t_in = 0.58 * d0 + 70 * n1 + 30 * n2                                  # paper burns fast, from the flame's corner
+        dout = cv2.distanceTransform(255 - m, cv2.DIST_L2, 5).astype(np.float32)
+        t_full = float(np.percentile(t_in[m > 0], 80))
+        t_out = t_full * 0.45 + 0.35 * d0 + dout * np.where(_GY < fy0, 0.75, 0.95) + 170 * n1 + 70 * n2   # then it spills off its edges
+        T = photo * t_in + (1 - photo) * t_out + 26 * n3
+        _BP.update(T=T.astype(np.float32), Tmax=float(T.max()) + 40, photo=photo, ref=(fx0, fy0))
+    return _BP
+
+def burn109(A, B, j, f, sa, sb, pre=30, post=16):
+    q = (j + pre + 0.5) / (pre + post)
+    D = _bp_setup(); fx, fy = _bn_flame(min(f, sa["f1"] - 1)); dx, dy = fx - D["ref"][0], fy - D["ref"][1]
+    Tf = D["T"] if abs(dx) + abs(dy) < 0.5 else cv2.warpAffine(D["T"], np.float32([[1, 0, dx], [0, 1, dy]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+    Rq = -30 + (D["Tmax"] + 30) * ein(clamp(q, 0, 1), 1.35)
+    s_ = Tf - Rq                                                           # < 0 burnt
+    hole = np.clip(-s_ / 3.0 + 0.5, 0, 1)
+    char = np.clip(1 - s_ / 22.0, 0, 1) * (1 - hole)
+    scorch = np.clip(1 - (s_ - 22) / 90.0, 0, 1) * (s_ > 0)
+    a = A * (1 - (0.22 * scorch)[..., None]) + (0.05 * scorch)[..., None] * np.array([0.0, 0.10, 0.30], np.float32)
+    a = a * (1 - char[..., None] * 0.85) + char[..., None] * np.array([0.02, 0.03, 0.05], np.float32)
+    o = a * (1 - hole[..., None]) + B * hole[..., None]
+    live = float(Rq > 0) * (1 - smooth((q - 0.94) / 0.06))
+    core = np.exp(-((s_ - 2) / 2.5) ** 2) * live
+    ember = np.exp(-((s_ - 6) / 9.0) ** 2) * live * (0.7 + 0.6 * _up(nz108(1945, 1.5)))
+    glow = cv2.GaussianBlur(ember, (0, 0), 10)
+    o = o + core[..., None] * np.array([0.70, 0.90, 1.0], np.float32) * 0.85 + ember[..., None] * np.array([0.06, 0.34, 1.0], np.float32) * 0.75 \
+        + glow[..., None] * np.array([0.03, 0.20, 0.80], np.float32) * 0.45
+    rng = np.random.default_rng(1957); n = 300                              # sparks lift off the burning edge
+    th_ = rng.uniform(0, 2 * np.pi, n); dd = rng.uniform(20, 900, n); rise = rng.uniform(260, 620, n); life = rng.uniform(0.22, 0.45, n)
+    sx = np.clip(fx + dd * np.cos(th_), 0, W - 1); sy = np.clip(fy + dd * np.sin(th_), 0, H - 1)
+    tb = Tf[sy.astype(int), sx.astype(int)]                                 # when the front reaches the spark's seat
+    qb = ((tb + 30) / (D["Tmax"] + 30)) ** (1 / 1.35); age = (q - qb) * (pre + post) / FPS
+    k = (age >= 0) & (age < life)
+    if k.any():
+        x = sx[k] + rng.uniform(-60, 60, n)[k] * age[k] * 3; y = sy[k] - rise[k] * age[k]
+        al = (rng.uniform(0.6, 1.4, n)[k] * np.exp(-age[k] / (0.4 * life[k]))).astype(np.float32)
+        cols = np.tile(np.array([[0.35, 0.70, 1.0]], np.float32), (int(k.sum()), 1))
+        rgb, _ = splat109(x, y, cols, al, q=2, sig=1.2)
+        o = o + cv2.resize(rgb, (W, H), interpolation=cv2.INTER_LINEAR) * 3.0
+    return np.clip(o, 0, 1)
+TR2["burn109"] = (burn109, 30, 16)
+
+def beat_phase(f):
+    """rev 2: the beat camera runs through the syringe shot and lands one punch on the cut to his stare (e52), then rests."""
+    e = f / FPS / E.HB; ph = (e % 2) * E.HB; bi = int(e // 2)
+    hook = (E.E_BEAT + 2 <= e < 52.6) and not (10 <= e < 13.5) and not (18.5 <= e < 19.5) and not (29.5 <= e < 31) \
+        and not (37.4 <= e < 40) and not (49.5 <= e < 50.4)
+    return ph, bi, hook, False

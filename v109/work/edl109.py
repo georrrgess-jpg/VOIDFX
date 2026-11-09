@@ -43,7 +43,7 @@ LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
 SET_PIECES = [("the flashlight", th(2), th(4)), ("MATERIALISE", th(5), th(8)), ("PHANTOM", th(10), th(13.5)),
-              ("the surveillance", th(27), th(31)), ("the flatline", th(50.4), th(52.4)), ("THE GUST (loop)", th(53), th(56))]
+              ("the surveillance", th(27), th(31)), ("THE GUST (loop)", th(53), th(56))]
 SIGNATURE = ["materialize109"]
 HERO = ["mist_veil"]                        # the phantom mist: the drop, the vanish, the loop
 HERO_TINS = ["materialize109", "vanish109"]
@@ -111,8 +111,8 @@ shot("lighter", "s1", 41, 43, 222.30, 223.20, z=[(0, 1.00), (1, 1.03)], tin="sme
 shot("hammer", "s4", 43, 46, 222.30, 223.30, z=[(0, 1.00), (1, 1.04)], tin="burn109", interp="flow", **SP)   # the photo's fire burns the frame away
 shot("container", "s1", 46, 48, 371.70, 372.60, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", redthr=0.30, **SP)   # the rusted container
 shot("drive", "s4", 48, 50, 0.50, 1.40, z=[(0, 1.00), (1, 1.03)], tin="redwash109", interp="flow", ev=0.4, **SP)   # red-lit, driving
-shot("syringe", "s4", 50, 52, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="streetlight109", interp="flow", **SP)   # "no motion": the M99 takes him, his pulse
-shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], tin="ekg109", seg=True, interp="flow", tout="dust_loop109", **SP)   # the flatline opens on him
+shot("syringe", "s4", 50, 52, 177.40, 178.30, z=[(0, 1.00), (1, 1.04)], tin="streetlight109", interp="flow", **SP)   # "no motion": the M99 takes him
+shot("stare", "ds2b", 52, 56, 322.28, 323.32, z=[(0, 1.00), (1, 1.04)], seg=True, interp="flow", tout="dust_loop109", **SP)   # rev 2: no monitor; a clean cut on the downbeat
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])

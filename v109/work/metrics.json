@@ -1,6 +1,6 @@
 {
  "edit": "v109",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-09 04:02:57",
@@ -547,6 +547,48 @@
    "step": "sheet:tapecheck:722,726,730,734,738,742",
    "s": 2.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:08",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:17",
+   "round": 3,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:33",
+   "round": 3,
+   "step": "sheet:fire:1076,1081,1085,1089,1093,1097,1101,1105,1108,1112,1116,1121",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:34",
+   "round": 3,
+   "step": "sheet:cut52:1328,1334,1336,1337,1338,1342",
+   "s": 1.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:39:58",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:40:11",
+   "round": 3,
+   "step": "sheet:fire:1078,1082,1085,1088,1091,1094,1097,1100,1104,1108,1113,1118",
+   "s": 13.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -573,6 +615,18 @@
    "round": 2,
    "cat": "loop",
    "text": "improve ... the end flow of the edit and into the loop. I don't really like that part. ... make it more unique and creative with better animations"
+  },
+  {
+   "t": "2026-11-09 16:37:38",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "change the heart monitor on the 21-second mark. You don't have to replace this with anything"
+  },
+  {
+   "t": "2026-11-09 16:37:38",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "make the fire transition graphic ... stem from the actual picture that's burning and try to make it tied into that transition"
   }
  ],
  "catches": [
@@ -647,10 +701,17 @@
    "round": 2,
    "cat": "restyle",
    "text": "the cold grade read sunburnt skin as blood on the two new day shots: redthr 0.30"
+  },
+  {
+   "t": "2026-11-09 16:40:27",
+   "round": 3,
+   "cat": "drawn_asset",
+   "text": "the photo's first burnt hole was a clean quad (read as a rectangle): ragged photo edge, the fire spills out sooner"
   }
  ],
  "round_starts": {
   "1": "2026-11-09 05:23:02",
-  "2": "2026-11-09 15:23:07"
+  "2": "2026-11-09 15:23:07",
+  "3": "2026-11-09 16:37:38"
  }
 }
