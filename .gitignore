@@ -134,3 +134,10 @@ v13/work/*.npz
 v13/work/*.npy
 */work/plan_check.err
 */work/preflight.log
+v108/work/*.log
+v108/audio/
+v108/frames/
+v108/out/
+v108/work/*.npz
+v108/work/*.npy
+v108/sr/
