@@ -92,3 +92,21 @@ seconds, and I don't really like the lines transition at 17 seconds."*
   PLASTIC ROLL (kill-room plastic unrolls down over the lens into the kill room; replaces the 17 s frost), BRUSH (two
   dry-brush strokes paint the cabin in; replaces the slices), and the bamboo fronds into the barrel (for a dolly).
 - **Sound:** the title's tubes ignite on the drop, the print tears, the drip lands (the loop's whoosh is gone).
+
+## Revision 2 (the owner's notes)
+*"I do like the general theme of this edit … the beginning window graphic at the start of the edit isn't really
+necessary … I'm losing power … phase it in. So it would be like, I'm losing, and then power would be when it drops. And
+the text for I'm losing would already be written … the blood spatter scene near the end of the edit still isn't quite
+adequate … smoother or more cinematic … improve the gun transition to be more seamless and smoother … the beginning of
+the beat drop, the scenes shake a little bit too much … reduce the shaking/beat jump."*
+- **The window graphic is gone:** the bed → the yard is a gentle push.
+- **I'M LOSING POWER, phased:** "I'M LOSING" is written into the dark of the fan room during the last bar of the break,
+  letter by letter on the 16th grid, like weak tubes catching (dim, flickering with the fan's low power), so it is already
+  there when the drop comes; on the drop "POWER" slams on with the surge and the line comes up to full power.
+- **The blood room, cinematic:** THE SWINGING LIGHT: the bare bulb's pool of light swings across him; on its last swing
+  the pool grows toward us with the blood-spattered wall lit inside it (a calm shot of him in front of the wall, dmx
+  111.8 s), the dark falling away; then a motion-blurred tilt up to him looking at the blood on the ceiling.
+- **The barrel, seamless:** one continuous push into the muzzle; a soft light grows in the bore; his stare opens inside it
+  through a wide feathered edge and keeps the same forward motion as it settles. No ring, no burst.
+- **A calmer drop:** no impact shake on the drop (or before the loop); the beat camera rests through the drop's first bar
+  (the title) and runs at half its punch and kick after it.
