@@ -106,7 +106,7 @@ UN = dict(look="under108")                  # under the surface: cold steel and 
 def V(e0, e1, a, b): return dict(tmap=vel(e0, e1, a, b, lo=0.55, hi=1.9), lin=True, interp="flow")
 # ---- "...SAVE ME THE TROUBLE, YO / WATCH YOUR OWN BACK, CAME IN AND GO OUT ALONE, BLACK": the mask (frame 0 is the loop's landing)
 shot("mask", "s1", 0, 4, 406.00, 407.30, z=[(0, 1.00), (1, 1.04)], interp="flow", **SU)   # the sunset smile
-shot("palms", "s1", 4, 8, 64.30, 65.80, z=[(0, 1.02), (1, 1.06)], tin="light_sweep", interp="flow", **SU)
+shot("palms", "s1", 4, 8, 64.30, 65.80, z=[(0, 1.02), (1, 1.06)], tin="light_sweep108", interp="flow", **SU)
 shot("tension", "s1", 8, 12, 376.62, 377.92, z=[(0, 1.00), (1, 1.05)], tin="whip", interp="flow", **SU)
 # ---- "STAY IN THE ZONE": SURFACE, the plastic stretches over the calm picture and peels away to the darker Dexter
 shot("release", "s4", 12, 16, 117.50, 118.90, z=[(0, 1.06), (1, 1.00)], tin="surface", interp="flow", **UN)
@@ -116,7 +116,7 @@ shot("enter", "s1", 18, 22, 262.40, 263.80, z=[(0, 1.00), (1, 1.06)], tin="whip"
 # ---- "ON DOOMSDAY": SPECIMEN, the slide crosses his face, the next shot is inside the glass, then fills the frame
 shot("reveal", "s1", 22, 25, 152.20, 153.20, z=[(0, 1.04), (1, 1.00)], tin="specimen", interp="flow", **UN)
 # ---- "EVER SINCE THE WOMB": the shipping container he was born in
-shot("womb", "s1", 25, 28, 371.60, 372.70, z=[(0, 1.00), (1, 1.05)], tin="molasses108", interp="flow", **UN)
+shot("womb", "s1", 25, 28, 371.60, 372.70, z=[(0, 1.06), (1, 1.10)], tin="molasses108", interp="flow", **UN)
 # ---- "TILL I'M BACK WHERE MY BROTHER WENT": frost creeps over the lens (the Ice Truck Killer), thaws on Brian's table
 shot("brother", "s1", 28, 32, 390.45, 391.95, z=[(0, 1.00), (1, 1.04)], tin="frost108", interp="flow", **UN)
 # ---- "THAT'S WHAT MY TOMB SAY": lying face up
@@ -124,13 +124,13 @@ shot("tomb", "s4", 32, 36, 124.50, 125.90, z=[(0, 1.00), (1, 1.05)], tin="roll",
 # ---- "RIGHT ABOVE MY GOVERNMENT, DUMILE NAME": Miami Metro, the badge; the grin by the squad car
 shot("badge", "p7", 36, 40, 14.60, 16.10, z=[(0, 1.00), (1, 1.04)], tin="polaroid", interp="flow", **UN)
 shot("name", "s4", 40, 44, 46.95, 48.40, z=[(0, 1.00), (1, 1.05)], tin="slam", interp="flow", **UN)
-# ---- "EITHER UNMARKED OR ENGRAVED": the bag on the boat (the Gulf Stream keeps the rest)
-shot("unmarked", "s1", 44, 48, 258.70, 260.20, z=[(0, 1.02), (1, 1.06)], tin="rainfocus", face=None, cx=(700, 730), interp="flow", **UN)
+# ---- "EITHER UNMARKED OR ENGRAVED": into the woods with the axe
+shot("unmarked", "s4", 44, 48, 136.80, 138.20, z=[(0, 1.00), (1, 1.05)], tin="rainfocus", interp="flow", **UN)   # the woods with the axe (the Trinity hike): an unmarked grave
 # ---- "HEY, WHO'S TO SAY?": he turns and smirks at the lens
 shot("whos", "s1", 48, 52, 283.32, 284.45, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **UN)
 # ---- "I WROTE THIS ONE IN B-C-D-C-O SECTION": into his eye, out at the red desk; the light table
-shot("wrote", "s1", 52, 56, 78.20, 79.70, z=[(0, 1.00), (1, 1.05)], tin="eye_dive", interp="flow", **UN)
-shot("section", "s4", 56, 59, 145.82, 146.70, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 640), interp="flow", **UN)
+shot("wrote", "s1", 52, 56, 78.20, 79.70, z=[(0, 1.00), (1, 1.05)], interp="flow", **UN)   # rev: a clean downbeat cut with the punch (the eye dive went black)
+shot("section", "s4", 56, 59, 145.82, 146.70, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 640), interp="blend", **UN)
 # ---- "IF YOU DON'T BELIEVE ME, GO GET BAGGED AND CHECKED IN": the night drive; the bags on the boat; the windshield wiper wipes the drive away
 shot("believe", "s1", 59, 64, 316.00, 317.70, z=[(0, 1.00), (1, 1.05)], tin="smear", interp="flow", **UN)
 shot("bagged", "p5", 64, 68, 51.75, 53.30, z=[(0, 1.00), (1, 1.04)], tin="wiper", interp="flow", **UN)

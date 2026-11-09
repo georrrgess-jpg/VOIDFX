@@ -1,9 +1,9 @@
 - **QC:** 11/11 on the encode (11 distinct checks).
 - **Loudness:** -13.2 LUFS, true peak -3.3 dBTP after AAC.
 - **Loop seam:** blurred difference 0.13 (gate ≤ 1); audio seam step 0.0266; picture wrap step 0.73 vs local median 1.51.
-- **Flashes:** 1 events, at most 1 a second; white-outs [].
+- **Flashes:** 2 events, at most 1 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
-- **Faces vs effects:** 3 flags in 2 runs: 114–114, 1338–1340.
-- **Motion audit:** 21 pops (UNEXPLAINED 1, beat 10, cut 9, flash 1); UNEXPLAINED at [1213] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **Faces vs effects:** 9 flags in 4 runs: 114–114, 864–864, 896–896, 1332–1342.
+- **Motion audit:** 22 pops (UNEXPLAINED 1, beat 10, cut 10, flash 1); UNEXPLAINED at [1213] (check signoff_pops.jpg); dead spans 0; judder flags 0.
 - **plan_check:** 0 FAIL, 1 WARN; WARN: [sound count] 13 effects in 11 moments over 22.6 s (fx_events.json); start lean: about 10-12 in 20-23 s, small transitions silent (v13 rule 4).
-- **Effort this round (1):** 2 renders (9.2 min), QC 6.0 min.
+- **Effort this round (1):** 3 renders (14.4 min), QC 9.1 min.

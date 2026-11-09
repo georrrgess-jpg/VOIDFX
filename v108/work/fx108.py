@@ -1281,9 +1281,10 @@ def blood_drop108(out, cx, cy, r, behind=None, inside=None, inside_w=0.0, stretc
         bulge = clamp(1 - (W * 0.5) / (r * Sc), 0, 0.62) * (1 - smooth((r - 0.80 * R_FULL) / (0.18 * R_FULL)))   # the rim maps inside frame 0
         ux = W / 2 + (xx - cx) * Sc * (1 - bulge * (1 - z)); uy = H / 2 + (yy - cy) * Sc * (1 - bulge * (1 - z))
         ins = _remap(inside, ux, uy, cv2.BORDER_REPLICATE)
-        oob = np.clip(np.maximum(np.maximum(-ux, ux - (W - 1)), np.maximum(-uy, uy - (H - 1))) / 40.0, 0, 1)   # outside frame 0
-        iw = inside_w * (1 - oob)
-        ref = ref * (1 - iw[..., None]) + ins * iw[..., None]
+        oob = np.clip(np.maximum(np.maximum(-ux, ux - (W - 1)), np.maximum(-uy, uy - (H - 1))) / 40.0, 0, 1)   # outside frame 0:
+        soft = _remap(_blur_small(inside), ux, uy, cv2.BORDER_REPLICATE)                          # its blurred edge, carried out
+        ins = ins * (1 - oob[..., None]) + soft * oob[..., None]
+        ref = ref * (1 - inside_w) + ins * inside_w
     thick = z * (0.55 + 0.45 * z)
     sig = np.array([3.4, 3.1, 0.55], np.float32) * tint
     T = np.exp(-sig * thick[..., None] * 1.5)
@@ -1342,17 +1343,19 @@ def surface(A, B, j, f, sa, sb, pre=SU_PRE, post=SU_POST):
     fo = cv2.remap(folds, sxp.astype(np.float32), syp.astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     wr = cv2.remap(wrink, sxp.astype(np.float32), syp.astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     front_arr = -0.12 + 1.32 * qa; front_peel = 1.12 - 1.32 * peel
-    wob = lip * 0.03
+    wob = cv2.GaussianBlur(lip, (0, 0), 6) * 0.03
     cov = np.clip((front_arr - dg + wob) * 60, 0, 1) * np.clip((front_peel - dg + wob) * 60, 0, 1)
     if cov.max() < 0.002 and q > 0.5: return B
     dfp = np.clip(front_peel - dg, 0, 1); curl_w = 0.03 + 0.05 * peel
     lift = np.exp(-(dfp / curl_w) ** 2) * (peel > 0)
-    hgt = fo * (1.35 - 0.35 * tens) + wr * 0.45 * (1 - 0.6 * tens) + taut * 0.38 * tens
+    hgt = fo * (1.45 - 0.30 * tens) + wr * 0.40 * (1 - 0.6 * tens) + taut * 0.20 * tens
     gy, gx = np.gradient(cv2.GaussianBlur(hgt, (0, 0), 0.8))
     ly_, lx_ = np.gradient(cv2.GaussianBlur(lift, (0, 0), 1.5))
-    k_ref = 16.0 + 14.0 * tens                                                                   # px of bend per unit slope (quarter res)
+    k_ref = 26.0 + 16.0 * tens                                                                   # px of bend per unit slope (quarter res)
     gx = gx + lx_ * 0.5; gy = gy + ly_ * 0.5
     gxF = cv2.resize(gx, (W, H), interpolation=cv2.INTER_CUBIC); gyF = cv2.resize(gy, (W, H), interpolation=cv2.INTER_CUBIC)
+    ef = np.clip(np.minimum(np.minimum(_GX, W - 1 - _GX), np.minimum(_GY, H - 1 - _GY)) / 90.0, 0, 1)   # no bend at the frame edge
+    gxF *= ef; gyF *= ef
     covF = cv2.resize(cov, (W, H), interpolation=cv2.INTER_LINEAR)
     plate = A
     under = _remap(plate, _GX + gxF * k_ref * 4, _GY + gyF * k_ref * 4)
@@ -1361,11 +1364,12 @@ def surface(A, B, j, f, sa, sb, pre=SU_PRE, post=SU_POST):
     lv = np.array([-0.45, -0.65, 0.62], np.float32); lv /= np.linalg.norm(lv)
     hv = lv + np.array([0, 0, 1], np.float32); hv /= np.linalg.norm(hv)
     ndh = np.clip((nx * hv[0] + ny * hv[1] + hv[2]) / nn, 0, 1)
-    spec = ndh ** 60 * (0.70 + 0.40 * tens) + ndh ** 10 * 0.12                                   # glints on the fold crests, a broad sheen
+    spec = (ndh ** 60 * (0.70 + 0.40 * tens) + ndh ** 10 * 0.12) * (1 - np.clip(lift * 1.5, 0, 1))   # glints on the fold crests; none in the curl
     crease = np.clip(np.abs(cv2.Laplacian(hgt, cv2.CV_32F, ksize=3)) * 2.2 - 0.05, 0, 1) * 0.22   # stress-whitened creases
     curl_hi = np.exp(-((dfp - curl_w * 0.55) / (curl_w * 0.30)) ** 2) * (peel > 0) * 0.60         # the bright rolled edge
     edge_arr = np.exp(-((front_arr - dg) / 0.012) ** 2) * (qa < 1) * 0.40                         # the sheet's leading edge
     hl = cv2.resize((spec + crease + curl_hi + edge_arr).astype(np.float32), (W, H), interpolation=cv2.INTER_CUBIC)
+    hl *= np.clip(np.minimum(np.minimum(_GX, W - 1 - _GX), np.minimum(_GY, H - 1 - _GY)) / 60.0, 0, 1)        # no glints on the frame edge
     milk = 0.06 + 0.04 * tens
     sheet = under * (1 - milk) + milk * 0.90 + np.clip(hl, 0, 1.2)[..., None] * np.array([0.95, 0.97, 1.0], np.float32)
     base = B
@@ -1394,12 +1398,12 @@ def specimen(A, B, j, f, sa, sb, pre=SP_PRE, post=SP_POST):
     if j < 0:
         u = (j + pre + 0.5) / pre
         off = 1500 * (1 - eout(clamp(u / 0.55, 0, 1), 2.4)) - 50 * u                             # sweeps in from the lower right, settles on the eye
-        hw = 230.0; M = 1.0 + 0.75 * smooth(u / 0.60)                                           # and magnifies it
+        hw = 230.0; M = 1.0 + 0.85 * smooth(u / 0.42)                                           # and magnifies it
         cin = smooth((u - 0.76) / 0.24)                                                          # then the next shot appears in the glass
     else:
         v = (j + 0.5) / post
         off = -50.0; hw = 230.0 + 2400 * ein(clamp(v / 0.85, 0, 1), 2.3)                          # the slide comes to the lens
-        M = 1.75 - 0.75 * smooth(v / 0.90); cin = 1.0
+        M = 1.85 - 0.85 * smooth(v / 0.90); cin = 1.0
     C = np.array([ex, ey], np.float32) + SP_N * off
     sc_ = hw / 230.0
     dn = (_GX - C[0]) * SP_N[0] + (_GY - C[1]) * SP_N[1]
@@ -1418,7 +1422,11 @@ def specimen(A, B, j, f, sa, sb, pre=SP_PRE, post=SP_POST):
     gy_ = nxb * SP_N[1] + (1 - np.abs(nxb)) * np.sign(ds - (s0 + s1) / 2) * SP_U[1]
     mx = C[0] + (_GX - C[0]) / M + gx_ * pull; my = C[1] + (_GY - C[1]) / M + gy_ * pull
     in_old = _remap(A, mx, my) if cin < 1 else None
-    in_new = _remap(B, mx, my) if cin > 0 else None
+    if cin > 0:                                                                                   # the next shot inside the glass: its own eye
+        sa_n_for_b[sb["n"]] = sa["n"]; bx, by = sp_eye_b(sb); kk = smooth((j + 0.5) / post) if j >= 0 else 0.0                   # on the slide's line, whole face, then 1:1
+        Mb = 1.0 + 0.0 * kk; ox = bx + (C[0] - bx) * kk; oy = by + (C[1] - by) * kk
+        in_new = cv2.remap(B, (ox + (_GX - C[0]) / Mb + gx_ * pull).astype(np.float32), (oy + (_GY - C[1]) / Mb + gy_ * pull).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    else: in_new = None
     glass = in_new if in_old is None else (in_old if in_new is None else in_old * (1 - cin) + in_new * cin)
     glass[..., 2] = glass[..., 2] * (1 - edge * 0.35) + _remap((A if cin < 0.5 else B)[..., 2], mx + gx_ * 6 * edge, my + gy_ * 6 * edge) * edge * 0.35
     tintc = np.array([0.93, 0.98, 0.92], np.float32)                                            # the green of a glass edge
@@ -1431,7 +1439,7 @@ def specimen(A, B, j, f, sa, sb, pre=SP_PRE, post=SP_POST):
     if j >= 0: outside = _blur(outside, 2.5 * min(1.0, (j + 1) / 6))
     o = outside * (1 - inside[..., None]) + glass * inside[..., None]
     # the drop of blood on the slide, near its lower-left end; it rides the slide out of frame
-    dpx = C + SP_U * (-400 * sc_) + SP_N * (70 * sc_)
+    dpx = C + SP_U * (-330 * sc_) + SP_N * (40 * sc_)
     o = blood_drop108(o, float(dpx[0]), float(dpx[1]), 64.0 * sc_ ** 0.75, tint=1.0)
     return np.clip(o, 0, 1)
 TR2["specimen"] = (specimen, SP_PRE, SP_POST)
@@ -1483,7 +1491,7 @@ def frost108(A, B, j, f, sa, sb, pre=FR_PRE, post=FR_POST):
     else:
         v = (j + 0.5) / post; tau = 1.05 + v; melt = clamp(eout(v / 0.70, 1.6), 0, 1); hz = 0.95 * (1 - melt * 1.15); plate = B
     fern = np.clip((tau - TF) / 0.025, 0, 1)                                                      # the ferns that have formed
-    fern = cv2.GaussianBlur(fern, (0, 0), 0.7) * (1 - melt) * 0.55
+    fern = cv2.GaussianBlur(fern, (0, 0), 0.7) * (1 - melt) * 0.0                                # rev: rime only, no line drawing
     haze = np.clip((hz - TH + gr_h * 0.03) / 0.08, 0, 1) * 0.80 if j < 0 else np.clip(((0.95 - melt * 1.15) - (1 - TH) * 0.0 - TH + 0.0) / 0.08, 0, 1) * 0.55
     if j >= 0: haze = np.clip(((1.0 - melt * 1.25) - TH + gr_h * 0.03) / 0.08, 0, 1) * 0.80 * (1 - melt * 0.5)  # the centre clears first
     glow = cv2.GaussianBlur(fern, (0, 0), 3.0)
@@ -1506,13 +1514,13 @@ def last_drop(out, f, s):
     if f < f0: return out
     t = (f - f0) / (f1 - f0)
     if f >= f1: return frame0_plate108().copy()
-    fall = eout(clamp(t / 0.40, 0, 1), 1.6)                                                      # it drops into the dark above his head
-    cx = W * 0.85; cy = -70 + (H * 0.20 + 70) * fall                                            # in the dark beside his head
-    r = 18 + 40 * fall
+    fall = ein(clamp(t / 0.62, 0, 1), 1.6)                                                       # it falls down the dark beside his head
+    cx = W * 0.84; cy = -70 + (H * 0.46 + 70) * fall
+    r = 16 + 70 * fall
     grow = ein(clamp((t - 0.36) / 0.60, 0, 1), 2.2)                                               # then it falls toward the lens
     r = r + grow * (R_FULL - r)
-    cx = cx + (W / 2 - cx) * grow; cy = cy + (H / 2 - cy) * grow
-    stretch = 1.0 + 0.25 * (1 - grow) * (1 - smooth((t - 0.25) / 0.2))
+    cx = cx + (W / 2 - cx) * grow ** 1.6; cy = cy + (H / 2 - cy) * grow ** 1.6                   # it stays on the right until it covers
+    stretch = 1.0 + 0.45 * (1 - grow) * smooth(t / 0.15)                                         # a falling bead, longer while it falls
     iw = smooth((t - 0.30) / 0.45)                                                                # frame 0's smile inside it
     tint = 1.0 - smooth((t - 0.50) / 0.42); gloss = 1.0 - smooth((grow - 0.55) / 0.40)
     base = out
@@ -1539,3 +1547,41 @@ MOL_QC = 0.5
 def molasses108(A, B, j, f, sa, sb):
     return molasses(A, B, j, f, sa, sb, pre=24, post=24)
 TR2["molasses108"] = (molasses108, 24, 24)
+
+_BS = {}
+def _blur_small(img):
+    k = id(img)
+    if k not in _BS:
+        _BS.clear(); _BS[k] = cv2.resize(cv2.GaussianBlur(cv2.resize(img, (W // 8, H // 8), interpolation=cv2.INTER_AREA), (0, 0), 3), (W, H))
+    return _BS[k]
+
+_SPB = {}; sa_n_for_b = {}
+def sp_eye_b(sb):
+    if sb["n"] not in _SPB:
+        fs = face_scr(sb, sb["f0"])
+        if fs is None: _SPB[sb["n"]] = (W * 0.5, H * 0.40)
+        else:
+            ex_, ey_, _ = _SPX.get(sa_n_for_b.get(sb["n"], ""), (W / 2, H * 0.4, 0))
+            e = min((fs[3], fs[4]), key=lambda q: (q[0] - ex_) ** 2 + (q[1] - ey_) ** 2); _SPB[sb["n"]] = (float(e[0]), float(e[1]))   # the eye nearest the slide
+    return _SPB[sb["n"]]
+
+# ---- rev (the fresh-eyes critique): the library whip without its gold streak (it crossed his mouth); a softer sun sweep
+def whip108(A, B, j, f, sa, sb, pre=6, post=8):
+    if j < 0:
+        u = ein((j + pre + 1) / pre, 2.2); o = cv2.warpAffine(A, np.float32([[1, 0, -W * 0.55 * u], [0, 1, 0]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+        o = hblur(o, 4 + 260 * u)
+    else:
+        v = 1 - eout((j + 1) / post, 2.6); o = cv2.warpAffine(B, np.float32([[1, 0, W * 0.55 * v], [0, 1, 0]]), (W, H), borderMode=cv2.BORDER_REFLECT)
+        o = hblur(o, 4 + 260 * v)
+    return np.clip(o, 0, 1)
+TR2["whip"] = (whip108, 6, 8)
+
+def light_sweep108(A, B, j, f, sa, sb, n=9):
+    u = clamp((j + n + 0.5) / (2 * n), 0, 1); pos = -0.45 + 1.9 * smooth(u)
+    xs = (_GX / W) * 0.55 + (_GY / H) * 0.85
+    side = smooth((pos - xs) / 0.22 + 0.5)[..., None] if False else np.clip((pos - xs) / 0.22 + 0.5, 0, 1)[..., None]
+    side = side * side * (3 - 2 * side)
+    band = np.exp(-((xs - pos) / 0.16) ** 2)[..., None]
+    o = A * (1 - side) + B * side
+    return np.clip(o * (1 + 0.55 * band) + band * (SODIUM * 0.18 + WARMW * 0.10), 0, 1)
+TR2["light_sweep108"] = (light_sweep108, 9, 9)

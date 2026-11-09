@@ -34,9 +34,9 @@ the S1 finale takes him back to his brother Brian's table, wrapped in plastic.
   strapped to Brian's table.
 - **"That's what my tomb say":** a roll onto him lying face up.
 - **"Right above my government, Dumile name":** a crime-scene photo onto Miami Metro and the badge; the grin by the squad car.
-- **"Either unmarked or engraved":** the bag on the boat (the Gulf Stream keeps the rest). **"Hey, who's to say?":** he
-  turns and smirks at the lens.
-- **"I wrote this one…":** into his eye and out at the red desk; the light table. **"If you don't believe me":** the
+- **"Either unmarked or engraved":** into the woods with the axe (the Trinity hike: an unmarked grave). **"Hey, who's to
+  say?":** he turns and smirks at the lens.
+- **"I wrote this one…":** a clean downbeat cut to the red desk, with the beat camera's punch; the light table. **"If you don't believe me":** the
   night drive; the wiper wipes it onto the boat with the trash bags, **"go get bagged and checked in"**.
 - **The loop: THE LAST DROP.** He looks up; one drop of blood falls in the dark beside his head and comes toward the
   lens. Frame 0's smile is inside it; it fills the frame on the last frame and the edit starts again on the mask.
@@ -59,15 +59,31 @@ reverse swell, the glass tick, the bass impact), the pour, the frost forming, th
 transitions are silent; nothing on beat moments; no chimes or drones. Effects +10 dB against DOOM's loud master, the music
 ducked 3 dB under the two biggest hits.
 
-## Measured (rev 2, the delivered file)
+## Measured (the delivered file)
 - **QC:** 11/11 on the encode. **Loudness:** −13.2 LUFS, true peak −3.3 dBTP after AAC.
 - **Loop seam:** blurred difference 0.13 (gate ≤ 1); audio seam step 0.027; picture wrap step 0.73 vs local median 1.51.
 - **Flashes:** 1, no white-outs. **Text:** none.
-- **Faces vs effects:** 3 frames in 2 runs (the light sweep at 114; the loop drop at 1338–1340, as it fills the frame).
+- **Faces vs effects:** 9 frames in 4 runs, all designed: the sun sweep (114), rain on the lens (864, 896), the loop drop as it
+  fills the frame (1332–1342).
 - **Motion audit:** no dead spans, no judder; 1 unexplained pop at 1213, the wiper blade's own sweep (designed).
 - **plan_check:** 0 FAIL; 1 WARN (13 effects, the lean target is 10–12).
-- **Effort:** 2 full renders before delivery (9.2 min), QC 6.0 min.
+- **Effort:** 3 full renders before delivery (over the target of 2: the third applied the fresh-eyes critique), about 14 min
+  of rendering, QC about 3 min a pass.
 
 ## Files
 `work/edl108.py` (every decision), `work/fx108.py` (the v108 section at the end: the looks, SURFACE, SPECIMEN, the frost,
 the last drop, the drop of blood), `work/audio108.py` (the v108 section: `music108`, `main108`). Media stays out of git.
+
+## Caught before delivery (the new loop)
+- **plan_check:** the three new transitions before they existed; a sandbox-sound warning; then 0 FAIL throughout.
+- **QC, rev 1:** frame 0's close-up was wider than the 9:16 window (face-centring FAIL) → the sunset smile; an unexplained
+  pop where the zipper ended → the wiper.
+- **The sign-off pages:** the plastic first read as rain (rebuilt as folds); the frost read as a web (now rime only); the
+  library heat haze carried the Flash studio's zigzag fire; `blood_lens` was a flat red tint; `m99`'s lids read as black
+  bars; the headlights parked two orbs on his eyes; the zipper filled the frame with black; skin read as blood in the cold
+  grade; the loop drop crossed his face.
+- **The fresh-eyes critique** (one agent, before delivery): HIGH: the eye dive's black field with an outlined hexagon (your
+  black-box family) → a clean downbeat cut; the frost's lines over his face → rime. MEDIUM: the two boat shots looked
+  alike → the woods; the whip's gold streak crossed his mouth → removed; SPECIMEN showed hair, not a face, inside the glass
+  → the incoming face is framed in it; the loop drop read as a marble → it falls down the dark beside him. One claim was
+  not a defect: the "coil" at the left edge in SURFACE is the backlit trunk behind him in the source.
