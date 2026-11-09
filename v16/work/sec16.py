@@ -235,6 +235,23 @@ def a_motes(img, person, s, f):
 ANIMS = {"twinkle": a_twinkle, "windows": a_windows, "flares": a_flares, "motes": a_motes}
 
 # ---- BOKEH DRIFT (the rooftop -> over his shoulder): the city's lights swell into discs that drift, and settle again ---
+def drop_whip(A, B, j, f, sa, sb, pre=6, post=8):
+    """DROP WHIP: the camera drops off his face to the wet street where he is already running (a strip tilt down)."""
+    q = (j + pre) / (pre + post - 1); p = smooth(clamp(q, 0, 1)); sp = math.sin(math.pi * clamp(q, 0, 1))
+    strip = np.concatenate([A, B], axis=0); y0 = int(round(p * H))
+    return np.clip(hblur(np.ascontiguousarray(strip[y0:y0 + H]), 2 + 170 * sp, vertical=True), 0, 1)
+
+def flare_sweep(A, B, j, f, sa, sb, pre=8, post=10):
+    """FLARE SWEEP: a warm streetlight flare sweeps low across the lens; under its glare he becomes Barry looking at her."""
+    x = (j + pre) / (pre + post - 1); cx = -0.3 * W + 1.6 * W * smooth(x); cy = H * 0.78
+    pk = math.exp(-((x - 0.5) / 0.14) ** 2)
+    w = smooth(clamp((x - 0.44) / 0.12, 0, 1)); o = A * (1 - w) + B * w
+    d2 = (_GX - cx) ** 2 + ((_GY - cy) * 1.6) ** 2
+    bloom = np.exp(-d2 / (2 * 260.0 ** 2)).astype(F32)
+    streak = (np.exp(-((_GY - cy) / 9.0) ** 2) * np.exp(-np.abs(_GX - cx) / 700.0)).astype(F32)
+    addc(o, bloom, TUNG, 0.9 * math.sin(math.pi * clamp(x, 0, 1))); addc(o, streak, HOT * 0.4 + TUNG * 0.6, 0.8)
+    return np.clip(o * (1 - 0.3 * pk) + TUNG * 0.30 * pk, 0, 1)
+
 def bokeh_drift(A, B, j, f, sa, sb, pre=10, post=14):
     x = (j + pre) / (pre + post - 1); r = 30 * math.sin(math.pi * clamp(x, 0, 1)) ** 1.2
     a = defocus16(shift_img(A, 80 * smooth(x)), r); b = defocus16(shift_img(B, -80 * (1 - smooth(x))), r)
@@ -248,7 +265,7 @@ def reflection(A, B, j, f, sa, sb, pre=16, post=12):
     kb = 0.55 * smooth(clamp(x / 0.5, 0, 1)) + 0.45 * smooth(clamp((x - 0.5) / 0.5, 0, 1))     # her reflection comes up, then she is there
     Bs = defocus16(zoom_about(B, W / 2, H * 0.42, 1.0 + 0.06 * (1 - smooth(x))), 5 * (1 - smooth(x)))
     fk = face_keep(sb, sb["f0"], 1.3)
-    Aa = A * (ka * (1 - 0.25 * smooth(clamp(x / 0.5, 0, 1))))
+    Aa = A * (ka * (1 - 0.70 * smooth(clamp(x / 0.45, 0, 1))))
     if not isinstance(fk, float): Aa = Aa * (1 - (1 - fk) * smooth(clamp((x - 0.3) / 0.3, 0, 1)))
     o = 1 - (1 - Aa) * (1 - Bs * kb)                                                            # a screen: light adds like glass
     band = np.exp(-(((_GX * 0.55 + _GY * 0.83) - (-400 + 2600 * x)) / 160.0) ** 2).astype(F32) * math.sin(math.pi * x)
@@ -265,12 +282,13 @@ def headlight_pass(A, B, j, f, sa, sb, pre=10, post=10):
         d2 = (_GX - (cx + dx_)) ** 2 + (_GY - cy) ** 2
         lay += np.exp(-d2 / (2 * 30.0 ** 2)) * 1.4 + np.exp(-d2 / (2 * 140.0 ** 2)) * 0.5
     streak = np.exp(-((_GY - cy) / 7.0) ** 2) * np.exp(-np.abs(_GX - cx - 95) / 520.0)
-    w = smooth(clamp((x - 0.40) / 0.2, 0, 1))
+    w = smooth(clamp((x - 0.45) / 0.10, 0, 1))
     o = A * (1 - w) + B * w
     keep = face_keep(sa if w < 0.5 else sb, sa["f1"] - 1 if w < 0.5 else sb["f0"], 1.2)
     lay = lay * (keep[..., 0] if not isinstance(keep, float) else 1.0)
-    addc(o, lay.astype(F32), HOT * 0.5 + AMBR * 0.5, 0.75 * env); addc(o, streak.astype(F32), CYAN, 0.6 * env)
-    o = o + AMBR * 0.10 * math.exp(-((x - 0.5) / 0.15) ** 2)
+    pk = math.exp(-((x - 0.5) / 0.10) ** 2)
+    addc(o, lay.astype(F32), HOT * 0.5 + AMBR * 0.5, 0.75 * env + 0.6 * pk); addc(o, streak.astype(F32), CYAN, 0.6 * env + 0.4 * pk)
+    o = o * (1 - 0.35 * pk) + (HOT * 0.3 + AMBR * 0.7) * 0.32 * pk                               # the glare covers the switch
     return np.clip(o, 0, 1)
 
 # ---- LIGHT WARP (his eyes spark -> the run at us): the night's lights stretch into speed lines -------------------------
@@ -293,17 +311,17 @@ def hold_on(img, person, s, f):
     t = ein(u, 1.5); cx, cy = W / 2, H * 0.45
     if "dn" not in _HO:
         d = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2); _HO["dn"] = (d / (0.5 * math.hypot(W, H))).astype(F32)
-    dn = _HO["dn"]; k = 0.16 * t
+    dn = _HO["dn"]; k = 0.26 * t
     sc = 1 + k * (dn - 0.25)                                                                    # the picture pulled back toward the far point
     mx = (cx + (_GX - cx) * sc).astype(F32); my = (cy + (_GY - cy) * sc).astype(F32)
     o = cv2.remap(img, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-    o = radial_blur(o, cx, cy, 1.0, 1.0 - 0.09 * t, 8)                                         # streaks drawn in toward it
+    o = radial_blur(o, cx, cy, 1.0, 1.0 - 0.14 * t, 10)                                        # streaks drawn in toward it
     tt = f / FPS; tr = 2.4 * t
     o = shift_img(o, tr * math.sin(2 * math.pi * 11 * tt), 0.6 * tr * math.sin(2 * math.pi * 13 * tt + 1.0))   # it strains
     o = o * (1 - 0.32 * t * np.clip(dn, 0, 1)[..., None] ** 1.5)                               # tension at the edges
     bo = body_only(person, s, f)
     o2 = edge_arcs(o, f, bo, 0.5 + 1.4 * t, 1601); o2 = edge_arcs(o2, f + 1, bo, 0.3 + 1.2 * t, 1611)
-    return off_face(np.clip(o2, 0, 1), o, s, f, 1.15)
+    return off_face(np.clip(o2, 0, 1), o, s, f, 1.45)
 
 def release(A, B, j, f, sa, sb, pre=4, post=12):
     """RELEASE (on "home", the drums back): the drawn-back shot lets go: the run blasts out at us and settles."""
@@ -353,9 +371,11 @@ def light_flare(A, B, j, f, sa, sb, pre=6, post=8):
 
 # ---- WHIP UP (ported, v15): a tilt-whip up over the rooftops ---------------------------------------------------------------
 def whip_up15(A, B, j, f, sa, sb, pre=6, post=8):
-    if j < 0: u = (j + pre) / pre; o = hblur(shift_img(A, 0, H * 0.45 * ein(u, 2.2)), 2 + 190 * ein(u, 2.0), vertical=True)
-    else: v = (j + 1) / post; o = hblur(shift_img(B, 0, -H * 0.45 * (1 - eout(v, 2.2))), 2 + 170 * (1 - eout(v, 2.0)), vertical=True)
-    return np.clip(o, 0, 1)
+    """WHIP UP: the camera tilts up hard: the frame and the next one as one strip, with vertical motion blur (no mirrored
+    edges)."""
+    q = (j + pre) / (pre + post - 1); p = smooth(clamp(q, 0, 1)); sp = math.sin(math.pi * clamp(q, 0, 1))
+    strip = np.concatenate([B, A], axis=0); y0 = int(round((1 - p) * H))
+    return np.clip(hblur(np.ascontiguousarray(strip[y0:y0 + H]), 2 + 170 * sp, vertical=True), 0, 1)
 
 # ---- CITY DIVE (the city from above -> his run): we dive into one of his light trails over the city --------------------
 def city_dive(A, B, j, f, sa, sb, pre=8, post=10):
@@ -417,7 +437,8 @@ def long_exposure(A, B, j, f, sa, sb, pre=12, post=18):
     x = (j + pre) / (pre + post - 1)
     if j < 0: return A
     v = (j + 1) / post
-    lay = cv2.resize(lex_layer(sa, sa["f1"] - 1), (W, H), interpolation=cv2.INTER_LINEAR) * (0.86 ** (j + 1))
+    lay = cv2.resize(lex_layer(sa, sa["f1"] - 1), (W, H), interpolation=cv2.INTER_LINEAR) * (0.90 ** (j + 1))
+    lay = zoom_about(lay, W / 2, H * 0.40, 1 - 0.85 * ein(v, 1.6))                               # drawn back into points of light
     w = smooth(clamp(v / 0.45, 0, 1))
     hiB = B * np.clip((lumf(B) - 0.45) / 0.3, 0, 1)[..., None]
     bump = math.sin(math.pi * clamp(v, 0, 1))
@@ -451,8 +472,11 @@ def beam_call(A, B, j, f, sa, sb, pre=20, post=8):
     cone = np.clip(1 - da / hw, 0, 1) ** 1.6
     dist = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2) / H
     beam = (cone * np.exp(-dist * 0.55)).astype(F32) * smooth(clamp(x / 0.25, 0, 1))
-    pm = PERSON.get(f) if j < 0 else None
-    behind = 1.0 if pm is None else (1 - np.clip(pm * 1.3, 0, 1))
+    pm = PERSON.get(f) if j < 0 else _HO.get("bc_pm")
+    if j < 0 and pm is not None: _HO["bc_pm"] = pm
+    behind = 1.0 if pm is None else (1 - np.clip(cv2.dilate(pm, np.ones((9, 9), np.uint8)) * 1.3, 0, 1))
+    fsm = face_soft(sa, sa["f1"] - 1, 0.95)
+    if fsm is not None: behind = behind * (1 - fsm[..., 0])
     w = smooth(clamp((x - 0.68) / 0.12, 0, 1))
     if "lens0" not in _HO: _HO["lens0"] = sig_lens(sb, sb["f0"])
     lx, ly, lr = _HO["lens0"]
@@ -522,16 +546,18 @@ def emblem_signal(A, B, j, f, sa, sb, pre=SIG_PRE, post=SIG_POST):
     bw = smooth(clamp((u - 0.30) / 0.45, 0, 1))
     fb = face_scr(sb, sb["f0"]) if sb.get("face") is not None else None                      # his face sits inside the bolt's middle blade
     if fb:
-        pin = (M[0, 0] * (X - 0.04 * R) + M[0, 2], M[1, 1] * (Y - 0.06 * R) + M[1, 2])
-        rel = 1.0 if j < 0 else 1 - smooth(clamp(((j + 1) / post - 0.25) / 0.75, 0, 1))
-        Bz = shift_img(B, (pin[0] - fb[0]) * rel, (pin[1] - fb[1]) * rel)
+        pin = (M[0, 0] * (X - 0.02 * R) + M[0, 2], M[1, 1] * (Y - 0.02 * R) + M[1, 2])
+        rel = 1.0 if j < 0 else 1 - smooth(clamp(((j + 1) / post - 0.20) / 0.80, 0, 1))
+        bsc = clamp(0.20 * R * z / max(1.0, fb[2]), 0.12, 1.0)                                  # his face fits the bolt's middle blade
+        sc_ = 1 + (bsc - 1) * rel; tx_, ty_ = fb[0] + (pin[0] - fb[0]) * rel, fb[1] + (pin[1] - fb[1]) * rel
+        Bz = cv2.warpAffine(B, np.float32([[sc_, 0, tx_ - sc_ * fb[0]], [0, sc_, ty_ - sc_ * fb[1]]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     else:
         Bz = zoom_about(B, W / 2, H * 0.47, 1.10 if j < 0 else 1.10 - 0.10 * eout((j + 1) / post, 2.0))
     m = bm * bw
     if j >= 0: m = np.maximum(m, smooth(clamp(((j + 1) / post - 0.35) / 0.65, 0, 1)))   # exactly home by the end
     o = Ac * (1 - m[..., None]) + Bz * m[..., None]
     rim = np.clip(cv2.GaussianBlur(bm, (0, 0), 3 + 2 * z) - bm, 0, 1) * bw * (1 - (smooth((j + 1) / post) if j >= 0 else 0))
-    addc(o, rim, TUNG, 2.2)
+    addc(o, rim, TUNG, 3.0); addc(o, cv2.GaussianBlur(rim, (0, 0), 8), AMBR, 1.2)                   # the bolt's edge glows
     o = o * (1 - (1 - m[..., None]) * np.array([0.26, 0.10, 0.0], F32) * smooth(u)) + (1 - m[..., None]) * TUNG * 0.04 * smooth(u)   # the glare is warm light
     return np.clip(o, 0, 1)
 
@@ -543,7 +569,8 @@ def lamplight(A, B, j, f, sa, sb, pre=8, post=12):
     w = smooth(clamp((x - 0.45) / 0.1, 0, 1)); o = A * (1 - w) + B * w
     d2 = (_GX - px) ** 2 + (_GY - py) ** 2
     bloom = np.exp(-d2 / (2 * (120 + 700 * env) ** 2)).astype(F32)
-    addc(o, bloom, TUNG, 0.36 * env)                                                            # warm lamplight washes the room
+    pk = math.exp(-((x - 0.5) / 0.12) ** 2)
+    addc(o, bloom, TUNG, 0.36 * env + 0.30 * pk)                                                # warm lamplight washes the room, brightest on the switch
     return np.clip(o, 0, 1)
 
 # ---- TURN PAN (Iris -> him): the camera turns from her to him, a whip across the room ----------------------------------
@@ -576,9 +603,10 @@ def home_light(img, f, s):
     M = np.float32([[sc, 0, cx - sc * W / 2], [0, sc, cy - sc * H / 2]])
     card = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
     m = cv2.warpAffine(np.ones((H, W), F32), M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    fade = 1 - smooth(clamp((t - 0.80) / 0.20, 0, 1))                                           # the window's light is all that is left
+    fade = 1 - smooth(clamp((t - 0.88) / 0.12, 0, 1))                                           # the window's light is all that is left
     if pm0 is not None:
-        m = m * (1 - np.clip(pm0 * 1.2, 0, 1) * smooth(clamp((t - 0.01) / 0.05, 0, 1)))        # we pull back out through the window: he is in front of it
+        m = cv2.GaussianBlur(m, (0, 0), 1.0 + 5.0 * sc) if f > f0 else m
+        if f > f0: m = m * (1 - np.clip(pm0 * 1.2, 0, 1))                                       # on the beat we are out of the window: he is in front of it
     glow = cv2.GaussianBlur(m, (0, 0), 6 + 40 * sc) * (1 - m)
     o = sur * (1 - (m * fade)[..., None]) + card * (m * fade)[..., None]
     addc(o, glow * fade, TUNG, 0.55)
@@ -613,23 +641,24 @@ def window_hop(A, B, j, f, sa, sb, pre=10, post=12):
     """WINDOW HOP: we dolly into one lit window of the falling city; it grows to the frame and the next shot of the city is
     what's inside it (the home-light motif: every lit window is somebody's home)."""
     x = (j + pre) / (pre + post - 1); px, py = WH_P
-    z = math.exp(math.log(80.0) * ein(clamp(x, 0, 1), 2.2))
+    z = math.exp(math.log(400.0) * ein(clamp(x, 0, 1), 2.0))
     tx, ty = px + (W / 2 - px) * smooth(x), py + (H / 2 - py) * smooth(x)                       # the window drifts to the centre
     M = np.float32([[z, 0, tx - z * px], [0, z, ty - z * py]])
-    Az = cv2.warpAffine(A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    Az = cv2.warpAffine(A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     k = 0.10 * math.sin(math.pi * clamp(x, 0, 1))
     if k > 0.004: Az = radial_blur(Az, tx, ty, 1.0, 1.0 + k, 8)
     hw, hh = WH_HW * z, WH_HH * z; fe_ = 3 + 0.08 * hw
     m = (np.clip((hw - np.abs(_GX - tx)) / fe_ + 0.5, 0, 1) * np.clip((hh - np.abs(_GY - ty)) / fe_ + 0.5, 0, 1)).astype(F32)
-    m = np.maximum(m, smooth(clamp((x - 0.82) / 0.18, 0, 1)))                                    # exactly the next shot at the end
+    m = cv2.GaussianBlur(m, (0, 0), 1.5 + 0.04 * hw)
+    m = np.maximum(m, smooth(clamp((x - 0.62) / 0.22, 0, 1)))                                    # exactly the next shot before the end
     bs = max(hw * 2 / W, hh * 2 / H, 0.02)
-    Bz = cv2.warpAffine(B, np.float32([[bs, 0, tx - bs * W / 2], [0, bs, ty - bs * H / 2]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) if bs < 1 else B
+    Bz = cv2.warpAffine(B, np.float32([[bs, 0, tx - bs * W / 2], [0, bs, ty - bs * H / 2]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE) if bs < 1 else B
     o = Az * (1 - m[..., None]) + Bz * m[..., None]
-    rim = np.clip(cv2.GaussianBlur(m, (0, 0), 2 + 0.05 * hw) - m, 0, 1) * (1 - smooth(clamp((x - 0.6) / 0.3, 0, 1)))
-    addc(o, rim, TUNG, 1.8)
+    glow = cv2.GaussianBlur(m, (0, 0), 6 + 0.25 * hw) * (1 - m) * (1 - smooth(clamp((x - 0.5) / 0.3, 0, 1)))
+    addc(o, glow, TUNG, 0.9)                                                                     # the window's warm light spills out
     return np.clip(o, 0, 1)
 
-TR2.update({"focus_pull": (focus_pull, 8, 10), "bolt_trail": (bolt_trail, 6, 10), "window_hop": (window_hop, 10, 12)})
+TR2.update({"drop_whip": (drop_whip, 6, 8), "flare_sweep": (flare_sweep, 8, 10), "focus_pull": (focus_pull, 8, 10), "bolt_trail": (bolt_trail, 6, 10), "window_hop": (window_hop, 10, 12)})
 
 TR2.update({"bokeh_drift": (bokeh_drift, 10, 14), "reflection": (reflection, 16, 12), "headlight_pass": (headlight_pass, 10, 10),
             "light_warp": (light_warp, 8, 10), "release": (release, 4, 12), "streak_pass": (streak_pass, 5, 7),

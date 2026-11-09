@@ -47,7 +47,7 @@ HDROP = 24; DROP_HB = HDROP; T_STOP = DUR      # the drums slam back on "home"
 E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0
 STUT_GAPS, STUT_HITS = [], []
 E_BEAT, E_DIP = 24, 16
-E_LOOP = 76                                    # the loop set piece (the beat camera rests from here)
+E_LOOP = 74                                    # the loop set piece (the beat camera rests from here)
 E_HOLD = 20                                    # HOLD ON: the draw-back from "hold" to "home"
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
@@ -83,23 +83,24 @@ def shot(n, src, e0, e1, a, b, **kw):
 
 # ---- the drumless verse (e0-e24): the rooftop, Iris, the hold-on
 shot("roof", "fs5", 0, 4, 138.20, 139.70, tin="loop_in16", seg=True, face=None, cx=(720, 700), lin=True, z=[(0, 1.00), (1, 1.05)], anim="twinkle")
-shot("thinks", "fbh", 4, 8, 136.55, 138.05, tin="bokeh_drift", seg=True, anim="flares")                            # he thinks of her, the night in bokeh behind him
+shot("thinks", "fbh", 4, 6, 136.55, 137.30, tin="bokeh_drift", seg=True, anim="flares")                            # he thinks of her, the night in bokeh behind him
+shot("looks", "fs1", 6, 8, 230.40, 231.20, tin="flare_sweep", seg=True, look="dusk")                         # Barry looks at her
 shot("iris", "fs1", 8, 12, 233.95, 234.95, tin="reflection", seg=True, look="dusk")                                  # "who you could be"
 shot("mask", "fs3", 12, 16, 59.40, 60.70, tin="headlight_pass", seg=True, anim="flares")
 shot("couple", "fs3", 16, 18, 120.80, 121.40, tin="bolt_split", seg=True)                                          # "Oh, just hold on": the two of them at night
 shot("eyes", "fs1", 18, 19.5, 291.95, 292.70, tin="focus_pull", seg=True, face=None, cx=(343, 343))           # his eye fills with lightning (v12-proven)                                                  # the lightning sparks in his eyes
-shot("charge", "fs5", 19.5, 24, 114.30, 116.30, tin="light_warp", seg=True, tmap=slow(19.5, 24, 114.30, 116.30, 0.9), lin=True, flowmax=90)   # HOLD ON draws back from e20
+shot("charge", "fs5", 19.5, 24, 114.30, 116.30, tin="light_warp", seg=True, tmap=slow(19.5, 24, 114.30, 116.30, 0.9), lin=True, interp="hold")   # strobe-cut source: its own cadence   # HOLD ON draws back from e20
 # ---- the drums are back on "home" (e24): the run home through the night city
 shot("run", "fs2", 24, 26, 144.60, 145.90, tin="release", seg=True, face=None, cx=(1040, 1060), tmap=vel(24, 26, 144.60, 145.90), lin=True, flowmax=40, flowfall="blend")
 shot("fpv", "fbk", 26, 28, 61.30, 62.30, tin="bolt_trail", seg=True, face=None, cx=(640, 640), tmap=vel(26, 28, 61.30, 62.30), lin=True)   # down the street toward home
 shot("close", "fs2", 28, 30, 107.30, 108.00, tin="streak_pass", seg=True)
-shot("wet", "fs2", 30, 32, 77.20, 78.20, tin="whip", seg=True, face=None, cx=(840, 820), flowmax=40, flowfall="blend")
+shot("wet", "fs2", 30, 32, 77.20, 78.20, tin="drop_whip", seg=True, face=None, cx=(840, 820), flowmax=40, flowfall="blend")
 shot("night", "fbk", 32, 34, 136.15, 136.85, tin="ramp", seg=True, anim="flares")
 shot("star", "fs2", 34, 36, 109.60, 110.25, tin="light_flare", seg=True, face=None, cx=(980, 1000), flowmax=40, flowfall="blend")
 shot("city", "fbk", 36, 38, 69.95, 70.80, tin="whip_up15", seg=True, face=None, cx=(700, 640), tmap=vel(36, 38, 69.95, 70.80), lin=True)
-shot("city2", "fbk", 38, 40, 71.72, 72.26, tin="window_hop", seg=True, face=None, cx=(640, 640), anim="twinkle")   # the city's windows
+shot("van", "fbh", 38, 40, 106.55, 107.25, tin="window_hop", seg=True)                                           # inside the window: the S5 suit by the van
 # ---- LONG EXPOSURE (the focal piece): the shutter opens on his run; the trails become the city's lights
-shot("lrun", "fs5", 40, 48, 119.20, 121.05, tin="city_dive", seg=True, face=None, cx=(930, 860), tmap=slow(40, 48, 119.20, 121.05, 0.2), lin=True, flowmax=60, flowfall="blend")
+shot("lrun", "fs5", 40, 48, 119.20, 121.05, tin="city_dive", seg=True, face=None, cx=(930, 860), tmap=slow(40, 48, 119.20, 121.05, 0.2), lin=True, flowmax=90, flowfall="blend")
 shot("alone", "fs3", 48, 52, 115.00, 116.60, tin="long_exposure", seg=True, anim="windows")                          # "It's hard to do these things alone"
 shot("alonec", "fs3", 52, 56, 39.75, 40.55, tin="face_match", seg=True)
 # ---- THE SIGNAL (the emblem transition): the real Flash signal lamp, its bolt the doorway home
@@ -115,7 +116,7 @@ SIG_BOLT = [(0.512, -0.762), (0.148, -0.347), (0.391, -0.338), (0.004, 0.011), (
             (-0.249, 0.212), (-0.477, 0.208), (-0.095, -0.150), (-0.342, -0.157)]   # the stencil bolt, traced (lens radii)
 
 HOME_WIN = (158.0, 770.0, 22.0)                # the lit window in frame 0 the loft pulls back into (x, y, height; measured on frame 0)
-SET_PIECES = [("hold_on", th(18), th(26)), ("long_exposure", th(42), th(50)), ("emblem_signal", th(56), th(66)), ("loop", th(76), th(80))]
+SET_PIECES = [("hold_on", th(18), th(26)), ("long_exposure", th(42), th(50)), ("emblem_signal", th(56), th(66)), ("loop", th(74), th(80))]
 HERO = ["home_light"]
 HERO_TINS = ["emblem_signal", "window_hop", "loop_in16"]
 SIGNATURE = ["long_exposure", "emblem_signal"]

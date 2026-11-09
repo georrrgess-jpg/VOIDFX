@@ -16,9 +16,9 @@ The fastest man alive can run anywhere, but every run ends at the same place.
 - **"It's hard to do these things alone":** alone; a searchlight sweeps the sky behind him.
 - **THE SIGNAL (the emblem transition):** the real Flash signal lamp (S2). We push into it; through the bolt in its
   lens is home, his face inside the bolt's blade; the bolt opens past the frame and we are in the loft.
-- **Home:** the loft, Iris, the two of them in warm lamplight.
-- **The loop (HOME LIGHT):** we pull back out through the loft's window; he is standing in front of it on the rooftop,
-  and home shrinks into one lit window of the city behind him: frame 0.
+- **Home:** the loft, Iris, Barry in warm lamplight.
+- **The loop (HOME LIGHT):** on the beat at e74 we are back out through the loft's window: he stands on the rooftop in
+  front of it, and home shrinks into one lit window of the city behind him: frame 0.
 
 The hero is the HOME LIGHT (a lit window, a lamp): frame 0's windows, WINDOW HOP, the signal's lamp into the loft's lamp,
 and the loop.
@@ -39,29 +39,30 @@ and the loop.
 | e | Shot | In |
 |---|---|---|
 | 0–4 | the Flash on a rooftop over the night city (S5); *the city's windows breathe* | the loop |
-| 4–8 | he thinks of her, the night in bokeh (S5 suit); *streetlight flares* | **BOKEH DRIFT** (the city's lights swell into discs and settle) |
-| 8–12 | Iris (S1) | **REFLECTION** (her face rises in the night glass over the city) |
+| 4–6 | he thinks of her (S5 suit); *flares* | **BOKEH DRIFT** (the city's lights swell into discs and settle) |
+| 6–8 | Barry looks at her (S1) | **FLARE SWEEP** (a warm streetlight flare sweeps low across the lens) |
+| 8–12 | Iris (S1), the reverse shot | **REFLECTION** (her face rises in the night glass; his shot falls back into the dark) |
 | 12–16 | masked, at night (S3); *streetlight flares* | **HEADLIGHT PASS** (a car's lights sweep across the lens) |
-| 16–18 | Barry at night, "Oh, just hold on" (S3) | BOLT SPLIT |
+| 16–18 | Barry at night, "Oh, just hold on" (S3) | BOLT SPLIT (beside his face) |
 | 18–19.5 | his eye fills with lightning (S1) | **FOCUS PULL** |
-| 19.5–24 | the charge (S5); **HOLD ON** from e20: drawn back like a slingshot | **LIGHT WARP** (the lights stretch into speed lines) |
+| 19.5–24 | the charge (S5, its own strobe-cut cadence); **HOLD ON** from e20: drawn back like a slingshot | **LIGHT WARP** (the lights stretch into speed lines) |
 | 24–26 | the run (S2) | **RELEASE** on "home": the run blasts out at us |
 | 26–28 | down the street toward home (Blitzkrieg) | **BOLT TRAIL** (his lightning stretches into the street's speed trails) |
 | 28–30 | masked close-up (S2) | STREAK PASS |
-| 30–32 | the lightning run on a wet street (S2) | WHIP |
+| 30–32 | the lightning run on a wet street (S2) | **DROP WHIP** (the camera drops off his face to the street) |
 | 32–34 | masked under street lights (S4); *flares* | RAMP |
 | 34–36 | lightning past S.T.A.R. Labs (S2) | **LIGHT FLARE** |
 | 36–38 | the city from below, falling fire (Blitzkrieg) | WHIP UP |
-| 38–40 | more of the city | **WINDOW HOP** (a dolly into one lit window; the next shot is inside it) |
+| 38–40 | the S5 suit by the van (S5) | **WINDOW HOP** (a dolly into one lit window of the falling city; he is inside it) |
 | 40–48 | the run (S5); **LONG EXPOSURE** from e42 | **CITY DIVE** (into a light trail over the city) |
-| 48–52 | alone, at night (S3); *the windows breathe* | **LONG EXPOSURE** (the trails settle into the city's lights) |
+| 48–52 | alone, at night (S3); *the windows breathe* | **LONG EXPOSURE** (the shutter closes: the trails retract into points of light) |
 | 52–56 | alone, close (S3) | **FACE MATCH** (the push in lands on the close-up's eye line) |
 | 56–64 | the Flash signal (S2), warming up | **BEAM CALL** (a searchlight sweeps the sky behind him) |
-| 64–68 | the loft (S3); *warm dust in the lamplight* | **THE SIGNAL** (through the bolt, home) |
+| 64–68 | the loft (S3); *warm dust in the lamplight* | **THE SIGNAL** (through the bolt, home: his face inside its blade) |
 | 68–72 | Iris in the loft (S3); *dust* | **LAMPLIGHT** (the lamp's glow carries us across the room) |
-| 72–80 | the two of them; then **HOME LIGHT** into frame 0 | **TURN PAN** |
+| 72–80 | Barry home with the ice; from e74 **HOME LIGHT** into frame 0 | **TURN PAN** (from her to him) |
 
-22 designed transitions and the loop in 24.0 s, plus in-shot animations (in italics), each motivated by its shot and kept
+23 designed transitions and the loop in 24.0 s, plus in-shot animations (in italics), each motivated by its shot and kept
 off faces.
 
 ## Look: AFTER HOURS

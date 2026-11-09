@@ -176,8 +176,95 @@
    "step": "report",
    "s": 7.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:05:54",
+   "round": 1,
+   "step": "prep",
+   "s": 135.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 21:06:44",
+   "round": 1,
+   "step": "sheet:v16j:110,116,122,140,150,212,216,220,400,420,536,540,544,684,690,694,700,706,870,874,880,1004,1010,1120,1140,1160,1340,1350,1360,1380,1400,1420",
+   "s": 43.0,
+   "rc": 0
   }
  ],
  "notes": [],
- "catches": []
+ "catches": [
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: WINDOW HOP went into the same Blitzkrieg city shot and the window looked pasted (white frame, edge bands, mirrored texture); now the S5 suit by the van inside a warm soft-edged window"
+  },
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "critique: the library whip ran a static streak through his nose and BORDER_REFLECT mirrored his face; replaced by a custom DROP WHIP (strip tilt), whip_up15 made a strip too"
+  },
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: HOLD ON's source is strobe-cut; slow flow ghosted it; plays its own cadence, the draw-back stronger"
+  },
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "critique: the signal's bolt edges cut across his face; his face now scaled into the bolt's middle blade, edge glow; the glare warm not grey"
+  },
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "critique: the beam crossed his jaw on the cut; kept behind the matte (stored last frame) and off the face"
+  },
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: too many soft dissolves; covers of light at the switch (headlights, lamplight, flare sweep), long exposure retracts into points; one more verse cut (shot/reverse)"
+  },
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "other",
+   "text": "beam_call invisible: the face guard covered the whole close-up; kept only the matte"
+  },
+  {
+   "t": "2026-11-09 21:07:16",
+   "round": 1,
+   "cat": "other",
+   "text": "window_hop/whip_up mirrored edges (BORDER_REFLECT); replicate/strip"
+  },
+  {
+   "t": "2026-11-09 21:07:21",
+   "round": 1,
+   "cat": "seam",
+   "text": "critique: the loop's Flash faded in as a ghost and the end was 2 s of one back shot; loop from e74, he is solid on the beat, the loft a soft glowing window"
+  },
+  {
+   "t": "2026-11-09 21:07:21",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: too many soft dissolves; covers of light at the switch (headlights, lamplight, flare sweep), long exposure retracts into points; one more verse cut (shot/reverse)"
+  },
+  {
+   "t": "2026-11-09 21:07:21",
+   "round": 1,
+   "cat": "other",
+   "text": "beam_call invisible: the face guard covered the whole close-up; kept only the matte"
+  },
+  {
+   "t": "2026-11-09 21:07:21",
+   "round": 1,
+   "cat": "other",
+   "text": "window_hop/whip_up mirrored edges (BORDER_REFLECT); replicate/strip"
+  }
+ ]
 }
