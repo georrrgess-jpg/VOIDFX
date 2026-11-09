@@ -4007,3 +4007,5 @@ def glide110(A, B, j, f, sa, sb, pre=16, post=16):
     Bd = _zoom_about(B, 1 + 0.04 * (1 - z), W / 2, H * 0.40)
     w = smooth((q - 0.25) / 0.50)
     return np.clip(Ad * (1 - w) + Bd * w, 0, 1)
+TR2["swinglight110"] = (swinglight110, 44, 26)                                         # register the rev 2 versions
+TR2["glide110"] = (glide110, 16, 16)

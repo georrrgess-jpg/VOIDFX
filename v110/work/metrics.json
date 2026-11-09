@@ -750,6 +750,55 @@
    "step": "sheet:u1:1150,1165,1180,1195,1210,1225,1255,1262,1268,1338,1346,1354",
    "s": 11.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:11:11",
+   "round": 3,
+   "step": "audio",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:11:19",
+   "round": 3,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:17:40",
+   "round": 3,
+   "step": "video",
+   "s": 381.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:20:20",
+   "round": 3,
+   "step": "qc",
+   "s": 160.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:20:29",
+   "round": 3,
+   "step": "report",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:23:09",
+   "round": 3,
+   "step": "deliver",
+   "s": 160.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 22:24:35",
+   "round": 3,
+   "step": "splice",
+   "s": 0.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -1006,6 +1055,12 @@
    "round": 3,
    "cat": "other",
    "text": "motionqc: the smear into the last shot jumped: a soft matched dissolve"
+  },
+  {
+   "t": "2026-11-09 22:24:53",
+   "round": 3,
+   "cat": "other",
+   "text": "the rev 2 swinging light and dissolve were appended but TR2 kept the old functions (registered at first definition): re-registered; an appended override must re-register its TR2 entry"
   }
  ],
  "round_starts": {
