@@ -168,6 +168,17 @@
    "buried": false
   },
   {
+   "name": "time_restarts",
+   "kind": "set piece",
+   "at": 12.68,
+   "t0": 12.68,
+   "t1": 13.32,
+   "music_db": -14.0,
+   "fx_peak_db": -13.8,
+   "fx_minus_music": 0.1,
+   "buried": false
+  },
+  {
    "name": "time_restart",
    "kind": "transition",
    "at": 12.9,
@@ -179,36 +190,36 @@
    "buried": false
   },
   {
-   "name": "time_restarts",
-   "kind": "set piece",
-   "at": 12.9,
-   "t0": 12.9,
-   "t1": 13.55,
-   "music_db": -13.9,
-   "fx_peak_db": -12.7,
-   "fx_minus_music": 1.2,
-   "buried": false
-  },
-  {
    "name": "eye_iris15",
    "kind": "transition",
-   "at": 13.87,
-   "t0": 13.57,
-   "t1": 14.32,
-   "music_db": -13.2,
-   "fx_peak_db": -31.0,
-   "fx_minus_music": -17.8,
+   "at": 13.71,
+   "t0": 13.41,
+   "t1": 14.16,
+   "music_db": -13.5,
+   "fx_peak_db": -27.0,
+   "fx_minus_music": -13.4,
    "buried": true
   },
   {
    "name": "speed_whip15",
    "kind": "transition",
-   "at": 15.16,
-   "t0": 14.86,
-   "t1": 15.61,
-   "music_db": -12.5,
-   "fx_peak_db": -55.8,
-   "fx_minus_music": -43.3,
+   "at": 15.0,
+   "t0": 14.7,
+   "t1": 15.45,
+   "music_db": -12.7,
+   "fx_peak_db": -52.7,
+   "fx_minus_music": -39.9,
+   "buried": true
+  },
+  {
+   "name": "turn_away",
+   "kind": "transition",
+   "at": 16.29,
+   "t0": 15.99,
+   "t1": 16.74,
+   "music_db": -14.1,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -165.9,
    "buried": true
   },
   {
@@ -236,12 +247,12 @@
   {
    "name": "focus_rack15",
    "kind": "transition",
-   "at": 18.71,
-   "t0": 18.41,
-   "t1": 19.16,
-   "music_db": -13.4,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -166.6,
+   "at": 18.87,
+   "t0": 18.57,
+   "t1": 19.32,
+   "music_db": -13.6,
+   "fx_peak_db": -33.1,
+   "fx_minus_music": -19.5,
    "buried": true
   },
   {
@@ -251,9 +262,9 @@
    "t0": 19.35,
    "t1": 20.97,
    "music_db": -13.3,
-   "fx_peak_db": -36.9,
-   "fx_minus_music": -23.5,
-   "buried": true
+   "fx_peak_db": -25.2,
+   "fx_minus_music": -11.8,
+   "buried": false
   },
   {
    "name": "emblem_clock",
@@ -262,9 +273,9 @@
    "t0": 20.34,
    "t1": 21.09,
    "music_db": -13.4,
-   "fx_peak_db": -36.4,
-   "fx_minus_music": -23.0,
-   "buried": true
+   "fx_peak_db": -24.5,
+   "fx_minus_music": -11.1,
+   "buried": false
   },
   {
    "name": "afterimage15",
@@ -273,19 +284,19 @@
    "t0": 21.15,
    "t1": 21.9,
    "music_db": -13.4,
-   "fx_peak_db": -30.2,
-   "fx_minus_music": -16.8,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -166.6,
    "buried": true
   },
   {
-   "name": "panel_run15",
+   "name": "pendulum",
    "kind": "transition",
    "at": 21.93,
    "t0": 21.63,
    "t1": 22.38,
    "music_db": -13.3,
-   "fx_peak_db": -29.4,
-   "fx_minus_music": -16.2,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -166.7,
    "buried": true
   },
   {
@@ -313,12 +324,12 @@
   {
    "name": "dolly",
    "kind": "transition",
-   "at": 23.87,
-   "t0": 23.57,
-   "t1": 24.32,
-   "music_db": -13.3,
+   "at": 24.03,
+   "t0": 23.73,
+   "t1": 24.48,
+   "music_db": -13.5,
    "fx_peak_db": -180.0,
-   "fx_minus_music": -166.7,
+   "fx_minus_music": -166.5,
    "buried": true
   },
   {
@@ -328,8 +339,8 @@
    "t0": 24.51,
    "t1": 25.8,
    "music_db": -12.8,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -167.2,
+   "fx_peak_db": -25.2,
+   "fx_minus_music": -12.4,
    "buried": true
   }
  ]

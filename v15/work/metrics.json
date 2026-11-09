@@ -113,8 +113,239 @@
    "step": "plan",
    "s": 9.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:39:06",
+   "round": 1,
+   "step": "video",
+   "s": 635.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:43:10",
+   "round": 1,
+   "step": "qc",
+   "s": 244.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:43:20",
+   "round": 1,
+   "step": "report",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:45:09",
+   "round": 1,
+   "step": "sheet:v15f:640,660,680,700,720,740,160,170,180,1510,1520,1530,1540,1547,0,3",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:47:26",
+   "round": 1,
+   "step": "sheet:v15g:650,700,1436,1460,1480,1500,1515,1525",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:48:43",
+   "round": 1,
+   "step": "sheet:v15h:1219,1232,1242,1248,1254,1260",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:54:03",
+   "round": 1,
+   "step": "sheet:v15i:1168,1190,1205,1219,1228,1236,1242,1248,1254,1260",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:56:03",
+   "round": 1,
+   "step": "sheet:v15j:1190,1205,1212,1219,1226,1232,1236,1240,1246,1252",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 04:56:32",
+   "round": 1,
+   "step": "sheet:v15k:537,539,541,542,544,546",
+   "s": 15.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:10:53",
+   "round": 1,
+   "step": "prep",
+   "s": 124.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:11:30",
+   "round": 1,
+   "step": "sheet:v15m:66,72,76,77,78,81,199,203,208,384,387,390,762,768,772,774,776,780,786,796,812,816,820,822,824,828",
+   "s": 25.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:12:05",
+   "round": 1,
+   "step": "sheet:v15n:940,970,973,976,977,980,984,1000,1126,1132,1140,1310,1314,1318,1322,1326,1331,1400,1420,1436",
+   "s": 21.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:12:57",
+   "round": 1,
+   "step": "sheet:v15o:845,880,1336,1344,1352,1360,1450,1471,1482,1492,1500,1508,1516,1524,1532,1538,1543,1547",
+   "s": 27.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:14:15",
+   "round": 1,
+   "step": "sheet:v15p:1336,1344,1352,1400,1420,1436,1494,1498,1502,1506,1510,1514,1518,1522,1526,1530,1534,1538",
+   "s": 29.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:15:19",
+   "round": 1,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:15:28",
+   "round": 1,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:15:46",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:16:07",
+   "round": 1,
+   "step": "sheet:v15q:539,541,542,544,1400,1410,1420,1430,1438,990,1010,1024",
+   "s": 16.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:22:35",
+   "round": 1,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 05:22:43",
+   "round": 1,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
   }
  ],
  "notes": [],
- "catches": []
+ "catches": [
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: the two Iris shots read as one clip (same coat, framing); iris swapped for S4 Iris at work"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: the loop was a soft ring wipe, low effort; rebuilt as time stops once more + REWIND through the edit's memories"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "emblem clock: colour-cut bolt missed its pale faces (ghost bolt left on the disc, rim crescents lifted); traced the bolt as a polygon, filled the disc from its own white, rotational motion blur"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "eye iris: lightning veins across his forehead and cheek; kept inside the socket, Iris upright in the pupil"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "time restart: ring wipe gave a ghosted double face; rebuilt as a discharge + radial pull with the switch under the blur"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "time slice: seams split masked faces; strips over a face now move as one"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "still: drops in front of his face and the hot-pixel pulse on his forehead; both masked off the face"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "strike cut: bolt crossed the incoming lab shot's face; routed to the side away from both faces"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "other",
+   "text": "whip_up15: a static full-height hairline (the designed streak) read as a render line; removed"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "other",
+   "text": "vibrate: shaken copies read as a triple ghost; one picture, smooth 12 Hz shake, switch on the cut"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "other",
+   "text": "focus rack: snap where defocus switched from gaussian to bokeh at r 6; blended"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "other",
+   "text": "alone: source lens VFX cycles RGB every 2-3 frames; the shot now freezes before the flicker"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "mix",
+   "text": "the emblem clock's ratchet was anchored to the wrong shot after a rename (played after the winding)"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "other",
+   "text": "runfs5: source flickers frame to frame, flow blends ghosted; held 24p at 1.05x"
+  },
+  {
+   "t": "2026-11-09 05:16:56",
+   "round": 1,
+   "cat": "framing",
+   "text": "hero (fire flight): profile face cut at the frame edge; reframed"
+  }
+ ]
 }

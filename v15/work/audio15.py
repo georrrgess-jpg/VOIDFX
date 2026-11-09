@@ -750,7 +750,8 @@ def main():
     place(fx, stereo(mono_(A2.impact(-9, (58, 30), 0.45, 0.30, 1505))), t0["eyes"])                          # TIME RESTARTS
     place(fx, stereo(mono_(sub_drop(-12, 0.6, 64, 30))), t0["eyes"] + 0.01)
     place(fx, stereo(gust(-14, 1506), -0.4), t0["hair"] - 6 / E.FPS)                                          # WIND GUST
-    place(fx, stereo(ratchet(-7, 1507)), t0["runfs5"] - 1.33)                                                # EMBLEM CLOCK
+    place(fx, stereo(ratchet(-2, 1507)), t0["fly"] - 1.33)                                                   # EMBLEM CLOCK: winding into the sweep
+    rw = rev(A2.whoosh(0.95, -11, 1508, True)); place(fx, rw.astype(np.float32), E.DUR - 0.04 - len(rw) / SR)   # REWIND: into frame 0
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))
     wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
     full = mus + fx

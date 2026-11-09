@@ -10285,7 +10285,7 @@ def last_kick(e):
     return best
 
 def cam_live(e):
-    return (0 <= e < E.E_STOP) or (E.HDROP <= e < 74)
+    return (0.5 <= e < E.E_STOP) or (E.HDROP <= e < 74)              # no punch on frame 0 (the loop lands on it)
 
 def beat_bounce(f):
     e = e_of(f)
@@ -10363,21 +10363,26 @@ def edge_current15(A, B, j, f, sa, sb, pre=10, post=14):
         base = B * (0.20 + 0.80 * eout(v, 1.8)); amp = 1.2 * (1 - eout(v, 1.4))
     return np.clip(base + light_rgb(np.clip(e * cur, 0, 255).astype(np.uint8), amp, HOT, AMB), 0, 1)
 
+def defocus15(img, r):
+    """defocus without the jump where the engine's defocus switches from a gaussian to the bokeh disc (at r 6)."""
+    if r < 0.6: return img
+    g = cv2.GaussianBlur(img, (0, 0), r / 2)
+    if r < 3: return g
+    w = clamp((r - 3) / 6, 0, 1); return g * (1 - w) + defocus(img, max(r, 6.01)) * w
+
 def focus_rack15(A, B, j, f, sa, sb, pre=10, post=12):
     """FOCUS RACK: the lens racks out to bokeh, the next shot is found in the blur over 8 frames, and racks back in."""
     if j < 0:
-        u = (j + pre) / pre; o = defocus(A, 50 * ein(u, 1.8))
-        if j >= -8: o = mixm(o, defocus(B, 50), np.full((H, W), smooth((j + 9) / 9), F32))
+        u = (j + pre) / pre; o = defocus15(A, 50 * ein(u, 1.8))
+        if j >= -8: o = mixm(o, defocus15(B, 50), np.full((H, W), smooth((j + 9) / 9), F32))
         return o
-    v = (j + 1) / post; return defocus(B, 50 * (1 - eout(v, 2.0)))
+    v = (j + 1) / post; return defocus15(B, 50 * (1 - smooth(v)))
 
 def whip_up15(A, B, j, f, sa, sb, pre=6, post=8):
-    """WHIP UP: a clean tilt-whip upward with real vertical motion blur and one thin streak of light."""
-    if j < 0: u = (j + pre) / pre; o = hblur(shift_img(A, 0, H * 0.45 * ein(u, 2.2)), 2 + 190 * ein(u, 2.0), vertical=True); k = ein(u, 1.5)
-    else: v = (j + 1) / post; o = hblur(shift_img(B, 0, -H * 0.45 * (1 - eout(v, 2.2))), 2 + 170 * (1 - eout(v, 2.0)), vertical=True); k = 1 - eout(v, 1.6)
-    band = np.exp(-((_GX[:1, :] - W * 0.86) / 4.0) ** 2) * k
-    lay = np.zeros((H, W, 3), F32); addc(lay, np.repeat(band, H, 0), HOT, 0.6)
-    return np.clip(o + lay, 0, 1)
+    """WHIP UP: a clean tilt-whip upward with real vertical motion blur."""
+    if j < 0: u = (j + pre) / pre; o = hblur(shift_img(A, 0, H * 0.45 * ein(u, 2.2)), 2 + 190 * ein(u, 2.0), vertical=True)
+    else: v = (j + 1) / post; o = hblur(shift_img(B, 0, -H * 0.45 * (1 - eout(v, 2.2))), 2 + 170 * (1 - eout(v, 2.0)), vertical=True)
+    return np.clip(o, 0, 1)
 
 def speed_whip15(A, B, j, f, sa, sb, pre=5, post=7):
     """SPEED WHIP: a real whip pan across the two shots laid side by side (from her to him), with motion blur."""
@@ -10406,41 +10411,52 @@ def disc_mask(cx, cy, r, soft=2.0):
     if r > 0.5: cv2.circle(m, (int(round(cx * 4)), int(round(cy * 4))), int(round(r * 4)), 1.0, -1, cv2.LINE_AA, shift=2)
     return cv2.GaussianBlur(m, (0, 0), soft) if soft > 0 else m
 
+def place15(img, ax, ay, tx, ty, sc):
+    """img scaled by sc about its point (ax, ay), which lands on (tx, ty)."""
+    M = np.float32([[sc, 0, tx - sc * ax], [0, sc, ty - sc * ay]])
+    return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+
 def eye_iris15(A, B, j, f, sa, sb, pre=12, post=14):
-    """EYE IRIS: the lightning in his eyes forks outward, then a ring of lightning opens from his pupil with Iris inside."""
+    """EYE IRIS: the lightning in his eye flickers round the iris (never past the socket), the pupil opens like an
+    aperture with Iris inside it, upright and face-on, and the opening takes the frame as she comes to full size."""
+    bf = face_scr(sb, sb["f0"]) if sb.get("face") is not None else None
+    bx, by = (bf[0], bf[1]) if bf else (W / 2, H * 0.4)
     if j < 0:
         u = (j + pre) / pre; px, py = eye_pos15(sa, f); Z = 1 + 0.45 * ein(u, 2.0); A2 = zoom_about(A, px, py, Z)
-        Ri = 30 * Z; Lr = Ri + 520 * ein(u, 1.5); cv = bolt_canvas()
-        for k in range(9):
-            a = 2 * math.pi * k / 9 + 0.25 * math.sin(f * 0.07 + k)
-            put_bolt(cv, (px + Ri * math.cos(a), py + Ri * math.sin(a)), (px + Lr * math.cos(a), py + Lr * math.sin(a)), 9300 + k + 9 * (f // 2), 2, 0.30, 5, 1)
+        Ri = 26 * Z; cv = bolt_canvas()
+        for k in range(6):
+            a = 2 * math.pi * k / 6 + 0.3 * math.sin(f * 0.07 + k); r1 = Ri * (1.25 + 1.1 * ein(u, 1.5))
+            put_bolt(cv, (px + Ri * 0.55 * math.cos(a), py + Ri * 0.55 * math.sin(a)), (px + r1 * math.cos(a), py + r1 * math.sin(a)), 9300 + k + 9 * (f // 2), 1, 0.30, 4, 0)
         o = A2
-        if u > 0.6:
-            Rr = Ri * (1 + 5 * ein((u - 0.6) / 0.4, 2.0))
-            m = disc_mask(px, py, Rr, 3); o = mixm(A2, zoom_about(B, px, py, 1.3), m)
-            cv = np.maximum(cv, light_ring(px, py, Rr, f))
-        return np.clip(o + light_rgb(cv, 0.35 + 0.6 * u, HOT, AMB), 0, 1)
+        if u > 0.55:
+            w = ein((u - 0.55) / 0.45, 2.0); Rr = Ri * 0.7 * (1 + 4 * w)
+            o = mixm(A2, place15(B, bx, by, px, py, 0.22 + 0.25 * w), disc_mask(px, py, Rr, 3))
+            cv = np.maximum(cv, light_ring(px, py, Rr, f, 0, 2))
+        return np.clip(o + light_rgb(cv, 0.30 + 0.5 * u, HOT, AMB), 0, 1)
     v = (j + 1) / post; px, py = eye_pos15(sa, sa["f1"] - 1)
-    cx, cy = px + (W / 2 - px) * smooth(v), py + (H / 2 - py) * smooth(v)
-    Rr = 30 * 1.45 * 6 + 2300 * ein(v, 1.8)
-    A2 = zoom_about(A, px, py, 1.45 * (1 + 0.4 * v))
-    o = mixm(A2, zoom_about(B, cx, cy, 1.0 + 0.3 * (1 - eout(v, 2.0))), disc_mask(cx, cy, Rr, 3))
-    return np.clip(o + light_rgb(light_ring(cx, cy, Rr, f, 3, 4), 0.9 * (1 - v) ** 1.2, HOT, AMB), 0, 1)
+    cx, cy = px + (bx - px) * smooth(v), py + (by - py) * smooth(v)
+    Rr = 26 * 1.45 * 0.7 * 5 + 2300 * ein(v, 1.8); sc = 0.47 + 0.53 * eout(v, 3.5)
+    o = mixm(zoom_about(A, px, py, 1.45 * (1 + 0.4 * v)), place15(B, bx, by, cx, cy, sc), disc_mask(cx, cy, Rr, 3))
+    return np.clip(o + light_rgb(light_ring(cx, cy, Rr, f, 3, 3), 0.8 * (1 - v) ** 1.2, HOT, AMB), 0, 1)
 
 def time_slice15(A, B, j, f, sa, sb, pre=6, post=10):
     """TIME SLICE: the frame comes apart into tall slivers that slide out in a wave, each a moment later than its
-    neighbour (time smeared across the frame), and the next shot slides in behind them; gold seams between them."""
+    neighbour (time smeared across the frame), and the next shot slides in behind them; gold seams between them. The
+    slivers over a face move as one, so no seam ever splits a face."""
     q = (j + pre) / (pre + post); n = 12; sw = W / n
-    Ab = hblur(A, 60, vertical=True); Bb = hblur(B, 60, vertical=True)
+    fbs = [b_ for b_ in (face_box(sa, sa["f1"] - 1) if sa.get("face") is not None else None,
+                         face_box(sb, sb["f0"]) if sb.get("face") is not None else None) if b_]
+    cuts = [int(i * sw) for i in range(1, n) if not any(b_[0] - 24 < i * sw < b_[1] + 24 for b_ in fbs)]
+    xs = [0] + cuts + [W]
     o = np.empty_like(A); seam = np.zeros((H, W), F32)
-    for i in range(n):
-        x0, x1 = int(i * sw), int((i + 1) * sw); d = 0.40 * i / (n - 1)
+    for i in range(len(xs) - 1):
+        x0, x1 = xs[i], xs[i + 1]; d = 0.40 * ((x0 + x1) / 2 / W)
         p = eout(clamp((q - d) / 0.55, 0, 1), 2.4); sp = 4 * p * (1 - p)
-        dy = int(-H * p) if i % 2 == 0 else int(H * p)
-        Ai = (Ab if sp > 0.3 else A)[:, x0:x1]; Bi = (Bb if sp > 0.3 else B)[:, x0:x1]
+        dy = int(round(-H * p)) if i % 2 == 0 else int(round(H * p))
+        Ai = hblur(A[:, x0:x1], 2 + 70 * sp, vertical=True); Bi = hblur(B[:, x0:x1], 2 + 70 * sp, vertical=True)
         col = np.roll(np.concatenate([Ai, Bi], 0) if dy < 0 else np.concatenate([Bi, Ai], 0), dy, axis=0)
         o[:, x0:x1] = col[:H] if dy < 0 else col[H:]
-        if 0 < p < 1: seam[:, max(0, x0 - 1):x0 + 2] = sp
+        if 0 < p < 1 and x0 > 0: seam[:, max(0, x0 - 1):x0 + 2] = sp
     return np.clip(o + light_rgb((seam * 255).astype(np.uint8), 0.7, HOT, AMB), 0, 1)
 
 def afterimage15(A, B, j, f, sa, sb, pre=10, post=10):
@@ -10470,36 +10486,67 @@ def light_leak15(A, B, j, f, sa, sb, pre=10, post=12):
     lay = np.zeros((H, W, 3), F32); addc(lay, lk, VIO, 0.55 * pk); addc(lay, lk ** 2, PEACH, 0.60 * pk)
     return np.clip(o * (1 + 0.10 * pk) + lay * np.clip(1.1 - lum8(o), 0.2, 1)[..., None], 0, 1)
 
-def panel_run15(A, B, j, f, sa, sb, pre=8, post=12):
-    """PANEL RUN: three panels run out in alternate directions, one after another; the next shot runs in behind them."""
-    q = (j + pre) / (pre + post); n = 3; pw = W / n
-    o = np.empty_like(A); seam = np.zeros((H, W), F32)
-    for i in range(n):
-        x0, x1 = int(i * pw), int((i + 1) * pw); p = eout(clamp((q - 0.12 * i) / 0.62, 0, 1), 2.6)
-        d = 1 if i % 2 == 0 else -1; off = int(d * H * p); sp = 4 * p * (1 - p)
-        Ai = hblur(A[:, x0:x1], 2 + 50 * sp, vertical=True) if sp > 0.2 else A[:, x0:x1]
-        Bi = hblur(B[:, x0:x1], 2 + 50 * sp, vertical=True) if sp > 0.2 else B[:, x0:x1]
-        st_ = np.concatenate([Ai, Bi], 0) if d < 0 else np.concatenate([Bi, Ai], 0)
-        st_ = np.roll(st_, off, axis=0); o[:, x0:x1] = st_[:H] if d < 0 else st_[H:]
-        if 0 < p < 1 and i > 0: seam[:, x0 - 1:x0 + 2] = sp
-    return np.clip(o + light_rgb((seam * 255).astype(np.uint8), 0.8, HOT, AMB), 0, 1)
+def card_quad(a_deg, F=2.1 * W):
+    """the frame as a card turned a_deg about its vertical centre line, in perspective: its four corners on screen."""
+    a = math.radians(a_deg); out = []
+    for x, y in ((-W / 2, -H / 2), (W / 2, -H / 2), (W / 2, H / 2), (-W / 2, H / 2)):
+        xr, zr = x * math.cos(a), x * math.sin(a); k = F / (F + zr); out.append((W / 2 + xr * k, H / 2 + y * k))
+    return np.float32(out)
+
+def turn_away(A, B, j, f, sa, sb, pre=7, post=11):
+    """TURN AWAY ("do whatever you want"): he turns his back on her: in the wind of his leaving the frame turns away like
+    a card about its centre line, edge-on on the kick, and on its other side he is already running."""
+    x0 = pre / (pre + post - 1); x = (j + pre) / (pre + post - 1)                               # exactly 1 on its last frame
+    g = 0.5 * ein(x / x0, 2.0) if x < x0 else 0.5 + 0.5 * eout((x - x0) / (1 - x0), 2.2)
+    ang = 180 * g; card, a = (A, ang) if ang < 90 else (B, ang - 180)
+    src = np.float32([(0, 0), (W, 0), (W, H), (0, H)]); Hm = cv2.getPerspectiveTransform(src, card_quad(a))
+    cw = cv2.warpPerspective(card, Hm, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    m = cv2.warpPerspective(np.ones((H, W), F32), Hm, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)[..., None]
+    bg = zoom_about(defocus(B, 28), W / 2, H / 2, 1.12) * 0.62 + VIO * 0.05                       # the street beyond, out of focus
+    o = bg * (1 - m) + cw * m
+    edge = np.clip(cv2.GaussianBlur(m[..., 0], (0, 0), 1.6) - m[..., 0] * 0.0, 0, 1) * (1 - m[..., 0])
+    addc(o, edge, PEACH, 0.6 * math.sin(math.radians(min(90, abs(a)))))                         # the card's edge catches the light
+    sp = 180 * (0.5 * 2 * (x / x0) / x0 if x < x0 else 0.5 * 2.2 * (1 - (x - x0) / (1 - x0)) ** 1.2 / (1 - x0)) / (pre + post)
+    return np.clip(hblur(o, 2 + 3.0 * sp), 0, 1)
+
+def pendulum(A, B, j, f, sa, sb, pre=8, post=16):
+    """PENDULUM: the frame hangs like a clock's pendulum from a pivot far above it: it swings out on the kick and the
+    next shot swings in on the same rod, runs past centre and settles back (a damped swing), his run already going."""
+    PV = (W / 2, -2.5 * H); D = 2 * math.degrees(math.atan((W / 2) / (3.5 * H)))                 # a frame's width at its foot
+    def swing(x):
+        return 1.10 * smooth(x / 0.72) if x < 0.72 else 1.10 - 0.10 * smooth((x - 0.72) / 0.28)
+    x = (j + pre) / (pre + post - 1); p = swing(x)                                             # exactly 1 on its last frame
+    dp = (swing(min(1, x + 0.25 / (pre + post))) - swing(max(0, x - 0.25 / (pre + post)))) * D       # degrees in half a frame
+    K = int(clamp(abs(dp) / 0.35, 0, 6)) + 1
+    bg = zoom_about(defocus(B, 22), W / 2, H / 2, 1.10) * 0.8
+    accA = np.zeros((H, W, 4), F32); accB = np.zeros((H, W, 4), F32)
+    A4 = np.dstack([A, np.ones((H, W), F32)]); B4 = np.dstack([B, np.ones((H, W), F32)])
+    for i in range(K):
+        pi_ = p if K == 1 else p + dp / D * (i / (K - 1) - 0.5)
+        phA = -D * pi_; phB = phA + D * (1 + 0.45 * (1 - clamp(pi_, 0, 1)))
+        for img4, ph, acc in ((A4, phA, accA), (B4, phB, accB)):
+            M = cv2.getRotationMatrix2D(PV, ph, 1.0)
+            w = cv2.warpAffine(img4, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+            w[..., :3] *= w[..., 3:4]; acc += w
+    accA /= K; accB /= K
+    o = bg * (1 - accA[..., 3:4]) + accA[..., :3]
+    sh = cv2.GaussianBlur(accB[..., 3], (0, 0), 22); sh = np.roll(sh, -14, axis=1) * (1 - accB[..., 3])   # B's shadow on A
+    o = o * (1 - 0.22 * sh[..., None])
+    return np.clip(o * (1 - accB[..., 3:4]) + accB[..., :3], 0, 1)
 
 # ---- VIBRATE (the watch -> the call): the frame buzzes like a phone ringing, three pulses, the call under the last -------
 def vibrate(A, B, j, f, sa, sb, pre=12, post=8):
-    """VIBRATE: a call comes in: the picture buzzes three times like a phone on a table (a fast side-to-side shake with a
-    ghost of itself), and the call is underneath the third buzz."""
-    k = j + pre; n = pre + post
+    """VIBRATE: a call comes in: the picture buzzes three times like a phone on a table (a quick, smooth side-to-side shake
+    at 12 Hz with motion blur: one picture, no ghosts), and the call is there on the cut, under the blur of the third buzz."""
+    k = j + pre
     pulses = [(0, 4), (6, 4), (11, 6)]                                                        # (start, length) in frames from -pre
     amp = 0.0
     for a_, l_ in pulses:
         if a_ <= k < a_ + l_: amp = math.sin(math.pi * (k - a_ + 0.5) / l_)
-    w = smooth(clamp((k - 11) / 4, 0, 1))                                                     # the call comes in under the last buzz
-    base = A * (1 - w) + B * w if 0 < w < 1 else (A if w <= 0 else B)
+    base = A if j < 0 else B
     if amp <= 0: return base
-    dx = 16 * amp * (1 if (f % 2) else -1)
-    g1 = shift_img(base, dx); g2 = shift_img(base, -dx * 0.6)
-    o = g1 * 0.62 + g2 * 0.38
-    return np.clip(hblur(o, 2 + 10 * amp), 0, 1)
+    w_ = 2 * math.pi * 12.0 / FPS; dx = 15 * amp * math.sin(w_ * k); vx = abs(15 * amp * math.cos(w_ * k) * w_)
+    return np.clip(hblur(shift_img(base, dx), 3 + 2.2 * vx + 6 * amp), 0, 1)
 
 # ---- STREAK PASS (the call -> he runs): the Flash streaks past the lens; the cut is behind him -------------------------
 def streak_pass(A, B, j, f, sa, sb, pre=5, post=7):
@@ -10524,8 +10571,9 @@ def streak_pass(A, B, j, f, sa, sb, pre=5, post=7):
 def strike_cut(A, B, j, f, sa, sb, pre=6, post=8):
     """STRIKE CUT: lightning strikes down through the frame beside him (never on his face); under its flash the picture
     becomes the S1 lab, where the strike that started it all is already happening."""
-    fb = face_box(sa, f) if (j < 0 and sa.get("face") is not None) else None
-    xs = W * 0.22 if (fb is None or (fb[0] + fb[1]) / 2 > W / 2) else W * 0.78
+    fcs = [(b_[0] + b_[1]) / 2 for b_ in (face_box(sa, sa["f1"] - 1) if sa.get("face") is not None else None,
+                                          face_box(sb, sb["f0"]) if sb.get("face") is not None else None) if b_]
+    xs = max((W * 0.16, W * 0.84), key=lambda x_: min([abs(x_ - c_) for c_ in fcs] or [0]))     # the side away from both faces
     q = (j + pre) / (pre + post); pk = math.exp(-((q - 0.42) / 0.16) ** 2)
     cv = bolt_canvas()
     if q < 0.75:
@@ -10573,7 +10621,7 @@ def fill_step(e):
     """the frozen world steps on each kick of the fill: a quick push that settles (stop-motion through the moment)."""
     z = 0.0
     for ek in E.FILL:
-        if e >= ek: z += 0.010 * eout(clamp((e - ek) / 0.35, 0, 1), 3.0)
+        if e >= ek: z += 0.024 * eout(clamp((e - ek) / 0.35, 0, 1), 3.0)
     return z
 
 def fill_pulse(e):
@@ -10590,23 +10638,23 @@ def still_fx(s, f):
     pulses on each kick; in the last beat the frozen lightning starts to crackle."""
     L = still_layers(s); e = e_of(f); k = f - s["f0"]; n = s["f1"] - s["f0"]
     u = k / max(1, n - 1); cx, cy = L["fc"]
-    z = 1.0 + 0.045 * u + fill_step(e)
-    zb = 1.0 + (z - 1) * 0.55; dx = -18 * smooth(u)
+    z = 1.0 + 0.05 * u + fill_step(e)
+    zb = 1.0 + (z - 1) * 0.55; dx = -60 * smooth(u) + 10 * math.sin(2 * math.pi * u)
     bg = zoom_about(shift_img(L["plate"], dx * 0.5), cx, cy, zb)
     fg = zoom_about(shift_img(L["img"], dx), cx, cy, z); m = zoom_about(shift_img(L["m"], dx), cx, cy, z)
     if m.ndim == 2: m = m[..., None]
     o = bg * (1 - m) + fg * m
-    lum = lum8(o); hot = np.clip((lum - 0.62) / 0.25, 0, 1)[..., None]                       # the lightning stays hot
+    lum = lum8(o); hot = np.clip((lum - 0.62) / 0.25, 0, 1)[..., None] * (1 - L["fmask"][..., None])   # the lightning stays hot (not his skin)
     gray = lum[..., None] * np.array([1.10, 0.99, 0.90], F32)                                 # time stopped: cool and still
     drain = 0.66 * smooth(clamp(k / 10, 0, 1))
     o = o * (1 - drain * (1 - hot)) + gray * (drain * (1 - hot)) + VIO * 0.045 * drain
-    pl = fill_pulse(e); o = o * (1 + 0.16 * pl * hot)
+    pl = fill_pulse(e); o = o * (1 + 0.30 * pl * hot)
     # the suspended drops and sparks
     q4 = np.zeros((H // 2, W // 2), F32); qs = np.zeros((H // 2, W // 2), F32); t = k / FPS
     fb = face_box(s, s["f0"]) if s.get("face") is not None else None
     for (x, y, d, r, kind, ph) in still_particles():
-        zz = 1 + (z - 1) / d; px = cx + (x - cx) * zz + dx / d + 3 * math.sin(t * 0.7 + ph); py = cy + (y - cy) * zz + 2 * t / d
-        if fb and fb[0] - 30 < px < fb[1] + 30 and py < fb[2] + 40 and d > 0.7: continue      # nothing hangs in front of his face
+        zz = 1 + (z - 1) / d; px = cx + (x - cx) * zz + dx / d + 9 * math.sin(t * 1.1 + ph); py = cy + (y - cy) * zz + 14 * t / d
+        if fb and fb[0] - 40 < px < fb[1] + 40 and py < fb[2] + 50: continue                   # nothing hangs in front of his face
         rr = max(1.0, r * zz * 0.5)
         if kind: cv2.circle(qs, (int(px * 2), int(py * 2)), int(rr * 2), 1.0, -1, cv2.LINE_AA, shift=2)
         else:                                                                                  # a drop: a pale lens with a bright point
@@ -10631,29 +10679,28 @@ def time_stop(A, B, j, f, sa, sb, pre=4, post=14):
     return np.clip(mixm(full, B, m), 0, 1)
 
 # ---- TIME RESTARTS (the return): the frozen lightning discharges; a shockwave carries his eyes in -----------------------
-def time_restart(A, B, j, f, sa, sb, pre=6, post=16):
-    """TIME RESTARTS: the frozen lightning flares and discharges; a shockwave ring bends the picture as it races out from
-    the strike, and behind it time is moving again: his eyes, full of lightning, in full colour."""
-    L = still_layers(sa); cx, cy = L["sp"]
+def time_restart(A, B, j, f, sa, sb, pre=14, post=24):
+    """TIME RESTARTS: the frozen lightning discharges: the bolts flare and spill their light through the room (never on
+    his face) and the whole frozen moment is pulled into the strike; at the peak of that pull time is moving again, and
+    his eyes, full of lightning, come out of it as the colour floods back."""
+    L = still_layers(sa); cx, cy = L["sp"]; nf = (1 - L["fmask"])[..., None]
     if j < 0:
         u = (j + pre) / pre
-        return np.clip(radial_blur(A, cx, cy, 1.0, 1.0 + 0.10 * ein(u, 2.0), 6) * (1 + 0.20 * ein(u, 2.0) * (1 - L["fmask"][..., None])), 0, 1)
-    v = (j + 1) / post; R = 160 + 2600 * eout(v, 2.2)
-    d = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2) + 1e-3
-    env = np.exp(-((d - R) / 90) ** 2); disp = 38 * env * (1 - v)
-    mx = (_GX - (_GX - cx) / d * disp).astype(F32); my = (_GY - (_GY - cy) / d * disp).astype(F32)
-    Aw = cv2.remap(A, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-    Bz = zoom_about(B, W / 2, H * 0.4, 1.0 + 0.10 * (1 - eout(v, 2.0)))
-    Bw = cv2.remap(Bz, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-    m = np.clip((R - d) / 220 + 0.5, 0, 1).astype(F32)
-    o = mixm(Aw, Bw, m)
-    fb = face_box(sb, sb["f0"]) if sb.get("face") is not None else None
-    keep = np.ones((H, W), F32)
-    if fb: keep = 1 - np.clip(((np.abs(_GX - (fb[0] + fb[1]) / 2) < (fb[1] - fb[0]) * 0.75) & (_GY < fb[2] + 80)).astype(F32), 0, 1)
-    keep = cv2.GaussianBlur(keep, (0, 0), 25)
-    lay = np.zeros((H, W, 3), F32); fr = np.exp(-((d - R) / 16) ** 2) * (1 - v) ** 0.8 * keep
-    addc(lay, fr, HOT, 0.45); addc(lay, cv2.GaussianBlur(fr.astype(F32), (0, 0), 18), AMBR, 0.7)
-    return np.clip(o + lay, 0, 1)
+        lum = lum8(A); hot = np.clip((lum - 0.62) / 0.25, 0, 1)[..., None] * nf
+        glow = cv2.GaussianBlur(hot[..., 0], (0, 0), 8 + 46 * u)[..., None] * nf
+        o = A * (1 + (0.6 + 1.6 * ein(u, 1.6)) * hot) + glow * AMBR * (0.5 + 1.4 * ein(u, 1.4))
+        return np.clip(radial_blur(np.clip(o, 0, 1), cx, cy, 1.0, 1.0 + 0.16 * ein(u, 2.4), 7), 0, 1)
+    v = (j + 1) / post; k = 0.16 * (1 - eout(v, 2.2))
+    Bz = zoom_about(B, W / 2, H * 0.42, 1.0 + 0.07 * (1 - eout(v, 2.0)))
+    lumB = lum8(Bz)[..., None]; sat = smooth(clamp(v / 0.55, 0, 1))
+    Bc = Bz * sat + lumB * np.array([1.08, 0.99, 0.92], F32) * (1 - sat)                         # the colour floods back
+    w = smooth(clamp((j + 1) / 4, 0, 1))
+    if w < 1:
+        Ab = edge15(sa, "last"); lumA = lum8(Ab); hotA = np.clip((lumA - 0.62) / 0.25, 0, 1)[..., None] * nf
+        Ab = np.clip(Ab * (1 + 2.2 * hotA) + cv2.GaussianBlur(hotA[..., 0], (0, 0), 54)[..., None] * nf * AMBR * 1.9, 0, 1)
+        Bc = Ab * (1 - w) + Bc * w
+    o = radial_blur(Bc, W / 2, H * 0.42, 1.0, 1.0 + k, 7) if k > 0.004 else Bc
+    return np.clip(o + AMBR * 0.18 * (1 - eout(v, 1.6)), 0, 1)
 
 # ---- WIND GUST (he tears off -> her hair blows): the wind of his passing carries the next shot in -----------------------
 def wind_gust(A, B, j, f, sa, sb, pre=6, post=10):
@@ -10684,28 +10731,43 @@ def emb15_screen(s, f):
     t, _, _ = src_time(s, f); x, y = emb15_src(t); X, Y, sc = to_screen(s, f, x, y); return X, Y, E.EMB15_R * sc
 
 def bolt_lift(A, ex, ey, R):
-    """the real bolt lifted off the emblem: its gold pixels (inside 1.55 R; the gold rim left in place except where the
-    bolt's tips cross it), and the emblem with the bolt filled in from its own white disc and the suit around it."""
+    """the real bolt lifted off the emblem: the traced polygon (EMB15_BOLT; outside the disc only the bolt's own gold, not
+    the suit or the black rim it crosses), and the emblem with the bolt filled in from its own white disc and the suit."""
     m_ = 1.6 * R; x0, y0, x1, y1 = max(0, int(ex - m_)), max(0, int(ey - m_)), min(W, int(ex + m_) + 1), min(H, int(ey + m_) + 1)
     sub = np.clip(A[y0:y1, x0:x1], 0, 1); Bc, Gc, Rc = sub[..., 0], sub[..., 1], sub[..., 2]
     gx, gy = _GX[y0:y1, x0:x1] - ex, _GY[y0:y1, x0:x1] - ey; rho = np.sqrt(gx * gx + gy * gy) / R
-    mx_, mn_ = sub.max(2), sub.min(2)
-    white = (mn_ > 0.55) & (mx_ - mn_ < 0.20)
-    gold = (Rc > 0.30) & (Gc / (Rc + 1e-3) > 0.48) & (Rc - Bc > 0.06)
-    ax = np.array([E.EMB15_TIP[0], E.EMB15_TIP[1]], F32); ax /= np.linalg.norm(ax)
-    dax = np.abs(gx * ax[1] - gy * ax[0]) / R                                                  # distance to the bolt's axis
-    inner = (rho < 0.84) & ~white                                                              # in the disc: anything that isn't the white face
-    tips = (rho >= 0.84) & (rho < 1.55) & gold & (dax < 0.30)                                  # beyond it: the gold tips along the axis
-    mk = (inner | tips).astype(np.uint8)
-    mk = cv2.morphologyEx(mk, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)); mk = cv2.dilate(mk, np.ones((3, 3), np.uint8))
-    filled = cv2.inpaint((sub * 255).astype(np.uint8), mk * 255, 5, cv2.INPAINT_TELEA).astype(F32) / 255
-    alpha = cv2.GaussianBlur(mk.astype(F32), (0, 0), 0.8)
+    poly = np.array([(ex + x * R - x0, ey + y * R - y0) for x, y in E.EMB15_BOLT], F32)
+    mk = np.zeros(sub.shape[:2], np.uint8); cv2.fillPoly(mk, [np.int32(np.round(poly * 4))], 255, cv2.LINE_AA, shift=2)
+    mkf = mk.astype(F32) / 255
+    suit = (Rc > 0.22) & (Gc / (Rc + 1e-3) < 0.45); dark = sub.max(2) < 0.16
+    mkf = mkf * (1 - ((rho > 0.86) & (suit | dark)).astype(F32))
+    hole = cv2.dilate((mk > 40).astype(np.uint8), np.ones((9, 9), np.uint8))
+    tel = cv2.inpaint((sub * 255).astype(np.uint8), hole * 255, 5, cv2.INPAINT_TELEA).astype(F32) / 255
+    wd = ((rho < 0.82) & (sub.min(2) > 0.5) & (hole == 0)).astype(F32); sg = 0.12 * R              # the white face, smoothly
+    den = cv2.GaussianBlur(wd, (0, 0), sg); disc = cv2.GaussianBlur(sub * wd[..., None], (0, 0), sg) / np.maximum(den, 1e-3)[..., None]
+    ins = (np.clip((0.86 - rho) / 0.05, 0, 1) * np.clip(den / 0.05, 0, 1))[..., None]
+    filled = np.where(hole[..., None] > 0, tel * (1 - ins) + disc * ins, sub).astype(F32)
+    alpha = cv2.GaussianBlur(mkf, (0, 0), 0.7)
     return (x0, y0, x1, y1), filled, np.dstack([sub, alpha])
 
 def ec_cam(sa, f, P_):
     ex, ey, er = emb15_screen(sa, f); s_ = 1 + 1.25 * P_
     tx, ty = ex + (W / 2 - ex) * smooth(P_), ey + (H * 0.52 - ey) * smooth(P_)
     return np.float32([[s_, 0, tx - s_ * ex], [0, s_, ty - s_ * ey]]), ex, ey, er, tx, ty, s_
+
+def ec_theta(sa, jj, pre=EC_PRE, post=EC_POST):
+    """the hand's angle at transition time jj (fractional frames from the cut): ticks on the kicks (30 deg each), then the
+    winding, then the reveal sweep. Returns (angle, sweep so far, post progress)."""
+    if jj < 0: u = (jj + pre) / pre; e = e_of(sa["f1"] + jj)
+    else: u = 1.0; e = e_of(sa["f1"] - 1)
+    th = 0.0; e0 = (sa["f1"] - pre) / FPS / E.HB; e1 = e0 + 0.40 * pre / FPS / E.HB
+    for ek in [x for x in np.arange(math.floor(e0), e1 + 0.01, 0.5) if (x % 8) in E.KICKS and e0 <= x <= e1]:
+        if e >= ek: th += 30 * eout(clamp((e - ek) * E.HB / 0.10, 0, 1), 3)
+    th += 540 * ein(clamp((u - 0.40) / 0.38, 0, 1), 2.2)                                         # winding
+    sw = clamp((u - 0.78) / 0.22, 0, 1) if jj < 0 else 1.0
+    sw_post = clamp((jj + 1) / post, 0, 1) if jj >= 0 else 0.0
+    sweep = 360 * (0.62 * smooth(sw) + 0.38 * smooth(sw_post))                                    # the reveal sweep
+    return th + sweep, sweep, sw_post
 
 def emblem_clock(A, B, j, f, sa, sb, pre=EC_PRE, post=EC_POST):
     """EMBLEM CLOCK: the emblem is the clock. Its real gold bolt lifts off the white disc and ticks round on the kicks like
@@ -10718,27 +10780,22 @@ def emblem_clock(A, B, j, f, sa, sb, pre=EC_PRE, post=EC_POST):
     P_ = smooth(clamp((u - 0.20) / 0.62, 0, 1)) if j < 0 else 1.0
     M, ex, ey, er, tx, ty, s_ = ec_cam(sa, f_, P_)
     if j >= 0:
-        v = (j + 1) / post; s2 = 1 + 1.6 * ein(v, 1.6); M = M.copy(); M[:, :2] *= s2; M[0, 2] = tx - s_ * s2 * ex; M[1, 2] = ty - s_ * s2 * ey; s_ = s_ * s2
+        v = (j + 1) / post; s2 = 1 + 0.9 * ein(v, 1.6); M = M.copy(); M[:, :2] *= s2; M[0, 2] = tx - s_ * s2 * ex; M[1, 2] = ty - s_ * s2 * ey; s_ = s_ * s2
     (x0, y0, x1, y1), filled, bolt = bolt_lift(A, ex, ey, er)
     Af = A.copy(); Af[y0:y1, x0:x1] = filled
     lift = smooth(clamp(u / 0.12, 0, 1))
     Ac = cv2.warpAffine(Af if lift > 0 else A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-    # the hand's angle: ticks on the kicks (30 deg each), then winding, then the sweep
-    e = e_of(f_); th = 0.0
-    e0 = (sa["f1"] - pre) / FPS / E.HB; e1 = e0 + 0.40 * pre / FPS / E.HB
-    for ek in [x for x in np.arange(math.floor(e0), e1 + 0.01, 0.5) if (x % 8) in E.KICKS and e0 <= x <= e1]:
-        if e >= ek: th += 30 * eout(clamp((e - ek) * E.HB / 0.10, 0, 1), 3)
-    wu = clamp((u - 0.40) / 0.38, 0, 1); th += 540 * ein(wu, 2.2)                                # winding
-    sw = clamp((u - 0.78) / 0.22, 0, 1) if j < 0 else 1.0
-    if j >= 0: sw_post = (j + 1) / post
-    else: sw_post = 0.0
-    sweep = 360 * (0.62 * smooth(sw) + 0.38 * smooth(sw_post))                                  # the reveal sweep
-    th_total = th + sweep
-    # the bolt, rotated about the emblem centre, through the camera
-    bw = np.zeros((H, W, 4), F32); bw[y0:y1, x0:x1] = bolt
-    Rm = cv2.getRotationMatrix2D((ex, ey), -th_total, 1.0)
-    Mt = np.vstack([M, [0, 0, 1]]) @ np.vstack([Rm, [0, 0, 1]])
-    bc = cv2.warpAffine(bw, Mt[:2].astype(F32), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    th_total, sweep, sw_post = ec_theta(sa, j, pre, post)
+    # the bolt, rotated about the emblem centre, through the camera, with a 180-degree shutter's rotational blur
+    bw = np.zeros((H, W, 4), F32); bw[y0:y1, x0:x1] = bolt; bw[..., :3] *= bw[..., 3:4]
+    t_a, t_b = ec_theta(sa, j - 0.25, pre, post)[0], ec_theta(sa, j + 0.25, pre, post)[0]
+    K = int(clamp(abs(t_b - t_a) / 2.5, 0, 12)) + 1; bc = np.zeros((H, W, 4), F32)
+    for i in range(K):
+        th_i = th_total if K == 1 else t_a + (t_b - t_a) * i / (K - 1)
+        Rm = cv2.getRotationMatrix2D((ex, ey), -th_i, 1.0)
+        Mt = np.vstack([M, [0, 0, 1]]) @ np.vstack([Rm, [0, 0, 1]])
+        bc += cv2.warpAffine(bw, Mt[:2].astype(F32), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    bc /= K
     R_s = er * s_
     # the reveal behind the hand (a clock wipe from the pivot)
     o = Ac
@@ -10758,50 +10815,98 @@ def emblem_clock(A, B, j, f, sa, sb, pre=EC_PRE, post=EC_POST):
         for i in range(12):
             a = math.radians(i * 30)
             p0 = (tx + math.cos(a) * R_s * 0.74, ty + math.sin(a) * R_s * 0.74); p1 = (tx + math.cos(a) * R_s * 0.84, ty + math.sin(a) * R_s * 0.84)
-            cv2.line(cvm, (int(p0[0] * 4), int(p0[1] * 4)), (int(p1[0] * 4), int(p1[1] * 4)), 255, max(1, int(R_s / 60)), cv2.LINE_AA, shift=2)
+            cv2.line(cvm, (int(p0[0] * 4), int(p0[1] * 4)), (int(p1[0] * 4), int(p1[1] * 4)), 255, max(2, int(R_s / (28 if i % 3 == 0 else 45))), cv2.LINE_AA, shift=2)
         mk_face = disc_mask(tx, ty, R_s * 0.92, 2) * (1 - (m if sweep > 0 else 0))
-        o = np.clip(o + light_rgb(cvm, 0.55 * am, GOLDL, AMBR), 0, 1)
+        o = np.clip(o + light_rgb(cvm, 0.95 * am, GOLDL, AMBR), 0, 1)
         o = o + mk_face[..., None] * PEACH * 0.10 * am
-    o = o * (1 - bc[..., 3:4] * lift) + bc[..., :3] * bc[..., 3:4] * lift
+    if j >= 0: lift *= 1 - smooth(clamp(((j + 1) / post) / 0.65, 0, 1))                       # the hand passes the lens and is gone
+    o = o * (1 - bc[..., 3:4] * lift) + bc[..., :3] * lift
     return np.clip(o, 0, 1)
 
-# ---- the loop: the last memory stops once more, then restarts on frame 0 -----------------------------------------------
-LOOP_N = 30
+# ---- the loop: time stops once more on the e76 kick, then REWIND flies back past the edit's memories into frame 0 --------
+F_STOP = int(round(E.LOOP_E0 * E.HB * FPS)); F_REW = int(round(E.LOOP_E1 * E.HB * FPS))
+LOOP_N = E.DUR_F - F_STOP
 def frame_virtual(fv):
     s0 = SHOTS[0]; out, _ = base15(s0, fv)
     return out
 
+_LC = {}
+def rew_card(name):
+    """a memory for the rewind: the shot's own picture at its middle (the emblem before its clock starts)."""
+    if name not in _LC:
+        s_ = shot_by(name); fm = (s_["f0"] + s_["f1"]) // 2
+        if name == "emblem": fm = s_["f0"] + 14
+        _LC[name] = np.clip(base15(s_, fm)[0], 0, 1).astype(F32)
+    return _LC[name]
+
+def stopped(img, s, f, a):
+    """time stopped: the colour drains to the cool grey of the drum break, the lights in the lenses stay, and the drops
+    and sparks hang in the air again (never in front of his face)."""
+    lum = lum8(img); hot = np.clip((lum - 0.70) / 0.2, 0, 1)[..., None]
+    gray = lum[..., None] * np.array([1.10, 0.99, 0.90], F32)
+    o = img * (1 - 0.62 * a * (1 - hot)) + gray * (0.62 * a * (1 - hot)) + VIO * 0.045 * a
+    if a <= 0.01: return o
+    fb = face_box(s, f) if s.get("face") is not None else None; t = (f - F_STOP) / FPS
+    q4 = np.zeros((H // 2, W // 2), F32); qs = np.zeros((H // 2, W // 2), F32)
+    for (x, y, d, r, kind, ph) in still_particles():
+        px = x + 9 * math.sin(t * 1.1 + ph) - 18 * t / d; py = y + 14 * t / d
+        if fb and fb[0] - 40 < px < fb[1] + 40 and py < fb[2] + 50: continue
+        rr = max(1.0, r * 0.5)
+        if kind: cv2.circle(qs, (int(px * 2), int(py * 2)), int(rr * 2), 1.0, -1, cv2.LINE_AA, shift=2)
+        else: cv2.circle(q4, (int(px * 2), int(py * 2)), int(rr * 3.0), 0.55, -1, cv2.LINE_AA, shift=2)
+    dro = cv2.resize(cv2.GaussianBlur(q4, (0, 0), 0.8), (W, H)); spk = cv2.resize(cv2.GaussianBlur(qs, (0, 0), 0.6), (W, H))
+    addc(o, dro, np.array([0.95, 0.85, 0.92], F32), 0.40 * a); addc(o, cv2.GaussianBlur(spk, (0, 0), 5), AMBR, 0.7 * a); addc(o, spk, HOT, 0.7 * a)
+    return np.clip(o, 0, 1)
+
+def rew_cam(t):
+    """the camera's place on the rewind's axis (0 at the start; the memories lie behind it, one unit apart)."""
+    return 0.5 - 0.5 * math.cos(math.pi * clamp(t, 0, 1))
+
 def loop_out(img, f, s):
-    """THE LOOP: on "know" the last memory stops (the drain and the hush of the still) and then time restarts: the
-    shockwave races out and frame 0 (the watch, the next "I don't got time") is behind it at the wrap."""
-    k = f - (s["f1"] - LOOP_N)
-    if k < 0: return img
-    u = k / (LOOP_N - 1)
-    a = smooth(clamp(u / 0.35, 0, 1))
-    lum = lum8(img)[..., None]; o = img * (1 - 0.55 * a) + lum * np.array([1.04, 0.98, 0.96], F32) * 0.55 * a
-    v = clamp((u - 0.40) / 0.60, 0, 1)
-    if v <= 0: return o
-    under = frame_virtual(f - E.DUR_F); cx, cy = W * 0.5, H * 1.02
-    R = 40 + 2300 * eout(v, 1.8); d = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2) + 1e-3
-    env = np.exp(-((d - R) / 90) ** 2); disp = 34 * env * (1 - v)
-    mx = (_GX - (_GX - cx) / d * disp).astype(F32); my = (_GY - (_GY - cy) / d * disp).astype(F32)
-    ow = cv2.remap(o, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
-    m = np.clip((R - d) / 60 + 0.5, 0, 1).astype(F32); res = mixm(ow, under, m)
-    fr = np.exp(-((d - R) / 40) ** 2) * (1 - v) ** 1.2
-    lay = np.zeros((H, W, 3), F32); addc(lay, cv2.GaussianBlur(fr.astype(F32), (0, 0), 24), PEACH, 0.35)
-    res = np.clip(res + lay, 0, 1)
-    if v >= 1: return under
-    return res
+    """THE LOOP: on the e76 kick time stops once more (the colour drains, the drops hang, the lenses hold their light);
+    on "really want to know" it runs backwards: the camera flies back out of the moment and the edit's memories come past
+    the lens from behind it and fall away down a spiral (newest first: the fire, the emblem, Iris, his eyes, the strike,
+    the city, the run), until the first memory, frame 0, comes from behind the lens and settles to fill the frame."""
+    if f < F_STOP: return img
+    o = stopped(img, s, f, smooth(clamp((f - F_STOP) / 8, 0, 1)))
+    if f < F_REW: return o
+    t = (f - F_REW) / (E.DUR_F - 1 - F_REW)
+    under = frame_virtual(f - E.DUR_F)
+    if t >= 1: return under
+    N = len(E.REW_CARDS) + 1; c = -1 - N * rew_cam(t)
+    bg = defocus(under, 40) * (0.22 + 0.50 * t) + VIO * 0.07
+    cards = [(0.0, o, 0.0, 0.0)]
+    for i, nm in enumerate(E.REW_CARDS, 1):
+        th_ = math.radians(200 - 50 * i); cards.append((-float(i), rew_card(nm), 1.0 * math.sin(th_), 1.3 * math.cos(th_)))   # a spiral wide enough that they come in from the edges
+    cards.append((-float(N), under, 0.0, 0.0))
+    out = bg.copy(); ones = np.ones((H, W), F32)
+    for z, im, X, Y in cards:                                                                  # far to near
+        d = z - c
+        if d <= 0.08: continue
+        sc = 1.0 / d; al = clamp((d - (0.25 if z == -float(N) else 0.30)) / 0.32, 0, 1) * clamp((7.5 - d) / 2.5, 0, 1)
+        if al <= 0: continue
+        tx, ty = W / 2 + X * W * sc, H / 2 + Y * W * sc
+        M = np.float32([[sc, 0, tx - sc * W / 2], [0, sc, ty - sc * H / 2]])
+        if abs(sc - 1) < 1e-6 and X == 0 and Y == 0 and al >= 1: out = im.copy(); continue
+        ci = cv2.warpAffine(im, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        m = cv2.warpAffine(ones, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        rim = np.clip(cv2.GaussianBlur(m, (0, 0), 2.2) - m, 0, 1) * 1.6
+        out = out * (1 - (m * al)[..., None]) + ci * (m * al)[..., None]
+        addc(out, rim * al, PEACH, 0.55)
+    spd = (rew_cam(t + 0.02) - rew_cam(t - 0.02)) / 0.04
+    k = 0.035 * spd * (1 - smooth(clamp((t - 0.72) / 0.22, 0, 1)))
+    if k > 0.002: out = radial_blur(out, W / 2, H / 2, 1.0, 1.0 + k, 6)
+    return np.clip(out, 0, 1)
 
 def loop_in15(out, f, k):
     return out
 
 TR2.update({"vibrate": (vibrate, 12, 8), "streak_pass": (streak_pass, 5, 7), "time_slice15": (time_slice15, 6, 10),
             "edge_current15": (edge_current15, 10, 14), "whip_up15": (whip_up15, 6, 8), "light_leak15": (light_leak15, 10, 12),
-            "strike_cut": (strike_cut, 6, 8), "time_stop": (time_stop, 4, 14), "time_restart": (time_restart, 6, 16),
+            "strike_cut": (strike_cut, 6, 8), "time_stop": (time_stop, 4, 14), "time_restart": (time_restart, 14, 24),
             "eye_iris15": (eye_iris15, 12, 14), "speed_whip15": (speed_whip15, 5, 7), "wind_gust": (wind_gust, 6, 10),
             "focus_rack15": (focus_rack15, 10, 12), "emblem_clock": (emblem_clock, EC_PRE, EC_POST), "afterimage15": (afterimage15, 10, 10),
-            "panel_run15": (panel_run15, 8, 12), "loop_in15": ((lambda A, B, j, f, sa, sb: B), 0, 1)})
+            "turn_away": (turn_away, 7, 11), "pendulum": (pendulum, 8, 16), "loop_in15": ((lambda A, B, j, f, sa, sb: B), 0, 1)})
 
 # ---- the frame ----------------------------------------------------------------------------------------------------------
 def timepiece_draw(out, *a, **k):
