@@ -10408,7 +10408,7 @@ ANIMS = {"twinkle": a_twinkle, "windows": a_windows, "flares": a_flares, "motes"
 def bokeh_drift(A, B, j, f, sa, sb, pre=10, post=14):
     x = (j + pre) / (pre + post - 1); r = 30 * math.sin(math.pi * clamp(x, 0, 1)) ** 1.2
     a = defocus16(shift_img(A, 80 * smooth(x)), r); b = defocus16(shift_img(B, -80 * (1 - smooth(x))), r)
-    w = smooth(clamp((x - 0.38) / 0.28, 0, 1))
+    w = smooth(clamp((x - 0.28) / 0.44, 0, 1))
     return np.clip(a * (1 - w) + b * w, 0, 1)
 
 # ---- REFLECTION ("who you could be"): her face rises in the night glass over the city lights ---------------------------
@@ -10493,7 +10493,7 @@ def streak_pass(A, B, j, f, sa, sb, pre=5, post=7):
     cy = H * 0.80; hh = H * 0.15                                                                # low, past the lens (never at face height)
     yy = (_GY - cy) / hh; body = np.exp(-yy ** 4) * np.clip((_GX - (x - W * 0.55)) / (W * 0.55), 0, 1) * np.clip((x + 60 - _GX) / 60, 0, 1)
     body = body.astype(F32)
-    w = smooth(clamp((q - 0.38) / 0.24, 0, 1)); under = A * (1 - w) + B * w                  # the switch under the blur
+    w = smooth(clamp((q - 0.28) / 0.44, 0, 1)); under = A * (1 - w) + B * w                  # the switch under the blur
     kb = math.sin(math.pi * clamp(q, 0, 1)) ** 1.5
     sm = hblur(under, 120)
     o = mixm(under, sm, np.clip(np.maximum(body * 1.4, kb * 0.85), 0, 1).astype(F32))
@@ -10607,7 +10607,7 @@ def face_match(A, B, j, f, sa, sb, pre=10, post=12):
     sA = s_ab ** p; tA = (fa[0] + (fb[0] - fa[0]) * p, fa[1] + (fb[1] - fa[1]) * p)              # A carried onto B's face
     sB = s_ab ** (p - 1); tB = tA
     a = M_(A, fa[0], fa[1], sA, *tA); b = M_(B, fb[0], fb[1], sB, *tB)
-    w = smooth(clamp((x - 0.35) / 0.3, 0, 1)); o = a * (1 - w) + b * w
+    w = smooth(clamp((x - 0.44) / 0.12, 0, 1)); o = a * (1 - w) + b * w
     k = 0.03 * math.sin(math.pi * x)
     return np.clip(radial_blur(o, tA[0], tA[1], 1.0, 1.0 + k, 8) if k > 0.004 else o, 0, 1)
 
@@ -10702,7 +10702,7 @@ def emblem_signal(A, B, j, f, sa, sb, pre=SIG_PRE, post=SIG_POST):
     o = Ac * (1 - m[..., None]) + Bz * m[..., None]
     rim = np.clip(cv2.GaussianBlur(bm, (0, 0), 3 + 2 * z) - bm, 0, 1) * bw * (1 - (smooth((j + 1) / post) if j >= 0 else 0))
     addc(o, rim, TUNG, 2.2)
-    o = o * (1 - (1 - m[..., None]) * np.array([0.10, 0.04, 0.0], F32) * smooth(u)) + (1 - m[..., None]) * TUNG * 0.05 * smooth(u)   # the glare is warm light
+    o = o * (1 - (1 - m[..., None]) * np.array([0.26, 0.10, 0.0], F32) * smooth(u)) + (1 - m[..., None]) * TUNG * 0.04 * smooth(u)   # the glare is warm light
     return np.clip(o, 0, 1)
 
 # ---- LAMPLIGHT (the loft -> Iris in the kitchen): the lamp's warm glow swells and carries us across the room ----------
@@ -10771,7 +10771,7 @@ def focus_pull(A, B, j, f, sa, sb, pre=8, post=10):
 # ---- BOLT TRAIL (the run -> down the street): his lightning stretches ahead into the street's speed trails -------------
 def bolt_trail(A, B, j, f, sa, sb, pre=6, post=10):
     x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.42) / 0.16, 0, 1)); base = A * (1 - w) + B * w
+    w = smooth(clamp((x - 0.32) / 0.36, 0, 1)); base = A * (1 - w) + B * w
     hi = base * np.clip((lumf(base) - 0.50) * 2.5, 0, 1)[..., None]
     L = int(2 + 420 * k); st = hblur(shift_img(hi, 120 * k), L)
     o = hblur(base, 2 + 60 * k) * (1 - 0.45 * k) + st * 0.6 * k

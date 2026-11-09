@@ -103,7 +103,7 @@ shot("lrun", "fs5", 40, 48, 119.20, 121.05, tin="city_dive", seg=True, face=None
 shot("alone", "fs3", 48, 52, 115.00, 116.60, tin="long_exposure", seg=True, anim="windows")                          # "It's hard to do these things alone"
 shot("alonec", "fs3", 52, 56, 39.75, 40.55, tin="face_match", seg=True)
 # ---- THE SIGNAL (the emblem transition): the real Flash signal lamp, its bolt the doorway home
-shot("signal", "fs2", 56, 64, 45.40, 48.40, tin="beam_call", seg=True, face=None, cx=(640, 640), tmap=slow(56, 64, 45.40, 48.40, 0.3), lin=True, z=[(0, 1.00), (1, 1.08)])
+shot("signal", "fs2", 56, 64, 45.40, 48.40, tin="beam_call", seg=True, face=None, cx=(640, 640), tmap=slow(56, 64, 45.40, 48.40, 0.3), lin=True, z=[(0, 1.00), (1, 1.08)], flowmax=60)
 # ---- home (e64-e80): the loft, Iris, the two of them; the loop pulls home back into the city
 shot("loft", "fs3", 64, 68, 41.50, 43.50, tin="emblem_signal", seg=True, look="home", anim="motes")                         # "Just hold on"
 shot("iriskit", "fs3", 68, 72, 49.40, 50.35, tin="lamplight", seg=True, look="home", anim="motes")                        # "hold on, we're going"

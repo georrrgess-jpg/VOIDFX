@@ -47,7 +47,18 @@
    "buried": false
   },
   {
-   "name": "light_warp",
+   "name": "bolt_split",
+   "kind": "transition",
+   "at": 4.8,
+   "t0": 4.5,
+   "t1": 5.25,
+   "music_db": -18.4,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -161.6,
+   "buried": true
+  },
+  {
+   "name": "focus_pull",
    "kind": "transition",
    "at": 5.4,
    "t0": 5.1,
@@ -69,6 +80,17 @@
    "buried": false
   },
   {
+   "name": "light_warp",
+   "kind": "transition",
+   "at": 5.85,
+   "t0": 5.55,
+   "t1": 6.3,
+   "music_db": -18.0,
+   "fx_peak_db": -32.2,
+   "fx_minus_music": -14.2,
+   "buried": true
+  },
+  {
    "name": "release",
    "kind": "transition",
    "at": 7.2,
@@ -77,6 +99,17 @@
    "music_db": -12.6,
    "fx_peak_db": -12.5,
    "fx_minus_music": 0.1,
+   "buried": false
+  },
+  {
+   "name": "bolt_trail",
+   "kind": "transition",
+   "at": 7.8,
+   "t0": 7.5,
+   "t1": 8.25,
+   "music_db": -11.8,
+   "fx_peak_db": -21.8,
+   "fx_minus_music": -10.0,
    "buried": false
   },
   {
@@ -132,6 +165,17 @@
    "music_db": -11.2,
    "fx_peak_db": -180.0,
    "fx_minus_music": -168.8,
+   "buried": true
+  },
+  {
+   "name": "window_hop",
+   "kind": "transition",
+   "at": 11.4,
+   "t0": 11.1,
+   "t1": 11.85,
+   "music_db": -11.6,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -168.4,
    "buried": true
   },
   {
