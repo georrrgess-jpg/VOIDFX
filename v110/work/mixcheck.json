@@ -91,14 +91,14 @@
    "buried": true
   },
   {
-   "name": "THROUGH THE FAN + I'M LOSING POWER",
+   "name": "THROUGH THE FAN",
    "kind": "set piece",
    "at": 7.3,
    "t0": 7.3,
-   "t1": 10.5,
-   "music_db": -11.1,
-   "fx_peak_db": -3.9,
-   "fx_minus_music": 7.2,
+   "t1": 9.43,
+   "music_db": -12.9,
+   "fx_peak_db": -3.8,
+   "fx_minus_music": 9.1,
    "buried": false
   },
   {
@@ -108,7 +108,7 @@
    "t0": 8.83,
    "t1": 9.58,
    "music_db": -11.4,
-   "fx_peak_db": -4.4,
+   "fx_peak_db": -4.3,
    "fx_minus_music": 7.1,
    "buried": false
   },

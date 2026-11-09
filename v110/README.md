@@ -110,3 +110,9 @@ the beat drop, the scenes shake a little bit too much … reduce the shaking/bea
   through a wide feathered edge and keeps the same forward motion as it settles. No ring, no burst.
 - **A calmer drop:** no impact shake on the drop (or before the loop); the beat camera rests through the drop's first bar
   (the title) and runs at half its punch and kick after it.
+
+## Revision 3 and the verdict
+*"I would like for you to remove the I'm losing power, and then upon completion, you can make the edit as standard."*
+- The title is gone (and its ignition sound); the edit has no text. The tube still blinks on with the sung "I'm" and the
+  mains still dip on each word; the drop is THE SURGE alone. **Standard:** `sync/handoffs/2026-11-09_dexter_v110_SLEEPWALKER_standard.md`;
+  new Dexter edits scaffold from it (`--base v110`).

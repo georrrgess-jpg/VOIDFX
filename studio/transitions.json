@@ -896,7 +896,8 @@
       "tags": [
         "physical"
       ],
-      "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+      "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'",
+      "caution": "v110 rev 1: the owner disliked it at 17 s ('the lines transition'): replaced by plasticroll110"
     },
     "molasses108": {
       "verdict": "liked",
@@ -1079,7 +1080,8 @@
       "tags": [
         "physical"
       ],
-      "evidence": "v109, no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'"
+      "evidence": "v109, no note; v109 PHANTOM standard (2026-11-09): 'I like this edit, make it a standard.'",
+      "caution": "v110 rev 1: the owner disliked it at 16 s ('the doorway transition'): replaced by curtain110"
     },
     "mirror109": {
       "verdict": "liked",
@@ -1350,6 +1352,159 @@
       "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13.",
       "studio": "flash",
       "tags": []
+    },
+    "headlight110": {
+      "verdict": "rejected",
+      "studio": "dexter",
+      "tags": [
+        "overlay"
+      ],
+      "evidence": "v110 rev 2: 'the beginning window graphic at the start of the edit isn't really necessary' (a car's light through a window: two panes with the window's cross crossing the bed)",
+      "fix": "a gentle push; don't add a graphic where the cut needs none"
+    },
+    "lightson110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 (the tube above him blinks on with the sung 'I'm'), no note; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "brownout110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 (the mains fail into the fog), no note; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "fogwipe110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 (the room's fog rolls across the lens), no note; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "nodoff110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 (falling asleep: the picture drops away with vertical motion blur, the next rises from below), no note; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "fan110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "signature",
+        "physical"
+      ],
+      "evidence": "v110 signature on the drop: the fan's light through turning blades (off his face), the fan spins up, a blade sweeps the lens and the kill room is behind it; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'",
+      "caution": "the first build was a drawn disc parked on the frame and the drop a washed-out flash: the light is from behind him, the blade crosses the lens as the cover"
+    },
+    "barrel110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "signature"
+      ],
+      "evidence": "v110 THE BARREL (the focal point): rev 2 'improve the gun transition to be more seamless and smoother' -> one continuous push into the real muzzle, light grows in the bore, his stare opens inside it through a wide feathered edge and keeps moving; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'",
+      "caution": "no drawn ring, no burst, and light first: the next face only once the bore is big (a mouth in a gun bore reads badly)"
+    },
+    "spatter110": {
+      "verdict": "rejected",
+      "studio": "dexter",
+      "tags": [],
+      "evidence": "v110 rev 1 'I don't like the splatter transition at the end ... smoother and more seamless'; rev 2 'the blood spatter scene ... still isn't quite adequate ... smoother or more cinematic' (cast-off spatter swept over him, then a seep)",
+      "fix": "swinglight110: a motivated light pool carries the next scene in, soft-edged, one continuous push"
+    },
+    "fall110": {
+      "verdict": "rejected",
+      "studio": "dexter",
+      "tags": [
+        "overlay"
+      ],
+      "evidence": "v110 rev 1: 'the loop is really poor ... completely change the loop and take a different avenue' (frame 0 as a card rising out of the dark, streaks and drops)",
+      "fix": "driploop110"
+    },
+    "neonloop110": {
+      "verdict": "ok",
+      "studio": "dexter",
+      "tags": [],
+      "evidence": "v110 rev 1, tried and dropped by the studio: a neon outline of frame 0's silhouette read as a squiggle or a ring around his face (top-down matte)"
+    },
+    "driploop110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "signature"
+      ],
+      "evidence": "v110 rev 1 loop: one lit drop of blood falls beside his head, lands, the room becomes a liquid surface and frame 0 comes up through the ripples; no further note; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "bokeh110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 rev 1 (the city lights fall into soft discs, the next shot's lamp refocuses out of them); v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "tear110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 rev 1 (the picture is a print torn down one side and pulled away, the face whole on its piece); v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "curtain110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 rev 1, replacing the 16 s after-image the owner disliked: the sheer curtain blows across the lens; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'",
+      "caution": "broad soft folds: thin fold stripes read as the 'lines' the owner dislikes"
+    },
+    "plasticroll110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 rev 1, replacing the 17 s frost the owner disliked: kill-room plastic unrolls down over the lens; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "brush110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [],
+      "evidence": "v110 rev 1 (two dry-brush strokes paint the next shot in); v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "swinglight110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "signature",
+        "physical"
+      ],
+      "evidence": "v110 rev 2, the owner's 'smoother or more cinematic' blood scene: the bare bulb's pool of light swings across him and on its last swing carries the blood-spattered wall in; v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'",
+      "caution": "his own light while the pool is small, the next scene only once it is big; its extra light must be gone by the cut's end"
+    },
+    "tilt110": {
+      "verdict": "liked",
+      "studio": "dexter",
+      "tags": [
+        "physical"
+      ],
+      "evidence": "v110 rev 2 (a motion-blurred tilt up to him looking at the blood); v110 SLEEPWALKER standard (2026-11-09): 'remove the I'm losing power, and then upon completion, you can make the edit as standard'"
+    },
+    "glide110": {
+      "verdict": "ok",
+      "studio": "dexter",
+      "tags": [],
+      "evidence": "v110 rev 2 (a soft matched dissolve into the last shot), no note"
     }
   },
   "families": {

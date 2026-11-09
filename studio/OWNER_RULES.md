@@ -1,7 +1,7 @@
 # The owner's rules, on one page (both studios)
 
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
-(v4–v15, v101–v109) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
+(v4–v15, v101–v110) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
 Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
@@ -22,6 +22,8 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 - Outro / title cards, watermarks, labels, name tags, counters, timecodes, CJK lines; a recoloured logo. **[plan]** `logo_uv` banned
 - **Interface / HUD overlays drawn over the footage**: a heart-monitor trace, readouts, timers (v6's VHS counter; v109 rev 2: *"change the heart monitor … You don't have to replace this with anything"*). A frame treatment (v109's surveillance feed) is fine; a widget parked on the picture is not. **[plan]** registry (`ekg109` rejected)
 - **Spins in a smooth, dark edit**: v109 rev 1 removed the headspin for flow (*"I don't really like how that flows with this edit"*), and the roll and flip at its end went with it. Spins belong to kinetic edits, once. **[eye]**
+- **A graphic where the cut needs none** (v110 rev 2: the window-light panes over the opening, *"isn't really necessary"*). **[eye]**
+- **Stripe or line transitions and after-images in a dark, smooth edit** (v110 rev 1: *"the doorway transition at 16 seconds … the lines transition at 17 seconds"*: an after-image and a rime frost). **[plan]** registry cautions
 - **A mirrored pack shot**: read any text in the frame (v109: p7's tape read SSORƆ TON OD); flip it back with `hflip=True` (v109 base). **[eye]**
 - A line shown as spoken when the lips don't match (v101); captions on words the song isn't singing (v103).
 - Chimes, bells, shimmers, drones, swirls, whines, a swell on every move (v12, v106, v13). **[plan]** sound kinds (a WARN: v107 shipped one swirl)
@@ -49,6 +51,10 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 19. **A flow of graphics that become transitions**: in the back half, chain two or three graphic → transition moments, each graphic on its shot for ~0.5–1 s first (v109 rev 1: *"a cool flow where there's unique graphics appearing and then transitions from those graphics"* → the fingerprint dive, the photo's fire; approved).
 20. **A prop's effect starts on the prop, tracked**: the fire comes out of the real burning photo (its flame's foot tracked through the shot), burns the photo first, then the frame (v109 rev 2: *"make it stem from the actual picture that's burning and try to make it tied into that transition"*). Extends 13 to every prop-motivated transition.
 21. **Keep the edit on Dexter; supporting characters only when the concept needs them, and swap soft or busy shots for sharp "texture" clips** (fire, foliage, rust; the high-bitrate S1/S4 packs) (v109 rev 1: *"remove the clips with dokes and replace them with other high-quality texture clips"*).
+22. **A violent scene carried by light, not by drawn spatter**: a motivated light (the bare bulb's pool) carries the blood room in, soft-edged, one continuous push; the cast-off spatter sweep was rejected twice (v110: *"smoother and more seamless"*, *"smoother or more cinematic"*, then the SWINGING LIGHT and the verdict).
+23. **A calmer drop**: no impact shake on the drop; the beat camera rests through the drop's first bar and runs at about half its punch and kick (v110 rev 2: *"the scenes shake a little bit too much … reduce the shaking/beat jump"*). The beat camera stays the default, lighter. **[eye]**
+24. **Text: start without; if a title rides a drop, phase it** (the setup words already written before the drop, the payoff word on it), **and expect to remove it** (v110: *"I'm losing, and then power would be when it drops"*, then *"remove the I'm losing power"* at the verdict; as v12 removed both titles). **[plan]** titles
+25. **A prop dive is one continuous, seamless move** (the push into the real muzzle, light first, the next face only once the opening is big, the motion carried through the cut; v110 rev 2 *"more seamless and smoother"*).
 
 ## 3. Text
 - Dexter: every clearly sung line captioned word by word on its sung onset, in the v9 style (heavy caps, keyline, red emphasis, eased in). Flash: text is optional and titles must earn their place (v12 removed both).
