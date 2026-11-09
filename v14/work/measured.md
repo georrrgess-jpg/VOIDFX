@@ -1,0 +1,9 @@
+- **QC:** 11/11 on the encode (11 distinct checks).
+- **Loudness:** -13.9 LUFS, true peak -4.6 dBTP after AAC.
+- **Loop seam:** blurred difference 0.15 (gate ≤ 1); audio seam step 0.0400; picture wrap step 0.41 vs local median 2.24.
+- **Flashes:** 0 events, at most 0 a second; white-outs [].
+- **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
+- **Faces vs effects:** 37 flags in 4 runs: 492–492, 544–578, 670–702, 1512–1512.
+- **Motion audit:** 9 pops (UNEXPLAINED 1, cadence 2, cut 6); UNEXPLAINED at [326] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **plan_check:** 0 FAIL, 1 WARN; WARN: [clip reuse] 'laugh' and 'album' come from the same source shot (fs1 214.30-216.37 s, 0.0 s apart): one continuous shot counts as a reuse (v107 rule 6).
+- **Effort this round (1):** 1 renders (5.8 min), QC 3.4 min.

@@ -1,0 +1,204 @@
+{
+ "music_rms_db": -24.6,
+ "under": 12.0,
+ "rows": [
+  {
+   "name": "loop_in14",
+   "kind": "transition",
+   "at": 0.0,
+   "t0": -0.3,
+   "t1": 0.45,
+   "music_db": -28.3,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -151.7,
+   "buried": true
+  },
+  {
+   "name": "print_signature",
+   "kind": "set piece",
+   "at": 0.81,
+   "t0": 0.81,
+   "t1": 3.24,
+   "music_db": -25.8,
+   "fx_peak_db": -38.5,
+   "fx_minus_music": -12.6,
+   "buried": true
+  },
+  {
+   "name": "print_dive",
+   "kind": "transition",
+   "at": 2.7,
+   "t0": 2.4,
+   "t1": 3.15,
+   "music_db": -25.2,
+   "fx_peak_db": -38.4,
+   "fx_minus_music": -13.2,
+   "buried": true
+  },
+  {
+   "name": "double_exp",
+   "kind": "transition",
+   "at": 3.78,
+   "t0": 3.48,
+   "t1": 4.23,
+   "music_db": -22.1,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -157.9,
+   "buried": true
+  },
+  {
+   "name": "sun_flare",
+   "kind": "transition",
+   "at": 5.4,
+   "t0": 5.1,
+   "t1": 5.85,
+   "music_db": -26.7,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -153.3,
+   "buried": true
+  },
+  {
+   "name": "film_burn",
+   "kind": "transition",
+   "at": 7.02,
+   "t0": 6.72,
+   "t1": 7.47,
+   "music_db": -26.0,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -154.0,
+   "buried": true
+  },
+  {
+   "name": "shutter_freeze",
+   "kind": "transition",
+   "at": 8.1,
+   "t0": 7.8,
+   "t1": 8.55,
+   "music_db": -35.0,
+   "fx_peak_db": -47.9,
+   "fx_minus_music": -12.9,
+   "buried": true
+  },
+  {
+   "name": "the_album",
+   "kind": "set piece",
+   "at": 8.1,
+   "t0": 8.1,
+   "t1": 12.69,
+   "music_db": -28.5,
+   "fx_peak_db": -36.1,
+   "fx_minus_music": -7.6,
+   "buried": false
+  },
+  {
+   "name": "album_out",
+   "kind": "transition",
+   "at": 12.42,
+   "t0": 12.12,
+   "t1": 12.87,
+   "music_db": -20.9,
+   "fx_peak_db": -35.8,
+   "fx_minus_music": -14.9,
+   "buried": true
+  },
+  {
+   "name": "ripple",
+   "kind": "transition",
+   "at": 14.04,
+   "t0": 13.74,
+   "t1": 14.49,
+   "music_db": -27.9,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -152.1,
+   "buried": true
+  },
+  {
+   "name": "focus_rack14",
+   "kind": "transition",
+   "at": 15.66,
+   "t0": 15.36,
+   "t1": 16.11,
+   "music_db": -27.5,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -152.5,
+   "buried": true
+  },
+  {
+   "name": "emblem_glint",
+   "kind": "set piece",
+   "at": 16.2,
+   "t0": 16.2,
+   "t1": 17.28,
+   "music_db": -20.0,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -160.0,
+   "buried": true
+  },
+  {
+   "name": "emblem_glint",
+   "kind": "transition",
+   "at": 16.74,
+   "t0": 16.44,
+   "t1": 17.19,
+   "music_db": -19.9,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -160.1,
+   "buried": true
+  },
+  {
+   "name": "speed_whip14",
+   "kind": "transition",
+   "at": 18.36,
+   "t0": 18.06,
+   "t1": 18.81,
+   "music_db": -27.8,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -152.2,
+   "buried": true
+  },
+  {
+   "name": "light_leak14",
+   "kind": "transition",
+   "at": 19.98,
+   "t0": 19.68,
+   "t1": 20.43,
+   "music_db": -29.6,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -150.4,
+   "buried": true
+  },
+  {
+   "name": "dolly",
+   "kind": "transition",
+   "at": 21.6,
+   "t0": 21.3,
+   "t1": 22.05,
+   "music_db": -25.0,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -155.0,
+   "buried": true
+  },
+  {
+   "name": "afterimage14",
+   "kind": "transition",
+   "at": 23.22,
+   "t0": 22.92,
+   "t1": 23.67,
+   "music_db": -23.4,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -156.6,
+   "buried": true
+  },
+  {
+   "name": "loop",
+   "kind": "set piece",
+   "at": 24.3,
+   "t0": 24.3,
+   "t1": 25.92,
+   "music_db": -21.1,
+   "fx_peak_db": -36.3,
+   "fx_minus_music": -15.2,
+   "buried": true
+  }
+ ]
+}

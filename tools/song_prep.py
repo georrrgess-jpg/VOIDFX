@@ -89,7 +89,7 @@ def main():
     os.makedirs(W, exist_ok=True); os.makedirs(AD, exist_ok=True)
     song = a.song if os.path.isabs(a.song) else f"{ROOT}/{a.song}"; T0 = time.time()
     if not os.path.exists(f"{AD}/song48.wav"):
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", song, "-ac", "2", "-ar", "48000", f"{AD}/song48.wav"], check=True)
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", song, "-ac", "2", "-ar", "48000", "-c:a", "pcm_f32le", f"{AD}/song48.wav"], check=True)   # float, as the audio builders read it
     # 1. map
     cmd = [sys.executable, f"{ROOT}/tools/song_map.py", song, W] + (["--bpm", str(a.bpm)] if a.bpm else [])
     mp = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
