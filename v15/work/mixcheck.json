@@ -135,7 +135,7 @@
    "buried": true
   },
   {
-   "name": "gold_link",
+   "name": "freefall",
    "kind": "transition",
    "at": 8.55,
    "t0": 8.25,

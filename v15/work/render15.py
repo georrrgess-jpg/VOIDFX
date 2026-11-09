@@ -10593,6 +10593,7 @@ def still_layers(s):
         m = np.clip(person if person is not None else np.zeros((H, W), F32), 0, 1).astype(F32)
         lum = lum8(img); q = 4
         fs = face_scr(s, s["f0"]) if s.get("face") is not None else None
+        if not fs and s.get("face_hint"): fs = s["face_hint"]
         fm = np.zeros((H, W), F32)
         if fs: cv2.ellipse(fm, (int(fs[0]), int(fs[1])), (int(fs[2] * 0.9), int(fs[2] * 1.2)), 0, 0, 360, 1.0, -1)
         _ST["fmask"] = np.clip(cv2.GaussianBlur(fm, (0, 0), 30) * 1.5, 0, 1)
@@ -10624,15 +10625,15 @@ def still_particles(n=170, seed=1515):
         _PT["p"] = p
     return _PT["p"]
 
-STILL_X = [22, -18, 15, -12, 10, -8, 6, -4, 0]                                                # where the camera steps to on each kick
+STILL_X = [32, -28, 26, -22, 18, -14, 10, -6, 0]                                                # where the camera steps to on each kick
 def still_cam(e):
     """the bullet-time camera: on each kick of the drum fill it steps to a new place in the frozen moment (alternating
     sides, a little closer each time) in 0.13 s, and drifts slowly between the steps. (dx at his depth in px, zoom)."""
     x = 0.0; z = 0.0; prev = 0.0
     for i, ek in enumerate(E.FILL):
         if e < ek: break
-        w = eout(clamp((e - ek) * E.HB / 0.13, 0, 1), 3.0)
-        x += (STILL_X[i] - prev) * w; z += 0.0055 * w; prev = STILL_X[i]
+        w = eout(clamp((e - ek) * E.HB / 0.10, 0, 1), 3.0)
+        x += (STILL_X[i] - prev) * w; z += (0.028 if i % 2 == 0 else -0.016) * w; prev = STILL_X[i]
     u = clamp((e - E.FILL[0]) / 8, 0, 1)
     return x + 6 * math.sin(2 * math.pi * 0.5 * u), 1.0 + z + 0.004 * u
 
@@ -10666,8 +10667,8 @@ def still_fx(s, f):
     on each kick of the drum fill, the layers sliding against each other; the room drains to a cold steel grey while the
     bolts stay molten gold, throw rays through the room behind him and rim his edge; the drops of the chemicals hang
     in the air as real little lenses; in the last beat the frozen lightning starts to tremble and crackle."""
-    L = still_layers(s); e = e_of(f); k = f - s["f0"]; cx, cy = L["fc"]; t = k / FPS
-    dx, zc = still_cam(e); Z0 = 1.05
+    L = still_layers(s); e = e_of(f); k = f - s["f0"]; cx, cy = W / 2, H / 2; t = k / FPS          # pivot: the frame centre (matches the strike's end)
+    dx, zc = still_cam(e); Z0 = 1.06
     def tf(img, p):
         return zoom_about(shift_img(img, dx * p), cx, cy, Z0 * (1 + (zc - 1) * p))
     a = 0.68 * smooth(clamp(k / 10, 0, 1)); pl = fill_pulse(e)
@@ -10685,10 +10686,10 @@ def still_fx(s, f):
     M = tf(L["m"][..., 0], 1.0)[..., None]; Hm = drain(tf(L["img"], 1.0))
     fmk = tf(L["fmask"], 1.0)[..., None]
     # the bolts and their glow, behind him
-    Bg = lum8(Bl)[..., None] * (AMBR * 1.15 + HOT * 0.35) + Bl * 0.25                          # molten gold, a white-hot core
+    Bg = lum8(Bl)[..., None] * AMBR * 0.95                                                       # molten gold
     glow = cv2.GaussianBlur(Bg, (0, 0), 16); wide = cv2.GaussianBlur(Bg, (0, 0), 90)
-    o = P + (Bg * (1.15 + 0.55 * pl + 0.4 * tr * (0.5 + 0.5 * math.sin(f * 2.3))) + glow * (0.9 + 0.6 * pl)) * (1 - M)
-    o = o + wide * 2.2 * (1 - fmk)                                                              # the bolts' warm light falls through the room
+    o = P * (1 - np.clip(lum8(Bl)[..., None] * 1.5, 0, 0.8)) + (Bg * (0.95 + 0.45 * pl + 0.4 * tr * (0.5 + 0.5 * math.sin(f * 2.3))) + glow * (0.55 + 0.4 * pl)) * (1 - M)
+    o = o + wide * 1.5 * (1 - fmk)                                                              # the bolts' warm light falls through the room
     # god rays streaming out of the frozen bolts through the room (behind him, never on his face)
     q = 4; bq = cv2.resize(Ba, (W // q, H // q), interpolation=cv2.INTER_AREA)
     sx, sy = L["sp"]; zb = Z0 * (1 + (zc - 1) * 0.75); sxq, syq = (cx + (sx + dx * 0.75 - cx) * zb) / q, (cy + (sy - cy) * zb) / q
@@ -10704,6 +10705,7 @@ def still_fx(s, f):
     o = np.clip(o, 0, 1)
     # the hanging drops and sparks (three depths, parallax; never in front of his face)
     fb = face_box(s, s["f0"]) if s.get("face") is not None else None
+    if not fb and s.get("face_hint"): h_ = s["face_hint"]; fb = (h_[0] - h_[2] * 0.75, h_[0] + h_[2] * 0.75, h_[1] + h_[2] * 0.85)
     if fb: fb = (cx + (fb[0] - cx) * Z0 * zc + dx, cx + (fb[1] - cx) * Z0 * zc + dx, cy + (fb[2] - cy) * Z0 * zc)
     q4 = np.zeros((H // 2, W // 2), F32); qs = np.zeros((H // 2, W // 2), F32); lens = []
     for (x, y, d, r, kind, ph) in still_particles():
@@ -10713,7 +10715,7 @@ def still_fx(s, f):
         if fb and fb[0] - 50 < px < fb[1] + 50 and py < fb[2] + 60: continue                  # nothing hangs in front of his face
         rr = max(1.0, r * zz * 0.5)
         if kind: cv2.circle(qs, (int(px * 2), int(py * 2)), int(rr * 2), 1.0, -1, cv2.LINE_AA, shift=2)
-        elif d < 0.80 and len(lens) < 18: lens.append((px, py, rr * 5.0, d))
+        elif d < 0.80 and len(lens) < 4: lens.append((px, py, rr * 3.0, d))
         else: cv2.circle(q4, (int(px * 2), int(py * 2)), int(rr * 3.0), 0.55, -1, cv2.LINE_AA, shift=2)
     dro = cv2.resize(cv2.GaussianBlur(q4, (0, 0), 0.8), (W, H)); spk = cv2.resize(cv2.GaussianBlur(qs, (0, 0), 0.6), (W, H))
     addc(o, dro, np.array([0.95, 0.88, 0.92], F32), 0.40); addc(o, cv2.GaussianBlur(spk, (0, 0), 5), AMBR, 0.9 * (0.6 + 0.4 * pl)); addc(o, spk, HOT, 0.9)
@@ -10947,16 +10949,18 @@ def loop_out(img, f, s):
     strike, the run, newest first), a gold thread of time spiralling along the walls and the frozen sparks streaming
     past as light; at the far end, visible all the way, frame 0 grows, settles and fills the frame: the next "I don't
     got time"."""
-    if f < F_STOP: return img
-    o = stopped(img, s, f, smooth(clamp((f - F_STOP) / 8, 0, 1)))
-    if f < F_REW: return o
+    if f < F_REW: return img
+    o = img
     t = (f - F_REW) / (E.DUR_F - 1 - F_REW)
     under = frame_virtual(f - E.DUR_F)
     if t >= 1: return under
     names = E.REW_CARDS; N = len(names) + 1; D = 0.85; zN = 1 + N * D; cE = zN - 1
     c = cE * rew_cam(t); c_prev = cE * rew_cam(t - 1.0 / (E.DUR_F - 1 - F_REW))
     end = smooth(clamp((t - 0.72) / 0.28, 0, 1))
-    out = rew_bg().copy()
+    w_end = smooth(clamp((t - 0.40) / 0.45, 0, 1))                                             # the walls: the last moment stretched, then frame 0's own light
+    walls = zoom_about(defocus(o, 34), W / 2, H / 2, 1.0 + 2.2 * rew_cam(t)) * np.array([1.05, 0.80, 0.85], F32) * 0.55
+    if w_end > 0: walls = walls * (1 - w_end) + zoom_about(defocus(under, 26), W / 2, H / 2, 1.20 - 0.16 * rew_cam(t)) * 0.85 * w_end
+    out = walls * 0.75 + rew_bg() * 0.40
     # the gold thread of time spiralling along the corridor walls
     cv = np.zeros((H // 2, W // 2), np.uint8); pts = []
     for i in range(240):
@@ -11011,8 +11015,8 @@ def loop_out(img, f, s):
         sp = cv2.resize(cv2.GaussianBlur(sp, (0, 0), 0.8), (W, H))[..., None] * fa
         out = np.clip(out + sp * HOT * 0.8 + cv2.GaussianBlur(sp[..., 0], (0, 0), 5)[..., None] * AMBR * 0.8, 0, 1)
     v = (rew_cam(t + 0.02) - rew_cam(t - 0.02)) / 0.04
-    k = 0.05 * v * (1 - end)
-    if k > 0.002: out = radial_blur(out, W / 2, H / 2, 1.0, 1.0 + k, 6)
+    k = 0.035 * v * (1 - end)
+    if k > 0.002: out = radial_blur(out, W / 2, H / 2, 1.0, 1.0 + k, int(clamp(6 + k * 260, 6, 16)))   # enough samples: no stepped combs
     return np.clip(out, 0, 1)
 
 def loop_in15(out, f, k):
@@ -11067,8 +11071,13 @@ def a_bokeh(img, person, s, f):
 def a_urge(img, person, s, f):
     """THE URGE: lightning gathers on him while he looks at her (his shoulders, his arms), stronger to the end."""
     u = (f - s["f0"]) / max(1, s["f1"] - s["f0"])
-    o = edge_arcs(img, f, body_only(person, s, f), 0.6 + 1.4 * ein(u, 1.3), 1501)
-    o = edge_arcs(o, f + 1, body_only(person, s, f), 0.45 + 1.2 * ein(u, 1.3), 1511)
+    bo = body_only(person, s, f)
+    o = edge_arcs(img, f, bo, 0.8 + 1.8 * ein(u, 1.2), 1501)
+    o = edge_arcs(o, f + 1, bo, 0.6 + 1.6 * ein(u, 1.2), 1511)
+    o = edge_arcs(o, f + 2, bo, 0.4 + 1.4 * ein(u, 1.2), 1521)
+    if bo is not None:                                                                          # his outline starts to glow
+        eg = cv2.GaussianBlur(cv2.morphologyEx((bo > 0.5).astype(np.uint8), cv2.MORPH_GRADIENT, np.ones((5, 5), np.uint8)).astype(F32), (0, 0), 6)[..., None]
+        o = o + eg * AMBR * 1.6 * ein(u, 1.3)
     return off_face(o, img, s, f, 1.15)
 
 def a_grit(img, person, s, f):
@@ -11195,11 +11204,28 @@ def dust_cloud(A, B, j, f, sa, sb, pre=14, post=12):
     w = smooth(clamp((x - 0.46) / 0.20, 0, 1)); base = A * (1 - w) + B * w if 0 < w < 1 else (A if w <= 0 else B)
     return np.clip(base * (1 - dens) + dust * dens, 0, 1)
 
+def freefall(A, B, j, f, sa, sb, pre=6, post=10):
+    """FREEFALL (the S5 suit at night -> the city from above): he steps off the roof: the frame drops away beneath us
+    like a card falling, tipping as it goes, and we fall after it toward the city far below, rushing in out of the blur."""
+    x = (j + pre) / (pre + post - 1); fa = ein(clamp(x / 0.72, 0, 1), 2.1)
+    dy = H * 1.12 * fa; rot = 5.0 * fa; v = 2.1 * H * 1.12 * (clamp(x / 0.72, 0, 1) ** 1.1) / 0.72 / (pre + post)
+    M = cv2.getRotationMatrix2D((W / 2, H * 0.2), rot, 1.0); M[1, 2] += dy
+    A4 = cv2.warpAffine(np.dstack([A, np.ones((H, W), F32)]), M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    if v > 2: A4 = hblur(A4, 2 + v * 0.8, vertical=True)
+    zb = 1.0 + 0.28 * (1 - eout(x, 2.2)); Bz = zoom_about(B, W / 2, H / 2, zb)
+    kb = 0.10 * (1 - eout(x, 2.0)); Bz = radial_blur(Bz, W / 2, H / 2, 1.0, 1.0 + kb, 8) if kb > 0.004 else Bz
+    Bz = Bz * (0.72 + 0.28 * smooth(x))
+    sh = np.roll(cv2.GaussianBlur(A4[..., 3], (0, 0), 26), -30, axis=0)[..., None] * (1 - A4[..., 3:4])   # the falling frame's shadow
+    o = Bz * (1 - 0.35 * sh)
+    return np.clip(o * (1 - A4[..., 3:4]) + A4[..., :3], 0, 1)
+
 TR2.update({"phone_flare": (phone_flare, 8, 12), "dust_cloud": (dust_cloud, 14, 12)})
+TR2.update({"freefall": (freefall, 6, 10)})
 
 def base15(s, f):
     if s["n"] == "still": return still_fx(s, f), None
     img, person = base11(s, f)
+    if s.get("expo"): img = 1 - (1 - np.clip(img, 0, 1)) ** s["expo"]                         # a dark source lifted (the night city)
     if s.get("anim") in ANIMS: img = ANIMS[s["anim"]](img, person, s, f)
     if s["n"] == "alone": img = loop_out(img, f, s)
     return img, person

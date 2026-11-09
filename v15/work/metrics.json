@@ -428,6 +428,69 @@
    "step": "sheet:v15w:1072,1075,1078,1080,1082,1084",
    "s": 13.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:58:15",
+   "round": 2,
+   "step": "prep",
+   "s": 139.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:59:09",
+   "round": 2,
+   "step": "sheet:v15x:622,640,665,688,712,740,505,509,512,515,960,972,130,1330,1340,1475,1495,1510,1525,1535,1542,1547",
+   "s": 49.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:03:54",
+   "round": 2,
+   "step": "prep",
+   "s": 225.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:04:24",
+   "round": 2,
+   "step": "sheet:v15y:590,605,615,619,622,630,650,675,700,725,750,770",
+   "s": 30.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:04:55",
+   "round": 2,
+   "step": "sheet:v15z:545,575,600,612,616,619,621,624",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:06:09",
+   "round": 2,
+   "step": "sheet:v15z2:616,618,619,620,621,623,626,640",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:06:29",
+   "round": 2,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:06:36",
+   "round": 2,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 16:15:38",
+   "round": 2,
+   "step": "video",
+   "s": 542.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -540,6 +603,72 @@
    "round": 1,
    "cat": "framing",
    "text": "hero (fire flight): profile face cut at the frame edge; reframed"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "framing",
+   "text": "freeze: YuNet took his open palm for the largest face, so the crop centred on the hand and pushed his face to the edge; framed by hand with a face hint"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "other",
+   "text": "freeze: 12.04 s fell between two 24p source frames and flow ghosted the palm; frozen on the real frame at 12.017"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "seam",
+   "text": "freeze: the strike ended at a different zoom and pivot than the still, a ghost at the time stop; matched (1.06 about the centre)"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the bullet-time steps were too small to see and the bolts read white; steps x2 with alternate pushes, the bolts molten gold"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "critique: 18 big refractive drops read like a droplet filter (rejected in v108); cut to four small ones"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the loop's cards had stepped radial-blur combs on faces and floated in an empty void; more samples, walls of the stretched last moment turning into frame 0's own light"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the loop's second time-stop repeated the freeze (v14 rule 4); removed"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: too much lightning-on-chest; gold_link replaced by FREEFALL (a non-lightning drop toward the city)"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "framing",
+   "text": "critique: runfs5 face half off the right edge (face=None); face tracking on"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "other",
+   "text": "critique: the night insert too dark (mean luma 46); lifted"
+  },
+  {
+   "t": "2026-11-09 16:06:41",
+   "round": 2,
+   "cat": "other",
+   "text": "dust cloud front crossed the frame in 4 frames (pop at 1082); 14-frame roll-in with a leading front"
   }
  ],
  "round_starts": {

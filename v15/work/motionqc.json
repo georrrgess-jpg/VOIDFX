@@ -8,9 +8,9 @@
   8.61,
   6.72,
   2.08,
-  8.7,
-  2.35,
-  9.33,
+  8.58,
+  3.22,
+  8.76,
   6.3,
   20.93,
   7.89,
@@ -28,60 +28,60 @@
   8.66,
   7.09,
   1.8,
-  6.08,
-  4.9,
-  13.16,
-  5.21,
-  5.88,
-  3.88,
-  2.38,
-  2.89,
-  1.48,
-  1.3,
-  0.55,
-  1.72,
-  0.94,
-  1.79,
-  5.32,
+  6.07,
+  4.89,
+  13.85,
+  6.55,
+  5.56,
+  3.66,
+  2.5,
+  4.04,
+  2.14,
+  1.95,
+  0.56,
+  2.79,
+  1.29,
+  2.44,
+  5.69,
   3.09,
-  10.46,
+  10.47,
   2.71,
-  1.74,
-  1.64,
-  17.32,
-  1.92,
-  2.83,
-  3.9,
-  17.44,
-  16.27,
-  19.15,
+  1.75,
+  1.52,
+  16.24,
+  2.33,
+  3.54,
+  5.06,
+  17.76,
+  16.28,
+  19.16,
   12.6,
   4.2,
-  7.3,
+  7.15,
   5.29,
-  2.45,
-  5.76,
+  2.46,
+  5.77,
   1.28,
   4.18,
   14.11,
   9.57,
   5.69,
   7.52,
-  5.0,
+  4.99,
   8.51,
-  12.08,
-  17.95,
-  11.24,
-  15.52,
-  4.46,
-  19.19,
-  6.47,
-  5.86,
+  12.77,
+  19.68,
+  13.24,
+  17.32,
+  4.43,
+  19.18,
+  6.46,
+  5.85,
   1.07,
-  1.95,
-  11.01,
-  12.97,
-  11.58
+  5.54,
+  11.65,
+  13.81,
+  9.39
  ],
  "dead": [],
  "pops": [
@@ -131,30 +131,12 @@
    "hb_off": 9
   },
   {
-   "f": 513,
-   "t": 8.55,
-   "d": 53.1,
-   "med": 3.9,
-   "kind": "cut",
-   "near": "gold_link @ 513",
-   "hb_off": 10
-  },
-  {
-   "f": 525,
-   "t": 8.75,
-   "d": 6.2,
-   "med": 1.2,
-   "kind": "cadence",
-   "near": "gold_link @ 513",
-   "hb_off": 2
-  },
-  {
    "f": 528,
    "t": 8.8,
    "d": 6.5,
    "med": 1.1,
    "kind": "cadence",
-   "near": "gold_link @ 513",
+   "near": "freefall @ 513",
    "hb_off": 5
   },
   {
@@ -163,7 +145,7 @@
    "d": 6.6,
    "med": 1.1,
    "kind": "cadence",
-   "near": "gold_link @ 513",
+   "near": "freefall @ 513",
    "hb_off": 7
   },
   {
@@ -172,40 +154,85 @@
    "d": 6.6,
    "med": 1.1,
    "kind": "cadence",
-   "near": "gold_link @ 513",
+   "near": "freefall @ 513",
    "hb_off": 9
   },
   {
-   "f": 599,
-   "t": 9.983,
-   "d": 16.7,
-   "med": 3.9,
-   "kind": "beat",
-   "near": null,
-   "hb_off": -1
-  },
-  {
-   "f": 614,
-   "t": 10.233,
-   "d": 11.7,
-   "med": 3.1,
+   "f": 621,
+   "t": 10.35,
+   "d": 8.7,
+   "med": 2.0,
    "kind": "UNEXPLAINED",
    "near": "time_stop @ 619",
-   "hb_off": -5
+   "hb_off": 2
+  },
+  {
+   "f": 639,
+   "t": 10.65,
+   "d": 6.8,
+   "med": 1.5,
+   "kind": "beat",
+   "near": "time_stop @ 619",
+   "hb_off": 0
   },
   {
    "f": 640,
    "t": 10.667,
-   "d": 6.9,
-   "med": 1.2,
+   "d": 10.1,
+   "med": 1.5,
    "kind": "beat",
    "near": "time_stop @ 619",
    "hb_off": 1
   },
   {
+   "f": 641,
+   "t": 10.683,
+   "d": 7.6,
+   "med": 1.5,
+   "kind": "UNEXPLAINED",
+   "near": "time_stop @ 619",
+   "hb_off": 2
+  },
+  {
+   "f": 650,
+   "t": 10.833,
+   "d": 9.2,
+   "med": 1.5,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -8
+  },
+  {
+   "f": 651,
+   "t": 10.85,
+   "d": 6.9,
+   "med": 0.9,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -7
+  },
+  {
+   "f": 652,
+   "t": 10.867,
+   "d": 4.9,
+   "med": 0.9,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -6
+  },
+  {
+   "f": 669,
+   "t": 11.15,
+   "d": 9.3,
+   "med": 1.7,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -8
+  },
+  {
    "f": 688,
    "t": 11.467,
-   "d": 5.1,
+   "d": 10.2,
    "med": 0.8,
    "kind": "UNEXPLAINED",
    "near": null,
@@ -214,8 +241,71 @@
   {
    "f": 689,
    "t": 11.483,
-   "d": 4.4,
+   "d": 7.2,
    "med": 0.8,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -8
+  },
+  {
+   "f": 690,
+   "t": 11.5,
+   "d": 5.3,
+   "med": 0.8,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -7
+  },
+  {
+   "f": 717,
+   "t": 11.95,
+   "d": 8.5,
+   "med": 1.0,
+   "kind": "beat",
+   "near": null,
+   "hb_off": 1
+  },
+  {
+   "f": 718,
+   "t": 11.967,
+   "d": 5.9,
+   "med": 1.0,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": 2
+  },
+  {
+   "f": 727,
+   "t": 12.117,
+   "d": 7.3,
+   "med": 1.0,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -8
+  },
+  {
+   "f": 728,
+   "t": 12.133,
+   "d": 4.8,
+   "med": 0.9,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -7
+  },
+  {
+   "f": 746,
+   "t": 12.433,
+   "d": 5.5,
+   "med": 0.7,
+   "kind": "UNEXPLAINED",
+   "near": null,
+   "hb_off": -9
+  },
+  {
+   "f": 747,
+   "t": 12.45,
+   "d": 4.3,
+   "med": 0.7,
    "kind": "UNEXPLAINED",
    "near": null,
    "hb_off": -8
@@ -223,8 +313,8 @@
   {
    "f": 774,
    "t": 12.9,
-   "d": 17.2,
-   "med": 3.3,
+   "d": 18.5,
+   "med": 4.0,
    "kind": "cut",
    "near": "time_restart @ 774",
    "hb_off": 0
@@ -241,8 +331,8 @@
   {
    "f": 929,
    "t": 15.483,
-   "d": 13.4,
-   "med": 2.5,
+   "d": 14.2,
+   "med": 3.0,
    "kind": "beat",
    "near": "speed_whip15 @ 900",
    "hb_off": 0
@@ -257,31 +347,40 @@
    "hb_off": -9
   },
   {
-   "f": 1081,
-   "t": 18.017,
-   "d": 16.2,
-   "med": 3.7,
+   "f": 1077,
+   "t": 17.95,
+   "d": 16.0,
+   "med": 3.8,
    "kind": "UNEXPLAINED",
    "near": "dust_cloud @ 1084",
-   "hb_off": -3
+   "hb_off": -7
   },
   {
-   "f": 1082,
-   "t": 18.033,
-   "d": 29.6,
-   "med": 3.7,
+   "f": 1078,
+   "t": 17.967,
+   "d": 23.5,
+   "med": 3.8,
    "kind": "UNEXPLAINED",
    "near": "dust_cloud @ 1084",
-   "hb_off": -2
+   "hb_off": -6
   },
   {
-   "f": 1083,
-   "t": 18.05,
-   "d": 37.9,
-   "med": 4.4,
-   "kind": "cut",
+   "f": 1079,
+   "t": 17.983,
+   "d": 22.4,
+   "med": 3.8,
+   "kind": "UNEXPLAINED",
    "near": "dust_cloud @ 1084",
-   "hb_off": -1
+   "hb_off": -5
+  },
+  {
+   "f": 1080,
+   "t": 18.0,
+   "d": 16.4,
+   "med": 3.8,
+   "kind": "UNEXPLAINED",
+   "near": "dust_cloud @ 1084",
+   "hb_off": -4
   },
   {
    "f": 1162,
@@ -295,26 +394,26 @@
   {
    "f": 1327,
    "t": 22.117,
-   "d": 37.5,
-   "med": 10.0,
+   "d": 43.6,
+   "med": 12.6,
    "kind": "cadence",
    "near": "pendulum @ 1316",
    "hb_off": -8
   },
   {
-   "f": 1329,
-   "t": 22.15,
-   "d": 25.9,
-   "med": 6.4,
+   "f": 1332,
+   "t": 22.2,
+   "d": 20.7,
+   "med": 4.6,
    "kind": "cadence",
    "near": "pendulum @ 1316",
-   "hb_off": -6
+   "hb_off": -3
   },
   {
    "f": 1334,
    "t": 22.233,
-   "d": 21.8,
-   "med": 4.4,
+   "d": 29.7,
+   "med": 4.6,
    "kind": "beat",
    "near": "pendulum @ 1316",
    "hb_off": -1
@@ -322,8 +421,8 @@
   {
    "f": 1336,
    "t": 22.267,
-   "d": 14.6,
-   "med": 2.1,
+   "d": 22.5,
+   "med": 1.6,
    "kind": "beat",
    "near": "pendulum @ 1316",
    "hb_off": 1
@@ -331,8 +430,8 @@
   {
    "f": 1339,
    "t": 22.317,
-   "d": 16.4,
-   "med": 0.7,
+   "d": 27.0,
+   "med": 1.1,
    "kind": "cadence",
    "near": "pendulum @ 1316",
    "hb_off": 4
@@ -340,8 +439,8 @@
   {
    "f": 1341,
    "t": 22.35,
-   "d": 35.7,
-   "med": 0.7,
+   "d": 47.3,
+   "med": 0.9,
    "kind": "cadence",
    "near": "pendulum @ 1316",
    "hb_off": 6
@@ -349,8 +448,8 @@
   {
    "f": 1343,
    "t": 22.383,
-   "d": 24.9,
-   "med": 0.7,
+   "d": 27.5,
+   "med": 0.9,
    "kind": "cadence",
    "near": "pendulum @ 1316",
    "hb_off": 8
@@ -358,8 +457,8 @@
   {
    "f": 1346,
    "t": 22.433,
-   "d": 41.4,
-   "med": 0.7,
+   "d": 38.6,
+   "med": 1.2,
    "kind": "cadence",
    "near": "pendulum @ 1316",
    "hb_off": -9
@@ -367,8 +466,8 @@
   {
    "f": 1348,
    "t": 22.467,
-   "d": 22.9,
-   "med": 0.7,
+   "d": 28.7,
+   "med": 1.2,
    "kind": "cadence",
    "near": "whip @ 1364",
    "hb_off": -7
@@ -376,8 +475,8 @@
   {
    "f": 1350,
    "t": 22.5,
-   "d": 24.2,
-   "med": 0.7,
+   "d": 27.8,
+   "med": 1.2,
    "kind": "cadence",
    "near": "whip @ 1364",
    "hb_off": -5
@@ -385,20 +484,11 @@
   {
    "f": 1353,
    "t": 22.55,
-   "d": 36.7,
-   "med": 0.7,
+   "d": 34.6,
+   "med": 1.3,
    "kind": "cadence",
    "near": "whip @ 1364",
    "hb_off": -2
-  },
-  {
-   "f": 1355,
-   "t": 22.583,
-   "d": 37.8,
-   "med": 9.2,
-   "kind": "beat",
-   "near": "whip @ 1364",
-   "hb_off": 0
   },
   {
    "f": 1442,
@@ -445,9 +535,9 @@
    "repeat_frac": 0.06,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.81,
-   "p80": 2.76,
-   "ratio": 1.52,
+   "p20": 2.52,
+   "p80": 4.31,
+   "ratio": 1.71,
    "flag": false
   },
   {
@@ -525,7 +615,7 @@
    "cadence_range": null,
    "p20": 4.18,
    "p80": 7.04,
-   "ratio": 1.68,
+   "ratio": 1.69,
    "flag": false
   },
   {
@@ -536,7 +626,7 @@
    "repeat_frac": 0.06,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 3.03,
+   "p20": 3.04,
    "p80": 5.94,
    "ratio": 1.96,
    "flag": false
@@ -550,7 +640,7 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 7.36,
-   "p80": 9.17,
+   "p80": 9.18,
    "ratio": 1.25,
    "flag": false
   },
@@ -563,8 +653,8 @@
    "cadence_frames": 0,
    "cadence_range": null,
    "p20": 1.47,
-   "p80": 2.88,
-   "ratio": 1.96,
+   "p80": 2.87,
+   "ratio": 1.95,
    "flag": false
   },
   {
@@ -572,15 +662,15 @@
    "f0": 513,
    "f1": 542,
    "interp": "flow",
-   "repeat_frac": 0.53,
+   "repeat_frac": 0.47,
    "cadence_frames": 17,
    "cadence_range": [
     519,
     535
    ],
-   "p20": 0.99,
-   "p80": 6.44,
-   "ratio": 6.51,
+   "p20": 0.98,
+   "p80": 6.43,
+   "ratio": 6.58,
    "flag": false
   },
   {
@@ -588,28 +678,25 @@
    "f0": 542,
    "f1": 619,
    "interp": "flow",
-   "repeat_frac": 0.23,
-   "cadence_frames": 15,
-   "cadence_range": [
-    590,
-    604
-   ],
-   "p20": 3.46,
-   "p80": 7.55,
-   "ratio": 2.18,
+   "repeat_frac": 0.17,
+   "cadence_frames": 0,
+   "cadence_range": null,
+   "p20": 4.04,
+   "p80": 8.61,
+   "ratio": 2.13,
    "flag": false
   },
   {
    "shot": "still",
    "f0": 619,
    "f1": 774,
-   "interp": "flow",
-   "repeat_frac": 0.05,
+   "interp": "hold",
+   "repeat_frac": 0.1,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 0.56,
-   "p80": 2.39,
-   "ratio": 4.26,
+   "p20": 0.57,
+   "p80": 3.57,
+   "ratio": 6.25,
    "flag": false
   },
   {
@@ -624,8 +711,8 @@
     816
    ],
    "p20": 2.23,
-   "p80": 4.13,
-   "ratio": 1.86,
+   "p80": 4.12,
+   "ratio": 1.85,
    "flag": false
   },
   {
@@ -636,8 +723,8 @@
    "repeat_frac": 0.08,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.09,
-   "p80": 1.5,
+   "p20": 1.11,
+   "p80": 1.53,
    "ratio": 1.37,
    "flag": false
   },
@@ -646,12 +733,12 @@
    "f0": 900,
    "f1": 977,
    "interp": "flow",
-   "repeat_frac": 0.08,
+   "repeat_frac": 0.06,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.43,
-   "p80": 2.65,
-   "ratio": 1.85,
+   "p20": 2.18,
+   "p80": 3.43,
+   "ratio": 1.57,
    "flag": false
   },
   {
@@ -675,12 +762,12 @@
    "f0": 1026,
    "f1": 1084,
    "interp": "flow",
-   "repeat_frac": 0.04,
+   "repeat_frac": 0.07,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.57,
-   "p80": 5.64,
-   "ratio": 2.19,
+   "p20": 2.79,
+   "p80": 5.8,
+   "ratio": 2.08,
    "flag": false
   },
   {
@@ -691,9 +778,9 @@
    "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.95,
-   "p80": 5.23,
-   "ratio": 2.68,
+   "p20": 1.94,
+   "p80": 5.22,
+   "ratio": 2.69,
    "flag": false
   },
   {
@@ -701,12 +788,12 @@
    "f0": 1132,
    "f1": 1239,
    "interp": "flow",
-   "repeat_frac": 0.02,
+   "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.92,
-   "p80": 13.21,
-   "ratio": 6.89,
+   "p20": 1.94,
+   "p80": 13.22,
+   "ratio": 6.83,
    "flag": false
   },
   {
@@ -717,9 +804,9 @@
    "repeat_frac": 0.19,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 3.68,
-   "p80": 8.62,
-   "ratio": 2.34,
+   "p20": 3.67,
+   "p80": 8.63,
+   "ratio": 2.35,
    "flag": false
   },
   {
@@ -746,9 +833,9 @@
     1322,
     1357
    ],
-   "p20": 0.65,
-   "p80": 25.88,
-   "ratio": 39.66,
+   "p20": 0.84,
+   "p80": 29.72,
+   "ratio": 35.26,
    "flag": true
   },
   {
@@ -759,9 +846,9 @@
    "repeat_frac": 0.06,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.23,
+   "p20": 1.18,
    "p80": 3.0,
-   "ratio": 2.43,
+   "ratio": 2.54,
    "flag": false
   },
   {
@@ -772,9 +859,9 @@
    "repeat_frac": 0.08,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.19,
-   "p80": 19.89,
-   "ratio": 9.09,
+   "p20": 2.18,
+   "p80": 19.86,
+   "ratio": 9.12,
    "flag": false
   },
   {
@@ -785,15 +872,15 @@
    "repeat_frac": 0.0,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.23,
-   "p80": 13.05,
-   "ratio": 10.62,
+   "p20": 2.14,
+   "p80": 14.29,
+   "ratio": 6.68,
    "flag": false
   }
  ],
  "loop": {
   "wrap_step": 0.78,
-  "local_median": 1.95,
+  "local_median": 1.89,
   "spike": false
  }
 }

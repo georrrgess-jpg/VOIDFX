@@ -10,22 +10,23 @@ care, don't care, don't even tell me … I don't really want to know".
 - **I don't got time (e0–e32):** the fastest man alive never has time. He swings up the watch, a call comes in, and he
   runs: the city, the lightning, the suit, cut on the groove's kicks.
 - **Time stops (the drum break, e32–e40), in bullet time:** at the moment it all began, the S1 lab strike, frozen on the
-  instant the bolt hits him, his hand thrown up against it (round 2: a stronger frame than his upward look). The frozen
+  instant the bolt hits him, his palm open against it (round 2: a stronger frame than his upward look; the strike
+  slows, pans and pushes into it so the freeze lands on the same framing). The frozen
   moment is taken apart in depth: the room, the frozen bolts and him. On each kick of the drum fill the camera steps to
   a new place, so the layers slide against each other. The room sinks to cold steel while the bolts stay molten gold;
-  they throw rays through the room behind him and rim his edge with light. The chemicals hang in the air as real little
-  lenses (refracting the room upside down), and in the last beat the frozen lightning trembles.
+  they throw rays through the room behind him and rim his edge with light. A few drops of the chemicals hang in the air
+  as real little lenses, and in the last beat the frozen lightning trembles.
 - **Time restarts (e40, the return):** the frozen lightning discharges, and he opens his eyes full of it.
 - **The jealousy he says he doesn't feel:** Iris living her life ("Do whatever you want", seen inside his eye). He
   tells himself he doesn't care, turns his back and runs; the wind of it blows her hair; the trail rips down the path.
 - **EMBLEM CLOCK (the signature, and the emblem transition):** the real S5 emblem's gold bolt (traced as a polygon on the
   source) is lifted off the white disc, which is filled clean, and wound round like a clock hand with a rotational motion
   blur; twelve gold marks come up round the face, and its last sweep brings the next memory in.
-- **The loop (REWIND, rebuilt in round 2):** on the e76 kick ("don't") time stops once more. Half a beat later it runs
-  backwards: the camera flies forward through the frozen moment into a corridor of the edit's memories, hung along the
-  walls in perspective and turned toward us (the fire, the emblem, Iris, his eyes, the strike, the run, newest first).
-  A gold thread of time spirals along the walls and the frozen sparks stream past as light. At the far end, visible the
-  whole way, frame 0 grows, slows and settles until it fills the frame: the next "I don't got time".
+- **The loop (REWIND, rebuilt in round 2):** on the e76 kick ("don't") time runs backwards: the camera flies forward
+  through the last moment into a corridor of the edit's memories, hung along the walls in perspective and turned toward
+  us (the fire, the emblem, Iris, his eyes, the strike, the run, newest first). The walls are the last moment stretched
+  past us, turning into frame 0's own light; a gold thread of time spirals along them and sparks stream past. At the far
+  end, visible the whole way, frame 0 grows, slows and settles until it fills the frame: the next "I don't got time".
 
 The hero is time itself: the timepiece (the emblem clock) and stopped time (the frozen strike, the restart, the loop).
 
@@ -54,7 +55,7 @@ The hero is time itself: the timepiece (the emblem clock) and stopped time (the 
 | 20–22.5 | masked under street lights (S3); *streetlight flares* | WHIP UP |
 | 22.5–24 | a run along a wall; *time remnants* | ARC LINK |
 | 24–26.5 | the S5 suit at night | LIGHT LEAK |
-| 26.5–28 | the city | GOLD LINK |
+| 26.5–28 | the city from above | **FREEFALL** (he steps off the roof: the frame drops away and we fall toward the city) |
 | 28–32 | the S1 lab strike, slowing into the hit | STRIKE CUT (the bolt on the side away from both faces) |
 | 32–40 | **TIME STOPS**: the strike, frozen, in bullet time | the freeze spreads out from the bolts |
 | 40–42.5 | his eyes full of lightning | **TIME RESTARTS** (the bolts discharge, the moment is pulled into the strike, the colour floods back) |
@@ -66,10 +67,10 @@ The hero is time itself: the timepiece (the emblem clock) and stopped time (the 
 | 58.5–64 | the S5 emblem | FOCUS RACK |
 | 64–66.5 | in flight | **EMBLEM CLOCK** |
 | 66.5–68 | he shouts into the lightning; *the shout* (arcs and sparks on the kick) | AFTERIMAGE |
-| 68–70.5 | velocity run (S5) | **PENDULUM** (the frame swings out like a clock's pendulum, the run swings in and settles) |
+| 68–70.5 | velocity run (S5), face-tracked | **PENDULUM** (the frame swings out like a clock's pendulum, the run swings in and settles) |
 | 70.5–72 | masked, blue-grey | WHIP |
 | 72–74.5 | through the fire (S4); *embers* | TIME PARTICLES |
-| 74.5–80 | alone, masked; time stops once more, then **REWIND** into frame 0 | dolly |
+| 74.5–80 | alone, masked; then **REWIND** down the corridor of memories into frame 0 | dolly |
 
 27 designed transitions and the loop in 25.8 s, plus eight in-shot animations (in italics), each motivated by its shot and kept off faces.
 
