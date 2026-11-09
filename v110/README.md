@@ -69,3 +69,26 @@ angle); target-like rings and a black lower third (the red-screen shot replaced,
 frame at 3 s; the title dying while "power" was still sung (it holds now); a still span at 19–20 s (a swinging bulb). On
 the way: the library plastic burst put a starburst on his face (replaced), and the falling-asleep shift mirrored a face
 (edge replication now). Transitions: 25 + the loop.
+
+## Revision 1 (the owner's notes)
+*"I like the general style of this edit … I don't like the splatter transition at the end. I would like for you to make
+it smoother and more seamless … the loop is really poor … completely change the loop and take a different avenue … I'm
+losing power text. I like it, but I don't really like how it appears … incorporate it as more of a beat drop … most of
+the transitions right now are kind of lackluster … I also don't really like the doorway transition that appears at 16
+seconds, and I don't really like the lines transition at 17 seconds."*
+- **I'M LOSING POWER is the drop now.** It leaves the break (the tube still blinks on with "I'm", the room still dips on
+  each sung word) and slams on with the power surge on the drop (9.1 s), as the fan blade crosses the lens: white-hot,
+  scaled in with motion blur, a shock ripple through the picture, a surge on each beat of the bar, then it loses power
+  letter by letter (to 10.4 s).
+- **THE SPATTER, smooth:** the cast-off lands softly along the swing, the blood room seeps in from its blood with a
+  wide, soft front, and one continuous push runs through the cut; no hard edges, no seam.
+- **The loop, THE DRIP:** as he looks up, one lit drop of blood falls in the dark beside his head, lands, and the blood
+  room becomes a liquid surface; the ripples run out from the impact and the bed comes up through them as through water,
+  calming on frame 0. (A neon outline of frame 0 was tried and dropped: the top-down matte gave a squiggle or a ring
+  around his face.)
+- **New, custom transitions:** BOKEH (the marina's city lights fall into soft discs and the doorway's lamp comes back
+  into focus out of them), TEAR (the drive is a print that tears down one side and is pulled away, his face whole on its
+  piece), CURTAIN (the sheer curtain behind him in the doorway shot blows across the lens; replaces the 16 s after-image),
+  PLASTIC ROLL (kill-room plastic unrolls down over the lens into the kill room; replaces the 17 s frost), BRUSH (two
+  dry-brush strokes paint the cabin in; replaces the slices), and the bamboo fronds into the barrel (for a dolly).
+- **Sound:** the title's tubes ignite on the drop, the print tears, the drip lands (the loop's whoosh is gone).
