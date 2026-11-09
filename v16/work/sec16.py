@@ -341,7 +341,7 @@ def streak_pass(A, B, j, f, sa, sb, pre=5, post=7):
     cy = H * 0.80; hh = H * 0.15                                                                # low, past the lens (never at face height)
     yy = (_GY - cy) / hh; body = np.exp(-yy ** 4) * np.clip((_GX - (x - W * 0.55)) / (W * 0.55), 0, 1) * np.clip((x + 60 - _GX) / 60, 0, 1)
     body = body.astype(F32)
-    w = smooth(clamp((q - 0.28) / 0.44, 0, 1)); under = A * (1 - w) + B * w                  # the switch under the blur
+    w = smooth(clamp((q - 0.12) / 0.76, 0, 1)); under = A * (1 - w) + B * w                  # the switch under the blur
     kb = math.sin(math.pi * clamp(q, 0, 1)) ** 1.5
     sm = hblur(under, 120)
     o = mixm(under, sm, np.clip(np.maximum(body * 1.4, kb * 0.85), 0, 1).astype(F32))
@@ -542,7 +542,7 @@ def emblem_signal(A, B, j, f, sa, sb, pre=SIG_PRE, post=SIG_POST):
     Pz = np.float32([(M[0, 0] * x + M[0, 2], M[1, 1] * y + M[1, 2]) for x, y in P0])
     bm = poly_mask(Pz, 1.0 + 0.6 * z)
     Xz, Yz, Rz = M[0, 0] * X + M[0, 2], M[1, 1] * Y + M[1, 2], R * z
-    Ac = lens_rays(Ac, Xz, Yz, Rz, bm, 0.55 + 0.25 * u)
+    Ac = lens_rays(Ac, Xz, Yz, Rz, bm, 0.40 * ein(u, 1.5))                                      # on top of the shot's own rays: from zero
     bw = smooth(clamp((u - 0.30) / 0.45, 0, 1))
     fb = face_scr(sb, sb["f0"]) if sb.get("face") is not None else None                      # his face sits inside the bolt's middle blade
     if fb:

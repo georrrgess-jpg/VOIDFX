@@ -25,6 +25,17 @@
    "buried": true
   },
   {
+   "name": "flare_sweep",
+   "kind": "transition",
+   "at": 1.8,
+   "t0": 1.5,
+   "t1": 2.25,
+   "music_db": -17.1,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -162.9,
+   "buried": true
+  },
+  {
    "name": "reflection",
    "kind": "transition",
    "at": 2.4,
@@ -124,7 +135,7 @@
    "buried": true
   },
   {
-   "name": "whip",
+   "name": "drop_whip",
    "kind": "transition",
    "at": 9.0,
    "t0": 8.7,
@@ -280,12 +291,12 @@
   {
    "name": "loop",
    "kind": "set piece",
-   "at": 22.8,
-   "t0": 22.8,
+   "at": 22.2,
+   "t0": 22.2,
    "t1": 24.0,
-   "music_db": -11.5,
+   "music_db": -11.4,
    "fx_peak_db": -22.9,
-   "fx_minus_music": -11.4,
+   "fx_minus_music": -11.5,
    "buried": false
   }
  ]

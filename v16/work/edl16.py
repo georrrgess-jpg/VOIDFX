@@ -82,7 +82,7 @@ def shot(n, src, e0, e1, a, b, **kw):
     d.update(kw); S.append(d)
 
 # ---- the drumless verse (e0-e24): the rooftop, Iris, the hold-on
-shot("roof", "fs5", 0, 4, 138.20, 139.70, tin="loop_in16", seg=True, face=None, cx=(720, 700), lin=True, z=[(0, 1.00), (1, 1.05)], anim="twinkle")
+shot("roof", "fs5", 0, 4, 138.20, 139.70, tin="loop_in16", seg=True, face=None, cx=(720, 700), lin=True, z=[(-1, 1.00), (0, 1.05), (1, 1.10)], anim="twinkle")   # the push-in runs on through the loop's virtual frames
 shot("thinks", "fbh", 4, 6, 136.55, 137.30, tin="bokeh_drift", seg=True, anim="flares")                            # he thinks of her, the night in bokeh behind him
 shot("looks", "fs1", 6, 8, 230.40, 231.20, tin="flare_sweep", seg=True, look="dusk")                         # Barry looks at her
 shot("iris", "fs1", 8, 12, 233.95, 234.95, tin="reflection", seg=True, look="dusk")                                  # "who you could be"
