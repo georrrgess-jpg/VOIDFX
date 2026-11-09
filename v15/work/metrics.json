@@ -797,5 +797,11 @@
  "round_starts": {
   "2": "2026-11-09 15:07:56",
   "3": "2026-11-09 16:40:18"
+ },
+ "verdict": {
+  "t": "2026-11-09 17:51:42",
+  "round": 3,
+  "verdict": "standard",
+  "words": "I like this edit, make it a standard."
  }
 }

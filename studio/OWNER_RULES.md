@@ -1,7 +1,7 @@
 # The owner's rules, on one page (both studios)
 
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
-(v4–v14, v101–v107) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
+(v4–v15, v101–v108) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
 Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
@@ -16,6 +16,7 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 - **The same clip twice**, or two shots that look the same (the same close-up from the same scene) (v107 rev 2). **[plan]**
 - **Overlays parked on the frame**: glass webs, hanging shards, slides drifting as a constant layer. Transform the picture itself (v10, v103).
 - **Drawn-looking props** next to footage: blood, slides, knives, tape only when motivated by the shot or lyric, brief, physically lit, off the face (v103). **[eye]**
+- **A face taken apart**: a particle dissolve of a face, fire holes in a face, a scorch line or particles across it (v15 round 3: *"where [Barry] kind of like breaks down into many pieces ... change that"*; `time_particles` is now `caution`). A burn or cover passes a face as one soft edge. **[eye]**
 - **Droplets on the lens or a wavy heat-haze warp as a transition** (v108 rev 2: *"remove the water droplet filter"*, *"the squiggle, swirl, weird animation"*). **[plan]** registry
 - Outro / title cards, watermarks, labels, name tags, counters, timecodes, CJK lines; a recoloured logo. **[plan]** `logo_uv` banned
 - A line shown as spoken when the lips don't match (v101); captions on words the song isn't singing (v103).
@@ -35,6 +36,10 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 10. **A smooth ending**: the beat camera rests through the break, fewer and longer cuts (v107).
 11. **The style matched to the song** (v14 standard, *"a different style ... but is still really good"*): on a calm, nostalgic song, a calm edit (slower set pieces on the song's structure, a breathing camera, ~5 quiet effects, a low overlay) is right; v10–v12's density and beat camera are for energetic songs.
 12. **A liked transition used once, fast; an emblem transition ~2 s with stages; the owner's named moment opens the edit** (v14 rev 2: the print *"too slow and repeats multiple times"*; the emblem *"too fast"*; *"barry waking up ... the focal point of and in the beginning"*). An asset the owner supplies as a reference is built faithfully in our own drawing, with a designed pop (the achievement toast).
+14. **A freeze lands on the hit and is emphasized in depth** (v15 round 2: *"see if there's any other freeze frame shots that could be better selected ... emphasize it more and make the scene a little bit cooler"*): the instant of most action, a real source frame (not an interpolated one), the previous shot running into the same framing; then plate / subject / light layers with a camera stepping on the beat (bullet time), the scene's own light as rays and rim, a few physical particles.
+15. **"Blank space" = new cuts with motivated custom transitions plus a visible, motivated in-shot animation in every plain hold**, big enough to read at phone size (v15 round 2).
+16. **A seamless loop shows its destination early**: frame 0 visible at the end of the move the whole way, growing to fill on a smooth landing, the surround turning into frame 0's own light; never a giant card fading in from behind the camera (v15 round 2: *"the loop isn't particularly seamless"*; the corridor REWIND, seam 0.13, approved).
+17. **A transition the owner wants to "focus" has one small, bright, motivated focal point that grows into the move, with every part a smooth function of time** (fixed noise, eased fronts, analytic particle paths; v15 round 3 IGNITION: *"a focal point graphic ... really, really smooth animation"*).
 13. **The owner's concept boards are built from the shot's own props**: lift, tilt or move the real object (v108: the real slide pivots up in his fingers) rather than a CG copy beside it (*"merge that slide graphic … with one of the actual slides from that scene"*). Board choices (text, timing) apply to that edit only; ask when the rest is left open.
 
 ## 3. Text

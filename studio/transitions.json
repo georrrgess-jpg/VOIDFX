@@ -1052,6 +1052,165 @@
       "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
       "studio": "flash",
       "tags": []
+    },
+    "vibrate": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' The call: one picture shaken at 12 Hz with blur, the switch on the cut (rev 1 had ghost copies).",
+      "studio": "flash",
+      "tags": []
+    },
+    "phone_flare": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Round 2: the phone's light flares into the lens and the night city burns in (no streak across the face).",
+      "studio": "flash",
+      "tags": [
+        "physical"
+      ]
+    },
+    "streak_pass": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.'",
+      "studio": "flash",
+      "tags": []
+    },
+    "strike_cut": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' The bolt falls on the side away from both shots' faces.",
+      "studio": "flash",
+      "tags": []
+    },
+    "time_stop": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Set piece: the freeze drains out from the bolts on the drum break's first kick.",
+      "studio": "flash",
+      "tags": [
+        "signature"
+      ]
+    },
+    "time_restart": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' The frozen bolts discharge, a radial pull, the switch under the blur, the colour floods back (rev 1's ring was cut).",
+      "studio": "flash",
+      "tags": [
+        "signature"
+      ]
+    },
+    "turn_away": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' The frame turns away like a card (3D flip) as he leaves her.",
+      "studio": "flash",
+      "tags": [
+        "physical"
+      ]
+    },
+    "wind_gust": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.'",
+      "studio": "flash",
+      "tags": [
+        "physical"
+      ]
+    },
+    "dust_cloud": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Round 2: his dust rolls in from the side, billowing, and clears onto the trail; roll it over ~14 frames.",
+      "studio": "flash",
+      "tags": [
+        "physical"
+      ]
+    },
+    "emblem_clock": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' The real S5 bolt (traced polygon) lifted off the disc and wound like a clock hand, rotational motion blur, a clock-wipe sweep.",
+      "studio": "flash",
+      "tags": [
+        "signature"
+      ]
+    },
+    "pendulum": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' The frame swings out from a pivot far above and the next swings in with a damped settle.",
+      "studio": "flash",
+      "tags": [
+        "physical"
+      ]
+    },
+    "freefall": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Round 2: the frame drops away beneath us and we fall toward the city (replaced a lightning link: too much lightning on his chest).",
+      "studio": "flash",
+      "tags": [
+        "physical"
+      ]
+    },
+    "ignition": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Round 3, the owner's 'focal point graphic ... really, really smooth animation': one ember catches, pulses and burns the frame open onto the fire; the face passes under one soft edge.",
+      "studio": "flash",
+      "tags": [
+        "signature",
+        "physical"
+      ]
+    },
+    "loop_in15": {
+      "verdict": "liked",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' The loop REWIND: a fly-forward corridor of the edit's memory cards, frame 0 visible at the far end, growing to fill (seam 0.13); round 2's note 'the loop isn't particularly seamless' was answered by this.",
+      "studio": "flash",
+      "tags": [
+        "signature"
+      ]
+    },
+    "eye_iris15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13; veins kept inside the eye socket, the incoming face upright inside the pupil.",
+      "studio": "flash",
+      "tags": []
+    },
+    "time_slice15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13; strips over a face move as one.",
+      "studio": "flash",
+      "tags": []
+    },
+    "edge_current15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13.",
+      "studio": "flash",
+      "tags": []
+    },
+    "light_leak15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13.",
+      "studio": "flash",
+      "tags": []
+    },
+    "speed_whip15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13.",
+      "studio": "flash",
+      "tags": [
+        "generic"
+      ]
+    },
+    "whip_up15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13; the static streak line removed.",
+      "studio": "flash",
+      "tags": [
+        "generic"
+      ]
+    },
+    "focus_rack15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13; the defocus blended across the gaussian/bokeh switch.",
+      "studio": "flash",
+      "tags": []
+    },
+    "afterimage15": {
+      "verdict": "ok",
+      "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13.",
+      "studio": "flash",
+      "tags": []
     }
   },
   "families": {

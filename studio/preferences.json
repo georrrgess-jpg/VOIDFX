@@ -49,7 +49,8 @@
     "source_restoration": "tools/sr_prep.py (always, background after prep)",
     "sharpness_check": "tools/sharpness.py packs (while picking) and N (finished video): swap shots below 0.80x the edit median",
     "flash_peak_mean_luma_max": 110,
-    "no_prolonged_strobing": true
+    "no_prolonged_strobing": true,
+    "freeze": "freeze on the hit, on a unique source frame (not interpolated), the shot before running into the same framing; emphasize it in depth (layers, a camera stepping on the beat, the scene's own light) (v15 round 2)"
   },
   "text": {
     "band_y_px": [
@@ -93,7 +94,8 @@
       "outro card",
       "plain motion-blurred rewind"
     ],
-    "wrap_step": "no frame-difference spike across the wrap (tools/motionqc.py)"
+    "wrap_step": "no frame-difference spike across the wrap (tools/motionqc.py)",
+    "shows_destination_early": "frame 0 visible at the end of the move the whole way, growing to fill on a smooth landing, the surround turning into frame 0's own light; never a giant card fading in from behind the camera, no second time-stop (v15 round 2: 'the loop isn't particularly seamless'; the corridor REWIND approved, seam 0.13)"
   },
   "structure": {
     "cold_open_frac": [
@@ -103,7 +105,8 @@
     "song_section": "the good part (song_map.py): the drop where the full mix or bass returns at ~33-47 % of the edit",
     "biggest_transition_on": "the song's biggest moment",
     "montage": "a designed transition every 2-4 half-beats",
-    "opening": "strong in the first 1-2 s; dialogue openings play as one continuous take (J-cuts, dissolves, matched-angle morph)"
+    "opening": "strong in the first 1-2 s; dialogue openings play as one continuous take (J-cuts, dissolves, matched-angle morph)",
+    "blank_space": "new cuts with motivated custom transitions plus a visible, motivated in-shot animation in every plain hold, big enough to read at phone size (v15 round 2)"
   },
   "transitions": {
     "min_designed": 15,
@@ -128,7 +131,9 @@
     },
     "repeat": "never, except as a deliberate motif",
     "signature_read_time": "a signature graphic transition gets ~1 s on screen and a graphic >= ~8 % of the frame width; move the cut to the next sung word to make room (v106 rev 3)",
-    "covers": "cover transitions are exactly 0 at u=0 and full at u=1, continuous across the cut, plates dissolved under the cover; pre-roll progress reaches 1 before the cut (j/pre) (v106)"
+    "covers": "cover transitions are exactly 0 at u=0 and full at u=1, continuous across the cut, plates dissolved under the cover; pre-roll progress reaches 1 before the cut (j/pre) (v106)",
+    "never_take_a_face_apart": "no particle dissolve, fire holes, scorch or line across a face; a burn or cover passes a face as one soft edge (v15 round 3; time_particles -> caution)",
+    "focal_point": "a transition the owner wants to focus has one small, bright, motivated focal point that grows into the move; every part a smooth function of time (v15 round 3 IGNITION)"
   },
   "dialogue": {
     "max_lines": 2,
