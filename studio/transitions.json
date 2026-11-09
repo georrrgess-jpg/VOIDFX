@@ -922,6 +922,134 @@
     "physical"
    ],
    "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "print_dive": {
+   "verdict": "liked",
+   "tags": [
+    "signature",
+    "physical"
+   ],
+   "evidence": "v14 rev 1 -> rev 2 (owner, 2026-11-09): 'remove or change up the picture frame/photo transition graphic. i really like the transition but I don't like that it is too slow and repeats multiple times'; the once-and-fast version kept in the v14 standard",
+   "studio": "flash",
+   "family": "print",
+   "caution": "liked, but use it once and fast: in v14 rev 1 the print was on screen 1.9 s and the print motif came back four times (signature, album, dive, loop); rev 2 uses one 0.4 s flick-in and dive"
+  },
+  "shutter_freeze": {
+   "verdict": "ok",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v14 rev 1 -> rev 2 (owner, 2026-11-09): 'remove or change up the picture frame/photo transition graphic. i really like the transition but I don't like that it is too slow and repeats multiple times'",
+   "studio": "flash",
+   "family": "print",
+   "set_piece": true,
+   "caution": "part of v14 rev 1's print motif, which the owner found too slow and repeated: don't stack several prints in one edit"
+  },
+  "album_out": {
+   "verdict": "ok",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v14 rev 1 -> rev 2 (owner, 2026-11-09): 'remove or change up the picture frame/photo transition graphic. i really like the transition but I don't like that it is too slow and repeats multiple times'",
+   "studio": "flash",
+   "family": "print",
+   "set_piece": true,
+   "caution": "part of v14 rev 1's print motif, which the owner found too slow and repeated: don't stack several prints in one edit"
+  },
+  "emblem_glint": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v14 rev 1 (owner, 2026-11-09): 'the emblem transition is too fast, I would like for you to slow it down and make it more pronounced'; 'the flash symbol on the crest is not an actual lightning bolt and is in the wrong shape'; rev 2 (2.1 s, the traced bolt) kept in the v14 standard",
+   "studio": "flash",
+   "caution": "the S1 emblem runs off the bottom of the frame in flash_s1.mp4: a push that lifts it must not mirror the missing half (BORDER_REFLECT drew a '<' chevron in rev 1); draw the bolt from the traced polygon (v14 EMB_BOLT) and give the move ~2 s"
+  },
+  "lens_in14": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": [
+    "signature",
+    "physical"
+   ],
+   "family": "lensball",
+   "caution": "keep the memories upright (round 3: 'face upright so that Barry's face is facing upwards')"
+  },
+  "lens_dive14": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": [
+    "signature",
+    "physical"
+   ],
+   "family": "lensball",
+   "caution": "keep the memories upright (round 3: 'face upright so that Barry's face is facing upwards')"
+  },
+  "lights_on14": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": [
+    "physical"
+   ]
+  },
+  "focus_rack14": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": []
+  },
+  "double_exp": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": []
+  },
+  "sun_flare": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": [
+    "physical"
+   ]
+  },
+  "film_burn": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": [
+    "physical"
+   ]
+  },
+  "ripple": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": [
+    "physical"
+   ]
+  },
+  "speed_whip14": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": [
+    "generic"
+   ]
+  },
+  "light_leak14": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": []
+  },
+  "afterimage14": {
+   "verdict": "liked",
+   "evidence": "v14 KEEPSAKES standard (2026-11-09): 'I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good.'",
+   "studio": "flash",
+   "tags": []
   }
  },
  "families": {

@@ -1,0 +1,10 @@
+- **QC:** 11/11 on the encode (11 distinct checks).
+- **Loudness:** -13.9 LUFS, true peak -4.7 dBTP after AAC.
+- **Loop seam:** blurred difference 0.13 (gate ≤ 1); audio seam step 0.0393; picture wrap step 0.4 vs local median 1.89.
+- **Flashes:** 1 events, at most 1 a second; white-outs [].
+- **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
+- **Faces vs effects:** 34 flags in 2 runs: 510–522, 620–674.
+- **Motion audit:** 10 pops (UNEXPLAINED 3, beat 1, cadence 1, cut 1, flash 4); UNEXPLAINED at [771, 1494, 1527] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **Sharpness:** SOFT: emblem; max zoom 1.06.
+- **plan_check:** 0 FAIL, 2 WARN; WARN: `emblem_glint`: the S1 emblem runs off the bottom of the frame in flash_s1.mp4: a push that lifts it must not mirror the missing half (BORDER_REFLECT drew a '<' chevron in rev 1); draw the bolt from the traced polygon (v14 EMB_BOLT) and give the move ~2 s; WARN: `print_dive`: liked, but use it once and fast: in v14 rev 1 the print was on screen 1.9 s and the print motif came back four times (signature, album, dive, loop); rev 2 uses one 0.4 s flick-in and dive.
+- **Effort this round (3):** 1 renders (6.8 min), QC 3.4 min.

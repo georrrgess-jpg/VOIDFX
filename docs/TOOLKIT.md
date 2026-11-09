@@ -499,6 +499,20 @@ All in `v107/work/fx107.py` on `origin/dev/pipeline-v2`, written for the v12 eng
 | QC transition windows | `qc107.py` `_tr_window` | **Ported** into `v12/work/qc12.py` |
 | Rejected in v107 (reuse with care) | `press_flash`, `broadcast` (avoid the black room), `spatter_fx` (never converge on a face), `rorschach` | — |
 
+## 5h. Reusable from v14 KEEPSAKES (a standard, a different style: calm, nostalgic)
+
+All in `v14/work/sec14.py` (the v12 engine plus this section); the polygon and track are in `v14/work/edl14.py`. Handoff: `sync/handoffs/2026-11-09_flash_v14_KEEPSAKES_standard.md`.
+
+| Asset | Functions | Notes |
+|---|---|---|
+| THE LENSBALL (graphic, then the signature transition) | `lens_ball`, `ball_fx`, `ball_rest`, `ball_content`, `lens_entry`, `lens_in`, `lens_dive` | A per-pixel glass ball: barrel squeeze (`BALL_K`), rim dispersion, a Fresnel edge mirroring the room, highlights, a halo in its own wider box (rev 2's box-clipped halo showed a square). It turns between memories with a strip scroll on the notes. Entry and dive are exact identity at both ends. **Keep `phi` near 0 (upright; the owner, round 3).** Centre each memory's face with `BALL_CC` (YuNet on the content) |
+| THE ACHIEVEMENT (a UI toast from the owner's reference) | `toast_draw`, `toast_sprite`, `toast_box`, `put_text`, `put_glyph`, `GLY`, `crate_icon` | Our own 5×7 pixel font (add glyphs to `GLY`) and 16×16 icon, nearest-neighbour at 6 px. Spring pop, icon bounce, letter hops, a stepped shine, a glow. Drawn after the finish; pixel-crisp when at rest |
+| The traced emblem + EMBLEM GLINT (2.1 s) | `emblem_draw`, `emb_canvas`, `emb_screen`, `emb_colors`, `glint_cam`, `glint_path`, `glint_star`, `emb_arcs`, `emblem_glint`; EDL `EMB_BOLT`, `EMB_TRACK`, `EMB_R` | Trace the real bolt as a polygon on 2–3 source frames (overlay it on 4× crops to check). Template-track the centre on the source. The S1 emblem runs off the frame bottom, so `emb_canvas` inpaints it out of the bottom band and mirrors the suit down (never mirror the emblem itself). Stages: push, glint along the zigzag, ring light, gold arcs (stopped before the face shows), a portal disc with the bolt dissolving inside it, fly through |
+| THE LIGHTS loop | `LIGHTS_ON`, `lights_on`, `dim`, `loop_lights`, `frame_virtual` | Frame 0 is a dim room whose lights flicker on. The last memory flickers with the room flashing through, then goes out on frame 0's room (seam 0.13). Keep the room visible (L ≥ 0.48), not near black |
+| PRINT DIVE (once, ~0.4 s) | `print_dive`, `print_card`, `develop`, `dive`, `print_w` | Instant-film print with a reagent develop and a dive that lands exactly on the next shot |
+| SUNFADE + SUPER 8 HAZE | `grade`, `finish14`, `gate_weave`, `edge_leaks`, `dust`, `coarse_grain`, `gate_mask`, `breath` | Periodic over the edit (whole cycles), so the loop wraps clean; grain clumps ~4 px and dust 2–5 px read at phone size |
+| Transitions | `double_exp`, `sun_flare` (`flare_origin` above the faces), `film_burn` (face-softened front), `ripple`, `focus_rack14` (an 8-frame handover in the blur), `speed_whip14` (a real pan across both shots), `light_leak14`, `memory_echo` | All approved in the standard |
+
 ## 5f. Reusable from v13 EVENT HORIZON (approved, not a standard)
 
 All in `v13/work/sec13.py`.

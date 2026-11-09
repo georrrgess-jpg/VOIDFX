@@ -1,0 +1,599 @@
+{
+ "edit": "v14",
+ "round": 3,
+ "stages": [
+  {
+   "t": "2026-11-09 00:06:24",
+   "round": 1,
+   "step": "prep",
+   "s": 93.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:11:02",
+   "round": 1,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:12:15",
+   "round": 1,
+   "step": "sheet:sig:0,46,60,90,120,128,140,150,158,161,166,180",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:12:43",
+   "round": 1,
+   "step": "sheet:album:470,486,492,500,540,560,600,640,690,716,735,750",
+   "s": 15.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:14:13",
+   "round": 1,
+   "step": "sheet:album2:470,486,488,492,497,504,716,728,736,742,744,745",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:14:41",
+   "round": 1,
+   "step": "sheet:trA:222,232,318,326,332,416,424,431,836,846,856,936",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:16:11",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:16:34",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:16:47",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:16:59",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:17:20",
+   "round": 1,
+   "step": "sheet:trB:318,330,840,848,870,990,998,1004,1010,1018,1101,1198",
+   "s": 15.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:19:54",
+   "round": 1,
+   "step": "sheet:trC:860,880,905,930,990,996,1000,1004,1008,1012,1016,1022",
+   "s": 11.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:20:55",
+   "round": 1,
+   "step": "sheet:trD:860,900,935,996,1101,1180,1290,1300,1388,1396,1402,1410",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:21:31",
+   "round": 1,
+   "step": "sheet:loop:994,998,1001,1500,1512,1522,1530,1538,1546,1552,1554,4",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:22:52",
+   "round": 1,
+   "step": "sheet:grade:60,240,330,420,600,750,900,1050,1180,1250,1330,1450",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:43:03",
+   "round": 1,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:43:10",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:48:58",
+   "round": 1,
+   "step": "video",
+   "s": 348.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:52:19",
+   "round": 1,
+   "step": "qc",
+   "s": 201.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:52:27",
+   "round": 1,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:53:54",
+   "round": 1,
+   "step": "sheet:fix1:320,324,326,330,418,421,424,427,1386,1390,1393,1397",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 00:54:29",
+   "round": 1,
+   "step": "sheet:fix2:416,420,423,425,427,430,1384,1388,1391,1393,1396,1400",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:00:49",
+   "round": 1,
+   "step": "sheet:crit1:49,58,560,640,700,760,800,850,900,1001,1004,1008",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:01:18",
+   "round": 1,
+   "step": "sheet:crit2:570,650,708,1100,1210,1260,1505,1514,1522,1532,1544,1554",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:01:54",
+   "round": 1,
+   "step": "sheet:whip:1096,1098,1100,1101,1103,1106",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:07:21",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:07:28",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:13:34",
+   "round": 1,
+   "step": "video",
+   "s": 366.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:16:51",
+   "round": 1,
+   "step": "qc",
+   "s": 197.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:16:59",
+   "round": 1,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:20:20",
+   "round": 1,
+   "step": "video",
+   "s": 187.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:23:40",
+   "round": 1,
+   "step": "qc",
+   "s": 200.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:25:43",
+   "round": 1,
+   "step": "deliver",
+   "s": 111.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:25:51",
+   "round": 1,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:11:38",
+   "round": 2,
+   "step": "audio",
+   "s": 11.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:12:00",
+   "round": 2,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:12:22",
+   "round": 2,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:14:03",
+   "round": 2,
+   "step": "prep",
+   "s": 90.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:14:21",
+   "round": 2,
+   "step": "sheet:r2wake:0,10,14,30,45,58,62,64,66,68,72,80,100,150,175,212,218,226",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:14:56",
+   "round": 2,
+   "step": "sheet:r2print:0,8,300,304,308,312,316,320,323,324,330",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:15:08",
+   "round": 2,
+   "step": "sheet:r2ball:480,486,490,496,502,510,540,600,612,618,624,660,700,713,722,730,738,744,745",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:17:19",
+   "round": 2,
+   "step": "sheet:r2emb:900,940,960,975,990,1000,1008,1016,1022,1028,1032,1036,1037,1040,1046,1052,1058,1066",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:17:58",
+   "round": 2,
+   "step": "sheet:r2emb2:990,1000,1028,1032,1036,1040,1046",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:18:06",
+   "round": 2,
+   "step": "sheet:r2loop:1480,1490,1492,1500,1522,1524,1528,1534,1538,1542,1546,1550,1554,0,4,9,12,16,22,30",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:18:23",
+   "round": 2,
+   "step": "sheet:r2fix:308,312,320,322,323,324,490,500,600,620,690,720,730,738,744,745,752",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:19:06",
+   "round": 2,
+   "step": "sheet:r2fix2:1490,1524,1550,1554,0,322,700,730,740,745,760,790",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:20:16",
+   "round": 2,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:20:24",
+   "round": 2,
+   "step": "plan",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:27:13",
+   "round": 2,
+   "step": "video",
+   "s": 409.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:30:35",
+   "round": 2,
+   "step": "qc",
+   "s": 202.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:30:43",
+   "round": 2,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:43:55",
+   "round": 2,
+   "step": "sheet:r3a:0,6,10,20,30,40,50,65,70,75",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:43:59",
+   "round": 2,
+   "step": "sheet:r3b:520,600,642,680,700,1020,1026,1030,1034,1038",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:01",
+   "round": 2,
+   "step": "sheet:r3c:1488,1491,1500,1524,1530,1541,1544,1548,1554,0,3,6",
+   "s": 2.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:27",
+   "round": 2,
+   "step": "sheet:r3d:1030,1038,1046",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:39",
+   "round": 2,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:46",
+   "round": 2,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:51:20",
+   "round": 2,
+   "step": "video",
+   "s": 394.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:54:35",
+   "round": 2,
+   "step": "qc",
+   "s": 195.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:54:43",
+   "round": 2,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:55:30",
+   "round": 2,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:57:16",
+   "round": 2,
+   "step": "deliver",
+   "s": 94.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:07:16",
+   "round": 3,
+   "step": "sheet:r4ball:486,500,520,600,612,642,700,725,738,745",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:07:32",
+   "round": 3,
+   "step": "audio",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:07:39",
+   "round": 3,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:14:26",
+   "round": 3,
+   "step": "video",
+   "s": 407.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:17:51",
+   "round": 3,
+   "step": "qc",
+   "s": 205.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:18:00",
+   "round": 3,
+   "step": "report",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 03:20:21",
+   "round": 3,
+   "step": "deliver",
+   "s": 141.0,
+   "rc": 0
+  }
+ ],
+ "notes": [
+  {
+   "t": "2026-11-09 01:46:46",
+   "round": 2,
+   "cat": "other",
+   "text": "I want barry waking up for the first time to be the focal point of and in the beginning of the edit"
+  },
+  {
+   "t": "2026-11-09 01:46:46",
+   "round": 2,
+   "cat": "text",
+   "text": "I want the achievement in the attached image to appear in a satifying visually appealing pop up animation"
+  },
+  {
+   "t": "2026-11-09 01:46:46",
+   "round": 2,
+   "cat": "defect",
+   "text": "the flash symbol on the crest is not an actual lightning bolt and is in the wrong shape"
+  },
+  {
+   "t": "2026-11-09 01:46:46",
+   "round": 2,
+   "cat": "other",
+   "text": "the emblem transition is too fast, I would like for you to slow it down and make it more pronounced"
+  },
+  {
+   "t": "2026-11-09 01:46:46",
+   "round": 2,
+   "cat": "plain_effect",
+   "text": "remove or change up the picture frame/photo transition graphic ... too slow and repeats multiple times"
+  },
+  {
+   "t": "2026-11-09 01:46:46",
+   "round": 2,
+   "cat": "density",
+   "text": "implement a brand new custom graphic and transition/animation"
+  },
+  {
+   "t": "2026-11-09 03:07:02",
+   "round": 3,
+   "cat": "other",
+   "text": "the little circle orb thing that switches between the pictures ... I would like for it to face upright so that Barry's face is facing upwards"
+  }
+ ],
+ "catches": [
+  {
+   "t": "2026-11-09 01:07:17",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "self-review rev 1: film burn rim and ragged edge on his face; memory echo double faces; fixed before delivery"
+  },
+  {
+   "t": "2026-11-09 01:07:17",
+   "round": 1,
+   "cat": "other",
+   "text": "fresh-eyes critique: overlay invisible at phone size, return shot blurry/unframed, loop repeated the freeze, emblem disc read as a dark hole, small album prints, look-alike laugh shots, whip scan line, faint signature rectangle; all fixed before delivery"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "lensball's warm halo clipped to its bounding box: a visible square round the glass (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "other",
+   "text": "loop read as a flicker to near-black (luma 17-28): the room now stays visible, levels >= 0.48 (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "emblem crawl lightning and the bolt's dissolve over the incoming face in the opening disc (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "framing",
+   "text": "the wake's first second: empty dim room to frame 30 and a smeared slow rise; face in by frame 20 now (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:42",
+   "round": 2,
+   "cat": "framing",
+   "text": "memories off-centre in the lensball; faces now centred in the glass (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:42",
+   "round": 2,
+   "cat": "seam",
+   "text": "loop's room frames dimmed twice (darker than frame 0) (studio stills)"
+  },
+  {
+   "t": "2026-11-09 02:44:42",
+   "round": 2,
+   "cat": "other",
+   "text": "the real bolt's tip showed through as the drawn bolt dissolved (studio stills)"
+  }
+ ],
+ "round_starts": {
+  "2": "2026-11-09 01:46:46",
+  "3": "2026-11-09 03:07:02"
+ },
+ "verdict": {
+  "t": "2026-11-09 03:23:17",
+  "round": 3,
+  "verdict": "standard",
+  "words": "I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good."
+ }
+}

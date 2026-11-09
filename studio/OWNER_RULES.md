@@ -1,7 +1,7 @@
 # The owner's rules, on one page (both studios)
 
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
-(v4–v13, v101–v107) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
+(v4–v14, v101–v107) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
 Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
@@ -9,6 +9,8 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 
 ## 1. Never
 - **Black occluders as transitions**: letterbox bars, redaction boxes, a screen floating in a dark room ("the black bars", "the black box transition", v107). **[plan]** registry tags
+- **A symbol drawn in the wrong shape, or a cut-off subject mirrored** (`BORDER_REFLECT` on a push mirrored the S1 emblem into a chevron, v14 rev 1): trace the real shape on the source first. **[eye]**
+- **Faces or memories upside down inside a graphic**, even when the optics would invert them (v14 round 3: *"face upright so that Barry's face is facing upwards"*). **[eye]**
 - **Graphics on or pointing at a face**: lines or strings converging on it, crosshairs, target rings, even when the face arrives a beat later (v107 rev 3 rebuilt the old `strings` gimmick and lost a round). Nothing crosses a face: lightning, particles, seams, wipe edges, suns go round the face box or behind the matte. **[plan] [qc] [eye]**
 - **A transition the owner rejected**, unless the registry's `fix` is applied: see `studio/transitions.json` (press flash, broadcast TV, redact, rorschach, strings, glass shatter, knife pass, emblem horizon …). **[plan]**
 - **The same clip twice**, or two shots that look the same (the same close-up from the same scene) (v107 rev 2). **[plan]**
@@ -25,14 +27,15 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 3. **Lean sound**: about 10–12 sound events in 20–23 s, layered only at the set pieces, small transitions silent, nothing on beat punches or letters; v107's 28 placed effects is the ceiling (cut in v12, v106, v13). **[plan]** > 16 warns, > 30 fails
 4. **No headspace**: no span over ~1 s without a cut, a transition or a designed beat (v104, v106). **[plan]** estimate **[qc]** motionqc
 5. **A concept from the song's own words or the character's history**, carried by one hero object through picture, text and loop; the hero is a **motif** (2–4 appearances), not every transition (v11, v13). **[plan]** families
-6. **Physical, kinetic transitions** from the character's world (rip, pour, spin, zipper, page, eye dive, shutter, emblem/prop), each a different idea; generic moves (whip, slam, impact, dolly, smear) are filler between them. **About 24–26 designed transitions in ~22 s (≥ 1.1/s), nearly all custom** (v108 had 21 + the loop, 0.97/s, and the verdict still said *"could have contained slightly more transitions/animations"*). **[plan]** density, generic share, repeats v108 rev 1 asked again for *"a lot more transition and unique graphics with custom animated transitions … smooth transitions and creative ones so the edit flows"*: replace generic connectors with custom, smooth ones.
+6. **Physical, kinetic transitions** from the character's world (rip, pour, spin, zipper, page, eye dive, shutter, emblem/prop), each a different idea; generic moves (whip, slam, impact, dolly, smear) are filler between them. **About 24–26 designed transitions in ~22 s (≥ 1.1/s), nearly all custom** (v108 had 21 + the loop, 0.97/s, and the verdict still said *"could have contained slightly more transitions/animations"*). **[plan]** density, generic share, repeats v108 rev 1 asked again for *"a lot more transition and unique graphics with custom animated transitions … smooth transitions and creative ones so the edit flows"*: replace generic connectors with custom, smooth ones. *Read with 11: the density is for an energetic song; a calm song (v14) gets fewer, slower set pieces on its structure.*
 7. **Faces centred and whole**; spins and dives land on a centred, tracked face (v107). **[plan] [qc]**
 8. **The motion pass**: speed ramps with clean flow on hook shots, the beat camera (punch, kick, blur), smooth sub-pixel motion, no judder (v10, v106). **[qc]** judder
    - *v108 exception (not a new rule):* the owner turned the beat camera off for DOOMSDAY (*"I generally like when on the beat the clip … jumps up and down with the beat, but in this edit I would like for you to remove that just for this edit"*): a slow, menacing edit may flow better without the punch. Keep it the default.
 9. **Restored, sharp sources**: `sr_prep`, zoom ≤ 1.10 on 720p, no SOFT shot on a hero moment (v105). **[plan]** zoom **[qc]** sharpness
 10. **A smooth ending**: the beat camera rests through the break, fewer and longer cuts (v107).
-
-11. **The owner's concept boards are built from the shot's own props**: lift, tilt or move the real object (v108: the real slide pivots up in his fingers) rather than a CG copy beside it (*"merge that slide graphic … with one of the actual slides from that scene"*). Board choices (text, timing) apply to that edit only; ask when the rest is left open.
+11. **The style matched to the song** (v14 standard, *"a different style ... but is still really good"*): on a calm, nostalgic song, a calm edit (slower set pieces on the song's structure, a breathing camera, ~5 quiet effects, a low overlay) is right; v10–v12's density and beat camera are for energetic songs.
+12. **A liked transition used once, fast; an emblem transition ~2 s with stages; the owner's named moment opens the edit** (v14 rev 2: the print *"too slow and repeats multiple times"*; the emblem *"too fast"*; *"barry waking up ... the focal point of and in the beginning"*). An asset the owner supplies as a reference is built faithfully in our own drawing, with a designed pop (the achievement toast).
+13. **The owner's concept boards are built from the shot's own props**: lift, tilt or move the real object (v108: the real slide pivots up in his fingers) rather than a CG copy beside it (*"merge that slide graphic … with one of the actual slides from that scene"*). Board choices (text, timing) apply to that edit only; ask when the rest is left open.
 
 ## 3. Text
 - Dexter: every clearly sung line captioned word by word on its sung onset, in the v9 style (heavy caps, keyline, red emphasis, eased in). Flash: text is optional and titles must earn their place (v12 removed both).

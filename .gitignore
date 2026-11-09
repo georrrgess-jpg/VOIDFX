@@ -141,3 +141,10 @@ v108/out/
 v108/work/*.npz
 v108/work/*.npy
 v108/sr/
+v14/work/*.log
+v14/audio/
+v14/frames/
+v14/out/
+v14/work/*.npz
+v14/work/*.npy
+v14/sr/
