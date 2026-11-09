@@ -102,7 +102,7 @@
    "buried": false
   },
   {
-   "name": "light_sweep108",
+   "name": "flicker109",
    "kind": "transition",
    "at": 7.29,
    "t0": 6.99,
@@ -113,7 +113,7 @@
    "buried": true
   },
   {
-   "name": "facematch108",
+   "name": "headspin",
    "kind": "transition",
    "at": 8.14,
    "t0": 7.84,
@@ -146,7 +146,7 @@
    "buried": true
   },
   {
-   "name": "luminol108",
+   "name": "polaroid",
    "kind": "transition",
    "at": 11.14,
    "t0": 10.84,
@@ -157,7 +157,18 @@
    "buried": true
   },
   {
-   "name": "tape109",
+   "name": "the surveillance",
+   "kind": "set piece",
+   "at": 11.57,
+   "t0": 11.57,
+   "t1": 13.29,
+   "music_db": -7.2,
+   "fx_peak_db": -22.3,
+   "fx_minus_music": -15.1,
+   "buried": true
+  },
+  {
+   "name": "cctv109",
    "kind": "transition",
    "at": 12.0,
    "t0": 11.7,
@@ -179,18 +190,7 @@
    "buried": true
   },
   {
-   "name": "the hunt",
-   "kind": "set piece",
-   "at": 12.86,
-   "t0": 12.86,
-   "t1": 15.43,
-   "music_db": -7.4,
-   "fx_peak_db": -18.1,
-   "fx_minus_music": -10.7,
-   "buried": false
-  },
-  {
-   "name": "mist109",
+   "name": "page_turn107",
    "kind": "transition",
    "at": 13.71,
    "t0": 13.41,
@@ -201,7 +201,7 @@
    "buried": true
   },
   {
-   "name": "sink108",
+   "name": "whip",
    "kind": "transition",
    "at": 14.57,
    "t0": 14.27,
@@ -223,7 +223,7 @@
    "buried": true
   },
   {
-   "name": "whip",
+   "name": "smear",
    "kind": "transition",
    "at": 16.71,
    "t0": 16.41,
@@ -245,7 +245,7 @@
    "buried": true
   },
   {
-   "name": "developer108",
+   "name": "dolly",
    "kind": "transition",
    "at": 18.43,
    "t0": 18.13,
@@ -267,7 +267,7 @@
    "buried": true
   },
   {
-   "name": "smear",
+   "name": "flip",
    "kind": "transition",
    "at": 20.57,
    "t0": 20.27,
@@ -278,7 +278,7 @@
    "buried": true
   },
   {
-   "name": "dolly",
+   "name": "roll",
    "kind": "transition",
    "at": 21.43,
    "t0": 21.13,
@@ -289,7 +289,7 @@
    "buried": true
   },
   {
-   "name": "roll",
+   "name": "dolly",
    "kind": "transition",
    "at": 22.29,
    "t0": 21.99,

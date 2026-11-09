@@ -12250,7 +12250,7 @@ TR2["afterimage109"] = (afterimage109, 8, 10)
 # of the frame it leaves.
 def mirror109(A, B, j, f, sa, sb, pre=10, post=10):
     q = (j + pre + 0.5) / (pre + post); x0 = W * 1.08 - (W * 1.16) * smooth(q)                 # starts and ends just off frame
-    d = _GX - x0; inside = np.clip(-d / 3.0 + 0.5, 0, 1); edge = np.exp(-(d / 14.0) ** 2)
+    d = _GX - x0; inside = np.clip(d / 3.0 + 0.5, 0, 1); edge = np.exp(-(d / 14.0) ** 2)               # the pane trails its edge leftward
     refr = np.exp(-((d + 40) / 40.0) ** 2)
     b = cv2.remap(B, (_GX + refr * 30).astype(np.float32), _GY, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     ghost = cv2.flip(A, 1) * 0.10
