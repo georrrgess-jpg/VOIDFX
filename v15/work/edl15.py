@@ -80,33 +80,34 @@ def shot(n, src, e0, e1, a, b, **kw):
 
 # ---- I DON'T GOT TIME (e0-e32): the watch, the call, and he runs
 shot("watch", "fs2t", 0, 4, 59.75, 60.75, tin="loop_in15", seg=True, lin=True, flowmax=40, flowfall="blend")
-shot("call", "fs2t", 4, 8, 127.10, 128.60, tin="vibrate", seg=True)
+shot("call", "fs2t", 4, 6.5, 127.10, 128.10, tin="vibrate", seg=True)
+shot("night", "fs2t", 6.5, 8, 134.10, 134.70, tin="phone_flare", seg=True)                      # he is already out there
 shot("runcam", "fbk", 8, 10.5, 20.00, 20.85, tin="streak_pass", seg=True, face=None, cx=(830, 800), flowmax=24, flowfall="blend")
-shot("chest", "fs5", 10.5, 12, 180.30, 180.90, tin="time_slice15", seg=True)
+shot("chest", "fs5", 10.5, 12, 180.30, 180.90, tin="time_slice15", seg=True, anim="current")
 shot("masked", "fbh", 12, 14.5, 69.00, 69.85, tin="edge_current15", seg=True, tmap=vel(12, 14.5, 69.00, 69.85), lin=True)
 shot("charge", "fbk", 14.5, 16, 47.90, 48.45, tin="lightstreak", seg=True)
 shot("fpv", "fbk", 16, 18.5, 60.70, 61.90, tin="ramp", seg=True, face=None, cx=(640, 640))
 shot("flight", "fbh", 18.5, 20, 80.85, 81.45, tin="bolt_split", seg=True, face=None, cx=(560, 600))
-shot("street", "fs3", 20, 22.5, 106.80, 107.80, tin="whip_up15", seg=True, tmap=vel(20, 22.5, 106.80, 107.80), lin=True)
-shot("wall", "fbk", 22.5, 24, 74.60, 75.15, tin="arc_link", seg=True, face=None, cx=(640, 640))
+shot("street", "fs3", 20, 22.5, 106.80, 107.80, tin="whip_up15", seg=True, tmap=vel(20, 22.5, 106.80, 107.80), lin=True, anim="flares")
+shot("wall", "fbk", 22.5, 24, 74.60, 75.15, tin="arc_link", seg=True, face=None, cx=(640, 640), anim="remnants")
 shot("s5night", "fs5", 24, 26.5, 72.00, 72.95, tin="light_leak15", seg=True, tmap=vel(24, 26.5, 72.00, 72.95), lin=True)
 shot("city", "fbk", 26.5, 28, 71.72, 72.26, tin="gold_link", seg=True, face=None, cx=(640, 640))
-shot("strike", "fbh", 28, 32, 10.33, 10.74, tin="strike_cut", seg=True, tmap=slow(28, 32, 10.33, 10.74, 0.6), lin=True, flowfall="blend")
+shot("strike", "fbh", 28, 32, 10.33, 11.95, tin="strike_cut", seg=True, tmap=slow(28, 32, 10.33, 11.95, 0.6), lin=True, flowfall="blend")
 # ---- TIME STOPS (the drum break, e32-e40): the S1 lab strike, frozen (the strike's own next frame: one continuous moment)
-shot("still", "fbh", 32, 40, 10.75, 10.78, tin="time_stop", seg=True, z=[(0, 1.00), (1, 1.00)])
+shot("still", "fbh", 32, 40, 11.97, 11.98, tin="time_stop", seg=True, z=[(0, 1.00), (1, 1.00)])   # his hand up against the bolt
 # ---- TIME RESTARTS (e40): the return, and the jealousy he says he doesn't feel
 shot("eyes", "fbh", 40, 42.5, 116.60, 117.52, tin="time_restart", seg=True)
-shot("iris", "fs4", 42.5, 46.5, 117.25, 118.30, tin="eye_iris15", seg=True)                      # S4: Iris at work (her life)
-shot("look", "fs1", 46.5, 50.5, 236.00, 237.50, tin="speed_whip15", seg=True, tmap=vel(46.5, 50.5, 236.00, 237.50), lin=True, flowmax=30, flowfall="blend")
-shot("sunrun", "fs4", 50.5, 53, 2.55, 3.70, tin="turn_away", seg=True, tmap=vel(50.5, 53, 2.55, 3.70), lin=True, flowmax=60)   # he turns away and runs
-shot("hair", "fs1", 53, 56, 237.80, 238.76, tin="wind_gust", seg=True)
-shot("trail", "fs1", 56, 58.5, 238.85, 239.65, tin="smear", seg=True, face=None, cx=(700, 560), flowmax=30, flowfall="blend")
+shot("iris", "fs4", 42.5, 46.5, 117.20, 118.22, tin="eye_iris15", seg=True, anim="bokeh")                      # S4: Iris at work (her life)
+shot("look", "fs1", 46.5, 50.5, 236.00, 237.50, tin="speed_whip15", seg=True, tmap=vel(46.5, 50.5, 236.00, 237.50), lin=True, flowmax=30, flowfall="blend", anim="urge")
+shot("sunrun", "fs4", 50.5, 53, 2.55, 3.70, tin="turn_away", seg=True, interp="hold")   # the source's own 60p stutter-cut run, straight   # he turns away and runs
+shot("hair", "fs1", 53, 56, 237.80, 238.76, tin="wind_gust", seg=True, anim="grit")
+shot("trail", "fs1", 56, 58.5, 238.85, 239.65, tin="dust_cloud", seg=True, face=None, cx=(700, 560), flowmax=30, flowfall="blend")
 shot("emblem", "fbh", 58.5, 64, 92.30, 93.45, tin="focus_rack15", seg=True, z=[(0, 1.00), (1, 1.00)])
 shot("fly", "fbh", 64, 66.5, 119.60, 120.45, tin="emblem_clock", seg=True, face=None, cx=(640, 640))
-shot("saves", "fbh", 66.5, 68, 127.70, 128.25, tin="afterimage15", seg=True)
+shot("saves", "fbh", 66.5, 68, 127.70, 128.25, tin="afterimage15", seg=True, anim="shout")
 shot("runfs5", "fs5", 68, 70.5, 113.00, 113.85, tin="pendulum", seg=True, face=None, cx=(640, 640), interp="hold")   # the source flickers frame to frame: held 24p at 1.05x
 shot("blue", "fbk", 70.5, 72, 124.75, 125.30, tin="whip", seg=True)
-shot("hero", "fs4", 72, 74.5, 174.85, 175.75, tin="time_particles", seg=True, face=None, cx=(800, 760), tmap=vel(72, 74.5, 174.85, 175.75), lin=True)   # through the fire
+shot("hero", "fs4", 72, 74.5, 174.85, 175.75, tin="time_particles", seg=True, face=None, cx=(800, 760), tmap=vel(72, 74.5, 174.85, 175.75), lin=True, anim="embers", face_hint=(410, 640, 150))   # through the fire
 U76 = (76 - 74.5) / 5.5                       # time stops once more on "don't" (e76): the source holds (the lenses still clear)
 shot("alone", "fbh", 74.5, 80, 147.40, 147.88, tin="dolly", seg=True, tmap=[(0, 147.40), (U76, 147.88), (1, 147.88)], lin=True, z=[(0, 1.00), (1, 1.08)])
 
@@ -125,8 +126,8 @@ EMB15_TRACK = [(92.250, 496.9, 563.7), (92.333, 495.0, 563.9), (92.417, 493.0, 5
 
 SET_PIECES = [("time_stops", th(30), th(40)), ("time_restarts", th(39.3), th(41.3)),
               ("emblem_clock", th(60), th(65)), ("loop", th(76), th(80))]
-LOOP_E0, LOOP_E1 = 76.0, 77.0                  # the loop: time stops once more (e76), then REWIND (e77-e80) into frame 0
-REW_CARDS = ["hero", "emblem", "hair", "eyes", "still", "city", "runcam"]   # the memories the rewind flies back past, newest first
+LOOP_E0, LOOP_E1 = 76.0, 76.5                  # the loop: time stops once more (e76), then REWIND (e77-e80) into frame 0
+REW_CARDS = ["hero", "emblem", "iris", "eyes", "still", "runcam"]   # the memories the rewind flies back past, newest first
 HERO = ["timepiece_draw", "still_fx"]
 HERO_TINS = ["time_stop", "time_restart", "emblem_clock", "loop_in15"]
 SIGNATURE = ["emblem_clock"]

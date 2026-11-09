@@ -9,19 +9,23 @@ The window is the song's "I don't got time" run, its one drum-break bar and the 
 care, don't care, don't even tell me … I don't really want to know".
 - **I don't got time (e0–e32):** the fastest man alive never has time. He swings up the watch, a call comes in, and he
   runs: the city, the lightning, the suit, cut on the groove's kicks.
-- **Time stops (the drum break, e32–e40):** at the moment it all began, the S1 lab strike. The lightning and the
-  chemicals hang in the air while the drum fill keeps beating, and the camera steps through the frozen moment on each
-  kick.
+- **Time stops (the drum break, e32–e40), in bullet time:** at the moment it all began, the S1 lab strike, frozen on the
+  instant the bolt hits him, his hand thrown up against it (round 2: a stronger frame than his upward look). The frozen
+  moment is taken apart in depth: the room, the frozen bolts and him. On each kick of the drum fill the camera steps to
+  a new place, so the layers slide against each other. The room sinks to cold steel while the bolts stay molten gold;
+  they throw rays through the room behind him and rim his edge with light. The chemicals hang in the air as real little
+  lenses (refracting the room upside down), and in the last beat the frozen lightning trembles.
 - **Time restarts (e40, the return):** the frozen lightning discharges, and he opens his eyes full of it.
 - **The jealousy he says he doesn't feel:** Iris living her life ("Do whatever you want", seen inside his eye). He
   tells himself he doesn't care, turns his back and runs; the wind of it blows her hair; the trail rips down the path.
 - **EMBLEM CLOCK (the signature, and the emblem transition):** the real S5 emblem's gold bolt (traced as a polygon on the
   source) is lifted off the white disc, which is filled clean, and wound round like a clock hand with a rotational motion
   blur; twelve gold marks come up round the face, and its last sweep brings the next memory in.
-- **The loop (REWIND):** on the e76 kick ("don't") time stops once more; on "really want to know" it runs backwards: the
-  camera flies back out of the moment, the edit's memories come past the lens and fall away down a spiral (the fire,
-  the emblem, Iris, his eyes, the strike, the city, the run), and frame 0 comes from behind the lens and settles into
-  place, the next "I don't got time".
+- **The loop (REWIND, rebuilt in round 2):** on the e76 kick ("don't") time stops once more. Half a beat later it runs
+  backwards: the camera flies forward through the frozen moment into a corridor of the edit's memories, hung along the
+  walls in perspective and turned toward us (the fire, the emblem, Iris, his eyes, the strike, the run, newest first).
+  A gold thread of time spirals along the walls and the frozen sparks stream past as light. At the far end, visible the
+  whole way, frame 0 grows, slows and settles until it fills the frame: the next "I don't got time".
 
 The hero is time itself: the timepiece (the emblem clock) and stopped time (the frozen strike, the restart, the loop).
 
@@ -39,34 +43,35 @@ The hero is time itself: the timepiece (the emblem clock) and stopped time (the 
 | e | Shot | In |
 |---|---|---|
 | 0–4 | the watch (S2) | the loop |
-| 4–8 | the call (S2) | VIBRATE (the frame buzzes like a phone, three pulses) |
+| 4–6.5 | the call (S2) | VIBRATE (the frame buzzes like a phone, three pulses) |
+| 6.5–8 | masked, crouched over the night city (S2) | **PHONE FLARE** (the phone's light flares into the lens, the city burns in) |
 | 8–10.5 | he runs at the camera in lightning | STREAK PASS (he streaks past the lens) |
-| 10.5–12 | lightning on his chest (S5) | TIME SLICE (no seam across a face) |
+| 10.5–12 | lightning on his chest (S5); *suit current* | TIME SLICE (no seam across a face) |
 | 12–14.5 | masked (S4) | EDGE CURRENT |
 | 14.5–16 | the charge-up | LIGHT STREAK |
 | 16–18.5 | speed trails down a night street | RAMP (punch through) |
 | 18.5–20 | in flight, red lightning | BOLT SPLIT |
-| 20–22.5 | masked under street lights (S3) | WHIP UP |
-| 22.5–24 | a run along a wall | ARC LINK |
+| 20–22.5 | masked under street lights (S3); *streetlight flares* | WHIP UP |
+| 22.5–24 | a run along a wall; *time remnants* | ARC LINK |
 | 24–26.5 | the S5 suit at night | LIGHT LEAK |
 | 26.5–28 | the city | GOLD LINK |
-| 28–32 | the S1 lab strike, slowing | STRIKE CUT (the bolt on the side away from both faces) |
-| 32–40 | **TIME STOPS**: the strike, frozen | the freeze spreads out from the bolts |
+| 28–32 | the S1 lab strike, slowing into the hit | STRIKE CUT (the bolt on the side away from both faces) |
+| 32–40 | **TIME STOPS**: the strike, frozen, in bullet time | the freeze spreads out from the bolts |
 | 40–42.5 | his eyes full of lightning | **TIME RESTARTS** (the bolts discharge, the moment is pulled into the strike, the colour floods back) |
-| 42.5–46.5 | Iris at work (S4) | EYE IRIS (Iris upright inside his pupil) |
-| 46.5–50.5 | the Flash looks at her | SPEED WHIP |
+| 42.5–46.5 | Iris at work (S4); *her warm lights* | EYE IRIS (Iris upright inside his pupil) |
+| 46.5–50.5 | the Flash looks at her; *the urge* (lightning gathers on him) | SPEED WHIP |
 | 50.5–53 | he runs through the city (S4) | **TURN AWAY** (the frame turns its back like a card in his wind) |
-| 53–56 | her hair in his wind (S1) | WIND GUST |
-| 56–58.5 | the trail down the path | SMEAR |
+| 53–56 | her hair in his wind (S1); *wind grit* | WIND GUST |
+| 56–58.5 | the trail down the path | **DUST CLOUD** (his dust rolls over her and clears onto the trail) |
 | 58.5–64 | the S5 emblem | FOCUS RACK |
 | 64–66.5 | in flight | **EMBLEM CLOCK** |
-| 66.5–68 | he shouts into the lightning | AFTERIMAGE |
+| 66.5–68 | he shouts into the lightning; *the shout* (arcs and sparks on the kick) | AFTERIMAGE |
 | 68–70.5 | velocity run (S5) | **PENDULUM** (the frame swings out like a clock's pendulum, the run swings in and settles) |
 | 70.5–72 | masked, blue-grey | WHIP |
-| 72–74.5 | through the fire (S4) | TIME PARTICLES |
+| 72–74.5 | through the fire (S4); *embers* | TIME PARTICLES |
 | 74.5–80 | alone, masked; time stops once more, then **REWIND** into frame 0 | dolly |
 
-26 designed transitions and the loop in 25.8 s.
+27 designed transitions and the loop in 25.8 s, plus eight in-shot animations (in italics), each motivated by its shot and kept off faces.
 
 ## Look: VIOLET HOUR
 - **The grade:** lifted violet shadows, peach-gold highlights, the suit's red kept rich, skin protected.

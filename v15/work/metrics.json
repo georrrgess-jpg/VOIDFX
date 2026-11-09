@@ -1,6 +1,6 @@
 {
  "edit": "v15",
- "round": 1,
+ "round": 2,
  "stages": [
   {
    "t": "2026-11-09 03:58:50",
@@ -330,9 +330,126 @@
    "step": "deliver",
    "s": 105.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:20:24",
+   "round": 2,
+   "step": "prep",
+   "s": 152.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:21:18",
+   "round": 2,
+   "step": "sheet:v15r:600,622,640,660,690,720,745,758,112,118,122,126,130,140,1074,1078,1082,1086,1090,1095",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:24:28",
+   "round": 2,
+   "step": "sheet:v15s:640,680,720,758,122,126,1080,1084,1088,1092,215,400,445,860,940,1040,1300,1420",
+   "s": 25.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:32:54",
+   "round": 2,
+   "step": "sheet:v15t:1082,1085,1088,1091,215,400,440,444,860,890,960,970,1040,1050,1296,1300,1420,1430",
+   "s": 11.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:33:59",
+   "round": 2,
+   "step": "sheet:v15u:860,890,965,972,1296,1302,1420,1430,1471,1481,1490,1500,1510,1520,1530,1538,1544,1547",
+   "s": 21.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:36",
+   "round": 2,
+   "step": "audio",
+   "s": 9.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:42",
+   "round": 2,
+   "step": "plan",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:51",
+   "round": 2,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:34:57",
+   "round": 2,
+   "step": "plan",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:44:12",
+   "round": 2,
+   "step": "video",
+   "s": 555.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:47:01",
+   "round": 2,
+   "step": "qc",
+   "s": 169.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:47:08",
+   "round": 2,
+   "step": "report",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:48:16",
+   "round": 2,
+   "step": "sheet:v15v:1070,1074,1077,1080,1082,1084,1087,1090,1093,1095",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 15:48:43",
+   "round": 2,
+   "step": "sheet:v15w:1072,1075,1078,1080,1082,1084",
+   "s": 13.0,
+   "rc": 0
   }
  ],
- "notes": [],
+ "notes": [
+  {
+   "t": "2026-11-09 15:07:56",
+   "round": 2,
+   "cat": "other",
+   "text": "Freeze frame: see if any other freeze frame shots could be better selected; if not keep it, but emphasize it more and make the scene a little bit cooler"
+  },
+  {
+   "t": "2026-11-09 15:07:56",
+   "round": 2,
+   "cat": "density",
+   "text": "add more custom graphics, animations, and transitions; some scenes have blank space or room for improvement"
+  },
+  {
+   "t": "2026-11-09 15:07:56",
+   "round": 2,
+   "cat": "loop",
+   "text": "the loop isn't particularly seamless; improve the loop's animation, make it more visually appealing and detailed"
+  }
+ ],
  "catches": [
   {
    "t": "2026-11-09 05:16:56",
@@ -424,5 +541,8 @@
    "cat": "framing",
    "text": "hero (fire flight): profile face cut at the frame edge; reframed"
   }
- ]
+ ],
+ "round_starts": {
+  "2": "2026-11-09 15:07:56"
+ }
 }

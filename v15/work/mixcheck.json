@@ -25,6 +25,17 @@
    "buried": false
   },
   {
+   "name": "phone_flare",
+   "kind": "transition",
+   "at": 2.1,
+   "t0": 1.8,
+   "t1": 2.55,
+   "music_db": -13.0,
+   "fx_peak_db": -32.5,
+   "fx_minus_music": -19.5,
+   "buried": true
+  },
+  {
    "name": "streak_pass",
    "kind": "transition",
    "at": 2.58,
@@ -234,7 +245,7 @@
    "buried": true
   },
   {
-   "name": "smear",
+   "name": "dust_cloud",
    "kind": "transition",
    "at": 18.06,
    "t0": 17.76,
