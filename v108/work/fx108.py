@@ -1286,7 +1286,7 @@ def blood_drop108(out, cx, cy, r, behind=None, inside=None, inside_w=0.0, stretc
         ins = ins * (1 - oob[..., None]) + soft * oob[..., None]
         ref = ref * (1 - inside_w) + ins * inside_w
     thick = z * (0.55 + 0.45 * z)
-    sig = np.array([3.4, 3.1, 0.55], np.float32) * tint
+    sig = np.array([2.6, 2.4, 0.35], np.float32) * tint
     T = np.exp(-sig * thick[..., None] * 1.5)
     col = ref * T * (1 - 0.25 * tint) + CRIMSON * (1 - T[..., 2:3]) * 0.55 * tint
     nx, ny = dx, dy; nz = z + 1e-3; nn = np.sqrt(nx * nx + ny * ny + nz * nz)
@@ -1294,7 +1294,7 @@ def blood_drop108(out, cx, cy, r, behind=None, inside=None, inside_w=0.0, stretc
     hv = lv + np.array([0, 0, 1], np.float32); hv /= np.linalg.norm(hv)
     ndh = np.clip((nx * hv[0] + ny * hv[1] + nz * hv[2]) / nn, 0, 1)
     rs = clamp(110.0 / max(r, 1.0), 0.12, 1.0)                                                  # a big (near) drop keeps a small, sharp glint
-    spec = ndh ** (90 / rs) * (0.55 + 0.6 * rs) + ndh ** 14 * 0.10 * rs
+    spec = ndh ** (140 / rs) * (0.45 + 0.5 * rs)
     fres = np.clip(1 - z, 0, 1) ** 3 * 0.22 * (0.4 + 0.6 * np.clip(-(dx * lv[0] + dy * lv[1]), 0, 1))
     caus = np.exp(-(((dx - 0.35) / 0.32) ** 2 + ((dy - 0.42) / 0.22) ** 2)) * 0.28 * tint   # light focused through the bead
     rim = np.exp(-((np.sqrt(rho2) - 0.97) / 0.035) ** 2) * 0.35                              # the dark meniscus at the edge
@@ -1517,7 +1517,7 @@ def last_drop(out, f, s):
     fall = ein(clamp(t / 0.62, 0, 1), 1.6)                                                       # it falls down the dark beside his head
     cx = W * 0.84; cy = -70 + (H * 0.46 + 70) * fall
     r = 16 + 70 * fall
-    grow = ein(clamp((t - 0.36) / 0.60, 0, 1), 2.2)                                               # then it falls toward the lens
+    grow = ein(clamp((t - 0.46) / 0.50, 0, 1), 2.4)                                               # then it falls toward the lens
     r = r + grow * (R_FULL - r)
     cx = cx + (W / 2 - cx) * grow ** 1.6; cy = cy + (H / 2 - cy) * grow ** 1.6                   # it stays on the right until it covers
     stretch = 1.0 + 0.45 * (1 - grow) * smooth(t / 0.15)                                         # a falling bead, longer while it falls
@@ -1631,22 +1631,33 @@ def sp_eye_r(sa):
         _SPX[key] = (W * 0.70, H * 0.27) if fs is None else tuple(float(v) for v in max((fs[3], fs[4]), key=lambda q: q[0]))
     return _SPX[key]
 
+SR_PIV = np.array([705.0, 995.0], np.float32)     # his fingers hold the slide's right end: it pivots there
+def sp_eye_l(sa):
+    key = ("l", sa["n"])
+    if key not in _SPX:
+        fs = face_scr(sa, sa["f1"] - 3)
+        _SPX[key] = (W * 0.27, H * 0.27) if fs is None else tuple(float(v) for v in min((fs[3], fs[4]), key=lambda q: q[0]))
+    return _SPX[key]
+
 def specimen(A, B, j, f, sa, sb, pre=SP_PRE, post=SP_POST):
-    ex, ey = sp_eye_r(sa); tex, alpha, scr = sr_tex(sa)
-    lens_a = -300.0                                                                      # the clear end of the slide
+    """rev 1b: the real slide pivots up in his fingers (like tilting it to the light) until its clear end is over his
+    left eye, magnifying it; the next shot appears in the glass; it fills the lens."""
+    ex, ey = sp_eye_l(sa); tex, alpha, scr = sr_tex(sa)
+    piv = SR_PIV; dvec = piv - np.array([ex, ey], np.float32); dlen = float(np.hypot(*dvec))
+    ang_t = math.atan2(dvec[1], dvec[0])                                                    # the slide's axis toward the eye
     if j < 0:
-        u = (j + pre + 0.5) / pre
-        k1 = smooth(u / 0.34); k2 = smooth((u - 0.30) / 0.46)                             # lift toward the lens, then swing up
-        sc = 1.0 + 0.25 * k1 + 0.20 * k2; ang = math.radians(-8 * k1 - 22 * k2)
-        lp0 = SR_C + np.array([lens_a, 0.0], np.float32)                                 # where the clear end starts
-        lift = np.array([0.0, -70.0], np.float32) * k1
-        lp = (lp0 + lift) * (1 - k2) + np.array([ex, ey], np.float32) * k2
-        M = 1.0 + 0.85 * smooth((u - 0.45) / 0.40)                                        # it magnifies his eye
-        cin = smooth((u - 0.80) / 0.20); dof = 3.2 * smooth(u / 0.8); gone = smooth(u / 0.30)
+        u = (j + pre + 0.5) / pre; k = smooth(u / 0.78)
+        ang = ang_t * k; sc = 1.0 + 0.22 * k
+        lens_a = SR_L - 5 - dlen / sc                                                         # the point of the slide over the eye
+        cpos = piv - np.array([math.cos(ang), math.sin(ang)], np.float32) * (SR_L - 5) * sc
+        lp = cpos + np.array([math.cos(ang), math.sin(ang)], np.float32) * lens_a * sc
+        M = 1.0 + 0.85 * smooth((u - 0.45) / 0.40)
+        cin = smooth((u - 0.80) / 0.20); dof = 5.0 * smooth(u / 0.7); gone = smooth(u / 0.25)
     else:
-        v = (j + 0.5) / post
-        sc = 1.45 * (1 + 4.5 * ein(clamp(v / 0.85, 0, 1), 2.2)); ang = math.radians(-30)
-        lp = np.array([ex, ey], np.float32); M = 1.85 - 0.85 * smooth(v / 0.9); cin = 1.0; dof = 3.2; gone = 1.0
+        v = (j + 0.5) / post; ang = ang_t
+        sc0 = 1.22; sc = sc0 * (1 + 4.5 * ein(clamp(v / 0.85, 0, 1), 2.2))
+        lp = np.array([ex, ey], np.float32); lens_a = SR_L - 5 - dlen / sc0
+        M = 1.85 - 0.85 * smooth(v / 0.9); cin = 1.0; dof = 5.0; gone = 1.0
     ca, sn = math.cos(ang), math.sin(ang)
     uax = np.array([ca, sn], np.float32); nax = np.array([-sn, ca], np.float32)
     C = lp - uax * lens_a * sc                                                           # the slide's centre on screen
@@ -1711,12 +1722,12 @@ def _up(m): return cv2.resize(m, (W, H), interpolation=cv2.INTER_CUBIC)
 # HAZE: Miami heat. The picture shimmers in rising heat waves; the next shot condenses out of the shimmer.
 def haze108(A, B, j, f, sa, sb, pre=10, post=12):
     q = (j + pre + 0.5) / (pre + post); amp = math.sin(math.pi * clamp(q, 0, 1)) ** 1.4; t = f / FPS
-    dx = (np.sin(_GY * 0.040 - t * 9.0) * 0.6 + np.sin(_GY * 0.019 + _GX * 0.011 - t * 6.0)) * 16 * amp
-    dy = np.sin(_GX * 0.028 + _GY * 0.010 + t * 7.0) * 7 * amp
-    w = smooth((q - 0.35) / 0.30)
+    dx = (np.sin(_GY * 0.040 - t * 9.0) * 0.6 + np.sin(_GY * 0.019 + _GX * 0.011 - t * 6.0)) * 42 * amp
+    dy = (np.sin(_GX * 0.028 + _GY * 0.010 + t * 7.0) * 18 - 30) * amp
+    w = smooth((q - 0.44) / 0.12)
     a = _remap(A, _GX + dx, _GY + dy) if w < 1 else None; b = _remap(B, _GX - dx * 0.8, _GY + dy) if w > 0 else None
     o = b if a is None else (a if b is None else a * (1 - w) + b * w)
-    o = _blur(o, 2.2 * amp) * (1 + 0.05 * amp)
+    o = _blur(o, 3.0 * amp) * (1 + 0.07 * amp)
     return np.clip(o, 0, 1)
 TR2["haze108"] = (haze108, 10, 12)
 
@@ -1732,7 +1743,7 @@ def diffusion108(A, B, j, f, sa, sb, pre=16, post=18):
     adv1 = np.roll(n1, -off // 2, axis=0); adv2 = np.roll(n2, -off, axis=0)                   # it rises as it spreads
     D = np.sqrt(((xx - w4 * 0.50) / w4) ** 2 + ((yy - h4 * 1.08) / h4 * 0.9) ** 2) * 1.20
     D = D + (adv1 - 0.5) * 0.55 + (adv2 - 0.5) * 0.16
-    lvl = -0.05 + 1.85 * ein(q, 1.20)
+    lvl = -0.05 + 1.85 * ein(q, 1.55)
     m = np.clip((lvl - D) / 0.22, 0, 1); m = m * m * (3 - 2 * m)
     band = np.exp(-((lvl - D - 0.06) / 0.16) ** 2) * (0.45 + 0.55 * adv2)
     dens = np.clip((lvl - D) / 0.45, 0, 1) * (0.6 + 0.4 * adv1)                                 # the dye's body
@@ -1740,9 +1751,13 @@ def diffusion108(A, B, j, f, sa, sb, pre=16, post=18):
     M_, BD = _up(m), _up(band); GX_, GY_ = _up(gx * band), _up(gy * band)
     a = _remap(A, _GX + GX_ * 260, _GY + GY_ * 260); b = _remap(B, _GX - GX_ * 160, _GY - GY_ * 160)
     DN = _up(dens) * (1 - smooth((j + 0.5) / post) if j >= 0 else 1.0)
+    sharp = smooth((j + 0.5) / 10.0) if j >= 0 else 0.0                                         # inside the cloud it is soft until after the cut
+    bs = cv2.resize(cv2.GaussianBlur(cv2.resize(b, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 3.5), (W, H))
+    b = bs * (1 - sharp) + b * sharp
     o = a * (1 - M_[..., None]) + b * M_[..., None]
     tint = np.clip(BD * 0.45 + DN * 0.40, 0, 0.7)[..., None]
-    o = o * (1 - tint) + (o * 0.35 + DIFC * 0.75) * tint                                          # translucent cognac, not a line
+    soft = cv2.resize(cv2.GaussianBlur(cv2.resize(o, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 5), (W, H))
+    o = o * (1 - tint * 1.3) + soft * tint * 0.3 + (soft * 0.35 + DIFC * 0.75) * tint                 # a smooth wash of cognac
     return np.clip(o, 0, 1)
 TR2["diffusion108"] = (diffusion108, 16, 18)
 
@@ -1770,13 +1785,15 @@ def developer108(A, B, j, f, sa, sb, pre=8, post=18):
         u = (j + pre + 0.5) / pre; red = smooth(u); rip = smooth(u) * 8; img = A; dev = 1.0
     else:
         v = (j + 0.5) / post; red = 1 - smooth((v - 0.45) / 0.55); rip = 8 * (1 - smooth(v / 0.8)); img = B; dev = ein(clamp(v / 0.80, 0, 1), 1.3)
-    wave = np.sin(r * 0.045 - t * 14) * rip
+    wave = (np.sin(r * 0.045 - t * 14) + 0.5 * np.sin(r * 0.11 - t * 22)) * rip * 1.8
     img = _remap(img, _GX + wave * (_GX - W * 0.5) / (r + 1), _GY + wave * (_GY - H * 0.45) / (r + 1))
     if j >= 0:
         paper = np.float32(0.80)
         img = paper + (np.clip((img - 0.5) * (0.55 + 0.45 * dev) + 0.5 - 0.06 * (1 - dev), 0, 1) - paper) * (0.50 + 0.50 * dev)
     L = lum(img)[..., None]
     o = img * (1 - 0.55 * red) + L * SAFE * 0.85 * red
+    sheen = np.clip(np.sin(r * 0.045 - t * 14) * np.sin(r * 0.11 - t * 22), 0, 1) ** 6 * (rip / 8.0) * 0.12
+    o = o + sheen[..., None] * SAFE
     return np.clip(o, 0, 1)
 TR2["developer108"] = (developer108, 8, 18)
 
@@ -1794,7 +1811,7 @@ def lu_field():
             x, y = int(cx + rng.normal(0, sp)), int(cy + rng.normal(0, sp * 1.3)); r_ = max(1, int(rng.exponential(2.2)))
             cv2.circle(g, (x, y), r_, float(rng.uniform(0.5, 1.0)), -1, cv2.LINE_AA)
             if rng.random() < 0.12: cv2.line(g, (x, y), (x + int(rng.normal(0, 4)), y + int(rng.uniform(8, 30))), 0.7, 1, cv2.LINE_AA)   # drips
-        g = cv2.GaussianBlur(g, (0, 0), 0.8) + cv2.GaussianBlur(g, (0, 0), 5) * 0.8
+        g = cv2.GaussianBlur(g, (0, 0), 1.8) + cv2.GaussianBlur(g, (0, 0), 7) * 1.1
         _LU["g"] = np.clip(g / np.percentile(g[g > 0.01], 95), 0, 1.3)
     return _LU["g"]
 
@@ -1809,7 +1826,8 @@ def luminol108(A, B, j, f, sa, sb, pre=10, post=18):
     if fs is not None:                                                                        # keep the glow off his face
         yy, xx = np.mgrid[0:h4, 0:w4].astype(np.float32)
         fm = np.clip((np.sqrt((xx - fs[0] / 4) ** 2 + ((yy - fs[1] / 4) * 0.8) ** 2) - fs[2] / 4 * 0.55) / (fs[2] / 4 * 0.25), 0, 1)
-        field = field * fm + (lvl > 0.9) * (1 - fm) * field
+        below = np.clip((yy - (fs[1] + fs[2] * 0.75) / 4) / 12.0, 0, 1)                           # below the collar only
+        field = field * fm * (0.15 + 0.85 * below)
     m = np.clip((field - (1.0 - lvl)) / 0.18, 0, 1); M_ = _up(m)
     glow = _up(np.clip(m * (0.6 + 0.4 * g), 0, 1)) * (1 - smooth((j + 0.5) / post) if j >= 0 else 1.0)
     L = lum(img)[..., None]
@@ -1860,3 +1878,45 @@ def sink108(A, B, j, f, sa, sb, pre=14, post=18):
     o = img * (1 - m[..., None]) + uw * m[..., None] + men[..., None] * np.array([0.9, 0.95, 1.0], np.float32)
     return np.clip(o, 0, 1)
 TR2["sink108"] = (sink108, 14, 18)
+
+def facematch108(A, B, j, f, sa, sb, pre=8, post=10):
+    """rev 1b: registered on the eyes (scale, rotation and position), so one face becomes the other."""
+    fa = face_scr(sa, sa["f1"] - 1); fb = face_scr(sb, sb["f0"])
+    if fa is None or fb is None: return haze108(A, B, j, f, sa, sb, pre, post)
+    ea = sorted((fa[3], fa[4])); eb = sorted((fb[3], fb[4]))
+    va = np.subtract(ea[1], ea[0]); vb = np.subtract(eb[1], eb[0])
+    sc = clamp(np.hypot(*vb) / max(np.hypot(*va), 1.0), 0.5, 2.0); rot = math.atan2(vb[1], vb[0]) - math.atan2(va[1], va[0])
+    ca_ = np.mean(ea, axis=0); cb_ = np.mean(eb, axis=0)
+    def M_of(k):                                                                            # identity -> A's eyes onto B's (k 0..1)
+        s_ = 1 + (sc - 1) * k; r_ = rot * k; c, sn = math.cos(r_) * s_, math.sin(r_) * s_
+        tx, ty = ca_ + (cb_ - ca_) * k
+        return np.float32([[c, -sn, tx - (c * ca_[0] - sn * ca_[1])], [sn, c, ty - (sn * ca_[0] + c * ca_[1])]])
+    if j < 0:
+        k = smooth((j + pre + 0.5) / pre)
+        a = cv2.warpAffine(A, M_of(k), (W, H), borderMode=cv2.BORDER_REFLECT)
+        w = smooth((j + 2.5) / 5.0)
+        if w <= 0: return np.clip(_blur(a, 1.2 * math.sin(math.pi * k)), 0, 1)
+        bi = cv2.warpAffine(B, cv2.invertAffineTransform(M_of(1.0)) @ np.vstack([M_of(1.0), [0, 0, 1]])[:2] if False else np.float32([[1, 0, 0], [0, 1, 0]]), (W, H))
+        return np.clip(a * (1 - w) + B * w, 0, 1)
+    a = cv2.warpAffine(A, M_of(1.0), (W, H), borderMode=cv2.BORDER_REFLECT)
+    w = smooth((j + 2.5) / 5.0)
+    return np.clip(a * (1 - w) + B * w if w < 1 else B, 0, 1)
+TR2["facematch108"] = (facematch108, 8, 10)
+
+_sink_r1 = sink108
+def sink108(A, B, j, f, sa, sb, pre=14, post=18):
+    o = _sink_r1(A, B, j, f, sa, sb, pre, post)
+    rng = np.random.default_rng(1108); t = f / FPS
+    for k in range(26):                                                                      # bubbles rising under the surface
+        x0 = rng.uniform(0.05, 0.95) * W; sp_ = rng.uniform(260, 520); r_ = rng.uniform(4, 13); ph = rng.uniform(0, 3)
+        y = H * 1.05 - ((t * sp_ + ph * 400) % (H * 1.2)); x = x0 + 14 * math.sin(t * 6 + ph * 3)
+        if 0 < y < H:
+            q = (j + pre) / (pre + post); vis = math.sin(math.pi * clamp(q, 0, 1))
+            if vis > 0.05:
+                cv2.circle(o, (int(x), int(y)), int(r_), (0.85, 0.90, 0.95), 1, cv2.LINE_AA)
+    return np.clip(o, 0, 1)
+TR2["sink108"] = (sink108, 14, 18)
+
+def wiper108(A, B, j, f, sa, sb):
+    return wiper(A, B, j, f, sa, sb, pre=12, post=16)
+TR2["wiper108"] = (wiper108, 12, 16)

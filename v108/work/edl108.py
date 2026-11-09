@@ -106,9 +106,9 @@ UN = dict(look="under108")                  # under the surface: cold steel and 
 def V(e0, e1, a, b): return dict(tmap=vel(e0, e1, a, b, lo=0.55, hi=1.9), lin=True, interp="flow")
 # ---- "...SAVE ME THE TROUBLE, YO / WATCH YOUR OWN BACK, CAME IN AND GO OUT ALONE, BLACK": the mask (frame 0 is the loop's landing)
 shot("mask", "s1", 0, 3, 406.00, 407.10, z=[(0, 1.00), (1, 1.04)], interp="flow", **SU)   # the sunset smile
-shot("palms", "s1", 3, 6, 64.30, 65.40, z=[(0, 1.02), (1, 1.06)], tin="light_sweep108", interp="flow", **SU)
+shot("palms", "s1", 3, 6, 65.00, 66.10, z=[(0, 1.02), (1, 1.06)], tin="light_sweep108", interp="flow", **SU)
 shot("day2", "s1", 6, 9, 168.00, 169.00, z=[(0, 1.00), (1, 1.04)], tin="haze108", interp="flow", **SU)       # rev 1: the Miami heat
-shot("tension", "s1", 9, 12, 376.95, 377.92, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", **SU)
+shot("tension", "s4", 9, 12, 7.70, 8.70, z=[(0, 1.00), (1, 1.05)], tin="dolly", interp="flow", **SU)   # rev 1b: a calm day shot from another scene
 # ---- "STAY IN THE ZONE": SURFACE, the plastic stretches over the calm picture and peels away to the darker Dexter
 shot("release", "s4", 12, 16, 117.50, 118.90, z=[(0, 1.06), (1, 1.00)], tin="surface", interp="flow", **UN)
 # ---- "TURN H2O TO COGNAC": the drums drop out; the water turns (diffusion); the M99 (double vision); the slide to the light
@@ -124,8 +124,8 @@ shot("brother", "s1", 28, 32, 390.45, 391.95, z=[(0, 1.00), (1, 1.04)], tin="fro
 shot("tomb", "s4", 32, 36, 124.50, 125.90, z=[(0, 1.00), (1, 1.05)], tin="roll", interp="flow", **UN)
 # ---- "RIGHT ABOVE MY GOVERNMENT, DUMILE NAME": Miami Metro, the badge; luminol onto the grin; the car
 shot("badge", "p7", 36, 40, 14.60, 16.10, z=[(0, 1.00), (1, 1.04)], tin="polaroid", interp="flow", **UN)
-shot("name", "s4", 40, 42, 46.95, 47.65, z=[(0, 1.00), (1, 1.04)], tin="luminol108", interp="flow", **UN)
-shot("car", "s4", 42, 44, 88.20, 88.90, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **UN)
+shot("name", "s4", 40, 42, 46.95, 47.65, z=[(0, 1.00), (1, 1.04)], tin="luminol108", interp="flow", redthr=0.20, **UN)
+shot("car", "s4", 42, 44, 88.20, 88.90, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", redthr=0.20, **UN)
 # ---- "EITHER UNMARKED OR ENGRAVED": into the woods with the axe
 shot("unmarked", "s4", 44, 48, 136.80, 138.20, z=[(0, 1.00), (1, 1.05)], tin="rainfocus", interp="flow", **UN)   # the woods with the axe (the Trinity hike): an unmarked grave
 # ---- "HEY, WHO'S TO SAY?": his face becomes the smirk at the lens
@@ -135,8 +135,8 @@ shot("wrote", "s1", 52, 55, 78.20, 79.30, z=[(0, 1.00), (1, 1.05)], tin="develop
 shot("slides2", "s1", 55, 57, 45.60, 46.30, z=[(0, 1.00), (1, 1.04)], tin="whip", interp="flow", **UN)
 shot("section", "s4", 57, 59, 145.82, 146.50, z=[(0, 1.00), (1, 1.04)], tin="slam", face=None, cx=(640, 640), interp="blend", **UN)
 # ---- "IF YOU DON'T BELIEVE ME, GO GET BAGGED AND CHECKED IN": the night drive; the wiper onto the bags; under the surface
-shot("believe", "s1", 59, 64, 316.00, 317.70, z=[(0, 1.00), (1, 1.05)], tin="smear", interp="flow", **UN)
-shot("bagged", "p5", 64, 68, 51.75, 53.30, z=[(0, 1.00), (1, 1.04)], tin="wiper", interp="flow", **UN)
+shot("believe", "s1", 59, 64, 316.00, 317.70, z=[(0, 1.00), (1, 1.05)], tin="smear", interp="flow", redthr=0.30, **UN)
+shot("bagged", "p5", 64, 68, 51.75, 53.30, z=[(0, 1.00), (1, 1.04)], tin="wiper108", interp="flow", **UN)
 # ---- the loop: under the surface; he looks up; the last drop falls toward the lens with frame 0 inside it
 shot("lookup", "s4", 68, 72, 230.75, 232.15, z=[(0, 1.00), (1, 1.03)], tin="sink108", interp="flow", tout="last_drop", **UN)
 SHOTS = S

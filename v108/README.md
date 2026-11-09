@@ -106,3 +106,10 @@ animated transitions … a lot of smooth transitions and creative ones so the ed
   and they dissolve), *developer* (a print develops under the red safelight into the red desk), *sink* (the water rises
   over the lens and drains off the last shot). Three new shots (a Miami street, the car, a blood-slide close-up): 22 shots,
   21 transitions + the loop (was 19 / 18). Generic connectors are down to 6.
+- **After the fresh-eyes critique (rev 1b):** SPECIMEN's slide now pivots up in his fingers (like tilting a slide to the
+  light) so its clear end reaches his eye: most of where it was stays covered, and the rest sits in the soft background
+  (it had left a grey band over his mouth). The face match registers on the eye line; the heat haze warps harder and
+  switches at its peak; the darkroom ripples; the sink has bubbles; the dye wash is smooth; luminol glows soft and only
+  below the collar; the 3 s shot is a calm day shot from another scene (it looked like the container scene); the palms
+  shot starts after the passer-by; the wiper is slower (its one-frame jump is gone); skin no longer turns red in three
+  shots. QC: SHIP, 11 pops all cuts, no dead spans, no judder.
