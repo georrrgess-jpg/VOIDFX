@@ -102,24 +102,25 @@ def edge_leaks(f):
     return cv2.resize(cv2.GaussianBlur(q, (0, 0), 26), (W, H))
 
 def dust(out, f, s):
-    """a few film dust specks (one or two frames each) and, rarely, a hair; kept off the face."""
-    rng = np.random.default_rng(1400 + (f % E.DUR_F)); n = int(rng.choice([0, 0, 1, 1, 2]))
+    """film dust specks (one or two frames each, big enough to read on a phone) and a hair about once a second; kept
+    off the face."""
+    rng = np.random.default_rng(1400 + (f % E.DUR_F)); n = int(rng.choice([0, 1, 1, 2, 3]))
     fb = face_box(s, f) if s.get("face") is not None else None
     for _ in range(n):
         x, y = float(rng.uniform(60, W - 60)), float(rng.uniform(80, H - 80))
         if fb and fb[0] - 40 < x < fb[1] + 40 and y < fb[2] + 60: continue
-        r = float(rng.uniform(1.2, 3.0)); dark = rng.random() < 0.7; a = float(rng.uniform(0.18, 0.34))
+        r = float(rng.uniform(2.2, 4.8)); dark = rng.random() < 0.7; a = float(rng.uniform(0.35, 0.55))
         x0, y0, x1, y1 = int(x - 8), int(y - 8), int(x + 9), int(y + 9)
         yy, xx = np.mgrid[y0:y1, x0:x1].astype(F32)
         m = np.clip(r + 0.5 - np.sqrt((xx - x) ** 2 + (yy - y) ** 2), 0, 1) * a
         sub = out[y0:y1, x0:x1]
         sub[:] = sub * (1 - m[..., None]) + (0.05 if dark else 0.92) * m[..., None]
-    if f % 97 == 41:                                                                         # a hair, about every 1.6 s, 1 frame
+    if f % 61 == 23 or f % 61 == 24:                                                         # a hair, about once a second, 2 frames
         x0 = float(rng.uniform(80, 260)) if rng.random() < 0.5 else float(rng.uniform(W - 260, W - 80))
         y0 = float(rng.uniform(H * 0.55, H * 0.85)); t_ = np.linspace(0, 1, 40)
         pts = np.stack([x0 + 70 * t_ + 18 * np.sin(t_ * 5), y0 + 110 * t_ ** 1.3], 1)
-        cv = np.zeros((H, W), F32); cv2.polylines(cv, [(pts * 4).astype(np.int32)], False, 1.0, 1, cv2.LINE_AA, shift=2)
-        out *= (1 - 0.30 * cv)[..., None]
+        cv = np.zeros((H, W), F32); cv2.polylines(cv, [(pts * 4).astype(np.int32)], False, 1.0, 2, cv2.LINE_AA, shift=2)
+        out *= (1 - 0.45 * cv2.GaussianBlur(cv, (0, 0), 0.8))[..., None]
     return out
 
 STRONG = [46, 50, 54, 58, 60, 62, 66, 70, 76, 78, 82, 84, 86, 90]                           # the piano's strong notes after the return
@@ -131,6 +132,25 @@ def breath(f):
         if 0 <= d < 0.6: b = max(b, math.exp(-d / 0.20))
     return b
 
+def gate_mask():
+    """the Super 8 gate: soft rounded corners, darker toward each corner (not bars: the picture runs to every edge)."""
+    if "gate" not in _FIN14:
+        q = np.zeros((H // 4, W // 4), F32); r = 34
+        cv2.rectangle(q, (r, 0), (W // 4 - r, H // 4), 1.0, -1); cv2.rectangle(q, (0, r), (W // 4, H // 4 - r), 1.0, -1)
+        for (x, y) in ((r, r), (W // 4 - r, r), (r, H // 4 - r), (W // 4 - r, H // 4 - r)): cv2.circle(q, (x, y), r, 1.0, -1, cv2.LINE_AA)
+        g = cv2.resize(cv2.GaussianBlur(q, (0, 0), 7), (W, H))
+        _FIN14["gate"] = (0.30 + 0.70 * g)[..., None].astype(F32)
+    return _FIN14["gate"]
+
+def coarse_grain(f):
+    """film grain clumps (~4 px) that survive a phone's downscale; 6 frames that cycle like the engine's grain."""
+    k = ("cg", f % 6)
+    if k not in _FIN14:
+        rng = np.random.default_rng(1440 + f % 6)
+        n = cv2.resize(rng.standard_normal((H // 4, W // 4)).astype(F32), (W, H), interpolation=cv2.INTER_LINEAR)
+        _FIN14[k] = np.repeat((n * 0.016)[..., None], 3, axis=2)
+    return _FIN14[k]
+
 def finish14(out, f, s):
     if "v" not in _FIN14:
         grain(0, 0.012); _FIN14["v"] = np.repeat(0.74 + 0.26 * VIG, 3, axis=2)
@@ -141,11 +161,11 @@ def finish14(out, f, s):
     hi_ = np.clip(small.max(2) - 0.66, 0, 1)
     hal = cv2.resize(cv2.GaussianBlur(hi_, (0, 0), 5) * 0.45 + cv2.GaussianBlur(hi_, (0, 0), 20) * 0.55, (W, H))
     addc(o, hal, EMBR, 0.42)                                                                   # halation: warm red round the highlights
-    lk = edge_leaks(f); room = np.clip(1 - lum8(o), 0.2, 1)
-    addc(o, lk * room, AMBR, 0.13); addc(o, (lk ** 2) * room, EMBR, 0.08)
-    flick = 1 + 0.010 * _periodic(f, 13, 0.5) + 0.006 * _periodic(f, 29, 1.7) + 0.035 * breath(f)
+    lk = edge_leaks(f); room = np.clip(1 - lum8(o), 0.2, 1); bt = breath(f)
+    addc(o, lk * room, AMBR, 0.24 + 0.14 * bt); addc(o, (lk ** 2) * room, EMBR, 0.14 + 0.10 * bt)
+    flick = 1 + 0.016 * _periodic(f, 13, 0.5) + 0.009 * _periodic(f, 29, 1.7) + 0.035 * bt
     o *= flick
-    o *= _FIN14["v"]; o += _FIN14[k]
+    o *= _FIN14["v"]; o *= gate_mask(); o += _FIN14[k]; o += coarse_grain(f)
     o = dust(np.clip(o, 0, 1), f, s)
     return np.clip(o, 0, 1, out=o)
 
@@ -296,14 +316,14 @@ def sig_print(out, s, f, person):
     k = f - s["f0"]; n = s["f1"] - s["f0"]
     if k < SIG["k0"]: return out
     nxt = nxt_of(s); full = edge14(nxt, "first"); content = crop_portrait(full, SIG["crop"])
-    u_in = clamp((k - SIG["k0"]) / 22, 0, 1)                                                 # it rises into place
-    wcx = SIG["wcx"] + 40 * (1 - eout(u_in, 2.5)); wcy = SIG["wcy"] + 260 * (1 - eout(u_in, 2.5))
+    u_in = clamp((k - SIG["k0"]) / 22, 0, 1)                                                 # it rises into place from below the frame
+    wcx = SIG["wcx"] + 60 * (1 - eout(u_in, 2.5)); wcy = SIG["wcy"] + 900 * (1 - eout(u_in, 2.5))
     sway = 1.6 * math.sin((k - SIG["k0"]) * 0.07)
     ang = SIG["ang"] + sway
     dev = clamp((k - SIG["k0"] - 10) / 60, 0, 1)
     kd = n - SIG["dive"]
     if k < kd:
-        return print_w(out, content, wcx, wcy, SIG["sc"], ang, dev=dev, gloss=clamp((k - SIG["k0"]) / 80, 0, 1), alpha=smooth(u_in))
+        return print_w(out, content, wcx, wcy, SIG["sc"], ang, dev=dev, gloss=clamp((k - SIG["k0"]) / 80, 0, 1))
     sway_d = 1.6 * math.sin((kd - SIG["k0"]) * 0.07)
     return dive(out, full, SIG["crop"], wcx, wcy, SIG["sc"], SIG["ang"] + sway_d, (k - kd) / SIG["dive"], 1.0)
 
@@ -343,7 +363,7 @@ def orbs(f, n=14, seed=33):
         cv2.circle(q, (int(cx), int(cy)), int(r / 4), float(a * (0.75 + 0.25 * math.sin(t * 1.3 + ph))), -1, cv2.LINE_AA)
     return cv2.resize(cv2.GaussianBlur(q, (0, 0), 2.5), (W, H))
 
-ALB_SC = 560.0 / CW
+ALB_SC = 700.0 / CW
 def album_fx(s, f):
     k = f - s["f0"]; n = s["f1"] - s["f0"]
     lastL = edge14(prev_shot(s), "last")
@@ -372,7 +392,7 @@ def album_fx(s, f):
         dirx, diry = (-1, -1) if i == 1 else (1, -1) if i == 2 else (-0.4, 1)
         cx = xi + dirx * 900 * (1 - e_); cy = yi + diry * 1300 * (1 - e_)
         ang = ai + 25 * dirx * (1 - e_)
-        dev = clamp((k - kl) / 40, 0, 1)
+        dev = clamp((k - kl + 6) / 26, 0, 1)                                                     # it develops as it lands (readable within ~0.35 s)
         if i == 3 and k >= dv:
             return dive(o, edge14(nxt_of(s), "first"), 820, xi, yi, ALB_SC, ai, (k - dv) / 32, 1.0)
         o = print_w(o, album_content(i, f), cx, cy, ALB_SC * bounce, ang, dev=dev, gloss=clamp((k - kl) / 50, 0, 1), lift=1 + 0.8 * (1 - e_))
@@ -494,7 +514,7 @@ def focus_rack14(A, B, j, f, sa, sb, pre=10, post=12):
     racks back in on it."""
     if j < 0:
         u = (j + pre) / pre; o = defocus(A, 50 * ein(u, 1.8))
-        if j >= -2: o = mixm(o, defocus(B, 50), np.full((H, W), 0.5 if j == -2 else 0.75, F32))
+        if j >= -4: o = mixm(o, defocus(B, 50), np.full((H, W), 0.2 * (j + 5), F32))           # found in the blur over 4 frames
         return o
     v = (j + 1) / post; return defocus(B, 50 * (1 - eout(v, 2.0)))
 
@@ -526,6 +546,12 @@ def real_bolt(img, ex, ey, er):
     d = vt[0] if vt[0][1] < 0 else -vt[0]                                                       # point up (top end first)
     pr = (X - c) @ d; return m, tuple(c + d * pr.max()), tuple(c + d * pr.min())
 
+def glint_B(B, sb, ex, ey, k):
+    """the next shot, shifted so the emblem's opening shows his lit face (k = 1), easing back to its own framing (k = 0)."""
+    fs = face_scr(sb, sb["f0"]) if sb.get("face") is not None else None
+    if not fs or k <= 0: return B
+    return shift_img(B, (ex - fs[0]) * k, (ey - fs[1]) * k)
+
 def glint_cam(sa, f, e_):
     """the camera finds the emblem: it rises toward the frame's lower third and the shot pushes in (affine, scale s).
     One detection per shot (the shot's last frame), so a stray circle on one frame can't move it."""
@@ -552,26 +578,30 @@ def emblem_glint(A, B, j, f, sa, sb, pre=16, post=14):
             addc(o, cv, HOT, 1.2); addc(o, cv2.GaussianBlur(cv, (0, 0), 8), GOLDL, 1.0)
         bloom = smooth(clamp((u - 0.62) / 0.38, 0, 1))
         if bloom > 0:
-            o = add_glow(o, ex, ey, 140 + 380 * bloom, 0.55 * bloom, GOLDL)
-            m = np.clip((240 * bloom - np.sqrt((_GX - ex) ** 2 + (_GY - ey) ** 2)) / 220 + 0.5, 0, 1) * bloom
-            o = mixm(o, B, m)
+            o = add_glow(o, ex, ey, 140 + 380 * bloom, 0.75 * bloom, GOLDL)                       # the gold fills the emblem first
+            m = np.clip((240 * bloom - np.sqrt((_GX - ex) ** 2 + (_GY - ey) ** 2)) / 220 + 0.5, 0, 1) * clamp((bloom - 0.35) / 0.65, 0, 1)
+            o = mixm(o, glint_B(B, sb, ex, ey, 1.0), m)
         return np.clip(o, 0, 1)
     v = (j + 1) / post; M, ex, ey, er = glint_cam(sa, sa["f1"] - 1, 1.0)
     A2 = cv2.warpAffine(A, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     if v >= 1: return B
     Rm = 240 + 2600 * ein(v, 1.5)
     m = np.clip((Rm - np.sqrt((_GX - ex) ** 2 + (_GY - ey) ** 2)) / 360 + 0.5, 0, 1)
-    o = mixm(A2, B, m)
+    o = mixm(A2, glint_B(B, sb, ex, ey, 1 - smooth(clamp(v / 0.6, 0, 1))), m)
     o = add_glow(o, ex, ey, 520 + 300 * v, 0.55 * (1 - v) ** 1.5, GOLDL)
     return np.clip(o, 0, 1)
 
 # ---- SPEED WHIP / LIGHT LEAK / MEMORY ECHO ------------------------------------------------------------------------------
 def speed_whip14(A, B, j, f, sa, sb, pre=5, post=7):
-    """SPEED WHIP: a clean whip pan with real motion blur and one thin streak of his gold light at chest height."""
-    if j < 0: u = (j + pre) / pre; o = hblur(shift_img(A, -W * 0.55 * ein(u, 2.2)), 2 + 170 * ein(u, 2.0)); k = ein(u, 1.5)
-    else: v = (j + 1) / post; o = hblur(shift_img(B, W * 0.55 * (1 - eout(v, 2.2))), 2 + 150 * (1 - eout(v, 2.0))); k = 1 - eout(v, 1.6)
-    band = np.exp(-((_GY[:, :1] - H * 0.80) / 5.0) ** 2) * k
-    lay = np.zeros((H, W, 3), F32); addc(lay, np.repeat(band, W, 1), HOT, 0.7); addc(lay, np.repeat(np.exp(-((_GY[:, :1] - H * 0.80) / 40.0) ** 2) * k, W, 1), AMBR, 0.22)
+    """SPEED WHIP: a real whip pan across the two shots laid side by side (the camera swings from one memory to the
+    next; no mirrored edges), with motion blur and a soft streak of his gold light at chest height."""
+    q = (j + pre) / (pre + post - 1); p = smooth(clamp(q, 0, 1))
+    strip = np.concatenate([A, B], axis=1); x0 = int(round(p * W))
+    o = np.ascontiguousarray(strip[:, x0:x0 + W]); sp = math.sin(math.pi * clamp(q, 0, 1))
+    o = hblur(o, 2 + 150 * sp)
+    xs = np.exp(-((_GX[:1, :] - W * 0.5) / 360.0) ** 2)                                        # fades toward both edges
+    band = np.exp(-((_GY[:, :1] - H * 0.80) / 12.0) ** 2) * xs * sp
+    lay = np.zeros((H, W, 3), F32); addc(lay, band, HOT, 0.30); addc(lay, np.exp(-((_GY[:, :1] - H * 0.80) / 50.0) ** 2) * xs * sp, AMBR, 0.16)
     return np.clip(o + lay, 0, 1)
 
 def light_leak14(A, B, j, f, sa, sb, pre=10, post=12):
@@ -611,22 +641,42 @@ def frame_virtual(fv):
     s0 = SHOTS[0]; out, _ = base14(s0, fv)
     return out
 
+def tall_card(img, bw):
+    """the whole frame as a tall print: a cream border bw px wide (4 bw at the bottom) round it (BGR + alpha)."""
+    h, w = img.shape[:2]; c = np.empty((h + 5 * bw, w + 2 * bw, 3), F32); c[:] = CREAM
+    c[bw:bw + h, bw:bw + w] = img
+    a = np.ones(c.shape[:2], F32)
+    return c, a
+
 def loop_print(out, f, s):
+    """THE LOOP: the last memory becomes a print (its cream border grows in round the picture as it shrinks), tips, and
+    drops away below the faces like a photo let go; frame 0 is underneath and is all that is left at the wrap."""
     k = f - s["f0"]; n = s["f1"] - s["f0"]
     if k < n - LOOP_N: return out
     u = (k - (n - LOOP_N)) / (LOOP_N - 1)                                                    # 0..1, 1 = the last frame
     under = frame_virtual(f - E.DUR_F)
     if u >= 1: return under
     if u <= 0: return out
-    a = clamp(u / 0.40, 0, 1); e_ = eout(a, 2.2)
-    tx, ty = crop_centre(760)
-    sc = S_ID + (600.0 / CW - S_ID) * e_; ang = -4.0 * e_
-    wcx = tx + (600 - tx) * e_; wcy = ty + (900 - ty) * e_
-    b = clamp((u - 0.40) / 0.60, 0, 1); eb = ein(b, 2.0)
-    wcx += 820 * eb; wcy -= 1500 * eb; ang += 18 * eb
-    base = mixm(out, under, np.full((H, W), smooth(clamp(u / 0.38, 0, 1)), F32))
-    o = print_w(base, crop_portrait(out, 760), wcx, wcy, sc, ang, gloss=0.4 + 0.5 * u, shadow=0.45 * e_ * (1 - b), lift=1 + b, border=smooth(clamp(a / 0.6, 0, 1)))
-    w0 = 1 - smooth(clamp(u / 0.10, 0, 1))
+    a = clamp(u / 0.42, 0, 1); e_ = smooth(a)
+    sc = 1 - 0.40 * e_                                                                       # the picture's scale on screen
+    bw = int(round(46 * e_))                                                                 # the border grows in
+    q = 2; small = cv2.resize(out, (W // q, H // q), interpolation=cv2.INTER_AREA)
+    card, alpha = tall_card(small, max(0, bw // q))
+    ch, cw = card.shape[:2]
+    b = clamp((u - 0.42) / 0.58, 0, 1); eb = ein(b, 2.2)
+    ang = -3.0 * e_ - 14.0 * eb                                                              # it tips as it falls
+    ox, oy = bw / q, bw / q                                                                  # picture origin inside the card
+    cx = W / 2 - 60 * eb; cy = H / 2 + 120 * e_ + 2300 * eb                                  # it falls straight down, under the faces
+    M = cv2.getRotationMatrix2D((ox + W / q / 2, oy + H / q / 2), ang, sc * q)
+    M[0, 2] += cx - (ox + W / q / 2); M[1, 2] += cy - (oy + H / q / 2)
+    img = cv2.warpAffine(card, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    m = cv2.warpAffine(alpha, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    Ms = M.copy(); Ms[0, 2] += 22 * (1 + eb); Ms[1, 2] += 34 * (1 + eb)
+    sh = cv2.warpAffine(alpha, Ms, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    sh = cv2.resize(cv2.GaussianBlur(cv2.resize(sh, (W // 4, H // 4), interpolation=cv2.INTER_AREA), (0, 0), 6), (W, H))
+    base = under * (1 - 0.45 * sh * e_)[..., None]
+    o = mixm(base, img, m)
+    w0 = 1 - smooth(clamp(u / 0.06, 0, 1))                                                   # the first frames are the frame itself
     return mixm(o, out, np.full((H, W), w0, F32)) if w0 > 0 else o
 
 def loop_in14(out, f, k):

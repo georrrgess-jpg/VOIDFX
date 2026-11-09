@@ -79,21 +79,21 @@ shot("laugh", "fs1", 26, 30, 214.45, 215.50, tin="film_burn", seg=True)
 # ---- THE ALBUM (focal set piece, the song's pause): the laugh freezes into a print; three more land on the soft notes
 shot("album", "fs1", 30, 46, 215.50, 215.52, tin="shutter_freeze", seg=True, z=[(0, 1.00), (1, 1.00)])
 # ---- the theme returns: the sea run at sunset, out of the last print
-shot("searun", "fs1", 46, 52, 116.45, 118.40, tin="album_out", seg=True, face=None, cx=(640, 640), flowmax=40)
-shot("shore", "fs1", 52, 58, 120.05, 121.95, tin="ripple", seg=True, face=None, cx=(930, 610), tmap=slow(52, 58, 120.05, 121.95), lin=True)
+shot("searun", "fs1", 46, 52, 116.75, 118.05, tin="album_out", seg=True, face=None, cx=(610, 410), flowmax=24, flowfall="blend")
+shot("shore", "fs1", 52, 58, 120.30, 122.05, tin="ripple", seg=True, face=None, cx=(590, 620), tmap=slow(52, 58, 120.30, 122.05), lin=True)
 shot("emblem", "fs1", 58, 62, 226.78, 227.95, tin="focus_rack14", seg=True)
 # ---- the years after
 shot("smile3", "fs3", 62, 68, 3.30, 5.20, tin="emblem_glint", seg=True)
 shot("ballgame", "fs5", 68, 74, 91.20, 92.90, tin="speed_whip14", seg=True)
-shot("laugh5", "fs5", 74, 80, 28.70, 30.30, tin="light_leak14", seg=True)
+shot("shades", "fs3", 74, 80, 26.90, 28.50, tin="light_leak14", seg=True)
 shot("tux", "fs5", 80, 86, 101.40, 102.95, tin="dolly", seg=True)
 shot("today", "fs5", 86, 96, 0.05, 2.25, tin="afterimage14", seg=True, tmap=slow(86, 96, 0.05, 2.25), lin=True, z=[(0, 1.00), (1, 1.03)])
 
 # the prints in THE ALBUM (memories that appear only there): (note, pack, source a, source b, landing x, landing y, angle)
-ALBUM = [(30, "fs1", 215.50, 215.50, 540, 900, -3.0),          # the laugh, frozen (the previous shot's last frame)
-         (34, "fs1", 229.50, 231.20, 470, 820, 5.5),           # Iris and Barry by the water (S1)
-         (38, "fs3", 46.40, 48.20, 610, 940, -6.0),            # the loft, warm lamps (S3)
-         (42, "fs1", 116.45, 116.45, 545, 870, 2.0)]           # the sea at sunset: the print we fall into at e44-e46
+ALBUM = [(30, "fs1", 215.50, 215.50, 540, 920, -3.0),          # the laugh, frozen (the previous shot's last frame)
+         (34, "fs1", 229.50, 231.20, 505, 880, 5.5),           # Iris and Barry by the water (S1)
+         (38, "fs3", 46.40, 48.20, 580, 950, -6.0),            # the loft, warm lamps (S3)
+         (42, "fs1", 116.75, 116.75, 545, 900, 2.0)]           # the sea run at sunset: the print we fall into at e44-e46
 
 SET_PIECES = [("print_signature", th(3), th(12)), ("the_album", th(30), th(47)), ("emblem_glint", th(60), th(64)), ("loop", th(90), th(96))]
 HERO = ["print_draw"]

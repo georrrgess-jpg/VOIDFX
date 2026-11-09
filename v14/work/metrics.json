@@ -155,8 +155,105 @@
    "step": "sheet:fix2:416,420,423,425,427,430,1384,1388,1391,1393,1396,1400",
    "s": 9.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:00:49",
+   "round": 1,
+   "step": "sheet:crit1:49,58,560,640,700,760,800,850,900,1001,1004,1008",
+   "s": 13.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:01:18",
+   "round": 1,
+   "step": "sheet:crit2:570,650,708,1100,1210,1260,1505,1514,1522,1532,1544,1554",
+   "s": 14.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:01:54",
+   "round": 1,
+   "step": "sheet:whip:1096,1098,1100,1101,1103,1106",
+   "s": 12.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:07:21",
+   "round": 1,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:07:28",
+   "round": 1,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:13:34",
+   "round": 1,
+   "step": "video",
+   "s": 366.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:16:51",
+   "round": 1,
+   "step": "qc",
+   "s": 197.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:16:59",
+   "round": 1,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:20:20",
+   "round": 1,
+   "step": "video",
+   "s": 187.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:23:40",
+   "round": 1,
+   "step": "qc",
+   "s": 200.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:25:43",
+   "round": 1,
+   "step": "deliver",
+   "s": 111.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 01:25:51",
+   "round": 1,
+   "step": "report",
+   "s": 8.0,
+   "rc": 0
   }
  ],
  "notes": [],
- "catches": []
+ "catches": [
+  {
+   "t": "2026-11-09 01:07:17",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "self-review rev 1: film burn rim and ragged edge on his face; memory echo double faces; fixed before delivery"
+  },
+  {
+   "t": "2026-11-09 01:07:17",
+   "round": 1,
+   "cat": "other",
+   "text": "fresh-eyes critique: overlay invisible at phone size, return shot blurry/unframed, loop repeated the freeze, emblem disc read as a dark hole, small album prints, look-alike laugh shots, whip scan line, faint signature rectangle; all fixed before delivery"
+  }
+ ]
 }

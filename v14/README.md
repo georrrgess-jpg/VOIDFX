@@ -77,5 +77,33 @@ measured after AAC. **Four quiet effects in all**, each 12–15 dB under the mus
 
 There is no sound on beats or small transitions.
 
-## Measured
-(filled in from `work/measured.md` after the render)
+## Measured (rev 1, the first delivery, on the encoded MP4)
+- **QC:** ship checkpoint 11/11 PASS.
+- **Loudness:** −13.9 LUFS, true peak −4.6 dBTP after AAC.
+- **Loop seam:** blurred difference 0.18 (gate ≤ 1); audio seam step 0.040; picture wrap step 0.61 against a local median of 2.62.
+- **Motion audit:** no dead spans, no judder, 1 pop (a cut), no unexplained pops. 0 flashes, 0 white-outs.
+- **Faces vs effects:** 21 flags in 5 runs, all designed. 4 are in THE ALBUM, where the prints land over the blurred face behind them; 1 is the loop's print forming (1512–1516).
+- **Sharpness:** SOFT flags on two shots.
+  - **album:** its background is defocused by design; the prints themselves are sharp.
+  - **emblem:** 0.90× the median. It is the S1 pack at 1.1 Mb/s, pushed in 1.3× for the glint.
+  - Every source frame was restored (`sr_prep`, 498 frames).
+- **Plan check:** 0 FAIL, 1 WARN (the album is the laugh shot frozen; by design).
+- **Sound:** 4 placed effects, 12–15 dB under the music.
+
+## How it was made (the efficiency pilot)
+- **Song to delivery:** about 1 h 30 min. This includes:
+  - song prep (2 min);
+  - restoring 498 source frames (about 25 min, in the background);
+  - 14 still sheets on the render server (3 min in all).
+- **Renders before delivery:** 2 full and 1 partial (the change-tracked partial: 22 frames re-rendered and 30 verified bit-exact, 174 s against about 350 s for a full render). QC ran 3 times, 10 min in all.
+- **Caught before delivery:**
+  - **The studio's own sign-off review:** the film burn's rim and ragged edge on his face, the sun flare's 3-frame crossfade (a pop at 326), the memory echo's double faces.
+  - **The fresh-eyes critique** (`studio/CRITIQUE_PROMPT.md`):
+    - the overlay was invisible at phone size; it is now coarser grain, readable dust, stronger edge leaks and a Super 8 gate;
+    - the theme's return was blurry, unframed water; the sea run and shore are now reframed on him;
+    - the loop repeated the freeze; it is now a print that drops away;
+    - the emblem's disc read as a dark hole, close to the rejected emblem_horizon; it now fills with gold and opens on his lit face;
+    - the album prints were small and stayed milky too long;
+    - the two laughing-in-suit shots looked alike; the S5 laugh became the S3 sunglasses shot;
+    - the whip had a scan-line streak and mirrored edges;
+    - the signature print had a faint grey rectangle as it arrived.
