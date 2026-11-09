@@ -278,6 +278,9 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | v14 rev 1 → 2: the wake as *"the focal point of and in the beginning"*; the achievement toast; *"the flash symbol on the crest is not an actual lightning bolt and is in the wrong shape"*; the emblem transition *"too fast"*; the print *"too slow and repeats multiple times"*; *"a brand new custom graphic"* | v14 | Open on the moment the owner names. Build their reference asset faithfully in our own drawing, with a pop. Trace a real symbol on the source, and never mirror a cut-off subject. Give an emblem transition ~2 s with stages. Use a liked transition once, fast. |
 | v14 round 3: the lensball's memories *"face upright so that Barry's face is facing upwards"* | v14 | Faces stay upright inside graphics even when the optics would invert them. |
 | v14 verdict: *"I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good."* | v14 | A standard in a different style: the calm, nostalgic reference (the song carries it, ~5 quiet effects, a breathing camera, set pieces on the song's structure). v10–v12 stay the energetic reference; the Flash scaffold stays v12. |
+| v15 round 2: the freeze *"see if there's any other freeze frame shots that could be better selected ... emphasize it more and make the scene a little bit cooler"*; *"blank space"*; *"the loop isn't particularly seamless"* | v15 | Freeze on the hit (a real 24p frame, the shot before running into the same framing) and take it apart in depth (bullet time). Fill blank space with new cuts and visible, motivated in-shot animations. A seamless loop shows frame 0 early and grows it into place (the corridor REWIND, seam 0.13). |
+| v15 round 3: *"where [Barry] kind of like breaks down into many pieces ... change that"*; *"a focal point graphic ... really, really smooth animation"* | v15 | Never take a face apart (`time_particles` → caution). A focal point (an ember) that grows into a smooth move: IGNITION. |
+| v15 verdict: *"I like this edit, make it a standard."* | v15 | The newest energetic Flash standard: time carried by set pieces on the song's structure, EMBLEM CLOCK from the real traced bolt, custom transitions motivated by each pair of shots. Handoff `sync/handoffs/2026-11-09_flash_v15_OUT_OF_TIME_standard.md`. |
 
 ### Props and effects from the character's world: when they work (Studio 2, after FOREVER)
 
@@ -485,6 +488,7 @@ Only then deliver.
 | v107 ALL CAPS (Dexter studio) | TABLOID: newsprint-cream highlights, ink blacks, slate blues, one spot red; a misregistered red plate, paper grain and a fine shadow screen |
 | v13 EVENT HORIZON | REDSHIFT: a desaturated silver-steel world, only the suit's crimson, skin and the light keep colour; the picture redshifts (dimmer, sliding to red) as time slows |
 | v14 KEEPSAKES | SUNFADE under a SUPER 8 HAZE: golden hour on faded film (lifted warm blacks, cream-gold highlights, low saturation with blues fading most, skin protected); fine and coarse grain, sub-pixel gate weave, halation, two warm edge leaks, dust, a soft gate, all kept low |
+| v15 OUT OF TIME | VIOLET HOUR: lifted violet shadows, peach-gold highlights, the suit's red kept rich, skin protected; a soft dream bloom, violet haze in the darks, a faint lens fringe, fine grain; the freeze in its own cold steel under molten-gold bolts |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);

@@ -1,0 +1,143 @@
+# v15 — OUT OF TIME (The Flash × Eyedress "Jealous"), 9:16
+
+**The brief (the owner):** "make a flash edit using the song above. I want you to try to follow the beat in this and make
+a really amazing edit. Try to make this the best flash edit you've ever made. Use custom graphics, animations,
+transitions etc."
+
+## Concept: OUT OF TIME
+The window is the song's "I don't got time" run, its one drum-break bar and the return: "Do whatever you want, I don't
+care, don't care, don't even tell me … I don't really want to know".
+- **I don't got time (e0–e32):** the fastest man alive never has time. He swings up the watch, a call comes in, and he
+  runs: the city, the lightning, the suit, cut on the groove's kicks.
+- **Time stops (the drum break, e32–e40), in bullet time:** at the moment it all began, the S1 lab strike, frozen on the
+  instant the bolt hits him, his palm open against it (round 2: a stronger frame than his upward look; the strike
+  slows, pans and pushes into it so the freeze lands on the same framing). The frozen
+  moment is taken apart in depth: the room, the frozen bolts and him. On each kick of the drum fill the camera steps to
+  a new place, so the layers slide against each other. The room sinks to cold steel while the bolts stay molten gold;
+  they throw rays through the room behind him and rim his edge with light. A few drops of the chemicals hang in the air
+  as real little lenses, and in the last beat the frozen lightning trembles.
+- **Time restarts (e40, the return):** the frozen lightning discharges, and he opens his eyes full of it.
+- **The jealousy he says he doesn't feel:** Iris living her life ("Do whatever you want", seen inside his eye). He
+  tells himself he doesn't care, turns his back and runs; the wind of it blows her hair; the trail rips down the path.
+- **EMBLEM CLOCK (the signature, and the emblem transition):** the real S5 emblem's gold bolt (traced as a polygon on the
+  source) is lifted off the white disc, which is filled clean, and wound round like a clock hand with a rotational motion
+  blur; twelve gold marks come up round the face, and its last sweep brings the next memory in.
+- **The loop (REWIND, rebuilt in round 2):** on the e76 kick ("don't") time runs backwards: the camera flies forward
+  through the last moment into a corridor of the edit's memories, hung along the walls in perspective and turned toward
+  us (the fire, the emblem, Iris, his eyes, the strike, the run, newest first). The walls are the last moment stretched
+  past us, turning into frame 0's own light; a gold thread of time spirals along them and sparks stream past. At the far
+  end, visible the whole way, frame 0 grows, slows and settles until it fills the frame: the next "I don't got time".
+
+The hero is time itself: the timepiece (the emblem clock) and stopped time (the frozen strike, the restart, the loop).
+
+## The song
+- **Window:** song half-beats h176 → h256 (56.84 → 82.64 s), 80 half-beats, 25.81 s.
+- **Grid:** P = 0.32256 s (93.0 BPM), offset 0.0699 s, fitted on the Demucs drum stem (it agrees with the map). The groove
+  per 8-half-beat bar: strong kicks on e0, e2.5, e4, e6.5, lighter on e1, e5. The break bar (e32–e40) is drums only (the
+  bass and the band drop out) with a nine-kick fill.
+- **Lyrics** (Whisper large-v3 on the vocal stem): "time" on e2.9, e11.1, e19.2, e27.0; "Do whatever you want" e43–e47;
+  "I don't care, don't care" e49–e56; "don't even tell me" e62–e64; "I don't really want to know" e74.4–e79.5.
+- **Loop wrap:** the pre-roll crossfades into the end; the "I" pickup before the window plays at the wrap, into "don't
+  got time".
+
+## Structure (edit half-beat e = 0.3226 s; every cut on a kick of the groove)
+| e | Shot | In |
+|---|---|---|
+| 0–4 | the watch (S2) | the loop |
+| 4–6.5 | the call (S2) | VIBRATE (the frame buzzes like a phone, three pulses) |
+| 6.5–8 | masked, crouched over the night city (S2) | **PHONE FLARE** (the phone's light flares into the lens, the city burns in) |
+| 8–10.5 | he runs at the camera in lightning | STREAK PASS (he streaks past the lens) |
+| 10.5–12 | lightning on his chest (S5); *suit current* | TIME SLICE (no seam across a face) |
+| 12–14.5 | masked (S4) | EDGE CURRENT |
+| 14.5–16 | the charge-up | LIGHT STREAK |
+| 16–18.5 | speed trails down a night street | RAMP (punch through) |
+| 18.5–20 | in flight, red lightning | BOLT SPLIT |
+| 20–22.5 | masked under street lights (S3); *streetlight flares* | WHIP UP |
+| 22.5–24 | a run along a wall; *time remnants* | ARC LINK |
+| 24–26.5 | the S5 suit at night | LIGHT LEAK |
+| 26.5–28 | the city from above | **FREEFALL** (he steps off the roof: the frame drops away and we fall toward the city) |
+| 28–32 | the S1 lab strike, slowing into the hit | STRIKE CUT (the bolt on the side away from both faces) |
+| 32–40 | **TIME STOPS**: the strike, frozen, in bullet time | the freeze spreads out from the bolts |
+| 40–42.5 | his eyes full of lightning | **TIME RESTARTS** (the bolts discharge, the moment is pulled into the strike, the colour floods back) |
+| 42.5–46.5 | Iris at work (S4); *her warm lights* | EYE IRIS (Iris upright inside his pupil) |
+| 46.5–50.5 | the Flash looks at her; *the urge* (lightning gathers on him) | SPEED WHIP |
+| 50.5–53 | he runs through the city (S4) | **TURN AWAY** (the frame turns its back like a card in his wind) |
+| 53–56 | her hair in his wind (S1); *wind grit* | WIND GUST |
+| 56–58.5 | the trail down the path | **DUST CLOUD** (his dust rolls over her and clears onto the trail) |
+| 58.5–64 | the S5 emblem | FOCUS RACK |
+| 64–66.5 | in flight | **EMBLEM CLOCK** |
+| 66.5–68 | he shouts into the lightning; *the shout* (arcs and sparks on the kick) | AFTERIMAGE |
+| 68–70.5 | velocity run (S5), face-tracked | **PENDULUM** (the frame swings out like a clock's pendulum, the run swings in and settles) |
+| 70.5–72 | masked, blue-grey | WHIP |
+| 72–74.5 | through the fire (S4); *embers* | **IGNITION** (round 3: one ember catches on his shoulder, pulses, and burns the frame open onto the fire) |
+| 74.5–80 | alone, masked; then **REWIND** down the corridor of memories into frame 0 | dolly |
+
+27 designed transitions and the loop in 25.8 s, plus eight in-shot animations (in italics), each motivated by its shot and kept off faces.
+
+## Look: VIOLET HOUR
+- **The grade:** lifted violet shadows, peach-gold highlights, the suit's red kept rich, skin protected.
+- **The finish:** a soft dream bloom on the highlights, a violet haze in the darks, a faint lens fringe at the edges,
+  fine grain.
+- **The camera:** a punch on every kick of the groove (4.5 % after the return, 3 % before it, with hit-frame blur and a
+  colour split on the strong kicks after the return). It rests in the frozen bar and the last shot.
+- **Speed ramps:** on the montage shots, a burst on each kick with flow in between.
+- **Text:** none.
+
+## Sound
+The song straight and circular (pre-roll crossfade, mastered on a wrapped copy, measured after AAC). **Nine quiet
+effects**, none on beats:
+- a phone buzz (the call);
+- a whoosh (the streak);
+- a crack (the strike);
+- an air-suck into a hush (time stops);
+- a sub boom (time restarts);
+- a gust (the wind);
+- a watch-crown ratchet into a sweep (the emblem clock);
+- a soft whoosh as the burn catches (IGNITION);
+- a reversed whoosh (the rewind into frame 0).
+
+## Measured (round 2)
+- **QC:** 11/11 on the encode.
+- **Loudness:** −13.0 LUFS, true peak −4.5 dBTP after AAC.
+- **Loop seam:** blurred difference **0.13** (round 1: 0.26; gate ≤ 1). The picture step across the wrap is 0.78, smaller
+  than the frames around it (1.89), so it reads as continuous motion.
+- **Dead spans:** none (round 1: the freeze, 10.6–12.6 s).
+- **Motion audit:** every pop is a cut, a beat hit, the hold cadence or a designed move:
+  - the bullet-time camera steps 1–2 frames after the drum-fill kicks (641–747);
+  - the dust cloud's gust front (1077–1080);
+  - the speed whip.
+- **Judder:** two shots keep their source cadence on purpose: the S4 city run (a stutter-cut source) and the S5 run (its
+  source flickers frame to frame).
+- **Faces vs effects:** 6 flags. 634–638 is the time-stop front passing over the frozen frame; 1478–1482 is the camera
+  flying through the last moment. Both are transition frames.
+- **plan_check:** 0 FAIL, 3 WARN, each one decided (strike/still is one moment by design; the two held runs; `hair` is a
+  different shot next to `look` in the S1 source).
+- **Density:** 28 designed transitions and the loop in 25.8 s, plus eight in-shot animations; generic connectors 2 of 28.
+
+## How it was made
+- **Song prep:** the song map found no drops (steady lo-fi energy), so the whole song was prepped (stems, Whisper,
+  grid). The window was chosen by hand: the bar-energy profile showed one structural moment, the drum break at 67.2 s.
+- **Caught before delivery:** the fresh-eyes critique and the sign-off review, fixed in one pass before delivery:
+  - **look-alike shots:** the two Iris shots read as one clip, so `iris` is now S4 Iris at work. The second dark masked
+    face-on shot became the S4 fire flight.
+  - **the loop:** it was a soft ring wipe ("low effort"), so it was rebuilt as time stopping once more and the REWIND
+    through the edit's memories.
+  - **the emblem clock's bolt:** cutting it out by colour missed its pale faces, which left a ghost bolt on the disc. It
+    is now traced as a polygon, the disc is filled from its own white, and the hand has a rotational motion blur.
+  - **effects on faces:**
+    - the eye transition's veins crossed his face;
+    - the restart's ring left a ghosted double face;
+    - the time slice's seams split faces;
+    - drops and a glow sat on his face in the frozen moment;
+    - the strike bolt crossed the lab shot's face.
+  - **rhythm and density:**
+    - four cuts after the return were off the kicks;
+    - the `look` hold sat near the static floor, so a city-run insert now carries the TURN AWAY;
+    - the v13 panel port became PENDULUM.
+  - **render defects:**
+    - a static hairline in the whip up;
+    - ghosted copies in VIBRATE;
+    - a focus-rack snap;
+    - the opening's judder;
+    - the source's RGB flicker in the last shot's lenses (the shot now freezes before it);
+    - the ratchet anchored to the wrong shot after a rename.

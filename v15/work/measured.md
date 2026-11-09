@@ -1,0 +1,9 @@
+- **QC:** 11/11 on the encode (11 distinct checks).
+- **Loudness:** -13.0 LUFS, true peak -4.5 dBTP after AAC.
+- **Loop seam:** blurred difference 0.13 (gate ≤ 1); audio seam step 0.0435; picture wrap step 0.78 vs local median 1.89.
+- **Flashes:** 0 events, at most 0 a second; white-outs [].
+- **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
+- **Faces vs effects:** 6 flags in 2 runs: 634–638, 1478–1482.
+- **Motion audit:** 46 pops (UNEXPLAINED 19, beat 9, cadence 12, cut 6); UNEXPLAINED at [621, 641, 650, 651, 652, 669, 688, 689, 690, 718, 727, 728, 746, 747, 1055, 1077, 1078, 1079, 1080] (check signoff_pops.jpg); dead spans 0; judder flags 2.
+- **plan_check:** 0 FAIL, 3 WARN; WARN: `hair` picks up `look`'s take (0.30 s later in `fs1`) after 1 other shots: make sure it doesn't read as a repeat; WARN: [smoothness] 'runfs5' holds 24p frames (interp=hold): judder between 60p shots (v106 rule 5); WARN: [clip reuse] 'strike' and 'still' come from the same source shot (fbh 10.30-12.08 s, 0.0 s apart): one continuous shot counts as a reuse (v107 rule 6).
+- **Effort this round (3):** 1 renders (8.9 min), QC 2.6 min.

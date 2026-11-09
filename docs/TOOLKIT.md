@@ -513,6 +513,21 @@ All in `v14/work/sec14.py` (the v12 engine plus this section); the polygon and t
 | SUNFADE + SUPER 8 HAZE | `grade`, `finish14`, `gate_weave`, `edge_leaks`, `dust`, `coarse_grain`, `gate_mask`, `breath` | Periodic over the edit (whole cycles), so the loop wraps clean; grain clumps ~4 px and dust 2–5 px read at phone size |
 | Transitions | `double_exp`, `sun_flare` (`flare_origin` above the faces), `film_burn` (face-softened front), `ripple`, `focus_rack14` (an 8-frame handover in the blur), `speed_whip14` (a real pan across both shots), `light_leak14`, `memory_echo` | All approved in the standard |
 
+
+## 5i. Reusable from v15 OUT OF TIME (the newest energetic Flash standard)
+
+All in `v15/work/sec15.py` (the v12 engine plus this section); the bolt polygon and emblem track are in `v15/work/edl15.py`. Handoff: `sync/handoffs/2026-11-09_flash_v15_OUT_OF_TIME_standard.md`.
+
+| Asset | Functions | Notes |
+|---|---|---|
+| EMBLEM CLOCK (signature, ~2 s) | `emblem_clock`, `bolt_lift`, `ec_theta`, `ec_cam`, `emb15_screen`; EDL `EMB15_BOLT`, `EMB15_TRACK` | The traced bolt is lifted off the disc (the disc filled from its own white), ticks on the kicks, winds, sweeps a clock wipe; rotational motion blur with a 180° shutter |
+| TIME STOPS (bullet-time still) | `still_layers`, `still_cam`, `still_fx`, `lens_drop`, `time_stop` | Plate / bolts / subject layers; the camera steps on `E.FILL` kicks; rays from the bolts behind the matte, a rim light; four lens drops. Freeze on a `UNIQ` source frame; run the shot before into the same crop, zoom and pivot |
+| TIME RESTARTS | `time_restart` | The bolts discharge, a radial pull, the switch under the blur, the colour floods back |
+| REWIND (the loop) | `loop_out`, `rew_quad`, `rew_card`, `rew_cam`, `rew_bg`, `frame_virtual` | A corridor of memory cards in perspective, a gold thread, streaming sparks, walls of the last moment turning into frame 0's light; frame 0 visible at the end, growing to fill (seam 0.13). The loop window is exempted from face centring in `qc15.py` |
+| IGNITION (focal) | `ignition`, `ign_noise`, `ign_R` | An ember (the focal point) pulses on the kick and burns the frame open onto the next shot; fixed noise, an eased front, analytic embers; faces pass under one soft edge |
+| Kinetic moves | `turn_away` (3D card flip), `pendulum`, `freefall`, `phone_flare`, `dust_cloud`, `vibrate`, `streak_pass`, `strike_cut`, `wind_gust` | Exact at both ends (`/(pre+post-1)`) |
+| In-shot animations | `ANIMS` (`a_bokeh`, `a_urge`, `a_grit`, `a_shout`, `a_embers`, `a_flares`, `a_current`, `a_remnants`), `off_face`, `face_soft`, `body_only` | `anim=` on a shot; `face_hint=` for a face YuNet can't see; `expo=` lifts a dark source |
+
 ## 5f. Reusable from v13 EVENT HORIZON (approved, not a standard)
 
 All in `v13/work/sec13.py`.
