@@ -1,6 +1,6 @@
 {
  "edit": "v108",
- "round": 1,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-09 00:44:10",
@@ -752,6 +752,48 @@
    "rc": 0
   }
  ],
- "notes": [],
- "catches": []
+ "notes": [
+  {
+   "t": "2026-11-09 03:31:06",
+   "round": 2,
+   "cat": "other",
+   "text": "merge that slide graphic slash animation and merge it with one of the actual slides from that scene"
+  },
+  {
+   "t": "2026-11-09 03:31:06",
+   "round": 2,
+   "cat": "plain_effect",
+   "text": "remove [the beat bounce] just for this edit"
+  },
+  {
+   "t": "2026-11-09 03:31:06",
+   "round": 2,
+   "cat": "density",
+   "text": "add a lot more transition and unique graphics with custom animated transitions"
+  },
+  {
+   "t": "2026-11-09 03:31:06",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "remove the water droplet filter at 14 seconds"
+  },
+  {
+   "t": "2026-11-09 03:31:06",
+   "round": 3,
+   "cat": "replace_shot",
+   "text": "the first transition ... the squiggle, swirl, weird animation"
+  }
+ ],
+ "catches": [],
+ "round_starts": {
+  "1": "2026-11-09 03:31:06",
+  "2": "2026-11-09 03:31:06",
+  "3": "2026-11-09 03:31:06"
+ },
+ "verdict": {
+  "t": "2026-11-09 03:31:06",
+  "round": 3,
+  "verdict": "standard",
+  "words": "I like this edit make it a standard. Just note in there that the edit could have contained slightly more transitions/animations."
+ }
 }

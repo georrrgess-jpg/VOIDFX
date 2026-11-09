@@ -807,22 +807,22 @@
    "studio": "dexter"
   },
   "specimen": {
-   "verdict": "ok",
+   "verdict": "liked",
    "tags": [
     "physical",
     "signature"
    ],
    "studio": "dexter",
-   "evidence": "v108 rev 1, the owner's own concept: 'I generally like the edit … merge that slide graphic/animation with one of the actual slides from that scene' → the real slide is lifted from his hands (its smear and label cut from the frame), not a CG slide with a bead",
+   "evidence": "v108 rev 1, the owner's own concept: 'I generally like the edit … merge that slide graphic/animation with one of the actual slides from that scene' → the real slide is lifted from his hands (its smear and label cut from the frame), not a CG slide with a bead; v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'",
    "fix": "build it from a real prop in the shot, not a CG copy"
   },
   "surface": {
-   "verdict": "ok",
+   "verdict": "liked",
    "tags": [
     "physical"
    ],
    "studio": "dexter",
-   "evidence": "v108, the owner's own concept (kill-room plastic stretched over the calm shot, peeled diagonally to the darker one); 'I generally like the edit', no note on it"
+   "evidence": "v108, the owner's own concept (kill-room plastic stretched over the calm shot, peeled diagonally to the darker one); 'I generally like the edit', no note on it; v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
   },
   "haze108": {
    "verdict": "rejected",
@@ -832,6 +832,96 @@
    "studio": "dexter",
    "evidence": "v108 rev 2: 'I also do not like the first transition that's kind of like the squiggle, swirl, weird animation'",
    "fix": "a physical foreground pass (v108 fronds108: sunlit palm fronds sweep across the lens)"
+  },
+  "fronds108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "diffusion108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "double108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "luminol108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "facematch108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "developer108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "sink108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "frost108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "molasses108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "last_drop": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "light_sweep108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
+  },
+  "wiper108": {
+   "verdict": "liked",
+   "studio": "dexter",
+   "tags": [
+    "physical"
+   ],
+   "evidence": "v108 DOOMSDAY standard (2026-11-09): 'I like this edit make it a standard'"
   }
  },
  "families": {
