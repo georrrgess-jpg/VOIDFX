@@ -10598,7 +10598,11 @@ def lens_entry(bg, L, q, f):
 def lens_ball_bg(s, f):
     bgs, _ = base11(s, f)
     bg = defocus(bgs, 14) * 0.84
-    lay = np.zeros((H, W, 3), F32); addc(lay, orbs(f), AMBR, 0.22)
+    ob = orbs(f); fs = face_scr(s, f) if s.get("face") is not None else None
+    if fs:                                                                                   # the bokeh drifts round his face, not over it
+        fm = np.zeros((H // 4, W // 4), F32); cv2.ellipse(fm, (int(fs[0] / 4), int(fs[1] / 4)), (int(fs[2] * 0.75 / 4), int(fs[2] * 1.0 / 4)), 0, 0, 360, 1.0, -1)
+        ob = ob * (1 - cv2.resize(cv2.GaussianBlur(fm, (0, 0), 6), (W, H)))
+    lay = np.zeros((H, W, 3), F32); addc(lay, ob, AMBR, 0.22)
     return np.clip(bg + lay, 0, 1)
 
 def ball_fx(s, f):
@@ -10745,7 +10749,7 @@ def focus_rack14(A, B, j, f, sa, sb, pre=10, post=12):
     racks back in on it."""
     if j < 0:
         u = (j + pre) / pre; o = defocus(A, 50 * ein(u, 1.8))
-        if j >= -4: o = mixm(o, defocus(B, 50), np.full((H, W), 0.2 * (j + 5), F32))           # found in the blur over 4 frames
+        if j >= -8: o = mixm(o, defocus(B, 50), np.full((H, W), smooth((j + 9) / 9), F32))       # found in the blur over 8 frames
         return o
     v = (j + 1) / post; return defocus(B, 50 * (1 - eout(v, 2.0)))
 

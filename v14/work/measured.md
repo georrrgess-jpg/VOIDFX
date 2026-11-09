@@ -1,9 +1,10 @@
 - **QC:** 11/11 on the encode (11 distinct checks).
-- **Loudness:** -13.9 LUFS, true peak -4.6 dBTP after AAC.
-- **Loop seam:** blurred difference 0.18 (gate ≤ 1); audio seam step 0.0400; picture wrap step 0.61 vs local median 2.62.
-- **Flashes:** 0 events, at most 0 a second; white-outs [].
+- **Loudness:** -13.9 LUFS, true peak -4.7 dBTP after AAC.
+- **Loop seam:** blurred difference 0.14 (gate ≤ 1); audio seam step 0.0393; picture wrap step 0.4 vs local median 1.79.
+- **Flashes:** 1 events, at most 1 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
-- **Faces vs effects:** 21 flags in 5 runs: 492–492, 544–554, 614–626, 670–676, 1512–1516.
-- **Motion audit:** 1 pops (cut 1); dead spans 0; judder flags 0.
-- **plan_check:** 0 FAIL, 1 WARN; WARN: [clip reuse] 'laugh' and 'album' come from the same source shot (fs1 214.30-216.37 s, 0.0 s apart): one continuous shot counts as a reuse (v107 rule 6).
-- **Effort this round (1):** 3 renders (15.0 min), QC 10.0 min.
+- **Faces vs effects:** 37 flags in 2 runs: 510–524, 602–660.
+- **Motion audit:** 14 pops (UNEXPLAINED 6, beat 4, cadence 1, cut 1, flash 2); UNEXPLAINED at [159, 160, 771, 1493, 1494, 1527] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **Sharpness:** SOFT: album, emblem; max zoom 1.06.
+- **plan_check:** 0 FAIL, 2 WARN; WARN: `emblem_glint`: the S1 emblem runs off the bottom of the frame in flash_s1.mp4: a push that lifts it must not mirror the missing half (BORDER_REFLECT drew a '<' chevron in rev 1); draw the bolt from the traced polygon (v14 EMB_BOLT) and give the move ~2 s; WARN: `print_dive`: liked, but use it once and fast: in v14 rev 1 the print was on screen 1.9 s and the print motif came back four times (signature, album, dive, loop); rev 2 uses one 0.4 s flick-in and dive.
+- **Effort this round (2):** 1 renders (6.8 min), QC 3.4 min.
