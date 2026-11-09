@@ -234,7 +234,7 @@
    "buried": true
   },
   {
-   "name": "developer108",
+   "name": "frost108",
    "kind": "transition",
    "at": 17.04,
    "t0": 16.74,
@@ -298,6 +298,17 @@
    "fx_peak_db": -20.9,
    "fx_minus_music": -11.7,
    "buried": false
+  },
+  {
+   "name": "whip",
+   "kind": "transition",
+   "at": 21.6,
+   "t0": 21.3,
+   "t1": 22.05,
+   "music_db": -9.0,
+   "fx_peak_db": -45.9,
+   "fx_minus_music": -36.9,
+   "buried": true
   },
   {
    "name": "smear",
