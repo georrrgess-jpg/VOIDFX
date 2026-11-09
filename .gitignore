@@ -162,3 +162,10 @@ v15/out/
 v15/work/*.npz
 v15/work/*.npy
 v15/sr/
+v110/work/*.log
+v110/audio/
+v110/frames/
+v110/out/
+v110/work/*.npz
+v110/work/*.npy
+v110/sr/
