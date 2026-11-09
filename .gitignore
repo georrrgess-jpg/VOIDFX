@@ -148,3 +148,10 @@ v14/out/
 v14/work/*.npz
 v14/work/*.npy
 v14/sr/
+v15/work/*.log
+v15/audio/
+v15/frames/
+v15/out/
+v15/work/*.npz
+v15/work/*.npy
+v15/sr/
