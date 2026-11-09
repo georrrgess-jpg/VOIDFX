@@ -1,9 +1,9 @@
 - **QC:** 11/11 on the encode (11 distinct checks).
-- **Loudness:** -13.0 LUFS, true peak -3.5 dBTP after AAC.
-- **Loop seam:** blurred difference 0.12 (gate ≤ 1); audio seam step 0.0017; picture wrap step 0.83 vs local median 0.83.
+- **Loudness:** -13.0 LUFS, true peak -3.4 dBTP after AAC.
+- **Loop seam:** blurred difference 0.11 (gate ≤ 1); audio seam step 0.0018; picture wrap step 0.87 vs local median 0.76.
 - **Flashes:** 2 events, at most 2 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
-- **Faces vs effects:** 18 flags in 3 runs: 452–460, 1186–1200, 1384–1392.
-- **Motion audit:** 22 pops (beat 7, cadence 3, cut 11, flash 1); dead spans 0; judder flags 0.
+- **Faces vs effects:** 17 flags in 4 runs: 452–460, 622–622, 1186–1202, 1400–1402.
+- **Motion audit:** 24 pops (UNEXPLAINED 1, beat 8, cadence 2, cut 11, flash 2); UNEXPLAINED at [302] (check signoff_pops.jpg); dead spans 0; judder flags 1.
 - **plan_check:** 0 FAIL, 1 WARN; WARN: `light` holds 1.55 s with no cut, transition or beat hit (frames 199-292): plan a designed beat inside it.
-- **Effort this round (1):** 2 renders (14.6 min), QC 6.0 min.
+- **Effort this round (2):** 1 renders (6.6 min), QC 2.8 min.
