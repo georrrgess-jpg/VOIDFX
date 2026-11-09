@@ -358,6 +358,48 @@
    "step": "report",
    "s": 8.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:43:55",
+   "round": 2,
+   "step": "sheet:r3a:0,6,10,20,30,40,50,65,70,75",
+   "s": 6.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:43:59",
+   "round": 2,
+   "step": "sheet:r3b:520,600,642,680,700,1020,1026,1030,1034,1038",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:01",
+   "round": 2,
+   "step": "sheet:r3c:1488,1491,1500,1524,1530,1541,1544,1548,1554,0,3,6",
+   "s": 2.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:27",
+   "round": 2,
+   "step": "sheet:r3d:1030,1038,1046",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:39",
+   "round": 2,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-09 02:44:46",
+   "round": 2,
+   "step": "plan",
+   "s": 7.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -410,6 +452,48 @@
    "round": 1,
    "cat": "other",
    "text": "fresh-eyes critique: overlay invisible at phone size, return shot blurry/unframed, loop repeated the freeze, emblem disc read as a dark hole, small album prints, look-alike laugh shots, whip scan line, faint signature rectangle; all fixed before delivery"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "lensball's warm halo clipped to its bounding box: a visible square round the glass (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "other",
+   "text": "loop read as a flicker to near-black (luma 17-28): the room now stays visible, levels >= 0.48 (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "emblem crawl lightning and the bolt's dissolve over the incoming face in the opening disc (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:41",
+   "round": 2,
+   "cat": "framing",
+   "text": "the wake's first second: empty dim room to frame 30 and a smeared slow rise; face in by frame 20 now (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:42",
+   "round": 2,
+   "cat": "framing",
+   "text": "memories off-centre in the lensball; faces now centred in the glass (critique)"
+  },
+  {
+   "t": "2026-11-09 02:44:42",
+   "round": 2,
+   "cat": "seam",
+   "text": "loop's room frames dimmed twice (darker than frame 0) (studio stills)"
+  },
+  {
+   "t": "2026-11-09 02:44:42",
+   "round": 2,
+   "cat": "other",
+   "text": "the real bolt's tip showed through as the drawn bolt dissolved (studio stills)"
   }
  ],
  "round_starts": {

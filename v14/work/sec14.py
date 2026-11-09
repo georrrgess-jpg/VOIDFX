@@ -342,7 +342,8 @@ def orbs(f, n=14, seed=33):
     return cv2.resize(cv2.GaussianBlur(q, (0, 0), 2.5), (W, H))
 
 # ---- THE LENSBALL (the hero object; the song's pause e30-e46) ---------------------------------------------------------
-BALL_C = (540.0, 1275.0); BALL_R = 330.0; BALL_RC = 820.0; BALL_K = 1.15; R_FULL = 1400.0; CCY = 760.0
+BALL_C = (540.0, 1275.0); BALL_R = 330.0; BALL_RC = 760.0; BALL_K = 0.85; R_FULL = 1400.0
+BALL_CC = [(606.0, 660.0), (540.0, 470.0), (540.0, 510.0), (540.0, 760.0)]     # each memory's face (YuNet on the content), centred in the glass
 LB_IN = (6, 24); LB_DIVE = 32; LB_TURN = 14
 _BC = {}
 
@@ -381,9 +382,12 @@ def lens_ball(bg, content, cx, cy, R, phi, k, rc, ccx, ccy, hi=1.0, sweep=None):
             spec += np.exp(-(((gx * 0.8 + gy * 0.6) / R - (-1.3 + 2.6 * smooth(sweep))) / 0.16) ** 2) * (rr < 1) * 0.20 * math.sin(math.pi * sweep)
         inner = inner + (spec * hi)[..., None] * HOT
     a = np.clip((1 - rr) * R + 0.5, 0, 1)[..., None]
-    out = bg.copy(); sub = out[y0:y1, x0:x1]
-    if hi > 0:
-        sub += (np.exp(-np.clip(rr - 1, 0, None) * R / 60) * (rr >= 1) * 0.10 * hi)[..., None] * GOLDL     # warm light round the glass
+    out = bg.copy()
+    if hi > 0:                                                                                # warm light round the glass (its own, wider box)
+        X0, Y0, X1, Y1 = max(0, int(cx - R - 300)), max(0, int(cy - R - 300)), min(W, int(cx + R + 300)), min(H, int(cy + R + 300))
+        d_ = np.sqrt((_GX[Y0:Y1, X0:X1] - cx) ** 2 + (_GY[Y0:Y1, X0:X1] - cy) ** 2) - R
+        out[Y0:Y1, X0:X1] += (np.exp(-np.clip(d_, 0, None) / 60) * (d_ >= 0) * 0.10 * hi)[..., None] * GOLDL
+    sub = out[y0:y1, x0:x1]
     out[y0:y1, x0:x1] = sub * (1 - a) + inner * a
     return np.clip(out, 0, 1)
 
@@ -415,19 +419,21 @@ def ball_rest(f):
         d = t - E.th(e_)
         if d >= 0: pulse = max(pulse, math.exp(-d / 0.25) * min(1.0, d / 0.05))
     cx = BALL_C[0] + 4 * math.sin(2 * math.pi * t / 3.1 + 1.0); cy = BALL_C[1] + 7 * math.sin(2 * math.pi * t / 2.4)
-    return cx, cy, BALL_R * (1 + 0.025 * pulse), 180.0 + 2.5 * math.sin(2 * math.pi * t / 2.8)
+    creep = 1 + 0.07 * smooth(clamp((t - E.th(E.E_BALL)) / (E.th(44) - E.th(E.E_BALL)), 0, 1))        # we drift toward the glass
+    return cx, cy, BALL_R * creep * (1 + 0.025 * pulse), 180.0 + 2.5 * math.sin(2 * math.pi * t / 2.8)
 
 def lens_entry(bg, L, q, f):
     """the laugh is drawn into the glass: from the plain frame (q = 0) to the resting ball (q = 1), the ball shrinks out
     of the frame's edges, the picture turns upside down inside it and the glass comes up."""
-    cx, cy, R, phi = ball_rest(f); e_ = smooth(q)
+    cx, cy, R, phi = ball_rest(f); e_ = smooth(q); ccx, ccy = BALL_CC[0]
     R_ = math.exp(math.log(R_FULL) + (math.log(R) - math.log(R_FULL)) * e_)
     return lens_ball(bg, L, W / 2 + (cx - W / 2) * e_, H / 2 + (cy - H / 2) * e_, R_, phi * smooth(clamp((q - 0.08) / 0.84, 0, 1)),
-                     BALL_K * e_, R_ + (BALL_RC - R_) * e_, W / 2, H / 2 + (CCY - H / 2) * e_, smooth(clamp(q / 0.7, 0, 1)))
+                     BALL_K * e_, R_ + (BALL_RC - R_) * e_, W / 2 + (ccx - W / 2) * e_, H / 2 + (ccy - H / 2) * e_, smooth(clamp(q / 0.7, 0, 1)))
 
 def lens_ball_bg(s, f):
     bgs, _ = base11(s, f)
-    bg = defocus(bgs, 14) * 0.84
+    zc = 1 + 0.05 * smooth(clamp((f - s["f0"]) / max(1, s["f1"] - s["f0"]), 0, 1))
+    bg = defocus(zoom_about(bgs, W / 2, H * 0.40, zc) if zc > 1.0005 else bgs, 14) * 0.84
     ob = orbs(f); fs = face_scr(s, f) if s.get("face") is not None else None
     if fs:                                                                                   # the bokeh drifts round his face, not over it
         fm = np.zeros((H // 4, W // 4), F32); cv2.ellipse(fm, (int(fs[0] / 4), int(fs[1] / 4)), (int(fs[2] * 0.75 / 4), int(fs[2] * 1.0 / 4)), 0, 0, 360, 1.0, -1)
@@ -449,12 +455,13 @@ def ball_fx(s, f):
         a_ = E.fh(e_) - LB_TURN // 2
         if f >= a_ + LB_TURN: i = m
         elif f >= a_: i, tq = m, (f - a_ + 1) / LB_TURN; break
-    if tq is None: content, ccx = ball_content(i, f), W / 2
+    if tq is None: content, (ccx, ccy) = ball_content(i, f), BALL_CC[i]
     else:                                                                                       # the ball turns: the next memory comes round
-        content = np.concatenate([ball_content(i - 1, f), ball_content(i, f)], axis=1); ccx = W / 2 + W * smooth(tq)
+        content = np.concatenate([ball_content(i - 1, f), ball_content(i, f)], axis=1); e_ = smooth(tq)
+        ccx = BALL_CC[i - 1][0] + (BALL_CC[i][0] + W - BALL_CC[i - 1][0]) * e_; ccy = BALL_CC[i - 1][1] + (BALL_CC[i][1] - BALL_CC[i - 1][1]) * e_
         phi += 8 * math.sin(math.pi * tq)
     kd = n - LB_DIVE
-    if k < kd: return lens_ball(bg, content, cx, cy, R, phi, BALL_K, BALL_RC, ccx, CCY, 1.0, tq)
+    if k < kd: return lens_ball(bg, content, cx, cy, R, phi, BALL_K, BALL_RC, ccx, ccy, 1.0, tq)
     q = (k - kd + 1) / (LB_DIVE + 1); e_ = smooth(q) ** 1.15                                 # the dive: we fall into the ball
     full = edge14(nxt_of(s), "first")
     w_ = smooth(clamp((q - 0.70) / 0.30, 0, 1))
@@ -462,7 +469,7 @@ def ball_fx(s, f):
     R_ = math.exp(math.log(R) + (math.log(R_FULL) - math.log(R)) * e_)
     bgz = zoom_about(bg, cx, cy, 1 + 0.6 * ein(q, 2.0))
     return lens_ball(bgz, content, cx + (W / 2 - cx) * e_, cy + (H / 2 - cy) * e_, R_, phi + (360 - phi) * smooth(clamp((q - 0.08) / 0.84, 0, 1)),
-                     BALL_K * (1 - e_), BALL_RC + (R_ - BALL_RC) * e_, W / 2, CCY + (H / 2 - CCY) * e_, 1 - smooth(clamp((q - 0.45) / 0.55, 0, 1)), None)
+                     BALL_K * (1 - e_), BALL_RC + (R_ - BALL_RC) * e_, ccx + (W / 2 - ccx) * e_, ccy + (H / 2 - ccy) * e_, 1 - smooth(clamp((q - 0.45) / 0.55, 0, 1)), None)
 
 def lens_in(A, B, j, f, sa, sb, pre=LB_IN[0], post=LB_IN[1]):
     """LENS IN: the laugh starts to bend into the glass just before the note (j < 0); the ball's own frames draw the rest."""
@@ -640,7 +647,8 @@ def emblem_draw(out, cx, cy, R, disc, gold, alpha=1.0, lit_p=0.0, lit=0.0, ring_
     aa = 1.0 / max(R, 1.0)
     rm = np.clip((rho - 0.935) / aa + 0.5, 0, 1) * np.clip((1.0 - rho) / aa + 0.5, 0, 1)        # the ring
     dm = np.clip((0.95 - rho) / aa + 0.5, 0, 1)                                               # the disc (under the ring's inner half)
-    bm = bm * bolt_a; gm = np.maximum(bm, rm)                                                 # gold (the bolt can fade into its own light)
+    if bolt_a < 1: bm = bm * (bolt_a + (1 - bolt_a) * np.clip((rho - 0.90) / 0.08, 0, 1))      # the bolt fades inside the opening disc; its tips stay
+    gm = np.maximum(bm, rm)                                                                   # gold
     # bevel: a rounded height field on the bolt and the ring, lit from the upper left
     hb = np.clip(cv2.distanceTransform((bm > 0.5).astype(np.uint8), cv2.DIST_L2, 5) / max(1.0, 0.055 * R), 0, 1)
     hb = hb * hb * (3 - 2 * hb)
@@ -757,9 +765,10 @@ def emblem_glint(A, B, j, f, sa, sb, pre=GL_PRE, post=GL_POST):
         gp = clamp((u - 0.34) / 0.26, 0, 1); rq = clamp((u - 0.56) / 0.26, 0, 1); au = clamp((u - 0.58) / 0.42, 0, 1)
         fl = smooth(clamp((u - 0.80) / 0.20, 0, 1)); pu = clamp((u - 0.84) / 0.16, 0, 1)
         portal = glint_B(B, sb, tx, ty, 1.0) if pu > 0 else None
+        au = au * (1 - smooth(clamp((u - 0.79) / 0.06, 0, 1)))                               # the crawl stops before the disc opens on his face
         o = emblem_draw(o, tx, ty, R, disc, gold, alpha=smooth(clamp(u / 0.09, 0, 1)), lit_p=gp * 1.15, lit=1.0 if gp > 0 else 0.0,
                         ring_p=(-math.pi / 2 + 2 * math.pi * rq) if 0 < rq < 1 else None, ring=smooth(rq), flare=0.8 * fl,
-                        portal=portal, pr=0.94 * R * ein(pu, 1.4), bolt_a=1 - 0.85 * smooth(pu))
+                        portal=portal, pr=0.94 * R * ein(pu, 1.4), bolt_a=1 - smooth(clamp(pu / 0.45, 0, 1)))
         if 0 < gp < 1:
             x, y = glint_path(tx, ty, R, gp); o = glint_star(o, x, y, R * (0.55 + 0.35 * math.sin(math.pi * gp)), 1.0)
         o = emb_arcs(o, tx, ty, R, int(round(1 + 6 * au)) if au > 0 else 0, f, 0.55 + 0.45 * au)
@@ -825,7 +834,7 @@ TR2.update({"print_dive": (print_dive, 23, 6), "double_exp": (double_exp, 12, 14
             "lights_on14": ((lambda A, B, j, f, sa, sb: B), 0, 24)})
 
 # ---- the medical bay's lights: dim before he wakes, flickering on (frame 0) and flickering out (the loop) ---------------
-LIGHTS_ON = [0.30] * 8 + [0.82, 0.86, 0.40, 0.36, 0.42, 1.0, 0.97, 0.60, 0.66, 0.92, 0.95, 0.90, 0.94, 0.97, 0.99, 1.0]
+LIGHTS_ON = [0.48] * 4 + [0.86, 0.90, 0.55, 0.52, 0.60, 1.0, 0.98, 0.72, 0.76, 0.94, 0.96, 0.93, 0.96, 0.98, 1.0]
 def lights_on(f):
     return LIGHTS_ON[0] if f < 0 else (LIGHTS_ON[f] if f < len(LIGHTS_ON) else 1.0)
 
@@ -849,14 +858,14 @@ def loop_lights(img, f, s):
     flashes = [(e92, 3), (e94, 4)]
     for a_, n_ in flashes:
         if a_ <= f < a_ + n_: return room()
-        if a_ + n_ <= f < a_ + n_ + 3: return dim(img, (0.55, 0.82, 0.96)[f - a_ - n_])
-    out0 = end - 20                                                                          # the lights go out
+        if a_ + n_ <= f < a_ + n_ + 3: return dim(img, (0.62, 0.85, 0.96)[f - a_ - n_])
+    out0 = end - 14                                                                          # the lights go out
     if f < out0: return img
     k = f - out0
-    seq = [0.80, 0.55, 0.40, 0.34, 0.75, 0.70, 0.36, 0.32]                                  # a last flicker, then down
+    seq = [0.85, 0.64, 0.54, 0.82, 0.74, 0.52]                                              # a last flicker, then down
     if k < len(seq): return dim(img, seq[k])
-    w = smooth(clamp((k - len(seq) + 1) / 5, 0, 1))
-    return dim(img, 0.32) * (1 - w) + room() * w
+    w = smooth(clamp((k - len(seq) + 1) / 4, 0, 1))
+    return dim(img, 0.50) * (1 - w) + room() * w
 
 # ---- THE ACHIEVEMENT (the owner's toast; our own pixel font and crate icon, built from code) ---------------------------
 TP = 6                                                                                       # screen px per toast pixel
@@ -932,7 +941,7 @@ def toast_box():
 
 def toast_sprite(k):
     spr = toast_box().copy()
-    ki = k - 5                                                                               # the crate pops in with a bounce and a wobble
+    ki = k - 3                                                                               # the crate pops in with a bounce and a wobble
     if ki >= 0:
         si = 1 - math.exp(-ki / 2.6) * math.cos(0.8 * ki); rot = 10 * math.exp(-ki / 4) * math.sin(0.9 * ki)
         ic = cv2.resize(crate_icon(), (16 * TP, 16 * TP), interpolation=cv2.INTER_NEAREST)
@@ -944,8 +953,8 @@ def toast_sprite(k):
             M = cv2.getRotationMatrix2D((8 * TP, 8 * TP), rot, si); M[0, 2] += icx - 8 * TP; M[1, 2] += icy - 8 * TP
             w_ = cv2.warpAffine(ic, M, (spr.shape[1], spr.shape[0]), flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT)
             al = w_[..., 3:4]; spr[..., :3] = spr[..., :3] * (1 - al) + w_[..., :3] * al; spr[..., 3:4] = np.maximum(spr[..., 3:4], al)
-    put_text(spr, TOAST_TITLE, 30, 7, COL_T, k, 5, 0.45)
-    put_text(spr, TOAST_DESC, 30, 18, COL_D, k, 11, 0.40)
+    put_text(spr, TOAST_TITLE, 30, 7, COL_T, k, 3, 0.45)
+    put_text(spr, TOAST_DESC, 30, 18, COL_D, k, 9, 0.40)
     if 18 <= k < 34:                                                                         # a stepped shine crosses the box
         uw, uh = TOAST_U; yy, xx = np.mgrid[0:uh, 0:uw].astype(F32)
         band = (np.abs((xx + yy * 0.8) - (-30 + (k - 18) / 16 * (uw + 60))) < 5).astype(F32) * 0.16

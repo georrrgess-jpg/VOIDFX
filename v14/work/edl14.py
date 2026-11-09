@@ -73,7 +73,7 @@ def shot(n, src, e0, e1, a, b, **kw):
 
 # ---- THE WAKE (focal set piece at the start): the dark medical bay, the lights flicker on, he gasps awake (S1)
 shot("wake", "fs1", 0, 10, 4.135, 5.02, tin="lights_on14", seg=True, lin=True, flowfall="blend",
-     tmap=[(0, 4.135), (0.15, 4.18), (0.40, 4.55), (1.0, 5.02)], z=[(0, 1.00), (1, 1.05)])
+     tmap=[(0, 4.135), (0.06, 4.17), (0.22, 4.50), (0.40, 4.62), (1.0, 5.02)], z=[(0, 1.00), (1, 1.05)])
 shot("woke", "fs1", 10, 14, 7.30, 8.50, tin="focus_rack14", seg=True)
 # ---- S1: the first year
 shot("lab", "fs1", 14, 20, 68.80, 70.45, tin="double_exp", seg=True, z=[(0, 1.02), (1, 1.06)])
@@ -94,8 +94,8 @@ shot("today", "fs5", 88, 96, 0.05, 2.25, tin="afterimage14", seg=True, z=[(0, 1.
 
 # the memories inside THE LENSBALL: (note, pack, source a, source b, source x centre of the 9:16 crop)
 BALL = [(30, "fs1", 215.50, 216.30, None),            # the laugh, carried into the glass (the previous shot's crop)
-        (34, "fs1", 229.50, 231.10, 610),             # Iris and Barry by the water (S1)
-        (38, "fs3", 46.40, 48.10, 690),               # the loft, warm lamps (S3)
+        (34, "fs1", 229.50, 231.10, 500),             # Barry by the water (S1), the crop on his face
+        (38, "fs3", 46.40, 48.10, 800),               # the loft, warm lamps (S3), the crop on his face
         (42, "fs1", 116.37, 116.42, 700)]             # the sea run's lead-in (the sun on the water): the memory we fall into at e44-e46
 
 # the real S1 chest emblem in flash_s1.mp4 (226.73-228.0 s), measured on the source: circle centre per source frame
