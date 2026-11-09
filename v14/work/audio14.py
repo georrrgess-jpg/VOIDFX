@@ -723,6 +723,30 @@ def air_rise(dur, level, seed):
     y = lo * (1 - t) + hi * t
     return norm(y * (t ** 1.8) * (1 - np.clip((t - 0.92) / 0.08, 0, 1)), level)
 
+def gasp_air(dur, level, seed):
+    """the breath he takes as he wakes: soft band-passed air that swells and stops on the gasp (no pitch)."""
+    n = I(dur); t = np.arange(n) / n; x = noise(n, seed)
+    y = bq(x, "band", np.array([500, 2600]), 2) * 0.8 + bq(noise(n, seed + 1), "band", np.array([2500, 7000]), 2) * 0.25
+    return norm(y * (t ** 2.2) * (1 - np.clip((t - 0.94) / 0.06, 0, 1)), level)
+
+def toast_pop(level, seed):
+    """the achievement arriving: a short soft swish up and a low round thock under it (no chime, no bell)."""
+    n = I(0.22); t = np.arange(n) / SR
+    sw = bq(noise(n, seed), "band", np.array([1200, 5200]), 2) * np.clip(t / 0.10, 0, 1) ** 1.5 * np.exp(-np.clip(t - 0.10, 0, None) / 0.03)
+    th_ = np.sin(2 * np.pi * np.cumsum(170 - 60 * np.clip(t / 0.08, 0, 1)) / SR) * np.exp(-np.clip(t - 0.10, 0, None) / 0.035) * (t >= 0.10)
+    return norm((sw * 0.7 + th_ * 0.6).astype(np.float32), level)
+
+def mono(x):
+    return x if x.ndim == 1 else x.mean(1)
+
+def emblem_charge(level, seed, dur=1.5):
+    """the emblem: faint electric crackle that builds as the lightning crawls on the bolt, ending in a soft low whoomp as
+    the disc opens (one sound for the transition)."""
+    c = mono(crackle(dur, level - 6, seed, 0.18, (1800, 8000))); n = len(c); t = np.arange(n) / n
+    w = mono(sub_drop(level - 2, 0.45, 90, 40))
+    y = np.zeros(n + len(w), np.float32); y[:n] += c * t ** 1.6; y[n - I(0.05):n - I(0.05) + len(w)] += w
+    return norm(y, level)
+
 def music14(song):
     n = N + PRE; i0 = I(E.SONG_IN) - PRE
     return song[i0:i0 + n].copy().astype(np.float32)
@@ -733,11 +757,12 @@ def main():
     mus = music14(song)
     fx = np.zeros((N + PRE, 2), np.float32)
     t0 = {s_["n"]: s_["t0"] for s_ in E.SHOTS}
-    place(fx, stereo(paper_slide(0.50, -27, 1401, True), 0.2), t0["wake"] - 0.48)               # into the signature print
-    place(fx, stereo(shutter_click(-25, 1402)), t0["album"] - 0.01)                              # the memory freezes
-    place(fx, stereo(air_rise(0.70, -24, 1403)), t0["searun"] - 0.70)                            # into the theme's return
-    tl_ = t0["today"] + (E.DUR - t0["today"]) - 46 / E.FPS
-    place(fx, stereo(paper_slide(0.55, -25, 1404, False), -0.3), tl_ + 0.18)                     # the loop's print leaves
+    tg = E.th(E.E_TOAST)
+    place(fx, stereo(gasp_air(0.55, -28, 1411), 0.0), tg - 0.55)                                 # he breathes in and wakes
+    place(fx, stereo(toast_pop(-25, 1412), 0.15), (E.fh(E.E_TOAST) - 3) / E.FPS - 0.10)          # the achievement pops up
+    place(fx, stereo(paper_slide(0.36, -27, 1413, True), 0.25), t0["hood"] - 0.38)               # the print flicks in
+    place(fx, stereo(air_rise(0.70, -24, 1414)), t0["searun"] - 0.70)                            # into the ball, the theme returns
+    place(fx, stereo(emblem_charge(-26, 1415)), t0["smile3"] - 1.45)                             # the emblem lights and opens
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))
     wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
     full = mus + fx

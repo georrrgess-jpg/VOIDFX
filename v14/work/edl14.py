@@ -1,25 +1,25 @@
-"""KEEPSAKES — The Flash × C418 "Mice on Venus" (voidfx v14, 9:16). Single source of truth: the renderer, audio builder and
-QC read only this file. Scaffolded from the v12 BLOOM standard engine.
+"""KEEPSAKES — The Flash × C418 "Mice on Venus" (voidfx v14, 9:16), rev 2. Single source of truth: the renderer, audio
+builder and QC read only this file. Scaffolded from the v12 BLOOM standard engine.
 
-Concept: KEEPSAKES. Nostalgia as a box of instant photos. Barry, now (S5, golden window light), looks back, and the years
-develop in front of him like instant prints: the night he woke from the coma, the CSI lab, the first suit in the sun,
-laughing in S.T.A.R. Labs, Iris by the water, the loft, the sea run at sunset, and on to the family ballgame and the
-tux. The hero object is the print (a lit instant photo with a thick bottom border, paper grain, a soft shadow), a motif
-in three places only: the signature graphic (a print develops beside him, then we fall into it), the focal set piece
-THE ALBUM (in the song's quiet pause the memory freezes into a print and three more land on it, one per soft piano note;
-we fall into the last one as the theme comes back), and the loop (the last memory becomes a print and slides away to
-reveal frame 0). Instant-film development is the real phenomenon behind it: the image rises out of the milky reagent.
-Every other transition is a different idea: a double exposure, a sun flare, a film burn, a water ripple, a focus rack,
-the emblem's glint (the S1 emblem catches the sun and its bolt burns open the next memory), a speed whip, a dolly,
-a light leak, an afterimage.
-Look SUNFADE: golden hour on faded film (lifted warm blacks, cream highlights, gentle halation). Overlay: a faint
-Super 8 haze (fine grain, sub-pixel gate weave, slow light leaks at the frame edges, a few dust specks), kept low so
-the clips stay clear (the owner: "don't make the overlay too overbearing"). No text. Sound: the song carries it; four
-quiet effects in all (the owner: "keep the sound effects low ... I don't want to overshadow the actual song").
+Concept: KEEPSAKES. Nostalgia for where it all began. The edit opens on the night Barry woke from the coma (S1): the
+dark medical bay at S.T.A.R. Labs, the lights flicker on, he gasps awake, and an achievement pops up: "Achievement Made!
+The Beginning?" (THE WAKE, the focal set piece at the start; the owner's toast, drawn with our own pixel font and icon).
+Then the years run as memories: the CSI lab, the first suit, laughing in S.T.A.R. Labs. In the song's quiet pause, the
+new hero object: THE LENSBALL, a glass sphere that holds his memories upside down (a real ball lens inverts the scene
+behind it). The laugh is drawn into it, Barry now (S5, golden window light) stands behind it out of focus, and on each
+soft piano note the ball turns to another memory (Iris by the water, the loft, the sea at sunset). On the pickup we fall
+into the ball and the picture flips upright as the theme returns full-frame on the sea run. The S1 emblem then gets the
+slow EMBLEM GLINT: the camera finds it, a corrected, lit bolt (fitted to the real S1 bolt) catches the light, lightning
+crawls along its zigzag, and the disc opens on his face. The loop: the lights of the last memory flicker, the dark
+medical bay flashes through, and the lights go out on frame 0, where they flicker back on and he wakes again.
+The print (the instant photo) is used once, fast: PRINT DIVE between the lab and the first suit.
+Look SUNFADE: golden hour on faded film. Overlay: a faint Super 8 haze, kept low so the clips stay clear. No text but
+the owner's achievement toast. Sound: the song carries it; five quiet effects.
 
 Song window: song half-beats 728 -> 824 (196.56 -> 222.48 s), 96 half-beats, 25.92 s; the build, the quiet pause
 (e28-e44: single notes on e30, e34, e38, e42) and the return of the full theme at e46 (song 208.97 s). The section has no
 drums: grid fitted on the music stem (song_prep: P = 0.26997 s, offset 0.0100 s, checked on the piano onsets).
+Strong onsets in the build (music stem, spectral flux): e4, e10, e12, e14, e16, e22, e26.
 Loop wrap: music spectral correlation 0.906 (the best of the candidate windows).
 """
 ROOT = "/home/user/VOIDFX"
@@ -42,12 +42,14 @@ def te(e): return th(e)
 def s2e(s): return s - SONG_IN
 DUR = th(H1 - H0); DUR_F = fh(H1 - H0)
 HDROP = 46; DROP_HB = HDROP; T_STOP = DUR  # the theme returns (song 208.97 s)
-E_ALBUM = 30                               # THE ALBUM: the memory freezes on the pause's first note
-ALBUM_NOTES = [30, 34, 38, 42]             # one print lands on each soft note; e44 is the pickup, e46 the return
+E_BALL = 30                                # THE LENSBALL: the laugh is drawn into the glass on the pause's first note
+BALL_NOTES = [30, 34, 38, 42]              # the ball turns to another memory on each soft note; e44 the dive, e46 the return
+E_TOAST = 4                                # the achievement pops on the gasp (a strong onset)
+E_TOAST_OUT = 13
 E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0
 STUT_GAPS, STUT_HITS = [], []
 E_BEAT, E_DIP = 46, 28
-E_LOOP = H1 - H0 - 6                       # the loop set piece (the beat camera rests from here)
+E_LOOP = H1 - H0 - 4                       # the loop set piece: the lights flicker out (the beat camera rests from here)
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
@@ -69,43 +71,57 @@ def shot(n, src, e0, e1, a, b, **kw):
              z=kw.pop("z", [(0, 1.00), (1, 1.04)]), face=kw.pop("face", "largest"), interp=kw.pop("interp", "flow"))
     d.update(kw); S.append(d)
 
-# ---- NOW: Barry in golden window light looks back; a print develops beside him (the signature graphic)
-shot("now", "fs5", 0, 10, 89.82, 90.90, tin="loop_in14", seg=True, tmap=slow(0, 10, 89.82, 90.90), lin=True, z=[(0, 1.00), (1, 1.05)])
-# ---- S1: where it started
-shot("wake", "fs1", 10, 14, 4.47, 5.01, tin="print_dive", seg=True)
+# ---- THE WAKE (focal set piece at the start): the dark medical bay, the lights flicker on, he gasps awake (S1)
+shot("wake", "fs1", 0, 10, 4.135, 5.02, tin="lights_on14", seg=True, lin=True, flowfall="blend",
+     tmap=[(0, 4.135), (0.15, 4.18), (0.40, 4.55), (1.0, 5.02)], z=[(0, 1.00), (1, 1.05)])
+shot("woke", "fs1", 10, 14, 7.30, 8.50, tin="focus_rack14", seg=True)
+# ---- S1: the first year
 shot("lab", "fs1", 14, 20, 68.80, 70.45, tin="double_exp", seg=True, z=[(0, 1.02), (1, 1.06)])
-shot("hood", "fs1", 20, 26, 124.00, 125.60, tin="sun_flare", seg=True, tmap=slow(20, 26, 124.00, 125.60), lin=True)
+shot("hood", "fs1", 20, 26, 124.00, 125.60, tin="print_dive", seg=True, tmap=slow(20, 26, 124.00, 125.60), lin=True)
 shot("laugh", "fs1", 26, 30, 214.45, 215.50, tin="film_burn", seg=True)
-# ---- THE ALBUM (focal set piece, the song's pause): the laugh freezes into a print; three more land on the soft notes
-shot("album", "fs1", 30, 46, 215.50, 215.52, tin="shutter_freeze", seg=True, z=[(0, 1.00), (1, 1.00)])
-# ---- the theme returns: the sea run at sunset, out of the last print
-shot("searun", "fs1", 46, 52, 116.75, 118.05, tin="album_out", seg=True, face=None, cx=(610, 410), flowmax=24, flowfall="blend")
-shot("shore", "fs1", 52, 58, 120.30, 122.05, tin="ripple", seg=True, face=None, cx=(590, 620), tmap=slow(52, 58, 120.30, 122.05), lin=True)
-shot("emblem", "fs1", 58, 62, 226.78, 227.95, tin="focus_rack14", seg=True)
+# ---- THE LENSBALL (the song's pause): Barry now, behind the glass; his memories turn inside it on the soft notes
+shot("ball", "fs5", 30, 46, 89.82, 90.90, tin="lens_in14", seg=True, tmap=slow(30, 46, 89.82, 90.90), lin=True, z=[(0, 1.00), (1, 1.03)])
+# ---- the theme returns: the sea run at sunset, out of the ball
+shot("searun", "fs1", 46, 52, 116.42, 118.05, tin="lens_dive14", seg=True, face=None, cx=(700, 420), flowmax=24, flowfall="blend")
+shot("shore", "fs1", 52, 56, 120.30, 121.45, tin="ripple", seg=True, face=None, cx=(590, 610))
+shot("emblem", "fs1", 56, 64, 226.78, 227.95, tin="sun_flare", seg=True, tmap=slow(56, 64, 226.78, 227.95), lin=True, z=[(0, 1.00), (1, 1.00)])
 # ---- the years after
-shot("smile3", "fs3", 62, 68, 3.30, 5.20, tin="emblem_glint", seg=True)
-shot("ballgame", "fs5", 68, 74, 91.20, 92.90, tin="speed_whip14", seg=True)
-shot("shades", "fs3", 74, 80, 26.90, 28.50, tin="light_leak14", seg=True)
-shot("tux", "fs5", 80, 86, 101.40, 102.95, tin="dolly", seg=True)
-shot("today", "fs5", 86, 96, 0.05, 2.25, tin="afterimage14", seg=True, tmap=slow(86, 96, 0.05, 2.25), lin=True, z=[(0, 1.00), (1, 1.03)])
+shot("smile3", "fs3", 64, 70, 3.30, 5.20, tin="emblem_glint", seg=True)
+shot("ballgame", "fs5", 70, 76, 91.20, 92.90, tin="speed_whip14", seg=True)
+shot("shades", "fs3", 76, 82, 26.90, 28.50, tin="light_leak14", seg=True)
+shot("tux", "fs5", 82, 88, 101.40, 102.95, tin="dolly", seg=True)
+shot("today", "fs5", 88, 96, 0.05, 2.25, tin="afterimage14", seg=True, z=[(0, 1.00), (1, 1.03)])
 
-# the prints in THE ALBUM (memories that appear only there): (note, pack, source a, source b, landing x, landing y, angle)
-ALBUM = [(30, "fs1", 215.50, 215.50, 540, 920, -3.0),          # the laugh, frozen (the previous shot's last frame)
-         (34, "fs1", 229.50, 231.20, 505, 880, 5.5),           # Iris and Barry by the water (S1)
-         (38, "fs3", 46.40, 48.20, 580, 950, -6.0),            # the loft, warm lamps (S3)
-         (42, "fs1", 116.75, 116.75, 545, 900, 2.0)]           # the sea run at sunset: the print we fall into at e44-e46
+# the memories inside THE LENSBALL: (note, pack, source a, source b, source x centre of the 9:16 crop)
+BALL = [(30, "fs1", 215.50, 216.30, None),            # the laugh, carried into the glass (the previous shot's crop)
+        (34, "fs1", 229.50, 231.10, 610),             # Iris and Barry by the water (S1)
+        (38, "fs3", 46.40, 48.10, 690),               # the loft, warm lamps (S3)
+        (42, "fs1", 116.37, 116.42, 700)]             # the sea run's lead-in (the sun on the water): the memory we fall into at e44-e46
 
-SET_PIECES = [("print_signature", th(3), th(12)), ("the_album", th(30), th(47)), ("emblem_glint", th(60), th(64)), ("loop", th(90), th(96))]
-HERO = ["print_draw"]
-HERO_TINS = ["print_dive", "shutter_freeze", "album_out", "loop_in14"]
-SIGNATURE = ["print_dive"]
+# the real S1 chest emblem in flash_s1.mp4 (226.73-228.0 s), measured on the source: circle centre per source frame
+# (template-tracked, 5-tap smoothed), radius, and the bolt as a polygon in units of the radius about the centre, traced
+# on the real emblem (a point-symmetric zigzag: top tip past the ring at the upper right, a step, bottom tip lower left).
+EMB_R = 74.5
+EMB_BOLT = [(0.884, -1.179), (-0.436, -0.074), (-0.075, -0.095), (-0.862, 0.763), (0.458, -0.342), (0.097, -0.321)]
+EMB_TRACK = [(226.733, 435.8, 698.9), (226.767, 437.8, 699.5), (226.833, 440.6, 700.2), (226.867, 443.7, 700.9), (226.900, 446.3, 701.4),
+             (226.933, 448.2, 701.8), (226.967, 449.4, 702.3), (227.000, 450.1, 703.0), (227.033, 450.2, 703.6), (227.067, 449.5, 704.1),
+             (227.100, 447.8, 704.5), (227.167, 445.4, 704.9), (227.200, 442.7, 705.3), (227.233, 440.1, 705.7), (227.267, 437.9, 706.3),
+             (227.333, 436.2, 706.9), (227.367, 434.9, 707.3), (227.400, 433.7, 707.6), (227.433, 432.8, 707.9), (227.467, 432.0, 708.4),
+             (227.500, 431.3, 709.2), (227.533, 430.8, 709.7), (227.567, 430.4, 709.6), (227.600, 430.1, 708.9), (227.667, 429.7, 707.8),
+             (227.700, 429.3, 706.5), (227.733, 428.7, 705.5), (227.767, 428.4, 704.7), (227.833, 428.1, 704.2), (227.867, 427.9, 703.6),
+             (227.900, 427.7, 702.9), (227.933, 427.5, 702.1), (228.000, 427.2, 701.5)]
+
+SET_PIECES = [("the_wake", th(0), th(14)), ("lensball", th(30), th(47)), ("emblem_glint", th(58), th(65)), ("loop", th(92), th(96))]
+HERO = ["lens_ball"]
+HERO_TINS = ["lens_in14", "lens_dive14"]
+SIGNATURE = ["lens_dive14"]
 PLAN_ACCEPT = {
-    "density": "a slow, nostalgic piano piece: 14 designed transitions plus THE ALBUM's four landings; the owner asked to see the clips",
-    "sig_time:print_dive": "the print is on screen from frame 46 to the cut at 162 (1.9 s); the check times only the dive",
-    "retake:now/ballgame": "different scenes (golden window vs the ballgame), split by a source cut at 90.92/90.97 s",
-    "dead:now": "the signature print rises and develops beside him from frame 46 (a designed animation)",
-    "dead:album": "THE ALBUM: a print lands and develops on each soft note (e30, e34, e38, e42)",
-    "dead:today": "the loop: the frame becomes a print and slides away from frame 1509",
+    "density": "a slow, nostalgic piano piece: 14 designed transitions plus the lensball's three turns; the owner asked to see the clips",
+    "retake:ball/ballgame": "different scenes (golden window vs the ballgame), split by a source cut at 90.92/90.97 s",
+    "dead:ball": "THE LENSBALL: the ball forms, bobs, and turns to a new memory on each soft note (e30, e34, e38, e42)",
+    "dead:wake": "THE WAKE: the lights flicker on (frames 8-24), he rises and gasps (the slow-motion sit-up), the achievement pops up on e4 and animates through e13",
+    "dead:today": "the loop: the lights flicker on e92 and e94 with the dark medical bay flashing through, then go out from frame 1535",
+    "sig_time:lens_dive14": "the lensball is on screen from frame 486 to the cut at 745 (4.3 s); the check times only the dive",
 }
 SHOTS = S
 for s in SHOTS:
