@@ -1,6 +1,6 @@
 # voidfx studio handbook
 
-This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers both studios' standards (§0: Dexter v107 ALL CAPS, v105 DRACULA, v104 THE PASSENGER, v103 FOREVER; §1: Flash v12 BLOOM, v11 BOP, v10 LET IT HAPPEN; v106 WONDERWALL a standard made in the Dexter chat; v13 EVENT HORIZON approved, not a standard), every preference learned over v1–v13 and v101–v107 and their revision rounds, what works and what doesn't, and how to work twice as fast.
+This is everything a voidfx studio needs to make an edit the owner will approve on the first or second pass. It covers both studios' standards (§0: Dexter v107 ALL CAPS, v105 DRACULA, v104 THE PASSENGER, v103 FOREVER; §1: Flash v12 BLOOM, v11 BOP, v10 LET IT HAPPEN; v14 KEEPSAKES, a standard in a different (calm, nostalgic) style; v106 WONDERWALL a standard made in the Dexter chat; v13 EVENT HORIZON approved, not a standard), every preference learned over v1–v14 and v101–v107 and their revision rounds, what works and what doesn't, and how to work twice as fast.
 
 Read this first. Then read `SCENE_PACKS.md` (the sources), `/docs/TOOLKIT.md` (the engine) and `/CLAUDE.md` (the binding rules).
 
@@ -273,6 +273,9 @@ Every new edit must **match or exceed** these. It must **not copy their look**: 
 | v107 rev 2–3: a headspin landing off-centre; the same clip at 17 s and 19 s; a rough ending; a "low effort" loop; the name spelled too slowly on uneven sung onsets | v107 | Spins land on a centred face; never reuse a clip; rest the camera and lengthen the cuts at the end; the loop is a set piece; spell-outs on an even 16th-note grid. |
 | v13 rev 1: *"I don't like that the singularity is the primary object in every transition and animation"*; the emblem transition (a black hole born in the emblem) didn't count as one; *"the tedious sound effects"* | v13 | The hero asset gets 2–4 appearances, and every other transition is a different idea. An emblem transition comes from the emblem itself (its bolt, its shape). Start sound lean (~10–12 events). |
 | v13 verdict: *"I like this edit but I do not want you to make it a standard. It does somethings good and somethings bad."* | v13 | Approved, not a standard. The studio's reading of the weak parts: an abstract concept (a black hole as the voice of a love song); nearly all footage from the soft S1 pack under a grey grade; a drumless section with few beat moments and no big moment in the first 10 s; newer bright-red suits mixed with S1 maroon. |
+| v14 rev 1 → 2: the wake as *"the focal point of and in the beginning"*; the achievement toast; *"the flash symbol on the crest is not an actual lightning bolt and is in the wrong shape"*; the emblem transition *"too fast"*; the print *"too slow and repeats multiple times"*; *"a brand new custom graphic"* | v14 | Open on the moment the owner names. Build their reference asset faithfully in our own drawing, with a pop. Trace a real symbol on the source, and never mirror a cut-off subject. Give an emblem transition ~2 s with stages. Use a liked transition once, fast. |
+| v14 round 3: the lensball's memories *"face upright so that Barry's face is facing upwards"* | v14 | Faces stay upright inside graphics even when the optics would invert them. |
+| v14 verdict: *"I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good."* | v14 | A standard in a different style: the calm, nostalgic reference (the song carries it, ~5 quiet effects, a breathing camera, set pieces on the song's structure). v10–v12 stay the energetic reference; the Flash scaffold stays v12. |
 
 ### Props and effects from the character's world: when they work (Studio 2, after FOREVER)
 
@@ -479,6 +482,7 @@ Only then deliver.
 | v12 BLOOM | NOCTURNE: indigo nights, crimson suit, orange light turned cream, lightning in jasmine white over a cream glow, deep vignette |
 | v107 ALL CAPS (Dexter studio) | TABLOID: newsprint-cream highlights, ink blacks, slate blues, one spot red; a misregistered red plate, paper grain and a fine shadow screen |
 | v13 EVENT HORIZON | REDSHIFT: a desaturated silver-steel world, only the suit's crimson, skin and the light keep colour; the picture redshifts (dimmer, sliding to red) as time slows |
+| v14 KEEPSAKES | SUNFADE under a SUPER 8 HAZE: golden hour on faded film (lifted warm blacks, cream-gold highlights, low saturation with blues fading most, skin protected); fine and coarse grain, sub-pixel gate weave, halation, two warm edge leaks, dust, a soft gate, all kept low |
 
 Fresh directions for future edits:
 - 16 mm film burn / home movie (Harry flashbacks);
@@ -513,6 +517,7 @@ Fresh directions for future edits:
 | v106 | Oasis "Wonderwall" | 87.02 BPM (drum-stem fit; the auto map locked to 4/3 = 116) | half-beats 456–520 (bars 57–65, 2:37.5–2:59.6, chorus 2); bar 65 starts chorus 3 the same way, so the loop wraps on the music | 16.55 s, the sung "WONDERWALL" → THE WONDERWALL burst |
 | v107 | Madvillain "All Caps" | 87.50 BPM (drum-stem fit over 8 bars; the auto map read 175.6, the autocorrelation 117.4 = the dotted pattern) | half-beats 176–240 (8 bars, 60.92–82.86 s): the end of verse 1 and the beat break; the bass drops out in the last bar and returns on bar 1, so the wrap lands like a drop | 14.76 s "ALL CAPS" → the strip slaps on; D-E-X-T-E-R on the 16ths e44–e46.5 → 16.45 s the strip flies onto the real banner |
 | v13 | Brent Faiyaz "Wish You Well" (full version; v8 used a 36 s screen recording) | 138 BPM half-beats, 69 BPM feel (drum-stem fit) | h92–h188 (0:20.05–0:40.92, six 16-half-beat phrases, no drums: an 808 hit at e8 mod 16, a rest at e12–14) | "Darling," (30.84) → a 3 s vocal silence → the deepest rest (33.1) → the music returns (33.97); bar 23 mirrors bar 11, so the window wraps exactly |
+| v14 | C418 "Mice on Venus" | P = 0.26997 s half-beats (~111 BPM; no drums: fitted on the music stem, checked on the piano onsets) | h728–h824 (196.56–222.48 s): the build, the quiet pause (notes on e30, e34, e38, e42), the theme's return at e46 | the pause holds THE LENSBALL; the dive lands on the return; wrap correlation 0.906 |
 
 ## 11. Communication
 

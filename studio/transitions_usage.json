@@ -2283,7 +2283,7 @@
    "edit_verdicts": {
     "v103": "standard"
    },
-   "owner_verdict": "unrated"
+   "owner_verdict": "liked"
   },
   "roll": {
    "pre": 8,
@@ -2784,7 +2784,7 @@
    "edit_verdicts": {
     "v105": "standard"
    },
-   "owner_verdict": "unrated"
+   "owner_verdict": "liked"
   },
   "surface": {
    "engines": [],

@@ -1,7 +1,7 @@
 # The owner's rules, on one page (both studios)
 
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
-(v4–v13, v101–v107) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
+(v4–v14, v101–v107) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
 Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
@@ -9,6 +9,8 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 
 ## 1. Never
 - **Black occluders as transitions**: letterbox bars, redaction boxes, a screen floating in a dark room ("the black bars", "the black box transition", v107). **[plan]** registry tags
+- **A symbol drawn in the wrong shape, or a cut-off subject mirrored** (`BORDER_REFLECT` on a push mirrored the S1 emblem into a chevron, v14 rev 1): trace the real shape on the source first. **[eye]**
+- **Faces or memories upside down inside a graphic**, even when the optics would invert them (v14 round 3: *"face upright so that Barry's face is facing upwards"*). **[eye]**
 - **Graphics on or pointing at a face**: lines or strings converging on it, crosshairs, target rings, even when the face arrives a beat later (v107 rev 3 rebuilt the old `strings` gimmick and lost a round). Nothing crosses a face: lightning, particles, seams, wipe edges, suns go round the face box or behind the matte. **[plan] [qc] [eye]**
 - **A transition the owner rejected**, unless the registry's `fix` is applied: see `studio/transitions.json` (press flash, broadcast TV, redact, rorschach, strings, glass shatter, knife pass, emblem horizon …). **[plan]**
 - **The same clip twice**, or two shots that look the same (the same close-up from the same scene) (v107 rev 2). **[plan]**
@@ -29,6 +31,8 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 8. **The motion pass**: speed ramps with clean flow on hook shots, the beat camera (punch, kick, blur), smooth sub-pixel motion, no judder (v10, v106). **[qc]** judder
 9. **Restored, sharp sources**: `sr_prep`, zoom ≤ 1.10 on 720p, no SOFT shot on a hero moment (v105). **[plan]** zoom **[qc]** sharpness
 10. **A smooth ending**: the beat camera rests through the break, fewer and longer cuts (v107).
+11. **The style matched to the song** (v14 standard, *"a different style ... but is still really good"*): on a calm, nostalgic song, a calm edit (slower set pieces on the song's structure, a breathing camera, ~5 quiet effects, a low overlay) is right; v10–v12's density and beat camera are for energetic songs.
+12. **A liked transition used once, fast; an emblem transition ~2 s with stages; the owner's named moment opens the edit** (v14 rev 2: the print *"too slow and repeats multiple times"*; the emblem *"too fast"*; *"barry waking up ... the focal point of and in the beginning"*). An asset the owner supplies as a reference is built faithfully in our own drawing, with a designed pop (the achievement toast).
 
 ## 3. Text
 - Dexter: every clearly sung line captioned word by word on its sung onset, in the v9 style (heavy caps, keyline, red emphasis, eased in). Flash: text is optional and titles must earn their place (v12 removed both).

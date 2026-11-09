@@ -589,5 +589,11 @@
  "round_starts": {
   "2": "2026-11-09 01:46:46",
   "3": "2026-11-09 03:07:02"
+ },
+ "verdict": {
+  "t": "2026-11-09 03:23:17",
+  "round": 3,
+  "verdict": "standard",
+  "words": "I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good."
  }
 }

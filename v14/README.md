@@ -1,5 +1,7 @@
 # v14 — KEEPSAKES (The Flash × C418 "Mice on Venus"), 9:16
 
+**Verdict (2026-11-09): a standard.** The owner: *"I like this edit make it a standard. However, I want it to be noted that this edit is a different style from the flash edits we normally create but is still really good."* The reference for a calm, nostalgic edit; handoff `sync/handoffs/2026-11-09_flash_v14_KEEPSAKES_standard.md`.
+
 **The brief (the owner):** a nostalgic Flash edit on the attached song, using its best and most popular part to carry the
 feeling; transitions; few, quiet sound effects so the song isn't overshadowed; a cool overlay that isn't overbearing, so
 the clips stay clear; high quality, with custom graphics, animations and transitions.
