@@ -97,17 +97,17 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 
 SP = dict(look="night111")
 # ---- LIGHTS OUT (e0-e11): "I shoot the lights out": the city's lights behind him go out, a wave from the edges in
-shot("lights", "p1", 0, 11, 123.30, 124.40, z=[(0, 1.00), (1, 1.22)], interp="flow", seg=True, face=None, cx=(705, 725), **SP)   # frame 0: the marina at night, slowed (the shot's flash lands here)
+shot("lights", "p1", 0, 11, 123.30, 124.40, z=[(0, 1.00), (1, 1.15)], interp="flow", seg=True, face=None, cx=(705, 725), **SP)   # frame 0: the marina at night, slowed (the shot's flash lands here)
 # ---- HIDE (e11-e23): "Hide till it's bright out": in the dark, behind the door, behind the fence, waiting for the light
 shot("dark", "ds2b", 11, 14, 323.40, 324.65, z=[(0, 1.00), (1, 1.04)], tin="emerge111", interp="flow", **SP)     # the light comes back first, from below
-shot("door", "s4", 14, 17, 157.95, 158.95, z=[(0, 1.00), (1, 1.04)], tin="facematch108", interp="flow", **SP)    # his face and its reflection
+shot("door", "s4", 14, 17, 157.95, 158.95, z=[(0, 1.00), (1, 1.04)], tin="doorslide111", interp="flow", **SP)    # his face and its reflection (we pan past the door's edge)
 shot("fence", "p1", 17, 20, 170.97, 171.78, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)
 shot("truck", "ds2a", 20, 23, 188.00, 189.00, z=[(0, 1.00), (1, 1.04)], tin="fence111", interp="flow", **SP)     # we push through the fence
 # ---- DAYBREAK (e23-e29): "bright out": the sun comes up at the edge of the frame; the day burns white
 shot("sunrise", "p1", 23, 26, 29.05, 30.15, z=[(0, 1.00), (1, 1.04)], tin="daybreak111", interp="flow", **SP)
 shot("bright", "s1", 26, 29, 376.70, 377.66, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
 # ---- NIGHTFALL (e29-e45): "Oh, just another lonely night": the sun goes down, the garden lamps come on, the moon
-shot("lake", "p1", 29, 33, 169.80, 170.90, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
+shot("lake", "p1", 29, 33, 169.80, 170.90, z=[(0, 1.00), (1, 1.04)], tin="tear110", interp="flow", **SP)
 shot("garden", "s4", 33, 37, 81.40, 82.70, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", face=None, cx=(660, 670), ev=-0.9, **SP)   # night: the lamp behind him is the light   # the lights come on as the night comes down
 shot("moon", "s4", 37, 45, 222.40, 224.95, z=[(0, 1.00), (1, 1.06)], tin="lookup111", interp="flow", seg=True, face=None, cx=(690, 790), **SP)   # we look up: THE MOON rises behind him
 # ---- "Are you willing to sacrifice your life?" (e45-e57): the moon becomes the lamp over the kill table
@@ -122,9 +122,9 @@ shot("suit", "dmx", 65, 67, 94.90, 95.95, tmap=vel(65, 67, 94.90, 95.95), lin=Tr
 shot("suitclose", "dmx", 67, 69, 96.80, 97.80, tmap=vel(67, 69, 96.80, 97.80), lin=True, interp="flow", tin="dolly", **SP)
 shot("slides", "s1", 69, 71, 263.10, 263.95, tmap=vel(69, 71, 263.10, 263.95), lin=True, interp="flow", tin="slide111", **SP)   # "blood sucker": the slides
 shot("goggles", "dmx", 71, 73, 106.10, 107.40, tmap=vel(71, 73, 106.10, 107.40), lin=True, interp="flow", tin="luminol108", **SP)
-shot("grin", "s1", 73, 75, 346.60, 347.70, tmap=vel(73, 75, 346.60, 347.70), lin=True, interp="flow", tin="double108", **SP)
+shot("grin", "s1", 73, 75, 346.60, 347.70, tmap=vel(73, 75, 346.60, 347.70), lin=True, interp="flow", **SP)   # a clean cut on the downbeat (the beat camera's punch)
 shot("redface", "s1", 75, 77, 79.40, 80.60, tmap=vel(75, 77, 79.40, 80.60), lin=True, interp="flow", tin="flicker109", **SP)
-shot("tape", "p7", 77, 79, 22.95, 23.70, tmap=vel(77, 79, 22.95, 23.70), lin=True, interp="flow", tin="siren111", hflip=True, **SP)   # "look who's in trouble" (the pack is mirrored: the tape reads backwards)
+shot("tape", "p7", 77, 79, 22.95, 23.70, tmap=vel(77, 79, 22.95, 23.70), lin=True, interp="hold", tin="siren111", hflip=True, **SP)   # "look who's in trouble" (the pack is mirrored: the tape reads backwards)
 shot("axe", "s4", 79, 81, 136.60, 137.80, tmap=vel(79, 81, 136.60, 137.80), lin=True, interp="flow", tin="whip", **SP)
 shot("mangrove", "s1", 81, 83, 174.70, 175.90, tmap=vel(81, 83, 174.70, 175.90), lin=True, interp="flow", tin="fronds108", **SP)
 shot("bamboo", "ds2b", 83, 85, 370.20, 371.20, tmap=vel(83, 85, 370.20, 371.20), lin=True, interp="flow", tin="bokeh110", **SP)   # the sunlit leaves fall out of focus; his face comes into focus out of them
