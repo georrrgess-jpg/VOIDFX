@@ -14235,64 +14235,57 @@ def _lights_mask(img, person, thr=0.38, soft=0.22):
     if person is not None: m *= 1 - cv2.resize(person, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
     return m
 
-# ---- LIGHTS OUT (the first shot): "I shoot the lights out": the lights behind him go out one by one (each stutters,
-# flares and dies, the room dropping a step each time); on "out" the light on him dies too and only a rim is left.
-T_SHOT = [E.th(e) for e in (6.8, 8.1, 10.25, 10.55)]      # "the", "lights", "out" (the lamp), then the light on him
+# ---- LIGHTS OUT (the first shot): "I shoot the lights out": the lights of the city behind him go out one by one, a
+# wave from the edges of the frame in toward him (each stutters, flares and dies, and the night thickens with every one);
+# on "out" the last of them go and the light on him drops to a cold rim.
+T_WAVE = (E.th(6.6), E.th(10.0)); T_KEY = E.th(10.45)       # "the lights" ... "out"; then the light on him
 _LO = {}
-def _lo_regions(s_):
-    if "reg" not in _LO:
-        f0 = s_["f0"] + 6; img = base108(s_, f0)[0]; P = _pick(s_, f0)
-        m = _lights_mask(img, P, 0.30, 0.25)
-        lab = (m > 0.25).astype(np.uint8); n, cc = cv2.connectedComponents(lab)
+def _lo_map(s_):
+    """per light (1/4 res): the time it dies (inf where there is no light)."""
+    if "map" not in _LO:
+        f0 = s_["f0"] + 4; img = base108(s_, f0)[0]; P = _pick(s_, f0)
+        m = _lights_mask(img, P, 0.34, 0.20)
+        lab = (m > 0.30).astype(np.uint8); n, cc = cv2.connectedComponents(lab)
         ys, xs = np.mgrid[0:H // 4, 0:W // 4]
-        cents = sorted([(int((cc == i).sum()), i) for i in range(1, n) if (cc == i).sum() > 12])
-        order = np.zeros(n, np.int32)
-        for k_, (_, i) in enumerate(cents): order[i] = 2 if k_ == len(cents) - 1 else (0 if k_ < len(cents) // 2 else 1)   # small ones first, the lamp last
-        reg = np.full(cc.shape, -1, np.int32); reg[cc > 0] = order[cc[cc > 0]]
-        dil = cv2.dilate(((reg >= 0) * 1).astype(np.uint8), np.ones((9, 9), np.uint8))   # glow around each light dies with it
-        near = cv2.dilate((reg + 1).astype(np.float32), np.ones((9, 9), np.uint8)) - 1
-        _LO["reg"] = np.where(dil > 0, near, -1).astype(np.int32)
-    return _LO["reg"]
-
-def _dying(t, td):
-    """1 (on) -> a stutter, a flare -> ~0.12 (out)."""
-    if t < td - 0.16: return 1.0
-    if t < td:                                                                    # the stutter
-        u = (t - td + 0.16) / 0.16
-        return 1.0 - 0.55 * (math.sin(u * math.pi * 5) > 0.2) * u
-    if t < td + 0.05: return 1.65                                                # the flare as it blows
-    return 0.12                                                                    # out
+        tmap_ = np.full(cc.shape, np.inf, np.float32)
+        items = [(abs(float(xs[cc == i].mean()) - W / 8), i) for i in range(1, n) if (cc == i).sum() >= 2]
+        items.sort(reverse=True)                                                  # the outermost first
+        rng = np.random.default_rng(1101)
+        for r_, (_, i) in enumerate(items):
+            u = r_ / max(1, len(items) - 1)
+            tmap_[cc == i] = T_WAVE[0] + (T_WAVE[1] - T_WAVE[0]) * clamp(u + rng.uniform(-0.08, 0.08), 0, 1)
+        grow = cv2.erode(tmap_, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))   # each light's glow dies with it
+        _LO["map"] = (grow, len(items))
+    return _LO["map"]
 
 def lightsout111(out, f, s_, person):
     t = f / FPS
-    reg = _lo_regions(s_)
-    lv = [_dying(t, T_SHOT[min(i, 2)]) for i in range(3)]
-    mult_q = np.ones(reg.shape, np.float32)
-    for i in range(3): mult_q[reg == i] = lv[i]
-    mult_q = cv2.GaussianBlur(mult_q, (0, 0), 3)
-    mult = cv2.resize(mult_q, (W, H), interpolation=cv2.INTER_LINEAR)
-    P = person if person is not None else np.zeros((H, W), np.float32)
-    Pc = _pp_clean(np.clip(np.asarray(P, np.float32), 0, 1)) if person is not None else P
-    n_dead = sum(1 for td in T_SHOT[:3] if t >= td + 0.05)
-    room = 1.0 - (0.10, 0.10, 0.30)[0] * min(n_dead, 2) - 0.30 * (n_dead >= 3)                                                    # the room drops a step with each light
+    tm, n = _lo_map(s_)
+    dt = t - tm                                                                   # < 0: still on
+    mult = np.ones(tm.shape, np.float32)
+    st_ = (dt > -0.14) & (dt < 0)
+    mult[st_] = 1 - 0.6 * (np.sin((dt[st_] + 0.14) * 140) > 0.1)                   # the stutter
+    fl = (dt >= 0) & (dt < 0.05); mult[fl] = 1.9                                   # it blows
+    mult[dt >= 0.05] = 0.08                                                        # out
+    mult = cv2.GaussianBlur(mult, (0, 0), 2.0)
+    M = cv2.resize(mult, (W, H), interpolation=cv2.INTER_CUBIC)
+    frac = float(np.mean(np.isfinite(tm) & (tm < t))) / max(1e-6, float(np.mean(np.isfinite(tm))))
+    P = _pp_clean(np.clip(np.asarray(person, np.float32), 0, 1)) if person is not None else np.zeros((H, W), np.float32)
+    room = 1.0 - 0.55 * smooth(frac)                                              # the night thickens with every light
     key = 1.0
-    tk = T_SHOT[3]
-    if t >= tk - 0.10:                                                            # "out": the light on him goes too
-        key = 0.30 + 0.70 * math.exp(-max(0.0, t - tk) / 0.07)
-        if t < tk: key = 1.0 - 0.45 * (math.sin((t - tk) * 90) > 0)
-    bg = mult * room
-    o = out * (bg * (1 - Pc) + key * Pc)[..., None]
-    # the flare of a blowing light: a warm bloom where it was
-    for i in range(3):
-        td = T_SHOT[min(i, 2)]
-        if td <= t < td + 0.09:
-            a = math.sin(math.pi * (t - td) / 0.09)
-            m = cv2.resize((reg == i).astype(np.float32), (W, H), interpolation=cv2.INTER_LINEAR)
-            glow = cv2.GaussianBlur(m, (0, 0), 28)
-            o += (glow * a * 0.55)[..., None] * np.array([0.55, 0.80, 1.0], np.float32)
-    if t >= tk:                                                                   # what is left: a cold rim on him
-        rim = np.clip(Pc - cv2.GaussianBlur(Pc, (0, 0), 6), 0, 1) * smooth((t - tk) / 0.25)
-        o += (rim * 0.10)[..., None] * np.array([0.95, 0.75, 0.45], np.float32)
+    if t >= T_KEY - 0.12:
+        key = 0.32 + 0.68 * math.exp(-max(0.0, t - T_KEY) / 0.08)
+        if t < T_KEY: key = 1.0 - 0.45 * (math.sin((t - T_KEY) * 90) > 0)
+    Mb = np.clip(M, 0, 1)[..., None]                                              # a dead light keeps only what is under it (no dark squares)
+    lit = out * np.clip(M, 1, 2)[..., None] * Mb + np.minimum(out, 0.05) * (1 - Mb)
+    o = lit * (room * (1 - P))[..., None] + out * (key * P)[..., None]
+    pops = cv2.resize(np.clip(fl.astype(np.float32), 0, 1), (W, H), interpolation=cv2.INTER_LINEAR)
+    if pops.max() > 0:
+        g = cv2.GaussianBlur(pops, (0, 0), 16) * 2.2
+        o += g[..., None] * np.array([0.55, 0.80, 1.0], np.float32) * 0.6
+    if t >= T_KEY:                                                                # what is left: a cold rim on him
+        rim = np.clip(P - cv2.GaussianBlur(P, (0, 0), 6), 0, 1) * smooth((t - T_KEY) / 0.25)
+        o += (rim * 0.12)[..., None] * np.array([0.95, 0.75, 0.45], np.float32)
     return np.clip(o, 0, 1)
 
 # the shot's flash lands on frame 0 (the loop): its light decays over the first frames, the lights shiver from it
@@ -14307,12 +14300,13 @@ def flash_in111(out, f):
 # ---- EMERGE (light first): the last of the light goes, and the next shot comes up out of the dark brightest-first.
 def emerge111(A, B, j, f, sa, sb, pre=10, post=16):
     q = (j + pre + 0.5) / (pre + post)
-    fa = 1 - smooth(q / 0.55)                                                    # the old shot sinks into the dark
+    fa = 1 - 0.75 * smooth(q / 0.6)                                              # the old shot sinks (never to black)
     LB = cv2.resize(lum(cv2.resize(B, (W // 4, H // 4), interpolation=cv2.INTER_AREA)), (W, H), interpolation=cv2.INTER_LINEAR)
     LB = cv2.GaussianBlur(LB, (0, 0), 6)
-    thr = 1.05 - 1.35 * smooth((q - 0.25) / 0.75)
+    thr = 0.80 - 1.10 * smooth((q - 0.12) / 0.80)                                # its brightest light first
     m = np.clip((LB - thr) / 0.28, 0, 1); m = m * m * (3 - 2 * m)
-    m = np.maximum(m, smooth((q - 0.86) / 0.14))
+    m = np.maximum(m, 0.12 * smooth((q - 0.2) / 0.4))
+    m = np.maximum(m, smooth((q - 0.82) / 0.18))
     bl = cv2.GaussianBlur(cv2.resize(np.clip(LB - 0.55, 0, 1), (W // 8, H // 8)), (0, 0), 4)
     halo = cv2.resize(bl, (W, H)) * math.sin(math.pi * clamp((q - 0.25) / 0.75, 0, 1)) * 0.5
     o = A * fa * (1 - m[..., None]) + B * m[..., None] + halo[..., None] * np.array([0.40, 0.70, 1.0], np.float32)
@@ -14374,11 +14368,13 @@ TR2["daybreak111"] = (daybreak111, 14, 14)
 def brightout111(A, B, j, f, sa, sb, pre=8, post=12):
     q = (j + pre + 0.5) / (pre + post)
     e = math.sin(math.pi * clamp(q, 0, 1)) ** 1.3
-    w = smooth((j + 4) / 8.0); img = A * (1 - w) + B * w                          # the switch is inside the burn
+    w = smooth((j + 3) / 6.0); img = A * (1 - w) + B * w                          # the switch is inside the burn
     lift = 1 + 1.6 * e
     x = np.clip(img * lift, 0, 1.6)
     hot = cv2.resize(cv2.GaussianBlur(cv2.resize(np.clip(x - 0.8, 0, 1), (W // 8, H // 8)), (0, 0), 5), (W, H))
-    o = x + hot * 0.9 * e + np.array([0.80, 0.92, 1.0], np.float32) * 0.25 * e ** 2
+    o = x + hot * 0.9 * e
+    wh = smooth((e - 0.55) / 0.45) * 0.88                                         # near the peak the frame is the light itself
+    o = o * (1 - wh) + np.array([0.80, 0.92, 1.00], np.float32) * wh
     return np.clip(o, 0, 1)
 TR2["brightout111"] = (brightout111, 8, 12)
 
@@ -14406,7 +14402,7 @@ TR2["nightfall111"] = (nightfall111, 14, 18)
 
 # ---- THE MOON (the moon shot, a graphic): he looks up; a full moon rises behind the trees where he looks (seen only
 # through the sky between the leaves), its halo washing the night, thin cloud drifting over it.
-MOON_A = (790.0, 520.0); MOON_B = (760.0, 300.0); MOON_R = 92.0
+MOON_A = (150.0, 540.0); MOON_B = (175.0, 215.0); MOON_R = 66.0
 _MT = {}
 def _moon_tex():
     if "t" not in _MT:
@@ -14474,77 +14470,59 @@ def _lamp_pos(sb, B0):
 def moon111(A, B, j, f, sa, sb, pre=16, post=16):
     q = (j + pre + 0.5) / (pre + post)
     mx, my = _moon_xy(sa["f1"] - 1, sa); lx, ly = _lamp_pos(sb, B)
-    LIGHT = np.array([0.80, 0.90, 0.98], np.float32)
+    LIGHT = np.array([0.82, 0.92, 0.99], np.float32)
     if j < 0:
         u = (j + pre) / pre
-        Z = math.exp(math.log(2.6) * ein(u, 1.7))
-        o = _zoom_about(A, Z, mx, my, cv2.BORDER_REPLICATE)
+        P = _pick(sa, f)
+        o = moon_draw111(A, f, sa, P, scale=1 + 2.2 * ein(u, 1.6))                 # it swells and burns, behind him
         d = np.sqrt((_GX - mx) ** 2 + (_GY - my) ** 2)
-        o = o + (np.exp(-(d / (MOON_R * Z * (1.0 + 1.5 * u))) ** 2) * 0.9 * ein(u, 1.5))[..., None] * LIGHT
-        return np.clip(o, 0, 1)
-    u = j / post
-    Z = 1 + 1.6 * (1 - smooth(u))
-    dx = (mx - lx) * (1 - smooth(u)); dy = (my - ly) * (1 - smooth(u))
-    M = np.float32([[Z, 0, lx * (1 - Z) + dx], [0, Z, ly * (1 - Z) + dy]])
+        g = np.exp(-(d / (MOON_R * (2 + 4 * u))) ** 2) * 0.85 * ein(u, 1.4)
+        if P is not None: g = g * (1 - 0.85 * P)
+        return np.clip(o + g[..., None] * LIGHT, 0, 1)
+    u = smooth(j / post)
+    dx = (mx - lx) * (1 - u); dy = (my - ly) * (1 - u)
+    M = np.float32([[1, 0, dx], [0, 1, dy]])
     o = cv2.warpAffine(B, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-    cx_, cy_ = lx + dx, ly + dy
-    d = np.sqrt((_GX - cx_) ** 2 + (_GY - cy_) ** 2)
-    o = o + (np.exp(-(d / (MOON_R * 2.6 * (1.4 - 0.8 * u))) ** 2) * 0.9 * (1 - smooth(u)))[..., None] * LIGHT
+    d = np.sqrt((_GX - lx - dx) ** 2 + (_GY - ly - dy) ** 2)
+    o = o + (np.exp(-(d / (MOON_R * 4.0)) ** 2) * 0.8 * (1 - u))[..., None] * LIGHT
+    if j < 4:                                                                     # across the cut: through the light
+        w = 1 - j / 4.0; o = o * (1 - 0.5 * w) + (A * 0.3 + 0.55 * LIGHT) * 0.5 * w
     return np.clip(o, 0, 1)
 TR2["moon111"] = (moon111, 16, 16)
 
-# ---- THE PASSENGER (the build, e57-e65): crouched against the wall in the light from below, his shadow climbs the wall
-# behind him and grows, taller, leaning, wrong; the light shivers as the song builds.
-PS_LIGHT = (560.0, 1130.0)                                                       # the light at his hands (output px)
-def _shadow(P, k, lean, wob, f):
-    lx, ly = PS_LIGHT
-    sx, sy = k * 0.92, k * 1.12                                                  # taller than wide
-    M = np.float32([[sx, -lean, lx * (1 - sx) + lean * ly + 70 * k], [0, sy, ly * (1 - sy) - 40 * (k - 1)]])
-    Sm = cv2.warpAffine(P, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    if wob > 0:
-        n1 = cv2.resize(nz108(1131, 6), (W, H)); sh = int(f * 3) % H
-        dx = (np.roll(n1, sh, axis=0) - 0.5) * 60 * wob
-        Sm = cv2.remap(Sm, (_GX + dx).astype(np.float32), (_GY + dx * 0.6).astype(np.float32), cv2.INTER_LINEAR)
-    return cv2.GaussianBlur(Sm, (0, 0), 3 + 3 * (k - 1))
-
-def _ps_k(f):
-    t = f / FPS; u = clamp((t - E.th(57)) / (E.th(64.6) - E.th(57)), 0, 1)
-    return 1.15 + 1.25 * ein(u, 1.6), 0.10 + 0.22 * u, 0.25 + 0.75 * u ** 2
+# ---- THE PASSENGER (the build, e57-e65): crouched in the light from below, the shadows grow around him (the midtones
+# sink into the dark, a little more on every beat of the riser) while the light in his hands pulses.
+def _ps_u(f):
+    return clamp((f / FPS - E.th(57)) / (E.th(65) - E.th(57)), 0, 1)
 
 def shadow111(out, f, s_, person):
-    if person is None: return out
-    P = _pp_clean(np.clip(np.asarray(person, np.float32), 0, 1))
-    k, lean, wob = _ps_k(f)
-    Sm = _shadow(P, k, lean, wob, f) * (1 - P)
-    t = f / FPS
-    shiver = 1 - 0.10 * max(0.0, math.sin(t * 37)) * clamp((t - E.th(60)) / 1.0, 0, 1)
-    o = out * (1 - 0.72 * Sm[..., None]) * shiver
-    edge = np.clip(cv2.GaussianBlur(Sm, (0, 0), 10) - Sm, 0, 1)
-    o += (edge * 0.18)[..., None] * np.array([0.25, 0.30, 0.85], np.float32)    # a red edge on the shadow
+    u = _ps_u(f); t = f / FPS
+    L = lum(out)
+    g = 1 + 0.75 * ein(u, 1.4)                                                   # the dark takes the midtones
+    k = (np.clip(L, 1e-4, 1) ** g) / np.clip(L, 1e-4, 1)
+    k = np.where(L > 0.62, 1.0, k).astype(np.float32)
+    ph = (t / E.HB) % 2.0
+    pulse = math.exp(-ph * E.HB / 0.10) * clamp((t - E.th(59)) / 1.0, 0, 1)      # the light breathes on the beat
+    hot = cv2.resize(cv2.GaussianBlur(cv2.resize(np.clip(L - 0.7, 0, 1), (W // 8, H // 8)), (0, 0), 6), (W, H))
+    o = out * k[..., None] + hot[..., None] * np.array([0.92, 0.94, 0.95], np.float32) * (0.25 + 0.6 * pulse) * u
     return np.clip(o, 0, 1)
 
-# ---- THE PASSENGER, the drop (the passenger -> the suit): on "...I'm a monster" the shadow comes off the wall and
-# lunges over the lens; inside it the blood-soaked suit walks out into the day.
-def passenger111(A, B, j, f, sa, sb, pre=22, post=38):
+# ---- THE PASSENGER, the drop (the passenger -> the suit): on "...I'm a monster" the monster comes out of the dark: the
+# blood-soaked suit in the daylight shows through the darkest parts of the frame first, the front of it edged in red,
+# and the light in his hands goes last.
+def passenger111(A, B, j, f, sa, sb, pre=18, post=40):
     q = (j + pre + 0.5) / (pre + post)
-    qc = pre / (pre + post)                                                       # the drop
-    Ah = A
-    fr = f if j < 0 else sa["f1"] - 1
-    P = _pick(sa, fr)
-    if P is None: P = np.zeros((H, W), np.float32)
-    k0, lean, wob = _ps_k(sa["f1"] - 1)
-    k = k0 * math.exp(math.log(10.0) * ein(smooth(q / (qc + 0.08)), 1.6))       # it comes off the wall and over the lens by the drop
-    Sm = np.clip(_shadow(P, k, lean * (1 - q), wob, fr) + smooth((q - qc) / 0.15), 0, 1)
-    Sm = np.maximum(Sm, P * smooth((q - qc + 0.12) / 0.15))                       # he goes under it
-    ZB = 1 + 0.30 * (1 - smooth((q - qc) / (1 - qc)))
+    LA = cv2.resize(cv2.GaussianBlur(lum(cv2.resize(A, (W // 4, H // 4), interpolation=cv2.INTER_AREA)), (0, 0), 7), (W, H), interpolation=cv2.INTER_LINEAR)
+    thr = -0.05 + 1.15 * ein(smooth(q / 0.62), 1.15)
+    m = np.clip((thr - LA) / 0.30, 0, 1); m = m * m * (3 - 2 * m)
+    m = np.maximum(m, smooth((q - 0.30) / 0.30))                                  # and then everything
+    ZB = 1 + 0.28 * (1 - smooth(q))
     Bz = _zoom_about(B, ZB, W / 2, H * 0.45, cv2.BORDER_REPLICATE)
-    day = smooth((q - qc + 0.02) / (1 - qc) * 1.25)                             # out of the shadow, the day
-    inner = np.clip(cv2.GaussianBlur(Sm, (0, 0), 40) * 1.4 - 0.4, 0, 1)
-    Bi = Bz * np.clip(0.12 + 0.88 * day + 0.3 * inner[..., None] * day, 0, 1)
-    dark = Ah * (1 - 0.80 * Sm[..., None])
-    o = dark * (1 - Sm[..., None] * smooth((q - qc + 0.04) / 0.08)) + Bi * (Sm * smooth((q - qc + 0.04) / 0.08))[..., None]
+    front = np.exp(-((LA - thr) / 0.05) ** 2) * np.clip((LA - 0.07) * 6, 0, 1) * (1 - smooth((q - 0.55) / 0.3)) * smooth(q / 0.15)
+    o = A * (1 - m[..., None]) + Bz * m[..., None] + front[..., None] * RED111 * 0.30
     return np.clip(o, 0, 1)
-TR2["passenger111"] = (passenger111, 22, 38)
+TR2["passenger111"] = (passenger111, 18, 40)
+RED111 = np.array([0.10, 0.13, 0.95], np.float32)
 
 # ---- SLIDE (the slide at the window -> two slides): a glass slide is pushed in across the frame, the next shot on it.
 def slide111(A, B, j, f, sa, sb, pre=4, post=6):
@@ -14646,8 +14624,8 @@ def underlight111(A, B, j, f, sa, sb, pre=12, post=14):
     yf = H + 380 - (H + 760) * smooth(q)
     m = np.clip((_GY - yf) / 420.0 + 0.5, 0, 1); m = m * m * (3 - 2 * m)
     m = np.maximum(m, smooth((q - 0.9) / 0.1))
-    glow = np.exp(-((_GY - yf) / 170.0) ** 2) * math.sin(math.pi * clamp(q, 0, 1))
-    o = A * (1 - m[..., None]) + B * m[..., None] + glow[..., None] * np.array([0.85, 0.90, 0.92], np.float32) * 0.40
+    glow = np.exp(-((_GY - yf) / 150.0) ** 2) * math.sin(math.pi * clamp(q, 0, 1))
+    o = A * (1 - m[..., None]) + B * m[..., None] + glow[..., None] * np.array([0.85, 0.90, 0.92], np.float32) * 0.20
     return np.clip(o, 0, 1)
 TR2["underlight111"] = (underlight111, 12, 14)
 

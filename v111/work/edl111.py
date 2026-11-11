@@ -108,8 +108,8 @@ shot("sunrise", "p1", 23, 26, 29.05, 30.15, z=[(0, 1.00), (1, 1.04)], tin="daybr
 shot("bright", "s1", 26, 29, 376.70, 377.66, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
 # ---- NIGHTFALL (e29-e45): "Oh, just another lonely night": the sun goes down, the garden lamps come on, the moon
 shot("lake", "p1", 29, 33, 169.80, 170.90, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
-shot("garden", "s4", 33, 37, 81.40, 82.70, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", face=None, cx=(660, 670), **SP)   # the lights come on as the night comes down
-shot("moon", "s4", 37, 45, 222.40, 224.95, z=[(0, 1.00), (1, 1.06)], tin="lookup111", interp="flow", seg=True, face=None, cx=(700, 700), **SP)   # we look up: THE MOON rises behind him
+shot("garden", "s4", 33, 37, 81.40, 82.70, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", face=None, cx=(660, 670), ev=-0.9, **SP)   # night: the lamp behind him is the light   # the lights come on as the night comes down
+shot("moon", "s4", 37, 45, 222.40, 224.95, z=[(0, 1.00), (1, 1.06)], tin="lookup111", interp="flow", seg=True, face=None, cx=(690, 790), **SP)   # we look up: THE MOON rises behind him
 # ---- "Are you willing to sacrifice your life?" (e45-e57): the moon becomes the lamp over the kill table
 shot("lamp", "p1", 45, 48, 133.98, 135.10, z=[(0, 1.06), (1, 1.00)], tin="moon111", interp="flow", **SP)
 shot("table", "p1", 48, 51, 133.04, 133.90, z=[(0, 1.00), (1, 1.04)], tin="light_sweep108", interp="flow", **SP)
@@ -120,8 +120,7 @@ shot("passenger", "p1", 57, 65, 165.05, 166.55, z=[(0, 1.00), (1, 1.08)], tin="l
 # ---- MONSTER (e65-e88): the drop
 shot("suit", "dmx", 65, 67, 94.90, 95.95, tmap=vel(65, 67, 94.90, 95.95), lin=True, interp="flow", tin="passenger111", **SP)   # "...I'm a monster"
 shot("suitclose", "dmx", 67, 69, 96.80, 97.80, tmap=vel(67, 69, 96.80, 97.80), lin=True, interp="flow", tin="dolly", **SP)
-shot("slide", "s1", 69, 70, 46.10, 46.55, interp="flow", tin="whip", **SP)                                      # "blood"
-shot("slides", "s1", 70, 71, 263.30, 263.75, interp="flow", tin="slide111", **SP)                               # "sucker"
+shot("slides", "s1", 69, 71, 263.10, 263.95, tmap=vel(69, 71, 263.10, 263.95), lin=True, interp="flow", tin="slide111", **SP)   # "blood sucker": the slides
 shot("goggles", "dmx", 71, 73, 106.10, 107.40, tmap=vel(71, 73, 106.10, 107.40), lin=True, interp="flow", tin="luminol108", **SP)
 shot("grin", "s1", 73, 75, 346.60, 347.70, tmap=vel(73, 75, 346.60, 347.70), lin=True, interp="flow", tin="double108", **SP)
 shot("redface", "s1", 75, 77, 79.40, 80.60, tmap=vel(75, 77, 79.40, 80.60), lin=True, interp="flow", tin="flicker109", **SP)
