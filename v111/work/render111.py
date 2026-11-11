@@ -14251,7 +14251,7 @@ def _lo_map(s_):
         items = [(abs(float(xs[cc == i].mean()) - W / 8), i) for i in range(1, n) if (cc == i).sum() >= 2]
         items.sort(reverse=True)                                                  # the outermost first
         rng = np.random.default_rng(1101)
-        early = {0: E.th(1.4), 1: E.th(4.3)}                                       # one blows on "shoot", one more before the wave
+        early = {0: E.th(1.4), 1: E.th(2.6), 2: E.th(3.4), 3: E.th(4.6), 4: E.th(5.4)}   # "I shooooot": a light blows on each beat before the wave
         for r_, (_, i) in enumerate(items):
             u = r_ / max(1, len(items) - 1)
             tmap_[cc == i] = early.get(r_, T_WAVE[0] + (T_WAVE[1] - T_WAVE[0]) * clamp(u + rng.uniform(-0.08, 0.08), 0, 1))

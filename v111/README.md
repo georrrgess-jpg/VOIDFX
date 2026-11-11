@@ -80,5 +80,10 @@ whoop on "trouble"; the gunshot, whose echo carries over the loop into frame 0.
   and he goes last); double exposures (the double-vision transition and the second bright-out replaced, crossfades
   shortened); the opening's lights too small to read at phone size (the room now steps down on "shoot", "the",
   "lights", "out", with bigger pops and a push-in); the tape smeared by interpolation (held frames).
+- Round 4: a light blows on each beat of the held "shoot" before the wave on "the lights out" (the motion audit still
+  reads 0.3–2.2 s as quiet: it is the slowed opening, the lights popping behind him and the push-in).
+- **Measured (final):** ship checkpoint 11/11; loudness -13.1 LUFS, true peak -2.9 dBTP after AAC; loop seam blurred
+  difference 0.27 (gate ≤ 1), audio seam step 0.0015; no white-outs; the flagged pops are the designed ones (the last
+  light's stutter on "out", the gunshot).
 - Left as judgement calls: the edit is 28.2 s (the whole Bon Iver intro and the drop; the owner's usual is 20–26 s);
   the garden shot's own camera judders slightly (1.3 s, at night, under the nightfall transition).
