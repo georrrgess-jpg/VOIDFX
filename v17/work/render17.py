@@ -10393,7 +10393,7 @@ def finish17(out, f, s, mix=None):
 
 # ---- the beat camera: a punch on every beat (a kick on each), stronger on the half bar and the bar ----------------------
 def beat_e(e): return 2 * math.floor(e / 2 + 1e-9)
-def cam_live(e): return 0 <= e < E.E_LOOP
+def cam_live(e): return 1.0 <= e < E.E_LOOP                                                 # the first punch is on e2: frame 0 stays clean for the loop
 
 def beat_bounce(f):
     e = e_of(f)
