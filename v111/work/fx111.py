@@ -4076,64 +4076,55 @@ def _lights_mask(img, person, thr=0.38, soft=0.22):
     if person is not None: m *= 1 - cv2.resize(person, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
     return m
 
-# ---- LIGHTS OUT (the first shot): "I shoot the lights out": the lights behind him go out one by one (each stutters,
-# flares and dies, the room dropping a step each time); on "out" the light on him dies too and only a rim is left.
-T_SHOT = [E.th(e) for e in (6.8, 8.1, 10.25, 10.55)]      # "the", "lights", "out" (the lamp), then the light on him
+# ---- LIGHTS OUT (the first shot): "I shoot the lights out": the lights of the city behind him go out one by one, a
+# wave from the edges of the frame in toward him (each stutters, flares and dies, and the night thickens with every one);
+# on "out" the last of them go and the light on him drops to a cold rim.
+T_WAVE = (E.th(6.6), E.th(10.0)); T_KEY = E.th(10.45)       # "the lights" ... "out"; then the light on him
 _LO = {}
-def _lo_regions(s_):
-    if "reg" not in _LO:
-        f0 = s_["f0"] + 6; img = base108(s_, f0)[0]; P = _pick(s_, f0)
-        m = _lights_mask(img, P, 0.30, 0.25)
-        lab = (m > 0.25).astype(np.uint8); n, cc = cv2.connectedComponents(lab)
+def _lo_map(s_):
+    """per light (1/4 res): the time it dies (inf where there is no light)."""
+    if "map" not in _LO:
+        f0 = s_["f0"] + 4; img = base108(s_, f0)[0]; P = _pick(s_, f0)
+        m = _lights_mask(img, P, 0.34, 0.20)
+        lab = (m > 0.30).astype(np.uint8); n, cc = cv2.connectedComponents(lab)
         ys, xs = np.mgrid[0:H // 4, 0:W // 4]
-        cents = sorted([(int((cc == i).sum()), i) for i in range(1, n) if (cc == i).sum() > 12])
-        order = np.zeros(n, np.int32)
-        for k_, (_, i) in enumerate(cents): order[i] = 2 if k_ == len(cents) - 1 else (0 if k_ < len(cents) // 2 else 1)   # small ones first, the lamp last
-        reg = np.full(cc.shape, -1, np.int32); reg[cc > 0] = order[cc[cc > 0]]
-        dil = cv2.dilate(((reg >= 0) * 1).astype(np.uint8), np.ones((9, 9), np.uint8))   # glow around each light dies with it
-        near = cv2.dilate((reg + 1).astype(np.float32), np.ones((9, 9), np.uint8)) - 1
-        _LO["reg"] = np.where(dil > 0, near, -1).astype(np.int32)
-    return _LO["reg"]
-
-def _dying(t, td):
-    """1 (on) -> a stutter, a flare -> ~0.12 (out)."""
-    if t < td - 0.16: return 1.0
-    if t < td:                                                                    # the stutter
-        u = (t - td + 0.16) / 0.16
-        return 1.0 - 0.55 * (math.sin(u * math.pi * 5) > 0.2) * u
-    if t < td + 0.05: return 1.65                                                # the flare as it blows
-    return 0.12                                                                    # out
+        tmap_ = np.full(cc.shape, np.inf, np.float32)
+        items = [(abs(float(xs[cc == i].mean()) - W / 8), i) for i in range(1, n) if (cc == i).sum() >= 2]
+        items.sort(reverse=True)                                                  # the outermost first
+        rng = np.random.default_rng(1101)
+        for r_, (_, i) in enumerate(items):
+            u = r_ / max(1, len(items) - 1)
+            tmap_[cc == i] = T_WAVE[0] + (T_WAVE[1] - T_WAVE[0]) * clamp(u + rng.uniform(-0.08, 0.08), 0, 1)
+        grow = cv2.erode(tmap_, np.ones((7, 7), np.uint8))                        # each light's glow dies with it
+        _LO["map"] = (grow, len(items))
+    return _LO["map"]
 
 def lightsout111(out, f, s_, person):
     t = f / FPS
-    reg = _lo_regions(s_)
-    lv = [_dying(t, T_SHOT[min(i, 2)]) for i in range(3)]
-    mult_q = np.ones(reg.shape, np.float32)
-    for i in range(3): mult_q[reg == i] = lv[i]
-    mult_q = cv2.GaussianBlur(mult_q, (0, 0), 3)
-    mult = cv2.resize(mult_q, (W, H), interpolation=cv2.INTER_LINEAR)
-    P = person if person is not None else np.zeros((H, W), np.float32)
-    Pc = _pp_clean(np.clip(np.asarray(P, np.float32), 0, 1)) if person is not None else P
-    n_dead = sum(1 for td in T_SHOT[:3] if t >= td + 0.05)
-    room = 1.0 - (0.10, 0.10, 0.30)[0] * min(n_dead, 2) - 0.30 * (n_dead >= 3)                                                    # the room drops a step with each light
+    tm, n = _lo_map(s_)
+    dt = t - tm                                                                   # < 0: still on
+    mult = np.ones(tm.shape, np.float32)
+    st_ = (dt > -0.14) & (dt < 0)
+    mult[st_] = 1 - 0.6 * (np.sin((dt[st_] + 0.14) * 140) > 0.1)                   # the stutter
+    fl = (dt >= 0) & (dt < 0.05); mult[fl] = 1.9                                   # it blows
+    mult[dt >= 0.05] = 0.08                                                        # out
+    mult = cv2.GaussianBlur(mult, (0, 0), 1.2)
+    M = cv2.resize(mult, (W, H), interpolation=cv2.INTER_LINEAR)
+    frac = float(np.mean(np.isfinite(tm) & (tm < t))) / max(1e-6, float(np.mean(np.isfinite(tm))))
+    P = _pp_clean(np.clip(np.asarray(person, np.float32), 0, 1)) if person is not None else np.zeros((H, W), np.float32)
+    room = 1.0 - 0.55 * smooth(frac)                                              # the night thickens with every light
     key = 1.0
-    tk = T_SHOT[3]
-    if t >= tk - 0.10:                                                            # "out": the light on him goes too
-        key = 0.30 + 0.70 * math.exp(-max(0.0, t - tk) / 0.07)
-        if t < tk: key = 1.0 - 0.45 * (math.sin((t - tk) * 90) > 0)
-    bg = mult * room
-    o = out * (bg * (1 - Pc) + key * Pc)[..., None]
-    # the flare of a blowing light: a warm bloom where it was
-    for i in range(3):
-        td = T_SHOT[min(i, 2)]
-        if td <= t < td + 0.09:
-            a = math.sin(math.pi * (t - td) / 0.09)
-            m = cv2.resize((reg == i).astype(np.float32), (W, H), interpolation=cv2.INTER_LINEAR)
-            glow = cv2.GaussianBlur(m, (0, 0), 28)
-            o += (glow * a * 0.55)[..., None] * np.array([0.55, 0.80, 1.0], np.float32)
-    if t >= tk:                                                                   # what is left: a cold rim on him
-        rim = np.clip(Pc - cv2.GaussianBlur(Pc, (0, 0), 6), 0, 1) * smooth((t - tk) / 0.25)
-        o += (rim * 0.10)[..., None] * np.array([0.95, 0.75, 0.45], np.float32)
+    if t >= T_KEY - 0.12:
+        key = 0.32 + 0.68 * math.exp(-max(0.0, t - T_KEY) / 0.08)
+        if t < T_KEY: key = 1.0 - 0.45 * (math.sin((t - T_KEY) * 90) > 0)
+    o = out * ((M * room) * (1 - P) + key * P)[..., None]
+    pops = cv2.resize(np.clip(fl.astype(np.float32), 0, 1), (W, H), interpolation=cv2.INTER_LINEAR)
+    if pops.max() > 0:
+        g = cv2.GaussianBlur(pops, (0, 0), 16) * 2.2
+        o += g[..., None] * np.array([0.55, 0.80, 1.0], np.float32) * 0.6
+    if t >= T_KEY:                                                                # what is left: a cold rim on him
+        rim = np.clip(P - cv2.GaussianBlur(P, (0, 0), 6), 0, 1) * smooth((t - T_KEY) / 0.25)
+        o += (rim * 0.12)[..., None] * np.array([0.95, 0.75, 0.45], np.float32)
     return np.clip(o, 0, 1)
 
 # the shot's flash lands on frame 0 (the loop): its light decays over the first frames, the lights shiver from it
@@ -4247,7 +4238,7 @@ TR2["nightfall111"] = (nightfall111, 14, 18)
 
 # ---- THE MOON (the moon shot, a graphic): he looks up; a full moon rises behind the trees where he looks (seen only
 # through the sky between the leaves), its halo washing the night, thin cloud drifting over it.
-MOON_A = (790.0, 520.0); MOON_B = (760.0, 300.0); MOON_R = 92.0
+MOON_A = (865.0, 480.0); MOON_B = (835.0, 235.0); MOON_R = 84.0
 _MT = {}
 def _moon_tex():
     if "t" not in _MT:
@@ -4336,7 +4327,7 @@ TR2["moon111"] = (moon111, 16, 16)
 
 # ---- THE PASSENGER (the build, e57-e65): crouched against the wall in the light from below, his shadow climbs the wall
 # behind him and grows, taller, leaning, wrong; the light shivers as the song builds.
-PS_LIGHT = (560.0, 1130.0)                                                       # the light at his hands (output px)
+PS_LIGHT = (620.0, 1060.0)                                                       # the light at his hands (output px)
 def _shadow(P, k, lean, wob, f):
     lx, ly = PS_LIGHT
     sx, sy = k * 0.92, k * 1.12                                                  # taller than wide

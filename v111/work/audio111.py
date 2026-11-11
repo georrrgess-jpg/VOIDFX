@@ -1055,7 +1055,85 @@ def main110():
     print(f"lag {lag}; raw {Iraw:.1f} -> {gain:+.1f} dB -> wav {I2:.1f} LUFS/{TP2:.1f} dBTP; AAC {I3:.1f} LUFS/{TP3:.1f} dBTP")
     mm = m.mean(1); loop = np.concatenate([mm[-24000:], mm[:24000]]); d = np.abs(np.diff(loop))
     print(f"loop seam step {d[23997:24003].max():.4f} vs local median {np.median(d[21600:26400]):.4f}")
-main = main110
+
+# ------------------------------------------------------------------ v111 MONSTER sounds
+def gunshot(level=-8, seed=1111):
+    """a pistol in the open: the crack, the body, the thump, and its echo off the trees."""
+    n = I(1.6); t = np.arange(n) / SR
+    crack = bq(noise(n, seed), "high", 1800, 2) * env_exp(n, 0.006, 0.0001)
+    body = bq(noise(n, seed + 1), "band", np.array([300, 3500]), 2) * env_exp(n, 0.05, 0.0005) * 0.8
+    thump = np.sin(2 * np.pi * np.cumsum(55 + 60 * np.exp(-t / 0.03)) / SR) * env_exp(n, 0.16, 0.001) * 0.9
+    tail = bq(noise(n, seed + 2), "band", np.array([250, 2200]), 2) * np.exp(-t / 0.45) * (1 - np.exp(-t / 0.05)) * 0.22
+    echo = np.roll(body * 0.35 + crack * 0.2, I(0.19)) + np.roll(body * 0.18, I(0.41))
+    return norm(crack * 1.3 + body + thump + tail + echo, level)
+
+def bulb_pop(level=-26, seed=1120):
+    """a lamp blowing: a fizz, a tiny glass tick."""
+    n = I(0.30); t = np.arange(n) / SR
+    fizz = bq(noise(n, seed), "band", np.array([1800, 7000]), 2) * env_exp(n, 0.035, 0.0005)
+    pop = bq(noise(n, seed + 1), "low", 900, 2) * env_exp(n, 0.012, 0.0002) * 1.4
+    tick = np.sin(2 * np.pi * (5200 + 600 * (seed % 3)) * t) * np.exp(-t / 0.018) * 0.5
+    return norm(fizz + pop + tick, level)
+
+def siren_chirp(level=-30):
+    """one whoop of a cruiser's siren, far off."""
+    n = I(0.55); t = np.arange(n) / SR; u = t / 0.55
+    f = 650 + 900 * np.sin(np.pi * u) ** 1.4
+    y = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * 0.5 + np.sin(2 * np.pi * np.cumsum(f) / SR)
+    y = bq(y, "band", np.array([500, 3000]), 2) * np.sin(np.pi * u) ** 0.6
+    return norm(y, level)
+
+def main111():
+    os.makedirs(AD, exist_ok=True)
+    song = song_read10()
+    if np.abs(song).max() > 2.0: song = song / 32768.0
+    mus = music107(song) * db(-1.0)
+    n = N + PRE; tt = np.arange(n) / SR - PRE / SR; th = E.th
+    fx = np.zeros((n, 2), np.float32)
+    td = th(E.HDROP)
+    for k_, e_ in enumerate((6.75, 8.4, 9.95)):                                                         # LIGHTS OUT: three of the lamps blowing
+        place(fx, stereo(bulb_pop(-27 + 2 * k_, 1120 + k_), (-0.5, 0.45, 0.0)[k_]), th(e_))
+    place(fx, stereo(rev(hum_rise(0.5, -30, 120, 260))), th(10.45) - 0.48)                             # the light on him dies
+    place(fx, A2.whoosh(0.9, -26, 1130, True), th(23) - 0.55)                                         # DAYBREAK: the light swells
+    cr = crickets(I(th(45) - th(33.5)), 1131, -38); cr = cr * np.minimum(1, np.minimum(np.arange(len(cr)) / I(0.6), (len(cr) - np.arange(len(cr))) / I(0.5)))
+    place(fx, stereo(cr), th(33.5))                                                                   # NIGHTFALL: the garden at night
+    place(fx, A2.whoosh(0.7, -24, 1132, True), th(37) - 0.42)                                         # we look up at the sky
+    place(fx, stereo(neon_buzz(0.55, -30, (1, 0, 1, 1, 1, 1, 1, 1))), th(45) + 0.02)                    # the moon becomes the kill lamp: its buzz
+    place(fx, rev_swell(1.1, -22, 1133), td - 1.1)                                        # THE PASSENGER: the shadow draws in
+    place(fx, stereo(A2.impact(-7, (48, 26), 0.9, 0.3, 1134)), td); place(fx, stereo(sub_drop(-9, 0.8, 60, 26)), td + 0.01)
+    place(fx, stereo(siren_chirp(-31), 0.3), th(77) - 0.08)                                           # "look who's in trouble"
+    tg = th(87.55); gs = stereo(gunshot(-7, 1111))
+    place(fx, gs, tg)                                                                                 # THE SHOT
+    place(fx, gs[I(E.DUR - tg - PRE / SR):], -PRE / SR)                                              # its echo carries over the loop
+    fx = fx * db(10.0)
+    duck = np.zeros(N + PRE, np.float32); duck[I(td - 0.03) + PRE:I(td + 0.35) + PRE] = 1.0
+    duck[I(tg - 0.01) + PRE:] = 0.6
+    duck = np.convolve(duck, np.hanning(I(0.12)) / np.hanning(I(0.12)).sum(), "same")
+    mus = mus * db(-3.0 * duck)[:, None]
+    fx = np.tanh(fx * 1.2) / 1.2
+    wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32)); wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
+    full = mus + fx; lead, mix = full[:PRE].copy(), full[PRE:].copy()
+    th2 = np.linspace(0, np.pi / 2, PRE)[:, None]; mix[-PRE:] = mix[-PRE:] * np.cos(th2) + lead * np.sin(th2)
+    raw = f"{AD}/mix_raw.wav"; wf.write(raw, SR, mix.astype(np.float32))
+    Iraw, _ = measure(raw); gain = -12.9 - Iraw
+    P2 = SR; wrapped = np.vstack([mix[-P2:], mix, mix[:P2]]); wf.write(f"{AD}/mix_raw_wrapped.wav", SR, wrapped.astype(np.float32))
+    tmp = f"{AD}/mix_wrapped_master.wav"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f"{AD}/mix_raw_wrapped.wav", "-af", f"volume={gain:.2f}dB,aresample=192000,"
+                    f"alimiter=limit={db(-3.6):.4f}:attack=3:release=60:level=disabled,aresample=48000:resampler=soxr", "-c:a", "pcm_f32le", tmp], check=True)
+    _, mw = wf.read(tmp); mw = mw.astype(np.float32)
+    ref = wrapped[P2:P2 + SR, 0]; seg_ = mw[P2 - 2000:P2 + SR + 2000, 0]
+    lag = int(np.argmax(np.correlate(seg_, ref, mode="valid"))) - 2000
+    m = mw[P2 + lag:P2 + lag + N].copy()
+    zf = 96; fade = np.sin(np.linspace(0, np.pi / 2, zf)) ** 2; m[:zf] *= fade[:, None]; m[-zf:] *= fade[::-1, None]
+    out = f"{AD}/mix.wav"; wf.write(out, SR, (np.clip(m, -1, 1) * (2 ** 31 - 1)).astype(np.int32))
+    wf.write(f"{AD}/mix_preroll.wav", SR, np.vstack([m[-1024:], m]).astype(np.float32))
+    test = f"{AD}/aac_test.m4a"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-itsoffset", str(-1024 / SR), "-i", f"{AD}/mix_preroll.wav", "-c:a", "aac", "-b:a", "256k", test], check=True)
+    I2, TP2 = measure(out); I3, TP3 = measure(test)
+    print(f"lag {lag}; raw {Iraw:.1f} -> {gain:+.1f} dB -> wav {I2:.1f} LUFS/{TP2:.1f} dBTP; AAC {I3:.1f} LUFS/{TP3:.1f} dBTP")
+    mm = m.mean(1); loop = np.concatenate([mm[-24000:], mm[:24000]]); d = np.abs(np.diff(loop))
+    print(f"loop seam step {d[23997:24003].max():.4f} vs local median {np.median(d[21600:26400]):.4f}")
+main = main111
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 """MONSTER - Dexter x Kanye West "Monster" (voidfx v111, 9:16). Scaffolded from v110 SLEEPWALKER (--base v110).
 
 Concept: I SHOOT THE LIGHTS OUT. The thing that lives in the dark. A flow of light: on Bon Iver's "I shoot the lights out"
-the lamp over him and the lights in the trees blow one by one and he is left in the dark; he hides till it's bright out (the sun comes up at the
-edge of the frame, the day burns white); the sun goes down and the lights of the city come on ("just another lonely
+the lights of the city behind him go out, a wave from the edges in, and he is left in the dark; he hides till it's
+bright out (the sun comes up at the edge of the frame, the day burns white); the sun goes down and the garden lamps come on ("just another lonely
 night"); we look up and a full moon is rising behind him, and the moon becomes the lamp over the kill table ("Are you
 willing to sacrifice your life?"). THE PASSENGER (the drop): crouched against the wall in the light from below, his shadow
 climbs the wall and grows into something else while the song builds; on "...I'm a monster" the shadow lunges over the lens
@@ -96,8 +96,8 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
     return ks
 
 SP = dict(look="night111")
-# ---- LIGHTS OUT (e0-e11): "I shoot the lights out": the lamp over him and the lights in the trees blow one by one
-shot("lights", "s4", 0, 11, 80.90, 84.20, z=[(0, 1.00), (1, 1.05)], interp="flow", seg=True, **SP)              # frame 0 (the shot's flash lands here)
+# ---- LIGHTS OUT (e0-e11): "I shoot the lights out": the city's lights behind him go out, a wave from the edges in
+shot("lights", "p1", 0, 11, 123.30, 124.40, z=[(0, 1.00), (1, 1.07)], interp="flow", seg=True, face=None, cx=(745, 745), **SP)   # frame 0: the marina at night, slowed (the shot's flash lands here)
 # ---- HIDE (e11-e23): "Hide till it's bright out": in the dark, behind the door, behind the fence, waiting for the light
 shot("dark", "ds2b", 11, 14, 323.40, 324.65, z=[(0, 1.00), (1, 1.04)], tin="emerge111", interp="flow", **SP)     # the light comes back first, from below
 shot("door", "s4", 14, 17, 157.95, 158.95, z=[(0, 1.00), (1, 1.04)], tin="facematch108", interp="flow", **SP)    # his face and its reflection
@@ -106,10 +106,10 @@ shot("truck", "ds2a", 20, 23, 188.00, 189.00, z=[(0, 1.00), (1, 1.04)], tin="fen
 # ---- DAYBREAK (e23-e29): "bright out": the sun comes up at the edge of the frame; the day burns white
 shot("sunrise", "p1", 23, 26, 29.05, 30.15, z=[(0, 1.00), (1, 1.04)], tin="daybreak111", interp="flow", **SP)
 shot("bright", "s1", 26, 29, 376.70, 377.66, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
-# ---- NIGHTFALL (e29-e45): "Oh, just another lonely night": the sun goes down, the city lights come on, the moon
+# ---- NIGHTFALL (e29-e45): "Oh, just another lonely night": the sun goes down, the garden lamps come on, the moon
 shot("lake", "p1", 29, 33, 169.80, 170.90, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
-shot("marina", "p1", 33, 37, 123.30, 124.40, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", **SP)   # the lights come on as the night comes down
-shot("moon", "s4", 37, 45, 222.40, 224.95, z=[(0, 1.00), (1, 1.06)], tin="lookup111", interp="flow", seg=True, **SP)   # we look up: THE MOON rises behind him
+shot("garden", "s4", 33, 37, 81.40, 82.70, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", face=None, cx=(660, 670), **SP)   # the lights come on as the night comes down
+shot("moon", "s4", 37, 45, 222.40, 224.95, z=[(0, 1.00), (1, 1.06)], tin="lookup111", interp="flow", seg=True, face=None, cx=(700, 700), **SP)   # we look up: THE MOON rises behind him
 # ---- "Are you willing to sacrifice your life?" (e45-e57): the moon becomes the lamp over the kill table
 shot("lamp", "p1", 45, 48, 133.98, 135.10, z=[(0, 1.06), (1, 1.00)], tin="moon111", interp="flow", **SP)
 shot("table", "p1", 48, 51, 133.04, 133.90, z=[(0, 1.00), (1, 1.04)], tin="light_sweep108", interp="flow", **SP)
