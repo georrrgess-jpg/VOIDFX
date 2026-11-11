@@ -7,4 +7,4 @@
 - **Motion audit:** 16 pops (beat 2, cut 12, flash 2); dead spans 0; judder flags 0.
 - **Sharpness:** SOFT: avenue, run5, sun, ledge, streets, arm, masked1, greysky, flashday, charged, forest, moneywall, runface; max zoom 1.08.
 - **plan_check:** 0 FAIL, 1 WARN; WARN: [determinism] storm_tex(): cache keyed on rounded arguments (int(clamp(round(k), 0, SHOTS[0]['f1'] - 1))) but filled from the exact ones: pixels depend on which frame filled it, so partial re-renders can't verify bit-exact (compute the value from the rounded key).
-- **Effort this round (3):** 2 renders (11.5 min), QC 5.7 min.
+- **Effort this round (3):** 3 renders (17.3 min), QC 8.5 min.

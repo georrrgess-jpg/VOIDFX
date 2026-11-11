@@ -154,22 +154,18 @@ effects in 9 moments**, none on beats:
 - a rising whoosh and a low boom as the emblem becomes the sun;
 - thunder as the clouds roll back (CLOUD OVER).
 
-## Measured (the encode, round 2)
+## Measured (the encode, round 3)
 - **QC:** 11/11. -13.0 LUFS, true peak -4.5 dBTP after AAC.
-- **Loop seam:** blurred difference 0.10 (gate ≤ 1); audio seam step 0.074; picture wrap step 0.62 against a local
-  median of 0.63.
-- **Flashes:** no white-outs; one flash event (the strike), within the limit.
-- **Motion audit:** no dead spans, no judder; 22 pops, every one a cut, a beat hit or a designed flash (none
-  unexplained).
-- **Faces vs effects:** 4 runs, all checked. Three are the suit's red restored on his cowl inside the face box; one is
-  the loop's storm rolling over him as one soft edge.
-- **plan_check:** 0 FAIL; 1 WARN, a determinism heuristic on `storm_tex`. Its cache is computed from the rounded key,
-  so the warning doesn't apply.
-- **Density:** 33 designed transitions and the loop in 24.7 s (1.34/s), 0 % generic; 32 shots, no clip twice (checked on
-  a mid-frame sheet of every shot).
-- **Sound:** 11 effects in 10 moments, none on beats.
-- **Sharpness:** every pack is 720p. `sharpness.py` flags 13 shots as soft against its threshold; the softest are the
-  close run before the last shot (runface, flash_a) and the money wall. All are restored (Real-ESRGAN compact), with
+- **Loop seam:** blurred difference 0.09 (gate ≤ 1); audio seam step 0.074; picture wrap step 0.62 against a local
+  median of 0.69 (no spike across the wrap). The last frame is frame 0's own storm picture.
+- **Motion audit:** no dead spans, no judder; 16 pops, every one a cut, a beat hit or a designed flash.
+- **Faces vs effects:** 5 runs, all checked, none on a face itself. They are the sun's glow behind his head (inside the
+  face box, behind his matte), the suit's red restored on the arm shot's cowl, and the ascent bolt's glow beside his
+  helmet.
+- **plan_check:** 0 FAIL; 1 WARN (a determinism heuristic that doesn't apply).
+- **Density:** 33 designed transitions and the loop in 24.7 s; 31 shots, no clip twice.
+- **Sound:** 12 effects in 10 moments, none on beats.
+- **Sharpness:** every pack is 720p; `sharpness.py` flags 13 shots as soft against its threshold. All are restored, with
   zoom at most 1.08.
 - **Not used:** Barry's lightning eyes (flash_b_hq about 116.5–119.5 s and 54.4–56 s; flash_a about 87.6–89.9 s).
 
