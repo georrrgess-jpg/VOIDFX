@@ -1091,8 +1091,8 @@ def main111():
     n = N + PRE; tt = np.arange(n) / SR - PRE / SR; th = E.th
     fx = np.zeros((n, 2), np.float32)
     td = th(E.HDROP)
-    for k_, e_ in enumerate((6.75, 8.4, 9.95)):                                                         # LIGHTS OUT: three of the lamps blowing
-        place(fx, stereo(bulb_pop(-27 + 2 * k_, 1120 + k_), (-0.5, 0.45, 0.0)[k_]), th(e_))
+    for k_, e_ in enumerate((1.4, 3.4, 5.4, 6.75, 8.4, 9.95)):                                           # LIGHTS OUT: the lamps blowing
+        place(fx, stereo(bulb_pop(-29 + k_, 1120 + k_), (-0.6, 0.5, -0.3, -0.5, 0.45, 0.0)[k_]), th(e_))
     place(fx, stereo(rev(hum_rise(0.5, -30, 120, 260))), th(10.45) - 0.48)                             # the light on him dies
     place(fx, A2.whoosh(0.9, -26, 1130, True), th(23) - 0.55)                                         # DAYBREAK: the light swells
     cr = crickets(I(th(45) - th(33.5)), 1131, -38); cr = cr * np.minimum(1, np.minimum(np.arange(len(cr)) / I(0.6), (len(cr) - np.arange(len(cr))) / I(0.5)))
