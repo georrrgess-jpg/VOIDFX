@@ -1,9 +1,9 @@
-- **QC:** 9/11 on the encode; FAIL: loop seam picture matched (static -> static); loop seam lands on frame 0 (blurred diff <= 1) (11 distinct checks).
-- **Loudness:** -13.1 LUFS, true peak -2.6 dBTP after AAC.
-- **Loop seam:** blurred difference 41.67 (gate ≤ 1); audio seam step 0.0029; picture wrap step 49.32 vs local median 4.39 (SPIKE).
-- **Flashes:** 0 events, at most 0 a second; white-outs [].
+- **QC:** 11/11 on the encode (11 distinct checks).
+- **Loudness:** -13.1 LUFS, true peak -2.9 dBTP after AAC.
+- **Loop seam:** blurred difference 0.16 (gate ≤ 1); audio seam step 0.0015; picture wrap step 1.02 vs local median 6.18.
+- **Flashes:** 1 events, at most 1 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
 - **Faces vs effects:** 7 flags in 1 runs: 1218–1230.
-- **Motion audit:** 32 pops (UNEXPLAINED 1, beat 5, cadence 16, cut 9, flash 1); UNEXPLAINED at [1500] (check signoff_pops.jpg); dead spans 1; judder flags 1.
-- **plan_check:** 0 FAIL, 7 WARN; WARN: `lake` picks up `fence`'s take (0.07 s later in `p1`) after 3 other shots: make sure it doesn't read as a repeat; WARN: `passenger` picks up `gloves`'s take (0.05 s later in `p1`) after 1 other shots: make sure it doesn't read as a repeat; WARN: `lights` holds 3.35 s with no cut, transition or beat hit (frames 0-201): plan a designed beat inside it; WARN: `moon` holds 1.98 s with no cut, transition or beat hit (frames 729-848): plan a designed beat inside it; WARN: `passenger` holds 2.03 s with no cut, transition or beat hit (frames 1109-1231): plan a designed beat inside it; WARN: [length] 28.18 s; the owner's range is about 20-26 s; WARN: [sound count] 14 effects in 12 moments over 28.2 s (fx_events.json); start lean: about 10-12 in 20-23 s, small transitions silent (v13 rule 4).
-- **Effort this round (1):** 1 renders (6.6 min), QC 3.5 min.
+- **Motion audit:** 36 pops (UNEXPLAINED 6, beat 5, cadence 16, cut 9); UNEXPLAINED at [1500, 1677, 1678, 1679, 1688, 1689] (check signoff_pops.jpg); dead spans 1; judder flags 1.
+- **plan_check:** 0 FAIL, 8 WARN; WARN: `lake` picks up `fence`'s take (0.07 s later in `p1`) after 3 other shots: make sure it doesn't read as a repeat; WARN: `passenger` picks up `gloves`'s take (0.05 s later in `p1`) after 1 other shots: make sure it doesn't read as a repeat; WARN: `lights` zooms to 1.12 (keep <= 1.1 on 720p); WARN: `lights` holds 3.35 s with no cut, transition or beat hit (frames 0-201): plan a designed beat inside it; WARN: `moon` holds 1.98 s with no cut, transition or beat hit (frames 729-848): plan a designed beat inside it; WARN: `passenger` holds 2.03 s with no cut, transition or beat hit (frames 1109-1231): plan a designed beat inside it; WARN: [length] 28.18 s; the owner's range is about 20-26 s; WARN: [sound count] 14 effects in 12 moments over 28.2 s (fx_events.json); start lean: about 10-12 in 20-23 s, small transitions silent (v13 rule 4).
+- **Effort this round (1):** 2 renders (13.7 min), QC 6.8 min.

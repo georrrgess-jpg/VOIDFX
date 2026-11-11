@@ -97,7 +97,7 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 
 SP = dict(look="night111")
 # ---- LIGHTS OUT (e0-e11): "I shoot the lights out": the city's lights behind him go out, a wave from the edges in
-shot("lights", "p1", 0, 11, 123.30, 124.40, z=[(0, 1.00), (1, 1.12)], interp="flow", seg=True, face=None, cx=(745, 745), **SP)   # frame 0: the marina at night, slowed (the shot's flash lands here)
+shot("lights", "p1", 0, 11, 123.30, 124.40, z=[(0, 1.00), (1, 1.22)], interp="flow", seg=True, face=None, cx=(705, 725), **SP)   # frame 0: the marina at night, slowed (the shot's flash lands here)
 # ---- HIDE (e11-e23): "Hide till it's bright out": in the dark, behind the door, behind the fence, waiting for the light
 shot("dark", "ds2b", 11, 14, 323.40, 324.65, z=[(0, 1.00), (1, 1.04)], tin="emerge111", interp="flow", **SP)     # the light comes back first, from below
 shot("door", "s4", 14, 17, 157.95, 158.95, z=[(0, 1.00), (1, 1.04)], tin="facematch108", interp="flow", **SP)    # his face and its reflection
@@ -124,7 +124,7 @@ shot("slides", "s1", 69, 71, 263.10, 263.95, tmap=vel(69, 71, 263.10, 263.95), l
 shot("goggles", "dmx", 71, 73, 106.10, 107.40, tmap=vel(71, 73, 106.10, 107.40), lin=True, interp="flow", tin="luminol108", **SP)
 shot("grin", "s1", 73, 75, 346.60, 347.70, tmap=vel(73, 75, 346.60, 347.70), lin=True, interp="flow", tin="double108", **SP)
 shot("redface", "s1", 75, 77, 79.40, 80.60, tmap=vel(75, 77, 79.40, 80.60), lin=True, interp="flow", tin="flicker109", **SP)
-shot("tape", "p7", 77, 79, 22.60, 23.60, tmap=vel(77, 79, 22.60, 23.60), lin=True, interp="flow", tin="siren111", hflip=True, **SP)   # "look who's in trouble" (the pack is mirrored: the tape reads backwards)
+shot("tape", "p7", 77, 79, 22.95, 23.70, tmap=vel(77, 79, 22.95, 23.70), lin=True, interp="flow", tin="siren111", hflip=True, **SP)   # "look who's in trouble" (the pack is mirrored: the tape reads backwards)
 shot("axe", "s4", 79, 81, 136.60, 137.80, tmap=vel(79, 81, 136.60, 137.80), lin=True, interp="flow", tin="whip", **SP)
 shot("mangrove", "s1", 81, 83, 174.70, 175.90, tmap=vel(81, 83, 174.70, 175.90), lin=True, interp="flow", tin="fronds108", **SP)
 shot("bamboo", "ds2b", 83, 85, 370.20, 371.20, tmap=vel(83, 85, 370.20, 371.20), lin=True, interp="flow", tin="bokeh110", **SP)   # the sunlit leaves fall out of focus; his face comes into focus out of them

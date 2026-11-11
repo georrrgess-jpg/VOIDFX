@@ -14259,9 +14259,18 @@ def _lo_map(s_):
         _LO["map"] = (grow, len(items))
     return _LO["map"]
 
+def _follow(s_, fa, fb):
+    """the affine (output px) that carries frame fa's picture to frame fb's framing (the push and the drift)."""
+    a0 = to_screen(s_, fa, 0.0, 0.0); a1 = to_screen(s_, fa, 100.0, 100.0)
+    b0 = to_screen(s_, fb, 0.0, 0.0); b1 = to_screen(s_, fb, 100.0, 100.0)
+    k = (b1[0] - b0[0]) / max(1e-6, (a1[0] - a0[0]))
+    return np.float32([[k, 0, b0[0] - k * a0[0]], [0, k, b0[1] - k * a0[1]]])
+
 def lightsout111(out, f, s_, person):
     t = f / FPS
     tm, n = _lo_map(s_)
+    M = _follow(s_, s_["f0"] + 4, f); M[:, 2] /= 4.0                                # the lights' map follows the camera
+    tm = cv2.warpAffine(tm, M, (tm.shape[1], tm.shape[0]), flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT, borderValue=float("inf"))
     dt = t - tm                                                                   # < 0: still on
     mult = np.ones(tm.shape, np.float32)
     st_ = (dt > -0.14) & (dt < 0)
