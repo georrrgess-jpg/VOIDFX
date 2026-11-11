@@ -9,8 +9,8 @@
    "t0": 0.0,
    "t1": 3.84,
    "music_db": -17.2,
-   "fx_peak_db": -23.3,
-   "fx_minus_music": -6.1,
+   "fx_peak_db": -22.2,
+   "fx_minus_music": -5.0,
    "buried": false
   },
   {
@@ -245,7 +245,7 @@
    "buried": false
   },
   {
-   "name": "luminol108",
+   "name": "bleed111",
    "kind": "transition",
    "at": 22.73,
    "t0": 22.43,
