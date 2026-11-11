@@ -110,16 +110,16 @@ shot("crossed", "fbh", 76, 80, 92.50, 93.50, tin="sun_whip", seg=True, anim="mot
 shot("flashday", "fs2", 80, 84, 42.20, 43.40, tin="balloon_rise", seg=True)
 shot("baseball", "fs5", 84, 88, 91.50, 92.60, tin="light_streak", seg=True)
 shot("laugh", "fs5", 88, 92, 29.00, 30.20, tin="throw_whip", seg=True)
-shot("charged", "fs2", 92, 96, 146.80, 147.50, tin="bolt_window", seg=True, face=None, cx=(770, 360))   # the Flash charged with lightning
+shot("charged", "fs2", 92, 96, 146.80, 147.50, tin="bolt_window", seg=True, face=None, cx=(720, 860))   # the Flash charged with lightning
 shot("forest", "fa", 96, 100, 74.25, 75.25, tin="spin_roll", seg=True)                       # the suit charges in the sunlit trees
 shot("speedforce", "fs3", 100, 104, 132.90, 133.90, tin="blue_bloom", seg=True)
 # ---- the chorus: "Mr. Blue Sky, please tell us why you had to hide away for so long" (e105-e138)
 shot("emblem", "fbh", 104, 110, 82.40, 83.75, tin="punch_cut", seg=True)                    # EMBLEM SUN: the chest emblem glints and blazes into the sun
 shot("leap", "fs1", 110, 116, 199.55, 201.95, tin="emblem_ignite", seg=True, face=None, cx=(700, 760), tmap=vel(110, 116, 199.55, 201.95), lin=True, flowmax=40, flowfall="blend")
-shot("device", "fbh", 116, 120, 49.95, 51.20, tin="horizon_slide", seg=True)                 # the S2 suit, the chest device lit, grinning
+shot("device", "fbh", 116, 120, 49.95, 51.20, tin="cube_turn", seg=True)                 # the S2 suit, the chest device lit, grinning
 shot("tux", "fs5", 120, 124, 102.30, 103.60, tin="bokeh_rack", seg=True)
-shot("skyward", "fa", 124, 128, 0.30, 1.30, tin="glare_wash", seg=True, anim="crackle")                    # the S5 suit against the open sky
-shot("smilelit", "fbh", 128, 132, 90.10, 91.30, tin="hide_peek", seg=True)                # "hide away"
+shot("trail", "fs5", 124, 128, 87.90, 88.90, tin="glare_wash", seg=True, face=None, cx=(470, 400))   # he runs with a lightning trail (S5)
+shot("moneywall", "fs2", 128, 132, 100.95, 101.65, tin="peel17", seg=True, anim="crackle")   # "hide away": the S2 suit grinning at the money wall                # "hide away"
 shot("runface", "fa", 132, 136, 62.40, 63.60, tin="smear17", seg=True, tmap=vel(132, 136, 62.40, 63.60), lin=True, flowmax=40, flowfall="blend")
 shot("last", "fs1", 136, 144, 207.00, 208.40, tin="lightning_strike", seg=True, face=None, cx=(485, 640), tmap=slow(136, 144, 207.00, 208.40, 0.2), lin=True)   # "so long": he stands on the airfield; the clouds roll back over the sun
 
