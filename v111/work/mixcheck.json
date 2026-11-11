@@ -9,8 +9,8 @@
    "t0": 0.0,
    "t1": 3.84,
    "music_db": -17.2,
-   "fx_peak_db": -19.4,
-   "fx_minus_music": -2.2,
+   "fx_peak_db": -14.5,
+   "fx_minus_music": 2.7,
    "buried": false
   },
   {
@@ -234,7 +234,7 @@
    "buried": false
   },
   {
-   "name": "whip",
+   "name": "slide111",
    "kind": "transition",
    "at": 22.09,
    "t0": 21.79,
@@ -242,17 +242,6 @@
    "music_db": -6.2,
    "fx_peak_db": -14.5,
    "fx_minus_music": -8.3,
-   "buried": false
-  },
-  {
-   "name": "slide111",
-   "kind": "transition",
-   "at": 22.41,
-   "t0": 22.11,
-   "t1": 22.86,
-   "music_db": -7.0,
-   "fx_peak_db": -17.3,
-   "fx_minus_music": -10.3,
    "buried": false
   },
   {
@@ -333,7 +322,7 @@
    "buried": true
   },
   {
-   "name": "canopy111",
+   "name": "bokeh110",
    "kind": "transition",
    "at": 26.57,
    "t0": 26.27,
@@ -360,9 +349,9 @@
    "at": 27.21,
    "t0": 27.21,
    "t1": 28.18,
-   "music_db": -7.0,
+   "music_db": -6.7,
    "fx_peak_db": -12.5,
-   "fx_minus_music": -5.5,
+   "fx_minus_music": -5.7,
    "buried": false
   }
  ]
