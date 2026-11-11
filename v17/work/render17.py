@@ -10976,6 +10976,63 @@ def peel17(A, B, j, f, sa, sb, pre=8, post=10):
     addc(o, hl, HOT, 0.35)
     return np.clip(o, 0, 1)
 
+# ---- SONIC BOOM (the attention-grabber, e8): he breaks the barrier running at us; a vapour cone condenses round him and a
+#      shock ring bursts out, bending the picture as it passes, and his view at speed is inside it ----------------------------
+def sonic_boom(A, B, j, f, sa, sb, pre=14, post=18):
+    t = f / FPS; cx, cy = W * 0.50, H * 0.70                                                    # on his chest, below his face
+    d = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2).astype(F32); ang = np.arctan2(_GY - cy, _GX - cx)
+    if j < 0:                                                                                  # the vapour cone condenses
+        u = (j + pre + 1) / pre
+        Rv = 120 + 260 * smooth(u)
+        n = cv2.resize(cloud_N(t, 0.0, 400.0), (W, H))
+        cone = np.clip((Rv * (0.85 + 0.30 * n) - d) / 60.0, 0, 1) * np.clip((d - Rv * 0.35) / 80.0, 0, 1)
+        cone = (cone * (0.35 + 0.65 * n) * 0.75 * smooth(u)).astype(F32)
+        fk_ = live_keep(sa, sb, j, f, 0, 1.25); cone = cone if isinstance(fk_, float) else cone * fk_[..., 0]
+        Az = zoom_about(A, cx, cy, 1.0 + 0.10 * ein(u, 2.0))
+        shake = 3.0 * u * math.sin(f * 2.7); Az = shift_img(Az, shake, -shake * 0.6)
+        o = Az * (1 - cone[..., None] * 0.6) + cone[..., None] * HOT
+        st = np.clip(np.sin(ang * 46 + 1.3) * 0.5 + 0.5, 0, 1) ** 12 * np.clip((d - 200) / 400, 0, 1) * 0.5 * u   # pressure streaks
+        addc(o, kmul(st.astype(F32), live_keep(sa, sb, j, f, 0, 1.2)), HOT, 0.5)
+        return np.clip(o, 0, 1)
+    v = (j + 1) / post                                                                         # BOOM: the shock ring
+    R = 40 + math.hypot(W, H) * 0.62 * eout(v, 2.2)
+    wid = 26 + 90 * v
+    band = np.exp(-((d - R) / wid) ** 2).astype(F32)
+    disp = (band * 34 * (1 - v)).astype(F32)                                                   # the ring bends the picture (refraction)
+    mx = (_GX + np.cos(ang) * disp).astype(F32); my = (_GY + np.sin(ang) * disp).astype(F32)
+    inside = np.clip((R - d) / (8 + 20 * v) + 0.5, 0, 1).astype(F32)
+    Bz = zoom_about(B, cx, cy, 1.0 + 0.22 * (1 - eout(v, 2.0)))
+    Ao = zoom_about(A, cx, cy, 1.10 + 0.08 * v)
+    base = Ao * (1 - inside[..., None]) + Bz * inside[..., None]
+    o = cv2.remap(base, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    shake = 9.0 * math.exp(-v * 5) * math.sin(f * 3.1); o = shift_img(o, shake, shake * 0.7)
+    vap = cv2.resize(cloud_N(t, 0.0, 900.0), (W, H))
+    addc(o, kmul((band * (0.45 + 0.55 * vap) * (1 - v) ** 0.8).astype(F32), live_keep(sa, sb, j, f, 1.0, 1.2)), HOT, 0.85)   # the vapour on the ring
+    o = o * (1 + 0.18 * math.exp(-v * 8))
+    return np.clip(o, 0, 1)
+
+# ---- ZIP (e68, "Mr. Blue Sky"): he zips out of the grey shot as a streak of lightning, and the next shot arrives behind it ---
+_ZP = {}
+def zip_plate(A, pm, key):
+    if key not in _ZP:
+        if len(_ZP) > 6: _ZP.clear()
+        q = 4; sm = (np.clip(cv2.resize(A, (W // q, H // q), interpolation=cv2.INTER_AREA), 0, 1) * 255).astype(np.uint8)
+        mq = (cv2.dilate((cv2.resize(pm, (W // q, H // q)) > 0.3).astype(np.uint8), np.ones((7, 7), np.uint8)) * 255)
+        fill = cv2.inpaint(sm, mq, 6, cv2.INPAINT_TELEA).astype(F32) / 255
+        _ZP[key] = cv2.resize(fill, (W, H), interpolation=cv2.INTER_LINEAR)
+    return _ZP[key]
+
+def zip17(A, B, j, f, sa, sb, pre=6, post=8):
+    """ZIP: he's gone in a flash: the camera whips after him and a bolt of his lightning rides the seam between the shots."""
+    q = (j + pre) / (pre + post - 1); p = smooth(clamp(q, 0, 1)); sp = math.sin(math.pi * clamp(q, 0, 1))
+    o = strip_pan(A, B, q, 1, rev=False, blur=200, ov=360)
+    seam = W * (1 - p)
+    cv = bolt_canvas()
+    for k in range(2):
+        put_bolt(cv, (seam + 20 * k, -40), (seam - 30 + 40 * k, H + 40), 18500 + k + 3 * (f // 2), 4 - k, 0.12, 7, 2, val=int(255 * sp))
+    lt = light_rgb(cv, 1.1, HOT, GOLD17)
+    return np.clip(o + kmul(lt, live_keep(sa, sb, j, f, p, 1.1)), 0, 1)
+
 # ---- CLOUD SHADOW ("where once was pity"): a cloud's shadow sweeps over the frame from the right; the next shot is under it
 def cloud_shadow(A, B, j, f, sa, sb, pre=8, post=10):
     x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
@@ -11008,8 +11065,9 @@ def punch_cut(A, B, j, f, sa, sb):
 
 # ---- THE SUN (the focal piece, e32 -> e40): the sun rises behind him through his matte; its rays turn on every beat -------
 def sun_path(e):
-    u = clamp((e - E.E_SUN) / 8.0, 0, 1); p = smoother(u)
-    return W * (0.70 - 0.16 * p), H * (0.60 - 0.48 * p), 50 + 34 * p, u                       # it rises behind him, from his shoulder to behind his head: a halo
+    u = clamp((e - E.E_SUN) / getattr(E, "SUN_LEN", 8), 0, 1); p = smoother(u)
+    (x0, y0), (x1, y1) = getattr(E, "SUN_P", ((0.70, 0.60), (0.54, 0.12)))
+    return W * (x0 + (x1 - x0) * p), H * (y0 + (y1 - y0) * p), 50 + 34 * p, u                 # it rises behind him, from his shoulder to behind his head
 
 def sun_rot(e):
     """the rays turn a step on every beat (eased), and drift between."""
@@ -11034,7 +11092,7 @@ def sun_fx(img, person, s, f):
         near = cv2.GaussianBlur(lumf(lay), (0, 0), 30)
         o = o + kmul((rim * np.clip(near * 3, 0, 1))[..., None] * GOLD17 * 0.9 * g, face_keep(s, f, 1.15))
     else: o = o + lay
-    gh = ghosts_draw(sx, sy, g * (0.55 + 0.45 * smooth(clamp((e - 36) / 3, 0, 1))))
+    gh = ghosts_draw(sx, sy, g * (0.55 + 0.45 * smooth(clamp((e - E.E_SUN - 4) / 3, 0, 1))))
     return np.clip(o + kmul(gh, face_keep(s, f, 1.25)), 0, 1)
 
 def ghost_iris(A, B, j, f, sa, sb, pre=30, post=26):
@@ -11301,27 +11359,50 @@ def bolt_window(A, B, j, f, sa, sb, pre=8, post=12):
 
 # ---- CLOUD OVER (the loop, e136 -> frame 0): the clouds roll back over the sun and they are frame 0's storm ----------------
 def loop_fx(img, person, s, f):
+    """LIGHTNING ASCENT (the loop): the storm has come back; the suit charges (gold arcs build over him), and he answers it:
+    a bolt launches from his chest straight up into the sky. The camera rises with it, past the clouds' edge, into the storm
+    of frame 0, its light fading, and comes to rest exactly on frame 0."""
     f0 = fh(E.E_LOOP); N = E.DUR_F - f0
     if f < f0: return img
     t = (f - f0) / N; tt = f / FPS
-    sx, sy = W * 0.74, H * 0.10
-    sv = 1 - smooth(clamp((t - 0.38) / 0.40, 0, 1))                                           # the sun, hiding away
     o = img
-    if sv > 0.002:
-        lay = sun_draw(sx, sy, 44, 0.85 * sv * smooth(clamp(t / 0.12, 0, 1)), rot=0.6 * t)
-        o = img + (lay if person is None else lay * (1 - np.clip(person * 1.2, 0, 1)[..., None]))
-    cov = 1.35 * smooth(clamp((t - 0.38) / 0.55, 0, 1)) - 0.60
-    covmap = (cov + 0.40 * (1 - _GYQ / H) + 0.20 * (_GXQ / W)).astype(F32)                    # they come over from the top right
-    soft = 0.22
-    N_ = cloud_N(tt, -130.0)
-    dq = np.clip((N_ - (0.80 - covmap)) / soft, 0, 1).astype(F32)
-    dm = cv2.resize(cv2.GaussianBlur(dq, (0, 0), 1.2), (W, H))[..., None]
-    storm = frame_virtual(f - E.DUR_F)                                                         # the clouds ARE frame 0's storm
-    rim = kmul(cv2.resize((dq * (1 - dq) * 4).astype(F32), (W, H)) * (1 - smooth(clamp((t - 0.55) / 0.35, 0, 1))), face_keep(s, f, 1.3))
-    o = o * (1 - 0.40 * smooth(clamp((t - 0.30) / 0.60, 0, 1))) * (1 - dm) + storm * dm
-    addc(o, rim, HOT * 0.7 + GOLD17 * 0.3, 0.45 * sv)                                          # their edge still catches the sun
-    wv = smooth(clamp((t - 0.64) / 0.32, 0, 1))                                                # ... and they close over completely
-    if wv > 0.002: o = o * (1 - wv) + storm * wv
+    chg = smooth(clamp((t - 0.06) / 0.30, 0, 1))                                               # 1. the charge
+    cv = bolt_canvas()
+    fs = face_scr(s, f) if s.get("face") is not None else s.get("face_hint")
+    body = None
+    if person is not None:
+        body = person.copy()
+        if fs: body[: int(min(H, fs[1] + fs[2] * 1.4))] = 0                                    # his body below the chin
+    fk = face_keep(s, f, 1.5)
+    if body is not None and chg > 0.01:
+        q = 8; bq = cv2.resize(body, (W // q, H // q), interpolation=cv2.INTER_AREA)
+        ys, xs = np.nonzero(bq > 0.6)
+        if len(xs) > 20:
+            rng = np.random.default_rng(1700 + f // 2)
+            for k in range(2 + int(4 * chg)):
+                i_ = int(rng.integers(len(xs))); p0 = (xs[i_] * q + 4.0, ys[i_] * q + 4.0)
+                a_ = rng.uniform(0, 2 * math.pi); L = rng.uniform(140, 300)
+                put_bolt(cv, p0, (p0[0] + L * math.cos(a_), p0[1] + L * math.sin(a_)), 18300 + k + 7 * (f // 2), 3, 0.32, 6, 1, val=int(255 * chg))
+    hx, hy = (fs[0], fs[1] + fs[2] * 2.6) if fs else (W * 0.45, H * 0.62)                      # his chest
+    launch = smooth(clamp((t - 0.34) / 0.12, 0, 1))                                            # 2. the bolt launches upward
+    if launch > 0.002:
+        top = hy - (hy + 200) * launch
+        sx_ = W * 0.84 if hx < W * 0.55 else W * 0.16                                          # from beside his shoulder, up past his head (never his face)
+        for k in range(2):
+            put_bolt(cv, (sx_, hy - 40), (sx_ + 30 * (1 - 2 * k), top), 18400 + k + 3 * (f // 2), 5 - 2 * k, 0.06, 7, 2, val=int(255 * (1 - 0.3 * k)))
+    lt = light_rgb(cv, 1.0 + 0.6 * launch, HOT, GOLD17)
+    o = o + kmul(lt, fk)
+    o = o * (1 - 0.15 * chg * (1 - launch))                                                    # the light dims before he answers
+    T = smooth(clamp((t - 0.40) / 0.60, 0, 1))                                                 # 3. the camera rises with it into frame 0
+    if T > 0:
+        storm = frame_virtual(f - E.DUR_F)
+        o = strip_pan(np.clip(o, 0, 1), storm, T, 0, rev=True, blur=150, ov=520)
+        glow = (1 - smooth(clamp((t - 0.55) / 0.35, 0, 1)))                                    # its light in the clouds, fading before frame 0
+        if glow > 0.002:
+            gx = W * 0.5; gy = H * (0.15 + 0.25 * (1 - T))
+            d = np.sqrt((_GX - gx) ** 2 + (_GY - gy) ** 2)
+            addc(o, (np.exp(-(d / 520.0) ** 2) * glow * T).astype(F32), HOT * 0.6 + GOLD17 * 0.4, 0.45)
+        if t > 0.985: o = storm                                                                # exactly frame 0's own picture at the wrap
     return np.clip(o, 0, 1)
 
 def loop17(A, B, j, f, sa, sb):
@@ -11330,7 +11411,7 @@ def loop17(A, B, j, f, sa, sb):
 TR2.update({"sun_burst": (sun_burst, 12, 16), "run_by": (run_by, 5, 7), "speed_zoom": (speed_zoom, 4, 7), "glint_sweep": (glint_sweep, 6, 6),
             "sky_whip": (sky_whip, 5, 6), "flare_cut": (flare_cut, 6, 8), "ray_rake": (ray_rake, 8, 8), "bloom_cut": (bloom_cut, 8, 10),
             "ghost_iris": (ghost_iris, 30, 26), "prism": (prism, 6, 8), "whip_pan": (whip_pan, 5, 6), "bolt_crack": (bolt_crack, 4, 8),
-            "rain_ripple": (rain_ripple, 6, 12), "tilt_up": (tilt_up, 6, 8), "cloud_break": (cloud_break, 28, 24), "cloud_shadow": (cloud_shadow, 8, 10), "sun_open": (sun_open, 8, 10), "sun_whip": (sun_whip, 5, 6),
+            "rain_ripple": (rain_ripple, 6, 12), "tilt_up": (tilt_up, 6, 8), "cloud_break": (cloud_break, 28, 24), "sonic_boom": (sonic_boom, 14, 18), "zip17": (zip17, 6, 8), "cloud_shadow": (cloud_shadow, 8, 10), "sun_open": (sun_open, 8, 10), "sun_whip": (sun_whip, 5, 6),
             "balloon_rise": (balloon_rise, 6, 8), "light_streak": (light_streak, 5, 7), "throw_whip": (throw_whip, 5, 7),
             "light_leak17": (light_leak17, 6, 8), "spin_roll": (spin_roll, 6, 10), "blue_bloom": (blue_bloom, 10, 12), "punch_cut": (punch_cut, 0, 1),
             "emblem_ignite": (emblem_ignite, 62, 40), "cube_turn": (cube_turn, 6, 10), "peel17": (peel17, 8, 10), "lightning_strike": (lightning_strike, 8, 14), "bolt_window": (bolt_window, 8, 12), "horizon_slide": (horizon_slide, 5, 7), "bokeh_rack": (bokeh_rack, 8, 10),
@@ -11380,7 +11461,7 @@ def prefinish(f):
 
 def render(f):
     s = shot_at(f); out = flash_governor(beat_fx(prefinish(f), f))
-    f0 = fh(E.E_LOOP); mix = smoother((f - f0) / (E.DUR_F - f0)) if (s["n"] == "last" and f >= f0) else None
+    f0 = fh(E.E_LOOP); mix = smoother(clamp(((f - f0) / (E.DUR_F - f0) - 0.40) / 0.60, 0, 1)) if (s["n"] == "last" and f >= f0) else None
     return (np.clip(finish17(out, f, s, mix), 0, 1) * 255 + 0.5).astype(np.uint8)
 
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)

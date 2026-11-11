@@ -45,7 +45,8 @@ E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0
 STUT_GAPS, STUT_HITS = [], []
 E_BEAT, E_DIP = 0, 0
 E_LOOP = 136                                   # CLOUD OVER: the loop set piece (the beat camera rests from here)
-E_SUN = 32                                     # THE SUN rises (e32) and opens as GHOST IRIS on e40
+E_SUN = 28                                     # THE SUN rises (e28) and opens as GHOST IRIS on e40
+SUN_LEN = 12
 E_CHORUS = 104                                 # EMBLEM SUN: e104 -> e110 ("Mr. Blue Sky")
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
@@ -87,14 +88,13 @@ def shot(n, src, e0, e1, a, b, **kw):
 shot("storm", "fs5", 0, 4, 105.82, 106.52, tin="loop17", seg=False, face=None, cx=(640, 600), lin=True, tmap=[(-0.5, 105.78), (0, 105.82), (1, 106.52)], tneg=True,
      z=LinZ([(0, 1.04), (1, 1.08)]), look="storm", anim="sunbreak")                        # frame 0: storm clouds lit by lightning; the sun breaks through
 shot("avenue", "fbh", 4, 8, 64.80, 66.30, tin="sun_burst", seg=True, face=None, cx=(640, 640), tmap=vel(4, 8, 64.80, 66.30), lin=True, interp="hold")   # he runs down the avenue at us (lightning flicker: its own cadence)
-shot("race", "fa", 8, 12, 50.00, 51.40, tin="run_by", seg=True, face=None, cx=(560, 640), tmap=vel(8, 12, 50.00, 51.40), lin=True, flowmax=40, flowfall="blend")
+shot("povrun", "fbk", 8, 12, 62.40, 63.40, tin="sonic_boom", seg=False, face=None, cx=(640, 640), interp="hold")   # SONIC BOOM: his view at speed down the avenue
 shot("runlit", "fbh", 12, 16, 4.55, 6.10, tin="speed_zoom", seg=True, tmap=vel(12, 16, 4.55, 6.10), lin=True, flowmax=40, flowfall="blend")
 shot("wave", "fbh", 16, 20, 6.90, 8.20, tin="glint_sweep", seg=True, anim="shine")                         # he turns and grins at us
 shot("run5", "fs5", 20, 24, 108.60, 110.00, tin="sky_whip", seg=True, tmap=vel(20, 24, 108.60, 110.00), lin=True, flowmax=40, flowfall="blend")
 # ---- "see how the sun shines brightly" (e22.6-e39.2): golden hour, THE SUN
-shot("golden", "fs1", 24, 28, 123.40, 124.40, tin="flare_cut", seg=True, anim="shine")
-shot("grin", "fs3", 28, 32, 44.07, 45.07, tin="ray_rake", seg=True, anim="crackle")             # the S2 suit, grinning in the daylight
-shot("sun", "fbk", 32, 40, 141.93, 142.85, tin="bloom_cut", seg=True, tmap=slow(32, 40, 141.93, 142.85, 0.2), lin=True, flowmax=40, suitred=1.0, z=LinZ([(0, 1.00), (1, 1.06)]))   # THE SUN rises behind him
+shot("grin", "fs3", 24, 28, 44.07, 45.07, tin="flare_cut", seg=True, anim="crackle")             # the S2 suit, grinning in the daylight
+shot("sun", "fs1", 28, 40, 123.35, 125.40, tin="ray_rake", seg=True, z=LinZ([(0, 1.00), (1, 1.05)]))   # THE SUN: Barry turns and looks up into it (S1, golden hour)
 # ---- "and the city, on the streets where once was pity" (e45-e64.5)
 shot("ledge", "fbh", 40, 44, 87.60, 88.60, tin="ghost_iris", seg=True, face=None, cx=(760, 760))   # the Flash crouched on the ledge (not the officer below)
 shot("streets", "fs2", 44, 48, 168.70, 169.70, tin="prism", seg=True)                       # "on the streets": he lands in the street
@@ -104,7 +104,7 @@ shot("hurt", "fs1", 56, 60, 278.40, 279.40, tin="rain_ripple", seg=True)        
 shot("masked1", "fs1", 60, 64, 287.40, 288.40, tin="tilt_up", seg=True, tmap=slow(60, 64, 287.40, 288.40, 0.3), lin=True)
 shot("greysky", "fs3", 64, 68, 8.90, 9.90, tin="cloud_shadow", seg=True)                      # he walks under a grey sky; the clouds gather ...
 # ---- "Mr. Blue Sky is living here today, hey" (e68.9-e91.2): the clouds part
-shot("lookup", "fbk", 68, 72, 94.05, 94.75, tin="cloud_break", seg=True, anim="rays")       # ... and part: Barry looks up at the sky
+shot("lookup", "fbk", 68, 72, 94.05, 94.75, tin="zip17", seg=True, anim="rays")       # ... and part: Barry looks up at the sky
 shot("sunny", "fs2t", 72, 76, 34.85, 35.85, tin="sun_open", seg=True, anim="motes")          # "living here today": Barry in the sunshine
 shot("crossed", "fbh", 76, 80, 92.50, 93.50, tin="sun_whip", seg=True, anim="motes")
 shot("flashday", "fs2", 80, 84, 42.20, 43.40, tin="balloon_rise", seg=True)
@@ -121,10 +121,10 @@ shot("tux", "fs5", 120, 124, 102.30, 103.60, tin="bokeh_rack", seg=True)
 shot("trail", "fs5", 124, 128, 87.90, 88.90, tin="glare_wash", seg=True, face=None, cx=(470, 400))   # he runs with a lightning trail (S5)
 shot("moneywall", "fs2", 128, 132, 100.95, 101.65, tin="peel17", seg=True, anim="crackle")   # "hide away": the S2 suit grinning at the money wall                # "hide away"
 shot("runface", "fa", 132, 136, 62.40, 63.60, tin="smear17", seg=True, tmap=vel(132, 136, 62.40, 63.60), lin=True, flowmax=40, flowfall="blend")
-shot("last", "fs1", 136, 144, 207.00, 208.40, tin="lightning_strike", seg=True, face=None, cx=(485, 640), tmap=slow(136, 144, 207.00, 208.40, 0.2), lin=True)   # "so long": he stands on the airfield; the clouds roll back over the sun
+shot("last", "fs1", 136, 144, 207.00, 208.40, tin="lightning_strike", seg=True, face=None, face_hint=(565, 610, 150), cx=(485, 640), tmap=slow(136, 144, 207.00, 208.40, 0.2), lin=True)   # "so long": he stands on the airfield; the clouds roll back over the sun
 
 EMB_TRACK = [(82.3, 448.6, 420.6, 78.9), (82.35, 452.4, 423.0, 77.7), (82.4, 459.1, 427.5, 74.3), (82.45, 465.4, 433.1, 70.9), (82.5, 469.5, 437.7, 69.1), (82.55, 472.4, 441.5, 69.6), (82.6, 472.1, 442.2, 69.6), (82.65, 472.6, 444.3, 67.0), (82.7, 475.9, 448.7, 63.6), (82.75, 480.7, 453.3, 61.4), (82.8, 482.0, 455.9, 61.6), (82.85, 481.5, 458.0, 61.5), (82.9, 479.6, 459.3, 62.3), (82.95, 478.3, 461.1, 62.5), (83.0, 476.9, 463.5, 62.5), (83.05, 476.0, 465.0, 60.9), (83.1, 475.0, 466.9, 60.3), (83.15, 480.8, 471.2, 59.8), (83.2, 489.6, 476.3, 59.0), (83.25, 490.4, 478.2, 58.4), (83.3, 476.5, 474.6, 58.7), (83.35, 460.6, 473.4, 59.2), (83.4, 461.1, 477.0, 58.6), (83.45, 456.8, 480.1, 58.7), (83.5, 447.1, 482.1, 59.4), (83.55, 437.3, 484.4, 60.3), (83.6, 433.9, 486.8, 60.4), (83.65, 431.8, 489.0, 60.3), (83.7, 430.4, 491.6, 60.3), (83.75, 429.6, 493.1, 60.2)]   # the chest emblem in flash_b_hq 82.3-83.75 s (Hough circle per source frame, smoothed): (t, x, y, r)
-SET_PIECES = [("sun_break", th(0), th(6)), ("the_sun", th(32), th(42)), ("cloud_break", th(65), th(70)), ("emblem_ignite", th(104), th(112)), ("strike", th(135.5), th(138)), ("loop", th(136), th(144))]
+SET_PIECES = [("sun_break", th(0), th(6)), ("sonic_boom", th(7), th(10)), ("the_sun", th(28), th(42)), ("emblem_ignite", th(104), th(112)), ("strike", th(135.5), th(138)), ("lightning_ascent", th(136), th(144))]
 HERO = ["sun_draw"]
 HERO_TINS = ["sun_burst", "ghost_iris", "emblem_ignite", "loop17"]
 SIGNATURE = ["ghost_iris", "emblem_ignite"]

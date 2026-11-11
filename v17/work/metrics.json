@@ -1,6 +1,6 @@
 {
  "edit": "v17",
- "round": 2,
+ "round": 3,
  "stages": [
   {
    "t": "2026-11-11 17:55:15",
@@ -603,6 +603,41 @@
    "step": "deliver",
    "s": 54.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:41:24",
+   "round": 3,
+   "step": "prep",
+   "s": 178.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:41:49",
+   "round": 3,
+   "step": "sheet:r8a:70,76,80,82,84,88,94,104,290,310,340,370,400,410",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:41:57",
+   "round": 3,
+   "step": "sheet:r8b:692,696,699,701,704,708,1420,1428,1436,1446,1456,1466,1476,1481,0",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:43:02",
+   "round": 3,
+   "step": "sheet:r9:76,80,83,86,300,330,693,697,700,703,1424,1432,1438,1446,1456",
+   "s": 20.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:43:36",
+   "round": 3,
+   "step": "sheet:r10:1426,1432,1438,1444",
+   "s": 15.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -629,6 +664,36 @@
    "round": 2,
    "cat": "density",
    "text": "I would like more creative transitions and unique graphics. Implement anything you believe will improve the edit."
+  },
+  {
+   "t": "2026-11-11 22:35:44",
+   "round": 3,
+   "cat": "replace_shot",
+   "text": "I dislike the beginning scene where barry seperates into a speed mirage and himself. Replace this scene with something different."
+  },
+  {
+   "t": "2026-11-11 22:35:44",
+   "round": 3,
+   "cat": "quality",
+   "text": "change the scene at 6 seconds or fix the part where barrys mouth and facial features as well as part of the suit are distorted"
+  },
+  {
+   "t": "2026-11-11 22:35:44",
+   "round": 3,
+   "cat": "density",
+   "text": "have a really cool and unique transition or focal point to try and get the viewers attention"
+  },
+  {
+   "t": "2026-11-11 22:35:44",
+   "round": 3,
+   "cat": "plain_effect",
+   "text": "fix the half second of the clouds and lightning in the sky that appear at 11 and a half seconds I don't like this scene"
+  },
+  {
+   "t": "2026-11-11 22:35:44",
+   "round": 3,
+   "cat": "loop",
+   "text": "change the loop to something that's more creative and cool and visually appealing ensure this loop is perfect and seamless"
   }
  ],
  "catches": [
@@ -767,6 +832,7 @@
  ],
  "round_starts": {
   "1": "2026-11-11 18:35:57",
-  "2": "2026-11-11 21:13:40"
+  "2": "2026-11-11 21:13:40",
+  "3": "2026-11-11 22:35:44"
  }
 }
