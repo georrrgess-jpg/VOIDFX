@@ -1,28 +1,36 @@
-"""MONSTER — Dexter × Monster (voidfx v111). WORKED TEMPLATE: this is v110 SLEEPWALKER's EDL; rewrite the song, packs, shots and text.
-SLEEPWALKER - Dexter x "Sleepwalker (Slowed)" (voidfx v110, 9:16). Scaffolded from v109 PHANTOM (--base v109).
+"""MONSTER - Dexter x Kanye West "Monster" (voidfx v111, 9:16). Scaffolded from v110 SLEEPWALKER (--base v110).
 
-Concept: SLEEPWALKER. His waking life is a sleepwalk, and the nightmare that made him loops forever. He lies awake (frame
-0), walks through the night half asleep, looks up into a failing light on "I'm losing power" while the song loses its bass,
-falls asleep in the fog; on the drop the power surges back and we dive through the spinning fan into the kill room (the
-Dark Passenger awake). The hunt. On the child's "Mommy?" he is in the blood room (the S1 hotel room drenched in blood,
-the memory of his mother's murder); the loop falls from there straight down into frame 0: he wakes in bed.
-Look: 3 A.M. (sodium amber highlights, navy shadows, a dream bloom and soft edges; blood stays red).
-Text: one designed title on the sung words, I'M LOSING POWER, flickering like a failing tube.
-Song: src/sleepwalker_slowed.mp3, 98.6 BPM (the drum stem agrees), window h162->h241 (49.39 -> 73.43 s, 24.04 s) from the
-owner's "roughly the 49-second mark": "I'm losing power" e10.2-e16.3, the bass drops out e~15-e29, the drop e30 (58.5 s),
-"Mommy?" e72.3 and e77.4. Edit half-beat e = song half-beat - H0; even e are beats, bars every 8 e.
+Concept: I SHOOT THE LIGHTS OUT. The thing that lives in the dark. A flow of light: on Bon Iver's "I shoot the lights out"
+the lamp over him and the lights in the trees blow one by one and he is left in the dark; he hides till it's bright out (the sun comes up at the
+edge of the frame, the day burns white); the sun goes down and the lights of the city come on ("just another lonely
+night"); we look up and a full moon is rising behind him, and the moon becomes the lamp over the kill table ("Are you
+willing to sacrifice your life?"). THE PASSENGER (the drop): crouched against the wall in the light from below, his shadow
+climbs the wall and grows into something else while the song builds; on "...I'm a monster" the shadow lunges over the lens
+and inside it is the blood-soaked suit walking out into the daylight. "No-good bloodsucker": the slides. "Now look who's
+in trouble": the crime-scene tape in the red and blue of a light bar. "As you run through my jungles": the woods, the
+mangroves, the bamboo; "all you hear is rumbles": he raises the pistol at us and fires; the flash lands on frame 0 and
+the lights are back on, for now (the loop).
+Look: NIGHTSHADE (teal-navy shadows, warm practicals, the day golden; after the drop harder, the reds full).
+Text: none (the owner's rule: start without).
+Song: src/monster_pad.wav (src/monster.mp3 with 1.0 s of silence in front, so the edit can start 0.17 s before "I").
+93.7 BPM: the drum stem, the snare and the full mix agree on a 0.640 s beat (the first map's 125 BPM was a 3:4 alias of
+the kick pattern). Window h2->h90 (0.93 -> 29.10 s, 28.18 s): "I shoot the lights out" e0-e11, "Hide till it's bright
+out" e13-e26, "Oh, just another lonely night" e29.5-e40, "Are you willing to sacrifice your life?" e45-e58, the build
+e58-e65, the drop e65 (the bass, "...I'm a monster"), "no good bloodsucker" e68-e71, "Fat motherfucker" e71.6-e74,
+"now look who's in trouble" e76-e79, "As you run through my jungles" e79.4-e83.5, "all you hear is rumbles" e84.4-e88.
+Edit half-beat e = song half-beat - H0; bars every 8 e from e1 (the window starts half a beat before the bar).
 """
 ROOT = "/home/user/VOIDFX"
 VER, SLUG = "v111", "monster_dexter"
-SONG = f"{ROOT}/src/sleepwalker_slowed.mp3"
-SONG_STEMS = f"{ROOT}/{VER}/audio/sep/htdemucs/win"; STEMS_T0 = 41.384
+SONG = f"{ROOT}/src/monster_pad.wav"
+SONG_STEMS = f"{ROOT}/{VER}/audio/sep/htdemucs/win"; STEMS_T0 = 0.000
 FPS, W, H = 60, 1080, 1920
 SRC = {"s1": (f"{ROOT}/src/dexter_s1_hq.mp4", 60.0, 1280, 720), "s4": (f"{ROOT}/src/dexter_s4_hq.mp4", 60.0, 1280, 720),
        "p7": (f"{ROOT}/src/pack7_4k.mp4", 60.0, 1280, 720), "p5": (f"{ROOT}/src/pack5_mixtape120.mp4", 60.0, 1280, 720),
        "p1": (f"{ROOT}/src/scenepack.mp4", 60.0, 1200, 720), "dmx": (f"{ROOT}/src/dexter_mix_b.mp4", 60.0, 1280, 720),
        "ds2a": (f"{ROOT}/src/dexter_s2_a.mp4", 60.0, 1280, 720), "ds2b": (f"{ROOT}/src/dexter_s2_b.mp4", 60.0, 1280, 720)}
-HB, HB_OFF = 0.304274, 0.0988            # 98.6 BPM (the drum stem agrees with the map)
-H0, H1 = 162, 241
+HB, HB_OFF = 0.320171, 0.2882             # 93.7 BPM (the drum stem agrees with the map)
+H0, H1 = 2, 90
 def st(h): return HB_OFF + h * HB
 SONG_IN = st(H0)
 def th(e): return e * HB                   # edit time of edit half-beat e
@@ -31,20 +39,21 @@ def fh(e): return fe(th(e))
 def te(e): return th(e)
 def s2e(s): return s - SONG_IN             # song seconds -> edit seconds
 DUR = th(H1 - H0); DUR_F = fh(H1 - H0)
-HDROP = 30; DROP_HB = HDROP; T_STOP = DUR   # the bass returns (58.5 s): the power surges back, through the fan
+HDROP = 65; DROP_HB = HDROP; T_STOP = DUR   # the bass and "...I'm a monster" (song 21.74 s): THE PASSENGER
 E_STUT, E_RUN, E_REW = H1 - H0, H1 - H0, H1 - H0
 STUT_GAPS, STUT_HITS = [], []
-E_BEAT, E_DIP = 30, 4                      # the beat camera from the drop
-E_LOOP = 75                                # the loop: from the blood room we fall into bed (frame 0)
+E_BEAT, E_DIP = 65, 4                      # the beat camera from the drop
+E_LOOP = 85                                # the loop: he raises the pistol and fires; the flash lands on frame 0
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
-SET_PIECES = [("POWER FAILURE", th(10), th(21)), ("THROUGH THE FAN", th(24), th(31)), ("THE BARREL", th(43.5), th(47)),
-              ("THE SWINGING LIGHT", th(65), th(70)), ("THE DRIP (loop)", th(74.6), th(79))]
-SIGNATURE = ["fan110"]
-HERO = ["power_light110"]                  # the failing / surging light: the title, the brownout, the fan
-HERO_TINS = ["lightson110", "brownout110", "fan110"]
+SET_PIECES = [("LIGHTS OUT", th(0), th(12)), ("DAYBREAK", th(22.5), th(29.5)), ("NIGHTFALL", th(32), th(37)),
+              ("THE MOON", th(37), th(46.5)), ("THE PASSENGER", th(57), th(66.5)), ("THE SIREN", th(76.3), th(78.5)),
+              ("THE SHOT (loop)", th(85), th(88))]
+SIGNATURE = ["passenger111"]
+HERO = ["moon_draw111"]                   # the light: the moon (it becomes the lamp that throws the shadow)
+HERO_TINS = ["moon111", "passenger111"]         # the moon becomes the lamp; the lamp throws the shadow; the shot (the loop)
 PLAN_ACCEPT = {}
 VO_STEM = None; VO_STEM_T0 = 0.0
 
@@ -86,44 +95,48 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
         ks.append((u0, a + (b - a) * i / n)); ks.append((u1, a + (b - a) * (i + 1) / n))
     return ks
 
-SP = dict(look="sleep110")
-# ---- the sleepwalk (e0-e10): he lies awake; he walks through the night half asleep
-shot("bed", "ds2a", 0, 3, 20.40, 21.30, z=[(0, 1.00), (1, 1.03)], interp="flow", seg=True, **SP)             # frame 0: awake, staring up
-shot("yard", "dmx", 3, 6, 254.20, 255.20, z=[(0, 1.00), (1, 1.03)], tin="dolly", interp="flow", **SP)
-shot("marina", "p1", 6, 8, 123.20, 124.00, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
-shot("doorway", "ds2b", 8, 10, 393.10, 393.80, z=[(0, 1.00), (1, 1.03)], tin="bokeh110", interp="flow", **SP)
-# ---- POWER FAILURE (e10-e21): "I'm losing power"; the light above him fails, the bass goes
-shot("light", "p1", 10, 17, 147.00, 148.20, z=[(0, 1.00), (1, 1.04)], tin="lightson110", interp="flow", **SP)   # the tube blinks on with "I'm"; the title
-shot("fog", "ds2b", 17, 21, 140.30, 141.70, z=[(0, 1.02), (1, 1.00)], tin="brownout110", interp="flow", **SP)
-shot("asleep", "s4", 21, 24, 143.60, 144.90, z=[(0, 1.00), (1, 1.04)], tin="fogwipe110", interp="flow", **SP)  # his eyes close
-shot("fan", "ds2b", 24, 30, 260.75, 261.70, z=[(0, 1.00), (1, 1.06)], tin="nodoff110", seg=True, interp="blend", **SP)   # the fan flickers: no flow (v15); the earlier frames are ghosted in the pack
-# ---- the hunt (e30-e68): the drop dives through the fan into the kill room
-shot("killroom", "ds2a", 30, 33, 223.90, 225.10, z=[(0, 1.04), (1, 1.00)], tin="fan110", interp="flow", **SP)
-shot("victim", "s1", 33, 35, 390.50, 391.40, z=[(0, 1.00), (1, 1.03)], tin="facematch108", interp="flow", **SP)
-shot("plastic", "ds2b", 35, 37, 159.30, 160.30, z=[(0, 1.00), (1, 1.03)], tin="double108", interp="flow", **SP)   # drugged: double vision
-shot("green", "s1", 37, 39, 152.20, 153.00, z=[(0, 1.00), (1, 1.03)], tin="light_sweep108", interp="flow", **SP)
-shot("drive", "s1", 39, 41, 316.00, 316.90, z=[(0, 1.00), (1, 1.03)], tin="wiper108", interp="flow", **SP)   # the car: the wiper
-shot("dark", "s4", 41, 43, 117.50, 118.40, z=[(0, 1.00), (1, 1.03)], tin="tear110", interp="flow", **SP)
-shot("aim", "ds2b", 43, 46, 369.40, 370.12, z=[(0, 1.00), (1, 1.03)], tin="fronds108", interp="flow", **SP)   # he aims through the bamboo: THE BARREL
-shot("warm", "dmx", 46, 48, 159.30, 160.20, z=[(0, 1.00), (1, 1.03)], tin="barrel110", interp="flow", **SP)
-shot("neon", "ds2b", 48, 50, 203.80, 204.50, z=[(0, 1.00), (1, 1.03)], tin="flicker109", interp="flow", **SP)   # the power fails again: red neon
-shot("lamp", "ds2b", 50, 53, 290.90, 291.90, z=[(0, 1.00), (1, 1.03)], tin="whip", interp="flow", **SP)
-shot("night", "ds2a", 53, 56, 188.00, 189.30, z=[(0, 1.00), (1, 1.03)], tin="curtain110", interp="flow", **SP)   # the curtain blows across
-shot("killwide", "p1", 56, 58, 135.30, 136.10, z=[(0, 1.00), (1, 1.03)], tin="plasticroll110", face=None, cx=(560, 640), interp="flow", **SP)   # the kill room: its plastic unrolls
-shot("cabin", "p1", 58, 60, 176.60, 177.50, z=[(0, 1.00), (1, 1.03)], tin="brush110", interp="flow", **SP)
-shot("closeup", "s4", 60, 62, 161.10, 161.90, z=[(0, 1.00), (1, 1.03)], tin="streetlight109", interp="flow", **SP)
-shot("anguish", "p1", 62, 68, 164.00, 164.90, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)      # THE SPATTER
-# ---- "Mommy?" (e68-e79): the blood room; the loop falls into bed
-shot("bloodwall", "dmx", 68, 72, 111.80, 112.90, z=[(0, 1.00), (1, 1.05)], tin="swinglight110", interp="flow", **SP)   # the blood-spattered wall, in the bulb's light
-shot("bloodroom2", "dmx", 72, 74, 110.05, 110.75, z=[(0, 1.00), (1, 1.03)], tin="tilt110", interp="flow", **SP)   # "Mommy?": he looks up at the blood
-shot("lookup", "dmx", 74, 79, 122.90, 124.30, z=[(0, 1.00), (1, 1.04)], tin="glide110", interp="flow", tout="driploop110", **SP)
+SP = dict(look="night111")
+# ---- LIGHTS OUT (e0-e11): "I shoot the lights out": the lamp over him and the lights in the trees blow one by one
+shot("lights", "s4", 0, 11, 80.90, 84.20, z=[(0, 1.00), (1, 1.05)], interp="flow", seg=True, **SP)              # frame 0 (the shot's flash lands here)
+# ---- HIDE (e11-e23): "Hide till it's bright out": in the dark, behind the door, behind the fence, waiting for the light
+shot("dark", "ds2b", 11, 14, 323.40, 324.65, z=[(0, 1.00), (1, 1.04)], tin="emerge111", interp="flow", **SP)     # the light comes back first, from below
+shot("door", "s4", 14, 17, 157.95, 158.95, z=[(0, 1.00), (1, 1.04)], tin="facematch108", interp="flow", **SP)    # his face and its reflection
+shot("fence", "p1", 17, 20, 170.97, 171.78, z=[(0, 1.00), (1, 1.04)], tin="dolly", interp="flow", **SP)
+shot("truck", "ds2a", 20, 23, 188.00, 189.00, z=[(0, 1.00), (1, 1.04)], tin="fence111", interp="flow", **SP)     # we push through the fence
+# ---- DAYBREAK (e23-e29): "bright out": the sun comes up at the edge of the frame; the day burns white
+shot("sunrise", "p1", 23, 26, 29.05, 30.15, z=[(0, 1.00), (1, 1.04)], tin="daybreak111", interp="flow", **SP)
+shot("bright", "s1", 26, 29, 376.70, 377.66, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
+# ---- NIGHTFALL (e29-e45): "Oh, just another lonely night": the sun goes down, the city lights come on, the moon
+shot("lake", "p1", 29, 33, 169.80, 170.90, z=[(0, 1.00), (1, 1.04)], tin="brightout111", interp="flow", **SP)
+shot("marina", "p1", 33, 37, 123.30, 124.40, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", **SP)   # the lights come on as the night comes down
+shot("moon", "s4", 37, 45, 222.40, 224.95, z=[(0, 1.00), (1, 1.06)], tin="lookup111", interp="flow", seg=True, **SP)   # we look up: THE MOON rises behind him
+# ---- "Are you willing to sacrifice your life?" (e45-e57): the moon becomes the lamp over the kill table
+shot("lamp", "p1", 45, 48, 133.98, 135.10, z=[(0, 1.06), (1, 1.00)], tin="moon111", interp="flow", **SP)
+shot("table", "p1", 48, 51, 133.04, 133.90, z=[(0, 1.00), (1, 1.04)], tin="light_sweep108", interp="flow", **SP)
+shot("gloves", "p1", 51, 54, 164.00, 165.00, z=[(0, 1.00), (1, 1.04)], tin="plasticroll110", interp="flow", **SP)
+shot("scalpel", "p1", 54, 57, 180.00, 180.96, z=[(0, 1.00), (1, 1.04)], tin="underlight111", interp="flow", **SP)
+# ---- THE PASSENGER (e57-e65): the build; his shadow climbs the wall and grows into something else
+shot("passenger", "p1", 57, 65, 165.05, 166.55, z=[(0, 1.00), (1, 1.08)], tin="lightmatch111", interp="flow", seg=True, **SP)
+# ---- MONSTER (e65-e88): the drop
+shot("suit", "dmx", 65, 67, 94.90, 95.95, tmap=vel(65, 67, 94.90, 95.95), lin=True, interp="flow", tin="passenger111", **SP)   # "...I'm a monster"
+shot("suitclose", "dmx", 67, 69, 96.80, 97.80, tmap=vel(67, 69, 96.80, 97.80), lin=True, interp="flow", tin="dolly", **SP)
+shot("slide", "s1", 69, 70, 46.10, 46.55, interp="flow", tin="whip", **SP)                                      # "blood"
+shot("slides", "s1", 70, 71, 263.30, 263.75, interp="flow", tin="slide111", **SP)                               # "sucker"
+shot("goggles", "dmx", 71, 73, 106.10, 107.40, tmap=vel(71, 73, 106.10, 107.40), lin=True, interp="flow", tin="luminol108", **SP)
+shot("grin", "s1", 73, 75, 346.60, 347.70, tmap=vel(73, 75, 346.60, 347.70), lin=True, interp="flow", tin="double108", **SP)
+shot("redface", "s1", 75, 77, 79.40, 80.60, tmap=vel(75, 77, 79.40, 80.60), lin=True, interp="flow", tin="flicker109", **SP)
+shot("tape", "p7", 77, 79, 22.60, 23.60, tmap=vel(77, 79, 22.60, 23.60), lin=True, interp="flow", tin="siren111", hflip=True, **SP)   # "look who's in trouble" (the pack is mirrored: the tape reads backwards)
+shot("axe", "s4", 79, 81, 136.60, 137.80, tmap=vel(79, 81, 136.60, 137.80), lin=True, interp="flow", tin="whip", **SP)
+shot("mangrove", "s1", 81, 83, 174.70, 175.90, tmap=vel(81, 83, 174.70, 175.90), lin=True, interp="flow", tin="fronds108", **SP)
+shot("bamboo", "ds2b", 83, 85, 370.20, 371.20, tmap=vel(83, 85, 370.20, 371.20), lin=True, interp="flow", tin="canopy111", **SP)
+shot("aim", "ds2b", 85, 88, 372.45, 373.45, z=[(0, 1.00), (1, 1.05)], interp="flow", tin="dolly", tout="shot111", **SP)
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
 
 # ---- text (the approved v9 construction): style = cap | carry | bound | charge | slam | echo | hero | speed | <your own>
 #      words=[(WORD, edit t, line 0|1)] on the sung onsets, end=t, emph=[...]; rides=True draws it before the transition
-TEXT = []                                   # no text (rev 3: the owner removed I'M LOSING POWER)
+TEXT = []                                   # no text (the owner: start without)
 CAPS = []; CAP_Y = (1385, 1490); END_CAP = []
 CLOSE_T = None; DROP_TITLE = None; VANISH_T0 = None
 MONTAGE = (2, E_LOOP)
