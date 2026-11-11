@@ -127,7 +127,7 @@ shot("redface", "s1", 75, 77, 79.40, 80.60, tmap=vel(75, 77, 79.40, 80.60), lin=
 shot("tape", "p7", 77, 79, 22.60, 23.60, tmap=vel(77, 79, 22.60, 23.60), lin=True, interp="flow", tin="siren111", hflip=True, **SP)   # "look who's in trouble" (the pack is mirrored: the tape reads backwards)
 shot("axe", "s4", 79, 81, 136.60, 137.80, tmap=vel(79, 81, 136.60, 137.80), lin=True, interp="flow", tin="whip", **SP)
 shot("mangrove", "s1", 81, 83, 174.70, 175.90, tmap=vel(81, 83, 174.70, 175.90), lin=True, interp="flow", tin="fronds108", **SP)
-shot("bamboo", "ds2b", 83, 85, 370.20, 371.20, tmap=vel(83, 85, 370.20, 371.20), lin=True, interp="flow", tin="canopy111", **SP)
+shot("bamboo", "ds2b", 83, 85, 370.20, 371.20, tmap=vel(83, 85, 370.20, 371.20), lin=True, interp="flow", tin="bokeh110", **SP)   # the sunlit leaves fall out of focus; his face comes into focus out of them
 shot("aim", "ds2b", 85, 88, 372.45, 373.45, z=[(0, 1.00), (1, 1.05)], interp="flow", tin="dolly", tout="shot111", **SP)
 SHOTS = S
 for s in SHOTS:

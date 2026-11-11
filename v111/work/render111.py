@@ -14560,11 +14560,12 @@ def canopy111(A, B, j, f, sa, sb, pre=8, post=10):
     n1 = nz108(1141, 5); n2 = nz108(1142, 11)
     sh = int(f * 4) % n1.shape[1]
     dap = cv2.resize(np.roll(n1, sh, axis=1) * 0.55 + np.roll(n2, -sh // 2, axis=0) * 0.45, (W, H), interpolation=cv2.INTER_LINEAR)
-    thr = 0.78 - 0.95 * smooth(q)
-    m = np.clip((dap - thr) / 0.07, 0, 1); m = m * m * (3 - 2 * m)
-    m = np.maximum(m, smooth((q - 0.9) / 0.1))
-    glow = np.clip(cv2.GaussianBlur(m, (0, 0), 8) - m * 0.6, 0, 1) * math.sin(math.pi * clamp(q, 0, 1))
-    o = A * (1 - m[..., None]) + B * m[..., None] + glow[..., None] * np.array([0.35, 0.70, 0.85], np.float32) * 0.35
+    thr = 0.80 - 0.95 * smooth(q)
+    m = np.clip((dap - thr) / 0.16, 0, 1); m = m * m * (3 - 2 * m)
+    m = np.maximum(m, smooth((q - 0.85) / 0.15))
+    sun = np.clip((dap - thr + 0.12) / 0.20, 0, 1) * math.sin(math.pi * clamp(q, 0, 1))   # pools of sunlight, the next shot inside them
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    o = o * (1 + 0.55 * sun[..., None]) + sun[..., None] * np.array([0.30, 0.62, 0.80], np.float32) * 0.22
     return np.clip(o, 0, 1)
 TR2["canopy111"] = (canopy111, 8, 10)
 

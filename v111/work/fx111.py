@@ -4133,7 +4133,7 @@ def lightsout111(out, f, s_, person):
 MUZ_OUT = (884.0, 395.0)                                                         # where the flash was on screen (set from the aim shot)
 def flash_in111(out, f):
     if f > 22: return out
-    a = 0.75 * math.exp(-f / 5.0)
+    a = 0.70 * math.exp(-f / 4.0)
     d2 = ((_GX - MUZ_OUT[0]) ** 2 + (_GY - MUZ_OUT[1]) ** 2)
     glow = np.exp(-d2 / (2 * 520.0 ** 2)) * a
     return np.clip(out * (1 + 0.8 * glow[..., None]) + glow[..., None] * np.array([0.42, 0.66, 0.95], np.float32) * 0.6, 0, 1)
@@ -4412,7 +4412,7 @@ TR2["canopy111"] = (canopy111, 8, 10)
 
 # ---- THE SHOT (the loop): he raises the pistol at us and fires on "rumbles": the flash at the real muzzle (tracked), its
 # light over him and the woods; the flash's light carries over the cut onto frame 0.
-E_FIRE = 87.55
+E_FIRE = 87.86                                                                     # on the last frames: the flash crosses the cut
 MUZ_KEYS = [(372.45, 850.0, 1050.0), (372.70, 858.0, 520.0), (372.92, 860.0, 400.0), (373.17, 882.0, 405.0), (373.43, 885.0, 372.0)]   # (src t, x, y) output px
 def _muz(s_, f):
     t, u, _ = src_time(s_, f)
