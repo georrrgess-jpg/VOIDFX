@@ -3,7 +3,12 @@
                restored-source sampler, velocity + optical flow, the beat camera, the v9 text system, the v11 and v12 pieces.
                Template: tools/edl_template.py
   --base v11   the previous Flash standard, v11 BOP rev 4 (inside v12). Template: tools/edl_template.py
-  --base v110  the Dexter standard since 2026-11-09 (night), v110 SLEEPWALKER rev 3: the v109 base below + the v110 toolkit at the
+  --base v111  the Dexter standard since 2026-11-11, v111 MONSTER rev 1: the v110 base below + the v111 toolkit at the end of
+               fxN.py (NIGHTSHADE grade, LIGHTS OUT with sparks, emerge, door pan, fence push, daybreak, bright out, nightfall,
+               look up, THE MOON (a moon in the sky mask that becomes a lamp), underlight, light match, THE PASSENGER drop,
+               slide, BLEED, THE SIREN + light bar, god rays, dust in light, THE TRACER loop).
+               Template: v111's own EDL (no text; rewrite it; its song is a padded copy, src/monster_pad.wav).
+  --base v110  the previous Dexter standard (2026-11-09 night), v110 SLEEPWALKER rev 3: the v109 base below + the v110 toolkit at the
                end of fxN.py (3 A.M. grade and dream finish, lights on, brownout, fog roll, falling asleep, THE SURGE (fan light
                through turning blades, a blade across the lens on the drop), THE BARREL (a seamless push into a real muzzle),
                bokeh, tear, curtain, plastic roll, brush, THE SWINGING LIGHT, tilt, THE DRIP loop, a calmer beat camera).
@@ -23,9 +28,9 @@
                tools/splice_section.py N vN/work/fxN.py --replace. Template: v107's own EDL (the worked example; rewrite it).
   --base v105  the previous Dexter standard, v105 DRACULA rev 3: the v4-v9 engine + the v103 FOREVER, v104 THE PASSENGER and
                v105 DRACULA toolkits in fxN.py (spliced into renderN.py by splice.py). Template: tools/edl_template_v105.py
-Without --base: v110 if the slug or title mentions Dexter, otherwise v12.
+Without --base: v111 if the slug or title mentions Dexter, otherwise v12.
 
-Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song" [--base v12|v11|v110|v109|v108|v107|v105]
+Usage:  python3 tools/new_edit.py N SLUG "TITLE — Show × Song" [--base v12|v11|v111|v110|v109|v108|v107|v105]
 Creates vN/{work,frames,audio,out}; copies the engine wired to vN/work/edlN.py; writes edlN.py from the base's template;
 adds the media folders to .gitignore. The engine reads every path and the output file name from the EDL (VER, SLUG).
 """
@@ -35,8 +40,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 n, slug = args[0], args[1]; title = args[2] if len(args) > 2 else slug
 if "--base" in sys.argv: BASE = sys.argv[sys.argv.index("--base") + 1]; args = [a for a in args if a != BASE]; n, slug = args[0], args[1]; title = args[2] if len(args) > 2 else slug
-else: BASE = "v110" if "dexter" in (slug + title).lower() else "v12"
-assert BASE in ("v12", "v11", "v110", "v109", "v108", "v107", "v105"), "--base must be v12 (Flash), v11 (the previous Flash standard), v110 (Dexter), v109, v108, v107 or v105 (earlier Dexter standards)"
+else: BASE = "v111" if "dexter" in (slug + title).lower() else "v12"
+assert BASE in ("v12", "v11", "v111", "v110", "v109", "v108", "v107", "v105"), "--base must be v12 (Flash), v11 (the previous Flash standard), v111 (Dexter), v110, v109, v108, v107 or v105 (earlier Dexter standards)"
 V = f"v{n}"; D = f"{ROOT}/{V}"
 if os.path.exists(f"{D}/work/edl{n}.py"): sys.exit(f"{V} already exists — refusing to overwrite")
 for sub in ("work", "frames", "audio", "out"): os.makedirs(f"{D}/{sub}", exist_ok=True)
@@ -74,8 +79,8 @@ else:
     shutil.copy(f"{ROOT}/{BASE}/work/facetrack.py", f"{D}/work/facetrack.py")
     port("analyze.py", "analyze.py", [(f'f"{BASE}/work/', f'f"{V}/work/'), (f'f"{BASE}/frames/', f'f"{V}/frames/'), ('f"v6/work/', f'f"{V}/work/'), ('f"v6/frames/', f'f"{V}/frames/')])
     TEMPLATE = "edl_template.py"
-    if BASE in ("v107", "v108", "v109", "v110"):                                           # the edit's own section + the worked EDL
-        name_ = {"v107": "v107 ALL CAPS", "v108": "v108 DOOMSDAY", "v109": "v109 PHANTOM", "v110": "v110 SLEEPWALKER"}[BASE]
+    if BASE in ("v107", "v108", "v109", "v110", "v111"):                                           # the edit's own section + the worked EDL
+        name_ = {"v107": "v107 ALL CAPS", "v108": "v108 DOOMSDAY", "v109": "v109 PHANTOM", "v110": "v110 SLEEPWALKER", "v111": "v111 MONSTER"}[BASE]
         hdr = open(f"{ROOT}/{BASE}/work/fx{BN}.py").read().split("\n", 1)[0]
         new_hdr = f"# ============================================================================ {V} — {title}: toolkit from the {BASE} standard (restyle it)"
         r = open(f"{D}/work/render{n}.py").read(); assert hdr in r, f"{BASE} section header not found in render{BN}.py"
@@ -107,7 +112,7 @@ next:
   python3 tools/sharpness.py {n} --src                             # clip quality before rendering
   read studio/OWNER_RULES.md and studio/WORKFLOW.md, then edit {V}/work/edl{n}.py (shots, transitions from studio/transitions.json,
     SIGNATURE, HERO, SET_PIECES, knobs)""" + (f" and {V}/work/fx{n}.py (python3 {V}/work/splice.py)" if BASE == "v105" else
-                                  f" and {V}/work/fx{n}.py (spliced automatically by build.sh)" if BASE in ("v107", "v108", "v109", "v110") else "") + f"""
+                                  f" and {V}/work/fx{n}.py (spliced automatically by build.sh)" if BASE in ("v107", "v108", "v109", "v110", "v111") else "") + f"""
   bash tools/build.sh {n} audio plan                               # sound, then the plan against every owner rule (0 FAIL before rendering)
   bash tools/build.sh {n} prep auto                                # tracks/mattes, the plan check, restoration in the background, sheets of every cut
   bash tools/build.sh {n} sheet:NAME:f,f clip:A:B                  # warm stills and motion for every custom piece

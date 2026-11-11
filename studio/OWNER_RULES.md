@@ -1,7 +1,7 @@
 # The owner's rules, on one page (both studios)
 
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
-(v4–v15, v101–v110) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
+(v4–v15, v101–v111) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
 Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
@@ -23,6 +23,7 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 - **Interface / HUD overlays drawn over the footage**: a heart-monitor trace, readouts, timers (v6's VHS counter; v109 rev 2: *"change the heart monitor … You don't have to replace this with anything"*). A frame treatment (v109's surveillance feed) is fine; a widget parked on the picture is not. **[plan]** registry (`ekg109` rejected)
 - **Spins in a smooth, dark edit**: v109 rev 1 removed the headspin for flow (*"I don't really like how that flows with this edit"*), and the roll and flip at its end went with it. Spins belong to kinetic edits, once. **[eye]**
 - **A graphic where the cut needs none** (v110 rev 2: the window-light panes over the opening, *"isn't really necessary"*). **[eye]**
+- **Forensic or lab graphics as a transition** (luminol glow, UV, spatter analysis overlays) (v111 rev 1: *"I dislike the graphic/animation … around the 23 second mark the forensics one"*; `luminol108` now rejected). Use the scene's own material (the blood soaking out). **[plan]** registry
 - **Stripe or line transitions and after-images in a dark, smooth edit** (v110 rev 1: *"the doorway transition at 16 seconds … the lines transition at 17 seconds"*: an after-image and a rime frost). **[plan]** registry cautions
 - **A mirrored pack shot**: read any text in the frame (v109: p7's tape read SSORƆ TON OD); flip it back with `hflip=True` (v109 base). **[eye]**
 - A line shown as spoken when the lips don't match (v101); captions on words the song isn't singing (v103).
@@ -55,6 +56,9 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 23. **A calmer drop**: no impact shake on the drop; the beat camera rests through the drop's first bar and runs at about half its punch and kick (v110 rev 2: *"the scenes shake a little bit too much … reduce the shaking/beat jump"*). The beat camera stays the default, lighter. **[eye]**
 24. **Text: start without; if a title rides a drop, phase it** (the setup words already written before the drop, the payoff word on it), **and expect to remove it** (v110: *"I'm losing, and then power would be when it drops"*, then *"remove the I'm losing power"* at the verdict; as v12 removed both titles). **[plan]** titles
 25. **A prop dive is one continuous, seamless move** (the push into the real muzzle, light first, the next face only once the opening is big, the motion carried through the cut; v110 rev 2 *"more seamless and smoother"*).
+26. **A creative loop in which the end causes the start**, never a flash, burst or fade into frame 0 (v111 rev 1: *"implement a new more creative loop"* after a muzzle-flash burst; THE TRACER: he fires, we whip after the tracer, and it lands as the light that blows on "shoot"). **[plan]** loop
+27. **A living graphic or animation in every section, on the shots, not only at the cuts** (particles, rays, light washes, a rising moon, dust in a beam), motivated by a light or material in the shot and kept off faces (v111 rev 1: *"I want more custom graphics and animations"*; the verdict: *"adequate"*). **[eye]**
+28. **"Adequate" is not "liked":** on a "best edit" brief, plan one designed animation per section and a signature that reads at phone size from the first delivery (v111 verdict). **[eye]**
 
 ## 3. Text
 - Dexter: every clearly sung line captioned word by word on its sung onset, in the v9 style (heavy caps, keyline, red emphasis, eased in). Flash: text is optional and titles must earn their place (v12 removed both).
