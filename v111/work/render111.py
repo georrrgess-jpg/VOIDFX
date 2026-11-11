@@ -14546,8 +14546,8 @@ def passenger111(A, B, j, f, sa, sb, pre=18, post=40):
     m = np.maximum(m, smooth((q - qc - 0.10) / 0.12))
     ZB = 1 + 0.28 * (1 - smooth(q))
     Bz = _zoom_about(B, ZB, W / 2, H * 0.45, cv2.BORDER_REPLICATE)
-    edge = np.exp(-((r - front) / 0.06) ** 2) * (1 - P) * (1 - smooth((q - qc) / 0.15))
-    o = A * (1 - m[..., None]) + Bz * m[..., None] + edge[..., None] * RED111 * 0.35
+    edge = np.exp(-((r - front) / 0.13) ** 2) * (1 - P) * (1 - smooth((q - qc) / 0.15))
+    o = A * (1 - m[..., None]) + Bz * m[..., None] + edge[..., None] * RED111 * 0.16
     return np.clip(o, 0, 1)
 TR2["passenger111"] = (passenger111, 18, 40)
 RED111 = np.array([0.10, 0.13, 0.95], np.float32)
@@ -14641,8 +14641,8 @@ def shot111(out, f, s_):
         d = np.sqrt(d2)
         m = np.clip((R - d) / (40 + 0.25 * R) + 0.5, 0, 1); m = m * m * (3 - 2 * m)
         if w >= 1: m = np.ones_like(m)
-        rim = np.exp(-((d - R) / (18 + 0.10 * R)) ** 2) * (1 - smooth((w - 0.75) / 0.25))
-        o = o * (1 - m[..., None]) + _LV111["t0"] * m[..., None] + rim[..., None] * np.array([0.62, 0.84, 1.0], np.float32) * 0.85
+        rim = np.exp(-((d - R) / (40 + 0.18 * R)) ** 2) * (1 - smooth((w - 0.70) / 0.30)) * smooth((R - 60) / 120)
+        o = o * (1 - m[..., None]) + _LV111["t0"] * m[..., None] + rim[..., None] * np.array([0.62, 0.84, 1.0], np.float32) * 0.45
     return np.clip(o, 0, 1)
 _LV111 = {}
 
