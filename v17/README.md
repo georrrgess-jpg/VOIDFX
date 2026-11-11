@@ -119,6 +119,22 @@ the emblem charges, and the thunder moved onto the strike.
   follows him.
 - **The strike was thin:** the bolt is thicker and brighter, and the next shot covers the width faster.
 
+## Round 3 (the owner's notes on round 2)
+> "I dislike the beginning scene where barry seperates into a speed mirage and himself. Replace this scene with
+> something different. Additionally, I would like for you to change the scene at 6 seconds or fix the part where barrys
+> mouth and facial features as well as part of the suit are distorted. Furthermore, I would like for you to have a
+> really cool and unique transition or focal point to try and get the viewers attention. Also fix the half second of the
+> clouds and lightning in the sky that appear at 11 and a half seconds I don't like this scene. I would also like for
+> you to change the loop to something that's more creative and cool and visually appealing ensure this loop is perfect
+> and seamless."
+
+| Note | Diagnosis | Change |
+|---|---|---|
+| The speed-mirage shot (1.4 s) | the flash_a race shot doubles him | **SONIC BOOM** (the attention-grabber, 1.4 s): as he runs at us a vapour cone condenses on his chest and a shock ring bursts out, bending the picture as it passes; inside it is his view at speed, a POV run down the avenue streaked with lightning (flash_blitzkrieg 62.4 s) |
+| The distorted face and suit at 6 s | that Blitzkrieg close-up is AI-processed at the source (waxy skin), and the suit recolour blotched the cowl | the shot is gone; **THE SUN** now rises on the S1 golden-hour shot (Barry turns and looks up into it, open sky behind him), about 2 s as the centrepiece |
+| Clouds and lightning at 11.5 s | the storm footage used as a full-frame cloud cover | **ZIP**: the camera whips after him and a bolt of his lightning rides the seam |
+| A more creative loop, perfect and seamless | the clouds-over loop was a cover | **LIGHTNING ASCENT**: the storm comes back (the strike); his suit charges with gold arcs; a bolt launches from beside him straight up; the camera rises with it into the storm and comes to rest exactly on frame 0 (frame 0's own picture at the wrap) |
+
 ## Look: BLUE SKY
 - **The grade:** high-key and clean. Skies are pushed to cerulean, highlights are sunny gold, the suit's red is rich and
   skin stays natural. The storm is in cool grey.

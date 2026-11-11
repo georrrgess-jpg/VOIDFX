@@ -1374,6 +1374,13 @@
       ],
       "evidence": "v17 rev 4: not mentioned in round 1 notes",
       "studio": "flash"
+    },
+    "cloud_break": {
+      "verdict": "rejected",
+      "tags": [],
+      "evidence": "v17 round 2: \"fix the half second of the clouds and lightning in the sky that appear at 11 and a half seconds I don't like this scene\" (the storm footage used as a full-frame cloud cover)",
+      "fix": "v17 round 3: ZIP (a lightning whip); don't fill the frame with sky footage as a cover",
+      "studio": "flash"
     }
   },
   "families": {
