@@ -389,6 +389,66 @@
    "round": 1,
    "cat": "face_overlay",
    "text": "EMBLEM SUN's face guard cut a hard oval out of the glow; a wide soft guard; the iris rim kept off faces"
+  },
+  {
+   "t": "2026-11-11 20:35:19",
+   "round": 1,
+   "cat": "seam",
+   "text": "loop seam 1.93: the beat camera punched frame 0; cam_live now starts at e1 (seam 0.10)"
+  },
+  {
+   "t": "2026-11-11 20:35:19",
+   "round": 1,
+   "cat": "other",
+   "text": "the last shot (fbh 54.4) had glowing electric eyes, excluded by the brief; replaced by the S1 airfield shot"
+  },
+  {
+   "t": "2026-11-11 20:35:19",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "procedural clouds read as grey plaster (cloud_break, loop); replaced by the opening's real storm footage"
+  },
+  {
+   "t": "2026-11-11 20:35:19",
+   "round": 1,
+   "cat": "restyle",
+   "text": "critique: the Blitzkrieg pack's suit reads tan; red restored on his matte, never his skin"
+  },
+  {
+   "t": "2026-11-11 20:35:19",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "critique: the focal sun was a clip-art star hidden at the frame edge; photographic sun as a halo behind his head, sky exposed down"
+  },
+  {
+   "t": "2026-11-11 20:35:19",
+   "round": 1,
+   "cat": "framing",
+   "text": "critique: last shot half off the left edge; recentred"
+  },
+  {
+   "t": "2026-11-11 20:35:19",
+   "round": 1,
+   "cat": "other",
+   "text": "a hidden source cut on the first frame of the grin shot (flash_s3 44.033)"
+  },
+  {
+   "t": "2026-11-11 20:35:22",
+   "round": 1,
+   "cat": "seam",
+   "text": "critique: loop of grey cloud into a grey start; Barry and the sun kept to the last half second, the storm comes through the gaps"
+  },
+  {
+   "t": "2026-11-11 20:35:22",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: look-alike shots (two tan Blitzkrieg masked close-ups; two S1 close-ups with the same cut cheek); two replaced"
+  },
+  {
+   "t": "2026-11-11 20:35:22",
+   "round": 1,
+   "cat": "other",
+   "text": "critique: five dissolves with two faces overlapping; rebuilt as light fronts"
   }
  ],
  "round_starts": {
