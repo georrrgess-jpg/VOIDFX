@@ -177,3 +177,11 @@ v16/work/*.npz
 v16/work/*.npy
 v16/sr/
 v16/work/cache/
+v17/work/*.log
+v17/audio/
+v17/frames/
+v17/out/
+v17/work/*.npz
+v17/work/*.npy
+v17/sr/
+v17/work/cache/

@@ -1,0 +1,159 @@
+{
+ "edit": "v17",
+ "round": 1,
+ "stages": [
+  {
+   "t": "2026-11-11 17:55:15",
+   "round": 1,
+   "step": "song:src/mr_blue_sky.mp3",
+   "s": 385.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:09:25",
+   "round": 1,
+   "step": "song:src/mr_blue_sky.mp3:176:328",
+   "s": 156.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:21:27",
+   "round": 1,
+   "step": "prep",
+   "s": 205.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:27:59",
+   "round": 1,
+   "step": "sheet:sp1:0,22,34,40,46,56,345,372,392,404,416,432",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:28:57",
+   "round": 1,
+   "step": "sheet:sp1:12,24,34,40,345,372,398,416,432,650,690,705",
+   "s": 19.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:30:07",
+   "round": 1,
+   "step": "sheet:cl:345,390,404,665,685,698,703,710,718,1035,1420,1460",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:31:46",
+   "round": 1,
+   "step": "sheet:cl:360,392,675,690,700,710,1030,1036,1420,1440,1460,1478",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:32:31",
+   "round": 1,
+   "step": "sheet:tr1:80,121,163,204,245,286,326,451,492,533,574,615",
+   "s": 31.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:32:36",
+   "round": 1,
+   "step": "sheet:tr2:780,821,862,903,945,986,1027,1233,1274,1315,1356,1397",
+   "s": 5.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:33:14",
+   "round": 1,
+   "step": "sheet:emb:1072,1082,1090,1098,1106,1112,1118,1124,1130,1138,1146,1154",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:33:52",
+   "round": 1,
+   "step": "sheet:emb:1106,1112,1118,1124,1130,1138",
+   "s": 17.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:35:15",
+   "round": 1,
+   "step": "audio",
+   "s": 7.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:36:23",
+   "round": 1,
+   "step": "sheet:mid1:20,61,102,144,185,226,267,308,370,432,473,514,555,596,658,741",
+   "s": 18.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:36:27",
+   "round": 1,
+   "step": "sheet:mid2:802,843,884,926,967,1008,1049,1101,1163,1214,1255,1296,1337,1378,1440",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 18:40:26",
+   "round": 1,
+   "step": "prep",
+   "s": 193.0,
+   "rc": 0
+  }
+ ],
+ "notes": [],
+ "catches": [
+  {
+   "t": "2026-11-11 18:35:54",
+   "round": 1,
+   "cat": "other",
+   "text": "the automatic window pick was the instrumental outro; chose 'Hey, running down the avenue' to 'for so long' and shifted one half-beat so the kicks are on even e"
+  },
+  {
+   "t": "2026-11-11 18:35:54",
+   "round": 1,
+   "cat": "other",
+   "text": "pack10 (picked as Flash daylight) is Dexter footage; excluded"
+  },
+  {
+   "t": "2026-11-11 18:35:54",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "first emblem shot was side-on and moving; swapped for the street shot with a steady frontal emblem, tracked per source frame"
+  },
+  {
+   "t": "2026-11-11 18:35:54",
+   "round": 1,
+   "cat": "whiteout",
+   "text": "SUN BREAK washed the storm flat grey; the sun now burns through, masked by the thick cloud"
+  },
+  {
+   "t": "2026-11-11 18:35:54",
+   "round": 1,
+   "cat": "framing",
+   "text": "the ledge shot framed a bystander's face (largest face); framed on the Flash"
+  },
+  {
+   "t": "2026-11-11 18:35:54",
+   "round": 1,
+   "cat": "drawn_asset",
+   "text": "the clouds read as grey stucco at full cover; softer octaves, billow shading, brief full cover"
+  },
+  {
+   "t": "2026-11-11 18:35:54",
+   "round": 1,
+   "cat": "face_overlay",
+   "text": "EMBLEM SUN's face guard cut a hard oval out of the glow; a wide soft guard; the iris rim kept off faces"
+  }
+ ],
+ "round_starts": {
+  "1": "2026-11-11 18:35:57"
+ }
+}
