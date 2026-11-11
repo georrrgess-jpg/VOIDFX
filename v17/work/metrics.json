@@ -449,6 +449,20 @@
    "step": "sheet:em6:1100,1112,1118,1122,1126,1129,1134",
    "s": 12.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-11 21:32:20",
+   "round": 2,
+   "step": "audio",
+   "s": 3.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 21:32:29",
+   "round": 2,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -579,6 +593,18 @@
    "round": 1,
    "cat": "other",
    "text": "critique: five dissolves with two faces overlapping; rebuilt as light fronts"
+  },
+  {
+   "t": "2026-11-11 21:32:40",
+   "round": 2,
+   "cat": "face_overlay",
+   "text": "round 2 build: the new emblem flew across his face; rerouted up the open side; its sun and the strike's bolt were hidden by over-wide face guards (face_soft pad 1.3 is twice the face), tightened to the face itself"
+  },
+  {
+   "t": "2026-11-11 21:32:40",
+   "round": 2,
+   "cat": "other",
+   "text": "round 2 build: candidate shots flash_s5 113.9-118.5 (stutter-cut every frame) and flash_a 8.4-10.5 (the same S4 shot as runlit) rejected before use"
   }
  ],
  "round_starts": {

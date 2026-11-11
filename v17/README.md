@@ -16,9 +16,15 @@ The Flash was made in a storm; this is the day after it.
 - **"Where once was pity":** the hurt days. The last raindrop lands (**RAIN RIPPLE**), a cloud's shadow passes
   (**CLOUD SHADOW**), and the opening's storm rolls back in. It parts from the sun outward on "Mr. Blue Sky" (**CLOUD
   BREAK**). Barry looks up, and the sun opens onto him in the sunshine (**SUN OPEN**).
-- **The happy days:** Flash Day with its balloons, the ball game, Barry laughing, XS, Wally, the Speed Force.
-- **EMBLEM SUN (the chorus):** the real chest emblem (tracked on the source) glints, lights from within, throws rays and
-  becomes the sun. The camera rises after it into the sky of the next shot.
+- **The happy days:** Flash Day with its balloons, the ball game, Barry laughing, then a Flash bolt flies at the lens
+  with the Flash inside it, charged with lightning (**BOLT WINDOW**), the suit charging in the sunlit trees, the Speed
+  Force.
+- **EMBLEM IGNITE (the chorus; round 2):** the real chest emblem (tracked on the source) charges, lightning crawling
+  round its rim. It tears free of his chest on a tether of current and coin-flips as it rises up the open side of the
+  frame, clear of his face. Face-on again, it ignites: the emblem is the sun, throwing lightning down the side. The
+  camera rises after it into the sky of the next shot, where it hangs.
+- **LIGHTNING STRIKE (round 2), "so long":** the light dims, and a real bolt strikes beside him on the cut. The last
+  shot burns in outward from the bolt's channel: the storm is coming back.
 - **CLOUD OVER (the loop), "you had to hide away for so long":** the clouds roll back over the sun. They are frame 0's
   real storm: it comes over him through the gaps and closes into frame 0.
 
@@ -47,7 +53,7 @@ The hero is **THE SUN**: the sun break, the focal piece, the emblem, the loop (4
 | 16–20 | he turns and grins; *sunshine glints* | **GLINT SWEEP** |
 | 20–24 | the S5 run with lightning | **SKY WHIP** |
 | 24–28 | Barry at golden hour (S1); *glints* | **FLARE CUT** |
-| 28–32 | the S2 suit, grinning in the daylight; *glints* | **RAY RAKE** |
+| 28–32 | the S2 suit, grinning in the daylight; *the suit crackles* | **RAY RAKE** |
 | 32–40 | **THE SUN** rises behind him (the suit's red restored) | **BLOOM CUT** |
 | 40–44 | the Flash on the ledge | **GHOST IRIS** |
 | 44–48 | he lands in the street (S2) | **PRISM** |
@@ -57,26 +63,44 @@ The hero is **THE SUN**: the sun break, the focal piece, the emblem, the loop (4
 | 60–64 | masked (S1) | **TILT UP** |
 | 64–68 | he walks under a grey sky (S3); the storm gathers | **CLOUD SHADOW** |
 | 68–72 | Barry looks up at the sky, "Mr. Blue Sky"; *god rays* | **CLOUD BREAK** |
-| 72–76 | Barry in the sunshine (S2), "living here today"; *glints* | **SUN OPEN** |
-| 76–80 | arms crossed, grinning (S6) | **SUN WHIP** |
+| 72–76 | Barry in the sunshine (S2), "living here today"; *dust in the sunlight* | **SUN OPEN** |
+| 76–80 | arms crossed, grinning (S6); *dust in the sunlight* | **SUN WHIP** |
 | 80–84 | Flash Day, waving (S2) | **BALLOON RISE** |
 | 84–88 | the ball game (S5) | **LIGHT STREAK** |
 | 88–92 | Barry laughing (S5) | **THROW WHIP** |
-| 92–96 | XS (S5) | **LIGHT LEAK** |
-| 96–100 | Wally | **SPIN ROLL** (the one spin; lands on his face) |
+| 92–96 | the Flash charged with lightning (S2) | **BOLT WINDOW** |
+| 96–100 | the S5 suit charging in the sunlit trees | **SPIN ROLL** (the one spin; lands on his face) |
 | 100–104 | Barry in the Speed Force's blue clouds (S3) | **BLUE BLOOM** |
-| 104–110 | the emblem (S1 suit) | a downbeat cut, then **EMBLEM SUN** |
-| 110–116 | the leap over the airfield (S1) | **EMBLEM SUN** |
+| 104–110 | the emblem, close | a downbeat cut, then **EMBLEM IGNITE** |
+| 110–116 | the leap over the airfield (S1) | **EMBLEM IGNITE** |
 | 116–120 | the chest device lit (S2) | **HORIZON SLIDE** |
 | 120–124 | Barry in a tux (S5) | **BOKEH RACK** |
-| 124–128 | the S5 suit against the open sky | **GLARE WASH** |
+| 124–128 | the S5 suit against the open sky; *the suit crackles* | **GLARE WASH** |
 | 128–132 | masked, grinning, lightning, "hide away" | **HIDE PEEK** |
 | 132–136 | the run, close | **SMEAR** |
-| 136–144 | "so long": **CLOUD OVER** into frame 0 | **SPLIT SLIDE** |
+| 136–144 | "so long": **CLOUD OVER** into frame 0 | **LIGHTNING STRIKE** |
 
-32 designed transitions and the loop in 24.7 s (1.34/s), all custom, plus in-shot animations (in italics). The light
+33 designed transitions and the loop in 24.7 s (1.34/s), all custom, plus in-shot animations (in italics). The light
 transitions are fronts of light that the next shot comes in behind (a raking shaft, a bloom, a slot, a starburst, a
 corner glare, the sun from above), not dissolves.
+
+## Round 2 (the owner's notes on rev 4)
+> "I generally like this edit, but there's a few things I would like to be changed. Firstly, I largely dislike the
+> transition done with the emblem at 19 seconds. It kind of feels incomplete and as if the emblem isn't really doing
+> anything. I would rather you make it a transition from the emblem into the sun or just a general emblem and lightning
+> transition. Additionally, I don't really like the transition done towards the end that is block transition with the
+> three block lines. I also don't like the scenes with Wally and XS. I'd rather those just be flash scenes. And I would
+> like more creative transitions and unique graphics. Implement anything you believe will improve the edit."
+
+| Note | Diagnosis | Change |
+|---|---|---|
+| The emblem "isn't really doing anything" | v1 lit the emblem in place and the camera tilted away: a glow, not an action | **EMBLEM IGNITE**: the real emblem charges, tears free on a tether of current, coin-flips (its back plain gold, never the front mirrored) up the open side of the frame, ignites into the sun and throws lightning; the camera rises after it into the next shot's sky |
+| The three-block slide | a generic slice wipe | **LIGHTNING STRIKE**: the light dims, a real bolt strikes on the cut and the last shot burns in from its channel. It also sets up the loop's storm |
+| No Wally, no XS | stay on Barry (v109 rule 6, Flash form) | the Flash charged with lightning (S2) and the S5 suit charging in sunlit trees. **BOLT WINDOW** (a Flash bolt flies at the lens with the next shot inside) replaces the light leak |
+| More creative transitions and unique graphics | | the three above, plus two in-shot graphics: **CRACKLE** (short gold arcs crawl over his suit, never his face, stronger on the beat) and **MOTES** (dust drifting in the sunlight) |
+
+Kept: the spin (it now lands on the new forest shot's centred face). Sound: a short zap on the bolt window, a crackle as
+the emblem charges, and the thunder moved onto the strike.
 
 ## Look: BLUE SKY
 - **The grade:** high-key and clean. Skies are pushed to cerulean, highlights are sunny gold, the suit's red is rich and
