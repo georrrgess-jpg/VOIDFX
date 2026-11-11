@@ -97,7 +97,7 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 
 SP = dict(look="night111")
 # ---- LIGHTS OUT (e0-e11): "I shoot the lights out": the city's lights behind him go out, a wave from the edges in
-shot("lights", "p1", 0, 11, 123.30, 124.40, z=[(0, 1.00), (1, 1.07)], interp="flow", seg=True, face=None, cx=(745, 745), **SP)   # frame 0: the marina at night, slowed (the shot's flash lands here)
+shot("lights", "p1", 0, 11, 123.30, 124.40, z=[(0, 1.00), (1, 1.12)], interp="flow", seg=True, face=None, cx=(745, 745), **SP)   # frame 0: the marina at night, slowed (the shot's flash lands here)
 # ---- HIDE (e11-e23): "Hide till it's bright out": in the dark, behind the door, behind the fence, waiting for the light
 shot("dark", "ds2b", 11, 14, 323.40, 324.65, z=[(0, 1.00), (1, 1.04)], tin="emerge111", interp="flow", **SP)     # the light comes back first, from below
 shot("door", "s4", 14, 17, 157.95, 158.95, z=[(0, 1.00), (1, 1.04)], tin="facematch108", interp="flow", **SP)    # his face and its reflection

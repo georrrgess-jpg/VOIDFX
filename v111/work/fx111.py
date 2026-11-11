@@ -4092,9 +4092,10 @@ def _lo_map(s_):
         items = [(abs(float(xs[cc == i].mean()) - W / 8), i) for i in range(1, n) if (cc == i).sum() >= 2]
         items.sort(reverse=True)                                                  # the outermost first
         rng = np.random.default_rng(1101)
+        early = {0: E.th(1.4), 1: E.th(4.3)}                                       # one blows on "shoot", one more before the wave
         for r_, (_, i) in enumerate(items):
             u = r_ / max(1, len(items) - 1)
-            tmap_[cc == i] = T_WAVE[0] + (T_WAVE[1] - T_WAVE[0]) * clamp(u + rng.uniform(-0.08, 0.08), 0, 1)
+            tmap_[cc == i] = early.get(r_, T_WAVE[0] + (T_WAVE[1] - T_WAVE[0]) * clamp(u + rng.uniform(-0.08, 0.08), 0, 1))
         grow = cv2.erode(tmap_, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))   # each light's glow dies with it
         _LO["map"] = (grow, len(items))
     return _LO["map"]
@@ -4108,6 +4109,8 @@ def lightsout111(out, f, s_, person):
     mult[st_] = 1 - 0.6 * (np.sin((dt[st_] + 0.14) * 140) > 0.1)                   # the stutter
     fl = (dt >= 0) & (dt < 0.05); mult[fl] = 1.9                                   # it blows
     mult[dt >= 0.05] = 0.08                                                        # out
+    if t < 0.45:                                                                   # the shot's impact: every light shivers
+        mult[dt < -0.14] *= 1 - 0.45 * math.exp(-t / 0.18) * (math.sin(t * 95) > -0.2)
     mult = cv2.GaussianBlur(mult, (0, 0), 2.0)
     M = cv2.resize(mult, (W, H), interpolation=cv2.INTER_CUBIC)
     frac = float(np.mean(np.isfinite(tm) & (tm < t))) / max(1e-6, float(np.mean(np.isfinite(tm))))
@@ -4333,6 +4336,10 @@ TR2["moon111"] = (moon111, 16, 16)
 
 # ---- THE PASSENGER (the build, e57-e65): crouched in the light from below, the shadows grow around him (the midtones
 # sink into the dark, a little more on every beat of the riser) while the light in his hands pulses.
+def _face_guard(hx, hy, hw):
+    el = ((_GX - hx) / (0.62 * hw)) ** 2 + ((_GY - hy) / (0.80 * hw)) ** 2
+    return np.clip(el - 0.6, 0, 1)                                               # 0 on his face, 1 away from it
+
 def _ps_u(f):
     return clamp((f / FPS - E.th(57)) / (E.th(65) - E.th(57)), 0, 1)
 
@@ -4345,6 +4352,8 @@ def shadow111(out, f, s_, person):
     ph = (t / E.HB) % 2.0
     pulse = math.exp(-ph * E.HB / 0.10) * clamp((t - E.th(59)) / 1.0, 0, 1)      # the light breathes on the beat
     hot = cv2.resize(cv2.GaussianBlur(cv2.resize(np.clip(L - 0.7, 0, 1), (W // 8, H // 8)), (0, 0), 6), (W, H))
+    uu = clamp((f - s_["f0"]) / max(1, s_["f1"] - s_["f0"]), 0, 1)
+    hot = hot * _face_guard(505.0 + 25 * uu, 360.0 - 10 * uu, 360.0 * (1 + 0.08 * uu))
     o = out * k[..., None] + hot[..., None] * np.array([0.92, 0.94, 0.95], np.float32) * (0.25 + 0.6 * pulse) * u
     return np.clip(o, 0, 1)
 
@@ -4412,7 +4421,7 @@ TR2["canopy111"] = (canopy111, 8, 10)
 
 # ---- THE SHOT (the loop): he raises the pistol at us and fires on "rumbles": the flash at the real muzzle (tracked), its
 # light over him and the woods; the flash's light carries over the cut onto frame 0.
-E_FIRE = 87.86                                                                     # on the last frames: the flash crosses the cut
+E_FIRE = 87.30                                                                     # on "rumbles": the flash floods, and frame 0 is inside its light by the last frame
 MUZ_KEYS = [(372.45, 850.0, 1050.0), (372.70, 858.0, 520.0), (372.92, 860.0, 400.0), (373.17, 882.0, 405.0), (373.43, 885.0, 372.0)]   # (src t, x, y) output px
 def _muz(s_, f):
     t, u, _ = src_time(s_, f)
@@ -4446,7 +4455,16 @@ def shot111(out, f, s_):
         sm = cv2.resize(nz108(1151, 4), (W, H)); r = 40 + 18 * (k - 3)
         puff = np.exp(-d2 / (2 * r * r)) * np.clip((sm - 0.35) * 2.5, 0, 1) * 0.35 * math.exp(-(k - 3) / 12)
         o = o * (1 - puff[..., None]) + puff[..., None] * 0.55
+    K = (E.DUR_F - 1) - tf * FPS
+    wsh = smooth(k / 1.5) * (1 - smooth((k - (K - 5)) / 5.0))                    # the flash floods the frame and holds while the pictures swap
+    o = o * (1 - 0.72 * wsh) + np.array([0.60, 0.80, 0.96], np.float32) * 0.72 * wsh
+    w = smooth((k - 2.0) / max(1.0, K - 7.0))                                     # ... and in its light, frame 0 (the loop lands)
+    if w > 0:
+        if "t0" not in _LV111: _LV111["t0"] = flash_in111(lightsout111(frame0_plate108().copy(), 0, SHOTS[0], _person(SHOTS[0], 0)), 0)
+        tgt = _LV111["t0"] * (1 - 0.72 * wsh) + np.array([0.60, 0.80, 0.96], np.float32) * 0.72 * wsh
+        o = o * (1 - w) + tgt * w
     return np.clip(o, 0, 1)
+_LV111 = {}
 
 
 # ---- LOOK UP (the marina -> the moon): we tilt up off the city into the night sky (motion-blurred), and he is under it.
@@ -4555,4 +4573,5 @@ def render(f):
     out = flash_in111(out, f)
     out = beat_fx(out, f)
     out = flash_governor(out)
-    return (np.clip(finish111(out, f, s), 0, 1) * 255 + 0.5).astype(np.uint8)
+    sf = SHOTS[0] if (s.get("tout") == "shot111" and f >= E.fh(E_FIRE) + 6) else s
+    return (np.clip(finish111(out, f, sf), 0, 1) * 255 + 0.5).astype(np.uint8)

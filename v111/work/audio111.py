@@ -1102,9 +1102,10 @@ def main111():
     place(fx, rev_swell(1.1, -22, 1133), td - 1.1)                                        # THE PASSENGER: the shadow draws in
     place(fx, stereo(A2.impact(-7, (48, 26), 0.9, 0.3, 1134)), td); place(fx, stereo(sub_drop(-9, 0.8, 60, 26)), td + 0.01)
     place(fx, stereo(siren_chirp(-31), 0.3), th(77) - 0.08)                                           # "look who's in trouble"
-    tg = th(87.86); gs = stereo(gunshot(-7, 1111))
+    tg = th(87.30); gs = stereo(gunshot(-7, 1111))
     place(fx, gs, tg)                                                                                 # THE SHOT
-    place(fx, gs, tg - E.DUR)                                                                         # and again across the loop (its echo carries into frame 0)
+    off = E.DUR - tg - PRE / SR                                                                       # and again across the loop (its echo carries into frame 0)
+    place(fx, gs[I(off):], -PRE / SR) if off >= 0 else place(fx, gs, tg - E.DUR)
     fx = fx * db(10.0)
     duck = np.zeros(N + PRE, np.float32); duck[I(td - 0.03) + PRE:I(td + 0.35) + PRE] = 1.0
     duck[I(tg - 0.01) + PRE:] = 0.6
