@@ -344,7 +344,7 @@
    "buried": false
   },
   {
-   "name": "horizon_slide",
+   "name": "cube_turn",
    "kind": "transition",
    "at": 19.89,
    "t0": 19.59,
@@ -377,7 +377,7 @@
    "buried": true
   },
   {
-   "name": "hide_peek",
+   "name": "peel17",
    "kind": "transition",
    "at": 21.95,
    "t0": 21.65,

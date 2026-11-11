@@ -73,10 +73,10 @@ The hero is **THE SUN**: the sun break, the focal piece, the emblem, the loop (4
 | 100–104 | Barry in the Speed Force's blue clouds (S3) | **BLUE BLOOM** |
 | 104–110 | the emblem, close | a downbeat cut, then **EMBLEM IGNITE** |
 | 110–116 | the leap over the airfield (S1) | **EMBLEM IGNITE** |
-| 116–120 | the chest device lit (S2) | **HORIZON SLIDE** |
+| 116–120 | the chest device lit (S2) | **CUBE TURN** |
 | 120–124 | Barry in a tux (S5) | **BOKEH RACK** |
-| 124–128 | the S5 suit against the open sky; *the suit crackles* | **GLARE WASH** |
-| 128–132 | masked, grinning, lightning, "hide away" | **HIDE PEEK** |
+| 124–128 | he runs with a lightning trail (S5) | **GLARE WASH** |
+| 128–132 | "hide away": the S2 suit grinning at the money wall; *the suit crackles* | **PEEL** |
 | 132–136 | the run, close | **SMEAR** |
 | 136–144 | "so long": **CLOUD OVER** into frame 0 | **LIGHTNING STRIKE** |
 
@@ -101,6 +101,23 @@ corner glare, the sun from above), not dissolves.
 
 Kept: the spin (it now lands on the new forest shot's centred face). Sound: a short zap on the bolt window, a crackle as
 the emblem charges, and the thunder moved onto the strike.
+
+**Caught by the fresh-eyes critique of the first round-2 render, fixed before delivery:**
+- **Two reused clips:** packs share clips, so the same shot came from two files. The S5 forest shot was also used as
+  smilelit (21.9 s), and the masked S4 close-up was both lookdown (8.2 s) and skyward (21.3 s). The later copies were
+  replaced (a run with a lightning trail; the S2 suit at the money wall). A mid-frame sheet of all 33 shots now shows no
+  pair.
+- **The emblem's ending:** v2 ended on a flat grey disc and a stacked slide with seams. The sun is now photographic
+  (disc, bloom, short spikes), drawn beside his face and never over it. The rise into the next shot is one feathered
+  tilt, and the sun holds in that shot's sky, the sky exposed down round it.
+- **Slides left after the owner rejected the slice wipe:** HIDE PEEK and HORIZON SLIDE are replaced. **PEEL** peels the
+  frame from the corner like a sticker, its paper back curling over. **CUBE TURN** turns the frame as one face of a cube,
+  the next shot on the face beside it, its edge catching the sun. The whips' two shots now meet in a band feathered
+  mid-move, not a butt joint.
+- **Graphics too small for a phone:** CRACKLE arcs are longer and brighter, MOTES bigger.
+- **The charged shot lost him:** its `cx` pan ran the wrong way (`cx` is a start-to-end pan, not a point). It now
+  follows him.
+- **The strike was thin:** the bolt is thicker and brighter, and the next shot covers the width faster.
 
 ## Look: BLUE SKY
 - **The grade:** high-key and clean. Skies are pushed to cerulean, highlights are sunny gold, the suit's red is rich and

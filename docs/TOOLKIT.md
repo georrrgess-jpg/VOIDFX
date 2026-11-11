@@ -422,6 +422,9 @@ Restyle it in the new edit's `fxN.py` and re-splice with `tools/splice_section.p
 5. **Motion blur must match the real per-frame speed**, not a guess. The film strip smeared because its blur was about 30× too long.
 6. **Face landmarks under caps and sunglasses** sit on the top edge of the lenses. Give lens transitions the real lens shape per shot (`lens=`).
 7. **Faces wider than the 9:16 window** (big profiles, two-shots): check the YuNet width before picking a shot (`analyze.py` sheets print `w`) and reject anything over about 400 px of a 720p source.
+- **A shot's `cx` is a pan, not a point** (v17 round 2): `cx=(x0, x1)` moves the 9:16 crop from x0 to x1 (source px) over the shot when it has no face track. `cx=(770, 360)` read as "x, y" panned the crop 400 px off the subject. Give the subject's x at the start and at the end (measure it on a gridded source frame).
+- **Scene packs share clips** (v17 round 2): the same shot can come from two pack files (`flash_a` and `flash_b_hq` carry several of the same S4/S5 shots), so source names and time ranges don't catch a reuse. Before delivery, look at one mid-frame of every shot on a single sheet.
+- **A whip's two shots butt-joined in one strip leave a hard seam** that blur doesn't hide: feather them mid-move, closing to nothing at the ends so the first and last frames stay pure (v17 `strip_pan`).
 8. **Titles must end before the next transition starts.** MIAMI over the cube looked broken.
 9. **Quiet-section transitions and VO:** keep caption lines inside 1280–1640 px and keep them two-line, never one long line.
 10. **Never wait on a full render to test a transition**: use `auto`, `sheet:`, `strip:` and `clip:` (render server).

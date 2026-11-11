@@ -554,6 +554,20 @@
    "step": "sheet:p6:1128,1131,1148",
    "s": 16.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:15:45",
+   "round": 2,
+   "step": "audio",
+   "s": 4.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:15:54",
+   "round": 2,
+   "step": "plan",
+   "s": 9.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -696,6 +710,24 @@
    "round": 2,
    "cat": "other",
    "text": "round 2 build: candidate shots flash_s5 113.9-118.5 (stutter-cut every frame) and flash_a 8.4-10.5 (the same S4 shot as runlit) rejected before use"
+  },
+  {
+   "t": "2026-11-11 22:15:39",
+   "round": 2,
+   "cat": "other",
+   "text": "round 2 critique: reused clips across packs (forest = smilelit, lookdown = skyward); replaced; all-shots mid-frame sheet added to the review"
+  },
+  {
+   "t": "2026-11-11 22:15:39",
+   "round": 2,
+   "cat": "drawn_asset",
+   "text": "round 2 critique: emblem sun a flat grey disc + stacked-slide seams; rebuilt photographic, off face, feathered tilt"
+  },
+  {
+   "t": "2026-11-11 22:15:39",
+   "round": 2,
+   "cat": "framing",
+   "text": "round 2: cx is a (start, end) pan; the charged shot panned away from him"
   }
  ],
  "round_starts": {
