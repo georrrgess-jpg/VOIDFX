@@ -97,8 +97,21 @@ effects in 9 moments**, none on beats:
 - a rising whoosh and a low boom as the emblem becomes the sun;
 - thunder as the clouds roll back (CLOUD OVER).
 
-## Measured
-(filled in after the ship)
+## Measured (the encode, rev 4)
+- **QC:** 11/11. -13.0 LUFS, true peak -4.5 dBTP after AAC.
+- **Loop seam:** blurred difference 0.10 (gate ≤ 1); audio seam step 0.074; picture wrap step 0.62 against a local
+  median of 0.63 (no spike across the wrap).
+- **Flashes:** none; no white-outs.
+- **Motion audit:** no dead spans, no judder. 21 pops: 14 cuts, 5 beat hits, 1 flash, and 1 at frame 1278, which is
+  GLARE WASH's front crossing the frame in the middle of the wipe (designed, checked frame by frame).
+- **Faces vs effects:** 4 runs, all checked. Three are the suit's red restored on his cowl inside the face box (not an
+  overlay). One is the loop: the storm rolls over him, one soft edge.
+- **plan_check:** 0 FAIL; 1 WARN, a determinism heuristic on `storm_tex`. Its cache is computed from the rounded key, so
+  the warning doesn't apply.
+- **Density:** 32 designed transitions and the loop in 24.7 s (1.34/s), 0 % generic. 32 shots, a new scene every two
+  beats (about 0.69 s).
+- **Sound:** 11 effects in 9 moments, none on beats.
+- **Not used:** Barry's lightning eyes (flash_b_hq about 116.5–119.5 s and 54.4–56 s; flash_a about 87.6–89.9 s).
 
 ## How it was made
 - **Song prep:** stems, Whisper large-v3 on the vocal stem, and the grid fitted on the drum stem. The automatic window

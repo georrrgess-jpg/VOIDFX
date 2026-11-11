@@ -1,9 +1,9 @@
 - **QC:** 11/11 on the encode (11 distinct checks).
 - **Loudness:** -13.0 LUFS, true peak -4.5 dBTP after AAC.
-- **Loop seam:** blurred difference 0.10 (gate ≤ 1); audio seam step 0.0742; picture wrap step 0.61 vs local median 0.63.
+- **Loop seam:** blurred difference 0.10 (gate ≤ 1); audio seam step 0.0742; picture wrap step 0.62 vs local median 0.63.
 - **Flashes:** 0 events, at most 0 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
-- **Faces vs effects:** 3 flags in 1 runs: 1418–1422.
-- **Motion audit:** 24 pops (UNEXPLAINED 1, beat 8, cadence 1, cut 14); UNEXPLAINED at [1278] (check signoff_pops.jpg); dead spans 0; judder flags 0.
-- **plan_check:** 0 FAIL, 0 WARN.
-- **Effort this round (1):** 3 renders (17.7 min), QC 8.7 min.
+- **Faces vs effects:** 21 flags in 4 runs: 350–380, 550–552, 564–566, 1446–1446.
+- **Motion audit:** 21 pops (UNEXPLAINED 1, beat 5, cut 14, flash 1); UNEXPLAINED at [1278] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **plan_check:** 0 FAIL, 1 WARN; WARN: [determinism] storm_tex(): cache keyed on rounded arguments (int(clamp(round(k), 0, SHOTS[0]['f1'] - 1))) but filled from the exact ones: pixels depend on which frame filled it, so partial re-renders can't verify bit-exact (compute the value from the rounded key).
+- **Effort this round (1):** 4 renders (23.6 min), QC 11.5 min.
