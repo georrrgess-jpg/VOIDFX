@@ -4,6 +4,6 @@
 - **Flashes:** 0 events, at most 0 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
 - **Faces vs effects:** 21 flags in 4 runs: 350–380, 550–552, 564–566, 1446–1446.
-- **Motion audit:** 21 pops (UNEXPLAINED 1, beat 5, cut 14, flash 1); UNEXPLAINED at [1278] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **Motion audit:** 21 pops (UNEXPLAINED 1, beat 5, cut 13, flash 2); UNEXPLAINED at [1278] (check signoff_pops.jpg); dead spans 0; judder flags 0.
 - **plan_check:** 0 FAIL, 1 WARN; WARN: [determinism] storm_tex(): cache keyed on rounded arguments (int(clamp(round(k), 0, SHOTS[0]['f1'] - 1))) but filled from the exact ones: pixels depend on which frame filled it, so partial re-renders can't verify bit-exact (compute the value from the rounded key).
-- **Effort this round (1):** 4 renders (23.6 min), QC 11.5 min.
+- **Effort this round (2):** 1 renders (6.0 min), QC 2.7 min.

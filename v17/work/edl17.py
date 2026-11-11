@@ -110,7 +110,7 @@ shot("crossed", "fbh", 76, 80, 92.50, 93.50, tin="sun_whip", seg=True, anim="mot
 shot("flashday", "fs2", 80, 84, 42.20, 43.40, tin="balloon_rise", seg=True)
 shot("baseball", "fs5", 84, 88, 91.50, 92.60, tin="light_streak", seg=True)
 shot("laugh", "fs5", 88, 92, 29.00, 30.20, tin="throw_whip", seg=True)
-shot("charged", "fs2", 92, 96, 147.10, 148.10, tin="bolt_window", seg=True, face=None, cx=(790, 360))   # the Flash charged with lightning
+shot("charged", "fs2", 92, 96, 146.80, 147.50, tin="bolt_window", seg=True, face=None, cx=(770, 360))   # the Flash charged with lightning
 shot("forest", "fa", 96, 100, 74.25, 75.25, tin="spin_roll", seg=True)                       # the suit charges in the sunlit trees
 shot("speedforce", "fs3", 100, 104, 132.90, 133.90, tin="blue_bloom", seg=True)
 # ---- the chorus: "Mr. Blue Sky, please tell us why you had to hide away for so long" (e105-e138)
