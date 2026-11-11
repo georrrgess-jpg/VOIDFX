@@ -728,10 +728,12 @@ def main():
     place(fx, A2.whoosh(0.55, -17, 1703, False), th(40) - 0.30)                                                  # GHOST IRIS
     place(fx, stereo(drip(-16, 1704), -0.3), th(56) + 0.01)                                                       # the last raindrop
     place(fx, wind_gust(1.3, -19, 1705), th(64.5))                                                               # CLOUD BREAK: the clouds roll in, then part
-    place(fx, A2.whoosh(0.32, -14, 1706, True), t0["wally"] - 0.12)                                              # SPIN ROLL
+    place(fx, stereo(zap(-24, 1711, 2600, 900, 0.12)), th(92) - 0.06)                                           # BOLT WINDOW: a short zap
+    place(fx, A2.whoosh(0.32, -14, 1706, True), t0["forest"] - 0.12)                                             # SPIN ROLL
+    place(fx, stereo(crackle(0.45, -21, 1712, 0.8)), th(104) + 0.10)                                             # EMBLEM SUN: it charges
     es = rev(A2.whoosh(0.90, -13, 1707, True)); place(fx, es.astype(np.float32), th(110) - len(es) / SR + 0.05)  # EMBLEM SUN: it rises
     place(fx, stereo(sub_drop(-15, 0.7, 64, 28)), th(110) + 0.01)
-    place(fx, stereo(thunder(-17, 1708, 1.0)), th(138.5))                                                         # CLOUD OVER: the storm comes back
+    place(fx, stereo(thunder(-15, 1708, 1.0)), th(136) - 0.02)                                                    # LIGHTNING STRIKE: the storm comes back
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))
     wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
     full = mus + fx

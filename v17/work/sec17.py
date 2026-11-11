@@ -363,7 +363,49 @@ def a_sunbreak(img, person, s, f):
     occ = cv2.GaussianBlur(np.clip((0.50 - lumf(img)) / 0.30, 0, 1), (0, 0), 6)               # the thick cloud in front of it
     return np.clip(img * (1 + 0.06 * g) + lay * (1 - 0.65 * occ)[..., None], 0, 1)
 
-ANIMS = {"shine": a_shine, "rays": a_rays, "sunbreak": a_sunbreak}
+_CRK = {}
+def a_crackle(img, person, s, f):
+    """CRACKLE: the suit charges in the sun: short gold arcs crawl over his shoulders and arms (his matte, below his chin),
+    each living a few frames, stronger on the beat."""
+    if person is None: return img
+    body = body_only(person, s, f)
+    if body is None: return img
+    key = (s["n"], f // 3)
+    q = 8; bq = cv2.resize(body, (W // q, H // q), interpolation=cv2.INTER_AREA)
+    ys, xs = np.nonzero(bq > 0.6)
+    if len(xs) < 20: return img
+    e = e_of(f); pulse = 0.55 + 0.45 * math.exp(-((e - beat_e(e)) * E.HB) / 0.10)
+    rng = np.random.default_rng(sum(ord(c_) for c_ in s["n"]) * 7919 + f // 3)                 # deterministic in every process
+    cv = bolt_canvas()
+    for k in range(3):
+        i = int(rng.integers(len(xs))); p0 = (xs[i] * q + 4.0, ys[i] * q + 4.0)
+        ang = rng.uniform(0, 2 * math.pi); L = rng.uniform(70, 170)
+        p1 = (p0[0] + L * math.cos(ang), p0[1] + L * math.sin(ang))
+        put_bolt(cv, p0, p1, 17800 + k + 13 * (f // 2), 2, 0.32, 5, 1, val=230)
+    lt = light_rgb(cv, 0.85 * pulse, HOT, GOLD17)
+    lt = lt * np.clip(cv2.GaussianBlur(body, (0, 0), 6) * 1.6, 0, 1)[..., None]                 # it stays on his suit
+    return np.clip(img + kmul(lt, face_keep(s, f, 1.35)), 0, 1)
+
+_MOT = {}
+def a_motes(img, person, s, f):
+    """MOTES: dust in the sunlight drifts through the air and catches the light (sub-pixel motion, a smooth twinkle)."""
+    if "p" not in _MOT:
+        rng = np.random.default_rng(1771)
+        _MOT["p"] = (rng.uniform(0, W, 70), rng.uniform(0, H, 70), rng.uniform(1.6, 4.2, 70), rng.uniform(0, 6.28, 70), rng.uniform(-14, 14, 70), rng.uniform(-22, -6, 70))
+    X0, Y0, rad, ph, vx, vy = _MOT["p"]; t = (f - s["f0"]) / FPS
+    X = (X0 + vx * t + 9 * np.sin(0.9 * t + ph)) % W; Y = (Y0 + vy * t + 6 * np.cos(0.7 * t + ph)) % H
+    beam = np.exp(-(((X * 0.6 + Y * 0.8) - (W * 0.6 * 0.9 + H * 0.8 * 0.2)) / 520.0) ** 2)      # brighter in the sunbeam
+    br = (0.35 + 0.65 * (0.5 + 0.5 * np.sin(2.3 * t + ph * 3))) * (0.25 + 0.75 * beam)
+    cv = np.zeros((H // 2, W // 2), np.uint8)
+    for x_, y_, r_, b_ in zip(X, Y, rad, br):
+        cv2.circle(cv, (int(x_ * 8), int(y_ * 8)), int(r_ * 8), int(255 * b_), -1, cv2.LINE_AA, shift=4)
+    m = cv2.resize(cv.astype(F32) / 255, (W, H), interpolation=cv2.INTER_LINEAR)
+    m = m * 0.8 + cv2.GaussianBlur(m, (0, 0), 5) * 1.6
+    if person is not None: m = m * (1 - 0.6 * np.clip(person, 0, 1))                           # mostly in the air round him
+    o = img.copy(); addc(o, kmul(m.astype(F32), face_keep(s, f, 1.3)), WARM * 0.7 + HOT * 0.3, 0.55)
+    return np.clip(o, 0, 1)
+
+ANIMS = {"shine": a_shine, "rays": a_rays, "sunbreak": a_sunbreak, "crackle": a_crackle, "motes": a_motes}
 
 
 
@@ -836,39 +878,190 @@ def star_glint(cx, cy, size, amt, rot=0.3):
     st = np.exp(-(u / size) ** 2 - (v / (size * 0.025)) ** 2) + np.exp(-(v / size) ** 2 - (u / (size * 0.025)) ** 2) + 1.5 * np.exp(-(u * u + v * v) / (size * 0.08) ** 2)
     return (st * amt).astype(F32)
 
-def emblem_sun(A, B, j, f, sa, sb, pre=62, post=22):
-    N = pre + post - 1; x = (j + pre) / N
+_EMH = {}
+def emb_hole(img, ex, ey, er, key):
+    """his chest without the emblem: the hole filled from the suit round it (inpainted at quarter resolution), a soft
+    shadow in the socket it leaves."""
+    if key not in _EMH:
+        if len(_EMH) > 4: _EMH.clear()
+        q = 4; sm = (np.clip(cv2.resize(img, (W // q, H // q), interpolation=cv2.INTER_AREA), 0, 1) * 255).astype(np.uint8)
+        m = np.zeros((H // q, W // q), np.uint8); cv2.circle(m, (int(round(ex / q)), int(round(ey / q))), int(er * 1.18 / q) + 2, 255, -1)
+        fill = cv2.inpaint(sm, m, 7, cv2.INPAINT_TELEA).astype(F32) / 255
+        _EMH[key] = cv2.GaussianBlur(cv2.resize(fill, (W, H), interpolation=cv2.INTER_LINEAR), (0, 0), 3)
+    d = np.sqrt((_GX - ex) ** 2 + (_GY - ey) ** 2)
+    hm = np.clip((er * 1.12 - d) / 5 + 0.5, 0, 1).astype(F32)[..., None]
+    sock = (np.exp(-(d / (er * 0.9)) ** 2) * 0.35).astype(F32)[..., None]
+    return img * (1 - hm) + _EMH[key] * (1 - sock) * hm
+
+def emb_patch(img, ex, ey, er):
+    """the real emblem as a sprite: its disc cut from the frame, with a soft alpha."""
+    R = int(er * 1.10) + 3; x0, y0 = int(round(ex)) - R, int(round(ey)) - R
+    pad = cv2.copyMakeBorder(img, R, R, R, R, cv2.BORDER_REFLECT)
+    patch = pad[y0 + R:y0 + 3 * R, x0 + R:x0 + 3 * R].copy()
+    yy, xx = np.mgrid[0:2 * R, 0:2 * R].astype(F32); d = np.sqrt((xx - R) ** 2 + (yy - R) ** 2)
+    alpha = np.clip((er * 1.04 - d) / 1.6 + 0.5, 0, 1).astype(F32)
+    return patch, alpha, R
+
+def coin_back(R, er):
+    """the back of the coin: plain gold, lit from above (never the front mirrored)."""
+    yy, xx = np.mgrid[0:2 * R, 0:2 * R].astype(F32); d = np.sqrt((xx - R) ** 2 + (yy - R) ** 2) / er
+    sh = np.clip(0.55 + 0.45 * (-(yy - R) / er) * 0.6 + 0.25 * (1 - d), 0.2, 1.1)
+    rim = np.exp(-((d - 0.93) / 0.05) ** 2)
+    return (sh[..., None] * GOLD17 * 0.85 + rim[..., None] * HOT * 0.5).astype(F32)
+
+def put_sprite(o, patch, alpha, R, px, py, sx, sy):
+    M = np.float32([[sx, 0, px - sx * R], [0, sy, py - sy * R]])
+    P = cv2.warpAffine(patch, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    Am = cv2.warpAffine(alpha, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)[..., None]
+    return o * (1 - Am) + P * Am, Am[..., 0]
+
+def bez(p0, p1, p2, t):
+    return ((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1])
+
+def emblem_ignite(A, B, j, f, sa, sb, pre=62, post=22):
+    """EMBLEM IGNITE (the chorus; EMBLEM SUN v2, after the owner's round-1 note on v1): the real chest emblem charges (lightning crawls round its rim and down its bolt), tears
+    free of his chest on a crackle of current, and flips like a coin as it rises, off his face, into the sky; as it turns
+    face-on again it ignites, and the emblem is the sun, throwing lightning; the camera rises after it into the next
+    shot, where it hangs in the sky."""
+    N = pre + post - 1; x = (j + pre) / N; t = f / FPS
     ff = f if j < 0 else sa["f1"] - 1
     ex, ey, er = emb_pt(sa, ff)
     u = clamp((j + pre + 1) / pre, 0, 1)
-    z = 1 + 0.30 * smooth(u); px_ = ex + (W / 2 - ex) * 0.30 * smooth(u); py_ = ey + (H * 0.55 - ey) * 0.30 * smooth(u)
-    Az = cv2.warpAffine(A, np.float32([[z, 0, px_ - z * ex], [0, z, py_ - z * ey]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    z = 1 + 0.22 * smooth(clamp(u / 0.40, 0, 1))                                               # 1. push in on it
+    px_ = ex + (W * 0.50 - ex) * 0.25 * smooth(clamp(u / 0.40, 0, 1)); py_ = ey + (H * 0.58 - ey) * 0.25 * smooth(clamp(u / 0.40, 0, 1))
+    Mz = np.float32([[z, 0, px_ - z * ex], [0, z, py_ - z * ey]])
+    Az = cv2.warpAffine(A, Mz, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     EX, EY, ER = px_, py_, er * z
-    fm = face_soft(sa, ff, 1.25)                                                               # a wide, soft guard: the glow fades before his face
-    if fm is None: fkA = 1.0
+    fm = face_soft(sa, ff, 0.62)                                                              # every light keeps off his face (the face itself)
+    fk = 1.0 if fm is None else (1 - 0.95 * cv2.GaussianBlur(cv2.warpAffine(fm[..., 0], Mz, (W, H), borderMode=cv2.BORDER_REPLICATE), (0, 0), 10))
+    fsc = face_scr(sa, ff) if sa.get("face") is not None else None
+    fx_, fy_ = (fsc[0] * z + px_ - z * ex, fsc[1] * z + py_ - z * ey) if fsc else (W * 0.5, H * 0.2)
+    lift = smooth(clamp((u - 0.30) / 0.40, 0, 1))                                              # 2. it tears free and rises
+    side = -1 if fx_ >= W * 0.45 else 1                                                        # the open side of the frame, away from his face
+    TX = W * (0.18 if side < 0 else 0.82); TY = H * 0.15
+    C1 = (TX + side * W * 0.02, EY - H * 0.05)                                                 # out to the side first, then up
+    SX, SY = bez((EX, EY), C1, (TX, TY), lift)
+    ign = smooth(clamp((u - 0.62) / 0.25, 0, 1))                                               # 3. face-on again, it ignites
+    T = smooth(clamp((x - 0.66) / 0.34, 0, 1))                                                 # 4. the camera rises after it
+    patch, alpha, R = emb_patch(Az, EX, EY, ER)
+    base = emb_hole(Az, EX, EY, ER, (sa["n"], int(round(ff)))) if lift > 0.002 else Az.copy()
+    o = base
+    # 1. the charge: arcs crawl round the rim and down the bolt; the bolt brightens
+    chg = smooth(clamp(u / 0.18, 0, 1)) * (1 - ign)
+    cv = bolt_canvas()
+    if chg > 0.01:
+        for k in range(3):
+            a0 = 0.6 + 2.1 * k + 4.0 * t; a1 = a0 + 1.1
+            p0 = (SX + ER * 1.02 * math.cos(a0), SY + ER * 1.02 * math.sin(a0)); p1 = (SX + ER * 1.02 * math.cos(a1), SY + ER * 1.02 * math.sin(a1))
+            put_bolt(cv, p0, p1, 17200 + k + 7 * (f // 2), 2, 0.30, 4, 0, val=int(255 * chg))
+    # the tether: current holds it to the socket as it tears free
+    tet = math.sin(math.pi * clamp((lift - 0.02) / 0.55, 0, 1))
+    if tet > 0.02 and math.hypot(SX - EX, SY - EY) > ER * 0.8:
+        for k in range(2): put_bolt(cv, (EX, EY), (SX, SY), 17300 + k + 5 * (f // 2), 2, 0.22, 5, 1, val=int(235 * tet))
+    # 2. the coin: one full turn as it rises, growing; its back is plain gold
+    phi = 2 * math.pi * smooth(clamp((u - 0.32) / 0.34, 0, 1)); cphi = math.cos(phi)
+    sc = 1.0 + 0.22 * lift
+    if lift <= 0.002: pass
     else:
-        fw_ = cv2.warpAffine(fm[..., 0], np.float32([[z, 0, px_ - z * ex], [0, z, py_ - z * ey]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
-        fkA = (1 - 0.92 * cv2.GaussianBlur(fw_, (0, 0), 70))[..., None]
-    gl = math.exp(-((u - 0.17) / 0.07) ** 2)                                                  # 1. a glint runs round the rim
-    a_ = 0.3 + 2.4 * clamp((u - 0.05) / 0.25, 0, 1)
-    addc(Az, star_glint(EX + ER * math.cos(a_), EY - ER * math.sin(a_), ER * 1.6, gl), HOT, 1.2)
-    lit = smooth(clamp((u - 0.25) / 0.30, 0, 1))                                               # 2. it lights from within
-    d = np.sqrt((_GX - EX) ** 2 + (_GY - EY) ** 2)
-    disc = np.clip((ER * 0.96 - d) / 3 + 0.5, 0, 1).astype(F32)
-    ring = np.exp(-((d - ER) / (3 + 0.06 * ER)) ** 2).astype(F32)
-    addc(Az, disc, GOLD17 * 0.55 + HOT * 0.45, 0.45 * lit); addc(Az, ring, GOLD17, 0.9 * lit)
-    T = smooth(clamp((x - 0.64) / 0.36, 0, 1))                                                 # 4. the camera rises after it
+        face_on = cphi >= 0
+        spr = patch if face_on else coin_back(R, er * z)
+        o, am = put_sprite(o, spr, alpha, R, SX, SY, sc * max(abs(cphi), 0.04), sc)
+        rimc = np.exp(-((np.sqrt(((_GX - SX) / max(abs(cphi), 0.04)) ** 2 + (_GY - SY) ** 2) - ER * sc) / 3.0) ** 2).astype(F32)
+        addc(o, rimc * (0.5 + 0.5 * lift), GOLD17, 0.6)                                         # its gold edge catches the light
+    # 3. the emblem is the sun
+    if ign > 0.002:
+        rs = ER * sc * (0.70 + 0.12 * ign)
+        dsk = np.clip((ER * sc * 1.05 - np.sqrt((_GX - SX) ** 2 + (_GY - SY) ** 2)) / 4 + 0.5, 0, 1).astype(F32)[..., None]
+        o = o + (HOT * 1.05 - o) * (0.40 * ign) * dsk                                          # the disc goes white-hot, the bolt glowing through
+        sun = sun_draw(SX, SY, rs, 1.15 * ign, rot=0.6 * t + 1.2 * ign, rays=0.45)             # short spikes
+        keep = dsk if isinstance(fk, float) else (fk[..., None] + (1 - fk[..., None]) * dsk)     # its light never washes his face
+        o = o + sun * keep
+        angs = (1.65, 2.15, 2.75, 4.45) if side < 0 else (1.50, 1.00, 0.40, -1.30)               # down the open side, off his face
+        for k, ang in enumerate(angs):                                                         # it throws lightning (away from his face)
+            L = math.hypot(W, H) * (0.30 + 0.25 * ign)
+            q1 = (SX + L * math.cos(ang), SY + L * math.sin(ang))
+            put_bolt(cv, (SX + rs * 0.9 * math.cos(ang), SY + rs * 0.9 * math.sin(ang)), q1, 17400 + 11 * k + 3 * (f // 2), 3, 0.30, 6, 2,
+                     val=int(255 * ign * (0.6 + 0.4 * math.sin(f * 1.7 + k) ** 2)))
+    if cv.max() > 0:
+        lt = light_rgb(cv, 1.0, HOT, GOLD17)
+        o = o + kmul(lt, fk if isinstance(fk, float) else fk[..., None])
+    o = np.clip(o, 0, 1.4)
+    # 4. the camera rises after it into the next shot's sky, where it hangs as the sun
     if T > 0:
-        strip = np.concatenate([B, Az], axis=0); y0 = int(round((1 - T) * H))
-        o = hblur(np.ascontiguousarray(strip[y0:y0 + H]), 2 + 150 * math.sin(math.pi * T), vertical=True)
-    else: o = Az
-    ray = smooth(clamp((u - 0.55) / 0.35, 0, 1)) * (1 - smooth(clamp((x - 0.80) / 0.20, 0, 1)))   # 3. it throws rays: the sun
-    if ray > 0.002:
-        sx = EX + (W * 0.76 - EX) * T ** 0.7; sy = EY + (H * 0.15 - EY) * T                      # it rises into the sky
-        lay = sun_draw(sx, sy, ER * (0.55 + 0.30 * ray) * (1 - 0.35 * T), ray * 1.0, rot=0.4 * x * 6)
-        if not isinstance(fkA, float): lay = lay * (fkA * (1 - T) + T)
-        o = o + lay
+        Bs = B
+        strip = np.concatenate([Bs, np.clip(o, 0, 1)], axis=0); y0 = int(round((1 - T) * H))
+        o2 = hblur(np.ascontiguousarray(strip[y0:y0 + H]), 2 + 130 * math.sin(math.pi * T), vertical=True)
+        sx2, sy2 = SX + (W * 0.74 - SX) * T, SY + (H * 0.16 - SY) * T                           # the sun stays with the camera
+        hang = 1.0 if j < 0 else 1 - smooth((j + 1) / post)
+        o2 = o2 + sun_draw(sx2, sy2, ER * sc * 1.2, 1.25 * T * hang, rot=0.6 * t + 1.2)
+        o = o2
     return np.clip(o, 0, 1)
+
+# ---- LIGHTNING STRIKE ("so long"): leaders creep down, then a real bolt strikes; the next shot burns in from its channel ---
+_LS = {}
+def strike_canvas(key, amt_main, amt_br, y_end=None):
+    cv = bolt_canvas(); x0 = W * 0.10
+    rng_seed = 17600
+    pts = bolt_points((x0 - 50.0, -60.0), (x0 + 40.0, H * 0.70), rng_seed, 0.16, 7)
+    if y_end is not None: pts = pts[pts[:, 1] <= y_end]
+    if len(pts) > 1:
+        cv2.polylines(cv, [pts.astype(np.int32)], False, int(255 * amt_main), 6, cv2.LINE_AA)
+        rng = np.random.default_rng(key)
+        for b in range(4):
+            i = int(rng.integers(len(pts) // 6, max(len(pts) // 6 + 1, len(pts) - 6))); q0 = pts[i]
+            ang = math.pi / 2 + rng.uniform(-0.9, 0.9) + (0.5 if b % 2 else -0.5)
+            Lb = rng.uniform(120, 340); q1 = (q0[0] + Lb * math.cos(ang), q0[1] + Lb * math.sin(ang))
+            cv2.polylines(cv, [bolt_points(tuple(q0), q1, rng_seed + 50 + b, 0.30, 5).astype(np.int32)], False, int(200 * amt_br), 3, cv2.LINE_AA)
+    return cv, pts
+
+def lightning_strike(A, B, j, f, sa, sb, pre=8, post=14):
+    """LIGHTNING STRIKE: the storm comes back for the loop. The light dims, faint leaders creep down the sky, a real bolt
+    strikes beside him (the frame flashes once, within the flash limit), re-strikes, and the next shot burns in outward
+    from the bolt's channel."""
+    x = (j + pre) / (pre + post - 1); xs = pre / (pre + post - 1)                              # it strikes on the cut
+    if "d" not in _LS:                                                                         # from the main channel only (order-free)
+        q = 4; cq = cv2.resize(strike_canvas(0, 1.0, 0.0)[0], (W // q, H // q), interpolation=cv2.INTER_AREA)
+        dist = cv2.distanceTransform((cq < 40).astype(np.uint8), cv2.DIST_L2, 5) * q
+        _LS["d"] = cv2.resize(dist.astype(F32), (W, H), interpolation=cv2.INTER_LINEAR)
+    dim = 1 - 0.38 * smooth(clamp(x / xs, 0, 1))
+    if x < xs:                                                                                 # the leaders
+        cv, _ = strike_canvas(17610 + f // 2, 0.45, 0.5, y_end=H * (0.08 + 0.62 * x / xs))
+        lt = light_rgb(cv, 0.8, HOT, SKYB * 0.6 + HOT * 0.4)
+        return np.clip(A * dim + kmul(lt, live_keep(sa, sb, j, f, 0, 0.95)), 0, 1)
+    y = x - xs
+    b = math.exp(-y / 0.10) + 0.65 * math.exp(-((y - 0.20) / 0.035) ** 2)                      # the strike, and its re-strike
+    cv, pts = strike_canvas(17620 + (f // 2) % 2, 1.0, 0.9)
+    R = 60 + W * 1.7 * eout(clamp(y / 0.50, 0, 1), 1.6)
+    m = np.clip((R - _LS["d"]) / (40 + 0.25 * R) + 0.5, 0, 1).astype(F32)
+    Bd = B * (0.62 + 0.38 * smooth(clamp(y / 0.60, 0, 1)))                                     # the next shot comes up from the storm light
+    o = A * dim * (1 - m[..., None]) + Bd * m[..., None]
+    o = o * (1 + 0.30 * b) + (SKYB * 0.5 + HOT * 0.5) * 0.05 * b
+    lt = light_rgb(cv, 1.5 * b + 0.25 * (1 - smooth(clamp(y / 0.7, 0, 1))), HOT, SKYB * 0.6 + HOT * 0.4)
+    return np.clip(o + kmul(lt, live_keep(sa, sb, j, f, 1.0, 0.95)), 0, 1)
+
+# ---- BOLT WINDOW: a Flash bolt flies at the lens with the next shot inside it, its edges alive with current ------------------
+BOLTP = np.array([(0.05, -0.50), (0.30, -0.50), (0.10, -0.08), (0.28, -0.08), (-0.22, 0.50), (-0.04, 0.02), (-0.22, 0.02)], np.float32)
+def bolt_window(A, B, j, f, sa, sb, pre=8, post=12):
+    x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
+    ax, ay = W * 0.50, H * 0.80                                                                # it flies in low at his chest, off his face
+    anc = np.array([0.08, -0.05], np.float32)                                                  # the bolt's fattest point
+    S = 260 * math.exp(math.log(16000 / 260) * ein(clamp(x / 0.92, 0, 1), 1.7))
+    rot = -0.35 * (1 - smooth(x)); c, s_ = math.cos(rot), math.sin(rot)
+    sqx = 0.55 + 0.45 * smooth(clamp(x / 0.35, 0, 1))                                          # it turns face-on as it comes
+    P = (BOLTP - anc) * S; P[:, 0] *= sqx
+    P = np.stack([ax + P[:, 0] * c - P[:, 1] * s_, ay + P[:, 0] * s_ + P[:, 1] * c], 1)
+    m = np.zeros((H, W), F32); cv2.fillPoly(m, [(np.clip(P, -60000, 60000) * 16).astype(np.int32)], 1.0, cv2.LINE_AA, shift=4)
+    m = cv2.GaussianBlur(m, (0, 0), 1.2)
+    Bz = zoom_about(B, ax, ay, 1.0 + 0.30 * (1 - smooth(x)))
+    Az = zoom_about(A, ax, ay, 1.0 + 0.12 * smooth(x))
+    o = Az * (1 - m[..., None]) + Bz * m[..., None]
+    cv = bolt_canvas()
+    cv2.polylines(cv, [(P * 16).astype(np.int32)], True, 255, 3, cv2.LINE_AA, shift=4)
+    if S < 2600:
+        for e_ in range(0, 7, 2):                                                              # current crawling along its edges
+            put_bolt(cv, tuple(P[e_]), tuple(P[(e_ + 1) % 7]), 17700 + e_ + 5 * (f // 2), 1, 0.20, 4, 0, val=200)
+    lt = light_rgb(cv, 0.9 * (1 - smooth(clamp((x - 0.75) / 0.25, 0, 1))), HOT, GOLD17)
+    return np.clip(o + kmul(lt, live_keep(sa, sb, j, f, smooth(x), 1.25)), 0, 1)
 
 # ---- CLOUD OVER (the loop, e136 -> frame 0): the clouds roll back over the sun and they are frame 0's storm ----------------
 def loop_fx(img, person, s, f):
@@ -904,7 +1097,7 @@ TR2.update({"sun_burst": (sun_burst, 12, 16), "run_by": (run_by, 5, 7), "speed_z
             "rain_ripple": (rain_ripple, 6, 12), "tilt_up": (tilt_up, 6, 8), "cloud_break": (cloud_break, 28, 24), "cloud_shadow": (cloud_shadow, 8, 10), "sun_open": (sun_open, 8, 10), "sun_whip": (sun_whip, 5, 6),
             "balloon_rise": (balloon_rise, 6, 8), "light_streak": (light_streak, 5, 7), "throw_whip": (throw_whip, 5, 7),
             "light_leak17": (light_leak17, 6, 8), "spin_roll": (spin_roll, 6, 10), "blue_bloom": (blue_bloom, 10, 12), "punch_cut": (punch_cut, 0, 1),
-            "emblem_sun": (emblem_sun, 62, 22), "horizon_slide": (horizon_slide, 5, 7), "bokeh_rack": (bokeh_rack, 8, 10),
+            "emblem_ignite": (emblem_ignite, 62, 22), "lightning_strike": (lightning_strike, 8, 14), "bolt_window": (bolt_window, 8, 12), "horizon_slide": (horizon_slide, 5, 7), "bokeh_rack": (bokeh_rack, 8, 10),
             "glare_wash": (glare_wash, 6, 8), "hide_peek": (hide_peek, 8, 8), "smear17": (smear17, 5, 6), "split_slide": (split_slide, 6, 8),
             "loop17": (loop17, 0, 1)})
 

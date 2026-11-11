@@ -1350,6 +1350,30 @@
       "evidence": "v15 OUT OF TIME standard (2026-11-09): 'I like this edit, make it a standard.' Ported from v13.",
       "studio": "flash",
       "tags": []
+    },
+    "emblem_sun": {
+      "verdict": "rejected",
+      "tags": [
+        "signature"
+      ],
+      "evidence": "v17 rev 4: \"I largely dislike the transition done with the emblem at 19 seconds. It kind of feels incomplete and as if the emblem isn't really doing anything. I would rather you make it a transition from the emblem into the sun or just a general emblem and lightning transition.\"",
+      "fix": "the emblem itself must act: v17 round 2 rebuilt it as EMBLEM SUN v2 (the real emblem charges, tears free, coin-flips up the open side and ignites into the sun, throwing lightning)",
+      "studio": "flash"
+    },
+    "split_slide": {
+      "verdict": "rejected",
+      "tags": [],
+      "evidence": "v17 rev 4: \"I don't really like the transition done towards the end that is block transition with the three block lines.\"",
+      "fix": "v17 round 2: LIGHTNING STRIKE",
+      "studio": "flash"
+    },
+    "spin_roll": {
+      "verdict": "ok",
+      "tags": [
+        "spin"
+      ],
+      "evidence": "v17 rev 4: not mentioned in round 1 notes",
+      "studio": "flash"
     }
   },
   "families": {

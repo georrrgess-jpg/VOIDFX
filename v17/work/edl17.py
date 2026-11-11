@@ -93,7 +93,7 @@ shot("wave", "fbh", 16, 20, 6.90, 8.20, tin="glint_sweep", seg=True, anim="shine
 shot("run5", "fs5", 20, 24, 108.60, 110.00, tin="sky_whip", seg=True, tmap=vel(20, 24, 108.60, 110.00), lin=True, flowmax=40, flowfall="blend")
 # ---- "see how the sun shines brightly" (e22.6-e39.2): golden hour, THE SUN
 shot("golden", "fs1", 24, 28, 123.40, 124.40, tin="flare_cut", seg=True, anim="shine")
-shot("grin", "fs3", 28, 32, 44.07, 45.07, tin="ray_rake", seg=True, anim="shine")             # the S2 suit, grinning in the daylight
+shot("grin", "fs3", 28, 32, 44.07, 45.07, tin="ray_rake", seg=True, anim="crackle")             # the S2 suit, grinning in the daylight
 shot("sun", "fbk", 32, 40, 141.93, 142.85, tin="bloom_cut", seg=True, tmap=slow(32, 40, 141.93, 142.85, 0.2), lin=True, flowmax=40, suitred=1.0, z=LinZ([(0, 1.00), (1, 1.06)]))   # THE SUN rises behind him
 # ---- "and the city, on the streets where once was pity" (e45-e64.5)
 shot("ledge", "fbh", 40, 44, 87.60, 88.60, tin="ghost_iris", seg=True, face=None, cx=(760, 760))   # the Flash crouched on the ledge (not the officer below)
@@ -105,29 +105,29 @@ shot("masked1", "fs1", 60, 64, 287.40, 288.40, tin="tilt_up", seg=True, tmap=slo
 shot("greysky", "fs3", 64, 68, 8.90, 9.90, tin="cloud_shadow", seg=True)                      # he walks under a grey sky; the clouds gather ...
 # ---- "Mr. Blue Sky is living here today, hey" (e68.9-e91.2): the clouds part
 shot("lookup", "fbk", 68, 72, 94.05, 94.75, tin="cloud_break", seg=True, anim="rays")       # ... and part: Barry looks up at the sky
-shot("sunny", "fs2t", 72, 76, 34.85, 35.85, tin="sun_open", seg=True, anim="shine")          # "living here today": Barry in the sunshine
-shot("crossed", "fbh", 76, 80, 92.50, 93.50, tin="sun_whip", seg=True)
+shot("sunny", "fs2t", 72, 76, 34.85, 35.85, tin="sun_open", seg=True, anim="motes")          # "living here today": Barry in the sunshine
+shot("crossed", "fbh", 76, 80, 92.50, 93.50, tin="sun_whip", seg=True, anim="motes")
 shot("flashday", "fs2", 80, 84, 42.20, 43.40, tin="balloon_rise", seg=True)
 shot("baseball", "fs5", 84, 88, 91.50, 92.60, tin="light_streak", seg=True)
 shot("laugh", "fs5", 88, 92, 29.00, 30.20, tin="throw_whip", seg=True)
-shot("xs", "fs5", 92, 96, 14.60, 15.60, tin="light_leak17", seg=True)
-shot("wally", "fs3", 96, 100, 93.70, 94.70, tin="spin_roll", seg=True)
+shot("charged", "fs2", 92, 96, 147.10, 148.10, tin="bolt_window", seg=True, face=None, cx=(790, 360))   # the Flash charged with lightning
+shot("forest", "fa", 96, 100, 74.25, 75.25, tin="spin_roll", seg=True)                       # the suit charges in the sunlit trees
 shot("speedforce", "fs3", 100, 104, 132.90, 133.90, tin="blue_bloom", seg=True)
 # ---- the chorus: "Mr. Blue Sky, please tell us why you had to hide away for so long" (e105-e138)
 shot("emblem", "fbh", 104, 110, 82.40, 83.75, tin="punch_cut", seg=True)                    # EMBLEM SUN: the chest emblem glints and blazes into the sun
-shot("leap", "fs1", 110, 116, 199.55, 201.95, tin="emblem_sun", seg=True, face=None, cx=(700, 760), tmap=vel(110, 116, 199.55, 201.95), lin=True, flowmax=40, flowfall="blend")
+shot("leap", "fs1", 110, 116, 199.55, 201.95, tin="emblem_ignite", seg=True, face=None, cx=(700, 760), tmap=vel(110, 116, 199.55, 201.95), lin=True, flowmax=40, flowfall="blend")
 shot("device", "fbh", 116, 120, 49.95, 51.20, tin="horizon_slide", seg=True)                 # the S2 suit, the chest device lit, grinning
 shot("tux", "fs5", 120, 124, 102.30, 103.60, tin="bokeh_rack", seg=True)
-shot("skyward", "fa", 124, 128, 0.30, 1.30, tin="glare_wash", seg=True)                    # the S5 suit against the open sky
+shot("skyward", "fa", 124, 128, 0.30, 1.30, tin="glare_wash", seg=True, anim="crackle")                    # the S5 suit against the open sky
 shot("smilelit", "fbh", 128, 132, 90.10, 91.30, tin="hide_peek", seg=True)                # "hide away"
 shot("runface", "fa", 132, 136, 62.40, 63.60, tin="smear17", seg=True, tmap=vel(132, 136, 62.40, 63.60), lin=True, flowmax=40, flowfall="blend")
-shot("last", "fs1", 136, 144, 207.00, 208.40, tin="split_slide", seg=True, face=None, cx=(485, 640), tmap=slow(136, 144, 207.00, 208.40, 0.2), lin=True)   # "so long": he stands on the airfield; the clouds roll back over the sun
+shot("last", "fs1", 136, 144, 207.00, 208.40, tin="lightning_strike", seg=True, face=None, cx=(485, 640), tmap=slow(136, 144, 207.00, 208.40, 0.2), lin=True)   # "so long": he stands on the airfield; the clouds roll back over the sun
 
 EMB_TRACK = [(82.3, 448.6, 420.6, 78.9), (82.35, 452.4, 423.0, 77.7), (82.4, 459.1, 427.5, 74.3), (82.45, 465.4, 433.1, 70.9), (82.5, 469.5, 437.7, 69.1), (82.55, 472.4, 441.5, 69.6), (82.6, 472.1, 442.2, 69.6), (82.65, 472.6, 444.3, 67.0), (82.7, 475.9, 448.7, 63.6), (82.75, 480.7, 453.3, 61.4), (82.8, 482.0, 455.9, 61.6), (82.85, 481.5, 458.0, 61.5), (82.9, 479.6, 459.3, 62.3), (82.95, 478.3, 461.1, 62.5), (83.0, 476.9, 463.5, 62.5), (83.05, 476.0, 465.0, 60.9), (83.1, 475.0, 466.9, 60.3), (83.15, 480.8, 471.2, 59.8), (83.2, 489.6, 476.3, 59.0), (83.25, 490.4, 478.2, 58.4), (83.3, 476.5, 474.6, 58.7), (83.35, 460.6, 473.4, 59.2), (83.4, 461.1, 477.0, 58.6), (83.45, 456.8, 480.1, 58.7), (83.5, 447.1, 482.1, 59.4), (83.55, 437.3, 484.4, 60.3), (83.6, 433.9, 486.8, 60.4), (83.65, 431.8, 489.0, 60.3), (83.7, 430.4, 491.6, 60.3), (83.75, 429.6, 493.1, 60.2)]   # the chest emblem in flash_b_hq 82.3-83.75 s (Hough circle per source frame, smoothed): (t, x, y, r)
-SET_PIECES = [("sun_break", th(0), th(6)), ("the_sun", th(32), th(42)), ("cloud_break", th(65), th(70)), ("emblem_sun", th(104), th(112)), ("loop", th(136), th(144))]
+SET_PIECES = [("sun_break", th(0), th(6)), ("the_sun", th(32), th(42)), ("cloud_break", th(65), th(70)), ("emblem_ignite", th(104), th(112)), ("strike", th(135.5), th(138)), ("loop", th(136), th(144))]
 HERO = ["sun_draw"]
-HERO_TINS = ["sun_burst", "ghost_iris", "emblem_sun", "loop17"]
-SIGNATURE = ["ghost_iris", "emblem_sun"]
+HERO_TINS = ["sun_burst", "ghost_iris", "emblem_ignite", "loop17"]
+SIGNATURE = ["ghost_iris", "emblem_ignite"]
 PLAN_ACCEPT = {}
 SHOTS = S
 for s in SHOTS:
