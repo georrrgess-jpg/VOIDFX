@@ -13,7 +13,7 @@ efficiency and quality."*
 - **LIGHTS OUT** (frame 0): the marina at night, slowed. On *"I shoot the lights out"* the city's lights behind him go out
   one by one, in a wave from the edges in toward him. Each one stutters, flares and dies, and the night thickens with
   every light. On *"out"* the light on him drops to a cold rim.
-- **HIDE**: the light comes back first (his face lit from below, out of the dark); behind the door with his reflection;
+- **HIDE**: the light comes back first (his face lit from below, out of the dark); we pan past a door's edge to him behind it with his reflection;
   behind the chain-link fence; we push through the fence to the night by the truck.
 - **DAYBREAK** (*"till it's bright out"*): the sun comes up where it is in the next shot (at the edge of the frame); the
   morning is inside its light; the day burns white and comes down onto the lake.
@@ -24,15 +24,16 @@ efficiency and quality."*
   the gloves, a light from under the frame into the scalpel over the light table, the glare matched into the last shot.
 - **THE PASSENGER** (the build and the drop): crouched in the light from below, the shadows grow around him (the
   midtones sink into the dark a little more on every beat of the riser) while the light in his hands pulses. On
-  *"…I'm a monster"* the monster comes out of the dark: the blood-soaked suit in the daylight shows through the darkest
-  parts of the frame first, its front edged in red, and the light in his hands goes last.
+  *"…I'm a monster"* the dark around him opens into the day from the edges of the frame (a soft red-lit front closing in
+  behind him), and he goes last, in one quick switch on the drop: the blood-soaked suit walking out.
 - The drop: the suit, the close-up, *"blood sucker"* on the slides (a glass slide pushed across), the luminol glow into
-  the blood room, the grin (double vision), the red face, **THE SIREN** (*"now look who's in trouble"*: a light bar's red
+  the blood room, the grin (a clean cut on the downbeat), the red face, **THE SIREN** (*"now look who's in trouble"*: a light bar's red
   sweeps the frame, then its blue, and the crime scene is behind the blue), the woods, the fronds, **CANOPY** (pools of
   sunlight through the leaves, the bamboo inside them).
 - **THE SHOT** (the loop): *"all you hear is rumbles"*: he raises the pistol at us and fires; the flash at the real
-  muzzle (tracked) lights him and the woods, smoke; the flash's light and the shot's echo carry over the cut onto frame 0,
-  where the lights are still on.
+  muzzle (tracked) lights him and the woods, and frame 0 opens inside it: a burst of light grows from the muzzle with the
+  marina inside it and fills the frame exactly on the last frame (the seam lands on frame 0); the shot's echo carries
+  over the loop, where the lights are still on, for now.
 
 ## Song
 `src/monster.mp3` (6:19). **93.7 BPM**: the drum stem, the snare band and the full mix agree on a 0.640 s beat; the first
@@ -45,10 +46,10 @@ bass and *"…I'm a monster"*), and the first three lines of the verse, ending o
 **NIGHTSHADE:** teal-navy shadows, warm practicals, the day golden; harder and redder after the drop. No text.
 
 ## Transitions (25 + the loop)
-New: emerge111, fence111, daybreak111, brightout111 (×2, into and out of the white day), nightfall111, lookup111,
-moon111, underlight111, lightmatch111, passenger111 (the signature), slide111, siren111, canopy111, shot111 (the loop).
-Liked library pieces: facematch108, light_sweep108, plasticroll110, luminol108, double108, flicker109, fronds108.
-Connectors: dolly ×2, whip. The beat camera runs from the drop at half punch (the owner's calmer drop).
+New: emerge111, doorslide111, fence111, daybreak111, brightout111, nightfall111, lookup111, moon111, underlight111,
+lightmatch111, passenger111 (the signature), slide111, siren111, shot111 (the loop). Liked library pieces: tear110,
+light_sweep108, plasticroll110, luminol108, flicker109, fronds108, bokeh110. Connectors: dolly ×3, whip; one clean
+downbeat cut. The beat camera runs from the drop at half punch (the owner's calmer drop).
 
 ## Sound
 About ten placed effects: three lamps blowing and the light on him dying; the daybreak swell; crickets under the night;
@@ -68,3 +69,16 @@ whoop on "trouble"; the gunshot, whose echo carries over the loop into frame 0.
 - The light-first reveal went near-black for a few frames; the bright-out showed a double exposure at the switch; the
   lights-out left blocky dark squares where the lights were; the garden read as day; the underlight's front crossed his
   face; the slide shot cropped the slide out. All fixed.
+
+## Before delivery: QC and the fresh-eyes critique
+- QC round 1 failed the loop seam (a hard cut from the woods to the marina) and measured a dead span at 0.3–2.2 s;
+  the render also stalled once when a worker ran out of memory while the restoration ran, and the disk filled once
+  (old edits' regenerable caches were cleared).
+- The critique predicted, and the studio fixed before sending: the loop reading as a flash and a fade (frame 0 now opens
+  inside the muzzle flash); the face-match at 4.5 s mirroring his face at the borders (now a pan past the door's edge);
+  the drop blotching his face and floating his glowing hands over the suit (now the day opens from the edges behind him
+  and he goes last); double exposures (the double-vision transition and the second bright-out replaced, crossfades
+  shortened); the opening's lights too small to read at phone size (the room now steps down on "shoot", "the",
+  "lights", "out", with bigger pops and a push-in); the tape smeared by interpolation (held frames).
+- Left as judgement calls: the edit is 28.2 s (the whole Bon Iver intro and the drop; the owner's usual is 20–26 s);
+  the garden shot's own camera judders slightly (1.3 s, at night, under the nightfall transition).
