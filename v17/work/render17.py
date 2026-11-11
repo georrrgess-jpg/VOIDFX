@@ -11372,7 +11372,7 @@ def loop_fx(img, person, s, f):
     body = None
     if person is not None:
         body = person.copy()
-        if fs: body[: int(min(H, fs[1] + fs[2] * 1.4))] = 0                                    # his body below the chin
+        if fs: body[: int(min(H, fs[1] + fs[2] * 2.3))] = 0                                    # his chest and shoulders, well below the chin
     fk = face_keep(s, f, 1.5)
     if body is not None and chg > 0.01:
         q = 8; bq = cv2.resize(body, (W // q, H // q), interpolation=cv2.INTER_AREA)
@@ -11381,7 +11381,7 @@ def loop_fx(img, person, s, f):
             rng = np.random.default_rng(1700 + f // 2)
             for k in range(2 + int(4 * chg)):
                 i_ = int(rng.integers(len(xs))); p0 = (xs[i_] * q + 4.0, ys[i_] * q + 4.0)
-                a_ = rng.uniform(0, 2 * math.pi); L = rng.uniform(140, 300)
+                a_ = rng.uniform(-0.35, math.pi + 0.35); L = rng.uniform(140, 300)                 # sideways and down: never up toward his face
                 put_bolt(cv, p0, (p0[0] + L * math.cos(a_), p0[1] + L * math.sin(a_)), 18300 + k + 7 * (f // 2), 3, 0.32, 6, 1, val=int(255 * chg))
     hx, hy = (fs[0], fs[1] + fs[2] * 2.6) if fs else (W * 0.45, H * 0.62)                      # his chest
     launch = smooth(clamp((t - 0.34) / 0.12, 0, 1))                                            # 2. the bolt launches upward
