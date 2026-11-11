@@ -121,7 +121,7 @@ shot("passenger", "p1", 57, 65, 165.05, 166.55, z=[(0, 1.00), (1, 1.08)], tin="l
 shot("suit", "dmx", 65, 67, 94.90, 95.95, tmap=vel(65, 67, 94.90, 95.95), lin=True, interp="flow", tin="passenger111", **SP)   # "...I'm a monster"
 shot("suitclose", "dmx", 67, 69, 96.80, 97.80, tmap=vel(67, 69, 96.80, 97.80), lin=True, interp="flow", tin="dolly", **SP)
 shot("slides", "s1", 69, 71, 263.10, 263.95, tmap=vel(69, 71, 263.10, 263.95), lin=True, interp="flow", tin="slide111", **SP)   # "blood sucker": the slides
-shot("goggles", "dmx", 71, 73, 106.10, 107.40, tmap=vel(71, 73, 106.10, 107.40), lin=True, interp="flow", tin="luminol108", **SP)
+shot("goggles", "dmx", 71, 73, 106.10, 107.40, tmap=vel(71, 73, 106.10, 107.40), lin=True, interp="flow", tin="bleed111", **SP)   # the blood on the slide soaks out into the blood room
 shot("grin", "s1", 73, 75, 346.60, 347.70, tmap=vel(73, 75, 346.60, 347.70), lin=True, interp="flow", **SP)   # a clean cut on the downbeat (the beat camera's punch)
 shot("redface", "s1", 75, 77, 79.40, 80.60, tmap=vel(75, 77, 79.40, 80.60), lin=True, interp="flow", tin="flicker109", **SP)
 shot("tape", "p7", 77, 79, 22.95, 23.70, tmap=vel(77, 79, 22.95, 23.70), lin=True, interp="hold", tin="siren111", hflip=True, **SP)   # "look who's in trouble" (the pack is mirrored: the tape reads backwards)

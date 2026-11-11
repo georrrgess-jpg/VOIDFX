@@ -1083,6 +1083,15 @@ def siren_chirp(level=-30):
     y = bq(y, "band", np.array([500, 3000]), 2) * np.sin(np.pi * u) ** 0.6
     return norm(y, level)
 
+def whiz(dur=0.22, level=-20, seed=1190):
+    """a bullet going by: a narrow band of noise sweeping down, rising to the pass."""
+    n = I(dur); t = np.arange(n) / SR; u = t / dur
+    x = noise(n, seed); y = np.zeros(n, np.float32); hop = 256
+    for i in range(0, n, hop):
+        fc = 5200 * (1 - u[i]) + 900 * u[i]
+        y[i:i + hop] = bq(x[max(0, i - 2048):i + hop], "band", np.array([fc * 0.8, fc * 1.25]), 2)[-len(y[i:i + hop]):]
+    return norm(y * (u ** 1.5) * np.minimum(1, (1 - u) / 0.05 + 0.2), level)
+
 def main111():
     os.makedirs(AD, exist_ok=True)
     song = song_read10()
@@ -1104,6 +1113,8 @@ def main111():
     place(fx, stereo(siren_chirp(-31), 0.3), th(77) - 0.08)                                           # "look who's in trouble"
     tg = th(87.30); gs = stereo(gunshot(-7, 1111))
     place(fx, gs, tg)                                                                                 # THE SHOT
+    place(fx, stereo(whiz(E.DUR - tg - 0.03, -21, 1190), 0.5), tg + 0.03)                           # THE TRACER: the bullet goes by as we chase it
+    place(fx, stereo(bulb_pop(-24, 1191), 0.4), 0.0)                                                    # ... and hits the light at frame 0
     off = E.DUR - tg - PRE / SR                                                                       # and again across the loop (its echo carries into frame 0)
     place(fx, gs[I(off):], -PRE / SR) if off >= 0 else place(fx, gs, tg - E.DUR)
     fx = fx * db(10.0)

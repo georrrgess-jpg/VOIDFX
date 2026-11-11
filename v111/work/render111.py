@@ -14773,6 +14773,206 @@ def render(f):
     sf = SHOTS[0] if (s.get("tout") == "shot111" and f >= E.fh(E_FIRE) + 6) else s
     return (np.clip(finish111(out, f, sf), 0, 1) * 255 + 0.5).astype(np.uint8)
 
+# ============================================================================ v111 rev 1 (the owner's notes)
+# "I dislike the graphic/animation that appeared around the 23 second mark, the forensics one" (the luminol -> BLEED: the
+# slide's own blood soaks out through the frame into the blood room); "implement a new more creative loop" (THE TRACER: he
+# fires, we whip after the bullet's tracer through the night, and it lands in the marina's skyline as the light that
+# blows on "shoot": the end fires the shot that starts it); "more custom graphics and animations" (sparks and glass from
+# every light that blows; god rays from the sunrise; dust in the kill lamp's beam; the light bar's red and blue over the
+# crime scene).
+
+TGT_GUESS = (830.0, 250.0)
+def _lo_map(s_):
+    """per light (1/4 res): the time it dies; the lights list (t, x, y, area, seed) in output px; the tracer's target."""
+    if "map" not in _LO:
+        f0 = s_["f0"] + 4; img = base108(s_, f0)[0]; P = _pick(s_, f0)
+        m = _lights_mask(img, P, 0.34, 0.20)
+        lab = (m > 0.30).astype(np.uint8); n, cc = cv2.connectedComponents(lab)
+        ys, xs = np.mgrid[0:H // 4, 0:W // 4]
+        tmap_ = np.full(cc.shape, np.inf, np.float32)
+        comps = [(i, float(xs[cc == i].mean()) * 4 + 2, float(ys[cc == i].mean()) * 4 + 2, int((cc == i).sum())) for i in range(1, n) if (cc == i).sum() >= 2]
+        tg = min(comps, key=lambda c: (c[1] - TGT_GUESS[0]) ** 2 + (c[2] - TGT_GUESS[1]) ** 2 - 400 * min(c[3], 12))
+        rest = sorted([c for c in comps if c is not tg], key=lambda c: -abs(c[1] - W / 2))   # the outermost first
+        order = [tg] + rest
+        rng = np.random.default_rng(1101)
+        early = {0: E.th(1.4), 1: E.th(2.6), 2: E.th(3.4), 3: E.th(4.6), 4: E.th(5.4)}   # a light blows on each beat of "shoot"
+        lights = []
+        for r_, (i, cx, cy, ar) in enumerate(order):
+            u = r_ / max(1, len(order) - 1)
+            td = early.get(r_, T_WAVE[0] + (T_WAVE[1] - T_WAVE[0]) * clamp(u + rng.uniform(-0.08, 0.08), 0, 1))
+            tmap_[cc == i] = td; lights.append((td, cx, cy, ar, 1170 + r_))
+        grow = cv2.erode(tmap_, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+        _LO["map"] = (grow, len(order)); _LO["lights"] = lights; _LO["tgt"] = (tg[1], tg[2])
+    return _LO["map"]
+
+def _splat(lay, xs, ys, cols, r=1):
+    for x, y, c in zip(xs, ys, cols):
+        if 0 <= x < lay.shape[1] and 0 <= y < lay.shape[0]: cv2.circle(lay, (int(x), int(y)), r, tuple(float(v) for v in c), -1, cv2.LINE_AA)
+
+def _sparks111(o, f, s_):
+    """each light that blows throws sparks and glass: they fly up and out and fall."""
+    t = f / FPS; M = _follow(s_, s_["f0"] + 4, f)
+    lay = np.zeros((H // 2, W // 2, 3), np.float32); any_ = False
+    for (td, cx, cy, ar, seed) in _LO.get("lights", [])[:40]:
+        dt = t - td
+        if dt < 0 or dt > 0.75: continue
+        any_ = True; rng = np.random.default_rng(seed); n = 9 + min(14, ar)
+        ang = rng.uniform(-math.pi * 0.95, -math.pi * 0.05, n); spd = rng.uniform(160, 560, n)
+        life = rng.uniform(0.30, 0.75, n)
+        for tt, br in ((dt, 1.0), (max(0.0, dt - 0.02), 0.45)):                    # the spark and its streak
+            x = cx + np.cos(ang) * spd * tt; y = cy + np.sin(ang) * spd * tt + 0.5 * 1500 * tt * tt
+            X = (M[0, 0] * x + M[0, 2]) / 2; Y = (M[1, 1] * y + M[1, 2]) / 2
+            fade = np.clip(1 - tt / life, 0, 1) ** 1.3 * br
+            cols = [np.array([0.55, 0.85, 1.0], np.float32) * a for a in fade]
+            _splat(lay, X[fade > 0], Y[fade > 0], [c for c, a in zip(cols, fade) if a > 0])
+    if not any_: return o
+    lay = lay + cv2.GaussianBlur(lay, (0, 0), 2.5) * 1.6
+    return np.clip(o + cv2.resize(lay, (W, H), interpolation=cv2.INTER_LINEAR), 0, 1)
+
+_lightsout_r0 = lightsout111
+def lightsout111(out, f, s_, person):
+    return _sparks111(_lightsout_r0(out, f, s_, person), f, s_)
+
+# the shot lands on frame 0 as the light it hits: that light flares, and blows on "shoot"
+def flash_in111(out, f):
+    if f > 26 or "tgt" not in _LO: return out
+    tx, ty = _LO["tgt"]; a = 0.95 * math.exp(-f / 6.0)
+    d2 = (_GX - tx) ** 2 + (_GY - ty) ** 2
+    glow = np.exp(-d2 / (2 * 150.0 ** 2)) * a + np.exp(-d2 / (2 * 38.0 ** 2)) * a * 1.4
+    return np.clip(out + glow[..., None] * np.array([0.55, 0.80, 1.0], np.float32), 0, 1)
+
+# ---- THE TRACER (the loop): he fires; we whip after the bullet's tracer through the night, and the whip lands on the
+# marina at frame 0, the tracer going into the light it will put out.
+def _seg_glow(ax, ay, bx, by, w0, w1):
+    vx, vy = bx - ax, by - ay; L2 = vx * vx + vy * vy + 1e-6
+    u = np.clip(((_GX - ax) * vx + (_GY - ay) * vy) / L2, 0, 1)
+    d2 = (_GX - (ax + u * vx)) ** 2 + (_GY - (ay + u * vy)) ** 2
+    wd = w0 + (w1 - w0) * u
+    return np.exp(-d2 / (2 * wd * wd)) * (0.25 + 0.75 * u)
+
+def _hblur_shift(img, x, k_):
+    Mx = np.float32([[1, 0, x], [0, 1, 0]])
+    o_ = cv2.warpAffine(img, Mx, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    return cv2.blur(o_, (k_, 1)) if k_ > 2 else o_
+
+def shot111(out, f, s_):
+    tf = E.th(E_FIRE); t = f / FPS
+    if t < tf - 0.01: return out
+    mx, my = _muz(s_, f); k = (t - tf) * FPS
+    a = 1.0 if k < 2 else math.exp(-(k - 2) / 2.2)
+    o = out.copy()
+    d2 = (_GX - mx) ** 2 + (_GY - my) ** 2
+    light = np.exp(-d2 / (2 * 520.0 ** 2)) * math.exp(-k / 5.0) * 0.75
+    o = o * (1 + 0.8 * light[..., None]) + light[..., None] * np.array([0.42, 0.66, 0.95], np.float32) * 0.6
+    o = o + _flash_star(mx, my, a, f)[..., None] * np.array([0.70, 0.90, 1.0], np.float32)
+    K = (E.DUR_F - 1) - tf * FPS
+    u = clamp((k - 1.0) / max(1.0, K - 1.0), 0, 1)
+    if u <= 0: return np.clip(o, 0, 1)
+    if "t0" not in _LV111:
+        _lo_map(SHOTS[0])
+        _LV111["t0"] = flash_in111(lightsout111(frame0_plate108().copy(), 0, SHOTS[0], _person(SHOTS[0], 0)), 0)
+    tx, ty = _LO["tgt"]
+    e = smooth(u); sp = math.sin(math.pi * u) ** 1.2
+    dx = W * 1.15 * e; kb = int(1 + 90 * sp) | 1
+    Ad = _hblur_shift(o, -dx, kb); Bd = _hblur_shift(_LV111["t0"], W * 1.15 - dx, kb)
+    w = smooth((u - 0.40) / 0.18)
+    o = Ad * (1 - w) + Bd * w
+    hx = mx + (tx - mx) * ein(u, 1.3) + 40 * math.sin(math.pi * u)                # the tracer: the camera chases it (up the right, clear of him)
+    hy = my + (ty - my) * ein(u, 1.3) - 230 * math.sin(math.pi * u)
+    tail = 50 + 380 * sp
+    vis = (1 - smooth((u - 0.82) / 0.18)) * smooth(u / 0.08)
+    if vis > 0:
+        g = _seg_glow(hx + 0.35 * tail, hy + 0.95 * tail, hx, hy, 3.0 + 8 * sp, 7.0)
+        core = np.exp(-((_GX - hx) ** 2 + (_GY - hy) ** 2) / (2 * 14.0 ** 2))
+        halo = cv2.GaussianBlur(g, (0, 0), 9)
+        o = o + ((g * 1.1 + core * 1.3) * vis)[..., None] * np.array([0.70, 0.90, 1.0], np.float32) + (halo * 0.6 * vis)[..., None] * np.array([0.30, 0.62, 1.0], np.float32)
+    return np.clip(o, 0, 1)
+_LV111 = {}
+
+# ---- BLEED (the slides -> the blood room; replaces the luminol): the blood spot on his slide soaks out through the frame
+# like blood through paper, its wet edge darker, and the blood room is inside it.
+_BLD = {}
+def bleed111(A, B, j, f, sa, sb, pre=6, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    if sa["n"] not in _BLD:
+        q4 = cv2.resize(A, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+        red = cv2.GaussianBlur(q4[..., 2] - 0.5 * (q4[..., 0] + q4[..., 1]), (0, 0), 4)
+        y, x = np.unravel_index(int(np.argmax(red)), red.shape); _BLD[sa["n"]] = (x * 4.0 + 2, y * 4.0 + 2)
+    bx, by = _BLD[sa["n"]]
+    R = 15 + 2100 * ein(smooth(q), 1.6)
+    nz = cv2.resize(nz108(1161, 3), (W, H)) * 0.65 + cv2.resize(nz108(1162, 9), (W, H)) * 0.35
+    d = np.sqrt((_GX - bx) ** 2 + (_GY - by) ** 2) * (0.70 + 0.60 * nz)
+    m = np.clip((R - d) / (40 + 0.12 * R) + 0.5, 0, 1); m = m * m * (3 - 2 * m)
+    m = np.maximum(m, smooth((q - 0.88) / 0.12))
+    band = np.exp(-((d - R) / (30 + 0.10 * R)) ** 2) * (1 - smooth((q - 0.65) / 0.35))
+    fs = face_scr(sa, sa["f1"] - 1)
+    if fs is not None:                                                            # the wet front never stains his face
+        band = band * np.clip((((_GX - fs[0]) / (0.70 * fs[2])) ** 2 + ((_GY - fs[1]) / (0.90 * fs[2])) ** 2) - 0.7, 0, 1)
+    BLOOD = np.array([0.04, 0.03, 0.42], np.float32)
+    Bt = B * (1 - 0.55 * band[..., None]) + BLOOD * 0.55 * band[..., None]
+    o = A * (1 - m[..., None]) + Bt * m[..., None]
+    o = o * (1 - 0.35 * (band * (1 - m))[..., None]) + (BLOOD * 0.8) * (0.35 * band * (1 - m))[..., None]   # the wet front ahead of it
+    return np.clip(o, 0, 1)
+TR2["bleed111"] = (bleed111, 6, 14)
+
+# ---- GOD RAYS (the sunrise): the low sun throws rays through the haze, slowly turning.
+_RAYC = {}
+def rays111(o, f, s_):
+    k = f - s_["f0"]; n = s_["f1"] - s_["f0"]
+    env = smooth(k / 8.0) * (1 - smooth((k - (n - 8)) / 8.0))
+    if env <= 0: return o
+    if "sun" not in _RAYC:
+        Lq = cv2.GaussianBlur(lum(cv2.resize(base108(s_, s_["f0"])[0], (W // 8, H // 8))), (0, 0), 3)
+        y, x = np.unravel_index(int(np.argmax(Lq)), Lq.shape); _RAYC["sun"] = (x * 8.0 + 4, y * 8.0 + 4)
+    sx, sy = _RAYC["sun"]
+    ang = np.arctan2(_GY - sy, _GX - sx); d = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2)
+    rot = 0.25 * (f / FPS)
+    r = (0.5 + 0.5 * np.cos(11 * ang + rot)) ** 6 * 0.6 + (0.5 + 0.5 * np.cos(17 * ang - 1.3 * rot + 1.1)) ** 8 * 0.4
+    L = cv2.resize(cv2.GaussianBlur(lum(cv2.resize(o, (W // 4, H // 4))), (0, 0), 3), (W, H))
+    wgt = np.clip((L - 0.30) / 0.45, 0, 1) * np.exp(-d / 1400.0) * env
+    return np.clip(o + (r * wgt * 0.30)[..., None] * np.array([0.45, 0.78, 1.0], np.float32), 0, 1)
+
+# ---- DUST (the lamp and the table): motes drifting in the kill lamp's light (seen only in the lit air, never on his face).
+def motes111(o, f, s_):
+    k = f - s_["f0"]; n = s_["f1"] - s_["f0"]
+    env = smooth(k / 6.0) * (1 - smooth((k - (n - 6)) / 6.0))
+    if env <= 0: return o
+    rng = np.random.default_rng(1180 + (7 if s_["n"] == "table" else 0)); N = 230
+    x0 = rng.uniform(0, W, N); y0 = rng.uniform(0, H * 0.75, N); ph = rng.uniform(0, 6.28, N); sz = rng.uniform(0.5, 1.0, N)
+    t = f / FPS
+    X = (x0 + 26 * np.sin(t * 0.9 + ph) + 14 * t) % W; Y = (y0 + 18 * np.cos(t * 0.7 + ph * 1.3) + 22 * t) % H
+    L = cv2.resize(cv2.GaussianBlur(lum(cv2.resize(o, (W // 4, H // 4))), (0, 0), 4), (W // 4, H // 4))
+    lit = np.clip((L[(Y / 4).astype(int).clip(0, H // 4 - 1), (X / 4).astype(int).clip(0, W // 4 - 1)] - 0.32) / 0.35, 0, 1)
+    fs = face_scr(s_, f)
+    if fs is not None:
+        lit = lit * np.clip((((X - fs[0]) / (0.75 * fs[2])) ** 2 + ((Y - fs[1]) / (0.95 * fs[2])) ** 2) - 0.8, 0, 1)
+    lay = np.zeros((H // 2, W // 2, 3), np.float32)
+    tw = 0.6 + 0.4 * np.sin(t * 6 + ph * 3)
+    _splat(lay, X / 2, Y / 2, [np.array([0.70, 0.86, 0.95], np.float32) * a for a in (lit * sz * tw * env * 1.5)])
+    lay = lay + cv2.GaussianBlur(lay, (0, 0), 2.0)
+    return np.clip(o + cv2.resize(lay, (W, H), interpolation=cv2.INTER_LINEAR), 0, 1)
+
+# ---- THE LIGHT BAR (the crime-scene tape, "now look who's in trouble"): after the siren's sweep its red and blue keep
+# washing over the scene on the half-beats, from the cruiser's side.
+def lightbar111(o, f, s_):
+    k = f - s_["f0"]; n = s_["f1"] - s_["f0"]
+    if k < 8: return o
+    env = smooth((k - 8) / 4.0) * (1 - smooth((k - (n - 6)) / 6.0))
+    e = f / FPS / (E.HB / 2); ph = e % 1.0; side = int(e) % 2
+    a = math.exp(-ph / 0.45) * env
+    g = np.clip((_GX / W) if side else (1 - _GX / W), 0, 1) ** 1.5
+    col = np.array([0.95, 0.30, 0.08], np.float32) if side else np.array([0.08, 0.10, 0.95], np.float32)
+    return np.clip(o * (1 + 0.60 * (g * a)[..., None] * col) + (g * a * 0.30)[..., None] * col, 0, 1)
+
+_graphic_r0 = graphic111
+def graphic111(out, f, s_, person):
+    out = _graphic_r0(out, f, s_, person)
+    n = s_["n"]
+    if n == "sunrise": out = rays111(out, f, s_)
+    elif n in ("lamp", "table"): out = motes111(out, f, s_)
+    elif n == "tape": out = lightbar111(out, f, s_)
+    return out
+
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
 # Nothing in this section changes the look. Every item is checked against the shipped v11 frames with
