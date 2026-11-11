@@ -88,7 +88,7 @@ def shot(n, src, e0, e1, a, b, **kw):
 shot("storm", "fs5", 0, 4, 105.82, 106.52, tin="loop17", seg=False, face=None, cx=(640, 600), lin=True, tmap=[(-0.5, 105.78), (0, 105.82), (1, 106.52)], tneg=True,
      z=LinZ([(0, 1.04), (1, 1.08)]), look="storm", anim="sunbreak")                        # frame 0: storm clouds lit by lightning; the sun breaks through
 shot("avenue", "fbh", 4, 8, 64.80, 66.30, tin="sun_burst", seg=True, face=None, cx=(640, 640), tmap=vel(4, 8, 64.80, 66.30), lin=True, interp="hold")   # he runs down the avenue at us (lightning flicker: its own cadence)
-shot("povrun", "fbk", 8, 12, 62.40, 63.40, tin="sonic_boom", seg=False, face=None, cx=(640, 640), interp="hold")   # SONIC BOOM: his view at speed down the avenue
+shot("povrun", "fbk", 8, 12, 62.40, 63.40, tin="sonic_boom", seg=False, face=None, cx=(640, 640))   # SONIC BOOM: his view at speed down the avenue
 shot("runlit", "fbh", 12, 16, 4.55, 6.10, tin="speed_zoom", seg=True, tmap=vel(12, 16, 4.55, 6.10), lin=True, flowmax=40, flowfall="blend")
 shot("wave", "fbh", 16, 20, 6.90, 8.20, tin="glint_sweep", seg=True, anim="shine")                         # he turns and grins at us
 shot("run5", "fs5", 20, 24, 108.60, 110.00, tin="sky_whip", seg=True, tmap=vel(20, 24, 108.60, 110.00), lin=True, flowmax=40, flowfall="blend")

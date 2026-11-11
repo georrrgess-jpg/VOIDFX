@@ -659,6 +659,34 @@
    "step": "video",
    "s": 343.0,
    "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:55:12",
+   "round": 3,
+   "step": "qc",
+   "s": 170.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 22:55:22",
+   "round": 3,
+   "step": "report",
+   "s": 10.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 23:00:03",
+   "round": 3,
+   "step": "prep",
+   "s": 258.0,
+   "rc": 0
+  },
+  {
+   "t": "2026-11-11 23:00:19",
+   "round": 3,
+   "step": "sheet:r11:396,400,404",
+   "s": 12.0,
+   "rc": 0
   }
  ],
  "notes": [
@@ -849,6 +877,12 @@
    "round": 2,
    "cat": "framing",
    "text": "round 2: cx is a (start, end) pan; the charged shot panned away from him"
+  },
+  {
+   "t": "2026-11-11 22:55:45",
+   "round": 3,
+   "cat": "other",
+   "text": "round 3: the sun shot's range moved after prep, so its last frames had no matte and the sun jumped in front of his head (f398); re-prepped"
   }
  ],
  "round_starts": {
