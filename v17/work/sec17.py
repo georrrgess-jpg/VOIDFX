@@ -243,14 +243,22 @@ def beat_fx(out, f):
 
 # ---- THE SUN (the hero asset): a white-hot disc, a gold glow, rays that turn, its lens ghosts -----------------------------
 def sun_draw(cx, cy, r, amt, rot=0.0, rays=1.0):
-    """the sun as light (H, W, 3), drawn at quarter resolution: the disc, the glow, slowly turning rays."""
+    """the sun as a lens sees it (H, W, 3), drawn at quarter resolution: a white-hot disc with a soft limb, a layered bloom,
+    six thin aperture spikes that turn with `rot`, a faint fan of atmosphere and a thin anamorphic streak."""
     dx = _GXQ - cx; dy = _GYQ - cy; d = np.sqrt(dx * dx + dy * dy)
-    core = np.clip(1.25 - d / r, 0, 1) ** 1.4
-    glow = np.exp(-(d / (r * 3.0)) ** 1.3) * 0.75 + np.exp(-(d / (r * 9.0)) ** 1.1) * 0.30
+    core = np.clip(1.12 - d / r, 0, 1) ** 0.7
+    glow = np.exp(-(d / (r * 2.0)) ** 1.6) * 0.60 + np.exp(-(d / (r * 6.5)) ** 1.2) * 0.30 + np.exp(-d / (r * 18.0)) * 0.10
+    sp = np.zeros_like(d); th_ = 4.0 + 0.05 * r
+    for k in range(3):                                                                         # a hexagonal aperture: three lines, six spikes
+        a = rot + k * math.pi / 3
+        perp = np.abs(dx * math.sin(a) - dy * math.cos(a))
+        sp += np.exp(-(perp / th_) ** 2) * np.exp(-d / (r * (3.2 + 0.8 * k)))
+    sp *= np.clip(d / r - 0.7, 0, 1)
     ang = np.arctan2(dy, dx)
-    ray = (0.5 + 0.5 * np.cos(ang * 12 + rot)) ** 10 * 0.65 + (0.5 + 0.5 * np.cos(ang * 7 - rot * 0.7 + 1.3)) ** 12 * 0.45
-    ray = ray * np.exp(-d / (r * 6.5)) * np.clip(d / r - 0.8, 0, 1) * rays
-    lay = core[..., None] * HOT * 1.5 + glow[..., None] * GOLD17 + ray[..., None] * (GOLD17 * 0.7 + HOT * 0.3)
+    fan = (0.5 + 0.5 * np.cos(ang * 9 + rot * 0.5)) ** 3 * np.exp(-d / (r * 5.0)) * 0.10
+    streak = np.exp(-(dy / (3.0 + 0.04 * r)) ** 2) * np.exp(-np.abs(dx) / (r * 11.0)) * 0.30
+    lay = (core[..., None] * HOT * 1.6 + glow[..., None] * (GOLD17 * 0.65 + HOT * 0.35)
+           + ((sp * 0.85 + fan) * rays)[..., None] * (HOT * 0.5 + GOLD17 * 0.5) + streak[..., None] * WARM)
     return cv2.resize((lay * amt).astype(F32), (W, H), interpolation=cv2.INTER_LINEAR)
 
 GHOSTS = [(0.30, 26, GOLD17, 0.55), (0.55, 60, SKYB, 0.32), (0.85, 18, ROSE, 0.60), (1.15, 110, TEAL17, 0.22), (1.45, 40, GOLD17, 0.30)]
@@ -274,7 +282,7 @@ def cloud_tex():
     if "t" not in _CL:
         rng = np.random.default_rng(1717); h, w = H // 4, W // 4 * 2
         acc = np.zeros((h, w), F32); amp = 1.0
-        for sig, a_ in ((60, 1.0), (30, 0.62), (14, 0.30)):                                         # soft and puffy
+        for sig, a_ in ((64, 1.0), (32, 0.55), (14, 0.30), (6, 0.15), (2.5, 0.07)):              # puffy, with cauliflower edges
             n = rng.standard_normal((h, w)).astype(F32); n = cv2.GaussianBlur(n, (0, 0), sig, borderType=cv2.BORDER_REFLECT)
             acc += a_ * n / (n.std() + 1e-6)
         acc = (acc - acc.min()) / (acc.max() - acc.min()); _CL["t"] = acc
@@ -294,17 +302,25 @@ def cloud_N(t, vx=90.0, ox=0.0):
     T = cloud_tex(); w = W // 4; off = (ox + vx * t) / 4.0; i0 = int(math.floor(off)) % w; fr = off - math.floor(off)
     return np.roll(T, -i0, axis=1)[:, :w] * (1 - fr) + np.roll(T, -i0 - 1, axis=1)[:, :w] * fr
 
-def clouds(t, covmap, vx=90.0, lit=1.0, dark=0.0, tint=None, ox=0.0, soft=0.20):
-    """clouds over the frame: (rgb, density) at full resolution. Density from a coverage map; the billows are shaded from
-    the noise itself, lit from above right, darker in the bellies."""
+def clouds(t, covmap, vx=90.0, lit=1.0, dark=0.0, tint=None, ox=0.0, soft=0.20, sun=(0.5, -0.3)):
+    """clouds over the frame: (rgb, density) at full resolution. Density from a coverage map; lit like real cloud: the light
+    comes from `sun` (a screen point, in frame units), so the side facing it is bright and the cloud behind thick cloud is
+    in its shadow (blue-grey bellies); thin edges facing the light get a silver lining."""
     N = cloud_N(t, vx, ox)
     dens = np.clip((N - (0.80 - covmap)) / soft, 0, 1).astype(F32)
-    Nb = cv2.GaussianBlur(N, (0, 0), 5.0)
-    gy = cv2.Sobel(Nb, cv2.CV_32F, 0, 1, ksize=5) / 16; gx = cv2.Sobel(Nb, cv2.CV_32F, 1, 0, ksize=5) / 16
-    shade = np.clip(0.55 + (Nb - 0.5) * 1.1 - gy * 9.0 + gx * 4.0, 0.15, 1.0) * lit * (1 - 0.55 * dark)
-    hi = (np.array([0.97, 0.96, 0.94], F32) if tint is None else tint); lo = np.array([0.46, 0.47, 0.50], F32) * (1 - 0.5 * dark)
-    rgb = shade[..., None] * hi + (1 - shade[..., None]) * lo
-    return cv2.resize(rgb.astype(F32), (W, H), interpolation=cv2.INTER_LINEAR), cv2.resize(cv2.GaussianBlur(dens, (0, 0), 1.0), (W, H))
+    hq, wq = dens.shape
+    ldx, ldy = sun[0] * wq - wq / 2, sun[1] * hq - hq / 2; ln = math.hypot(ldx, ldy) + 1e-6; ldx, ldy = ldx / ln, ldy / ln
+    db = cv2.GaussianBlur(dens, (0, 0), 3.0)
+    od = np.zeros_like(db)
+    for dd, wgt in ((3, 0.30), (7, 0.30), (13, 0.25), (22, 0.15)):                            # the cloud between it and the light
+        od += wgt * cv2.warpAffine(db, np.float32([[1, 0, -ldx * dd], [0, 1, -ldy * dd]]), (wq, hq), borderMode=cv2.BORDER_REPLICATE)
+    shade = np.exp(-2.4 * od) * (0.80 + 0.20 * (1 - db))                                      # self-shadowed: bright tops, dark bellies
+    shade = np.clip((0.20 + 0.95 * shade) * lit * (1 - 0.50 * dark), 0, 1.15).astype(F32)
+    lining = np.clip(dens * (1 - dens) * 4, 0, 1) * np.exp(-1.6 * od)                           # thin edges facing the light
+    hi = (np.array([0.95, 0.97, 1.00], F32) if tint is None else tint)
+    lo = np.array([0.60, 0.50, 0.42], F32) * (1 - 0.45 * dark)                                 # blue-grey shadow (BGR)
+    rgb = shade[..., None] * hi + (1 - np.clip(shade, 0, 1)[..., None]) * lo + (lining * 0.35 * lit)[..., None] * (HOT * 0.6 + GOLD17 * 0.4)
+    return cv2.resize(rgb.astype(F32), (W, H), interpolation=cv2.INTER_LINEAR), cv2.resize(cv2.GaussianBlur(dens, (0, 0), 0.8), (W, H))
 
 # ---- in-shot animations (each motivated by its shot, kept off faces) ---------------------------------------------------
 def a_shine(img, person, s, f):
@@ -340,7 +356,7 @@ def a_rays(img, person, s, f):
 def a_sunbreak(img, person, s, f):
     """SUN BREAK (frame 0, the storm): from e1 the sun begins to burn through the clouds; the thick cloud still hides part
     of it (the frame's own dark cloud masks it), its rays come through the thin."""
-    e = e_of(f); g = smooth(clamp((e - 1.0) / 3.0, 0, 1))
+    e = e_of(f); g = smooth(clamp((e - 0.4) / 3.0, 0, 1))
     if g <= 0: return img
     sx, sy = W * 0.72, H * 0.20
     lay = sun_draw(sx, sy, 26 + 18 * g, 0.85 * g ** 1.4, rot=f * 0.02, rays=0.7)
@@ -475,18 +491,33 @@ def flare_cut(A, B, j, f, sa, sb, pre=6, post=8):
 
 # ---- RAY RAKE: the sun's shafts rake across the frame from above and the next shot is in them ----------------------------
 def ray_rake(A, B, j, f, sa, sb, pre=8, post=8):
+    """RAY RAKE: a shaft of sun rakes down across the frame; the next shot is lit behind it."""
     x = (j + pre) / (pre + post - 1); env = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.40) / 0.20, 0, 1)); base = A * (1 - w) + B * w
-    o = god_rays(base, PERSON.get(f), W * (-0.1 + 1.2 * smooth(x)), -H * 0.10, 1.4 * env, 0.42)
-    return np.clip(o * (1 + 0.08 * env), 0, 1)
+    proj = _GX * 0.55 + _GY * 0.835; L1 = W * 0.55 + H * 0.835
+    pos = -260 + (L1 + 520) * smooth(clamp(x, 0, 1))
+    m = np.clip((pos - proj) / 90 + 0.5, 0, 1).astype(F32)
+    base = A * (1 - m[..., None]) + B * m[..., None]
+    o = god_rays(base, PERSON.get(f), W * (-0.1 + 0.7 * smooth(x)), -H * 0.10, 1.0 * env, 0.45)
+    band = np.exp(-((proj - pos) / 110.0) ** 2).astype(F32)
+    addc(o, kmul(band, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD17 * 0.6 + HOT * 0.4, 0.55 * env)
+    return np.clip(o, 0, 1)
+
 
 # ---- BLOOM CUT: the light blooms (the sun about to rise) and the next shot comes out of it -------------------------------
 def bloom_cut(A, B, j, f, sa, sb, pre=8, post=10):
+    """BLOOM CUT: the light blooms where the sun is about to rise, and the next shot opens out of the bloom."""
     x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.38) / 0.24, 0, 1)); base = A * (1 - w) + B * w
-    hi = np.clip(base - 0.45, 0, 1)
-    bl = cv2.GaussianBlur(hi, (0, 0), 24) * 1.5 + cv2.GaussianBlur(hi, (0, 0), 6) * 0.5
-    return np.clip(base * (1 - 0.10 * k) + bl * k * (GOLD17 * 0.5 + 0.5), 0, 1)
+    sx, sy, _, _ = sun_path(E.E_SUN)
+    d = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2).astype(F32)
+    R = math.hypot(W, H) * 1.05 * smooth(clamp((x - 0.12) / 0.80, 0, 1)) ** 1.25
+    m = np.clip((R - d) / (30 + 0.14 * R) + 0.5, 0, 1).astype(F32)
+    base = A * (1 - m[..., None]) + B * m[..., None]
+    hi = np.clip(base - 0.45, 0, 1); bl = cv2.GaussianBlur(hi, (0, 0), 24) * 1.2
+    o = base + bl * k * (GOLD17 * 0.5 + 0.5)
+    rim = np.exp(-((d - R) / (24 + 0.06 * R)) ** 2).astype(F32)
+    addc(o, kmul(rim, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD17 * 0.6 + HOT * 0.4, 0.75 * k)
+    return np.clip(o, 0, 1)
+
 
 # ---- PRISM ("it's stopped raining"): the light splits into its colours, a rainbow runs through, they come back together --
 def prism(A, B, j, f, sa, sb, pre=6, post=8):
@@ -504,7 +535,9 @@ _BC = {}
 def bolt_crack(A, B, j, f, sa, sb, pre=4, post=8):
     q = (j + pre) / (pre + post - 1)
     if "p" not in _BC:
-        p_ = bolt_points((0.0, -40.0), (0.0, H + 40.0), 1771, 0.10, 6).astype(F32); p_[:, 1] = np.maximum.accumulate(p_[:, 1]) + np.arange(len(p_)) * 1e-3; _BC["p"] = p_
+        rng = np.random.default_rng(1771); ys = np.linspace(-40, H + 40, 10); xs_ = np.array([(1 if k % 2 else -1) * (70 + 30 * rng.random()) for k in range(10)])
+        yy = np.arange(-40, H + 41, 8, dtype=F32); xx = np.interp(yy, ys, xs_) + rng.normal(0, 5, len(yy)); xx = cv2.GaussianBlur(xx.astype(F32)[None], (0, 0), 0.8)[0]
+        _BC["p"] = np.stack([xx, yy], 1).astype(F32)
     pts = _BC["p"]; xs = W * 1.08 - W * 1.25 * smooth(q)
     off = np.interp(np.arange(H, dtype=F32), pts[:, 1], pts[:, 0]).astype(F32)
     m = np.clip((_GX - (xs + off)[:, None]) / 6 + 0.5, 0, 1).astype(F32)
@@ -552,12 +585,17 @@ def balloon_rise(A, B, j, f, sa, sb, pre=6, post=8):
 
 # ---- LIGHT STREAK: a sun streak flashes across the lens at the cut --------------------------------------------------------
 def light_streak(A, B, j, f, sa, sb, pre=5, post=7):
-    x = (j + pre) / (pre + post - 1); pk = math.exp(-((x - 0.45) / 0.14) ** 2)
-    w = smooth(clamp((x - 0.40) / 0.12, 0, 1)); o = A * (1 - w) + B * w
-    cy = H * 0.36
-    st = (np.exp(-((_GY - cy) / (5 + 10 * pk)) ** 2) + 0.4 * np.exp(-((_GY - cy) / 90.0) ** 2)).astype(F32)
-    addc(o, kmul(st, live_keep(sa, sb, j, f, w, 1.2)), GOLD17 * 0.6 + HOT * 0.4, 1.3 * pk)
-    return np.clip(o * (1 - 0.10 * pk), 0, 1)
+    """LIGHT STREAK: a sun streak flashes across the lens, then opens like a slot onto the next shot."""
+    x = (j + pre) / (pre + post - 1); pk = math.exp(-((x - 0.30) / 0.16) ** 2); k = math.sin(math.pi * clamp(x, 0, 1))
+    cy = H * 0.36; dy = np.abs(_GY - cy).astype(F32)
+    half = H * 1.05 * smooth(clamp((x - 0.30) / 0.45, 0, 1)) ** 1.2
+    m = np.clip((half - dy) / (14 + 0.10 * half) + 0.5, 0, 1).astype(F32)
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    st = (np.exp(-(dy / (5 + 10 * pk)) ** 2) * pk + 0.35 * np.exp(-(dy / 90.0) ** 2) * pk
+          + np.exp(-((dy - half) / (10 + 0.04 * half)) ** 2) * k * 0.8).astype(F32)            # its two lit edges as it opens
+    addc(o, kmul(st, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD17 * 0.6 + HOT * 0.4, 1.1)
+    return np.clip(o, 0, 1)
+
 
 # ---- LIGHT LEAK: a warm leak of sun sweeps over the film and the next shot is under it ------------------------------------
 def light_leak17(A, B, j, f, sa, sb, pre=6, post=8):
@@ -587,16 +625,20 @@ def spin_roll(A, B, j, f, sa, sb, pre=6, post=10):
 
 # ---- BLUE BLOOM (into the Speed Force): its blue light blooms out of the frame and he is inside it -----------------------
 def blue_bloom(A, B, j, f, sa, sb, pre=10, post=12):
+    """BLUE BLOOM (into the Speed Force): a starburst of its blue light breaks out from his chest and he is inside it."""
     x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.45) / 0.10, 0, 1)); base = A * (1 - w) + B * w                  # the swap under the peak
-    pk = math.exp(-((x - 0.50) / 0.13) ** 2)
-    hi = np.clip(base - 0.30, 0, 1)
-    bl = cv2.GaussianBlur(hi, (0, 0), 30) * 1.8 + cv2.GaussianBlur(hi, (0, 0), 8) * 0.6
-    d = np.sqrt(((_GX - W / 2) / W) ** 2 + ((_GY - H * 0.45) / H) ** 2).astype(F32)
-    core = np.exp(-(d / (0.15 + 0.55 * k)) ** 2) * k
-    o = base * (1 - 0.45 * pk) + bl * k * (SKYB * 0.7 + 0.3) + (SKYB * 0.55 + HOT * 0.10) * 0.45 * pk
-    addc(o, core.astype(F32), SKYB * 0.6 + HOT * 0.4, 0.55)
+    cx, cy = W / 2, H * 1.02                                                                   # from below the frame, off every face
+    dx = _GX - cx; dy = _GY - cy; d = np.sqrt(dx * dx + dy * dy).astype(F32); a = np.arctan2(dy, dx)
+    jag = (1 + 0.20 * (0.6 * np.sin(7 * a + 1.3 + 2 * x) + 0.4 * np.sin(13 * a + 0.4 - 3 * x))).astype(F32)
+    R = H * 1.30 * smooth(clamp((x - 0.10) / 0.82, 0, 1)) ** 1.1
+    de = d / jag
+    m = np.clip((R - de) / (20 + 0.12 * R) + 0.5, 0, 1).astype(F32)
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    rim = np.exp(-((de - R) / (22 + 0.05 * R)) ** 2).astype(F32)
+    addc(o, kmul(rim, live_keep(sa, sb, j, f, smooth(x), 1.2)), SKYB * 0.65 + HOT * 0.35, 0.85 * k)
+    hi = np.clip(o - 0.35, 0, 1); o = o + cv2.GaussianBlur(hi, (0, 0), 26) * (SKYB * 0.6 + 0.2) * 0.8 * k
     return np.clip(o, 0, 1)
+
 
 # ---- HORIZON SLIDE (the leap -> the sea): the frame slides along the horizon, the next shot comes in faster behind it ----
 def horizon_slide(A, B, j, f, sa, sb, pre=5, post=7):
@@ -616,12 +658,17 @@ def bokeh_rack(A, B, j, f, sa, sb, pre=8, post=10):
 
 # ---- GLARE WASH: the sun's glare washes in from the corner and the next shot is in it ------------------------------------
 def glare_wash(A, B, j, f, sa, sb, pre=6, post=8):
+    """GLARE WASH: the sun's glare floods in from the corner; the next shot is in the glare as it passes."""
     x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.40) / 0.20, 0, 1)); o = A * (1 - w) + B * w
-    d = np.sqrt((_GX - W * 1.05) ** 2 + (_GY + H * 0.05) ** 2) / math.hypot(W, H)
-    g = np.clip(1 - d / (0.25 + 0.75 * k), 0, 1).astype(F32) ** 1.6
-    addc(o, kmul(g, live_keep(sa, sb, j, f, w, 1.2)), GOLD17 * 0.7 + HOT * 0.3, 0.75 * k)
-    return np.clip(o * (1 - 0.08 * k), 0, 1)
+    d = (np.sqrt((_GX - W * 1.08) ** 2 + (_GY + H * 0.06) ** 2)).astype(F32)
+    xr = 0.5 + 0.5 * math.tanh((x - 0.5) * 4.0) / math.tanh(2.0)
+    R = math.hypot(W, H) * 1.15 * xr
+    m = np.clip((R - d) / 170 + 0.5, 0, 1).astype(F32)
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    g = np.exp(-((d - R) / 260.0) ** 2).astype(F32) + 0.35 * np.clip(1 - d / (R + 1), 0, 1).astype(F32) * (1 - smooth(clamp((x - 0.6) / 0.4, 0, 1)))
+    addc(o, kmul(g, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD17 * 0.7 + HOT * 0.3, 0.60 * k)
+    return np.clip(o, 0, 1)
+
 
 # ---- HIDE PEEK ("hide away"): the frame slides away to the side and the next shot is behind it, peeking out --------------
 def hide_peek(A, B, j, f, sa, sb, pre=8, post=8):
@@ -643,12 +690,37 @@ def smear17(A, B, j, f, sa, sb, pre=5, post=6):
 def split_slide(A, B, j, f, sa, sb, pre=6, post=8):
     q = (j + pre) / (pre + post - 1); p = smooth(clamp(q, 0, 1)); o = B.copy()
     for k in range(3):
-        x0, x1 = k * W // 3, (k + 1) * W // 3; dy = int(round((H * 1.1) * p * (1 if k % 2 == 0 else -1) * (0.8 + 0.2 * k)))
-        sl = np.roll(A[:, x0:x1], dy, axis=0)
+        x0, x1 = k * W // 3, (k + 1) * W // 3; dy = int(round((H * 1.04) * p * (1 if k % 2 == 0 else -1) * (1.0 + 0.12 * k)))
+        dy = max(-H, min(H, dy)); sl = np.roll(A[:, x0:x1], dy, axis=0)
         if dy > 0: sl[:dy] = B[:dy, x0:x1]
         elif dy < 0: sl[dy:] = B[dy:, x0:x1]
         o[:, x0:x1] = sl
     return np.clip(hblur(o, 2 + 140 * math.sin(math.pi * clamp(q, 0, 1)), vertical=True), 0, 1)
+
+# ---- CLOUD SHADOW ("where once was pity"): a cloud's shadow sweeps over the frame from the right; the next shot is under it
+def cloud_shadow(A, B, j, f, sa, sb, pre=8, post=10):
+    x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
+    N = cv2.resize(cloud_N(f / FPS, -160.0), (W, H)); wob = (N - 0.5) * 260                    # the shadow's edge is a cloud's edge
+    proj = (W - _GX) + 0.18 * _GY + wob; L1 = W + 0.18 * H
+    pos = -350 + (L1 + 700) * smooth(clamp(x, 0, 1))
+    m = np.clip((pos - proj) / 70 + 0.5, 0, 1).astype(F32)
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    sh = (np.exp(-((proj - pos) / 210.0) ** 2) * 0.55 * k ** 0.6).astype(F32)               # the shadow itself: soft, the picture stays
+    return np.clip(o * (1 - sh[..., None]) + (sh * 0.10)[..., None] * SKYB, 0, 1)
+
+# ---- SUN OPEN ("Mr. Blue Sky"): he looks up into the sun; it opens from the top of the frame onto the next shot -----------
+def sun_open(A, B, j, f, sa, sb, pre=8, post=10):
+    x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
+    x = 0.5 + 0.5 * math.tanh((x - 0.5) * 4.0) / math.tanh(2.0)                                  # it crosses the frame fast in the middle
+    cx, cy = W * 0.5, -H * 0.04
+    d = np.sqrt((_GX - cx) ** 2 + ((_GY - cy) * 0.85) ** 2).astype(F32)
+    R = H * 1.25 * smooth(clamp((x - 0.08) / 0.84, 0, 1)) ** 1.2
+    m = np.clip((R - d) / (24 + 0.10 * R) + 0.5, 0, 1).astype(F32)
+    base = A * (1 - m[..., None]) + B * m[..., None]
+    o = god_rays(base, PERSON.get(f), cx, cy, 0.9 * k, 0.50)
+    rim = np.exp(-((d - R) / (20 + 0.05 * R)) ** 2).astype(F32)
+    addc(o, kmul(rim, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD17 * 0.55 + HOT * 0.45, 0.70 * k)
+    return np.clip(o, 0, 1)
 
 def punch_cut(A, B, j, f, sa, sb):
     return B
@@ -658,7 +730,7 @@ def punch_cut(A, B, j, f, sa, sb):
 # ---- THE SUN (the focal piece, e32 -> e40): the sun rises behind him through his matte; its rays turn on every beat -------
 def sun_path(e):
     u = clamp((e - E.E_SUN) / 8.0, 0, 1); p = smoother(u)
-    return W * (0.98 - 0.04 * p), H * (0.58 - 0.16 * p), 44 + 26 * p, u                       # it rises from behind the hills
+    return W * (0.70 - 0.16 * p), H * (0.60 - 0.48 * p), 50 + 34 * p, u                       # it rises behind him, from his shoulder to behind his head: a halo
 
 def sun_rot(e):
     """the rays turn a step on every beat (eased), and drift between."""
@@ -670,9 +742,13 @@ def sun_fx(img, person, s, f):
     g = smooth(clamp((e - E.E_SUN) / 1.6, 0, 1))
     if g <= 0: return img
     pulse = math.exp(-((e - beat_e(e)) * E.HB) / 0.12)
-    lay = sun_draw(sx, sy, r, g * (0.95 + 0.25 * pulse), sun_rot(e))
+    lay = sun_draw(sx, sy, r, g * (1.20 + 0.25 * pulse), sun_rot(e))
     pm = None if person is None else np.clip(person * 1.2, 0, 1)
-    o = img * (1 - 0.05 * g)
+    d_ = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2)
+    expo = (1 - 0.42 * g * (1 - np.exp(-(d_ / (r * 6.0)) ** 2))).astype(F32)                # exposed for the sun: the sky deepens away from it
+    tint = (np.exp(-(d_ / (r * 9.0)) ** 2) * 0.10 * g).astype(F32)
+    bg = img * expo[..., None] + tint[..., None] * GOLD17
+    o = bg if pm is None else img * pm[..., None] * (1 - 0.18 * g) + bg * (1 - pm[..., None])
     if pm is not None:
         o = o + lay * (1 - pm[..., None])                                                     # the sun is behind him
         rim = np.clip(pm - cv2.GaussianBlur(pm, (0, 0), 9), 0, 1) * 2.0                       # his edge catches it
@@ -688,7 +764,7 @@ def ghost_iris(A, B, j, f, sa, sb, pre=30, post=26):
     sx, sy, r, _ = sun_path(e_of(sa["f1"] - 1)); gx, gy, gr, gcol, ga = ghost_pts(sx, sy)[1]
     G = smoother(clamp(x / 0.95, 0, 1)); D = math.hypot(W, H)
     R = gr * math.exp(math.log(D * 0.62 / gr) * G)
-    cx, cy = gx + (W / 2 - gx) * G, gy + (H / 2 - gy) * G
+    cx, cy = gx + (W / 2 - gx) * G, gy + (H * 0.64 - gy) * G                                  # it opens on his chest, not his face
     d = np.sqrt((_GX - cx) ** 2 + (_GY - cy) ** 2)
     fe_ = (2 + 0.06 * R) * (1 - smooth(clamp((x - 0.80) / 0.20, 0, 1))) + 1e-3
     m = np.clip((R - d) / fe_, 0, 1).astype(F32)
@@ -704,22 +780,47 @@ def ghost_iris(A, B, j, f, sa, sb, pre=30, post=26):
     return np.clip(o, 0, 1)
 
 # ---- CLOUD BREAK ("where once was pity" -> "Mr. Blue Sky"): the clouds roll in over him, then part with the sun behind ---
-def cloud_break(A, B, j, f, sa, sb, pre=40, post=24):
-    t = f / FPS
+def _faceq(s_, f_, pad=1.3):
+    fm = face_soft(s_, f_, pad)
+    return None if fm is None else cv2.resize(fm[..., 0], (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+
+_STM = {}
+def storm_tex(k):
+    """the storm itself as the cloud: frame k of the opening storm, mirrored and pushed in (its building out of frame)."""
+    k = int(clamp(round(k), 0, SHOTS[0]["f1"] - 1))
+    if k not in _STM:
+        if len(_STM) > 6: _STM.clear()
+        img = base11(SHOTS[0], k)[0][:, ::-1]
+        z = 1.35; cx, cy = W * 0.5, H * 0.25
+        _STM[k] = cv2.warpAffine(np.ascontiguousarray(img), np.float32([[z, 0, cx - z * cx], [0, z, cy - z * cy]]), (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    return _STM[k]
+
+def _cloud_mask(t, covmap, soft, vx=-110.0):
+    N_ = cloud_N(t, vx)
+    dq = np.clip((N_ - (0.80 - covmap)) / soft, 0, 1).astype(F32)
+    return dq, cv2.resize(cv2.GaussianBlur(dq, (0, 0), 1.2), (W, H))[..., None], cv2.resize((dq * (1 - dq) * 4).astype(F32), (W, H))
+
+def cloud_break(A, B, j, f, sa, sb, pre=28, post=24):
+    """CLOUD BREAK ("where once was pity" -> "Mr. Blue Sky"): the storm of the opening rolls back in over him; on the word
+    it parts from the sun outward, his face clearing first, and the sun's rays come through the gap."""
+    t = f / FPS; stm = storm_tex(j + pre)
     if j < 0:
         u = (j + pre + 1) / pre
-        covmap = (1.05 * smooth(u) ** 1.6 - 0.50 + 0.70 * (_GXQ / W)).astype(F32)              # they roll in from the right
-        rgb, dm = clouds(t, covmap, vx=-110.0, lit=0.95 - 0.30 * u, dark=0.55 * u)
-        o = A * (1 - 0.22 * u)
-        return np.clip(o * (1 - dm[..., None]) + rgb * dm[..., None], 0, 1)
+        covmap = (1.25 * smooth(u) ** 2.0 - 0.50 + 0.70 * (_GXQ / W)).astype(F32)              # it rolls in from the right
+        fq = _faceq(sa, f); soft = 0.20 if fq is None else (0.20 + 0.25 * fq).astype(F32)      # its edge passes his face softly
+        dq, dm, rim = _cloud_mask(t, covmap, soft)
+        o = A * (1 - 0.25 * u) * (1 - dm) + stm * dm
+        addc(o, rim * (1 - u), HOT, 0.22)                                                      # the last light on its edge
+        return np.clip(o, 0, 1)
     v = (j + 1) / post
     dist = np.sqrt(((_GXQ - W * 0.5) / W) ** 2 + ((_GYQ - H * 0.15) / H) ** 2 * 0.8) / 0.75
-    covmap = (1.25 - 1.95 * eout(v, 2.0) + 0.9 * dist).astype(F32)                           # they part from the sun outward
-    rgb, dm = clouds(t, covmap, vx=-110.0, lit=0.95 + 0.20 * (1 - v), dark=0.0)
-    Bl = god_rays(B, PERSON.get(f), W * 0.5, H * 0.04, 1.1 * (1 - v) ** 0.7, 0.55)              # the sun behind him, through the gap
-    rim = (dm * (1 - dm) * 4).astype(F32) * (1 - v)                                           # the silver lining
-    o = Bl * (1 - dm[..., None]) + rgb * dm[..., None]
-    addc(o, rim, HOT * 0.6 + GOLD17 * 0.4, 0.55)
+    covmap = 1.30 - 2.00 * smooth(v) ** 0.9 + 0.55 * dist                                     # it parts from the sun outward
+    fq = _faceq(sb, f)
+    soft = 0.20 if fq is None else (0.20 + 0.25 * fq).astype(F32)                              # its edge passes his face softly
+    dq, dm, rim = _cloud_mask(t, covmap.astype(F32), soft)
+    Bl = god_rays(B, PERSON.get(f), W * 0.5, H * 0.04, 0.70 * (1 - v) ** 0.7, 0.55)             # the sun behind him, through the gap
+    o = Bl * (1 - dm) + stm * dm
+    addc(o, rim * (1 - v) ** 0.8, HOT * 0.6 + GOLD17 * 0.4, 0.60)                               # the silver lining
     return np.clip(o, 0, 1)
 
 # ---- EMBLEM SUN (the chorus, e104 -> e112): the real chest emblem glints, lights from within, throws rays and becomes the sun;
@@ -775,17 +876,23 @@ def loop_fx(img, person, s, f):
     if f < f0: return img
     t = (f - f0) / N; tt = f / FPS
     sx, sy = W * 0.74, H * 0.10
-    sv = 1 - smooth(clamp((t - 0.12) / 0.45, 0, 1))                                           # the sun, hiding away
+    sv = 1 - smooth(clamp((t - 0.38) / 0.40, 0, 1))                                           # the sun, hiding away
     o = img
     if sv > 0.002:
         lay = sun_draw(sx, sy, 44, 0.85 * sv * smooth(clamp(t / 0.12, 0, 1)), rot=0.6 * t)
         o = img + (lay if person is None else lay * (1 - np.clip(person * 1.2, 0, 1)[..., None]))
-    cov = 1.00 * smooth(clamp((t - 0.06) / 0.55, 0, 1)) - 0.45
-    covmap = (cov + 0.55 * (1 - _GYQ / H) + 0.25 * (_GXQ / W)).astype(F32)                    # they come over from the top right
-    rgb, dm = clouds(tt, covmap, vx=-130.0, lit=1.0 - 0.40 * t, dark=0.65 * t)
-    o = o * (1 - 0.30 * t) * (1 - dm[..., None]) + rgb * dm[..., None]
-    wv = smooth(clamp((t - 0.30) / 0.66, 0, 1))                                                # the storm of frame 0 comes through them
-    if wv > 0.002: o = o * (1 - wv) + frame_virtual(f - E.DUR_F) * wv
+    cov = 1.35 * smooth(clamp((t - 0.38) / 0.55, 0, 1)) - 0.60
+    covmap = (cov + 0.40 * (1 - _GYQ / H) + 0.20 * (_GXQ / W)).astype(F32)                    # they come over from the top right
+    soft = 0.22
+    N_ = cloud_N(tt, -130.0)
+    dq = np.clip((N_ - (0.80 - covmap)) / soft, 0, 1).astype(F32)
+    dm = cv2.resize(cv2.GaussianBlur(dq, (0, 0), 1.2), (W, H))[..., None]
+    storm = frame_virtual(f - E.DUR_F)                                                         # the clouds ARE frame 0's storm
+    rim = kmul(cv2.resize((dq * (1 - dq) * 4).astype(F32), (W, H)) * (1 - smooth(clamp((t - 0.55) / 0.35, 0, 1))), face_keep(s, f, 1.3))
+    o = o * (1 - 0.40 * smooth(clamp((t - 0.30) / 0.60, 0, 1))) * (1 - dm) + storm * dm
+    addc(o, rim, HOT * 0.7 + GOLD17 * 0.3, 0.45 * sv)                                          # their edge still catches the sun
+    wv = smooth(clamp((t - 0.72) / 0.26, 0, 1))                                                # ... and they close over completely
+    if wv > 0.002: o = o * (1 - wv) + storm * wv
     return np.clip(o, 0, 1)
 
 def loop17(A, B, j, f, sa, sb):
@@ -794,7 +901,7 @@ def loop17(A, B, j, f, sa, sb):
 TR2.update({"sun_burst": (sun_burst, 12, 16), "run_by": (run_by, 5, 7), "speed_zoom": (speed_zoom, 4, 7), "glint_sweep": (glint_sweep, 6, 6),
             "sky_whip": (sky_whip, 5, 6), "flare_cut": (flare_cut, 6, 8), "ray_rake": (ray_rake, 8, 8), "bloom_cut": (bloom_cut, 8, 10),
             "ghost_iris": (ghost_iris, 30, 26), "prism": (prism, 6, 8), "whip_pan": (whip_pan, 5, 6), "bolt_crack": (bolt_crack, 4, 8),
-            "rain_ripple": (rain_ripple, 6, 12), "tilt_up": (tilt_up, 6, 8), "cloud_break": (cloud_break, 40, 24), "sun_whip": (sun_whip, 5, 6),
+            "rain_ripple": (rain_ripple, 6, 12), "tilt_up": (tilt_up, 6, 8), "cloud_break": (cloud_break, 28, 24), "cloud_shadow": (cloud_shadow, 8, 10), "sun_open": (sun_open, 8, 10), "sun_whip": (sun_whip, 5, 6),
             "balloon_rise": (balloon_rise, 6, 8), "light_streak": (light_streak, 5, 7), "throw_whip": (throw_whip, 5, 7),
             "light_leak17": (light_leak17, 6, 8), "spin_roll": (spin_roll, 6, 10), "blue_bloom": (blue_bloom, 10, 12), "punch_cut": (punch_cut, 0, 1),
             "emblem_sun": (emblem_sun, 62, 22), "horizon_slide": (horizon_slide, 5, 7), "bokeh_rack": (bokeh_rack, 8, 10),
@@ -802,8 +909,27 @@ TR2.update({"sun_burst": (sun_burst, 12, 16), "run_by": (run_by, 5, 7), "speed_z
             "loop17": (loop17, 0, 1)})
 
 # ---- the frame ----------------------------------------------------------------------------------------------------------
+def suit_red(img, person, s, f):
+    """the Blitzkrieg pack's suit reads tan; give it back the suit's red: his matte, its tan and grey, cowl included; never
+    the skin of his lower face, the white emblem with its bolt, or the gold lightning on his ears."""
+    B_, G_, R_ = img[..., 0], img[..., 1], img[..., 2]
+    L = B_ * 0.114 + G_ * 0.587 + R_ * 0.299
+    hue = (R_ - G_) / (R_ + 1e-3); rb = R_ - B_
+    gate = np.clip((hue + 0.02) / 0.10, 0, 1) * np.clip((0.88 - L) / 0.16, 0, 1) * np.clip((0.42 - rb) / 0.10, 0, 1) * np.clip((rb + 0.04) / 0.06, 0, 1)
+    m = gate * (1.0 if person is None else np.clip(person * 1.3, 0, 1))
+    q = 4
+    fs = face_scr(s, f) if s.get("face") is not None else None
+    if fs:                                                                                     # the skin: his lower face only
+        sk = np.zeros((H // q, W // q), F32)
+        cv2.ellipse(sk, (int(fs[0] / q), int((fs[1] + 0.22 * fs[2]) / q)), (int(fs[2] * 0.50 / q), int(fs[2] * 0.50 / q)), 0, 0, 360, 1.0, -1)
+        m = m * (1 - cv2.resize(cv2.GaussianBlur(sk, (0, 0), 2.0), (W, H)))
+    m = cv2.GaussianBlur(m.astype(F32), (0, 0), 1.5)[..., None] * s.get("suitred", 1.0)
+    rec = np.stack([B_ * 0.50, G_ * 0.34, np.clip(R_ * 0.98 + 0.02, 0, 1)], axis=2)
+    return img * (1 - m) + rec * m
+
 def base17(s, f):
     img, person = base11(s, f)
+    if s.get("suitred"): img = suit_red(img, person, s, f)
     if s.get("anim") in ANIMS: img = ANIMS[s["anim"]](img, person, s, f)
     n = s["n"]
     if n == "sun": img = sun_fx(img, person, s, f)
