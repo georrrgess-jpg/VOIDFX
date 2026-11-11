@@ -10444,7 +10444,7 @@ def cloud_tex():
     if "t" not in _CL:
         rng = np.random.default_rng(1717); h, w = H // 4, W // 4 * 2
         acc = np.zeros((h, w), F32); amp = 1.0
-        for sig, a_ in ((60, 1.0), (30, 0.62), (14, 0.34), (6, 0.14)):                              # soft, puffy, little fine grain
+        for sig, a_ in ((60, 1.0), (30, 0.62), (14, 0.30)):                                         # soft and puffy
             n = rng.standard_normal((h, w)).astype(F32); n = cv2.GaussianBlur(n, (0, 0), sig, borderType=cv2.BORDER_REFLECT)
             acc += a_ * n / (n.std() + 1e-6)
         acc = (acc - acc.min()) / (acc.max() - acc.min()); _CL["t"] = acc
@@ -10469,7 +10469,7 @@ def clouds(t, covmap, vx=90.0, lit=1.0, dark=0.0, tint=None, ox=0.0, soft=0.20):
     the noise itself, lit from above right, darker in the bellies."""
     N = cloud_N(t, vx, ox)
     dens = np.clip((N - (0.80 - covmap)) / soft, 0, 1).astype(F32)
-    Nb = cv2.GaussianBlur(N, (0, 0), 3.0)
+    Nb = cv2.GaussianBlur(N, (0, 0), 5.0)
     gy = cv2.Sobel(Nb, cv2.CV_32F, 0, 1, ksize=5) / 16; gx = cv2.Sobel(Nb, cv2.CV_32F, 1, 0, ksize=5) / 16
     shade = np.clip(0.55 + (Nb - 0.5) * 1.1 - gy * 9.0 + gx * 4.0, 0.15, 1.0) * lit * (1 - 0.55 * dark)
     hi = (np.array([0.97, 0.96, 0.94], F32) if tint is None else tint); lo = np.array([0.46, 0.47, 0.50], F32) * (1 - 0.5 * dark)
@@ -10758,12 +10758,14 @@ def spin_roll(A, B, j, f, sa, sb, pre=6, post=10):
 # ---- BLUE BLOOM (into the Speed Force): its blue light blooms out of the frame and he is inside it -----------------------
 def blue_bloom(A, B, j, f, sa, sb, pre=10, post=12):
     x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.38) / 0.24, 0, 1)); base = A * (1 - w) + B * w
-    hi = np.clip(base - 0.35, 0, 1)
-    bl = cv2.GaussianBlur(hi, (0, 0), 30) * 1.6 + cv2.GaussianBlur(hi, (0, 0), 8) * 0.5
+    w = smooth(clamp((x - 0.45) / 0.10, 0, 1)); base = A * (1 - w) + B * w                  # the swap under the peak
+    pk = math.exp(-((x - 0.50) / 0.13) ** 2)
+    hi = np.clip(base - 0.30, 0, 1)
+    bl = cv2.GaussianBlur(hi, (0, 0), 30) * 1.8 + cv2.GaussianBlur(hi, (0, 0), 8) * 0.6
     d = np.sqrt(((_GX - W / 2) / W) ** 2 + ((_GY - H * 0.45) / H) ** 2).astype(F32)
-    core = np.exp(-(d / (0.10 + 0.45 * k)) ** 2) * k
-    o = base * (1 - 0.12 * k) + bl * k * (SKYB * 0.7 + 0.3); addc(o, core.astype(F32), SKYB * 0.6 + HOT * 0.4, 0.45)
+    core = np.exp(-(d / (0.15 + 0.55 * k)) ** 2) * k
+    o = base * (1 - 0.45 * pk) + bl * k * (SKYB * 0.7 + 0.3) + (SKYB * 0.55 + HOT * 0.10) * 0.45 * pk
+    addc(o, core.astype(F32), SKYB * 0.6 + HOT * 0.4, 0.55)
     return np.clip(o, 0, 1)
 
 # ---- HORIZON SLIDE (the leap -> the sea): the frame slides along the horizon, the next shot comes in faster behind it ----
@@ -10948,13 +10950,11 @@ def loop_fx(img, person, s, f):
     if sv > 0.002:
         lay = sun_draw(sx, sy, 44, 0.85 * sv * smooth(clamp(t / 0.12, 0, 1)), rot=0.6 * t)
         o = img + (lay if person is None else lay * (1 - np.clip(person * 1.2, 0, 1)[..., None]))
-    cov = 1.15 * smooth(clamp((t - 0.06) / 0.60, 0, 1)) - 0.45
+    cov = 1.00 * smooth(clamp((t - 0.06) / 0.55, 0, 1)) - 0.45
     covmap = (cov + 0.55 * (1 - _GYQ / H) + 0.25 * (_GXQ / W)).astype(F32)                    # they come over from the top right
-    fm = face_soft(s, f, 1.4, 4)
-    if fm is not None: covmap = covmap - 0.75 * cv2.resize(fm[..., 0], (W // 4, H // 4)) * (1 - smooth(clamp((t - 0.55) / 0.35, 0, 1)))   # his face is covered last
     rgb, dm = clouds(tt, covmap, vx=-130.0, lit=1.0 - 0.40 * t, dark=0.65 * t)
     o = o * (1 - 0.30 * t) * (1 - dm[..., None]) + rgb * dm[..., None]
-    wv = smooth(clamp((t - 0.48) / 0.52, 0, 1))                                                # the storm of frame 0 under the cover
+    wv = smooth(clamp((t - 0.30) / 0.66, 0, 1))                                                # the storm of frame 0 comes through them
     if wv > 0.002: o = o * (1 - wv) + frame_virtual(f - E.DUR_F) * wv
     return np.clip(o, 0, 1)
 
