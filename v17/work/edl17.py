@@ -84,7 +84,7 @@ def shot(n, src, e0, e1, a, b, **kw):
     d.update(kw); S.append(d)
 
 # ---- "Hey!" (e0): the storm breaks; "Running down the avenue" (e7.6-e16)
-shot("storm", "fs5", 0, 4, 105.45, 106.15, tin="loop17", seg=False, face=None, cx=(640, 600), lin=True, tmap=[(-0.5, 105.10), (0, 105.45), (1, 106.15)], tneg=True,
+shot("storm", "fs5", 0, 4, 105.82, 106.52, tin="loop17", seg=False, face=None, cx=(640, 600), lin=True, tmap=[(-0.5, 105.78), (0, 105.82), (1, 106.52)], tneg=True,
      z=LinZ([(0, 1.04), (1, 1.08)]), look="storm", anim="sunbreak")                        # frame 0: storm clouds lit by lightning; the sun breaks through
 shot("avenue", "fbh", 4, 8, 64.80, 66.30, tin="sun_burst", seg=True, face=None, cx=(640, 640), tmap=vel(4, 8, 64.80, 66.30), lin=True, interp="hold")   # he runs down the avenue at us (lightning flicker: its own cadence)
 shot("race", "fa", 8, 12, 50.00, 51.40, tin="run_by", seg=True, face=None, cx=(560, 640), tmap=vel(8, 12, 50.00, 51.40), lin=True, flowmax=40, flowfall="blend")
@@ -110,7 +110,7 @@ shot("baseball", "fs5", 84, 88, 91.50, 92.60, tin="light_streak", seg=True)
 shot("laugh", "fs5", 88, 92, 29.00, 30.20, tin="throw_whip", seg=True)
 shot("xs", "fs5", 92, 96, 14.60, 15.60, tin="light_leak17", seg=True)
 shot("wally", "fs3", 96, 100, 93.70, 94.70, tin="spin_roll", seg=True)
-shot("speedforce", "fs3", 100, 104, 132.90, 133.90, tin="cloud_pass", seg=True)
+shot("speedforce", "fs3", 100, 104, 132.90, 133.90, tin="blue_bloom", seg=True)
 # ---- the chorus: "Mr. Blue Sky, please tell us why you had to hide away for so long" (e105-e138)
 shot("emblem", "fbh", 104, 110, 82.40, 83.75, tin="punch_cut", seg=True)                    # EMBLEM SUN: the chest emblem glints and blazes into the sun
 shot("leap", "fs1", 110, 116, 199.55, 201.95, tin="emblem_sun", seg=True, face=None, cx=(700, 760), tmap=vel(110, 116, 199.55, 201.95), lin=True, flowmax=40, flowfall="blend")
@@ -119,7 +119,7 @@ shot("tux", "fs5", 120, 124, 102.30, 103.60, tin="bokeh_rack", seg=True)
 shot("masked2", "fbk", 124, 128, 45.07, 45.95, tin="glare_wash", seg=True)
 shot("smilelit", "fbh", 128, 132, 90.10, 91.30, tin="hide_peek", seg=True)                # "hide away"
 shot("runface", "fa", 132, 136, 62.40, 63.60, tin="smear17", seg=True, tmap=vel(132, 136, 62.40, 63.60), lin=True, flowmax=40, flowfall="blend")
-shot("last", "fbh", 136, 144, 54.40, 55.95, tin="split_slide", seg=True, tmap=slow(136, 144, 54.40, 55.95, 0.2), lin=True)   # "so long": the clouds roll back over the sun
+shot("last", "fs1", 136, 144, 207.00, 208.40, tin="split_slide", seg=True, face=None, cx=(640, 640), tmap=slow(136, 144, 207.00, 208.40, 0.2), lin=True)   # "so long": he stands on the airfield; the clouds roll back over the sun
 
 EMB_TRACK = [(82.3, 448.6, 420.6, 78.9), (82.35, 452.4, 423.0, 77.7), (82.4, 459.1, 427.5, 74.3), (82.45, 465.4, 433.1, 70.9), (82.5, 469.5, 437.7, 69.1), (82.55, 472.4, 441.5, 69.6), (82.6, 472.1, 442.2, 69.6), (82.65, 472.6, 444.3, 67.0), (82.7, 475.9, 448.7, 63.6), (82.75, 480.7, 453.3, 61.4), (82.8, 482.0, 455.9, 61.6), (82.85, 481.5, 458.0, 61.5), (82.9, 479.6, 459.3, 62.3), (82.95, 478.3, 461.1, 62.5), (83.0, 476.9, 463.5, 62.5), (83.05, 476.0, 465.0, 60.9), (83.1, 475.0, 466.9, 60.3), (83.15, 480.8, 471.2, 59.8), (83.2, 489.6, 476.3, 59.0), (83.25, 490.4, 478.2, 58.4), (83.3, 476.5, 474.6, 58.7), (83.35, 460.6, 473.4, 59.2), (83.4, 461.1, 477.0, 58.6), (83.45, 456.8, 480.1, 58.7), (83.5, 447.1, 482.1, 59.4), (83.55, 437.3, 484.4, 60.3), (83.6, 433.9, 486.8, 60.4), (83.65, 431.8, 489.0, 60.3), (83.7, 430.4, 491.6, 60.3), (83.75, 429.6, 493.1, 60.2)]   # the chest emblem in flash_b_hq 82.3-83.75 s (Hough circle per source frame, smoothed): (t, x, y, r)
 SET_PIECES = [("sun_break", th(0), th(6)), ("the_sun", th(32), th(42)), ("cloud_break", th(64), th(70)), ("emblem_sun", th(104), th(112)), ("loop", th(136), th(144))]

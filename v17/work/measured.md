@@ -1,0 +1,9 @@
+- **QC:** 10/11 on the encode; FAIL: loop seam lands on frame 0 (blurred diff <= 1) (11 distinct checks).
+- **Loudness:** -13.0 LUFS, true peak -4.5 dBTP after AAC.
+- **Loop seam:** blurred difference 1.93 (gate ≤ 1); audio seam step 0.0742; picture wrap step 2.67 vs local median 1.37.
+- **Flashes:** 0 events, at most 0 a second; white-outs [].
+- **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
+- **Faces vs effects:** 12 flags in 1 runs: 1408–1430.
+- **Motion audit:** 29 pops (UNEXPLAINED 6, beat 8, cadence 1, cut 14); UNEXPLAINED at [1023, 1024, 1025, 1035, 1036, 1278] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **plan_check:** 0 FAIL, 0 WARN.
+- **Effort this round (1):** 1 renders (5.9 min), QC 2.9 min.

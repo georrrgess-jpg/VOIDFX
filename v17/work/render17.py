@@ -10464,11 +10464,11 @@ def cloud_N(t, vx=90.0, ox=0.0):
     T = cloud_tex(); w = W // 4; off = (ox + vx * t) / 4.0; i0 = int(math.floor(off)) % w; fr = off - math.floor(off)
     return np.roll(T, -i0, axis=1)[:, :w] * (1 - fr) + np.roll(T, -i0 - 1, axis=1)[:, :w] * fr
 
-def clouds(t, covmap, vx=90.0, lit=1.0, dark=0.0, tint=None, ox=0.0):
+def clouds(t, covmap, vx=90.0, lit=1.0, dark=0.0, tint=None, ox=0.0, soft=0.20):
     """clouds over the frame: (rgb, density) at full resolution. Density from a coverage map; the billows are shaded from
     the noise itself, lit from above right, darker in the bellies."""
     N = cloud_N(t, vx, ox)
-    dens = np.clip((N - (0.80 - covmap)) / 0.20, 0, 1).astype(F32)
+    dens = np.clip((N - (0.80 - covmap)) / soft, 0, 1).astype(F32)
     Nb = cv2.GaussianBlur(N, (0, 0), 3.0)
     gy = cv2.Sobel(Nb, cv2.CV_32F, 0, 1, ksize=5) / 16; gx = cv2.Sobel(Nb, cv2.CV_32F, 1, 0, ksize=5) / 16
     shade = np.clip(0.55 + (Nb - 0.5) * 1.1 - gy * 9.0 + gx * 4.0, 0.15, 1.0) * lit * (1 - 0.55 * dark)
@@ -10755,14 +10755,16 @@ def spin_roll(A, B, j, f, sa, sb, pre=6, post=10):
         acc = w_ if acc is None else acc + w_
     return np.clip(acc / 5, 0, 1)
 
-# ---- CLOUD PASS (into the Speed Force's blue clouds): we fly through a bank of cloud -----------------------------------------
-def cloud_pass(A, B, j, f, sa, sb, pre=8, post=10):
+# ---- BLUE BLOOM (into the Speed Force): its blue light blooms out of the frame and he is inside it -----------------------
+def blue_bloom(A, B, j, f, sa, sb, pre=10, post=12):
     x = (j + pre) / (pre + post - 1); k = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.42) / 0.16, 0, 1)); base = A * (1 - w) + B * w
-    rgb, dm = clouds(f / FPS, np.full((H // 4, W // 4), 0.10 + 0.80 * k ** 1.5, F32), vx=0.0, lit=1.0, tint=np.array([1.00, 0.92, 0.80], F32), ox=300)
-    M_ = cv2.getRotationMatrix2D((W / 2, H / 2), 0, 1 + 0.8 * x)                              # we fly into them
-    rgb = cv2.warpAffine(rgb, M_, (W, H), borderMode=cv2.BORDER_REFLECT); dm = cv2.warpAffine(dm, M_, (W, H), borderMode=cv2.BORDER_REFLECT)
-    return np.clip(base * (1 - dm[..., None]) + rgb * dm[..., None], 0, 1)
+    w = smooth(clamp((x - 0.38) / 0.24, 0, 1)); base = A * (1 - w) + B * w
+    hi = np.clip(base - 0.35, 0, 1)
+    bl = cv2.GaussianBlur(hi, (0, 0), 30) * 1.6 + cv2.GaussianBlur(hi, (0, 0), 8) * 0.5
+    d = np.sqrt(((_GX - W / 2) / W) ** 2 + ((_GY - H * 0.45) / H) ** 2).astype(F32)
+    core = np.exp(-(d / (0.10 + 0.45 * k)) ** 2) * k
+    o = base * (1 - 0.12 * k) + bl * k * (SKYB * 0.7 + 0.3); addc(o, core.astype(F32), SKYB * 0.6 + HOT * 0.4, 0.45)
+    return np.clip(o, 0, 1)
 
 # ---- HORIZON SLIDE (the leap -> the sea): the frame slides along the horizon, the next shot comes in faster behind it ----
 def horizon_slide(A, B, j, f, sa, sb, pre=5, post=7):
@@ -10948,6 +10950,8 @@ def loop_fx(img, person, s, f):
         o = img + (lay if person is None else lay * (1 - np.clip(person * 1.2, 0, 1)[..., None]))
     cov = 1.15 * smooth(clamp((t - 0.06) / 0.60, 0, 1)) - 0.45
     covmap = (cov + 0.55 * (1 - _GYQ / H) + 0.25 * (_GXQ / W)).astype(F32)                    # they come over from the top right
+    fm = face_soft(s, f, 1.4, 4)
+    if fm is not None: covmap = covmap - 0.75 * cv2.resize(fm[..., 0], (W // 4, H // 4)) * (1 - smooth(clamp((t - 0.55) / 0.35, 0, 1)))   # his face is covered last
     rgb, dm = clouds(tt, covmap, vx=-130.0, lit=1.0 - 0.40 * t, dark=0.65 * t)
     o = o * (1 - 0.30 * t) * (1 - dm[..., None]) + rgb * dm[..., None]
     wv = smooth(clamp((t - 0.48) / 0.52, 0, 1))                                                # the storm of frame 0 under the cover
@@ -10962,7 +10966,7 @@ TR2.update({"sun_burst": (sun_burst, 12, 16), "run_by": (run_by, 5, 7), "speed_z
             "ghost_iris": (ghost_iris, 30, 26), "prism": (prism, 6, 8), "whip_pan": (whip_pan, 5, 6), "bolt_crack": (bolt_crack, 4, 8),
             "rain_ripple": (rain_ripple, 6, 12), "tilt_up": (tilt_up, 6, 8), "cloud_break": (cloud_break, 40, 24), "sun_whip": (sun_whip, 5, 6),
             "balloon_rise": (balloon_rise, 6, 8), "light_streak": (light_streak, 5, 7), "throw_whip": (throw_whip, 5, 7),
-            "light_leak17": (light_leak17, 6, 8), "spin_roll": (spin_roll, 6, 10), "cloud_pass": (cloud_pass, 8, 10), "punch_cut": (punch_cut, 0, 1),
+            "light_leak17": (light_leak17, 6, 8), "spin_roll": (spin_roll, 6, 10), "blue_bloom": (blue_bloom, 10, 12), "punch_cut": (punch_cut, 0, 1),
             "emblem_sun": (emblem_sun, 62, 22), "horizon_slide": (horizon_slide, 5, 7), "bokeh_rack": (bokeh_rack, 8, 10),
             "glare_wash": (glare_wash, 6, 8), "hide_peek": (hide_peek, 8, 8), "smear17": (smear17, 5, 6), "split_slide": (split_slide, 6, 8),
             "loop17": (loop17, 0, 1)})
