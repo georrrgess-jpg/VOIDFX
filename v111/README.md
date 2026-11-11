@@ -87,3 +87,18 @@ whoop on "trouble"; the gunshot, whose echo carries over the loop into frame 0.
   light's stutter on "out", the gunshot).
 - Left as judgement calls: the edit is 28.2 s (the whole Bon Iver intro and the drop; the owner's usual is 20–26 s);
   the garden shot's own camera judders slightly (1.3 s, at night, under the nightfall transition).
+
+## Revision 1 (the owner's notes)
+*"I generally like this edit but I would like for you to change a couple things. Firstly, I dislike the graphic/animation
+that appeared around the 23 second mark the forensics one. I would like for you to also implement a new more creative
+loop. I want more custom graphics and animations to be implemented."*
+- **The luminol is gone:** BLEED: the blood spot on his slide soaks out through the frame like blood through paper,
+  its wet front darker (kept off his face), and the blood room is inside it.
+- **The new loop, THE TRACER:** on "rumbles" he fires at us; we whip after the bullet's tracer as it climbs the right
+  of the frame through the night, and the whip lands on the marina at frame 0, the tracer going into one of the
+  skyline's lights. That light flares from the hit and is the first to blow on "shoot": the end fires the shot that
+  starts the edit. A bullet whiz under the whip, a glass tick on the hit.
+- **New animations:** sparks and glass fly up and fall from every light that blows in the opening; god rays turn
+  slowly from the sunrise through the haze; dust drifts in the kill lamp's light (only in the lit air, never on his
+  face); after the siren's sweep the light bar's red and blue keep washing over the crime scene on the half-beats.
+- **Measured:** ship checkpoint 12/12; -13.1 LUFS, -2.6 dBTP after AAC; loop seam blurred difference 0.16 (gate ≤ 1).
