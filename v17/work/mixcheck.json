@@ -36,14 +36,25 @@
    "buried": true
   },
   {
-   "name": "run_by",
+   "name": "sonic_boom",
+   "kind": "set piece",
+   "at": 1.2,
+   "t0": 1.2,
+   "t1": 1.71,
+   "music_db": -17.9,
+   "fx_peak_db": -16.4,
+   "fx_minus_music": 1.4,
+   "buried": false
+  },
+  {
+   "name": "sonic_boom",
    "kind": "transition",
    "at": 1.37,
    "t0": 1.07,
    "t1": 1.82,
    "music_db": -16.6,
-   "fx_peak_db": -27.4,
-   "fx_minus_music": -10.8,
+   "fx_peak_db": -16.6,
+   "fx_minus_music": -0.0,
    "buried": false
   },
   {
@@ -53,9 +64,9 @@
    "t0": 1.76,
    "t1": 2.51,
    "music_db": -16.1,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -163.9,
-   "buried": true
+   "fx_peak_db": -23.5,
+   "fx_minus_music": -7.4,
+   "buried": false
   },
   {
    "name": "glint_sweep",
@@ -64,8 +75,8 @@
    "t0": 2.44,
    "t1": 3.19,
    "music_db": -15.9,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -164.1,
+   "fx_peak_db": -37.6,
+   "fx_minus_music": -21.7,
    "buried": true
   },
   {
@@ -75,8 +86,8 @@
    "t0": 3.13,
    "t1": 3.88,
    "music_db": -15.0,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -165.0,
+   "fx_peak_db": -47.6,
+   "fx_minus_music": -32.6,
    "buried": true
   },
   {
@@ -102,25 +113,14 @@
    "buried": true
   },
   {
-   "name": "bloom_cut",
-   "kind": "transition",
-   "at": 5.49,
-   "t0": 5.19,
-   "t1": 5.94,
-   "music_db": -16.4,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -163.6,
-   "buried": true
-  },
-  {
    "name": "the_sun",
    "kind": "set piece",
-   "at": 5.49,
-   "t0": 5.49,
+   "at": 4.8,
+   "t0": 4.8,
    "t1": 7.2,
    "music_db": -16.3,
-   "fx_peak_db": -30.4,
-   "fx_minus_music": -14.1,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -163.7,
    "buried": true
   },
   {
@@ -130,8 +130,8 @@
    "t0": 6.56,
    "t1": 7.31,
    "music_db": -15.7,
-   "fx_peak_db": -30.4,
-   "fx_minus_music": -14.7,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -164.3,
    "buried": true
   },
   {
@@ -196,30 +196,19 @@
    "t0": 10.68,
    "t1": 11.43,
    "music_db": -16.7,
-   "fx_peak_db": -39.2,
-   "fx_minus_music": -22.5,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -163.3,
    "buried": true
   },
   {
-   "name": "cloud_break",
-   "kind": "set piece",
-   "at": 11.15,
-   "t0": 11.15,
-   "t1": 12.0,
-   "music_db": -17.1,
-   "fx_peak_db": -33.9,
-   "fx_minus_music": -16.8,
-   "buried": true
-  },
-  {
-   "name": "cloud_break",
+   "name": "zip17",
    "kind": "transition",
    "at": 11.66,
    "t0": 11.36,
    "t1": 12.11,
    "music_db": -16.3,
-   "fx_peak_db": -33.8,
-   "fx_minus_music": -17.5,
+   "fx_peak_db": -28.8,
+   "fx_minus_music": -12.5,
    "buried": true
   },
   {
@@ -229,8 +218,8 @@
    "t0": 12.05,
    "t1": 12.8,
    "music_db": -16.0,
-   "fx_peak_db": -41.1,
-   "fx_minus_music": -25.1,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -164.0,
    "buried": true
   },
   {
@@ -284,8 +273,8 @@
    "t0": 15.48,
    "t1": 16.23,
    "music_db": -17.8,
-   "fx_peak_db": -40.4,
-   "fx_minus_music": -22.6,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -162.2,
    "buried": true
   },
   {
@@ -421,13 +410,13 @@
    "buried": false
   },
   {
-   "name": "loop",
+   "name": "lightning_ascent",
    "kind": "set piece",
    "at": 23.32,
    "t0": 23.32,
    "t1": 24.69,
    "music_db": -17.5,
-   "fx_peak_db": -31.5,
+   "fx_peak_db": -31.4,
    "fx_minus_music": -13.9,
    "buried": true
   }
