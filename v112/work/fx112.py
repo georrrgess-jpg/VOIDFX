@@ -5293,3 +5293,101 @@ def prism112(A, B, j, f, sa, sb, pre=10, post=14):
     o = o * (1 - 0.35 * pk) + np.array([0.55, 0.72, 0.90], np.float32) * 0.35 * pk
     return np.clip(o, 0, 1)
 TR2["prism112"] = (prism112, 10, 14)
+
+# ======================================================================================================================
+# v112 round 5 (the fresh-eyes critique): the whip edge-replicates (it mirrored two half-faces); the nightfall's lamp
+# mask stays off his face (it read his face's highlights as lamps and blacked them out); the daybreak's sun rises in
+# the sky, not on his cheek, with a narrower front (no double exposure over his face); VERTIGO pushed so it reads at
+# phone size and the grave carries no streak; the last shot's sunlit shirt rolled off; the orbit's join feathered.
+# ======================================================================================================================
+def whip108(A, B, j, f, sa, sb, pre=6, post=8):
+    if j < 0:
+        u = ein((j + pre + 1) / pre, 2.2); o = cv2.warpAffine(A, np.float32([[1, 0, -W * 0.55 * u], [0, 1, 0]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+        o = hblur(o, 4 + 260 * u)
+    else:
+        v = 1 - eout((j + 1) / post, 2.6); o = cv2.warpAffine(B, np.float32([[1, 0, W * 0.55 * v], [0, 1, 0]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+        o = hblur(o, 4 + 260 * v)
+    return np.clip(o, 0, 1)
+TR2["whip"] = (whip108, 6, 8)
+
+def _face_guard112(s_, f, k=1.0):
+    fs = face_scr(s_, f)
+    if fs is None: return None
+    g = ((_GX - fs[0]) / (0.95 * k * fs[2])) ** 2 + ((_GY - fs[1]) / (1.25 * k * fs[2])) ** 2 - 1
+    return np.clip(g, 0, 1).astype(np.float32)
+
+def nightfall111(A, B, j, f, sa, sb, pre=14, post=18):
+    q = (j + pre + 0.5) / (pre + post)
+    yb = -0.35 * H + 1.75 * H * smooth(q)
+    front = np.clip((yb - _GY) / 520.0 + 0.5, 0, 1); front = front * front * (3 - 2 * front)
+    dusk = smooth(q * 1.3)
+    Ad = A * (1 - 0.45 * dusk) * np.array([1.08, 0.97, 0.88], np.float32) ** dusk
+    lm = cv2.resize(cv2.GaussianBlur(_lamps(B), (0, 0), 1.5), (W, H), interpolation=cv2.INTER_LINEAR)
+    g = _face_guard112(sb, sb["f0"], 1.3)
+    if g is not None: lm = lm * g                                                  # a lamp is never on his face
+    xs = (_GX / W)
+    on = np.clip((yb - _GY - 140 - 260 * xs) / 90.0, 0, 1)
+    flick = 0.75 + 0.25 * math.sin(f * 2.7)
+    lit = 0.55 + 0.45 * on * (1.0 + 0.4 * (on < 0.95) * flick)                    # an unlit lamp is dim, never black
+    Bn = B * (1 - lm[..., None]) + B * (lm * lit)[..., None]
+    Bn = Bn + cv2.GaussianBlur(lm * on, (0, 0), 14)[..., None] * np.array([0.35, 0.62, 1.0], np.float32) * 0.35
+    o = Ad * (1 - front[..., None]) + Bn * front[..., None]
+    return np.clip(o, 0, 1)
+TR2["nightfall111"] = (nightfall111, 14, 18)
+_taper112("nightfall111")
+
+def daybreak111(A, B, j, f, sa, sb, pre=14, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    fs = face_scr(sb, sb["f0"])
+    sx, sy = (W * 0.86, H * 0.10) if (fs is None or fs[0] < W / 2) else (W * 0.14, H * 0.10)   # the sky, the far side
+    d = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2)
+    rad = 60 + 2600 * ein(smooth(q), 1.7)
+    glow = np.exp(-(d / max(80.0, rad * 0.55)) ** 2) * math.sin(math.pi * clamp(q, 0, 1)) ** 0.8
+    rv = np.clip((rad - d) / (0.25 * rad + 80) + 0.3, 0, 1); rv = rv * rv * (3 - 2 * rv)
+    rv = np.maximum(rv * smooth((q - 0.18) / 0.5), smooth((q - 0.88) / 0.12))
+    rim = np.exp(-((d - rad) / (0.12 * rad + 50)) ** 2) * math.sin(math.pi * clamp(q, 0, 1))
+    SUNC = np.array([0.42, 0.72, 1.0], np.float32)
+    Al = A * (1 + 1.2 * glow[..., None]) + glow[..., None] * SUNC * 0.55
+    o = Al * (1 - rv[..., None]) + (B + glow[..., None] * SUNC * 0.30) * rv[..., None]
+    o = o * (1 + 0.6 * rim[..., None]) + rim[..., None] * SUNC * 0.35              # the light's edge carries the change
+    return np.clip(o, 0, 1)
+TR2["daybreak111"] = (daybreak111, 14, 14)
+
+def _vz(f):
+    u = clamp((f / FPS - E.th(30)) / (E.th(38) - E.th(30)), 0, 1)
+    return u, 1 + 1.45 * ein(u, 1.35)
+
+def graphic112(out, f, s_, person):
+    n = s_["n"]
+    if n == "grave": out = vertigo_shot112(out, f, s_, person)
+    if n in ("port", "profile", "dusk", "street", "shades", "cap", "warm"): out = flare112(out, f, s_)
+    if n in ("port", "profile", "grave", "funeral"): out = motes111(out, f, s_)
+    if n == "last": out = np.where(out > 0.74, 0.74 + (out - 0.74) * 0.35, out)   # the sunlit shirt rolled off
+    return out
+
+def _orb_frame(A, B, offB, r, vel):
+    phi = PHM * r; roll = RLM * r
+    zc = 1 + 0.30 * abs(math.sin(phi))
+    zB = zc + 2 * min(offB, SHS) / W * smooth(1 - (offB - SHS) / (0.3 * W))
+    MB = _place(B, offB, phi, zB, None)
+    o = cv2.warpPerspective(B, MB, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    if A is not None:
+        left = W / 2 + offB - zB * W / 2
+        if left > 0.5:
+            MA = _place(A, offB - W * zB, phi, zc, None)
+            a = cv2.warpPerspective(A, MA, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+            fw = 90.0 * min(1.0, left / 90.0)                                       # a soft join, gone as frame 0 lands
+            mB = np.clip((_GX - left) / max(1.0, fw) + 0.5, 0, 1); mB = mB * mB * (3 - 2 * mB)
+            o = a * (1 - mB[..., None]) + o * mB[..., None]
+            if r > 0.02:
+                dx = _GX - left; dy = _GY - H * 0.47; rr = np.sqrt(dx * dx + dy * dy)
+                sun = (np.exp(-(rr / 150.0) ** 2) * 0.85 + np.exp(-(rr / 520.0) ** 2) * 0.30 +
+                       np.exp(-(dy / 14.0) ** 2) * np.exp(-np.abs(dx) / 300.0) * 0.45) * r ** 1.3
+                o = o + sun[..., None] * np.array([0.42, 0.72, 1.0], np.float32)
+    k = int(1 + 1.1 * vel) | 1
+    if k > 2: o = cv2.blur(o, (k, 1), borderType=cv2.BORDER_REPLICATE)
+    if abs(roll) > 0.01:
+        th_ = math.radians(abs(roll)); sc = math.cos(th_) + (H / W) * math.sin(th_)
+        R = cv2.getRotationMatrix2D((W / 2, H / 2), roll, sc)
+        o = cv2.warpAffine(o, R, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    return o

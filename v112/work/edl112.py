@@ -94,8 +94,8 @@ shot("port", "s1", 0, 4, 366.00, 367.45, z=[(0, 1.00), (1, 1.04)], interp="flow"
 shot("profile", "s1", 4, 9, 406.25, 407.40, z=[(0, 1.00), (1, 1.03)], tin="leak112", interp="flow", **SP)           # his face against the low sun (the parade at sunset)
 shot("funeral", "p1", 9, 13, 51.30, 52.45, z=[(0, 1.00), (1, 1.04)], tin="prism112", interp="flow", **SP)          # the casket
 shot("redclose", "dmx", 13, 17, 394.00, 395.40, z=[(0, 1.00), (1, 1.03)], tin="emerge111", interp="flow", **SP)
-shot("dusk", "s1", 17, 21, 379.95, 381.35, z=[(0, 1.00), (1, 1.04)], tin="lookup111", interp="flow", **SP)         # he looks up at the evening
-shot("car", "dmx", 21, 25, 272.30, 273.70, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", **SP)
+shot("dusk", "s1", 17, 21, 396.75, 398.35, z=[(0, 1.00), (1, 1.04)], tin="lookup111", interp="flow", **SP)         # the suburb by day, by the car
+shot("car", "s1", 21, 25, 394.65, 396.25, z=[(0, 1.00), (1, 1.04)], tin="nightfall111", interp="flow", **SP)   # the container at night, the light from above
 shot("killroom", "ds2a", 25, 30, 233.90, 235.70, z=[(0, 1.00), (1, 1.04)], tin="plasticroll110", interp="flow", **SP)
 shot("grave", "p1", 30, 38, 5.55, 8.40, interp="flow", tin="bokeh110", seg=True, **SP)                               # VERTIGO: the cemetery stretches away behind him
 # ---- the drop (e38-e68): the life he would tell him about
@@ -108,10 +108,10 @@ shot("slides", "s1", 50, 52, 262.20, 263.00, tmap=vel(50, 52, 262.20, 263.00), l
 shot("kill", "p1", 52, 54, 135.40, 136.30, tmap=vel(52, 54, 135.40, 136.30), lin=True, interp="flow", tin="lightmatch111", **SP)
 shot("warm", "s1", 54, 56, 346.40, 347.90, tmap=vel(54, 56, 346.40, 347.90), lin=True, interp="flow", tin="light_sweep108", **SP)
 shot("crime", "s1", 56, 58, 58.00, 59.40, tmap=vel(56, 58, 58.00, 59.40), lin=True, interp="flow", tin="siren111", **SP)
-shot("gloves", "s1", 58, 60, 64.97, 66.30, tmap=vel(58, 60, 64.97, 66.30), lin=True, interp="flow", tin="fronds108", **SP)   # "make everyone a fool"
+shot("gloves", "ds2a", 58, 60, 27.20, 28.60, tmap=vel(58, 60, 27.20, 28.60), lin=True, interp="flow", tin="fronds108", **SP)   # "make everyone a fool"
 shot("house", "s1", 60, 62, 169.00, 170.50, tmap=vel(60, 62, 169.00, 170.50), lin=True, interp="flow", tin="tear110", **SP)
 shot("fire", "s1", 62, 65, 294.30, 295.90, z=[(0, 1.00), (1, 1.04)], interp="flow", tin="flicker109", **SP)
-shot("last", "s4", 65, 68, 7.65, 9.20, z=[(0, 1.00), (1, 1.03)], interp="flow", tin="daybreak111", tout="orbit112", seg=True, **SP)   # the orbit carries him round into frame 0
+shot("last", "s4", 65, 68, 7.65, 9.20, z=[(0, 1.00), (1, 1.03)], interp="flow", tin="brightout111", tout="orbit112", seg=True, **SP)   # the orbit carries him round into frame 0
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
