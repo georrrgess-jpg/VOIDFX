@@ -1,9 +1,9 @@
 - **QC:** 11/11 on the encode (11 distinct checks).
 - **Loudness:** -12.7 LUFS, true peak -3.7 dBTP after AAC.
-- **Loop seam:** blurred difference 0.84 (gate ≤ 1); audio seam step 0.0511; picture wrap step 1.71 vs local median 2.47.
-- **Flashes:** 1 events, at most 1 a second; white-outs [].
+- **Loop seam:** blurred difference 0.75 (gate ≤ 1); audio seam step 0.0511; picture wrap step 1.53 vs local median 2.63.
+- **Flashes:** 0 events, at most 0 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
-- **Faces vs effects:** 10 flags in 3 runs: 1492–1508, 1534–1534, 1554–1554.
-- **Motion audit:** 38 pops (UNEXPLAINED 8, beat 3, cadence 7, cut 17, flash 3); UNEXPLAINED at [502, 520, 532, 604, 1021, 1061, 1177, 1482] (check signoff_pops.jpg); dead spans 0; judder flags 2.
+- **Faces vs effects:** 11 flags in 3 runs: 1492–1510, 1524–1524, 1554–1554.
+- **Motion audit:** 35 pops (UNEXPLAINED 5, beat 4, cadence 6, cut 16, flash 4); UNEXPLAINED at [502, 520, 604, 1061, 1177] (check signoff_pops.jpg); dead spans 0; judder flags 2.
 - **plan_check:** 0 FAIL, 4 WARN; WARN: `timerun` holds 1.95 s with no cut, transition or beat hit (frames 1420-1567): plan a designed beat inside it; WARN: [length] 26.12 s; the owner's range is about 20-26 s; WARN: [determinism] storm_tex(): cache keyed on rounded arguments (int(clamp(round(k), 0, SHOTS[0]['f1'] - 1))) but filled from the exact ones: pixels depend on which frame filled it, so partial re-renders can't verify bit-exact (compute the value from the rounded key); WARN: [sound count] 13 effects in 8 moments over 26.1 s (fx_events.json); start lean: about 10-12 in 20-23 s, small transitions silent (v13 rule 4).
-- **Effort this round (1):** 2 renders (12.3 min), QC 6.8 min.
+- **Effort this round (1):** 3 renders (18.1 min), QC 10.2 min.
