@@ -12512,6 +12512,8 @@ def loop_fx18(img, person, s, f):
     breath = 1 + 0.30 * math.exp(-max(0.0, t - 0.42) / 0.10) * (t > 0.30)
     Vz = zoom_about(V, W / 2, H * 0.56, 1.0 + 0.10 * (1 - T) ** 2) * (1 + (breath - 1) * (1 - T))
     o = outside * (1 - inside[..., None]) + Vz * inside[..., None]
+    core = (inside * (1 - smooth(clamp(T / 0.12, 0, 1)))).astype(F32)                         # while it is a crack, it is full of light
+    o = o * (1 - core[..., None]) + core[..., None] * (HOT * 0.7 + GOLD18 * 0.3)
     fade = 1 - smooth(clamp((t - 0.80) / 0.17, 0, 1))
     fm0 = face_soft(SHOTS[0], f - E.DUR_F, 1.2)
     fk0 = 1.0 if fm0 is None else (1 - fm0[..., 0] * inside)[..., None]
