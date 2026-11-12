@@ -1861,11 +1861,11 @@ def lamp_bloom(A, B, j, f, sa, sb, pre=8, post=10):
     if _HO.get("lm_n") != sa["n"]: _HO["lm_n"] = sa["n"]; _HO["lm"] = hi_point(edge15(sa, "last"), sa, sa["f1"] - 1, 0.62)
     sx, sy = _HO["lm"]
     d = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2).astype(F32)
-    R = math.hypot(W, H) * 1.1 * smooth(clamp((x - 0.02) / 0.90, 0, 1)) ** 1.25
+    R = math.hypot(W, H) * 1.1 * smoother(clamp((x - 0.02) / 0.94, 0, 1)) ** 1.1
     m = np.clip((R - d) / (120 + 0.25 * R) + 0.5, 0, 1).astype(F32)
-    Bl = B * (1 + 0.5 * k) + (GOLD18 * 0.5 + HOT * 0.5) * 0.06 * k                            # the next shot comes up out of the light
+    Bl = B * (1 + 0.25 * k) + (GOLD18 * 0.5 + HOT * 0.5) * 0.03 * k                            # the next shot comes up out of the light
     base = A * (1 - m[..., None]) + Bl * m[..., None]
-    o = base + cv2.GaussianBlur(np.clip(base - 0.45, 0, 1), (0, 0), 24) * 1.2 * k * (GOLD18 * 0.5 + 0.5)
+    o = base + cv2.GaussianBlur(np.clip(base - 0.55, 0, 1), (0, 0), 24) * 0.7 * k * (GOLD18 * 0.5 + 0.5)
     rim = np.exp(-((d - R) / (60 + 0.10 * R)) ** 2).astype(F32)
     addc(o, kmul(rim, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD18 * 0.6 + HOT * 0.4, 0.8 * k)
     return np.clip(o, 0, 1)
@@ -2062,7 +2062,7 @@ TR2.update({"bokeh_bloom": (bokeh_bloom, 8, 12), "window_glow": (window_glow, 6,
             "wind_gust": (wind_gust, 6, 10), "grit_gust": (grit_gust, 6, 10), "hair_whip": (hair_whip, 5, 7), "colour_drain": (colour_drain, 10, 10), "sky_crack": (sky_crack, 10, 14),
             "heartstart": (heartstart, 4, 18), "current_climb": (current_climb, 26, 30), "lightbar_streak": (lightbar_streak, 5, 7),
             "spark_jump": (spark_jump, 5, 8), "arc_sweep": (arc_sweep, 6, 8), "streak_carry": (streak_carry, 6, 8), "shades_glint": (glint_star, 6, 8),
-            "flicker_cut": (flicker_cut, 6, 8), "mist_pass": (mist_pass, 10, 12), "lamp_bloom": (lamp_bloom, 8, 10), "lightning_whip": (lightning_whip, 5, 7),
+            "flicker_cut": (flicker_cut, 6, 8), "mist_pass": (mist_pass, 10, 12), "lamp_bloom": (lamp_bloom, 12, 16), "lightning_whip": (lightning_whip, 5, 7),
             "emblem_bolt": (emblem_bolt, 50, 34), "loop18": (loop18, 0, 1)})
 
 # ============================================================================ v18 round 2: new transitions, animations, the
@@ -2334,7 +2334,7 @@ def loop_fx18(img, person, s, f):
     for k in range(4):
         y_ = H * (0.70 + 0.055 * k) + 25 * math.sin(tt * 7 + k)
         put_bolt(cv, (W * (1.05 - 0.15 * k), y_), (W * (0.15 - 0.25 * chg), y_ + 40 * math.sin(k * 2.3)), 18950 + k + 7 * (f // 2), 3, 0.22, 6, 2, val=int(200 * (0.35 + 0.65 * chg) * (1 - smooth(clamp((t - 0.40) / 0.25, 0, 1)))))
-    o = hblur(o, 2 + 50 * chg)
+    o = off_face(hblur(o, 2 + 50 * chg), o, s, f, 1.3)                                        # the speed blur, never on his face
     tip = smooth(clamp((t - 0.10) / 0.26, 0, 1))                                              # the crack races along from the right
     if tip <= 0:
         return np.clip(o + kmul(light_rgb(cv, 1.0, HOT, GOLD18), face_keep(s, f, 1.3)), 0, 1)
