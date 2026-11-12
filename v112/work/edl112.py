@@ -106,7 +106,7 @@ shot("grin", "s1", 46, 48, 283.45, 284.45, tmap=vel(46, 48, 283.45, 284.45), lin
 shot("smirk", "s4", 48, 50, 41.05, 41.95, tmap=vel(48, 50, 41.05, 41.95), lin=True, interp="flow", tin="whip", **SP)
 shot("slides", "s1", 50, 52, 262.20, 263.00, tmap=vel(50, 52, 262.20, 263.00), lin=True, interp="flow", tin="slide111", **SP)   # "all the times that I had"
 shot("kill", "p1", 52, 54, 135.40, 136.30, tmap=vel(52, 54, 135.40, 136.30), lin=True, interp="flow", tin="lightmatch111", **SP)
-shot("warm", "s1", 54, 56, 307.30, 308.60, tmap=vel(54, 56, 307.30, 308.60), lin=True, interp="flow", tin="light_sweep108", **SP)
+shot("warm", "s1", 54, 56, 346.40, 347.90, tmap=vel(54, 56, 346.40, 347.90), lin=True, interp="flow", tin="light_sweep108", **SP)
 shot("crime", "s1", 56, 58, 58.00, 59.40, tmap=vel(56, 58, 58.00, 59.40), lin=True, interp="flow", tin="siren111", **SP)
 shot("gloves", "s1", 58, 60, 64.97, 66.30, tmap=vel(58, 60, 64.97, 66.30), lin=True, interp="flow", tin="fronds108", **SP)   # "make everyone a fool"
 shot("house", "s1", 60, 62, 169.00, 170.50, tmap=vel(60, 62, 169.00, 170.50), lin=True, interp="flow", tin="tear110", **SP)

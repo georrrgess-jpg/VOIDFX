@@ -1,9 +1,9 @@
 - **QC:** 10/11 on the encode; FAIL: no face-centering failures (11 distinct checks).
 - **Loudness:** -13.0 LUFS, true peak -3.5 dBTP after AAC.
-- **Loop seam:** blurred difference 0.28 (gate ≤ 1); audio seam step 0.0066; picture wrap step 1.29 vs local median 2.31.
+- **Loop seam:** blurred difference 0.29 (gate ≤ 1); audio seam step 0.0066; picture wrap step 1.3 vs local median 2.31.
 - **Flashes:** 1 events, at most 1 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
 - **Faces vs effects:** 15 flags in 2 runs: 0–20, 1424–1430.
-- **Motion audit:** 10 pops (UNEXPLAINED 2, cadence 2, cut 6); UNEXPLAINED at [197, 653] (check signoff_pops.jpg); dead spans 0; judder flags 0.
+- **Motion audit:** 9 pops (UNEXPLAINED 1, cadence 2, cut 6); UNEXPLAINED at [653] (check signoff_pops.jpg); dead spans 0; judder flags 0.
 - **plan_check:** 0 FAIL, 1 WARN; WARN: `grave` holds 2.42 s with no cut, transition or beat hit (frames 665-810): plan a designed beat inside it.
-- **Effort this round (1):** 2 renders (16.9 min), QC 7.7 min.
+- **Effort this round (1):** 3 renders (25.1 min), QC 11.6 min.
