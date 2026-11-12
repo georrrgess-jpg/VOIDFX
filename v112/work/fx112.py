@@ -5250,3 +5250,46 @@ def leak112(A, B, j, f, sa, sb, pre=12, post=16):
 TR2["leak112"] = (leak112, 12, 16)
 
 def _prism_d(): return 0.035
+
+# ---- round 3: the prism's swap over ~5 frames inside the peak blur (a 1.5-frame flip popped at 197); no flare on the
+# last shot (its brightest point is his white shirt; the orbit's sun passes there anyway).
+def prism112(A, B, j, f, sa, sb, pre=10, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    e = math.sin(math.pi * clamp(q, 0, 1)) ** 1.4
+    w = smooth((q - 0.40) / 0.20); img = A * (1 - w) + B * w
+    sg = 0.5 + 16 * e * e
+    img = cv2.GaussianBlur(img, (0, 0), sg) * (e * e) + img * (1 - e * e)
+    cx, cy = W / 2, H * 0.36; d = 0.035 * e
+    o = img.copy()
+    for ch, sc in ((2, 1 + d), (0, 1 - d)):
+        M = np.float32([[sc, 0, cx * (1 - sc)], [0, sc, cy * (1 - sc)]])
+        o[..., ch] = cv2.warpAffine(img[..., ch], M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    o = o * (1 + 0.18 * e) + cv2.GaussianBlur(o, (0, 0), 24) * 0.22 * e
+    return np.clip(o, 0, 1)
+TR2["prism112"] = (prism112, 10, 14)
+
+def graphic112(out, f, s_, person):
+    n = s_["n"]
+    if n == "grave": out = vertigo_shot112(out, f, s_, person)
+    if n in ("port", "profile", "dusk", "grave", "street", "shades", "cap", "warm"): out = flare112(out, f, s_)
+    if n in ("port", "profile", "grave", "funeral"): out = motes111(out, f, s_)
+    return out
+
+# ---- PRISM round 3b: at the swap the glass is fully soft and the light through it lifts the frame warm, so neither
+# face can be read while the two shots change over.
+def prism112(A, B, j, f, sa, sb, pre=10, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    e = math.sin(math.pi * clamp(q, 0, 1)) ** 1.4
+    w = smooth((q - 0.40) / 0.20); img = A * (1 - w) + B * w
+    pk = math.exp(-((q - 0.5) / 0.11) ** 2)                                       # the swap's peak
+    sg = 0.5 + 16 * e * e + 22 * pk
+    img = cv2.GaussianBlur(img, (0, 0), sg) * min(1.0, e * e + pk) + img * (1 - min(1.0, e * e + pk))
+    cx, cy = W / 2, H * 0.36; d = 0.035 * e
+    o = img.copy()
+    for ch, sc in ((2, 1 + d), (0, 1 - d)):
+        M = np.float32([[sc, 0, cx * (1 - sc)], [0, sc, cy * (1 - sc)]])
+        o[..., ch] = cv2.warpAffine(img[..., ch], M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    o = o * (1 + 0.18 * e) + cv2.GaussianBlur(o, (0, 0), 24) * 0.22 * e
+    o = o * (1 - 0.35 * pk) + np.array([0.55, 0.72, 0.90], np.float32) * 0.35 * pk
+    return np.clip(o, 0, 1)
+TR2["prism112"] = (prism112, 10, 14)

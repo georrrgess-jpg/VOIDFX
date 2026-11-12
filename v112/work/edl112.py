@@ -102,7 +102,7 @@ shot("grave", "p1", 30, 38, 5.55, 8.40, interp="flow", tin="bokeh110", seg=True,
 shot("street", "s1", 38, 41, 209.40, 210.90, tmap=vel(38, 41, 209.40, 210.90), lin=True, interp="flow", tin="vertigo112", **SP)
 shot("cap", "ds2b", 41, 43, 388.35, 389.55, tmap=vel(41, 43, 388.35, 389.55), lin=True, interp="flow", tin="whip", **SP)
 shot("shades", "s1", 43, 46, 157.90, 159.80, z=[(0, 1.00), (1, 1.05)], interp="flow", tin="dolly", **SP)               # the sunglasses go on (the glint)
-shot("grin", "dmx", 46, 48, 37.75, 39.00, tmap=vel(46, 48, 37.75, 39.00), lin=True, interp="flow", tin="glint112", **SP)
+shot("grin", "s1", 46, 48, 283.45, 284.45, tmap=vel(46, 48, 283.45, 284.45), lin=True, interp="flow", tin="glint112", **SP)
 shot("smirk", "s4", 48, 50, 41.05, 41.95, tmap=vel(48, 50, 41.05, 41.95), lin=True, interp="flow", tin="whip", **SP)
 shot("slides", "s1", 50, 52, 262.20, 263.00, tmap=vel(50, 52, 262.20, 263.00), lin=True, interp="flow", tin="slide111", **SP)   # "all the times that I had"
 shot("kill", "p1", 52, 54, 135.40, 136.30, tmap=vel(52, 54, 135.40, 136.30), lin=True, interp="flow", tin="lightmatch111", **SP)
