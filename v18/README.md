@@ -63,10 +63,10 @@ The hero is **THE TIME STREAK**: the hook, the strike's front and the loop.
 | 0–4 | Barry on a night street (S3); *THE HOOK: the streak* | **THE TIME TEAR** (the loop) |
 | 4–6 | Barry alone outside at night, in a suit (S3); *cold air drifts* | **BOKEH BLOOM** |
 | 6–8 | at work in the CCPD lab (S1) | **WINDOW GLOW** |
-| 8–11 | by the lamp, Iris's back (S3); *dust in the lamp light* | **LAMP ON** |
-| 11–15 | Iris (S1) | **FLARE CUT** (v17, liked) |
-| 15–19 | her hair blowing (S1); *the gust carries grit* | **GRIT GUST** |
-| 19–23 | the Flash, masked, his red the only colour (S1); *the suit crackles* | **HAIR WHIP** |
+| 8–11 | Barry by a brick wall, fidgeting (S1); *cold dust drifts* | **VERTIGO** (a dolly zoom) |
+| 11–15 | "You're": he looks up at the sky (S1); *shafts of gold light come down* | **RAY RAKE** (v17, liked) |
+| 15–19 | "so": the speedster runs on the airfield, his gold and red the only colour (S1) | **STREAK WIPE** |
+| 19–23 | the Flash, masked, his red the only colour (S1); *the suit crackles* | **CRASH ZOOM** |
 | 23–28 | Barry alone in the dark (S1); *lightning through the window, building* | **COLOUR DRAIN** |
 | 28–33 | **THE STRIKE** (S2): **COLOUR STRIKE** | **SKY CRACK** (crunch 1) |
 | 33–37 | he gasps awake (S1) | **HEARTSTART** (crunch 2) |
@@ -78,12 +78,12 @@ The hero is **THE TIME STREAK**: the hook, the strike's front and the loop.
 | 48–52 | "I'm a weirdo": the sunglasses (S3); *sun glints* | **STREAK CARRY** |
 | 52–54 | the S1 suit walks in | **GLINT STAR** |
 | 54–56 | Barry in the suit, lightning round him (S4); *embers* | **FLICKER CUT** |
-| 56–58 | "What": the flight (S4) | **PEEL** (v17, liked) |
+| 56–58 | "What": the flight (S4) | **EMBER BURN** |
 | 58–60 | the S5 night run | **SMEAR** (v17, liked) |
 | 60–64 | the S4 suit; the emblem charges | **BOKEH RACK** (v17, liked) |
 | 64–68 | the Speed Force (S3); *mist, lightning in it* | **EMBLEM BOLT** |
-| 68–72 | Iris in tears (S3); *bokeh drifts* | **MIST PASS** |
-| 72–80 | he runs back in time (S1); **THE TIME TEAR** from e76 | **LAMP BLOOM** |
+| 68–72 | "am I doing here": alone in the pipeline cell (S1); *rings of blue light pulse from its door* | **MIST PASS** |
+| 72–80 | he runs back in time (S1); **THE TIME TEAR** from e76 | **VAULT BLOOM** |
 
 24 shots, 23 transitions plus the loop, all custom or liked; no text. The beat camera breathes in the verse
 (0.3–0.45 of its punch), punches on every beat in the chorus and rests for the loop.
@@ -107,6 +107,37 @@ drop); the tear. Every other transition is silent; nothing on beats; no chimes.
   - the masked close-ups looked alike (two swapped for the night city and a full-body walk-in);
   - the hook streak was thin (thicker, brighter, back in front of him sooner);
   - the dusk shot repeated frame 0's shirt (now Barry alone at night, in a suit).
+
+## Round 2 (the owner's notes)
+*"remove the scenes with iris … fix the emblem transition scene and make it more cinematic and seamless … polish the loop …
+more creative transitions and animations."*
+- **Iris removed:** her four shots (the lamp shot had her back in the foreground) are now:
+  - Barry by a brick wall;
+  - Barry looking up at the sky as gold light comes down through it;
+  - the speedster running on the airfield (in the cold look only his lightning's gold and his suit's red keep their colour);
+  - Barry alone in the S.T.A.R. Labs pipeline cell for "what am I doing here".
+
+  The story stays the same: Barry wishes; the speedster is what he sees.
+- **EMBLEM BOLT, cinematic:**
+  - a slow push-in on the real emblem, the camera racking focus to it while the rest of the frame falls soft;
+  - a glint runs along the bolt as it charges;
+  - the traced bolt lifts off and spins, its shadow falling on the disc it leaves;
+  - it comes at the lens, zoom-blurred, while the world behind it falls away and darkens;
+  - a flare as it fills the lens, and the Speed Force inside it settles out of a zoom and a soft focus until it is all
+    there is.
+- **THE TIME TEAR, polished:**
+  - a brighter, cleaner piece of the time run at about its own speed (no ghosting);
+  - a crack full of light races along a bolt from right to left, then tears open;
+  - the halves are pushed apart and motion-blurred, embers lift off the burning edges, and a breath of light comes from
+    inside;
+  - the tear opens onto frame 0.
+- **New transitions:**
+  - VERTIGO: a dolly zoom; he holds his size while the world behind him rushes in;
+  - STREAK WIPE: the speedster crosses the sky and its wake pulls the next shot down like a curtain;
+  - CRASH ZOOM: into his lightning and out on the mask;
+  - EMBER BURN: the fire round him catches the frame and burns across it.
+- **New animations:** cold dust drifting by the brick wall; gold shafts of light in the sky; blue rings pulsing from the
+  vault door.
 
 ## Files
 `work/edl18.py` (the EDL), `work/sec18.py` (the edit's section: v17's toolkit plus the v18 section at the end, spliced
