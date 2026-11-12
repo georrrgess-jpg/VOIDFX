@@ -51,7 +51,7 @@ E_BEAT, E_DIP = 0, 0
 E_STRIKE = 28                                   # crunch 1: THE STRIKE (COLOUR STRIKE)
 E_WAKE = 33                                     # crunch 2: the wake
 E_DROP = 37                                     # "creep": THE DROP, the chorus in colour
-E_LOOP = 76                                     # THE TIME TEAR (the beat camera rests from e72)
+E_LOOP = 74                                     # THE TIME TEAR (the beat camera rests from e72)
 E_REST = 72
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
@@ -94,8 +94,8 @@ shot("street", "fs3", 0, 4, 3.75, 4.86, tin="loop18", seg=True, lin=True, tmap=[
      z=LinZ([(0, 1.02), (1, 1.06)]), look="cold", anim="hook")                    # frame 0: Barry on a night street; THE HOOK: a gold streak tears past behind him
 shot("dusk", "fs3", 4, 6, 115.00, 115.90, tin="bokeh_bloom", seg=True, face=None, cx=(540, 560), look="cold", anim="breath")     # alone outside at night
 shot("lab", "fs1", 6, 8, 66.00, 66.80, tin="window_glow", seg=True, look="cold")                    # "special": at work in the CCPD lab
-shot("brick", "fs1", 8, 11, 10.50, 11.90, tin="vertigo", seg=True, look="cold", anim="drift")      # by a brick wall, fidgeting: ordinary
-shot("skyward", "fs1", 11, 15, 125.40, 126.30, tin="ray_rake", seg=True, look="cold", anim="skyrays")   # "You're": he looks up at the sky
+shot("brick", "fs1", 8, 11, 10.50, 11.90, tin="vertigo", seg=True, face=None, cx=(610, 600), look="cold", anim="drift")      # by a brick wall, fidgeting: ordinary
+shot("skyward", "fs1", 11, 15, 125.25, 126.10, tin="ray_rake", seg=True, look="cold", anim="skyrays")   # "You're": he looks up at the sky
 shot("airfield", "fs1", 15, 19, 199.60, 200.90, tin="streak_wipe", seg=True, face=None, cx=(680, 800), look="cold", keepred=1.0, keepgold=1.0)   # "so": the speedster runs, his gold and red the only colour
 shot("mask", "fs1", 19, 23, 221.75, 222.95, tin="crash_zoom", seg=True, look="cold", keepred=1.0, anim="crackle")   # "f***ing special": the Flash she sees, his red the one colour
 shot("alone", "fs1", 23, 28, 74.00, 75.60, tin="colour_drain", seg=True, look="cold", anim="stormlight")   # Barry alone in the dark; the storm builds outside
@@ -118,7 +118,7 @@ shot("emblem", "fbh", 60, 64, 82.50, 83.75, tin="bokeh_rack", seg=True)         
 shot("sf", "fs3", 64, 68, 129.00, 129.85, tin="emblem_bolt", seg=True, look="force", anim="mist")    # inside the bolt: the Speed Force
 shot("vault", "fs1", 68, 72, 145.60, 147.60, tin="mist_pass", seg=True, face=None, cx=(300, 300), anim="vaultpulse")   # "am I doing here": alone in the pipeline cell
 # ---- "I don't belong here": he runs back in time (THE TIME TEAR, the loop)
-shot("timerun", "fs1", 72, 80, 139.80, 142.60, tin="lamp_bloom", seg=True, face=None, cx=(600, 640), face_hint=(520, 420, 220), lin=True, flowmax=40, ev=0.45)   # he runs back in time; THE TIME TEAR
+shot("timerun", "fs5", 72, 80, 108.50, 110.85, tin="lamp_bloom", seg=True, lin=True, flowmax=40, flowfall="blend")   # he runs back in time, lightning streaming off him; THE TIME TEAR   # he runs back in time; THE TIME TEAR
 
 EMB_TRACK = [(82.3, 448.6, 420.6, 78.9), (82.35, 452.4, 423.0, 77.7), (82.4, 459.1, 427.5, 74.3), (82.45, 465.4, 433.1, 70.9), (82.5, 469.5, 437.7, 69.1), (82.55, 472.4, 441.5, 69.6), (82.6, 472.1, 442.2, 69.6), (82.65, 472.6, 444.3, 67.0), (82.7, 475.9, 448.7, 63.6), (82.75, 480.7, 453.3, 61.4), (82.8, 482.0, 455.9, 61.6), (82.85, 481.5, 458.0, 61.5), (82.9, 479.6, 459.3, 62.3), (82.95, 478.3, 461.1, 62.5), (83.0, 476.9, 463.5, 62.5), (83.05, 476.0, 465.0, 60.9), (83.1, 475.0, 466.9, 60.3), (83.15, 480.8, 471.2, 59.8), (83.2, 489.6, 476.3, 59.0), (83.25, 490.4, 478.2, 58.4), (83.3, 476.5, 474.6, 58.7), (83.35, 460.6, 473.4, 59.2), (83.4, 461.1, 477.0, 58.6), (83.45, 456.8, 480.1, 58.7), (83.5, 447.1, 482.1, 59.4), (83.55, 437.3, 484.4, 60.3), (83.6, 433.9, 486.8, 60.4), (83.65, 431.8, 489.0, 60.3), (83.7, 430.4, 491.6, 60.3), (83.75, 429.6, 493.1, 60.2)]   # the chest emblem in flash_b_hq 82.3-83.75 s (Hough circle per source frame, smoothed): (t, x, y, r)
 SET_PIECES = [("hook", th(-1), th(3)), ("colour_strike", th(28), th(33)), ("the_drop", th(35), th(39)), ("emblem_bolt", th(61), th(66)), ("time_tear", th(76), th(80))]

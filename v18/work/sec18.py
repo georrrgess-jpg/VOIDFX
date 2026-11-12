@@ -1615,7 +1615,7 @@ def window_glow(A, B, j, f, sa, sb, pre=6, post=10):
     px, py = _HO["wg"]
     d = np.sqrt((_GX - px) ** 2 + (_GY - py) ** 2)
     R = math.hypot(W, H) * 1.1 * smooth(clamp((x - 0.1) / 0.8, 0, 1)) ** 1.3
-    m = np.clip((R - d) / (160 + 0.7 * R) + 0.5, 0, 1).astype(F32)
+    m = np.clip((R - d) / (320 + 1.1 * R) + 0.5, 0, 1).astype(F32)
     o = A * (1 - m[..., None]) + B * m[..., None]
     glow = np.exp(-(d / (300 + 900 * k)) ** 2).astype(F32)
     addc(o, kmul(glow, live_keep(sa, sb, j, f, smooth(x), 1.2)), COLDB * 0.5 + HOT * 0.5, 0.45 * k)
@@ -1863,10 +1863,11 @@ def lamp_bloom(A, B, j, f, sa, sb, pre=8, post=10):
     d = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2).astype(F32)
     R = math.hypot(W, H) * 1.1 * smooth(clamp((x - 0.12) / 0.80, 0, 1)) ** 1.25
     m = np.clip((R - d) / (30 + 0.14 * R) + 0.5, 0, 1).astype(F32)
-    base = A * (1 - m[..., None]) + B * m[..., None]
+    Bl = B * (1 + 0.5 * k) + (GOLD18 * 0.5 + HOT * 0.5) * 0.06 * k                            # the next shot comes up out of the light
+    base = A * (1 - m[..., None]) + Bl * m[..., None]
     o = base + cv2.GaussianBlur(np.clip(base - 0.45, 0, 1), (0, 0), 24) * 1.2 * k * (GOLD18 * 0.5 + 0.5)
-    rim = np.exp(-((d - R) / (24 + 0.06 * R)) ** 2).astype(F32)
-    addc(o, kmul(rim, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD18 * 0.6 + HOT * 0.4, 0.7 * k)
+    rim = np.exp(-((d - R) / (60 + 0.10 * R)) ** 2).astype(F32)
+    addc(o, kmul(rim, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD18 * 0.6 + HOT * 0.4, 0.8 * k)
     return np.clip(o, 0, 1)
 
 def lightning_whip(A, B, j, f, sa, sb, pre=5, post=7):
@@ -2101,10 +2102,10 @@ def streak_wipe(A, B, j, f, sa, sb, pre=10, post=14):
     passed = np.clip((hx - xs) / 260.0, 0, 1)                                                  # how long ago the streak passed each column
     rev = H * 1.15 * smooth(clamp((x - 0.25) / 0.70, 0, 1)) * (0.3 + 0.7 * passed)
     edge_y = (py(xs) + rev)[None, :]
-    m = np.clip((edge_y - _GY) / 40 + 0.5, 0, 1).astype(F32) * (passed > 0)[None, :]
-    o = A * (1 - m[..., None]) + B * m[..., None]
-    band = np.exp(-((_GY - edge_y) / 30.0) ** 2).astype(F32) * (passed > 0)[None, :]
-    addc(o, kmul(band * 0.5, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD18, 0.6)
+    wv = smooth(clamp((x - 0.38) / 0.30, 0, 1))                                              # the next shot comes through under its light
+    o = A * (1 - wv) + B * wv
+    wake = np.clip(1 - _GY / (H * 0.55), 0, 1).astype(F32) * math.sin(math.pi * clamp(x, 0, 1)) ** 1.5
+    o = o * (1 + 0.45 * wake[..., None] * (GOLD18 * 0.5 + 0.5))
     cv = bolt_canvas()
     tail = max(-260.0, hx - 700)
     pts = np.stack([np.linspace(tail, hx, 40), py(np.linspace(tail, hx, 40))], 1)
@@ -2184,9 +2185,11 @@ def a_vaultpulse(img, person, s, f):
     t = f / FPS; e = e_of(f); cx, cy = W * 0.62, H * 0.42
     d = np.sqrt((_GXQ - cx) ** 2 + (_GYQ - cy) ** 2)
     ph = (d / 220.0 - t * 1.1) % 1.0
-    ring = np.exp(-((ph - 0.5) / 0.06) ** 2) * np.exp(-d / 1100.0)
+    ring = np.exp(-((ph - 0.5) / 0.16) ** 2) * np.exp(-d / 900.0)
     pulse = 0.55 + 0.45 * math.exp(-((e - beat_e(e)) * E.HB) / 0.18)
-    lay = cv2.resize((ring * pulse).astype(F32), (W, H))
+    sm = cv2.resize(img, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    blue = np.clip((sm[..., 0] - np.maximum(sm[..., 1], sm[..., 2]) - 0.05) / 0.25, 0, 1) * np.clip((lumf(sm) - 0.10) / 0.3, 0, 1)
+    lay = cv2.resize(cv2.GaussianBlur((ring * pulse * (0.25 + 0.75 * blue)).astype(F32), (0, 0), 3), (W, H)) * 0.7   # the vault's own light, rippling
     if person is not None: lay = lay * (1 - np.clip(person * 1.3, 0, 1))
     o = img.copy(); addc(o, kmul(lay.astype(F32), face_keep(s, f, 1.3)), SFB * 0.8 + HOT * 0.2, 0.55)
     return np.clip(o, 0, 1)
@@ -2221,7 +2224,7 @@ def emblem_bolt2(A, B, j, f, sa, sb, pre=60, post=36):
     o = Az
     if lift > 0.002:                                                                           # the socket, filled from the disc
         hole = np.clip((warp_field(kx, ky, hx0, hy0) - 0.2) * 4, 0, 1).astype(F32)
-        hole = cv2.GaussianBlur(cv2.dilate(hole, np.ones((21, 21), np.uint8)), (0, 0), 2.5)
+        hole = cv2.GaussianBlur(cv2.dilate(hole, np.ones((31, 31), np.uint8)), (0, 0), 3.0)
         key = ("fill", ff, round(z, 4))
         if key not in _EB:
             Rr = int(max(HX, HY) * 1.6); x0, y0 = int(EX) - Rr, int(EY) - Rr
@@ -2249,15 +2252,20 @@ def emblem_bolt2(A, B, j, f, sa, sb, pre=60, post=36):
         sc_ = 1 - 0.07 * fly
         Mb = np.float32([[sc_, 0, (1 - sc_) * EX - side * W * 0.05 * fly], [0, sc_, (1 - sc_) * EY + H * 0.09 * fly]])
         o = cv2.warpAffine(o, Mb, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) * (1 - 0.40 * fly)
-    lx = hx0 + side * W * 0.22 * lift; ly = hy0 - H * 0.09 * lift
-    tx, ty = W * 0.5, H * 0.66
+    lx = hx0 + side * W * 0.20 * lift; ly = hy0 - H * 0.025 * lift
+    tx, ty = W * 0.5, H * 0.70
     cxp = lx + (tx - lx) * smooth(clamp(fly / 0.5, 0, 1)); cyp = ly + (ty - ly) * smooth(clamp(fly / 0.5, 0, 1))
     phi = 2 * math.pi * smooth(clamp((u - 0.34) / 0.30, 0, 1)); sxs = max(abs(math.cos(phi)), 0.06)
-    S = (1.0 + 0.6 * lift) * math.exp(math.log(70.0) * ein(clamp(fly, 0, 1), 1.8))
+    S = (1.0 + 0.08 * lift) * math.exp(math.log(70.0) * ein(clamp(fly, 0, 1), 1.8))
     fw_ = warp_field(kx * S * sxs, ky * S, cxp, cyp)
-    kk = 7.0 * max(1.0, S / 3.0)
+    kk = 7.0 * max(1.0, S / 3.0) / (1 + 2.5 * smooth(clamp((fly - 0.45) / 0.4, 0, 1)))   # its edge softens as it fills the lens
     m = np.clip((fw_ - 0.5) * kk + 0.5, 0, 1).astype(F32)
-    if j >= 0: m = np.maximum(m, smooth(clamp((v - 0.78) / 0.22, 0, 1)))
+    op = smooth(clamp((fly - 0.50) / 0.45, 0, 1))                                              # the light inside opens out from its heart
+    if op > 0:
+        Rr_ = math.hypot(W, H) * 1.15 * op ** 1.3
+        dc = np.sqrt((_GX - cxp) ** 2 + (_GY - cyp) ** 2)
+        m = np.maximum(m, np.clip((Rr_ - dc) / (220 + 0.25 * Rr_) + 0.5, 0, 1).astype(F32))
+    if j >= 0: m = np.maximum(m, smooth(clamp((v - 0.80) / 0.20, 0, 1)))
     fmk = face_soft(sa, ff, 1.3)
     if fmk is not None and fly > 0.2: m = m * (1 - fmk[..., 0]) + cv2.GaussianBlur(m, (0, 0), 30) * fmk[..., 0]
     t = f / FPS
@@ -2269,9 +2277,14 @@ def emblem_bolt2(A, B, j, f, sa, sb, pre=60, post=36):
         Bz = zoom_about(B, cxp, cyp, 1.0 + 0.35 * (1 - smooth(fly)))
         rr = 10 * (1 - smooth(clamp((fly - 0.45) / 0.45, 0, 1)))
         if rr > 0.6: Bz = defocus16(Bz, rr)
-        gx_ = cv2.Sobel(fw_, cv2.CV_32F, 1, 0, ksize=3); gy_ = cv2.Sobel(fw_, cv2.CV_32F, 0, 1, ksize=3)
-        sh_ = np.clip(0.62 + (-gx_ * 0.8 - gy_ * 0.9) * (4.0 / max(S, 1.0)) * math.cos(phi), 0.15, 1.4)[..., None]
-        metal = np.array([0.10, 0.34, 0.55], F32) * (1 - np.clip(sh_ - 0.4, 0, 1)) + np.array([0.55, 0.86, 1.00], F32) * np.clip(sh_ - 0.4, 0, 1)
+        sig = 2.0 + 2.2 * math.sqrt(S * max(kx, 0.3))                                         # a bevel of constant look at every size
+        mb_ = cv2.GaussianBlur(m, (0, 0), sig)
+        gx_ = cv2.Sobel(mb_, cv2.CV_32F, 1, 0, ksize=3) * sig; gy_ = cv2.Sobel(mb_, cv2.CV_32F, 0, 1, ksize=3) * sig
+        rim_ = np.clip(1 - np.abs(mb_ - 0.5) * 2, 0, 1)
+        lit = (-gx_ * 0.62 - gy_ * 0.78) * math.cos(phi) * 1.4
+        grad = ((_GX - cxp) * -0.5 + (_GY - cyp) * -0.85) / (S * 90.0 * max(ky, 0.3))            # a broad sheen across the face of it
+        sh_ = np.clip(0.58 + lit * rim_ + 0.22 * np.clip(grad, -1, 1), 0.10, 1.5)[..., None]
+        metal = np.array([0.04, 0.22, 0.46], F32) * (1 - np.clip(sh_ - 0.35, 0, 1)) + np.array([0.36, 0.76, 1.00], F32) * np.clip(sh_ - 0.35, 0, 1)
         proj = ((_GX - cxp) * 0.6 + (_GY - cyp) * 0.8) / (S * 70.0 * max(ky, 0.3))
         sweep = -1.4 + 2.8 * ((phi / (2 * math.pi) + 0.6 * u + 0.5 * fly) % 1.0)
         spec = np.exp(-((proj - sweep) / 0.10) ** 2).astype(F32)[..., None]                   # a glint runs along it as it turns
@@ -2320,26 +2333,28 @@ def loop_fx18(img, person, s, f):
     cv = bolt_canvas(); chg = smooth(clamp(t / 0.30, 0, 1))
     for k in range(4):
         y_ = H * (0.70 + 0.055 * k) + 25 * math.sin(tt * 7 + k)
-        put_bolt(cv, (W * (1.05 - 0.15 * k), y_), (W * (0.15 - 0.25 * chg), y_ + 40 * math.sin(k * 2.3)), 18950 + k + 7 * (f // 2), 3, 0.22, 6, 2, val=int(255 * (0.35 + 0.65 * chg) * (1 - smooth(clamp((t - 0.55) / 0.25, 0, 1)))))
+        put_bolt(cv, (W * (1.05 - 0.15 * k), y_), (W * (0.15 - 0.25 * chg), y_ + 40 * math.sin(k * 2.3)), 18950 + k + 7 * (f // 2), 3, 0.22, 6, 2, val=int(200 * (0.35 + 0.65 * chg) * (1 - smooth(clamp((t - 0.40) / 0.25, 0, 1)))))
     o = hblur(o, 2 + 50 * chg)
-    tip = smooth(clamp((t - 0.16) / 0.30, 0, 1))                                              # the crack races along from the right
+    tip = smooth(clamp((t - 0.10) / 0.26, 0, 1))                                              # the crack races along from the right
     if tip <= 0:
         return np.clip(o + light_rgb(cv, 1.0, HOT, GOLD18), 0, 1)
     V = frame_virtual(f - E.DUR_F + (0.5 if f == E.DUR_F - 1 else 0.0))
     yc, n1, n2 = tear_profile()
     tipx = W * (1.06 - 1.15 * tip)
     xm = np.clip((np.arange(W, dtype=F32) - tipx) / 50 + 0.5, 0, 1)
-    T = smoother(clamp((t - 0.40) / 0.55, 0, 1))
+    T = smoother(clamp((t - 0.30) / 0.58, 0, 1))
     h = 10 * xm + 2.7 * H * T ** 1.8
     top = (yc - h / 2 * (1 + 0.12 * n1))[None, :]; bot = (yc + h / 2 * (1 + 0.12 * n2))[None, :]
     inside = (np.clip((_GY - top) / 4 + 0.5, 0, 1) * np.clip((bot - _GY) / 4 + 0.5, 0, 1) * xm[None, :]).astype(F32)
+    fmf = face_soft(SHOTS[0], f - E.DUR_F, 1.4)                                                 # its edges pass frame 0's face as one soft edge
+    if fmf is not None: inside = inside * (1 - fmf[..., 0]) + cv2.GaussianBlur(inside, (0, 0), 28) * fmf[..., 0]
     pa = h * 0.30; spd = 2.7 * H * 1.8 * max(T, 1e-3) ** 0.8 / 0.55 / N * 0.30            # px a frame the halves move
     up_ = cv2.warpAffine(o, np.float32([[1, 0, 0], [0, 1, -float(np.median(pa))]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
     dn_ = cv2.warpAffine(o, np.float32([[1, 0, 0], [0, 1, float(np.median(pa))]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
     if T > 0.02:
         bl = 2 + min(80.0, spd * 1.5); up_ = hblur(up_, bl, vertical=True); dn_ = hblur(dn_, bl, vertical=True)
     outside = np.where((_GY < yc[None, :])[..., None], up_, dn_)
-    breath = 1 + 0.30 * math.exp(-max(0.0, t - 0.42) / 0.10) * (t > 0.30)
+    breath = 1 + 0.30 * math.exp(-max(0.0, t - 0.32) / 0.10) * (t > 0.22)
     Vz = zoom_about(V, W / 2, H * 0.56, 1.0 + 0.10 * (1 - T) ** 2) * (1 + (breath - 1) * (1 - T))
     o = outside * (1 - inside[..., None]) + Vz * inside[..., None]
     core = (inside * (1 - smooth(clamp(T / 0.12, 0, 1)))).astype(F32)                         # while it is a crack, it is full of light
@@ -2356,9 +2371,9 @@ def loop_fx18(img, person, s, f):
         addc(o, np.exp(-d2 / (2 * 60.0 ** 2)).astype(F32), HOT * 0.5 + GOLD18 * 0.5, 0.9 * (1 - tip))
     rng = np.random.default_rng(1891); cvs = np.zeros((H // 2, W // 2), np.uint8)             # embers lifting off the burning edges
     for k in range(90):
-        ex0 = rng.uniform(0, W); te = rng.uniform(0.30, 0.85); age = t - te; topk = k % 2 == 0
+        ex0 = rng.uniform(0, W); te = rng.uniform(0.22, 0.85); age = t - te; topk = k % 2 == 0
         if 0 < age < 0.25 and xm[int(ex0)] > 0.5:
-            Tk = smoother(clamp((te - 0.40) / 0.55, 0, 1)); hk = 10 + 2.7 * H * Tk ** 1.8
+            Tk = smoother(clamp((te - 0.30) / 0.58, 0, 1)); hk = 10 + 2.7 * H * Tk ** 1.8
             ey0 = float(yc[int(ex0)]) + (-1 if topk else 1) * hk / 2
             ex_ = ex0 + rng.uniform(-60, 60) * age * 4; ey_ = ey0 + (-1 if topk else 1) * 700 * age - 300 * age * age
             cv2.circle(cvs, (int(ex_ * 8), int(ey_ * 8)), int(rng.uniform(1.5, 3.2) * 8), int(255 * (1 - age / 0.25) * fade), -1, cv2.LINE_AA, shift=4)
@@ -2370,7 +2385,21 @@ def loop_fx18(img, person, s, f):
     if t > 0.985: o = V
     return np.clip(o, 0, 1)
 
-TR2.update({"vertigo": (vertigo, 10, 12), "streak_wipe": (streak_wipe, 10, 14), "crash_zoom": (crash_zoom, 5, 10), "ember_burn": (ember_burn, 8, 12),
+def bokeh_rack18(A, B, j, f, sa, sb, pre=8, post=10):
+    """BOKEH RACK (v17), the swap only at the deepest blur, so nothing doubles."""
+    x = _x(j, pre, post); r = 34 * math.sin(math.pi * clamp(x, 0, 1)) ** 1.1
+    w = smooth(clamp((x - 0.44) / 0.12, 0, 1))
+    return np.clip(defocus16(A, r) * (1 - w) + defocus16(B, r) * w, 0, 1)
+
+def ray_rake18(A, B, j, f, sa, sb, pre=8, post=8):
+    """RAY RAKE (v17), gentler, with faces left clean (the shafts and band fade where a face is)."""
+    out = ray_rake(A, B, j, f, sa, sb, pre, post)
+    x = _x(j, pre, post); w = smooth(x); base = A * (1 - w) + B * w
+    fm = face_soft(sa if w < 0.5 else sb, f if (j < 0) == (w < 0.5) else (sa["f1"] - 1 if w < 0.5 else sb["f0"]), 1.5)
+    out = base * 0.35 + out * 0.65
+    return np.clip(out if fm is None else out * (1 - fm) + base * fm, 0, 1)
+
+TR2.update({"vertigo": (vertigo, 10, 12), "bokeh_rack": (bokeh_rack18, 8, 10), "ray_rake": (ray_rake18, 8, 8), "streak_wipe": (streak_wipe, 10, 14), "crash_zoom": (crash_zoom, 5, 10), "ember_burn": (ember_burn, 8, 12),
             "emblem_bolt": (emblem_bolt2, 60, 36)})
 
 # ---- the frame --------------------------------------------------------------------------------------------------------------

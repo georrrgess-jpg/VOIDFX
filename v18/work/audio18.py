@@ -755,7 +755,7 @@ def main():
     place(fx, stereo(crackle(0.55, -21, 1815, 0.8)), th(61.5))                                  # EMBLEM BOLT: it charges
     eb = rev(A2.whoosh(0.85, -14, 1816, True)); place(fx, eb.astype(np.float32), th(64) - len(eb) / SR + 0.04)   # ... lifts off and flies at the lens
     place(fx, stereo(sub_drop(-15, 0.7, 64, 28)), th(64) + 0.01)
-    place(fx, rip(0.95, -16, 1840), th(76) + 0.25 * (th(80) - th(76)))                          # THE TIME TEAR
+    place(fx, rip(1.10, -16, 1840), th(74) + 0.30 * (th(80) - th(74)))                          # THE TIME TEAR
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))
     wf.write(f"{AD}/stem_fx.wav", SR, fx[PRE:].astype(np.float32))
     full = mus + fx
