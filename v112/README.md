@@ -72,3 +72,16 @@ drop on the snap; the glint's whoosh; a far siren whoop at the crime scene; THE 
   moved under a soft warm peak (a 52-level pop at 3.3 s); the flare no longer lands on the white shirt in the last shot.
 - **Round 4:** the warm close-up (cut off) became the kitchen smirk in the blinds' light, into which the light sweep is
   motivated.
+- **Round 5, the fresh-eyes critique** (predicted HIGH: the nightfall's black patches on his face, three look-alike
+  close-ups in a row, the cemetery hold dragging): the nightfall keeps its lamps off his face and never goes black; the
+  dusk, night and lab shots replaced (the sunlit suburb by the car, the shipping container lit from above, the lab's
+  projector light) so the first half moves between places and scales; VERTIGO pushed to 2.45× so the cemetery visibly
+  compresses at phone size, its streak removed; the whip edge-replicates (it mirrored two half-faces); the daybreak
+  into the last shot (a double exposure of two close-ups) became a bright-out; the orbit's join feathered; the sunlit
+  shirt rolled off. QC now leaves the loop's own window out of face-centring (the swing moves the face by design).
+- **Measured (final):** QC 11/11 on the encode; -13.0 LUFS, true peak -3.5 dBTP after AAC; loop seam blurred
+  difference 0.23 (gate ≤ 1), audio seam step 0.0066, wrap step 1.29 vs local median 2.27; no white-outs, 1 flash
+  event; no dead spans, no judder; the two remaining pops are designed (the bokeh's swap at 10.9 s, the bright-out's
+  climb at 23.4 s).
+- **Left as judgement calls:** the sunglasses shot is an extreme close-up (the glasses going on are the moment); 21
+  transitions + the loop in 24.6 s (the first half is the song's long held break, a calmer section).

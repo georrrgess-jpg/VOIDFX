@@ -58,6 +58,8 @@ def _tr_window():
         t_ = s_.get("tin")
         if t_ in TR: ex.update(range(s_["f0"] - TR[t_][1], s_["f0"] + TR[t_][2]))
         elif t_: ex.update(range(s_["f0"] - 8, s_["f0"] + 12))
+        if s_.get("tout") and hasattr(E, "E_LOOP"):                               # the loop set piece moves the face by design
+            ex.update(range(min(s_["f1"], int(round(E.th(E.E_LOOP) * E.FPS))), s_["f1"]))
     return ex
 TRW = _tr_window(); in_tr = {}
 bad = {}; cnt = {}
