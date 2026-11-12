@@ -192,3 +192,10 @@ v111/out/
 v111/work/*.npz
 v111/work/*.npy
 v111/sr/
+v112/work/*.log
+v112/audio/
+v112/frames/
+v112/out/
+v112/work/*.npz
+v112/work/*.npy
+v112/sr/
