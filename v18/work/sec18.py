@@ -2064,6 +2064,313 @@ TR2.update({"bokeh_bloom": (bokeh_bloom, 8, 12), "window_glow": (window_glow, 6,
             "flicker_cut": (flicker_cut, 6, 8), "mist_pass": (mist_pass, 10, 12), "lamp_bloom": (lamp_bloom, 8, 10), "lightning_whip": (lightning_whip, 5, 7),
             "emblem_bolt": (emblem_bolt, 50, 34), "loop18": (loop18, 0, 1)})
 
+# ============================================================================ v18 round 2: new transitions, animations, the
+# cinematic EMBLEM BOLT and the polished TIME TEAR (the owner: "remove the scenes with iris … fix the emblem transition scene
+# and make it more cinematic and seamless … polish the loop … more creative transitions and animations")
+def gold_mask(img):
+    """the speedster's own gold: warm, saturated, bright light (his lightning)."""
+    B_, G_, R_ = img[..., 0], img[..., 1], img[..., 2]
+    L = B_ * 0.114 + G_ * 0.587 + R_ * 0.299
+    m = np.clip((R_ - B_ - 0.22) / 0.20, 0, 1) * np.clip((L - 0.40) / 0.20, 0, 1) * np.clip((G_ - B_) / 0.10, 0, 1)
+    return cv2.GaussianBlur(m.astype(F32), (0, 0), 2.0)
+
+def vertigo(A, B, j, f, sa, sb, pre=10, post=12):
+    """VERTIGO (the lab -> the brick wall): a dolly zoom. He holds his size while the world behind him rushes in (his
+    matte over the room with him painted out); the cut lands on the peak and the next shot's world settles back."""
+    if j < 0:
+        u = (j + pre + 1) / pre; img = A; pm = PERSON.get(f); k = ("vA", f); zz = 1 + 0.32 * ein(u, 1.6)
+    else:
+        u = 1 - (j + 1) / post; img = B; pm = PERSON.get(f); k = ("vB", f); zz = 1 + 0.32 * ein(u, 1.6)
+    if pm is None or zz < 1.002: return img
+    plate = zip_plate(img, pm, k)
+    fs = fs3_of(sa if j < 0 else sb, f); cx, cy = (fs[0], fs[1]) if fs else (W / 2, H * 0.4)
+    bg = zoom_about(plate, cx, cy, zz)
+    bg = radial_blur(bg, cx, cy, 1.0, 1.0 + 0.05 * ein(u, 1.5), 5)
+    pmm = np.clip(pm * 1.2, 0, 1)[..., None]
+    sub = zoom_about(img, cx, cy, 1.0 - 0.04 * ein(u, 1.5))                                    # he even eases back a touch
+    pms = zoom_about(np.repeat(pmm, 3, 2), cx, cy, 1.0 - 0.04 * ein(u, 1.5))
+    return np.clip(bg * (1 - pms) + sub * pms, 0, 1)
+
+def streak_wipe(A, B, j, f, sa, sb, pre=10, post=14):
+    """STREAK WIPE (he looks up -> the speedster): a gold streak tears across the sky over him; its wake pulls the next
+    shot down behind it like a curtain."""
+    x = _x(j, pre, post); hp = ein(clamp(x / 0.55, 0, 1), 1.2)
+    hx = -260 + (W + 520) * hp
+    def py(xx): return H * 0.12 + (xx / W) * H * 0.10 + 30 * np.sin(xx / 140.0)
+    xs = np.arange(W, dtype=F32)
+    passed = np.clip((hx - xs) / 260.0, 0, 1)                                                  # how long ago the streak passed each column
+    rev = H * 1.15 * smooth(clamp((x - 0.25) / 0.70, 0, 1)) * (0.3 + 0.7 * passed)
+    edge_y = (py(xs) + rev)[None, :]
+    m = np.clip((edge_y - _GY) / 40 + 0.5, 0, 1).astype(F32) * (passed > 0)[None, :]
+    o = A * (1 - m[..., None]) + B * m[..., None]
+    band = np.exp(-((_GY - edge_y) / 30.0) ** 2).astype(F32) * (passed > 0)[None, :]
+    addc(o, kmul(band * 0.5, live_keep(sa, sb, j, f, smooth(x), 1.2)), GOLD18, 0.6)
+    cv = bolt_canvas()
+    tail = max(-260.0, hx - 700)
+    pts = np.stack([np.linspace(tail, hx, 40), py(np.linspace(tail, hx, 40))], 1)
+    for i in range(1, len(pts)):
+        a_ = i / len(pts); cv2.line(cv, (int(pts[i - 1][0] * 16), int(pts[i - 1][1] * 16)), (int(pts[i][0] * 16), int(pts[i][1] * 16)), int(255 * a_ ** 1.3), int(3 + 18 * a_), cv2.LINE_AA, shift=4)
+    if -100 < hx < W + 100:
+        put_bolt(cv, (hx - 260, float(py(np.array([hx - 260]))[0])), (hx, float(py(np.array([hx]))[0])), 19010 + f // 2, 2, 0.35, 5, 1, val=210)
+    lt = light_rgb(cv, 1.6 * (1 - smooth(clamp((x - 0.75) / 0.25, 0, 1))), HOT, GOLD18)
+    return np.clip(o + kmul(lt, live_keep(sa, sb, j, f, smooth(x), 1.1)), 0, 1)
+
+def crash_zoom(A, B, j, f, sa, sb, pre=5, post=10):
+    """CRASH ZOOM: the camera crashes into his lightning and out again on the masked face."""
+    if _HO.get("cz_n") != sa["n"]: _HO["cz_n"] = sa["n"]; _HO["cz"] = hi_point(edge15(sa, "last"), sa, sa["f1"] - 1, 0.60)
+    px, py = _HO["cz"]
+    if j < 0:
+        u = (j + pre + 1) / pre; o = radial_blur(zoom_about(A, px, py, 1 + 0.9 * ein(u, 2)), px, py, 1.0, 1.0 + 0.30 * ein(u, 1.6), 6)
+        return np.clip(o * (1 + 0.25 * ein(u, 2)), 0, 1)
+    v = (j + 1) / post; fs = fs3_of(sb, sb["f0"]); cx, cy = (fs[0], fs[1] + fs[2] * 0.6) if fs else (W / 2, H * 0.45)
+    o = zoom_about(B, cx, cy, 1 + 0.45 * (1 - eout(v, 2.5))); k = 0.25 * (1 - eout(v, 2))
+    if k > 0.004: o = radial_blur(o, cx, cy, 1.0, 1.0 + k, 6)
+    return np.clip(o * (1 + 0.20 * (1 - v) ** 3), 0, 1)
+
+def ember_burn(A, B, j, f, sa, sb, pre=8, post=12):
+    """EMBER BURN (the fire -> the flight): the fire round him catches the frame itself; a front of glowing embers burns
+    across it from the corner and the next shot is beneath, the char curling and sparks lifting off it. It passes his
+    face as one soft edge."""
+    x = _x(j, pre, post)
+    N = cv2.resize(cloud_N(0.0, 0.0, 2200.0), (W, H))
+    proj = ((_GX * 0.55 + (H - _GY) * 0.83) / (W * 0.55 + H * 0.83)).astype(F32) + (N - 0.5) * 0.22
+    pos = -0.15 + 1.35 * smooth(clamp(x, 0, 1))
+    s_ = sa if smooth(x) < 0.5 else sb; ff = f if (j < 0) == (s_ is sa) else (sa["f1"] - 1 if s_ is sa else sb["f0"])
+    fm = face_soft(s_, ff, 1.3)
+    fe = 0.012 + (0.10 * fm[..., 0] if fm is not None else 0.0)
+    m = np.clip((pos - proj) / fe + 0.5, 0, 1).astype(F32)
+    char = np.clip((pos + 0.04 - proj) / 0.04, 0, 1) * (1 - m)
+    o = A * (1 - m[..., None]) * (1 - 0.75 * char[..., None]) + B * m[..., None]
+    rim = np.exp(-((proj - pos) / 0.010) ** 2).astype(F32) + 0.4 * np.exp(-((proj - pos) / 0.035) ** 2).astype(F32)
+    fk = live_keep(sa, sb, j, f, smooth(x), 1.2)
+    addc(o, kmul(rim * (0.6 + 0.4 * N), fk), AMBER18 * 0.7 + HOT * 0.3, 1.1)
+    rng = np.random.default_rng(1886); cvs = np.zeros((H // 2, W // 2), np.uint8)
+    for k in range(70):
+        a0 = rng.uniform(0, 1); t0 = rng.uniform(0, 0.8); age = x - t0
+        if 0 < age < 0.5:
+            bx = a0 * W; by = H - (pos - 0.02 - a0 * W * 0.55 / (W * 0.55 + H * 0.83)) * (W * 0.55 + H * 0.83) / 0.83
+            ex_ = bx + rng.uniform(-80, 80) * age * 3; ey_ = by - 600 * age
+            cv2.circle(cvs, (int(ex_ * 8), int(ey_ * 8)), int(rng.uniform(1.5, 3.5) * 8), int(255 * (1 - age / 0.5)), -1, cv2.LINE_AA, shift=4)
+    sp = cv2.resize(cvs.astype(F32) / 255, (W, H)); sp = sp + cv2.GaussianBlur(sp, (0, 0), 5) * 1.5
+    addc(o, kmul(sp.astype(F32), fk), AMBER18 * 0.6 + HOT * 0.4, 0.9)
+    return np.clip(o, 0, 1)
+
+_DR = {}
+def a_drift(img, person, s, f):
+    """COLD DUST: grey dust drifts through the cold air round him, slowly, catching a little light."""
+    if "p" not in _DR:
+        rng = np.random.default_rng(1889)
+        _DR["p"] = (rng.uniform(0, W, 80), rng.uniform(0, H, 80), rng.uniform(2.0, 5.0, 80), rng.uniform(0, 6.28, 80), rng.uniform(-14, 6, 80), rng.uniform(-10, 18, 80))
+    X0, Y0, rad, ph, vx, vy = _DR["p"]; t = f / FPS
+    X = (X0 + vx * t + 8 * np.sin(0.7 * t + ph)) % W; Y = (Y0 + vy * t + 6 * np.cos(0.5 * t + ph)) % H
+    cv = np.zeros((H // 2, W // 2), np.uint8)
+    for x_, y_, r_, p_ in zip(X, Y, rad, ph):
+        cv2.circle(cv, (int(x_ * 8), int(y_ * 8)), int(r_ * 8), int(255 * (0.35 + 0.35 * math.sin(1.7 * t + p_ * 3))), -1, cv2.LINE_AA, shift=4)
+    m = cv2.resize(cv.astype(F32) / 255, (W, H)); m = m * 0.7 + cv2.GaussianBlur(m, (0, 0), 6) * 1.5
+    if person is not None: m = m * (1 - 0.6 * np.clip(person, 0, 1))
+    o = img.copy(); addc(o, kmul(m.astype(F32), face_keep(s, f, 1.1)), COLDB * 0.6 + HOT * 0.4, 0.7)
+    return np.clip(o, 0, 1)
+
+def a_skyrays(img, person, s, f):
+    """GOLD IN THE SKY: he looks up; shafts of gold light come down through the cold sky behind him, turning slowly (the
+    speedster is coming)."""
+    t = (f - s["f0"]) / FPS; e = e_of(f)
+    g = smooth(clamp((e - s["e0"]) / 2.5, 0, 1))
+    o = god_rays(img, person, W * (0.72 - 0.06 * t), -H * 0.08, 0.75 * g, 0.42)
+    return off_face(np.clip(o, 0, 1), img, s, f, 1.15)
+
+def a_vaultpulse(img, person, s, f):
+    """THE VAULT: rings of blue light run outward from the cell's great round door behind him, a slow pulse on each beat."""
+    t = f / FPS; e = e_of(f); cx, cy = W * 0.62, H * 0.42
+    d = np.sqrt((_GXQ - cx) ** 2 + (_GYQ - cy) ** 2)
+    ph = (d / 220.0 - t * 1.1) % 1.0
+    ring = np.exp(-((ph - 0.5) / 0.06) ** 2) * np.exp(-d / 1100.0)
+    pulse = 0.55 + 0.45 * math.exp(-((e - beat_e(e)) * E.HB) / 0.18)
+    lay = cv2.resize((ring * pulse).astype(F32), (W, H))
+    if person is not None: lay = lay * (1 - np.clip(person * 1.3, 0, 1))
+    o = img.copy(); addc(o, kmul(lay.astype(F32), face_keep(s, f, 1.3)), SFB * 0.8 + HOT * 0.2, 0.55)
+    return np.clip(o, 0, 1)
+
+ANIMS.update({"drift": a_drift, "skyrays": a_skyrays, "vaultpulse": a_vaultpulse})
+
+def emblem_bolt2(A, B, j, f, sa, sb, pre=60, post=36):
+    """EMBLEM BOLT (round 2, cinematic): the camera pushes in slowly on the real emblem and racks focus to it, the rest of
+    the frame falling soft; the emblem charges, a glint running along its bolt. The bolt (traced on the source) lifts off
+    the disc and spins once, casting its shadow on the disc it leaves; it turns face-on and comes at the lens, motion-
+    blurred, the world behind it falling away and darkening. A flare as it fills the lens, and the Speed Force is inside
+    it, settling out of a zoom until it is all there is."""
+    ff = f if j < 0 else sa["f1"] - 1
+    gx, gy, gr = emb_pt(sa, ff)
+    u = clamp((j + pre + 1) / pre, 0, 1); v = clamp((j + 1) / post, 0, 1) if j >= 0 else 0.0
+    dcx0, dcy0, _, _ = emb_disc(A, gx, gy, gr, ("d0", ff))
+    push = smooth(clamp(u / 0.50, 0, 1))
+    z = 1 + 0.22 * push
+    px_, py_ = dcx0 + (W * 0.5 - dcx0) * 0.35 * push, dcy0 + (H * 0.62 - dcy0) * 0.35 * push
+    Mz = np.float32([[z, 0, px_ - z * dcx0], [0, z, py_ - z * dcy0]])
+    Az = cv2.warpAffine(A, Mz, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    EX, EY, HX, HY = emb_disc(Az, px_, py_, gr * z, ("dz", ff, round(z, 4)))
+    up, (axp, ayp), (fx0, fy0) = emb_bolt_field()
+    kx, ky = HX / EB_K, HY / EB_K
+    fs = fs3_of(sa, ff); side = -1 if (fs and fs[0] > W * 0.5) else 1
+    lift = smooth(clamp((u - 0.32) / 0.30, 0, 1))
+    fly = 0.35 + 0.65 * ein(v, 1.3) if j >= 0 else 0.35 * ein(clamp((u - 0.62) / 0.38, 0, 1), 1.4)
+    def warp_field(sx_, sy_, cx_, cy_):
+        M = np.float32([[sx_ / 4, 0, cx_ - sx_ * (axp - fx0)], [0, sy_ / 4, cy_ - sy_ * (ayp - fy0)]])
+        return cv2.warpAffine(up, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    hx0, hy0 = EX + axp * kx, EY + ayp * ky
+    o = Az
+    if lift > 0.002:                                                                           # the socket, filled from the disc
+        hole = np.clip((warp_field(kx, ky, hx0, hy0) - 0.2) * 4, 0, 1).astype(F32)
+        hole = cv2.GaussianBlur(cv2.dilate(hole, np.ones((21, 21), np.uint8)), (0, 0), 2.5)
+        key = ("fill", ff, round(z, 4))
+        if key not in _EB:
+            Rr = int(max(HX, HY) * 1.6); x0, y0 = int(EX) - Rr, int(EY) - Rr
+            x0c, y0c, x1c, y1c = max(0, x0), max(0, y0), min(W, x0 + 2 * Rr), min(H, y0 + 2 * Rr)
+            c8 = (np.clip(Az[y0c:y1c, x0c:x1c], 0, 1) * 255).astype(np.uint8)
+            m8 = (hole[y0c:y1c, x0c:x1c] > 0.05).astype(np.uint8) * 255
+            fl = cv2.inpaint(c8, m8, 5, cv2.INPAINT_TELEA).astype(F32) / 255
+            cc = Az[y0c:y1c, x0c:x1c]; Lc = lumf(cc); satc = cc.max(2) - cc.min(2)
+            wsel = (Lc > 0.55) & (satc < 0.16) & (m8 == 0)
+            wcol = np.median(cc[wsel], axis=0) if wsel.any() else np.array([0.85, 0.86, 0.88], F32)
+            yy_, xx_ = np.mgrid[y0c:y1c, x0c:x1c].astype(F32)
+            de = np.sqrt(((xx_ - EX) / (HX * 0.86)) ** 2 + ((yy_ - EY) / (HY * 0.86)) ** 2)
+            disc = np.clip((1.0 - de) / 0.04 + 0.5, 0, 1)[..., None]
+            shade = (1.0 - 0.10 * np.clip((yy_ - EY) / HY, -1, 1) - 0.05 * np.clip((xx_ - EX) / HX, -1, 1))[..., None]
+            fl = fl * (1 - disc) + (wcol * shade) * disc
+            full = Az.copy(); full[y0c:y1c, x0c:x1c] = fl; _EB[key] = full
+        k_ = hole[..., None] * smooth(clamp(lift / 0.12, 0, 1))
+        o = o * (1 - k_) + _EB[key] * k_
+    # the rack focus: everything but the emblem falls soft, more as the bolt nears the lens
+    ER = max(HX, HY)
+    dd = np.sqrt((_GX - EX) ** 2 + (_GY - EY) ** 2)
+    dm = (np.clip((dd - ER * 1.7) / (ER * 2.6), 0, 1) * smooth(clamp(u / 0.35, 0, 1))).astype(F32)
+    o = o * (1 - dm[..., None]) + defocus16(o, 3 + 8 * push + 18 * fly) * dm[..., None]
+    if fly > 0.001:                                                                            # the world behind it falls away and darkens
+        sc_ = 1 - 0.07 * fly
+        Mb = np.float32([[sc_, 0, (1 - sc_) * EX - side * W * 0.05 * fly], [0, sc_, (1 - sc_) * EY + H * 0.09 * fly]])
+        o = cv2.warpAffine(o, Mb, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT) * (1 - 0.40 * fly)
+    lx = hx0 + side * W * 0.22 * lift; ly = hy0 - H * 0.09 * lift
+    tx, ty = W * 0.5, H * 0.66
+    cxp = lx + (tx - lx) * smooth(clamp(fly / 0.5, 0, 1)); cyp = ly + (ty - ly) * smooth(clamp(fly / 0.5, 0, 1))
+    phi = 2 * math.pi * smooth(clamp((u - 0.34) / 0.30, 0, 1)); sxs = max(abs(math.cos(phi)), 0.06)
+    S = (1.0 + 0.6 * lift) * math.exp(math.log(70.0) * ein(clamp(fly, 0, 1), 1.8))
+    fw_ = warp_field(kx * S * sxs, ky * S, cxp, cyp)
+    kk = 7.0 * max(1.0, S / 3.0)
+    m = np.clip((fw_ - 0.5) * kk + 0.5, 0, 1).astype(F32)
+    if j >= 0: m = np.maximum(m, smooth(clamp((v - 0.78) / 0.22, 0, 1)))
+    fmk = face_soft(sa, ff, 1.3)
+    if fmk is not None and fly > 0.2: m = m * (1 - fmk[..., 0]) + cv2.GaussianBlur(m, (0, 0), 30) * fmk[..., 0]
+    t = f / FPS
+    if lift > 0.002:                                                                           # its shadow on the disc and the suit
+        shd = cv2.GaussianBlur(warp_field(kx * S * sxs, ky * S, cxp + 14 * lift, cyp + 22 * lift), (0, 0), 6 + 10 * lift)
+        o = o * (1 - (np.clip(shd, 0, 1) * 0.45 * (1 - smooth(fly / 0.4)))[..., None])
+    if lift > 0.002 or j >= 0:
+        inside = smooth(clamp((fly - 0.42) / 0.22, 0, 1))
+        Bz = zoom_about(B, cxp, cyp, 1.0 + 0.35 * (1 - smooth(fly)))
+        rr = 10 * (1 - smooth(clamp((fly - 0.45) / 0.45, 0, 1)))
+        if rr > 0.6: Bz = defocus16(Bz, rr)
+        gx_ = cv2.Sobel(fw_, cv2.CV_32F, 1, 0, ksize=3); gy_ = cv2.Sobel(fw_, cv2.CV_32F, 0, 1, ksize=3)
+        sh_ = np.clip(0.62 + (-gx_ * 0.8 - gy_ * 0.9) * (4.0 / max(S, 1.0)) * math.cos(phi), 0.15, 1.4)[..., None]
+        metal = np.array([0.10, 0.34, 0.55], F32) * (1 - np.clip(sh_ - 0.4, 0, 1)) + np.array([0.55, 0.86, 1.00], F32) * np.clip(sh_ - 0.4, 0, 1)
+        proj = ((_GX - cxp) * 0.6 + (_GY - cyp) * 0.8) / (S * 70.0 * max(ky, 0.3))
+        sweep = -1.4 + 2.8 * ((phi / (2 * math.pi) + 0.6 * u + 0.5 * fly) % 1.0)
+        spec = np.exp(-((proj - sweep) / 0.10) ** 2).astype(F32)[..., None]                   # a glint runs along it as it turns
+        metal = metal * (1 + 0.5 * lift) + spec * HOT * 0.9
+        spr = Bz * inside + metal * (1 - inside)
+        o = o * (1 - m[..., None]) + spr * m[..., None]
+        edge = np.clip(1 - np.abs(fw_ - 0.5) * kk * 0.5, 0, 1).astype(F32)
+        fk = live_keep(sa, sb, j, f, 0 if j < 0 else 1, 1.1)
+        addc(o, kmul(cv2.GaussianBlur(edge, (0, 0), 2 + 6 * fly), fk), GOLD18 * 0.6 + HOT * 0.4, 1.2 * (1 - smooth(clamp((v - 0.6) / 0.4, 0, 1))))
+        mb = math.sin(math.pi * clamp(fly, 0, 1))                                              # it rushes at the lens: zoom blur
+        if mb > 0.02: o = o * (1 - 0.7 * mb) + radial_blur(o, cxp, cyp, 1.0, 1.0 + 0.06 * mb, 6) * (0.7 * mb)
+        fl_ = math.exp(-((fly - 0.55) / 0.10) ** 2)                                            # the flare as it fills the lens
+        if fl_ > 0.01:
+            stq = (np.exp(-((_GY - cyp) / 10.0) ** 2) * np.exp(-np.abs(_GX - cxp) / 900.0)).astype(F32)
+            glw = np.exp(-(((_GX - cxp) ** 2 + (_GY - cyp) ** 2) / (2 * 380.0 ** 2))).astype(F32)
+            addc(o, kmul(stq, fk), GOLD18 * 0.6 + HOT * 0.4, 0.8 * fl_); addc(o, kmul(glw, fk), GOLD18, 0.30 * fl_)
+    else:
+        chg = smooth(clamp(u / 0.25, 0, 1))
+        proj = ((_GX - hx0) * 0.6 + (_GY - hy0) * 0.8) / (70.0 * max(ky, 0.3))
+        spec = np.exp(-((proj - (-1.4 + 2.8 * ((1.8 * u) % 1.0))) / 0.12) ** 2).astype(F32)
+        bm_ = np.clip((fw_ - 0.5) * 6 + 0.5, 0, 1)
+        addc(o, (bm_ * (0.40 * chg * (0.8 + 0.2 * math.sin(t * 30)) + spec * 0.9 * chg)).astype(F32), GOLD18 * 0.7 + HOT * 0.3, 1.0)
+    cv = bolt_canvas()
+    ERr = ER * 1.12
+    if u < 0.64:
+        a_amt = smooth(clamp(u / 0.2, 0, 1))
+        for k in range(3):
+            a0 = 0.7 + 2.1 * k + 5.0 * t
+            put_bolt(cv, (EX + HX * 1.1 * math.cos(a0), EY + HY * 1.1 * math.sin(a0)), (EX + HX * 1.1 * math.cos(a0 + 1.2), EY + HY * 1.1 * math.sin(a0 + 1.2)), 18820 + k + 7 * (f // 2), 2, 0.30, 4, 0, val=int(230 * a_amt))
+    tet = math.sin(math.pi * clamp((lift - 0.05) / 0.6, 0, 1)) * (1 - smooth(fly / 0.3))
+    if tet > 0.02 and math.hypot(cxp - EX, cyp - EY) > ERr:
+        put_bolt(cv, (EX, EY), (cxp, cyp), 18830 + 5 * (f // 2), 2, 0.25, 5, 1, val=int(230 * tet))
+    if cv.max() > 0:
+        o = o + kmul(light_rgb(cv, 1.0, HOT, GOLD18), live_keep(sa, sb, j, f, 0, 0.75))
+    return np.clip(o, 0, 1)
+
+def loop_fx18(img, person, s, f):
+    """THE TIME TEAR (round 2, polished): he runs back in time and his lightning builds and runs back across the frame; a
+    crack of light races along a bolt from right to left behind it (frame 0's street glimpsed through it); then the crack
+    tears open, the halves pushed apart and motion-blurred, embers lifting off the burning edges, a breath of light from
+    inside, and the street opens until it is frame 0, where the streak behind Barry is him."""
+    f0 = fh(E.E_LOOP); N = E.DUR_F - f0
+    if f < f0: return img
+    t = (f - f0) / N; tt = f / FPS
+    o = img
+    cv = bolt_canvas(); chg = smooth(clamp(t / 0.30, 0, 1))
+    for k in range(4):
+        y_ = H * (0.70 + 0.055 * k) + 25 * math.sin(tt * 7 + k)
+        put_bolt(cv, (W * (1.05 - 0.15 * k), y_), (W * (0.15 - 0.25 * chg), y_ + 40 * math.sin(k * 2.3)), 18950 + k + 7 * (f // 2), 3, 0.22, 6, 2, val=int(255 * (0.35 + 0.65 * chg) * (1 - smooth(clamp((t - 0.55) / 0.25, 0, 1)))))
+    o = hblur(o, 2 + 50 * chg)
+    tip = smooth(clamp((t - 0.16) / 0.30, 0, 1))                                              # the crack races along from the right
+    if tip <= 0:
+        return np.clip(o + light_rgb(cv, 1.0, HOT, GOLD18), 0, 1)
+    V = frame_virtual(f - E.DUR_F + (0.5 if f == E.DUR_F - 1 else 0.0))
+    yc, n1, n2 = tear_profile()
+    tipx = W * (1.06 - 1.15 * tip)
+    xm = np.clip((np.arange(W, dtype=F32) - tipx) / 50 + 0.5, 0, 1)
+    T = smoother(clamp((t - 0.40) / 0.55, 0, 1))
+    h = 10 * xm + 2.7 * H * T ** 1.8
+    top = (yc - h / 2 * (1 + 0.12 * n1))[None, :]; bot = (yc + h / 2 * (1 + 0.12 * n2))[None, :]
+    inside = (np.clip((_GY - top) / 4 + 0.5, 0, 1) * np.clip((bot - _GY) / 4 + 0.5, 0, 1) * xm[None, :]).astype(F32)
+    pa = h * 0.30; spd = 2.7 * H * 1.8 * max(T, 1e-3) ** 0.8 / 0.55 / N * 0.30            # px a frame the halves move
+    up_ = cv2.warpAffine(o, np.float32([[1, 0, 0], [0, 1, -float(np.median(pa))]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+    dn_ = cv2.warpAffine(o, np.float32([[1, 0, 0], [0, 1, float(np.median(pa))]]), (W, H), borderMode=cv2.BORDER_REPLICATE)
+    if T > 0.02:
+        bl = 2 + min(80.0, spd * 1.5); up_ = hblur(up_, bl, vertical=True); dn_ = hblur(dn_, bl, vertical=True)
+    outside = np.where((_GY < yc[None, :])[..., None], up_, dn_)
+    breath = 1 + 0.30 * math.exp(-max(0.0, t - 0.42) / 0.10) * (t > 0.30)
+    Vz = zoom_about(V, W / 2, H * 0.56, 1.0 + 0.10 * (1 - T) ** 2) * (1 + (breath - 1) * (1 - T))
+    o = outside * (1 - inside[..., None]) + Vz * inside[..., None]
+    fade = 1 - smooth(clamp((t - 0.80) / 0.17, 0, 1))
+    fm0 = face_soft(SHOTS[0], f - E.DUR_F, 1.2)
+    fk0 = 1.0 if fm0 is None else (1 - fm0[..., 0] * inside)[..., None]
+    edge = ((np.exp(-((_GY - top) / 8.0) ** 2) + np.exp(-((_GY - bot) / 8.0) ** 2)) * xm[None, :]).astype(F32)
+    glow = ((np.exp(-((_GY - top) / 46.0) ** 2) + np.exp(-((_GY - bot) / 46.0) ** 2)) * xm[None, :]).astype(F32)
+    addc(o, kmul((edge * fade).astype(F32), fk0), HOT * 0.6 + GOLD18 * 0.4, 1.1); addc(o, kmul((glow * fade).astype(F32), fk0), GOLD18, 0.45)
+    if tip < 1:                                                                                # the crack's racing tip
+        ty_ = float(yc[int(clamp(tipx, 0, W - 1))])
+        d2 = (_GX - tipx) ** 2 + (_GY - ty_) ** 2
+        addc(o, np.exp(-d2 / (2 * 60.0 ** 2)).astype(F32), HOT * 0.5 + GOLD18 * 0.5, 0.9 * (1 - tip))
+    rng = np.random.default_rng(1891); cvs = np.zeros((H // 2, W // 2), np.uint8)             # embers lifting off the burning edges
+    for k in range(90):
+        ex0 = rng.uniform(0, W); te = rng.uniform(0.30, 0.85); age = t - te; topk = k % 2 == 0
+        if 0 < age < 0.25 and xm[int(ex0)] > 0.5:
+            Tk = smoother(clamp((te - 0.40) / 0.55, 0, 1)); hk = 10 + 2.7 * H * Tk ** 1.8
+            ey0 = float(yc[int(ex0)]) + (-1 if topk else 1) * hk / 2
+            ex_ = ex0 + rng.uniform(-60, 60) * age * 4; ey_ = ey0 + (-1 if topk else 1) * 700 * age - 300 * age * age
+            cv2.circle(cvs, (int(ex_ * 8), int(ey_ * 8)), int(rng.uniform(1.5, 3.2) * 8), int(255 * (1 - age / 0.25) * fade), -1, cv2.LINE_AA, shift=4)
+    sp = cv2.resize(cvs.astype(F32) / 255, (W, H)); sp = sp + cv2.GaussianBlur(sp, (0, 0), 4) * 1.4
+    addc(o, kmul(sp.astype(F32), fk0), AMBER18 * 0.5 + HOT * 0.5, 0.9)
+    cv2.polylines(cv, [np.stack([np.arange(0, W, 8), top[0, ::8]], 1).astype(np.int32)], False, int(190 * fade), 2, cv2.LINE_AA)
+    cv2.polylines(cv, [np.stack([np.arange(0, W, 8), bot[0, ::8]], 1).astype(np.int32)], False, int(190 * fade), 2, cv2.LINE_AA)
+    o = o + light_rgb(cv, 1.0, HOT, GOLD18) * (1 - inside[..., None])
+    if t > 0.985: o = V
+    return np.clip(o, 0, 1)
+
+TR2.update({"vertigo": (vertigo, 10, 12), "streak_wipe": (streak_wipe, 10, 14), "crash_zoom": (crash_zoom, 5, 10), "ember_burn": (ember_burn, 8, 12),
+            "emblem_bolt": (emblem_bolt2, 60, 36)})
+
 # ---- the frame --------------------------------------------------------------------------------------------------------------
 def base18(s, f):
     img, person = base11(s, f)
@@ -2077,6 +2384,8 @@ def base18(s, f):
                 q = 4; sk = np.zeros((H // q, W // q), F32)
                 cv2.ellipse(sk, (int(fs[0] / q), int((fs[1] + 0.10 * fs[2]) / q)), (int(fs[2] * 0.40 / q), int(fs[2] * 0.58 / q)), 0, 0, 360, 1.0, -1)
                 keep = keep * (1 - cv2.resize(cv2.GaussianBlur(sk, (0, 0), 6.0), (W, H)))
+        if s.get("keepgold"):
+            gk = gold_mask(img) * s["keepgold"]; keep = gk if keep is None else np.maximum(keep, gk)
         img = coldify(img, keep)
     elif lk == "strike": img = colour_strike(img, person, s, f)
     if s.get("anim") in ANIMS: img = ANIMS[s["anim"]](img, person, s, f)

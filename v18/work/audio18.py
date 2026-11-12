@@ -745,6 +745,7 @@ def main():
     fx = np.zeros((n, 2), np.float32)
     place(fx, streak_pass(-16, 1801, 0.42, (0.9, -0.9)), 0.0)                                   # THE HOOK: the streak tears past behind him
     place(fx, streak_pass(-17, 1802, 0.55, (-0.8, 0.8)), 0.50)                                  # ... and back across in front
+    place(fx, streak_pass(-18, 1803, 0.50, (-0.9, 0.9)), th(15) - 0.20)                       # STREAK WIPE: the speedster passes overhead
     place(fx, stereo(thunder(-13, 1810, 1.2)), th(28) - 0.01)                                   # THE STRIKE (crunch 1)
     place(fx, stereo(A2.impact(-11, (50, 28), 0.7, 0.5, 1811)), th(28)); place(fx, stereo(crackle(0.9, -22, 1812, 0.7)), th(28) + 0.10)   # the colour floods out
     place(fx, stereo(heartbeat(-14)), th(33))                                                   # he wakes (crunch 2)
