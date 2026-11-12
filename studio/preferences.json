@@ -1,6 +1,6 @@
 {
   "schema": "voidfx-preferences/1",
-  "updated": "2026-11-09",
+  "updated": "2026-11-12",
   "authoritative_prose": [
     "CLAUDE.md",
     "studio/VOIDFX_STUDIO.md",
@@ -230,6 +230,13 @@
     "honesty": "cannot watch or listen: report what was verified by frames and measurement"
   },
   "benchmarks": [
+    {
+      "edit": "v17 MR. BLUE SKY",
+      "folder": "v17/ (v12 engine + v17/work/sec17.py)",
+      "reference_for": "the newest Flash standard: AFTER THE STORM carried by the sun (sun break, THE SUN halo, EMBLEM IGNITE, the storm loop); SONIC BOOM attention-grabber at 1.4 s; a new scene every two beats (33 custom transitions in 24.7 s); LIGHTNING ASCENT causal loop (seam 0.09)",
+      "quote": "I like this edit make it a standard",
+      "handoff": "sync/handoffs/2026-11-12_flash_v17_MR_BLUE_SKY_standard.md"
+    },
     {
       "edit": "v14 KEEPSAKES",
       "folder": "v14/ (v12 engine + v14/work/sec14.py)",
@@ -774,6 +781,55 @@
         "faces and memories upright inside graphics",
         "the owner's named moment opens the edit, face in frame within ~0.3 s"
       ]
+    },
+    {
+      "from": "v17 MR. BLUE SKY",
+      "rule": "An emblem or symbol transition shows the object acting (lifts off, turns, transforms).",
+      "evidence": "it kind of feels incomplete and as if the emblem isn't really doing anything (v17 round 1)",
+      "applies_to": "all",
+      "check": "visual"
+    },
+    {
+      "from": "v17 MR. BLUE SKY",
+      "rule": "No block or slice wipes (split_slide rejected).",
+      "evidence": "the block transition with the three block lines (v17 round 1)",
+      "applies_to": "all",
+      "check": "visual"
+    },
+    {
+      "from": "v17 MR. BLUE SKY",
+      "rule": "Stay on Barry unless the owner asks (no supporting characters).",
+      "evidence": "I'd rather those just be flash scenes (v17 round 1)",
+      "applies_to": "all",
+      "check": "visual"
+    },
+    {
+      "from": "v17 MR. BLUE SKY",
+      "rule": "Check sources at full size for AI processing/distortion; no clothing recolour on a face; no speed-double shots.",
+      "evidence": "barrys mouth and facial features as well as part of the suit are distorted (v17 round 2)",
+      "applies_to": "all",
+      "check": "visual"
+    },
+    {
+      "from": "v17 MR. BLUE SKY",
+      "rule": "No full-frame sky or storm footage as a cover (cloud_break rejected).",
+      "evidence": "the half second of the clouds and lightning in the sky ... I don't like this scene (v17 round 2)",
+      "applies_to": "all",
+      "check": "visual"
+    },
+    {
+      "from": "v17 MR. BLUE SKY",
+      "rule": "An attention-grabber in the first ~1.5 s (a signature transition with its own physics and sound).",
+      "evidence": "a really cool and unique transition or focal point to try and get the viewers attention (v17 round 2)",
+      "applies_to": "all",
+      "check": "visual"
+    },
+    {
+      "from": "v17 MR. BLUE SKY",
+      "rule": "The loop is a causal event that keeps moving into frame 0.",
+      "evidence": "change the loop to something that's more creative and cool and visually appealing (v17 round 2)",
+      "applies_to": "all",
+      "check": "visual"
     }
   ]
 }

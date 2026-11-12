@@ -1,7 +1,7 @@
 # The owner's rules, on one page (both studios)
 
 Read this **before designing** an edit and again **before delivering** one. It distils every owner note and verdict
-(v4–v15, v101–v111) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
+(v4–v17, v101–v111) into the rules that are still in force; where two records conflict, the newer verdict wins and is the
 one written here. Evidence and history: `CLAUDE.md`, `studio/VOIDFX_STUDIO.md`, the handoffs in `sync/handoffs/`.
 Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' checks, one report) before any render · **[qc]** measured on the encode by
 `build.sh N qc` · **[eye]** judged on the sign-off sheets (`build.sh N signoff`) and by the fresh-eyes critique
@@ -28,6 +28,10 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 - **A mirrored pack shot**: read any text in the frame (v109: p7's tape read SSORƆ TON OD); flip it back with `hflip=True` (v109 base). **[eye]**
 - A line shown as spoken when the lips don't match (v101); captions on words the song isn't singing (v103).
 - Chimes, bells, shimmers, drones, swirls, whines, a swell on every move (v12, v106, v13). **[plan]** sound kinds (a WARN: v107 shipped one swirl)
+
+- **Block or slice wipes** (the frame split into panels that slide apart) (v17 round 1: *"the block transition with the three block lines"*; `split_slide` rejected). **[plan]** registry
+- **Full-frame sky or storm footage as a cover** (v17 round 2: *"the half second of the clouds and lightning in the sky … I don't like this scene"*; `cloud_break` rejected). **[plan]** registry
+- **AI-processed or distorted sources, a speed effect that doubles him, clothing recoloured on a face** (v17 round 2: *"barrys mouth and facial features as well as part of the suit are distorted"*, *"barry seperates into a speed mirage and himself"*): look at every source at full size; `flash_blitzkrieg` close-ups are warped. **[eye]**
 
 ## 2. Every first delivery already has (these were asked for again and again)
 1. **One signature custom graphic that becomes a transition**: on screen as a graphic for about a second, then it carries the cut (v106 tear lens, v13 light ribbon, v107 front page → stamp → banner). Asked for in **4 of the last 4** edits. **[plan]** `signature`
@@ -59,6 +63,9 @@ Markers: **[plan]** checked on the EDL by `tools/plan_check.py` (both studios' c
 26. **A creative loop in which the end causes the start**, never a flash, burst or fade into frame 0 (v111 rev 1: *"implement a new more creative loop"* after a muzzle-flash burst; THE TRACER: he fires, we whip after the tracer, and it lands as the light that blows on "shoot"). **[plan]** loop
 27. **A living graphic or animation in every section, on the shots, not only at the cuts** (particles, rays, light washes, a rising moon, dust in a beam), motivated by a light or material in the shot and kept off faces (v111 rev 1: *"I want more custom graphics and animations"*; the verdict: *"adequate"*). **[eye]**
 28. **"Adequate" is not "liked":** on a "best edit" brief, plan one designed animation per section and a signature that reads at phone size from the first delivery (v111 verdict). **[eye]**
+
+29. **An emblem or symbol transition shows the object acting**: it lifts off, turns, transforms into the next thing (v17 round 1: *"as if the emblem isn't really doing anything"* → EMBLEM IGNITE: the real emblem tears free, coin-flips and ignites into the sun). **[eye]**
+30. **An attention-grabber in the first ~1.5 s**: a signature transition with its own physics and sound (v17 round 2: *"a really cool and unique transition or focal point to try and get the viewers attention"* → SONIC BOOM). **[eye]**
 
 ## 3. Text
 - Dexter: every clearly sung line captioned word by word on its sung onset, in the v9 style (heavy caps, keyline, red emphasis, eased in). Flash: text is optional and titles must earn their place (v12 removed both).

@@ -1645,11 +1645,9 @@
    "studio": "flash"
   },
   "spin_roll": {
-   "verdict": "ok",
-   "tags": [
-    "spin"
-   ],
-   "evidence": "v17 rev 4: not mentioned in round 1 notes",
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
    "studio": "flash"
   },
   "cloud_break": {
@@ -1657,6 +1655,200 @@
    "tags": [],
    "evidence": "v17 round 2: \"fix the half second of the clouds and lightning in the sky that appear at 11 and a half seconds I don't like this scene\" (the storm footage used as a full-frame cloud cover)",
    "fix": "v17 round 3: ZIP (a lightning whip); don't fill the frame with sky footage as a cover",
+   "studio": "flash"
+  },
+  "sun_burst": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "sonic_boom": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "speed_zoom": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "glint_sweep": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "sky_whip": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "flare_cut": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "ray_rake": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "ghost_iris": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "prism": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "whip_pan": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "bolt_crack": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "rain_ripple": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "tilt_up": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "cloud_shadow": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "zip17": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "sun_open": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "sun_whip": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "balloon_rise": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "light_streak": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "throw_whip": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "bolt_window": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "blue_bloom": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "punch_cut": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "emblem_ignite": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "cube_turn": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "bokeh_rack": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "glare_wash": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "peel17": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "smear17": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "lightning_strike": {
+   "verdict": "liked",
+   "tags": [],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
+   "studio": "flash"
+  },
+  "loop17": {
+   "verdict": "liked",
+   "tags": [
+    "signature"
+   ],
+   "evidence": "v17 MR. BLUE SKY standard (2026-11-12): 'I like this edit make it a standard'",
    "studio": "flash"
   }
  },
