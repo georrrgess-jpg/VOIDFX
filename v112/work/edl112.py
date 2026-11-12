@@ -43,7 +43,7 @@ BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
 LOCK_FACE = dict(x=540, y=760, w=680)
 VO = []
-SET_PIECES = [("SUN LEAK", th(3.5), th(6.5)), ("VERTIGO", th(30), th(40)), ("THE GLINT", th(44.2), th(46)), ("THE ORBIT (loop)", th(65), th(68))]
+SET_PIECES = [("SUN LEAK", th(3.0), th(5.5)), ("VERTIGO", th(30), th(40)), ("THE GLINT", th(44.2), th(46)), ("THE ORBIT (loop)", th(65), th(68))]
 SIGNATURE = ["vertigo112"]
 HERO = ["flare112"]                        # the golden light: the sun leak, the flares, the glint
 HERO_TINS = ["leak112", "glint112"]
@@ -90,8 +90,8 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 
 SP = dict(look="gold112")
 # ---- "Wanna tell you 'bout the time" (e0-e38): golden hour and memory; the build to the drop
-shot("port", "s1", 0, 5, 366.00, 367.75, z=[(0, 1.00), (1, 1.04)], interp="flow", seg=True, **SP)                  # frame 0: the port at sunset (the orbit lands here)
-shot("profile", "s4", 5, 9, 196.80, 198.10, z=[(0, 1.00), (1, 1.04)], tin="leak112", interp="flow", **SP)           # his face in the sun
+shot("port", "s1", 0, 4, 366.00, 367.45, z=[(0, 1.00), (1, 1.04)], interp="flow", seg=True, **SP)                  # frame 0: the port at sunset (the orbit lands here)
+shot("profile", "s4", 4, 9, 196.70, 198.15, z=[(0, 1.00), (1, 1.04)], tin="leak112", interp="flow", **SP)           # his face in the sun
 shot("funeral", "p1", 9, 13, 51.30, 52.45, z=[(0, 1.00), (1, 1.04)], tin="prism112", interp="flow", **SP)          # the casket
 shot("redclose", "dmx", 13, 17, 394.00, 395.40, z=[(0, 1.00), (1, 1.03)], tin="emerge111", interp="flow", **SP)
 shot("dusk", "s1", 17, 21, 379.95, 381.35, z=[(0, 1.00), (1, 1.04)], tin="lookup111", interp="flow", **SP)         # he looks up at the evening

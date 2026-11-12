@@ -1154,7 +1154,7 @@ def main112():
     n = N + PRE; th = E.th
     fx = np.zeros((n, 2), np.float32)
     td = th(E.HDROP)
-    place(fx, A2.whoosh(0.9, -27, 1201, True), th(5) - 0.55)                                          # SUN LEAK: the light swells across
+    place(fx, A2.whoosh(0.9, -27, 1201, True), th(4) - 0.55)                                          # SUN LEAK: the light swells across
     place(fx, stereo(hum_rise(2.6, -31, 70, 220)), th(30.6))                                         # VERTIGO: the world closing in
     place(fx, rev_swell(0.9, -23, 1202), td - 0.9)                                                     # ... drawn in to the drop
     place(fx, stereo(sub_drop(-12, 0.8, 58, 28)), td + 0.01)                                           # the snap

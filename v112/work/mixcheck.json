@@ -5,23 +5,23 @@
   {
    "name": "SUN LEAK",
    "kind": "set piece",
-   "at": 1.27,
-   "t0": 1.27,
-   "t1": 2.35,
-   "music_db": -16.4,
-   "fx_peak_db": -30.5,
-   "fx_minus_music": -14.1,
+   "at": 1.08,
+   "t0": 1.08,
+   "t1": 1.99,
+   "music_db": -16.7,
+   "fx_peak_db": -30.6,
+   "fx_minus_music": -14.0,
    "buried": true
   },
   {
    "name": "leak112",
    "kind": "transition",
-   "at": 1.81,
-   "t0": 1.51,
-   "t1": 2.26,
-   "music_db": -15.9,
+   "at": 1.45,
+   "t0": 1.15,
+   "t1": 1.9,
+   "music_db": -16.6,
    "fx_peak_db": -30.5,
-   "fx_minus_music": -14.7,
+   "fx_minus_music": -14.0,
    "buried": true
   },
   {
@@ -190,7 +190,7 @@
    "buried": true
   },
   {
-   "name": "brush110",
+   "name": "light_sweep108",
    "kind": "transition",
    "at": 19.52,
    "t0": 19.22,
