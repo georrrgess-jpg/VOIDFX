@@ -1425,7 +1425,7 @@ def hook_pt(tau, fs):
 HOOK_T = (-0.16, 1.12)
 def streak_draw(s, f, person, img):
     """THE TIME STREAK, drawn into a frame of the street shot (f may be negative: the loop's virtual frames)."""
-    tau = f / FPS
+    tau = f / FPS; fi = int(math.floor(f))
     if tau < HOOK_T[0] - 0.02 or tau > HOOK_T[1] + 1.6: return img
     fs = fs3_of(s, f) or (W * 0.5, H * 0.40, 300.0)
     cvb, cvf = bolt_canvas(), bolt_canvas(); glb = np.zeros((H // 4, W // 4), F32); glf = np.zeros_like(glb)
@@ -1448,11 +1448,11 @@ def streak_draw(s, f, person, img):
     live = HOOK_T[0] <= tau <= HOOK_T[1]
     if live:                                                                                   # crackle round the head
         for k in range(3):
-            i = len(ts) - 3 - 4 * k - (f % 3)
+            i = len(ts) - 3 - 4 * k - (fi % 3)
             if i < 1: break
             a = pts[i]; L_ = 90 + 40 * k
-            put_bolt(cvb if hbeh else cvf, (a[0], a[1]), (hx + 0.6 * L_ * math.cos(f * 0.9 + k * 2.1), hy + 0.6 * L_ * math.sin(f * 1.3 + k)),
-                     18800 + k + 7 * (f // 2), 2, 0.34, 5, 1, val=200)
+            put_bolt(cvb if hbeh else cvf, (a[0], a[1]), (hx + 0.6 * L_ * math.cos(fi * 0.9 + k * 2.1), hy + 0.6 * L_ * math.sin(fi * 1.3 + k)),
+                     18800 + k + 7 * (fi // 2), 2, 0.34, 5, 1, val=200)
     rng = np.random.default_rng(1888)                                                          # the embers it sheds (analytic paths)
     for k in range(46):
         te = HOOK_T[0] + k * (HOOK_T[1] - HOOK_T[0]) / 46; age = tau - te
@@ -1472,14 +1472,14 @@ def streak_draw(s, f, person, img):
         lt = light_rgb(cv, 1.8, HOT, GOLD18)
         gw = cv2.resize(cv2.GaussianBlur(gl, (0, 0), 3) * 1.3 + cv2.GaussianBlur(gl, (0, 0), 12) * 2.0, (W, H))[..., None] * (GOLD18 * 0.8 + HOT * 0.2)
         lay = lt + gw
-        if behind: o = o + lay * (1 - pm)
+        if behind: o = o + kmul(lay * (1 - pm), face_keep(s, f, 0.9))
         else: o = o + kmul(lay, face_keep(s, f, 1.15))
     if live:                                                                                   # its light: on the street behind him, a rim on his edge
         d = np.sqrt((_GX - hx) ** 2 + (_GY - hy) ** 2)
         wash = np.exp(-(d / 420.0) ** 2).astype(F32)
         if person is not None:
             rim = np.clip(person - cv2.erode(person, np.ones((9, 9), np.uint8)), 0, 1) * np.exp(-(d / 700.0) ** 2)
-            o = o + (wash * 0.20 * (1 - pm[..., 0]))[..., None] * GOLD18 + kmul((rim * 0.9).astype(F32), face_keep(s, f, 1.0))[..., None] * GOLD18
+            o = o + kmul((wash * 0.20 * (1 - pm[..., 0]))[..., None] * GOLD18, face_keep(s, f, 1.0)) + kmul((rim * 0.9).astype(F32), face_keep(s, f, 1.25))[..., None] * GOLD18
         else:
             o = o + (wash * 0.20)[..., None] * GOLD18
     return np.clip(o, 0, 1)
@@ -1600,7 +1600,7 @@ def bokeh_bloom(A, B, j, f, sa, sb, pre=8, post=12):
     """BOKEH BLOOM (the street -> the dusk): the street's lights swell into big soft discs that rise, and the dusk racks
     into focus behind them."""
     x = _x(j, pre, post); k = math.sin(math.pi * clamp(x, 0, 1)); r = 34 * k ** 1.2
-    w = smooth(clamp((x - 0.38) / 0.28, 0, 1))
+    w = smooth(clamp((x - 0.28) / 0.48, 0, 1))
     a = defocus16(shift_img(A, 0, -60 * smooth(x)), r); b = defocus16(B, r)
     o = a * (1 - w) + b * w
     hi = np.clip(cv2.resize(cv2.resize(A, (W // 8, H // 8), interpolation=cv2.INTER_AREA).max(2), (W, H)) - 0.55, 0, 1)
@@ -1810,7 +1810,7 @@ def glint_star(A, B, j, f, sa, sb, pre=6, post=8):
     x = _x(j, pre, post); k = math.sin(math.pi * clamp(x, 0, 1)) ** 1.2
     if _HO.get("gs_n") != sa["n"]: _HO["gs_n"] = sa["n"]; _HO["gs"] = hi_point(edge15(sa, "last"), sa, sa["f1"] - 1, 0.66)
     px, py = _HO["gs"]
-    w = smooth(clamp((x - 0.40) / 0.20, 0, 1)); o = A * (1 - w) + B * w
+    w = smooth(clamp((x - 0.28) / 0.44, 0, 1)); o = A * (1 - w) + B * w
     st = star_glint(px, py, 120 + 700 * k, 1.0, rot=0.35 + 0.4 * x)
     addc(o, kmul(st, live_keep(sa, sb, j, f, w, 1.2)), GOLD18 * 0.5 + HOT * 0.5, 0.8 * k)
     return np.clip(o, 0, 1)
@@ -2002,13 +2002,13 @@ def loop_fx18(img, person, s, f):
     o = img
     cv = bolt_canvas(); chg = smooth(clamp(t / 0.30, 0, 1))                                    # 1. the lightning builds and runs back
     for k in range(4):
-        y_ = H * (0.42 + 0.09 * k) + 30 * math.sin(tt * 7 + k)
+        y_ = H * (0.62 + 0.07 * k) + 30 * math.sin(tt * 7 + k)
         put_bolt(cv, (W * (1.05 - 0.15 * k), y_), (W * (0.15 - 0.25 * chg), y_ + 40 * math.sin(k * 2.3)), 18950 + k + 7 * (f // 2), 3, 0.22, 6, 2, val=int(255 * (0.35 + 0.65 * chg)))
     o = hblur(o, 2 + 60 * chg)
     T = smoother(clamp((t - 0.28) / 0.72, 0, 1))                                              # 2. the tear opens
     if T <= 0:
         return np.clip(o + light_rgb(cv, 1.0, HOT, GOLD18), 0, 1)
-    V = frame_virtual(f - E.DUR_F)
+    V = frame_virtual(f - E.DUR_F + (0.5 if f == E.DUR_F - 1 else 0.0))
     yc, n1, n2 = tear_profile()
     h = 2.7 * H * T ** 3.5
     top = (yc - h / 2 * (1 + 0.12 * n1))[None, :]; bot = (yc + h / 2 * (1 + 0.12 * n2))[None, :]

@@ -107,7 +107,7 @@ shot("sfrun", "fs2", 40, 42, 144.55, 145.40, tin="lightbar_streak", seg=False, f
 shot("charge", "fs5", 42, 44, 180.00, 180.90, tin="spark_jump", seg=True)
 shot("s3mask", "fs3", 44, 46, 106.80, 107.70, tin="cube_turn", seg=True)
 shot("loft", "fs3", 46, 48, 48.20, 48.95, tin="arc_sweep", seg=True, face=None, cx=(810, 800), face_hint=(540, 560, 150))                                # he vanishes into a streak
-shot("shades", "fs3", 48, 52, 27.70, 29.25, tin="streak_carry", seg=True, anim="glare")            # "I'm a weirdo": he lowers his sunglasses
+shot("shades", "fs3", 48, 52, 28.74, 29.28, tin="streak_carry", seg=True, anim="glare")            # "I'm a weirdo": he lowers his sunglasses
 shot("corridor", "fs1", 52, 54, 255.55, 256.40, tin="shades_glint", seg=True)                      # the S1 suit grinning
 shot("fire", "fbh", 54, 56, 84.45, 85.05, tin="flicker_cut", seg=True, anim="embers")              # Barry in the suit, lightning round him
 shot("fly", "fbh", 56, 58, 81.00, 81.90, tin="peel17", seg=True, face=None, cx=(600, 640), tmap=vel(56, 58, 81.00, 81.90), lin=True, flowmax=40, flowfall="blend")   # "What"

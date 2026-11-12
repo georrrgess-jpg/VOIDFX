@@ -745,14 +745,12 @@ def main():
     fx = np.zeros((n, 2), np.float32)
     place(fx, streak_pass(-16, 1801, 0.42, (0.9, -0.9)), 0.0)                                   # THE HOOK: the streak tears past behind him
     place(fx, streak_pass(-17, 1802, 0.55, (-0.8, 0.8)), 0.50)                                  # ... and back across in front
-    place(fx, stereo(click_switch(-24), 0.3), th(8) + 0.02)                                     # LAMP ON
     place(fx, stereo(thunder(-13, 1810, 1.2)), th(28) - 0.01)                                   # THE STRIKE (crunch 1)
     place(fx, stereo(A2.impact(-11, (50, 28), 0.7, 0.5, 1811)), th(28)); place(fx, stereo(crackle(0.9, -22, 1812, 0.7)), th(28) + 0.10)   # the colour floods out
     place(fx, stereo(heartbeat(-14)), th(33))                                                   # he wakes (crunch 2)
     cl = crackle(1.2, -21, 1813, 0.5); cl = cl * np.linspace(0.15, 1.0, len(cl)) ** 1.5
     place(fx, stereo(cl.astype(np.float32)), th(37) - 1.2)                                      # THE DROP: the current climbs ...
     place(fx, stereo(A2.impact(-10, (55, 30), 0.8, 0.55, 1814)), th(37)); place(fx, stereo(sub_drop(-14, 0.8, 70, 28)), th(37) + 0.01)   # ... "creep"
-    place(fx, stereo(neon_buzz(0.30, -26, (1, 0, 1, 0, 0, 1, 1, 1))), th(54) - 0.12)            # FLICKER CUT: the tube light stutters
     place(fx, stereo(crackle(0.55, -21, 1815, 0.8)), th(61.5))                                  # EMBLEM BOLT: it charges
     eb = rev(A2.whoosh(0.85, -14, 1816, True)); place(fx, eb.astype(np.float32), th(64) - len(eb) / SR + 0.04)   # ... lifts off and flies at the lens
     place(fx, stereo(sub_drop(-15, 0.7, 64, 28)), th(64) + 0.01)
