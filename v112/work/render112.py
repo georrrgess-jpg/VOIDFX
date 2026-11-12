@@ -15344,9 +15344,9 @@ def _orb_frame(A, B, offB, r, vel):
             mB = (_GX >= left).astype(np.float32)
             o = a * (1 - mB[..., None]) + o * mB[..., None]
             if r > 0.02:                                                            # the low sun between the two places
-                dx = _GX - left; dy = _GY - H * 0.34; rr = np.sqrt(dx * dx + dy * dy)
+                dx = _GX - left; dy = _GY - H * 0.47; rr = np.sqrt(dx * dx + dy * dy)
                 sun = (np.exp(-(rr / 150.0) ** 2) * 0.85 + np.exp(-(rr / 520.0) ** 2) * 0.30 +
-                       np.exp(-(dy / 16.0) ** 2) * np.exp(-np.abs(dx) / 520.0) * 0.45) * r ** 1.3
+                       np.exp(-(dy / 14.0) ** 2) * np.exp(-np.abs(dx) / 300.0) * 0.45) * r ** 1.3
                 o = o + sun[..., None] * np.array([0.42, 0.72, 1.0], np.float32)
     k = int(1 + 1.1 * vel) | 1
     if k > 2: o = cv2.blur(o, (k, 1), borderType=cv2.BORDER_REPLICATE)
