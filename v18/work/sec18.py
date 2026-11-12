@@ -1861,8 +1861,8 @@ def lamp_bloom(A, B, j, f, sa, sb, pre=8, post=10):
     if _HO.get("lm_n") != sa["n"]: _HO["lm_n"] = sa["n"]; _HO["lm"] = hi_point(edge15(sa, "last"), sa, sa["f1"] - 1, 0.62)
     sx, sy = _HO["lm"]
     d = np.sqrt((_GX - sx) ** 2 + (_GY - sy) ** 2).astype(F32)
-    R = math.hypot(W, H) * 1.1 * smooth(clamp((x - 0.12) / 0.80, 0, 1)) ** 1.25
-    m = np.clip((R - d) / (30 + 0.14 * R) + 0.5, 0, 1).astype(F32)
+    R = math.hypot(W, H) * 1.1 * smooth(clamp((x - 0.02) / 0.90, 0, 1)) ** 1.25
+    m = np.clip((R - d) / (120 + 0.25 * R) + 0.5, 0, 1).astype(F32)
     Bl = B * (1 + 0.5 * k) + (GOLD18 * 0.5 + HOT * 0.5) * 0.06 * k                            # the next shot comes up out of the light
     base = A * (1 - m[..., None]) + Bl * m[..., None]
     o = base + cv2.GaussianBlur(np.clip(base - 0.45, 0, 1), (0, 0), 24) * 1.2 * k * (GOLD18 * 0.5 + 0.5)
@@ -2102,7 +2102,7 @@ def streak_wipe(A, B, j, f, sa, sb, pre=10, post=14):
     passed = np.clip((hx - xs) / 260.0, 0, 1)                                                  # how long ago the streak passed each column
     rev = H * 1.15 * smooth(clamp((x - 0.25) / 0.70, 0, 1)) * (0.3 + 0.7 * passed)
     edge_y = (py(xs) + rev)[None, :]
-    wv = smooth(clamp((x - 0.38) / 0.30, 0, 1))                                              # the next shot comes through under its light
+    wv = smooth(clamp((x - 0.25) / 0.55, 0, 1))                                              # the next shot comes through under its light
     o = A * (1 - wv) + B * wv
     wake = np.clip(1 - _GY / (H * 0.55), 0, 1).astype(F32) * math.sin(math.pi * clamp(x, 0, 1)) ** 1.5
     o = o * (1 + 0.45 * wake[..., None] * (GOLD18 * 0.5 + 0.5))
@@ -2337,7 +2337,7 @@ def loop_fx18(img, person, s, f):
     o = hblur(o, 2 + 50 * chg)
     tip = smooth(clamp((t - 0.10) / 0.26, 0, 1))                                              # the crack races along from the right
     if tip <= 0:
-        return np.clip(o + light_rgb(cv, 1.0, HOT, GOLD18), 0, 1)
+        return np.clip(o + kmul(light_rgb(cv, 1.0, HOT, GOLD18), face_keep(s, f, 1.3)), 0, 1)
     V = frame_virtual(f - E.DUR_F + (0.5 if f == E.DUR_F - 1 else 0.0))
     yc, n1, n2 = tear_profile()
     tipx = W * (1.06 - 1.15 * tip)
@@ -2364,6 +2364,8 @@ def loop_fx18(img, person, s, f):
     fk0 = 1.0 if fm0 is None else (1 - fm0[..., 0] * inside)[..., None]
     edge = ((np.exp(-((_GY - top) / 8.0) ** 2) + np.exp(-((_GY - bot) / 8.0) ** 2)) * xm[None, :]).astype(F32)
     glow = ((np.exp(-((_GY - top) / 46.0) ** 2) + np.exp(-((_GY - bot) / 46.0) ** 2)) * xm[None, :]).astype(F32)
+    fko = face_keep(s, f, 1.3)                                                                 # and none crosses the runner's face outside it
+    if not isinstance(fko, float): fk0 = (fk0 if not isinstance(fk0, float) else 1.0) * (1 - (1 - fko) * (1 - inside[..., None]))
     addc(o, kmul((edge * fade).astype(F32), fk0), HOT * 0.6 + GOLD18 * 0.4, 1.1); addc(o, kmul((glow * fade).astype(F32), fk0), GOLD18, 0.45)
     if tip < 1:                                                                                # the crack's racing tip
         ty_ = float(yc[int(clamp(tipx, 0, W - 1))])
@@ -2381,7 +2383,7 @@ def loop_fx18(img, person, s, f):
     addc(o, kmul(sp.astype(F32), fk0), AMBER18 * 0.5 + HOT * 0.5, 0.9)
     cv2.polylines(cv, [np.stack([np.arange(0, W, 8), top[0, ::8]], 1).astype(np.int32)], False, int(190 * fade), 2, cv2.LINE_AA)
     cv2.polylines(cv, [np.stack([np.arange(0, W, 8), bot[0, ::8]], 1).astype(np.int32)], False, int(190 * fade), 2, cv2.LINE_AA)
-    o = o + light_rgb(cv, 1.0, HOT, GOLD18) * (1 - inside[..., None])
+    o = o + kmul(light_rgb(cv, 1.0, HOT, GOLD18) * (1 - inside[..., None]), fko)
     if t > 0.985: o = V
     return np.clip(o, 0, 1)
 
