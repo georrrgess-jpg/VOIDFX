@@ -83,7 +83,7 @@ The hero is **THE TIME STREAK**: the hook, the strike's front and the loop.
 | 60–64 | the S4 suit; the emblem charges | **BOKEH RACK** (v17, liked) |
 | 64–68 | the Speed Force (S3); *mist, lightning in it* | **EMBLEM BOLT** |
 | 68–72 | "am I doing here": alone in the pipeline cell (S1); *rings of blue light pulse from its door* | **MIST PASS** |
-| 72–80 | he runs back in time (S1); **THE TIME TEAR** from e76 | **VAULT BLOOM** |
+| 72–80 | he runs back in time (S5); **THE TIME TEAR** from e74 | **VAULT BLOOM** |
 
 24 shots, 23 transitions plus the loop, all custom or liked; no text. The beat camera breathes in the verse
 (0.3–0.45 of its punch), punches on every beat in the chorus and rests for the loop.
@@ -126,18 +126,32 @@ more creative transitions and animations."*
   - a flare as it fills the lens, and the Speed Force inside it settles out of a zoom and a soft focus until it is all
     there is.
 - **THE TIME TEAR, polished:**
-  - a brighter, cleaner piece of the time run at about its own speed (no ghosting);
+  - the dark S1 time run is replaced by the bright S5 run (fs5 108.5–110.85 s): he runs leftward, lightning streaming off
+    him, at about its own speed;
   - a crack full of light races along a bolt from right to left, then tears open;
   - the halves are pushed apart and motion-blurred, embers lift off the burning edges, and a breath of light comes from
     inside;
+  - the tear opens about a second sooner, so frame 0 shows early, and its edges pass faces softly;
   - the tear opens onto frame 0.
 - **New transitions:**
   - VERTIGO: a dolly zoom; he holds his size while the world behind him rushes in;
   - STREAK WIPE: the speedster crosses the sky and its wake pulls the next shot down like a curtain;
   - CRASH ZOOM: into his lightning and out on the mask;
   - EMBER BURN: the fire round him catches the frame and burns across it.
-- **New animations:** cold dust drifting by the brick wall; gold shafts of light in the sky; blue rings pulsing from the
-  vault door.
+- **New animations:** cold dust drifting by the brick wall; gold shafts of light in the sky; the vault's own blue light
+  rippling out from its door.
+- **Round 2's fresh-eyes critique (2 HIGH):**
+  - the loop's dark run is replaced, and the tear opens sooner;
+  - the emblem bolt now lifts at its real size, is bevel-lit, and opens into light (no hard wedge across his face).
+
+  Also fixed:
+  - the sky shot is trimmed before a hidden source cut (126.2 s);
+  - the bokeh rack no longer doubles the emblem;
+  - the vault rings are now the vault's light;
+  - the streak wipe is a dissolve under the streak's light (no hole through his face);
+  - softer window glow and ray rake;
+  - the bloom into the loop is slower and softer.
+- **QC (round 2):** 11/11 on the encode; loop seam 0.76; −12.7 LUFS, −3.6 dBTP after AAC.
 
 ## Files
 `work/edl18.py` (the EDL), `work/sec18.py` (the edit's section: v17's toolkit plus the v18 section at the end, spliced
