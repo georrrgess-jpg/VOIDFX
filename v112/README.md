@@ -13,7 +13,7 @@ it should reflect that. and I would like this edit to be completed in an efficie
 **WANNA TELL YOU 'BOUT THE TIME.** The song is a son talking to his dead father; Dexter's dead father is Harry, who gave
 him the Code. The edit is what Dexter would tell him.
 - **Golden hour and memory** through the long held *"Wanna tell you 'bout the time…"* (the break, no bass): the port at
-  sunset (frame 0), his face in the sun (a SUN LEAK burns across the film), the funeral (the picture splits into its
+  sunset (frame 0), his face against the low sun at the parade (a SUN LEAK burns across the film, the next shot behind its front), the funeral (the picture splits into its
   colours through a PRISM), him in the car by day, looking up at the evening, the night drive, the kill room.
 - **VERTIGO** (the signature, the build into the drop): at the cemetery by the lake, the camera does a dolly zoom: he stays
   the same size while the cemetery behind him compresses toward him, softening and warming, as the song builds. On the
@@ -21,9 +21,11 @@ him the Code. The edit is what Dexter would tell him.
 - **The drop** is the life he'd tell Harry about: the palm-lined street at speed, the sunglasses going on (**THE GLINT**:
   the sun catches the brightest point beside him and throws an anamorphic streak), the grin, the mask, *"all the times
   that I had"* on his blood slides, the kill room, the crime scene's light bar, the fronds, the tear, the fire.
-- **THE ORBIT** (the loop, a camera move): the camera arcs round him: the world behind slides past in motion blur while
-  he turns in place (parallax), the frame rolls a little, the sun passes, and the arc comes round to him at the port:
-  frame 0. The last stretch of the arc carries on over frame 0's first half-second, so the loop never stops moving.
+- **THE ORBIT** (the loop, a camera move): the last shot and frame 0 sit side by side round him like one panorama; the
+  camera swings across from one to the other, the frame turning in perspective and rolling with the swing, the motion
+  blur following its speed, and the low sun between the two places passes through the lens: the swing through the
+  sunset lands on him at the port at sunset (frame 0). The swing is still settling over frame 0's first half-second, so
+  the loop never stops moving.
 - **Living animation:** anamorphic flares drift from the sun in the golden shots (only on a real light, never across his
   face); dust floats in the low light; red halation round every highlight.
 
@@ -58,3 +60,15 @@ drop on the snap; the glint's whoosh; a far siren whoop at the crime scene; THE 
   swap inside the peak motion blur.
 - The glint swapped two faces in a crossfade (now inside the burst); the brush's jagged edge crossed his face (now a light
   sweep).
+
+## Before delivery: QC rounds
+- **Round 1** (QC 10/11): the sunlit profile close-up was wider than the 9:16 frame (face cut off) and a dead span
+  (1.8–2.9 s); THE ORBIT read as a cut-out of him in front of a sliding plate and swapped two Dexters in a crossfade;
+  the prism and the sun leak each showed both shots at once; two library transitions (bokeh, nightfall) stopped on a
+  non-zero effect (pops). Fixed: the sunset parade close-up; THE ORBIT rebuilt as one camera swing on the whole picture
+  through the sun (no cut-out, no crossfade); the leak's front carries the next shot; the prism swaps inside its peak
+  blur; the tapers; VERTIGO lengthened to 1.0 s and its first frames no longer blend the unzoomed grave.
+- **Round 2–3:** the grin (an extreme close-up cut at the eyebrows) became the lab smirk into the lens; the prism's swap
+  moved under a soft warm peak (a 52-level pop at 3.3 s); the flare no longer lands on the white shirt in the last shot.
+- **Round 4:** the warm close-up (cut off) became the kitchen smirk in the blinds' light, into which the light sweep is
+  motivated.
