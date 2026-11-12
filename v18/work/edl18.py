@@ -31,7 +31,8 @@ SONG_STEMS = f"{ROOT}/{VER}/audio/sep/htdemucs/win"; STEMS_T0 = 40.565
 FPS, W, H = 60, 1080, 1920
 SRC = {"fbh": (f"{ROOT}/src/flash_b_hq.mp4", 60.0, 1280, 720),
        "fs1": (f"{ROOT}/src/flash_s1.mp4", 30.0, 1280, 720), "fs2": (f"{ROOT}/src/flash_s2.mp4", 60.0, 1280, 720),
-       "fs3": (f"{ROOT}/src/flash_s3.mp4", 30.0, 1280, 720), "fs5": (f"{ROOT}/src/flash_s5.mp4", 23.976, 1280, 720)}
+       "fs3": (f"{ROOT}/src/flash_s3.mp4", 30.0, 1280, 720), "fs5": (f"{ROOT}/src/flash_s5.mp4", 23.976, 1280, 720),
+       "fbk": (f"{ROOT}/src/flash_blitzkrieg.mp4", 60.0, 1280, 720)}
 
 HB, HB_OFF = 0.326460, 0.2741
 H0, H1 = 148, 228
@@ -91,11 +92,11 @@ def shot(n, src, e0, e1, a, b, **kw):
 # ---- "I wish I was special" (e0.8-e8): ORDINARY, cold; the only colour is the speedster's
 shot("street", "fs3", 0, 4, 3.75, 4.86, tin="loop18", seg=True, lin=True, tmap=[(-0.5, 3.195), (0, 3.75), (1, 4.86)], tneg=True,
      z=LinZ([(0, 1.02), (1, 1.06)]), look="cold", anim="hook")                    # frame 0: Barry on a night street; THE HOOK: a gold streak tears past behind him
-shot("dusk", "fs3", 4, 6, 9.00, 9.75, tin="bokeh_bloom", seg=True, look="cold", anim="breath")     # he looks off under a grey dusk
+shot("dusk", "fs3", 4, 6, 115.00, 116.20, tin="bokeh_bloom", seg=True, face=None, cx=(540, 560), look="cold", anim="breath")     # alone outside at night
 shot("lab", "fs1", 6, 8, 66.00, 66.80, tin="window_glow", seg=True, look="cold")                    # "special": at work in the CCPD lab
 shot("lamp", "fs3", 8, 11, 41.55, 42.95, tin="lamp_on", seg=True, look="cold", anim="lampdust")    # by the lamp, Iris's back in the foreground
-shot("iris", "fs1", 11, 15, 234.20, 235.70, tin="eyeline_whip", seg=True, look="cold")             # "You're": Iris
-shot("hair", "fs1", 15, 19, 237.80, 238.76, tin="wind_gust", seg=True, look="cold", anim="gustleaves")   # "so": her hair blows; the Flash has just passed her
+shot("iris", "fs1", 11, 15, 234.20, 235.70, tin="flare_cut", seg=True, look="cold")             # "You're": Iris
+shot("hair", "fs1", 15, 19, 237.80, 238.76, tin="grit_gust", seg=True, look="cold", anim="gustleaves")   # "so": her hair blows; the Flash has just passed her
 shot("mask", "fs1", 19, 23, 221.75, 222.95, tin="hair_whip", seg=True, look="cold", keepred=1.0, anim="crackle")   # "f***ing special": the Flash she sees, his red the one colour
 shot("alone", "fs1", 23, 28, 74.00, 75.60, tin="colour_drain", seg=True, look="cold", anim="stormlight")   # Barry alone in the dark; the storm builds outside
 # ---- the crunches: THE STRIKE (e28) and the wake (e33)
@@ -105,10 +106,10 @@ shot("wake", "fs1", 33, 37, 4.45, 4.98, tin="heartstart", seg=True, lin=True)   
 shot("hero", "fbh", 37, 40, 109.80, 110.95, tin="current_climb", seg=True, anim="crackle")          # THE DROP: he is the Flash
 shot("sfrun", "fs2", 40, 42, 144.55, 145.40, tin="lightbar_streak", seg=False, face=None, cx=(1040, 1000), tmap=vel(40, 42, 144.55, 145.40), lin=True, flowmax=40, flowfall="blend")
 shot("charge", "fs5", 42, 44, 180.00, 180.90, tin="spark_jump", seg=True)
-shot("s3mask", "fs3", 44, 46, 106.80, 107.70, tin="cube_turn", seg=True)
+shot("city", "fbk", 44, 46, 70.25, 71.25, tin="cube_turn", seg=False, face=None, cx=(700, 680))   # the city at night, his streak across it
 shot("loft", "fs3", 46, 48, 48.20, 48.95, tin="arc_sweep", seg=True, face=None, cx=(810, 800), face_hint=(540, 560, 150))                                # he vanishes into a streak
 shot("shades", "fs3", 48, 52, 28.74, 29.28, tin="streak_carry", seg=True, anim="glare")            # "I'm a weirdo": he lowers his sunglasses
-shot("corridor", "fs1", 52, 54, 255.55, 256.40, tin="shades_glint", seg=True)                      # the S1 suit grinning
+shot("lobby", "fs1", 52, 54, 249.80, 250.70, tin="shades_glint", seg=True, face=None, cx=(420, 520))   # the S1 suit walks in
 shot("fire", "fbh", 54, 56, 84.45, 85.05, tin="flicker_cut", seg=True, anim="embers")              # Barry in the suit, lightning round him
 shot("fly", "fbh", 56, 58, 81.00, 81.90, tin="peel17", seg=True, face=None, cx=(600, 640), tmap=vel(56, 58, 81.00, 81.90), lin=True, flowmax=40, flowfall="blend")   # "What"
 shot("run", "fs5", 58, 60, 72.00, 72.90, tin="smear17", seg=True, tmap=vel(58, 60, 72.00, 72.90), lin=True, flowmax=40, flowfall="blend")
@@ -117,7 +118,7 @@ shot("emblem", "fbh", 60, 64, 82.50, 83.75, tin="bokeh_rack", seg=True)         
 shot("sf", "fs3", 64, 68, 129.00, 129.85, tin="emblem_bolt", seg=True, look="force", anim="mist")    # inside the bolt: the Speed Force
 shot("cry", "fs3", 68, 72, 130.85, 132.40, tin="mist_pass", seg=True, look="force", anim="bokehdrift")   # Iris in tears
 # ---- "I don't belong here": he runs back in time (THE TIME TEAR, the loop)
-shot("timerun", "fs1", 72, 80, 138.10, 142.60, tin="lamp_bloom", seg=True, face=None, cx=(560, 640), face_hint=(470, 560, 180), tmap=slow(72, 80, 138.10, 142.60, -0.45), lin=True, flowmax=40, flowfall="blend", ev=0.30)   # he runs back in time; THE TIME TEAR
+shot("timerun", "fs1", 72, 80, 138.10, 142.60, tin="lamp_bloom", seg=True, face=None, cx=(560, 640), face_hint=(470, 560, 180), tmap=slow(72, 80, 138.10, 142.60, -0.45), lin=True, flowmax=40, flowfall="blend", ev=0.65)   # he runs back in time; THE TIME TEAR
 
 EMB_TRACK = [(82.3, 448.6, 420.6, 78.9), (82.35, 452.4, 423.0, 77.7), (82.4, 459.1, 427.5, 74.3), (82.45, 465.4, 433.1, 70.9), (82.5, 469.5, 437.7, 69.1), (82.55, 472.4, 441.5, 69.6), (82.6, 472.1, 442.2, 69.6), (82.65, 472.6, 444.3, 67.0), (82.7, 475.9, 448.7, 63.6), (82.75, 480.7, 453.3, 61.4), (82.8, 482.0, 455.9, 61.6), (82.85, 481.5, 458.0, 61.5), (82.9, 479.6, 459.3, 62.3), (82.95, 478.3, 461.1, 62.5), (83.0, 476.9, 463.5, 62.5), (83.05, 476.0, 465.0, 60.9), (83.1, 475.0, 466.9, 60.3), (83.15, 480.8, 471.2, 59.8), (83.2, 489.6, 476.3, 59.0), (83.25, 490.4, 478.2, 58.4), (83.3, 476.5, 474.6, 58.7), (83.35, 460.6, 473.4, 59.2), (83.4, 461.1, 477.0, 58.6), (83.45, 456.8, 480.1, 58.7), (83.5, 447.1, 482.1, 59.4), (83.55, 437.3, 484.4, 60.3), (83.6, 433.9, 486.8, 60.4), (83.65, 431.8, 489.0, 60.3), (83.7, 430.4, 491.6, 60.3), (83.75, 429.6, 493.1, 60.2)]   # the chest emblem in flash_b_hq 82.3-83.75 s (Hough circle per source frame, smoothed): (t, x, y, r)
 SET_PIECES = [("hook", th(-1), th(3)), ("colour_strike", th(28), th(33)), ("the_drop", th(35), th(39)), ("emblem_bolt", th(61), th(66)), ("time_tear", th(76), th(80))]

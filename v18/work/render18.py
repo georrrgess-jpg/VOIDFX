@@ -11497,7 +11497,8 @@ def fs3_of(s, f):
 def red_mask(img):
     B_, G_, R_ = img[..., 0], img[..., 1], img[..., 2]
     hue = (R_ - G_) / (R_ + 1e-3)
-    return (np.clip((hue - 0.52) / 0.14, 0, 1) * np.clip((R_ - np.maximum(G_, B_) - 0.10) / 0.12, 0, 1)).astype(F32)
+    m = np.clip((hue - 0.18) / 0.17, 0, 1) * np.clip((R_ - np.maximum(G_, B_) - 0.05) / 0.12, 0, 1)
+    return cv2.GaussianBlur(m.astype(F32), (0, 0), 3.0)                                        # the whole suit and cowl, smoothly (no blotches in its shadows)
 
 def coldify(img, keep=None):
     """the ordinary world: the colour drained to a cold slate (a trace of it left), flatter blacks lifted toward blue;
@@ -11586,13 +11587,13 @@ def hook_pt(tau, fs):
     if tau <= 0.36:
         u = (tau + 0.16) / 0.52
         return W + 260 - (W + 520) * u, yb + 90 * math.sin(math.pi * u) - 50 * u, True
-    if tau <= 0.46:
-        return -260.0, yb + (yf - yb) * (tau - 0.36) / 0.10, True
-    u = clamp((tau - 0.46) / 0.66, 0, 1); u = u * u * (1.6 - 0.6 * u) if u < 1 else 1.0
-    p0, p1, p2 = (-260.0, yf), (side + 140, yf + 40), (side - 40, -320.0)
+    if tau <= 0.40:
+        return -260.0, yb + (yf - yb) * (tau - 0.36) / 0.04, True
+    u = clamp((tau - 0.40) / 0.66, 0, 1); u = u * u * (1.6 - 0.6 * u) if u < 1 else 1.0
+    p0, p1, p2 = (-140.0, yf), (side + 140, yf + 40), (side - 40, -320.0)
     x, y = bez(p0, p1, p2, u); return x, y, False
 
-HOOK_T = (-0.16, 1.12)
+HOOK_T = (-0.16, 1.06)
 def streak_draw(s, f, person, img):
     """THE TIME STREAK, drawn into a frame of the street shot (f may be negative: the loop's virtual frames)."""
     tau = f / FPS; fi = int(math.floor(f))
@@ -11609,8 +11610,8 @@ def streak_draw(s, f, person, img):
         age = tau - ts[i]
         a, b = pts[i - 1], pts[i]
         if abs(b[0] - a[0]) + abs(b[1] - a[1]) < 0.5: continue
-        if age < 0.28:                                                                         # the streak
-            v = 255 * (1 - age / 0.28) ** 1.2; wid = int(4 + 18 * (1 - age / 0.28))
+        if age < 0.30:                                                                         # the streak
+            v = 255 * (1 - age / 0.30) ** 1.1; wid = int(6 + 26 * (1 - age / 0.30))
             seg(cvb if b[2] else cvf, glb if b[2] else glf, a, b, v, wid, 0.0)
         g_ = 0.55 * (1 - clamp(age / 0.95, 0, 1)) ** 2                                         # the ionised air it leaves
         seg(cvb if b[2] else cvf, glb if b[2] else glf, a, b, 0, 9, g_)
@@ -11639,7 +11640,7 @@ def streak_draw(s, f, person, img):
     if wk.max() > 0.01: o = o * (1 - wk) + hblur(o, 90) * wk
     for cv, gl, behind in ((cvb, glb, True), (cvf, glf, False)):
         if cv.max() == 0 and gl.max() == 0: continue
-        lt = light_rgb(cv, 1.8, HOT, GOLD18)
+        lt = light_rgb(cv, 2.2, HOT, GOLD18)
         gw = cv2.resize(cv2.GaussianBlur(gl, (0, 0), 3) * 1.3 + cv2.GaussianBlur(gl, (0, 0), 12) * 2.0, (W, H))[..., None] * (GOLD18 * 0.8 + HOT * 0.2)
         lay = lt + gw
         if behind: o = o + kmul(lay * (1 - pm), face_keep(s, f, 0.9))
@@ -11649,7 +11650,7 @@ def streak_draw(s, f, person, img):
         wash = np.exp(-(d / 420.0) ** 2).astype(F32)
         if person is not None:
             rim = np.clip(person - cv2.erode(person, np.ones((9, 9), np.uint8)), 0, 1) * np.exp(-(d / 700.0) ** 2)
-            o = o + kmul((wash * 0.20 * (1 - pm[..., 0]))[..., None] * GOLD18, face_keep(s, f, 1.0)) + kmul((rim * 0.9).astype(F32), face_keep(s, f, 1.25))[..., None] * GOLD18
+            o = o + kmul((wash * 0.34 * (1 - pm[..., 0]))[..., None] * GOLD18, face_keep(s, f, 1.0)) + kmul((rim * 0.9).astype(F32), face_keep(s, f, 1.25))[..., None] * GOLD18
         else:
             o = o + (wash * 0.20)[..., None] * GOLD18
     return np.clip(o, 0, 1)
@@ -11710,7 +11711,7 @@ def a_stormlight(img, person, s, f):
         if dt >= 0: fl += a_ * (math.exp(-dt / 0.05) + 0.5 * math.exp(-((dt - 0.11) / 0.03) ** 2))
     if fl < 0.01: return img
     g = np.clip(1.15 - _GY / (H * 1.05), 0, 1)[..., None] * (0.7 + 0.3 * np.clip(_GX / W, 0, 1))[..., None]
-    o = img * (1 + 0.42 * fl * g) + (fl * 0.06) * g * (COLDB * 0.6 + HOT * 0.4)
+    o = img * (1 + 0.65 * fl * g) + (fl * 0.10) * g * (np.array([1.0, 0.86, 0.72], F32))
     return np.clip(o, 0, 1)
 
 _EMB = {}
@@ -11823,6 +11824,26 @@ def wind_gust(A, B, j, f, sa, sb, pre=6, post=10):
     gl = (np.exp(-((_GX - pos) / 40.0) ** 2) * np.exp(-((_GY - H * 0.62) / 60.0) ** 2)).astype(F32)   # a glint of gold in it
     addc(o, kmul(gl, live_keep(sa, sb, j, f, smooth(x), 1.3)), GOLD18, 0.35 * k)
     return np.clip(o, 0, 1)
+
+_GG = {}
+def grit_gust(A, B, j, f, sa, sb, pre=6, post=10):
+    """GRIT GUST (Iris -> her hair blowing): the wind of something passing too fast to see throws grit and leaves past the
+    lens, out of focus; under the gust the frame is her hair, flying."""
+    x = _x(j, pre, post); k = math.sin(math.pi * clamp(x, 0, 1))
+    if "p" not in _GG:
+        rng = np.random.default_rng(1885)
+        _GG["p"] = (rng.uniform(-1.6, 0.2, 90), rng.uniform(0.0, 1.0, 90), rng.uniform(6, 30, 90), rng.uniform(0.8, 1.6, 90), rng.uniform(0, 6.28, 90))
+    X0, Y0, rad, sp, ph = _GG["p"]
+    cv = np.zeros((H // 4, W // 4), F32)
+    for x0, y0, r_, v_, p_ in zip(X0, Y0, rad, sp, ph):
+        xx = (x0 + v_ * 2.2 * x) * W; yy = (y0 + 0.08 * math.sin(4 * x + p_)) * H
+        if -100 < xx < W + 100:
+            cv2.ellipse(cv, (int(xx / 4 * 16), int(yy / 4 * 16)), (int(r_ / 4 * 16 * 1.6), int(r_ / 4 * 16 * 0.7)), math.degrees(p_ + 3 * x), 0, 360, 1.0, -1, cv2.LINE_AA, shift=4)
+    m = cv2.resize(cv2.GaussianBlur(cv, (0, 0), sigmaX=7, sigmaY=2), (W, H)) * 0.85
+    m = np.clip(m, 0, 0.9)
+    w = smooth(clamp((x - 0.30) / 0.40, 0, 1)); base = A * (1 - w) + B * w
+    base = base + 0.06 * k * cv2.GaussianBlur(base, (0, 0), 18)
+    return np.clip(base * (1 - m[..., None]) + m[..., None] * np.array([0.10, 0.11, 0.12], F32) * (0.6 + 0.4 * COLDB), 0, 1)
 
 def hair_whip(A, B, j, f, sa, sb, pre=5, post=7):
     """HAIR WHIP (her hair -> the masked Flash): her hair whips across the lens, out of focus, and it is the Flash behind it."""
@@ -11959,8 +11980,8 @@ def arc_sweep(A, B, j, f, sa, sb, pre=6, post=8):
     ang = math.pi * (1.02 - 1.04 * smoother(clamp(x, 0, 1)))                                    # from the left to the right
     ca, sa_ = math.cos(ang), math.sin(ang)
     side = (_GX - px) * (-sa_) + (py - _GY) * ca                                               # signed distance from the arm
-    m = np.clip(side / 90 + 0.5, 0, 1).astype(F32)
-    o = A * m[..., None] + B * (1 - m[..., None])
+    m = np.clip(side / 90 + 0.5, 0, 1).astype(F32)                                             # the swept side shows the next shot
+    o = A * (1 - m[..., None]) + B * m[..., None]
     cv = bolt_canvas(); L_ = math.hypot(W, H) * 1.2
     put_bolt(cv, (px, py), (px + L_ * ca, py - L_ * sa_), 18780 + f // 2, 3, 0.10, 7, 2, val=int(255 * math.sin(math.pi * clamp(x, 0, 1))))
     return np.clip(o + kmul(light_rgb(cv, 1.0, HOT, GOLD18), live_keep(sa, sb, j, f, smooth(x), 1.2)), 0, 1)
@@ -12128,11 +12149,12 @@ def emblem_bolt(A, B, j, f, sa, sb, pre=50, post=34):
     t = f / FPS
     if lift > 0.002 or j >= 0:
         Bz = zoom_about(B, cxp, cyp, 1.0 + 0.30 * (1 - smooth(fly)))
-        inside = 1.0 if fly > 0.15 else smooth(fly / 0.15)
+        inside = smooth(clamp((fly - 0.42) / 0.22, 0, 1))                                    # gold while it flies; a window once it is big
         gx_ = cv2.Sobel(fw_, cv2.CV_32F, 1, 0, ksize=3); gy_ = cv2.Sobel(fw_, cv2.CV_32F, 0, 1, ksize=3)
         sh_ = np.clip(0.62 + (-gx_ * 0.8 - gy_ * 0.9) * (4.0 / max(S, 1.0)) * math.cos(phi), 0.15, 1.4)[..., None]   # a bevel lit from the top left
         metal = np.array([0.10, 0.34, 0.55], F32) * (1 - np.clip(sh_ - 0.4, 0, 1)) + np.array([0.55, 0.86, 1.00], F32) * np.clip(sh_ - 0.4, 0, 1)
         spr = Bz * inside + metal * (1 + 0.5 * lift) * (1 - inside)                            # the gold bolt, then a window
+        if inside < 1 and S > 1.5: spr = spr * (1 - (1 - inside) * 0.0) + cv2.GaussianBlur(metal, (0, 0), 0.5 + S * 0.15) * 0.0
         o = o * (1 - m[..., None]) + spr * m[..., None]
         edge = np.clip(1 - np.abs(fw_ - 0.5) * kk * 0.5, 0, 1).astype(F32)                     # its outline, alive with current
         fk = live_keep(sa, sb, j, f, 0 if j < 0 else 1, 1.1)
@@ -12172,15 +12194,15 @@ def loop_fx18(img, person, s, f):
     o = img
     cv = bolt_canvas(); chg = smooth(clamp(t / 0.30, 0, 1))                                    # 1. the lightning builds and runs back
     for k in range(4):
-        y_ = H * (0.62 + 0.07 * k) + 30 * math.sin(tt * 7 + k)
+        y_ = H * (0.70 + 0.055 * k) + 25 * math.sin(tt * 7 + k)
         put_bolt(cv, (W * (1.05 - 0.15 * k), y_), (W * (0.15 - 0.25 * chg), y_ + 40 * math.sin(k * 2.3)), 18950 + k + 7 * (f // 2), 3, 0.22, 6, 2, val=int(255 * (0.35 + 0.65 * chg)))
     o = hblur(o, 2 + 60 * chg)
-    T = smoother(clamp((t - 0.28) / 0.72, 0, 1))                                              # 2. the tear opens
+    T = smoother(clamp((t - 0.24) / 0.70, 0, 1))                                              # 2. the tear opens
     if T <= 0:
         return np.clip(o + light_rgb(cv, 1.0, HOT, GOLD18), 0, 1)
     V = frame_virtual(f - E.DUR_F + (0.5 if f == E.DUR_F - 1 else 0.0))
     yc, n1, n2 = tear_profile()
-    h = 2.7 * H * T ** 3.5
+    h = 2.7 * H * T ** 2.2
     top = (yc - h / 2 * (1 + 0.12 * n1))[None, :]; bot = (yc + h / 2 * (1 + 0.12 * n2))[None, :]
     inside = (np.clip((_GY - top) / 6 + 0.5, 0, 1) * np.clip((bot - _GY) / 6 + 0.5, 0, 1)).astype(F32)
     pa = h * 0.30                                                                              # the halves are pushed apart
@@ -12206,7 +12228,7 @@ def loop18(A, B, j, f, sa, sb):
 
 HERO_FN = streak_draw
 TR2.update({"bokeh_bloom": (bokeh_bloom, 8, 12), "window_glow": (window_glow, 6, 10), "lamp_on": (lamp_on, 6, 14), "eyeline_whip": (eyeline_whip, 5, 7),
-            "wind_gust": (wind_gust, 6, 10), "hair_whip": (hair_whip, 5, 7), "colour_drain": (colour_drain, 10, 10), "sky_crack": (sky_crack, 10, 14),
+            "wind_gust": (wind_gust, 6, 10), "grit_gust": (grit_gust, 6, 10), "hair_whip": (hair_whip, 5, 7), "colour_drain": (colour_drain, 10, 10), "sky_crack": (sky_crack, 10, 14),
             "heartstart": (heartstart, 4, 18), "current_climb": (current_climb, 26, 30), "lightbar_streak": (lightbar_streak, 5, 7),
             "spark_jump": (spark_jump, 5, 8), "arc_sweep": (arc_sweep, 6, 8), "streak_carry": (streak_carry, 6, 8), "shades_glint": (glint_star, 6, 8),
             "flicker_cut": (flicker_cut, 6, 8), "mist_pass": (mist_pass, 10, 12), "lamp_bloom": (lamp_bloom, 8, 10), "lightning_whip": (lightning_whip, 5, 7),
@@ -12216,7 +12238,16 @@ TR2.update({"bokeh_bloom": (bokeh_bloom, 8, 12), "window_glow": (window_glow, 6,
 def base18(s, f):
     img, person = base11(s, f)
     lk = s.get("look")
-    if lk == "cold": img = coldify(img, red_mask(img) * s["keepred"] if s.get("keepred") else None)
+    if lk == "cold":
+        keep = None
+        if s.get("keepred"):
+            keep = red_mask(img) * s["keepred"]
+            fs = fs3_of(s, f)
+            if fs:                                                                             # the suit keeps its red, never his skin or lips
+                q = 4; sk = np.zeros((H // q, W // q), F32)
+                cv2.ellipse(sk, (int(fs[0] / q), int((fs[1] + 0.10 * fs[2]) / q)), (int(fs[2] * 0.40 / q), int(fs[2] * 0.58 / q)), 0, 0, 360, 1.0, -1)
+                keep = keep * (1 - cv2.resize(cv2.GaussianBlur(sk, (0, 0), 6.0), (W, H)))
+        img = coldify(img, keep)
     elif lk == "strike": img = colour_strike(img, person, s, f)
     if s.get("anim") in ANIMS: img = ANIMS[s["anim"]](img, person, s, f)
     if s["n"] == "timerun": img = loop_fx18(img, person, s, f)
@@ -12257,7 +12288,7 @@ def prefinish(f):
 def render(f):
     s = shot_at(f); out = flash_governor(beat_fx(prefinish(f), f))
     f0 = fh(E.E_LOOP); mix = None
-    if s["n"] == "timerun" and f >= f0: mix = 1.0 if f >= E.DUR_F - 2 else smoother(clamp(((f - f0) / (E.DUR_F - f0) - 0.28) / 0.72, 0, 1))
+    if s["n"] == "timerun" and f >= f0: mix = 1.0 if f >= E.DUR_F - 2 else smoother(clamp(((f - f0) / (E.DUR_F - f0) - 0.24) / 0.70, 0, 1))
     return (np.clip(finish18(out, f, s, mix), 0, 1) * 255 + 0.5).astype(np.uint8)
 
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)

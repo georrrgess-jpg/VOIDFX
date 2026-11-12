@@ -58,7 +58,7 @@
    "buried": true
   },
   {
-   "name": "eyeline_whip",
+   "name": "flare_cut",
    "kind": "transition",
    "at": 3.59,
    "t0": 3.29,
@@ -69,7 +69,7 @@
    "buried": true
   },
   {
-   "name": "wind_gust",
+   "name": "grit_gust",
    "kind": "transition",
    "at": 4.9,
    "t0": 4.6,

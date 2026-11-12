@@ -61,11 +61,11 @@ The hero is **THE TIME STREAK**: the hook, the strike's front and the loop.
 | e | Shot | In |
 |---|---|---|
 | 0–4 | Barry on a night street (S3); *THE HOOK: the streak* | **THE TIME TEAR** (the loop) |
-| 4–6 | Barry at dusk (S3); *cold air drifts* | **BOKEH BLOOM** |
+| 4–6 | Barry alone outside at night, in a suit (S3); *cold air drifts* | **BOKEH BLOOM** |
 | 6–8 | at work in the CCPD lab (S1) | **WINDOW GLOW** |
 | 8–11 | by the lamp, Iris's back (S3); *dust in the lamp light* | **LAMP ON** |
-| 11–15 | Iris (S1) | **EYELINE WHIP** |
-| 15–19 | her hair blowing (S1); *the gust carries grit* | **WIND GUST** |
+| 11–15 | Iris (S1) | **FLARE CUT** (v17, liked) |
+| 15–19 | her hair blowing (S1); *the gust carries grit* | **GRIT GUST** |
 | 19–23 | the Flash, masked, his red the only colour (S1); *the suit crackles* | **HAIR WHIP** |
 | 23–28 | Barry alone in the dark (S1); *lightning through the window, building* | **COLOUR DRAIN** |
 | 28–33 | **THE STRIKE** (S2): **COLOUR STRIKE** | **SKY CRACK** (crunch 1) |
@@ -73,10 +73,10 @@ The hero is **THE TIME STREAK**: the hook, the strike's front and the loop.
 | 37–40 | the Flash (S6); *the suit crackles* | **CURRENT CLIMB** (THE DROP) |
 | 40–42 | the lightning runner (S2) | **LIGHT BAR STREAK** |
 | 42–44 | the S5 suit charging | **SPARK JUMP** |
-| 44–46 | the S3 suit | **CUBE TURN** (v17, liked) |
+| 44–46 | the city at night, his streak across it | **CUBE TURN** (v17, liked) |
 | 46–48 | Barry vanishes into a streak (S3) | **ARC SWEEP** |
 | 48–52 | "I'm a weirdo": the sunglasses (S3); *sun glints* | **STREAK CARRY** |
-| 52–54 | the S1 suit grinning in the corridor | **GLINT STAR** |
+| 52–54 | the S1 suit walks in | **GLINT STAR** |
 | 54–56 | Barry in the suit, lightning round him (S4); *embers* | **FLICKER CUT** |
 | 56–58 | "What": the flight (S4) | **PEEL** (v17, liked) |
 | 58–60 | the S5 night run | **SMEAR** (v17, liked) |
@@ -88,10 +88,25 @@ The hero is **THE TIME STREAK**: the hook, the strike's front and the loop.
 24 shots, 23 transitions plus the loop, all custom or liked; no text. The beat camera breathes in the verse
 (0.3–0.45 of its punch), punches on every beat in the chorus and rests for the loop.
 
-## Sound (lean: 13 placed effects)
-The hook's two passes; a click for the lamp; the strike (thunder, an impact, the colour's crackle); the heartbeat; the
-drop (a rising crackle, an impact, a sub drop); the tube light's buzz; the emblem bolt (a charge, a rising whoosh, a sub
+## Sound (lean: 11 placed effects)
+The hook's two passes; the strike (thunder, an impact, the colour's crackle); the heartbeat; the drop (a rising crackle,
+an impact, a sub drop); the emblem bolt (a charge, a rising whoosh, a sub
 drop); the tear. Every other transition is silent; nothing on beats; no chimes.
+
+## Review
+- **QC round 1 (on the encode):** the loop seam measured 1.55, because the streak moves fast across frame 0. The last
+  frame now lands half a frame before frame 0. The sunglasses shot crossed a hidden cut in the source (28.6 s), so it now
+  starts after it. Two dissolves were too abrupt, the streak's light grazed his face, and the loop's lightning ran close to
+  the masked profile.
+- **Fresh-eyes critique (6 HIGH):**
+  - the arc sweep revealed the wrong side, so the shots swapped back and forth;
+  - three whips ran in a row (now a flare, a grit gust and one whip);
+  - the masked shot's red caught his lips (now a smooth suit key, his skin excluded);
+  - the emblem bolt went flat blue too early (it stays lit gold until it is big);
+  - the loop's run was dark and the tear opened late (brighter, the tear opens about 0.3 s sooner);
+  - the masked close-ups looked alike (two swapped for the night city and a full-body walk-in);
+  - the hook streak was thin (thicker, brighter, back in front of him sooner);
+  - the dusk shot repeated frame 0's shirt (now Barry alone at night, in a suit).
 
 ## Files
 `work/edl18.py` (the EDL), `work/sec18.py` (the edit's section: v17's toolkit plus the v18 section at the end, spliced
