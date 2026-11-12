@@ -91,7 +91,7 @@ def robo(e0, e1, a, b, steps_per_half=2, snap=0.035):
 SP = dict(look="gold112")
 # ---- "Wanna tell you 'bout the time" (e0-e38): golden hour and memory; the build to the drop
 shot("port", "s1", 0, 4, 366.00, 367.45, z=[(0, 1.00), (1, 1.04)], interp="flow", seg=True, **SP)                  # frame 0: the port at sunset (the orbit lands here)
-shot("profile", "s4", 4, 9, 196.70, 198.15, z=[(0, 1.00), (1, 1.04)], tin="leak112", interp="flow", **SP)           # his face in the sun
+shot("profile", "s1", 4, 9, 406.25, 407.40, z=[(0, 1.00), (1, 1.03)], tin="leak112", interp="flow", **SP)           # his face against the low sun (the parade at sunset)
 shot("funeral", "p1", 9, 13, 51.30, 52.45, z=[(0, 1.00), (1, 1.04)], tin="prism112", interp="flow", **SP)          # the casket
 shot("redclose", "dmx", 13, 17, 394.00, 395.40, z=[(0, 1.00), (1, 1.03)], tin="emerge111", interp="flow", **SP)
 shot("dusk", "s1", 17, 21, 379.95, 381.35, z=[(0, 1.00), (1, 1.04)], tin="lookup111", interp="flow", **SP)         # he looks up at the evening

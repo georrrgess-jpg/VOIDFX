@@ -1,0 +1,9 @@
+- **QC:** 10/11 on the encode; FAIL: no face-centering failures (11 distinct checks).
+- **Loudness:** -13.0 LUFS, true peak -3.5 dBTP after AAC.
+- **Loop seam:** blurred difference 0.34 (gate ≤ 1); audio seam step 0.0066; picture wrap step 1.33 vs local median 2.64.
+- **Flashes:** 1 events, at most 1 a second; white-outs [].
+- **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
+- **Faces vs effects:** 13 flags in 2 runs: 0–14, 1426–1434.
+- **Motion audit:** 17 pops (UNEXPLAINED 7, beat 1, cadence 2, cut 7); UNEXPLAINED at [101, 102, 197, 198, 473, 653, 1449] (check signoff_pops.jpg); dead spans 1; judder flags 0.
+- **plan_check:** 0 FAIL, 2 WARN; WARN: `vertigo112` is on screen 0.70 s (give a signature transition ~1 s); WARN: `grave` holds 2.45 s with no cut, transition or beat hit (frames 665-812): plan a designed beat inside it.
+- **Effort this round (1):** 1 renders (8.8 min), QC 3.9 min.

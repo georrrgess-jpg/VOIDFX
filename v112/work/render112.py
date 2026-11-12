@@ -15147,7 +15147,7 @@ def flare112(o, f, s_):
         y, x = np.unravel_index(int(np.argmax(Lq)), Lq.shape)
         _FL[s_["n"]] = (x * 8.0 + 4, y * 8.0 + 4, float(Lq.max()))
     sx, sy, pk = _FL[s_["n"]]
-    if pk < 0.55: return o
+    if pk < 0.74: return o                                                       # only a real light (the sun), never a bright shirt
     t = f / FPS; sx = sx + 18 * math.sin(t * 0.7)
     dx, dy = _GX - sx, _GY - sy
     streak = np.exp(-(dy / 7.0) ** 2) * np.exp(-np.abs(dx) / 520.0) * (0.8 + 0.2 * math.sin(t * 2.3))
@@ -15225,8 +15225,8 @@ def orbit112(out, f, s_, person):
         ob = _orbit_layers(b0, P0, max(PHS, phi), sh, 4.5 * sp + ROLLS * smooth(ub), 140 * sp + BLS * smooth(ub))
         oa = None
     o = oa if ob is None else ob
-    if 0.42 < u < 0.58:                                                            # the swap inside the blur
-        w = smooth((u - 0.42) / 0.16)
+    if 0.47 < u < 0.53:                                                            # the swap inside the blur
+        w = smooth((u - 0.47) / 0.06)
         other = _orbit_layers(b0, P0, phi, W * 1.5, 4.5 * sp, 140 * sp) if ob is None else _orbit_layers(out, P, phi, -W * 1.5, -4.5 * sp, 140 * sp)
         o = o * (1 - w) + other * w if ob is None else other * (1 - w) + o * w
     fl = np.exp(-((_GX - W * (1 - u)) / 240.0) ** 2) * sp * 0.30                   # the sun passes as we come round
@@ -15271,6 +15271,144 @@ def render(f):
     out = flash_governor(out)
     sf = SHOTS[0] if (s.get("tout") == "orbit112" and f >= E.fh(E.E_LOOP + 0.6) + (E.DUR_F - E.fh(E.E_LOOP + 0.6)) // 2) else s
     return (np.clip(finish112(out, f, sf), 0, 1) * 255 + 0.5).astype(np.uint8)
+
+# ======================================================================================================================
+# v112 round 2: THE ORBIT rebuilt as one camera move on the whole picture (no cut-out, no crossfade); PRISM as a lens
+# dispersion with the swap inside its peak blur; the library transitions that ended on a non-zero effect tapered.
+# ======================================================================================================================
+
+# ---- PRISM: the picture disperses like light through glass (red outward, blue inward about the light), softens at
+# the peak, and the next shot is swapped inside that peak.
+def prism112(A, B, j, f, sa, sb, pre=10, post=14):
+    q = (j + pre + 0.5) / (pre + post)
+    e = math.sin(math.pi * clamp(q, 0, 1)) ** 1.4
+    w = smooth((q - 0.47) / 0.06); img = A * (1 - w) + B * w
+    sg = 0.5 + 16 * e * e
+    img = cv2.GaussianBlur(img, (0, 0), sg) * (e * e) + img * (1 - e * e)
+    cx, cy = W / 2, H * 0.36; d = 0.035 * e
+    o = img.copy()
+    for ch, sc in ((2, 1 + d), (0, 1 - d)):
+        M = np.float32([[sc, 0, cx * (1 - sc)], [0, sc, cy * (1 - sc)]])
+        o[..., ch] = cv2.warpAffine(img[..., ch], M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    o = o * (1 + 0.18 * e) + cv2.GaussianBlur(o, (0, 0), 24) * 0.22 * e
+    return np.clip(o, 0, 1)
+TR2["prism112"] = (prism112, 10, 14)
+
+# ---- end tapers: a library transition whose effect is not zero on its last frame pops when it stops.
+def _taper112(name, n=5):
+    fn, pre, post = TR2[name]
+    def g(A, B, j, f, sa, sb, _fn=fn, _pre=pre, _post=post):
+        o = _fn(A, B, j, f, sa, sb)
+        if j >= 0 and j > _post - 1 - n:
+            t = (_post - 1 - j) / float(n); t = t * t * (3 - 2 * t)
+            return o * t + B * (1 - t)
+        return o
+    TR2[name] = (g, pre, post)
+for _nm in ("bokeh110", "nightfall111"): _taper112(_nm)
+
+# ---- THE ORBIT: the last shot and frame 0 sit side by side round him like one panorama; the camera swings across
+# from one to the other, the frame turning in perspective and rolling with the swing, the motion blur following its
+# speed, and the low sun between the two places passes through the lens. The swing is still settling over frame 0.
+SHS, N_IN = 34.0, 34
+PHM, RLM = 0.22, 2.0                                                              # yaw (rad) and roll (deg) at full speed
+def _orb_cfg():
+    if "cfg" not in _LV112:
+        f0 = E.fh(E.E_LOOP + 0.6); K = float(E.DUR_F - 1 - f0)
+        D = W - SHS; c = (2 * SHS / N_IN) * K / D                                  # end speed = frame 0's settling speed
+        _LV112["cfg"] = (f0, K, D, c, D * ((1 - c) * 3 + c) / K)
+    return _LV112["cfg"]
+
+def _h112(u, c):
+    s = 4 * u ** 3 if u < 0.5 else 1 - (2 - 2 * u) ** 3 / 2
+    ds = 12 * u ** 2 if u < 0.5 else 3 * (2 - 2 * u) ** 2
+    return (1 - c) * s + c * u, (1 - c) * ds + c
+
+def _place(img, off, phi, z, border):
+    Hm = _yaw(phi, W / 2)
+    Z = np.float32([[z, 0, W / 2 * (1 - z)], [0, z, H / 2 * (1 - z)], [0, 0, 1]])
+    T = np.float32([[1, 0, off], [0, 1, 0], [0, 0, 1]])
+    return (T @ Z @ Hm).astype(np.float32)
+
+def _orb_frame(A, B, offB, r, vel):
+    """one frame of the swing: B (frame 0) at offset offB, A (the last shot) just left of it; r = speed / top speed."""
+    phi = PHM * r; roll = RLM * r
+    zc = 1 + 0.30 * abs(math.sin(phi))                                             # the turn's perspective stays covered
+    zB = zc + 2 * min(offB, SHS) / W * smooth(1 - (offB - SHS) / (0.3 * W))       # frame 0 covers the frame as it lands
+    MB = _place(B, offB, phi, zB, None)
+    o = cv2.warpPerspective(B, MB, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    if A is not None:
+        left = W / 2 + offB - zB * W / 2                                            # frame 0's left edge on screen
+        if left > 0.5:
+            MA = _place(A, offB - W * zB, phi, zc, None)
+            a = cv2.warpPerspective(A, MA, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+            mB = (_GX >= left).astype(np.float32)
+            o = a * (1 - mB[..., None]) + o * mB[..., None]
+            if r > 0.02:                                                            # the low sun between the two places
+                dx = _GX - left; dy = _GY - H * 0.34; rr = np.sqrt(dx * dx + dy * dy)
+                sun = (np.exp(-(rr / 150.0) ** 2) * 0.85 + np.exp(-(rr / 520.0) ** 2) * 0.30 +
+                       np.exp(-(dy / 16.0) ** 2) * np.exp(-np.abs(dx) / 520.0) * 0.45) * r ** 1.3
+                o = o + sun[..., None] * np.array([0.42, 0.72, 1.0], np.float32)
+    k = int(1 + 1.1 * vel) | 1
+    if k > 2: o = cv2.blur(o, (k, 1), borderType=cv2.BORDER_REPLICATE)
+    if abs(roll) > 0.01:
+        th_ = math.radians(abs(roll)); sc = math.cos(th_) + (H / W) * math.sin(th_)
+        R = cv2.getRotationMatrix2D((W / 2, H / 2), roll, sc)
+        o = cv2.warpAffine(o, R, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    return o
+
+def orbit_in112(out, f, P=None):
+    """frame 0's first frames: the swing settles (the same move the edit ended on)."""
+    if f >= N_IN: return out
+    f0, K, D, c, VM = _orb_cfg()
+    x = 1 - f / N_IN; vel = 2 * SHS / N_IN * x
+    return _orb_frame(None, out, SHS * x * x, vel / VM, vel)
+
+def orbit112(out, f, s_, person):
+    f0, K, D, c, VM = _orb_cfg()
+    if f < f0: return out
+    u = clamp((f - f0) / K, 0, 1)
+    if "b0" not in _LV112:
+        s0 = SHOTS[0]; _LV112["b0"] = graphic112(base108(s0, 0)[0], 0, s0, _person(s0, 0))
+    h, dh = _h112(u, c); vel = D * dh / K
+    return _orb_frame(out, _LV112["b0"], W - D * h, vel / VM, vel)
+
+# ---- VERTIGO round 2: 1.0 s on screen (the signature reads), and the snap blends with the zoomed grave, not its
+# unzoomed last frame (that was a double exposure for three frames).
+def vertigo112(A, B, j, f, sa, sb, pre=14, post=46):
+    def a_at(u):
+        o = _zoom_about(A, 1 + 0.8 * ein(u, 2.0), W / 2, H * 0.42, cv2.BORDER_REPLICATE)
+        return radial_blur(o, W / 2, H * 0.42, 1.0, 1.0 + 0.10 * u, 6)
+    if j < 0: return np.clip(a_at((j + pre) / pre), 0, 1)
+    u = j / post
+    Z = 1 + 0.9 * (1 - smooth(u)) ** 1.5
+    o = _zoom_about(B, Z, W / 2, H * 0.42, cv2.BORDER_REPLICATE)
+    sp = (1 - smooth(u)) ** 2
+    if sp > 0.02: o = radial_blur(o, W / 2, H * 0.42, 1.0, 1.0 + 0.12 * sp, 6)
+    if j < 3:
+        b = (3 - j) / 3 * 0.5
+        o = o * (1 - b) + a_at(1.0) * b
+    return np.clip(rgb_split(o, 6 * sp), 0, 1)
+TR2["vertigo112"] = (vertigo112, 14, 46)
+
+# ---- SUN LEAK round 2: the burn's front carries the next shot (his face is where the light has passed), so the two
+# pictures never sit on top of each other; the front is the brightest part of the leak.
+def leak112(A, B, j, f, sa, sb, pre=12, post=16):
+    q = (j + pre + 0.5) / (pre + post)
+    e = math.sin(math.pi * clamp(q, 0, 1))
+    n1 = cv2.resize(nz108(1201, 14), (W, H)); n2 = cv2.resize(nz108(1202, 30), (W, H))
+    xf = W * (1.35 - 1.85 * smooth(q))                                             # the front, right to left
+    d = (_GX - xf) / 300.0 + (n1 - 0.5) * 0.8
+    wB = np.clip(d - 0.15, 0, 1); wB = wB * wB * (3 - 2 * wB)                    # passed: the next shot
+    band = np.exp(-(d / 0.55) ** 2)                                                # the burning front
+    lk = cv2.GaussianBlur(np.clip(band * (0.75 + 0.5 * n2) + 0.25 * wB * e, 0, 1.5), (0, 0), 18) * (0.25 + 0.75 * e)
+    col = np.stack([0.15 + 0.25 * n2, 0.45 + 0.30 * n1, np.ones_like(n1)], -1).astype(np.float32)
+    base = A * (1 - wB[..., None]) + B * wB[..., None]
+    if j < 0 and q < 0.05: pass
+    o = base * (1 + 1.2 * lk[..., None]) + lk[..., None] * col * 0.60
+    return np.clip(o, 0, 1)
+TR2["leak112"] = (leak112, 12, 16)
+
+def _prism_d(): return 0.035
 
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
