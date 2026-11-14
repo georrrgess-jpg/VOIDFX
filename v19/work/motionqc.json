@@ -55,9 +55,9 @@
   17.8,
   7.85,
   11.8,
-  10.55,
-  12.21,
-  3.19
+  10.53,
+  9.43,
+  1.49
  ],
  "dead": [],
  "pops": [
@@ -380,7 +380,7 @@
    "f": 1263,
    "t": 21.05,
    "d": 40.8,
-   "med": 0.8,
+   "med": 0.7,
    "kind": "cadence",
    "near": "bolt_window @ 1248",
    "hb_off": -10
@@ -506,7 +506,7 @@
    "f": 1322,
    "t": 22.033,
    "d": 27.8,
-   "med": 2.8,
+   "med": 2.7,
    "kind": "beat",
    "near": null,
    "hb_off": -1
@@ -551,37 +551,37 @@
    "f": 1344,
    "t": 22.4,
    "d": 32.8,
-   "med": 7.4,
+   "med": 7.3,
    "kind": "cadence",
    "near": null,
    "hb_off": -4
   },
   {
-   "f": 1358,
-   "t": 22.633,
-   "d": 50.2,
-   "med": 6.2,
+   "f": 1351,
+   "t": 22.517,
+   "d": 28.6,
+   "med": 8.7,
    "kind": "cadence",
    "near": null,
-   "hb_off": 10
+   "hb_off": 3
+  },
+  {
+   "f": 1355,
+   "t": 22.583,
+   "d": 28.6,
+   "med": 8.7,
+   "kind": "cadence",
+   "near": null,
+   "hb_off": 7
   },
   {
    "f": 1363,
    "t": 22.717,
-   "d": 54.8,
-   "med": 2.8,
+   "d": 28.0,
+   "med": 5.3,
    "kind": "cadence",
    "near": null,
    "hb_off": -10
-  },
-  {
-   "f": 1367,
-   "t": 22.783,
-   "d": 20.9,
-   "med": 3.5,
-   "kind": "cadence",
-   "near": null,
-   "hb_off": -6
   }
  ],
  "judder": [
@@ -861,9 +861,9 @@
    "repeat_frac": 0.05,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.48,
-   "p80": 2.06,
-   "ratio": 1.39,
+   "p20": 1.47,
+   "p80": 2.07,
+   "ratio": 1.41,
    "flag": false
   },
   {
@@ -884,15 +884,15 @@
    "f0": 1248,
    "f1": 1398,
    "interp": "hold",
-   "repeat_frac": 0.43,
-   "cadence_frames": 125,
+   "repeat_frac": 0.38,
+   "cadence_frames": 111,
    "cadence_range": [
     1254,
-    1378
+    1364
    ],
-   "p20": 1.08,
-   "p80": 23.84,
-   "ratio": 22.15,
+   "p20": 0.93,
+   "p80": 13.86,
+   "ratio": 14.94,
    "flag": true
   }
  ],

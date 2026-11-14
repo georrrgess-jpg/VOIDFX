@@ -3,8 +3,8 @@
 - **Loop seam:** blurred difference 0.17 (gate ≤ 1); audio seam step 0.0098; picture wrap step 0.85 vs local median 3.26.
 - **Flashes:** 0 events, at most 0 a second; white-outs [].
 - **Text over faces:** 0 frames (see qc.log §3 for which; frames inside transitions are expected).
-- **Faces vs effects:** 18 flags in 4 runs: 414–414, 446–452, 472–476, 1336–1354.
+- **Faces vs effects:** 19 flags in 4 runs: 414–414, 446–452, 472–476, 1336–1356.
 - **Motion audit:** 58 pops (UNEXPLAINED 7, beat 4, cadence 30, cut 13, flash 4); UNEXPLAINED at [127, 265, 409, 445, 471, 492, 994] (check signoff_pops.jpg); dead spans 0; judder flags 1.
 - **Sharpness:** SOFT: van, device, blast, wet, avenue; max zoom 1.06.
 - **plan_check:** 0 FAIL, 3 WARN; WARN: `avenue` holds 2.30 s with no cut, transition or beat hit (frames 1260-1398): plan a designed beat inside it; WARN: [determinism] storm_tex(): cache keyed on rounded arguments (int(clamp(round(k), 0, SHOTS[0]['f1'] - 1))) but filled from the exact ones: pixels depend on which frame filled it, so partial re-renders can't verify bit-exact (compute the value from the rounded key); WARN: [sound count] 14 effects in 10 moments over 23.3 s (fx_events.json); start lean: about 10-12 in 20-23 s, small transitions silent (v13 rule 4).
-- **Effort this round (1):** 7 renders (65.9 min), QC 25.1 min.
+- **Effort this round (1):** 8 renders (74.2 min), QC 28.4 min.

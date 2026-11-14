@@ -139,6 +139,8 @@ make it more visually appealing and well animated."*
   - the next shot blooms out of the pupil inside an iris drawn round it: blue-grey fibres, a soft limbal ring, a bright
     pupil edge, light rays and a radial blur that settles.
 - **Sound:** the thunder moved onto the strike (e20.5).
+- **QC (round 3):** 11/11 on the encode; loop seam 0.17 (wrap step 0.85 against a local median of 3.26); −12.3 LUFS,
+  −4.3 dBTP after AAC; no dead spans; every pop is a cut, a transition or a designed lightning strike.
 
 ## Sound (lean: 9 placed effects)
 The hook's rising whoosh into the pane; the dive; the emblem's charge (a crackle that builds through the break); the
