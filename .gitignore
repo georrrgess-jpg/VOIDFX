@@ -199,3 +199,10 @@ v18/out/
 v18/work/*.npz
 v18/work/*.npy
 v18/sr/
+v19/work/*.log
+v19/audio/
+v19/frames/
+v19/out/
+v19/work/*.npz
+v19/work/*.npy
+v19/sr/
