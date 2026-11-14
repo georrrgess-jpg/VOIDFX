@@ -119,7 +119,8 @@ SET_PIECES = [("hook", th(0), th(3)), ("speed_force_storm", th(16), th(20.5)), (
 HERO = ["pane_draw"]
 HERO_TINS = ["pane_pass", "loop19"]
 SIGNATURE = ["emblem_reboot", "eye_dive", "sf_strike"]
-PLAN_ACCEPT = {'pf:hero motif:the hero asset (pane_draw) is drawn by 6': "the panes are drawn by pane_pass, pane_dive and the loop; the other transitions only show the edge frame of a memory shot whose living animation has panes drifting in its background"}
+PLAN_ACCEPT = {'pf:hero motif:the hero asset (pane_draw) is drawn by 5': "the panes are drawn only by pane_pass (the hook) and the loop; the other transitions show the edge frame of the opening shot, whose background has panes drifting in it",
+               "landing:wet": "the eye dive opens out of his eye onto the wet-street run; it is not a spin, and the run has no face to centre"}
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
