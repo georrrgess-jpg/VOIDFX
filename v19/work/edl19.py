@@ -91,9 +91,8 @@ shot("blast", "fbh", 9, 11, 127.55, 128.15, tin="flare_cut", seg=True, look="mem
 shot("thinks", "fbh", 11, 13, 136.55, 137.30, tin="crash_zoom", seg=True, look="memory")                # masked, at night, the city behind him
 shot("roof", "fs5", 13, 16, 138.64, 139.60, tin="vertigo", seg=True, face=None, cx=(720, 700), look="memory", anim="skybolts")   # he stands over the city lights; lightning flickers in the clouds over it
 # ---- the break (e16-e24): time stops; the memories orbit him, then pour into the emblem
-shot("sf", "fs3", 16, 18.5, 132.80, 133.70, tin="speed_beam", seg=True, look="memory", anim="sfbolts")   # THE SPEED FORCE STORM: lightning strikes behind him, faster and faster
-shot("sf2", "fs3", 18.5, 20.5, 129.05, 129.85, tin="sf_strike", seg=True, look="memory", anim="sfbolts")  # a bolt strikes on the cut; he turns
-shot("hero", "fbh", 20.5, 24, 109.75, 110.95, tin="mist_pass", seg=True, look="memory", anim="ignite")   # EMBLEM IGNITION: lightning crawls along his suit into the real emblem; it lifts, flips and charges
+shot("sf", "fs3", 16, 20.5, 132.80, 134.25, tin="speed_beam", seg=True, look="memory", anim="sfbolts")   # THE SPEED FORCE STORM: lightning strikes behind him, faster and faster
+shot("hero", "fbh", 20.5, 24, 109.75, 110.95, tin="sf_strike", seg=True, look="memory", anim="ignite")   # EMBLEM IGNITION: lightning crawls along his suit into the real emblem; it lifts, flips and charges
 # ---- the drop (e24-e51): NEON, the present, a new scene on every beat
 shot("ltrun", "fs2", 24, 26, 144.55, 145.40, tin="emblem_reboot", seg=False, face=None, cx=(1040, 1000), tmap=vel(24, 26, 144.55, 145.40), lin=True, flowmax=40, flowfall="blend")
 shot("charge", "fs5", 26, 28, 180.00, 180.90, tin="spark_jump", seg=True, anim="crackle")
@@ -101,7 +100,7 @@ shot("s3mask", "fs3", 28, 30, 106.80, 107.70, tin="lightbar_streak", seg=True)
 shot("flight", "fbh", 30, 32, 81.00, 81.90, tin="smear17", seg=True, face=None, cx=(600, 640), tmap=vel(30, 32, 81.00, 81.90), lin=True, flowmax=40, flowfall="blend")
 shot("fire", "fbh", 32, 34, 84.45, 85.05, tin="glare_wash", seg=True, anim="embers")
 shot("airfield", "fs1", 34, 36, 199.60, 200.40, tin="ember_burn", seg=True, face=None, cx=(680, 800))
-shot("runlit", "fbh", 36, 38, 4.55, 6.10, tin="lightning_whip", seg=True, tmap=vel(36, 38, 4.55, 6.10), lin=True, flowmax=40, flowfall="blend")
+shot("runlit", "fbh", 36, 38, 4.55, 6.10, tin="speed_streaks", seg=True, tmap=vel(36, 38, 4.55, 6.10), lin=True, flowmax=40, flowfall="blend")
 shot("breakout", "fbh", 38, 40, 52.92, 53.62, tin="world_swap", seg=True, ev=0.25)
 shot("lrun", "fs5", 40, 42, 119.20, 120.60, tin="bolt_crack", seg=True, face=None, cx=(930, 860), lin=True, flowmax=90, flowfall="blend")
 shot("mgrin", "fs1", 42, 44, 252.25, 253.60, tin="streak_carry", seg=True)                       # the S1 suit grins

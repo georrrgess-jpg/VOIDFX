@@ -639,7 +639,7 @@ def main():
     place(fx, stereo(A2.impact(-10, (55, 30), 0.8, 0.55, 1904)), th(24)); place(fx, stereo(sub_drop(-14, 0.8, 70, 28)), th(24) + 0.01)   # EMBLEM REBOOT
     place(fx, stereo(zap(-20, 1905, 1800, 5200, 0.16)), th(24) - 0.02)
     place(fx, stereo(fire_whoosh(-19, 0.55, 1906)), th(34) - 0.20)                                                    # EMBER BURN
-    place(fx, stereo(thunder(-15, 1908, 1.1)), th(18.5) - 0.02)                                                       # SF STRIKE: the bolt on the cut
+    place(fx, stereo(thunder(-15, 1908, 1.1)), th(20.5) - 0.02)                                                       # SF STRIKE: the bolt on the cut
     ey_ = rev(A2.whoosh(0.60, -17, 1909, True)); place(fx, ey_.astype(np.float32), th(44) - len(ey_) / SR + 0.02)  # EYE DIVE: into his eye
     lp = rev(A2.whoosh(1.10, -16, 1907, True)); place(fx, lp.astype(np.float32), E.DUR - len(lp) / SR + 0.02)        # THE LOOP: the pane races at us
     wf.write(f"{AD}/stem_music.wav", SR, mus[PRE:].astype(np.float32))                        # pipeline v2: tools/mixcheck.py

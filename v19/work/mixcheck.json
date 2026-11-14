@@ -115,17 +115,6 @@
   {
    "name": "sf_strike",
    "kind": "transition",
-   "at": 7.7,
-   "t0": 7.4,
-   "t1": 8.15,
-   "music_db": -17.8,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -162.2,
-   "buried": true
-  },
-  {
-   "name": "mist_pass",
-   "kind": "transition",
    "at": 8.53,
    "t0": 8.23,
    "t1": 8.98,
@@ -212,7 +201,7 @@
    "buried": false
   },
   {
-   "name": "lightning_whip",
+   "name": "speed_streaks",
    "kind": "transition",
    "at": 14.98,
    "t0": 14.68,

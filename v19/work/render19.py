@@ -13196,7 +13196,7 @@ def sf_strike(A, B, j, f, sa, sb, pre=24, post=34):
     shot burns in outward from its channel."""
     x = _x(j, pre, post); xs = pre / (pre + post - 1)
     if "cv" not in _SFS:
-        cv = bolt_canvas(); bolt_draw(cv, (W * 0.84, -60.0), (W * 0.70, H + 40), 19400, 11, 6, 255)
+        cv = bolt_canvas(); bolt_draw(cv, (W * 0.95, -60.0), (W * 0.86, H + 40), 19400, 11, 6, 255)
         _SFS["cv"] = cv
         q = 4; cq = cv2.resize(cv, (W // q, H // q), interpolation=cv2.INTER_AREA)
         _SFS["d"] = cv2.resize((cv2.distanceTransform((cq < 40).astype(np.uint8), cv2.DIST_L2, 5) * q).astype(F32), (W, H))
@@ -13208,8 +13208,15 @@ def sf_strike(A, B, j, f, sa, sb, pre=24, post=34):
         return np.clip(A * (1 - 0.25 * x / xs) + kmul(lt, live_keep(sa, sb, j, f, 0, 1.0)), 0, 1)
     y = x - xs; b = math.exp(-y / 0.10) + 0.6 * math.exp(-((y - 0.22) / 0.04) ** 2)
     R = 50 + W * 2.0 * eout(clamp(y / 0.34, 0, 1), 1.6)
-    m = np.clip((R - _SFS["d"]) / (40 + 0.25 * R) + 0.5, 0, 1).astype(F32)
+    m = np.clip((R - _SFS["d"]) / (14 + 0.05 * R) + 0.5, 0, 1).astype(F32)                  # a burning front, not a dissolve (no double face)
+    fr = np.exp(-((_SFS["d"] - R) / (18 + 0.03 * R)) ** 2).astype(F32) * (1 - smooth(clamp(y / 0.6, 0, 1)))
+    fa = face_soft(sa, sa["f1"] - 1, 1.5); fb = face_soft(sb, sb["f0"], 1.5)
+    fm = None if (fa is None and fb is None) else np.maximum(fa[..., 0] if fa is not None else 0, fb[..., 0] if fb is not None else 0)
+    if fm is not None:                                                                         # it passes a face as one soft edge, unlit
+        mg = smooth(clamp((y - 0.005) / 0.05, 0, 1))                                            # under the flash, the face crossfades whole
+        m = m * (1 - fm) + mg * fm; fr = fr * (1 - fm)
     o = A * 0.75 * (1 - m[..., None]) + B * m[..., None]
+    o = o + fr[..., None] * (SFB * 0.4 + HOT * 0.6) * 0.8
     o = o * (1 + 0.25 * b)
     lt = light_rgb(cvm, 1.5 * b + 0.3 * (1 - smooth(clamp(y / 0.7, 0, 1))), HOT, SFB * 0.6 + HOT * 0.4)
     return np.clip(o + kmul(lt, live_keep(sa, sb, j, f, 1, 1.0)), 0, 1)
@@ -13343,6 +13350,144 @@ def prefinish(f):
         nt = n_.get("tin")
         if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge15(n_, "first"), kn, f, s, n_)
     return np.clip(out, 0, 1)
+
+
+# ============================================================================ v19 round 3 (the owner: no double take at 9 s, a new transition at
+# 15 s, a smoother, perfect loop, a more polished eye transition)
+def speed_streaks(A, B, j, f, sa, sb, pre=8, post=12):
+    """SPEED STREAKS (the airfield -> the daylight run): his lightning and every light in the frame stretch into long
+    anamorphic streaks as the camera surges forward; the frame dissolves inside them, and the next shot resolves out of
+    its own streaks, settling as they shorten."""
+    x = _x(j, pre, post); k = math.sin(math.pi * clamp(x, 0, 1)) ** 1.2
+    w = smooth(clamp((x - 0.35) / 0.30, 0, 1))
+    Az = zoom_about(A, W / 2, H * 0.48, 1 + 0.10 * smooth(clamp(x / 0.5, 0, 1)))
+    Bz = zoom_about(B, W / 2, H * 0.48, 1 + 0.10 * (1 - smooth(clamp((x - 0.5) / 0.5, 0, 1))))
+    base = Az * (1 - w) + Bz * w
+    base = hblur(base, 2 + 70 * k)
+    q = 4; sm = cv2.resize(base, (W // q, H // q), interpolation=cv2.INTER_AREA)
+    hi = np.clip(sm - 0.50, 0, 1) * 1.6
+    st = cv2.GaussianBlur(hi, (0, 0), sigmaX=60 * k + 1, sigmaY=0.6) * (2.5 * k) + cv2.GaussianBlur(hi, (0, 0), sigmaX=14 * k + 1, sigmaY=0.6) * (1.2 * k)
+    st = cv2.resize(st, (W, H))
+    s_ = sa if w < 0.5 else sb; fm = face_soft(s_, f if (j < 0) == (w < 0.5) else (sa["f1"] - 1 if w < 0.5 else sb["f0"]), 1.3)
+    fk = 1.0 if fm is None else (1 - 0.65 * cv2.GaussianBlur(fm[..., 0], (0, 0), 60))[..., None]   # a soft guard, no visible edge
+    o = base + kmul((st * 0.75).astype(F32), fk) * (GOLD18 * 0.35 + HOT * 0.35 + CYAN19 * 0.30)
+    return np.clip(rgb_split(o, 5 * k), 0, 1)
+
+# ---- THE LOOP (polished): the pane holding frame 0 comes out of the sky behind him and grows, always behind him; as it
+#      becomes the whole world behind him, he turns to light: lightning crawls over him, he glows, and the glow streams
+#      away into the frame as sparks, leaving frame 0 running on -------------------------------------------------------
+def loop_fx19(img, person, s, f):
+    f0 = fh(E.E_LOOP); N = E.DUR_F - f0
+    if f < f0: return img
+    t = (f - f0) / N
+    kk = E.DUR_F - f
+    fv = -kk * (0.35 + 0.65 * (kk - 1) / 7) if kk <= 8 else float(f - E.DUR_F)
+    V = frame_virtual(max(fv, -9.0))
+    if t >= 0.95: return np.clip(V, 0, 1)
+    tt = clamp(t / 0.95, 0, 1)
+    gp = smoother(clamp(tt / 0.80, 0, 1))                                                     # the pane reaches the full frame at tt 0.80
+    h = 150.0 * math.exp(math.log(H * 1.0 / 150.0) * gp)
+    pth = smoother(clamp(tt / 0.80, 0, 1))
+    cx = W * 0.80 + (W * 0.50 - W * 0.80) * pth; cy = H * 0.17 + (H * 0.50 - H * 0.17) * pth
+    yaw = -0.45 * (1 - pth)
+    vt = cv2.resize(V, (W // 2, H // 2), interpolation=cv2.INTER_AREA) if h < H * 0.6 else V
+    glow = 1.3 * (1 - smooth(clamp((tt - 0.55) / 0.25, 0, 1)))
+    o = pane_draw(img, vt, pane_quad(cx, cy, h, yaw, 0.0), alpha=smooth(clamp(t / 0.06, 0, 1)), behind=person,
+                  glow=glow, blur=max(0.0, 2.0 * (1 - gp * 3)), sheen=0.7 * (1 - pth))
+    if gp >= 0.999: o = o * 0 + V if person is None else V * (1 - np.clip(person * 1.25, 0, 1))[..., None] + o * np.clip(person * 1.25, 0, 1)[..., None]
+    k = smoother(clamp((tt - 0.62) / 0.36, 0, 1))                                              # he turns to light and streams away
+    if person is not None and k > 0:
+        pm = cv2.GaussianBlur(np.clip(person * 1.25, 0, 1), (0, 0), 3)
+        fk = face_keep(s, f, 1.0)
+        cv = bolt_canvas()                                                                     # lightning crawls over his suit (below his chin)
+        fs = fs3_of(s, f); body = pm.copy()
+        if fs: body[: int(min(H, fs[1] + fs[2] * 1.2))] = 0
+        q = 8; bq = cv2.resize(body, (W // q, H // q), interpolation=cv2.INTER_AREA); ys, xs = np.nonzero(bq > 0.6)
+        lt = 0.0
+        if len(xs) > 20:
+            rng = np.random.default_rng(1990 + f // 2)
+            for i in range(6):
+                i_ = int(rng.integers(len(xs))); p0 = (xs[i_] * q + 4.0, ys[i_] * q + 4.0)
+                a_ = rng.uniform(-0.3, math.pi + 0.3); L = rng.uniform(120, 260)
+                bolt_draw(cv, p0, (p0[0] + L * math.cos(a_), p0[1] + L * math.sin(a_)), 19700 + i + 5 * (f // 2), 3, 2, int(255 * math.sin(math.pi * min(1.0, k * 1.6))))
+            lt = light_rgb(cv, 1.1, HOT, GOLD18)
+        heat = math.sin(math.pi * k) * 0.9                                                       # he glows
+        fill = cv2.GaussianBlur(pm, (0, 0), 14) * heat
+        dissolve = np.clip(k * 1.15 - 0.15, 0, 1)
+        o = o * (1 - (pm * dissolve)[..., None]) + V * (pm * dissolve)[..., None]
+        o = o + kmul((fill * (1 - dissolve * 0.6)).astype(F32), fk)[..., None] * (GOLD18 * 0.55 + HOT * 0.45)
+        if not isinstance(lt, float): o = o + kmul(lt, fk) * (1 - dissolve)
+        rng = np.random.default_rng(1991); cvs = np.zeros((H // 2, W // 2), np.uint8)   # the sparks stream away
+        ys2, xs2 = np.nonzero(cv2.resize(pm, (W // 16, H // 16)) > 0.5)
+        if len(xs2) > 0:
+            for i in range(110):
+                j_ = int(rng.integers(len(xs2))); x0 = xs2[j_] * 16 + 8.0; y0 = ys2[j_] * 16 + 8.0
+                t0 = rng.uniform(0.0, 0.7); age = k - t0
+                if age <= 0 or age > 0.45: continue
+                vx = (x0 - W * 0.5) * 1.6 + rng.uniform(-120, 120); vy = rng.uniform(-420, -120)
+                px = x0 + vx * age; py = y0 + vy * age
+                cv2.circle(cvs, (int(px * 8), int(py * 8)), int(rng.uniform(1.5, 3.2) * 8), int(255 * (1 - age / 0.45)), -1, cv2.LINE_AA, shift=4)
+        sp = cv2.resize(cvs.astype(F32) / 255, (W, H)); sp = sp + cv2.GaussianBlur(sp, (0, 0), 4) * 1.5
+        o = o + kmul((sp * (1 - smooth(clamp((tt - 0.90) / 0.10, 0, 1)))).astype(F32), fk)[..., None] * (GOLD18 * 0.5 + HOT * 0.5)
+    return np.clip(o, 0, 1)
+
+# ---- EYE DIVE (polished): a slow cinematic push into his eye with a slight roll and a deepening focus falloff; the
+#      catchlight blooms; the pupil widens into a dark well, a point of light opens at its heart and the next shot blooms
+#      out of it inside an iris of his own eye colour (fibres, a darker limbal ring, a bright pupil edge), light rays
+#      breaking out of the opening as it sweeps past the lens -----------------------------------------------------------
+def eye_zoom2(img, ex_, ey_, u, roll_deg=7.0):
+    Z = math.exp(math.log(5.5) * smooth(u) ** 1.25); g = smooth(clamp(u * 1.25, 0, 1))
+    cx_t = ex_ + (W / 2 - ex_) * g; cy_t = ey_ + (H / 2 - ey_) * g
+    th_ = math.radians(roll_deg * smooth(u)); c, s_ = math.cos(th_) * Z, math.sin(th_) * Z
+    M = np.float32([[c, -s_, cx_t - c * ex_ + s_ * ey_], [s_, c, cy_t - s_ * ex_ - c * ey_]])
+    return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+
+def eye_dive(A, B, j, f, sa, sb, pre=40, post=30):
+    ff = f if j < 0 else sa["f1"] - 1
+    ex_, ey_, fw = eye_pick(sa, ff)
+    d = np.sqrt((_GX - W / 2) ** 2 + (_GY - H / 2) ** 2).astype(F32); ang = np.arctan2(_GY - H / 2, _GX - W / 2)
+    if j < 0:
+        u = (j + pre + 1) / pre
+        o = eye_zoom2(A, ex_, ey_, u)
+        foc = np.clip((d - H * (0.18 - 0.08 * u)) / (H * 0.35), 0, 1)[..., None] * smooth(clamp(u / 0.6, 0, 1))   # the focus falls off round the eye
+        o = o * (1 - foc) + cv2.GaussianBlur(o, (0, 0), 3 + 10 * u) * foc
+        o = o * (1 - 0.30 * ein(u, 1.5) * np.clip(d / (H * 0.6), 0, 1) ** 1.6)[..., None]
+        bl = smooth(clamp((u - 0.55) / 0.45, 0, 1))                                             # the catchlight blooms
+        cl = np.exp(-(((_GX - W * 0.47) ** 2 + (_GY - H * 0.46) ** 2) / (2 * (24 + 90 * bl) ** 2))).astype(F32)
+        addc(o, cl, HOT * 0.8 + CYAN19 * 0.2, 0.55 * bl)
+        pw = smooth(clamp((u - 0.70) / 0.30, 0, 1))                                             # the pupil widens into a dark well
+        well = cv2.GaussianBlur(np.clip((50 + 120 * pw - d) / 90 + 0.5, 0, 1).astype(F32), (0, 0), 12) * pw
+        o = o * (1 - 0.55 * well[..., None]) + well[..., None] * np.array([0.10, 0.07, 0.05], F32) * 0.4
+        return np.clip(o, 0, 1)
+    v = (j + 1) / post
+    Ae = eye_zoom2(A, ex_, ey_, 1.0)
+    Ae = cv2.GaussianBlur(Ae, (0, 0), 3)
+    irc = np.array([0.72, 0.62, 0.42], F32)                                                    # his eyes' own blue-grey
+    R = 30 + math.hypot(W, H) * 0.65 * eout(v, 2.2)
+    o_out = Ae * (1 - 0.55 * np.clip((220 - d) / 120 + 0.5, 0, 1))[..., None]                  # the well, round the opening
+    inside = np.clip((R - d) / (6 + 0.05 * R) + 0.5, 0, 1).astype(F32)
+    bloom = math.exp(-v / 0.18)
+    Bz = zoom_about(B, W / 2, H / 2, 1.0 + 0.50 * (1 - eout(v, 2.4)))
+    Bz = Bz * (1 + 0.6 * bloom) + bloom * 0.12 * (HOT * 0.6 + GOLD18 * 0.4)
+    o = o_out * (1 - inside[..., None]) + Bz * inside[..., None]
+    rr = d / max(R, 1.0)                                                                       # the iris round the opening
+    ann = np.clip((rr - 1.0) / 0.55, 0, 1)
+    band = (np.exp(-((rr - 1.28) / 0.22) ** 2) * (1 - v) ** 0.9).astype(F32)
+    fib = 0.5 + 0.5 * np.cos(ang * 54 + 2.2 * np.sin(ang * 6) + 1.4 * np.sin(ang * 17) + 6 * ann)
+    fib = cv2.GaussianBlur((0.80 + 0.20 * fib).astype(F32), (0, 0), 2.5)
+    limb = cv2.GaussianBlur((np.exp(-((rr - 1.55) / 0.14) ** 2) * (1 - v)).astype(F32), (0, 0), 6)   # a soft darker limbal ring
+    iris = irc[None, None, :] * (0.55 + 0.55 * fib[..., None]) * (1.10 - 0.35 * ann[..., None])
+    o = o * (1 - band[..., None] * 0.65) + iris * band[..., None] * 0.65
+    o = o * (1 - (limb * 0.30)[..., None])
+    edge = cv2.GaussianBlur((np.exp(-((d - R) / 3.0) ** 2) * (1 - v)).astype(F32), (0, 0), 1.2)   # the bright pupil edge
+    o = o + edge[..., None] * (HOT * 0.7 + CYAN19 * 0.3) * 0.7
+    rays = ((0.5 + 0.5 * np.cos(ang * 18 + 0.8 * np.sin(ang * 3))) ** 8 * np.exp(-np.abs(d - R) / 260.0) * (d > R)).astype(F32)   # light breaking out of it
+    addc(o, rays * math.sin(math.pi * min(1.0, v * 1.4)), HOT * 0.5 + GOLD18 * 0.5, 0.45)
+    k = 0.10 * (1 - eout(v, 2))
+    if k > 0.004: o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + k, 6)
+    return np.clip(o, 0, 1)
+
+TR2.update({"speed_streaks": (speed_streaks, 8, 12), "eye_dive": (eye_dive, 40, 30)})
 
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures

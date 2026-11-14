@@ -46,24 +46,23 @@ The hero is **THE MEMORY PANES**: the hook, the dive, the storm and the emblem's
 | 9–11 | he fires lightning from his hand (S4) | **FLARE CUT** (v17, liked) |
 | 11–13 | masked, the city at night behind him (S4) | **CRASH ZOOM** (v18) |
 | 13–16 | he stands over the city lights (S5); *panes drift* | **VERTIGO** (v18) |
-| 16–18.5 | the Speed Force (S3): **MEMORY STORM** | **SPEED BEAM** |
-| 18.5–20.5 | the Speed Force: he turns to them; the storm faster | **EYELINE WHIP** (v18) |
-| 20.5–24 | the S6 suit; the memories pour into the real emblem; it lifts off his chest and charges | **MIST PASS** (v18) |
+| 16–20.5 | the Speed Force (S3): **THE SPEED FORCE STORM** | **SPEED BEAM** |
+| 20.5–24 | the S6 suit; lightning crawls into the real emblem; it lifts off his chest and charges | **SF STRIKE** |
 | 24–26 | the lightning runner (S2) | **EMBLEM REBOOT** (the drop) |
 | 26–28 | the S5 suit charging; *the suit crackles* | **SPARK JUMP** (v18) |
 | 28–30 | the S3 suit at night | **LIGHT BAR STREAK** (v18) |
 | 30–32 | the flight (S4) | **SMEAR** (v17, liked) |
 | 32–34 | Barry in the suit, lightning round him; *embers* | **GLARE WASH** (v17, liked) |
 | 34–36 | the airfield run with lightning (S1) | **EMBER BURN** (v18) |
-| 36–38 | running, lightning, daylight (S4) | **LIGHTNING WHIP** (v18) |
+| 36–38 | running, lightning, daylight (S4) | **SPEED STREAKS** |
 | 38–40 | the breakout (S4) | **WORLD SWAP** |
-| 40–42 | the S5 run at night | **PANE FLIP** |
+| 40–42 | the S5 run at night | **BOLT CRACK** (v17, liked) |
 | 42–44 | the S1 suit grins | **STREAK CARRY** (v18) |
-| 44–47 | the wet street run (S2) | **ZIP** (v17, liked) |
+| 44–47 | the wet street run (S2) | **EYE DIVE** |
 | 47–50 | the S5 lightning trail | **PIXEL REBOOT** |
 | 50–56 | he runs at us down the avenue (S4); **THE LOOP** from e51 | **BOLT WINDOW** (v17, liked) |
 
-23 shots, all Barry (no side characters), from the high-bitrate packs wherever possible. 22 transitions plus the loop; no
+22 shots (round 3), all Barry (no side characters), from the high-bitrate packs wherever possible. 22 transitions plus the loop; no
 text. The beat camera breathes in the memories, rests while time stops, and punches on every beat after the drop.
 
 ## Review (before delivery)
@@ -112,6 +111,30 @@ visually appealing."*
 - The pane flip is replaced by BOLT CRACK (v17, liked).
 - **Sound:** a thunder crack on the strike; a rising whoosh into the eye.
 - **QC:** 11/11 on the encode; loop seam 0.16; −12.3 LUFS, −4.3 dBTP after AAC.
+
+## Round 3 (the owner's notes)
+*"I don't like that barry does a double take around the 9 second mark. I also dislike the transition that appears at the 15
+second mark … smooth the loop and make it perfect, visually appealing and well animated … polish barrys eye transition and
+make it more visually appealing and well animated."*
+- **The double take (9 s):** the second Speed Force shot (he turns his head toward the camera) and the mist dissolve into
+  it are gone. The first Speed Force shot now runs through the whole break (e16–20.5) with its storm, and the SF STRIKE
+  lands on the cut into the emblem shot. Where the burn front would cross a face, the two faces crossfade whole in two
+  frames under the flash instead; the bolt strikes at the frame's right edge, away from both faces.
+- **The 15 s transition (the lightning whip):** replaced by **SPEED STREAKS**: the frame surges forward, the picture
+  smears sideways and the highlights stretch into anamorphic streaks, then the running shot settles out of it. Faces
+  are kept clear under a soft guard.
+- **THE LOOP, polished:**
+  - the pane holding frame 0 grows smoothly from the vanishing point and reaches full frame just before the wrap
+    (eased, no jump);
+  - from the halfway point he turns to light: lightning runs over his suit below his chin, he glows and dissolves into
+    the pane's light, sparks streaming off him;
+  - the last eight frames ease into frame 0 (seam measured below).
+- **THE EYE DIVE, rebuilt (about 1.2 s):**
+  - the push into his eye accelerates (to 5.5×) with a slight roll; the world falls out of focus and darkens around the eye;
+  - the catchlight blooms and the pupil softly widens;
+  - the next shot blooms out of the pupil inside an iris drawn round it: blue-grey fibres, a soft limbal ring, a bright
+    pupil edge, light rays and a radial blur that settles.
+- **Sound:** the thunder moved onto the strike (e20.5).
 
 ## Sound (lean: 9 placed effects)
 The hook's rising whoosh into the pane; the dive; the emblem's charge (a crackle that builds through the break); the
