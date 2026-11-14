@@ -86,6 +86,33 @@ text. The beat camera breathes in the memories, rests while time stops, and punc
   - the mist keeps off his face.
 - **QC (final):** 11/11 on the encode; loop seam 0.16; −12.3 LUFS, −4.3 dBTP after AAC.
 
+## Round 2 (the owner's notes)
+*"I don't like that the picture frames appear in other scenes aside from the beginning and where the loop occurs … replace
+the scenes where there is picture frames with new creative Flash-related scenes … one to involve lightning bolt, one to
+involve the emblem, and another to involve his eyes in a cinematic, really cool transition … very high quality and very
+visually appealing."*
+- **The memory panes stay only in the hook (the opening) and the loop.** They are gone from the masked shot, the roof,
+  the Speed Force and the emblem.
+- **Lightning: THE SPEED FORCE STORM.**
+  - In the break, detailed branching bolts (each a tapering channel with forked branches and a re-strike 90 ms later)
+    strike behind him in the Speed Force, faster and faster.
+  - They light the mist round them and throw a rim of light on his edge.
+  - **SF STRIKE** on the cut (about 1 s): leaders creep down the open side, the bolt strikes on the cut, and the next shot
+    burns in outward from its channel.
+  - On the roof, lightning flickers in the clouds over the city.
+- **The emblem: EMBLEM IGNITION.**
+  - Lightning crawls along his suit into the real chest emblem, tracked on the source.
+  - The emblem lifts off his chest and flips once like a coin (its gold back showing), charging, with light pouring out
+    of it in a fan.
+  - On the drop it fires the reboot shock ring.
+- **His eyes: EYE DIVE.**
+  - The camera pushes into his eye through the mask's eye opening, the world narrowing round it; the catchlight flares.
+  - His iris opens onto the wet-street run, its fibres round the opening.
+  - No lightning in his eyes (the owner's standing rule).
+- The pane flip is replaced by BOLT CRACK (v17, liked).
+- **Sound:** a thunder crack on the strike; a rising whoosh into the eye.
+- **QC:** 11/11 on the encode; loop seam 0.16; −12.3 LUFS, −4.3 dBTP after AAC.
+
 ## Sound (lean: 9 placed effects)
 The hook's rising whoosh into the pane; the dive; the emblem's charge (a crackle that builds through the break); the
 drop (an impact, a sub drop, a zap); the ember burn; the loop's rising whoosh into the pane. Every other transition is
