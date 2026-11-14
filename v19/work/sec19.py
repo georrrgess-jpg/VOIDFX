@@ -2934,7 +2934,13 @@ def base19(s, f):
     lk = s.get("look")
     img = memoryize(img) if lk == "memory" else neonize(img)
     if s.get("anim") in ANIMS: img = ANIMS[s["anim"]](img, person, s, f)
-    if s["n"] == "avenue": img = loop_fx19(img, person, s, f)
+    if s["n"] == "avenue":
+        if person is not None and f >= fh(E.E_LOOP) and float((person > 0.5).mean()) < 0.15:    # the matte drops out (1358-1361): hold the last good one
+            for k_ in range(1, 9):
+                i2, p2 = base11(s, f - k_)
+                if p2 is not None and float((p2 > 0.5).mean()) >= 0.15:
+                    person = p2; img = neonize(i2); break                                       # the picture glitches with it: hold both
+        img = loop_fx19(img, person, s, f)
     return img, person
 base17 = base19
 base18 = base19
@@ -3224,13 +3230,16 @@ def loop_fx19(img, person, s, f):
     glow = 1.3 * (1 - smooth(clamp((tt - 0.55) / 0.25, 0, 1)))
     o = pane_draw(img, vt, pane_quad(cx, cy, h, yaw, 0.0), alpha=smooth(clamp(t / 0.06, 0, 1)), behind=person,
                   glow=glow, blur=max(0.0, 2.0 * (1 - gp * 3)), sheen=0.7 * (1 - pth))
-    if gp >= 0.999: o = o * 0 + V if person is None else V * (1 - np.clip(person * 1.25, 0, 1))[..., None] + o * np.clip(person * 1.25, 0, 1)[..., None]
+    pm = None if person is None else cv2.GaussianBlur(np.clip(person * 1.25, 0, 1), (0, 0), 3)   # one matte for every step (no outline left behind)
+    if gp >= 0.999: o = V if pm is None else V * (1 - pm)[..., None] + o * pm[..., None]
     k = smoother(clamp((tt - 0.62) / 0.36, 0, 1))                                              # he turns to light and streams away
     if person is not None and k > 0:
-        pm = cv2.GaussianBlur(np.clip(person * 1.25, 0, 1), (0, 0), 3)
-        fk = face_keep(s, f, 1.0)
+        fs = fs3_of(s, f)
+        if fs and fs[1] > H * 0.45: fs = None                                                  # the tracker takes his hand for a face late in the run
+        fk = (face_keep(s, f, 1.0) if fs else 1.0) * face_keep(SHOTS[0], SHOTS[0]["f0"], 1.3)  # off his face and frame 0's face
         cv = bolt_canvas()                                                                     # lightning crawls over his suit (below his chin)
-        fs = fs3_of(s, f); body = pm.copy()
+        body = pm.copy()
+        if not fs: body[: int(H * 0.30)] = 0
         if fs: body[: int(min(H, fs[1] + fs[2] * 1.2))] = 0
         q = 8; bq = cv2.resize(body, (W // q, H // q), interpolation=cv2.INTER_AREA); ys, xs = np.nonzero(bq > 0.6)
         lt = 0.0
@@ -3243,9 +3252,9 @@ def loop_fx19(img, person, s, f):
             lt = light_rgb(cv, 1.1, HOT, GOLD18)
         heat = math.sin(math.pi * k) * 0.9                                                       # he glows
         fill = cv2.GaussianBlur(pm, (0, 0), 14) * heat
-        dissolve = np.clip(k * 1.15 - 0.15, 0, 1)
+        dissolve = smooth(clamp(k * 1.5 - 0.15, 0, 1))                                          # he is gone by k 0.77: no lingering ghost
         o = o * (1 - (pm * dissolve)[..., None]) + V * (pm * dissolve)[..., None]
-        o = o + kmul((fill * (1 - dissolve * 0.6)).astype(F32), fk)[..., None] * (GOLD18 * 0.55 + HOT * 0.45)
+        o = o + kmul((fill * (1 - dissolve)).astype(F32), fk)[..., None] * (GOLD18 * 0.55 + HOT * 0.45)
         if not isinstance(lt, float): o = o + kmul(lt, fk) * (1 - dissolve)
         rng = np.random.default_rng(1991); cvs = np.zeros((H // 2, W // 2), np.uint8)   # the sparks stream away
         ys2, xs2 = np.nonzero(cv2.resize(pm, (W // 16, H // 16)) > 0.5)
@@ -3257,6 +3266,7 @@ def loop_fx19(img, person, s, f):
                 vx = (x0 - W * 0.5) * 1.6 + rng.uniform(-120, 120); vy = rng.uniform(-420, -120)
                 px = x0 + vx * age; py = y0 + vy * age
                 cv2.circle(cvs, (int(px * 8), int(py * 8)), int(rng.uniform(1.5, 3.2) * 8), int(255 * (1 - age / 0.45)), -1, cv2.LINE_AA, shift=4)
+        if dissolve >= 0.999: o = V.copy()                                                      # he is gone: frame 0 exactly, the sparks over it
         sp = cv2.resize(cvs.astype(F32) / 255, (W, H)); sp = sp + cv2.GaussianBlur(sp, (0, 0), 4) * 1.5
         o = o + kmul((sp * (1 - smooth(clamp((tt - 0.90) / 0.10, 0, 1)))).astype(F32), fk)[..., None] * (GOLD18 * 0.5 + HOT * 0.5)
     return np.clip(o, 0, 1)

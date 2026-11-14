@@ -128,6 +128,10 @@ make it more visually appealing and well animated."*
     (eased, no jump);
   - from the halfway point he turns to light: lightning runs over his suit below his chin, he glows and dissolves into
     the pane's light, sparks streaming off him;
+  - his cut-out drops out in the source for four frames (1358–1361), so the last good cut-out and picture are held there
+    (the dissolve no longer jumps); one matte drives every step, so no outline of him is left on frame 0;
+  - the lightning stays off his face and off frame 0's face; he is fully gone by 1368, and the last half second is frame 0
+    itself with the sparks fading over it;
   - the last eight frames ease into frame 0 (seam measured below).
 - **THE EYE DIVE, rebuilt (about 1.2 s):**
   - the push into his eye accelerates (to 5.5×) with a slight roll; the world falls out of focus and darkens around the eye;

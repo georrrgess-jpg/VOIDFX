@@ -4,7 +4,7 @@
  "activity_hb": [
   3.89,
   3.84,
-  10.3,
+  10.29,
   1.97,
   1.71,
   3.67,
@@ -17,16 +17,16 @@
   1.92,
   4.22,
   2.04,
-  5.81,
-  2.53,
-  2.93,
-  6.44,
-  6.01,
-  6.34,
-  4.41,
-  5.11,
+  5.87,
+  2.5,
+  2.88,
+  4.47,
+  4.22,
+  6.2,
+  4.8,
+  5.12,
   4.31,
-  11.75,
+  11.74,
   2.95,
   10.46,
   9.11,
@@ -37,27 +37,27 @@
   8.18,
   2.97,
   7.08,
-  5.25,
-  11.63,
+  3.21,
+  8.22,
   9.83,
   12.0,
-  6.19,
+  6.2,
   6.93,
   5.72,
-  9.37,
-  22.25,
-  7.32,
+  10.65,
+  19.51,
+  8.57,
   1.63,
   4.03,
   7.48,
   3.8,
   4.74,
   17.8,
-  7.7,
-  11.41,
-  8.45,
-  11.06,
-  9.18
+  7.85,
+  11.8,
+  10.55,
+  12.21,
+  3.19
  ],
  "dead": [],
  "pops": [
@@ -172,7 +172,7 @@
   {
    "f": 409,
    "t": 6.817,
-   "d": 11.3,
+   "d": 12.3,
    "med": 1.9,
    "kind": "UNEXPLAINED",
    "near": "speed_beam @ 399",
@@ -181,47 +181,56 @@
   {
    "f": 445,
    "t": 7.417,
-   "d": 15.6,
-   "med": 1.9,
+   "d": 16.1,
+   "med": 3.5,
    "kind": "UNEXPLAINED",
-   "near": "sf_strike @ 462",
+   "near": null,
    "hb_off": -4
-  },
-  {
-   "f": 463,
-   "t": 7.717,
-   "d": 16.2,
-   "med": 4.2,
-   "kind": "cut",
-   "near": "sf_strike @ 462",
-   "hb_off": -11
   },
   {
    "f": 471,
    "t": 7.85,
-   "d": 22.2,
-   "med": 6.4,
+   "d": 13.2,
+   "med": 3.6,
    "kind": "UNEXPLAINED",
-   "near": "sf_strike @ 462",
+   "near": null,
    "hb_off": -3
   },
   {
    "f": 492,
    "t": 8.2,
-   "d": 18.5,
-   "med": 4.2,
+   "d": 13.3,
+   "med": 3.5,
    "kind": "UNEXPLAINED",
-   "near": "sf_strike @ 462",
+   "near": null,
    "hb_off": -7
+  },
+  {
+   "f": 506,
+   "t": 8.433,
+   "d": 13.1,
+   "med": 3.7,
+   "kind": "cadence",
+   "near": "sf_strike @ 512",
+   "hb_off": 7
   },
   {
    "f": 514,
    "t": 8.567,
-   "d": 16.8,
+   "d": 21.7,
    "med": 4.6,
-   "kind": "UNEXPLAINED",
-   "near": "mist_pass @ 512",
+   "kind": "cadence",
+   "near": "sf_strike @ 512",
    "hb_off": -10
+  },
+  {
+   "f": 515,
+   "t": 8.583,
+   "d": 22.5,
+   "med": 4.5,
+   "kind": "cadence",
+   "near": "sf_strike @ 512",
+   "hb_off": -9
   },
   {
    "f": 649,
@@ -397,8 +406,8 @@
   {
    "f": 1276,
    "t": 21.267,
-   "d": 38.1,
-   "med": 0.6,
+   "d": 38.2,
+   "med": 0.7,
    "kind": "cadence",
    "near": "bolt_window @ 1248",
    "hb_off": 3
@@ -407,7 +416,7 @@
    "f": 1282,
    "t": 21.367,
    "d": 39.7,
-   "med": 0.7,
+   "med": 0.8,
    "kind": "cadence",
    "near": null,
    "hb_off": 9
@@ -415,8 +424,8 @@
   {
    "f": 1285,
    "t": 21.417,
-   "d": 31.4,
-   "med": 0.7,
+   "d": 31.5,
+   "med": 0.9,
    "kind": "cadence",
    "near": null,
    "hb_off": 12
@@ -424,8 +433,8 @@
   {
    "f": 1291,
    "t": 21.517,
-   "d": 37.1,
-   "med": 0.8,
+   "d": 37.3,
+   "med": 1.0,
    "kind": "cadence",
    "near": null,
    "hb_off": -7
@@ -433,8 +442,8 @@
   {
    "f": 1294,
    "t": 21.567,
-   "d": 32.4,
-   "med": 0.8,
+   "d": 32.6,
+   "med": 1.1,
    "kind": "cadence",
    "near": null,
    "hb_off": -4
@@ -442,8 +451,8 @@
   {
    "f": 1299,
    "t": 21.65,
-   "d": 34.3,
-   "med": 0.8,
+   "d": 35.0,
+   "med": 1.2,
    "kind": "beat",
    "near": null,
    "hb_off": 1
@@ -451,8 +460,8 @@
   {
    "f": 1301,
    "t": 21.683,
-   "d": 46.0,
-   "med": 0.9,
+   "d": 46.3,
+   "med": 1.3,
    "kind": "cadence",
    "near": null,
    "hb_off": 3
@@ -460,8 +469,8 @@
   {
    "f": 1305,
    "t": 21.75,
-   "d": 46.0,
-   "med": 1.0,
+   "d": 45.6,
+   "med": 1.5,
    "kind": "cadence",
    "near": null,
    "hb_off": 7
@@ -469,8 +478,8 @@
   {
    "f": 1308,
    "t": 21.8,
-   "d": 40.5,
-   "med": 1.0,
+   "d": 39.8,
+   "med": 1.5,
    "kind": "cadence",
    "near": null,
    "hb_off": 10
@@ -478,8 +487,8 @@
   {
    "f": 1313,
    "t": 21.883,
-   "d": 33.5,
-   "med": 1.1,
+   "d": 32.8,
+   "med": 2.3,
    "kind": "cadence",
    "near": null,
    "hb_off": -10
@@ -487,8 +496,8 @@
   {
    "f": 1317,
    "t": 21.95,
-   "d": 37.8,
-   "med": 1.2,
+   "d": 35.6,
+   "med": 2.5,
    "kind": "cadence",
    "near": null,
    "hb_off": -6
@@ -496,8 +505,8 @@
   {
    "f": 1322,
    "t": 22.033,
-   "d": 28.8,
-   "med": 1.5,
+   "d": 27.8,
+   "med": 2.8,
    "kind": "beat",
    "near": null,
    "hb_off": -1
@@ -505,8 +514,8 @@
   {
    "f": 1326,
    "t": 22.1,
-   "d": 37.3,
-   "med": 1.5,
+   "d": 34.9,
+   "med": 3.0,
    "kind": "cadence",
    "near": null,
    "hb_off": 3
@@ -514,8 +523,8 @@
   {
    "f": 1332,
    "t": 22.2,
-   "d": 40.9,
-   "med": 1.5,
+   "d": 39.8,
+   "med": 3.8,
    "kind": "cadence",
    "near": null,
    "hb_off": 9
@@ -523,8 +532,8 @@
   {
    "f": 1335,
    "t": 22.25,
-   "d": 36.5,
-   "med": 1.5,
+   "d": 36.1,
+   "med": 5.0,
    "kind": "cadence",
    "near": null,
    "hb_off": 12
@@ -532,8 +541,8 @@
   {
    "f": 1341,
    "t": 22.35,
-   "d": 31.1,
-   "med": 1.4,
+   "d": 28.0,
+   "med": 5.9,
    "kind": "cadence",
    "near": null,
    "hb_off": -7
@@ -541,44 +550,17 @@
   {
    "f": 1344,
    "t": 22.4,
-   "d": 38.0,
-   "med": 1.2,
+   "d": 32.8,
+   "med": 7.4,
    "kind": "cadence",
    "near": null,
    "hb_off": -4
   },
   {
-   "f": 1349,
-   "t": 22.483,
-   "d": 33.4,
-   "med": 1.1,
-   "kind": "beat",
-   "near": null,
-   "hb_off": 1
-  },
-  {
-   "f": 1351,
-   "t": 22.517,
-   "d": 33.6,
-   "med": 1.1,
-   "kind": "cadence",
-   "near": null,
-   "hb_off": 3
-  },
-  {
-   "f": 1355,
-   "t": 22.583,
-   "d": 38.0,
-   "med": 2.7,
-   "kind": "cadence",
-   "near": null,
-   "hb_off": 7
-  },
-  {
    "f": 1358,
    "t": 22.633,
-   "d": 45.1,
-   "med": 2.7,
+   "d": 50.2,
+   "med": 6.2,
    "kind": "cadence",
    "near": null,
    "hb_off": 10
@@ -586,8 +568,8 @@
   {
    "f": 1363,
    "t": 22.717,
-   "d": 38.8,
-   "med": 2.7,
+   "d": 54.8,
+   "med": 2.8,
    "kind": "cadence",
    "near": null,
    "hb_off": -10
@@ -595,38 +577,11 @@
   {
    "f": 1367,
    "t": 22.783,
-   "d": 26.2,
-   "med": 2.7,
+   "d": 20.9,
+   "med": 3.5,
    "kind": "cadence",
    "near": null,
    "hb_off": -6
-  },
-  {
-   "f": 1372,
-   "t": 22.867,
-   "d": 26.9,
-   "med": 3.3,
-   "kind": "beat",
-   "near": null,
-   "hb_off": -1
-  },
-  {
-   "f": 1376,
-   "t": 22.933,
-   "d": 35.1,
-   "med": 4.2,
-   "kind": "cadence",
-   "near": null,
-   "hb_off": 3
-  },
-  {
-   "f": 1382,
-   "t": 23.033,
-   "d": 29.7,
-   "med": 8.1,
-   "kind": "cadence",
-   "near": null,
-   "hb_off": 9
   }
  ],
  "judder": [
@@ -638,9 +593,9 @@
    "repeat_frac": 0.19,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.62,
-   "p80": 4.92,
-   "ratio": 1.88,
+   "p20": 2.61,
+   "p80": 4.93,
+   "ratio": 1.89,
    "flag": false
   },
   {
@@ -651,9 +606,9 @@
    "repeat_frac": 0.0,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.48,
+   "p20": 1.49,
    "p80": 2.04,
-   "ratio": 1.38,
+   "ratio": 1.37,
    "flag": false
   },
   {
@@ -733,27 +688,17 @@
   {
    "shot": "sf",
    "f0": 399,
-   "f1": 462,
-   "interp": "flow",
-   "repeat_frac": 0.18,
-   "cadence_frames": 0,
-   "cadence_range": null,
-   "p20": 1.61,
-   "p80": 4.23,
-   "ratio": 2.62,
-   "flag": false
-  },
-  {
-   "shot": "sf2",
-   "f0": 462,
    "f1": 512,
    "interp": "flow",
-   "repeat_frac": 0.16,
-   "cadence_frames": 0,
-   "cadence_range": null,
-   "p20": 3.75,
-   "p80": 7.79,
-   "ratio": 2.08,
+   "repeat_frac": 0.19,
+   "cadence_frames": 4,
+   "cadence_range": [
+    502,
+    505
+   ],
+   "p20": 1.79,
+   "p80": 4.75,
+   "ratio": 2.66,
    "flag": false
   },
   {
@@ -762,11 +707,14 @@
    "f1": 599,
    "interp": "flow",
    "repeat_frac": 0.09,
-   "cadence_frames": 0,
-   "cadence_range": null,
+   "cadence_frames": 2,
+   "cadence_range": [
+    518,
+    519
+   ],
    "p20": 3.26,
-   "p80": 6.11,
-   "ratio": 1.88,
+   "p80": 6.1,
+   "ratio": 1.87,
    "flag": false
   },
   {
@@ -774,12 +722,12 @@
    "f0": 599,
    "f1": 649,
    "interp": "flow",
-   "repeat_frac": 0.03,
+   "repeat_frac": 0.0,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.02,
-   "p80": 12.11,
-   "ratio": 6.0,
+   "p20": 2.01,
+   "p80": 12.1,
+   "ratio": 6.02,
    "flag": false
   },
   {
@@ -842,9 +790,9 @@
    "repeat_frac": 0.05,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.45,
-   "p80": 2.97,
-   "ratio": 1.21,
+   "p20": 2.51,
+   "p80": 3.02,
+   "ratio": 1.2,
    "flag": false
   },
   {
@@ -858,9 +806,9 @@
     942,
     942
    ],
-   "p20": 4.47,
-   "p80": 9.78,
-   "ratio": 2.19,
+   "p20": 4.58,
+   "p80": 9.64,
+   "ratio": 2.1,
    "flag": false
   },
   {
@@ -887,8 +835,8 @@
    "repeat_frac": 0.08,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.51,
-   "p80": 4.37,
+   "p20": 2.52,
+   "p80": 4.39,
    "ratio": 1.74,
    "flag": false
   },
@@ -897,12 +845,12 @@
    "f0": 1049,
    "f1": 1098,
    "interp": "flow",
-   "repeat_frac": 0.03,
+   "repeat_frac": 0.05,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 3.56,
-   "p80": 22.15,
-   "ratio": 6.22,
+   "p20": 5.64,
+   "p80": 19.16,
+   "ratio": 3.4,
    "flag": false
   },
   {
@@ -913,9 +861,9 @@
    "repeat_frac": 0.05,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.42,
-   "p80": 1.77,
-   "ratio": 1.25,
+   "p20": 1.48,
+   "p80": 2.06,
+   "ratio": 1.39,
    "flag": false
   },
   {
@@ -936,21 +884,21 @@
    "f0": 1248,
    "f1": 1398,
    "interp": "hold",
-   "repeat_frac": 0.46,
-   "cadence_frames": 136,
+   "repeat_frac": 0.43,
+   "cadence_frames": 125,
    "cadence_range": [
     1254,
-    1389
+    1378
    ],
-   "p20": 0.76,
-   "p80": 31.16,
-   "ratio": 41.18,
+   "p20": 1.08,
+   "p80": 23.84,
+   "ratio": 22.15,
    "flag": true
   }
  ],
  "loop": {
-  "wrap_step": 0.84,
-  "local_median": 3.25,
+  "wrap_step": 0.85,
+  "local_median": 3.26,
   "spike": false
  }
 }
