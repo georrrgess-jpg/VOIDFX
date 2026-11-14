@@ -12887,9 +12887,10 @@ def loop_fx19(img, person, s, f):
     f0 = fh(E.E_LOOP); N = E.DUR_F - f0
     if f < f0: return img
     t = (f - f0) / N
-    fv = f - E.DUR_F + (0.5 if f == E.DUR_F - 1 else 0.0)
+    kk = E.DUR_F - f                                                                           # the last frames ease into frame 0
+    fv = -kk * (0.35 + 0.65 * (kk - 1) / 7) if kk <= 8 else float(f - E.DUR_F)
     V = frame_virtual(max(fv, -9.0))
-    if t >= 0.93: return np.clip(frame_virtual(fv), 0, 1)                                      # it has filled the lens: frame 0, running on
+    if t >= 0.93: return np.clip(V, 0, 1)                                      # it has filled the lens: frame 0, running on
     h0 = 150.0; tt = clamp(t / 0.93, 0, 1); g_ = ein(tt, 1.6)
     h = h0 * math.exp(math.log(H * 1.18 / h0) * g_)
     pth = smooth(clamp(tt * 1.1 - 0.1, 0, 1)) ** 1.2                                          # from the sky over his shoulder to the middle
