@@ -119,7 +119,7 @@ SET_PIECES = [("hook", th(0), th(3)), ("memory_storm", th(16), th(21)), ("emblem
 HERO = ["pane_draw"]
 HERO_TINS = ["pane_pass", "pane_dive", "emblem_reboot", "loop19"]
 SIGNATURE = ["emblem_reboot", "pane_pass"]
-PLAN_ACCEPT = {"hero motif": "the panes are drawn by pane_pass, pane_dive and the loop; the other transitions only show the edge frame of a memory shot whose living animation has panes drifting in its background"}
+PLAN_ACCEPT = {'pf:hero motif:the hero asset (pane_draw) is drawn by 6': "the panes are drawn by pane_pass, pane_dive and the loop; the other transitions only show the edge frame of a memory shot whose living animation has panes drifting in its background"}
 SHOTS = S
 for s in SHOTS:
     s["f0"], s["f1"] = fe(s["t0"]), fe(s["t1"])
