@@ -1853,6 +1853,8 @@ def mist_pass(A, B, j, f, sa, sb, pre=10, post=12):
     cover = np.exp(-((_GX - pos) / 520.0) ** 2).astype(F32)
     dens = np.clip((N - 0.65 + 0.9 * cover * k) / 0.30, 0, 1).astype(F32) * 0.60
     w = smooth(clamp((x - 0.35) / 0.30, 0, 1)); base = defocus16(A, 10 * k) * (1 - w) + defocus16(B, 10 * k) * w
+    fmm = face_soft(sa if w < 0.5 else sb, f if (j < 0) == (w < 0.5) else (sa["f1"] - 1 if w < 0.5 else sb["f0"]), 1.4)
+    if fmm is not None: dens = dens * (1 - fmm[..., 0])                                        # the mist keeps off his face
     return np.clip(base * (1 - dens[..., None]) + dens[..., None] * (SFB * 0.55 + HOT * 0.25), 0, 1)
 
 def lamp_bloom(A, B, j, f, sa, sb, pre=8, post=10):
@@ -2519,7 +2521,7 @@ def cam_amp(e):
 def beat_e(e): return 2 * math.floor(e / 2 + 1e-9)
 
 # ---- THE MEMORY PANES (the hero) ------------------------------------------------------------------------------------------
-MEM_ORDER = ["van", "run5", "device", "s3night", "blast", "thinks", "roof", "sf", "charge", "flight", "fire", "runlit"]
+MEM_ORDER = ["van", "run5", "crossed", "masked", "blast", "thinks", "roof", "sf", "charge", "flight", "fire", "runlit"]
 _PT = {}
 def pane_tex(name):
     """a memory: the shot's middle frame, graded as a memory, at a quarter of the frame's size (pure: from base11 only)."""
@@ -2740,6 +2742,187 @@ def loop19(A, B, j, f, sa, sb):
     return B
 
 ANIMS.update({"panes": a_panes, "storm": a_storm, "converge": a_converge})
+
+# ============================================================================ v19 round 1b (the fresh-eyes critique): a hook that never crosses his
+# face, a Speed Force beam for the dive, a storm that visibly orbits behind him, the emblem lifting and charging, the loop
+# behind him, and four new transitions in place of ports (WORLD SWAP, PANE FLIP, PIXEL REBOOT, SPEED BEAM).
+def pane_pass(A, B, j, f, sa, sb, pre=69, post=12):
+    """THE HOOK: a memory pane (the night run inside it) rises out of the dark behind him on the open side, turning,
+    always behind him; then the camera pushes into the pane and through it, and he slides out of frame."""
+    if j >= 0:
+        v = (j + 1) / post
+        o = zoom_about(B, W / 2, H / 2, 1.0 + 0.05 * (1 - eout(v, 2.2)))
+        k = 0.05 * (1 - eout(v, 2))
+        if k > 0.004: o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + k, 5)
+        return np.clip(o, 0, 1)
+    u = (j + pre + 1) / pre
+    a_in = smooth(clamp((f - 2) / 10, 0, 1))
+    if a_in <= 0: return A
+    pm = PERSON.get(f)
+    up_ = smooth(clamp(u / 0.72, 0, 1))
+    h = 150 * math.exp(math.log(H * 0.30 / 150) * ein(up_, 1.4))
+    cx = W * 0.84 + (W * 0.77 - W * 0.84) * up_; cy = H * 0.24 + (H * 0.17 - H * 0.24) * up_
+    yaw = 0.85 * (1 - up_) + 0.10; roll = 0.10 * (1 - up_)
+    o = pane_draw(A, B, pane_quad(cx, cy, h, yaw, roll), alpha=a_in, behind=pm, glow=1.3, blur=max(0.0, 3.0 * (1 - up_ * 2)), sheen=0.8)
+    k = smooth(clamp((u - 0.72) / 0.28, 0, 1))                                                # the push into it
+    if k > 0:
+        Z = 1 + (H / (h * 1.0) - 1) * ein(k, 1.8)
+        tx_ = (W / 2 - cx) * smooth(k); ty_ = (H / 2 - cy) * smooth(k)
+        M = np.float32([[Z, 0, cx + tx_ - Z * cx], [0, Z, cy + ty_ - Z * cy]])
+        o = cv2.warpAffine(o, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + 0.10 * math.sin(math.pi * k), 6)
+        w = smooth(clamp((k - 0.55) / 0.45, 0, 1)); o = o * (1 - w) + B * w
+    return np.clip(o, 0, 1)
+
+def speed_beam(A, B, j, f, sa, sb, pre=42, post=14):
+    """SPEED BEAM (the roof -> the Speed Force): a column of the Speed Force's blue light comes down out of the sky behind
+    him, widening, its shafts raking through the city; it floods the lens and he is inside it."""
+    if j >= 0:
+        v = (j + 1) / post; o = B * (1 + 0.35 * (1 - v) ** 2)
+        return np.clip(o, 0, 1)
+    u = (j + pre + 1) / pre; pm = PERSON.get(f)
+    fs = fs3_of(sa, f); bx = fs[0] + 40 if fs else W * 0.55
+    wdt = 30 + 620 * ein(u, 2.0); grow = smooth(clamp(u / 0.35, 0, 1))
+    reach = H * (0.05 + 1.0 * grow)
+    beam = (np.exp(-((_GX - bx) / wdt) ** 2) * np.clip((reach - _GY) / 220.0, 0, 1)).astype(F32)
+    core = (np.exp(-((_GX - bx) / (wdt * 0.25 + 6)) ** 2) * np.clip((reach - _GY) / 220.0, 0, 1)).astype(F32)
+    beh = (1 - np.clip(pm * 1.3, 0, 1)) if pm is not None else 1.0
+    o = god_rays(A, pm, bx, -H * 0.05, 0.9 * u, 0.40)
+    o = o + ((beam * 0.85 + core * 1.4) * beh)[..., None] * (SFB * 0.5 + HOT * 0.5) * (0.5 + 0.7 * u)
+    fl = smooth(clamp((u - 0.70) / 0.20, 0, 1))                                                # it floods the lens
+    o = o * (1 - 0.55 * fl) + (SFB * 0.5 + HOT * 0.5) * 0.55 * fl
+    w = smooth(clamp((u - 0.86) / 0.14, 0, 1))
+    o = o * (1 - w) + (B * 1.25) * w
+    return np.clip(o, 0, 1)
+
+def world_swap(A, B, j, f, sa, sb, pre=10, post=6):
+    """WORLD SWAP: he stays; the world behind him turns into the next shot's world, rushing in from the edges round his
+    matte, a rim of light on him; then the cut."""
+    if j >= 0:
+        v = (j + 1) / post; return np.clip(B * (1 + 0.20 * (1 - v) ** 2), 0, 1)
+    u = (j + pre + 1) / pre; pm = PERSON.get(f)
+    if pm is None: w = smooth(u); return np.clip(A * (1 - w) + B * w, 0, 1)
+    d = np.minimum(np.minimum(_GX, W - _GX), np.minimum(_GY, H - _GY)) / (W * 0.5)
+    m = np.clip((ein(u, 1.3) * 1.15 - d) / 0.12, 0, 1).astype(F32)
+    pmc = np.clip(pm * 1.2, 0, 1)
+    bg = (m * (1 - pmc))[..., None]
+    o = A * (1 - bg) + zoom_about(B, W / 2, H / 2, 1.08 - 0.08 * u) * bg
+    rim = np.clip(pm - cv2.erode(pm, np.ones((11, 11), np.uint8)), 0, 1)
+    o = o + kmul((rim * 0.9 * math.sin(math.pi * u)).astype(F32), face_keep(sa, f, 1.0))[..., None] * (CYAN19 * 0.6 + HOT * 0.4)
+    return np.clip(o, 0, 1)
+
+def pane_flip(A, B, j, f, sa, sb, pre=6, post=10):
+    """PANE FLIP: the frame becomes a memory pane, steps back and turns over; on its back is the next shot."""
+    x = _x(j, pre, post); ph_ = math.pi * smoother(clamp(x, 0, 1))
+    sc = 1 - 0.18 * math.sin(ph_)
+    if ph_ < math.pi / 2: tex, yaw = A, ph_
+    else: tex, yaw = B, ph_ - math.pi
+    bg = cv2.GaussianBlur((A if ph_ < math.pi / 2 else B) * 0.35, (0, 0), 25)
+    o = pane_draw(bg, tex, pane_quad(W / 2, H / 2, H * sc, yaw, 0.0), alpha=1.0, glow=1.2 * math.sin(ph_), sheen=0.8 * math.sin(ph_))
+    return np.clip(o, 0, 1)
+
+def pixel_reboot(A, B, j, f, sa, sb, pre=6, post=14):
+    """PIXEL REBOOT: the frame breaks down into coarse blocks of its own colour as a line of cyan light sweeps it, and the
+    next shot boots back up from coarse to fine behind a second sweep."""
+    def mosaic(img, bs):
+        if bs < 1.5: return img
+        sm = cv2.resize(img, (max(1, int(W / bs)), max(1, int(H / bs))), interpolation=cv2.INTER_AREA)
+        return cv2.resize(sm, (W, H), interpolation=cv2.INTER_NEAREST)
+    if j < 0:
+        u = (j + pre + 1) / pre; bs = 1 + 60 * ein(u, 2.0); o = mosaic(A, bs); y_ = H * u
+    else:
+        v = (j + 1) / post; bs = 1 + 60 * (1 - eout(v, 1.8)); o = mosaic(B, bs); y_ = H * v
+    band = np.exp(-((_GY - y_) / 18.0) ** 2).astype(F32) + 0.3 * np.exp(-((_GY - y_) / 120.0) ** 2).astype(F32)
+    addc(o, band, CYAN19 * 0.7 + HOT * 0.3, 0.6 * (1 - (j + 1) / post if j >= 0 else 1.0))
+    return np.clip(o, 0, 1)
+
+def a_storm(img, person, s, f):
+    """MEMORY STORM: big panes orbit behind him on an ellipse in depth, visibly faster and faster (motion-blurred as they
+    go); the ones swinging round in front pass only at the frame's edges, huge and out of focus."""
+    e = e_of(f); tg = (e - E.E_BREAK) * E.HB                                                   # seconds since time stopped (both storm shots)
+    fs = fs3_of(s, f) or (W * 0.5, H * 0.35, 300.0)
+    cx0, cy0 = fs[0], fs[1] + fs[2] * 0.3
+    ang0 = 0.8 * tg + 0.55 * tg * tg; spd = 0.8 + 1.1 * tg
+    o = img; fm = face_soft(s, f, 1.4)
+    a_in = smooth(clamp(tg / 0.30, 0, 1))
+    items = []
+    for k in range(7):
+        th_ = ang0 + k * 2 * math.pi / 7; z = math.sin(th_)
+        x = cx0 + W * 0.40 * math.cos(th_); y = cy0 + H * (-0.24 + 0.20 * ((k * 0.618) % 1.0)) - 60 * z
+        h = 500 * (1 + 0.40 * z)
+        if z > 0.1 and abs(x - cx0) < W * 0.30: continue                                        # in front of him: only at the edges
+        items.append((z, k, x, y, h, th_))
+    for z, k, x, y, h, th_ in sorted(items):
+        tex = pane_tex(MEM_ORDER[k % 7])
+        for tr in (2, 1, 0) if spd > 1.6 else (0,):                                               # its trail as it whips round
+            dth = -tr * 0.05 * spd; t2 = th_ + dth
+            x2 = cx0 + W * 0.40 * math.cos(t2); al = a_in * (0.92 if tr == 0 else 0.30 / tr)
+            o = pane_draw(o, tex, pane_quad(x2, y, h, -math.cos(t2) * 0.9, 0.06 * math.sin(t2)), alpha=al,
+                          behind=(person if z <= 0.1 else None), glow=(1.0 if tr == 0 else 0.0), blur=(2.0 if z <= 0.1 else 9.0),
+                          face=(fm[..., 0] if fm is not None else None), sheen=0.5 if tr == 0 else 0.0)
+    return np.clip(o, 0, 1)
+
+def a_converge(img, person, s, f):
+    """CONVERGE: the memories pour into the real chest emblem from the sides and below, readable as they come, trailing
+    light; the emblem lifts off his chest toward us and charges, crackling round its rim."""
+    e = e_of(f); ex, ey, er = emb_pt19(s, f)
+    o = img; rng = np.random.default_rng(1919)
+    lift = smooth(clamp((e - 22.2) / 1.6, 0, 1)); chg = smooth(clamp((e - 20.8) / 3.0, 0, 1))
+    if lift > 0.002:                                                                           # the emblem leaves its socket
+        patch, alpha, R = emb_patch(img, ex, ey, er)
+        o = emb_hole(o, ex, ey, er, (s["n"], int(f)))
+        sc = 1.0 + 0.25 * lift
+        o, _ = put_sprite(o, patch, alpha, R, ex, ey - 30 * lift, sc, sc)
+        ey = ey - 30 * lift; er = er * sc
+    for k in range(8):
+        ang = math.radians([-20, 200, 30, 160, 60, 120, -40, 220][k]); dist = H * rng.uniform(0.48, 0.62)
+        ta = 20.7 + 0.32 * k; tb = ta + 1.30
+        u = clamp((e - ta) / (tb - ta), 0, 1)
+        if u <= 0 or u >= 1: continue
+        p = ein(u, 1.6)
+        x = ex + dist * math.cos(ang) * (1 - p); y = ey + dist * math.sin(ang) * (1 - p) * 0.8
+        h = 540 * (1 - p) ** 0.7 + 18
+        o = pane_draw(o, pane_tex(MEM_ORDER[k % 8]), pane_quad(x, y, h, 0.7 * (1 - p) * math.sin(k + 1), 0.25 * (1 - p)), alpha=0.92, glow=1.4, sheen=0.5,
+                      face=(face_soft(s, f, 1.2)[..., 0] if face_soft(s, f, 1.2) is not None else None))
+    d = np.sqrt((_GX - ex) ** 2 + (_GY - ey) ** 2)
+    cv = bolt_canvas()
+    for k in range(4):
+        a0 = 0.7 + 1.6 * k + 6.0 * f / FPS
+        put_bolt(cv, (ex + er * 1.12 * math.cos(a0), ey + er * 1.12 * math.sin(a0)), (ex + er * 1.12 * math.cos(a0 + 1.2), ey + er * 1.12 * math.sin(a0 + 1.2)), 19100 + k + 7 * (f // 2), 2, 0.3, 4, 0, val=int(230 * chg))
+    o = o + kmul(light_rgb(cv, 1.0, HOT, CYAN19 * 0.5 + GOLD18 * 0.5) * chg, face_keep(s, f, 1.1))
+    addc(o, kmul((np.exp(-(d / (er * (1.2 + 0.8 * chg))) ** 2) * chg).astype(F32), face_keep(s, f, 1.1)), CYAN19 * 0.5 + HOT * 0.5, 0.30)
+    return np.clip(o, 0, 1)
+
+def loop_fx19(img, person, s, f):
+    """THE LOOP: he runs at us; a pane holding frame 0 (live) comes out of the sky behind him, always behind him, growing
+    until it is the whole world behind him; he runs into it, his figure dissolving into its light, and it is frame 0."""
+    f0 = fh(E.E_LOOP); N = E.DUR_F - f0
+    if f < f0: return img
+    t = (f - f0) / N
+    kk = E.DUR_F - f
+    fv = -kk * (0.35 + 0.65 * (kk - 1) / 7) if kk <= 8 else float(f - E.DUR_F)
+    V = frame_virtual(max(fv, -9.0))
+    if t >= 0.95: return np.clip(V, 0, 1)
+    tt = clamp(t / 0.95, 0, 1); g_ = ein(tt, 1.5)
+    h = 150.0 * math.exp(math.log(H * 1.0 / 150.0) * g_)
+    pth = smooth(clamp(tt * 1.1 - 0.1, 0, 1)) ** 1.2
+    cx = W * 0.80 + (W * 0.50 - W * 0.80) * pth; cy = H * 0.17 + (H * 0.50 - H * 0.17) * pth
+    yaw = -0.45 * (1 - smooth(tt))
+    vt = cv2.resize(V, (W // 2, H // 2), interpolation=cv2.INTER_AREA) if h < H * 0.6 else V
+    o = pane_draw(img, vt, pane_quad(cx, cy, h, yaw, 0.0), alpha=smooth(clamp(t / 0.06, 0, 1)), behind=person,
+                  glow=1.3 * (1 - smooth(clamp((tt - 0.75) / 0.20, 0, 1))), blur=max(0.0, 2.0 * (1 - g_ * 3)), sheen=0.7 * (1 - tt))
+    k = smooth(clamp((tt - 0.70) / 0.30, 0, 1))                                                 # he dissolves into its light
+    if k > 0 and person is not None:
+        pm = np.clip(person * 1.2, 0, 1)
+        rim = np.clip(pm - cv2.erode(pm, np.ones((15, 15), np.uint8)), 0, 1)
+        o = o * (1 - (pm * k)[..., None]) + V * (pm * k)[..., None]
+        o = o + (rim * math.sin(math.pi * k) * 1.2)[..., None] * (HOT * 0.5 + CYAN19 * 0.5)
+    return np.clip(o, 0, 1)
+
+ANIMS.update({"storm": a_storm, "converge": a_converge})
+TR2.update({"pane_pass": (pane_pass, 69, 12), "speed_beam": (speed_beam, 42, 14), "world_swap": (world_swap, 10, 6),
+            "pane_flip": (pane_flip, 6, 10), "pixel_reboot": (pixel_reboot, 6, 14)})
+
 HERO_FN = pane_draw
 TR2.update({"pane_pass": (pane_pass, 69, 12), "pane_dive": (pane_dive, 60, 12), "emblem_reboot": (emblem_reboot, 18, 34),
             "chroma_split": (chroma_split, 5, 8), "loop19": (loop19, 0, 1)})

@@ -85,14 +85,15 @@ def shot(n, src, e0, e1, a, b, **kw):
 shot("van", "fbh", 0, 3, 106.40, 107.40, tin="loop19", seg=True, lin=True, tmap=[(-0.12, 106.30), (0, 106.40), (1, 107.40)], tneg=True,
      z=LinZ([(0, 1.02), (1, 1.06)]), look="memory", anim="panes")                  # frame 0: the S5 suit on a wet neon street at night; THE HOOK: a pane rises out of the dark behind him
 shot("run5", "fs5", 3, 5, 72.00, 72.90, tin="pane_pass", seg=True, look="memory")                # we fall into the pane: the night run
-shot("device", "fbh", 5, 7, 49.95, 50.80, tin="chroma_split", seg=True, look="memory")          # the S2 suit, the chest device lit
-shot("s3night", "fs3", 7, 9, 59.40, 60.30, tin="bokeh_rack", seg=True, look="memory", anim="panes")
+shot("crossed", "fbh", 5, 7, 92.40, 93.40, tin="chroma_split", seg=True, look="memory")          # the S5 suit, arms crossed, grinning
+shot("masked", "fbh", 7, 9, 69.00, 69.85, tin="bokeh_rack", seg=True, look="memory", anim="panes")
 shot("blast", "fbh", 9, 11, 127.55, 128.15, tin="flare_cut", seg=True, look="memory")           # he fires the lightning from his hand
 shot("thinks", "fbh", 11, 13, 136.55, 137.30, tin="crash_zoom", seg=True, look="memory")                # masked, at night, the city behind him
 shot("roof", "fs5", 13, 16, 138.64, 139.60, tin="vertigo", seg=True, face=None, cx=(720, 700), look="memory", anim="panes")   # he stands over the city lights
 # ---- the break (e16-e24): time stops; the memories orbit him, then pour into the emblem
-shot("sf", "fs3", 16, 21, 132.80, 134.30, tin="pane_dive", seg=True, look="memory", anim="storm")  # MEMORY STORM: in the Speed Force his memories orbit him
-shot("hero", "fbh", 21, 24, 109.80, 110.95, tin="mist_pass", seg=True, look="memory", anim="converge")   # they pour into the real emblem; it charges
+shot("sf", "fs3", 16, 18.5, 132.80, 133.70, tin="speed_beam", seg=True, look="memory", anim="storm")   # MEMORY STORM: in the Speed Force his memories orbit him
+shot("sf2", "fs3", 18.5, 20.5, 129.05, 129.85, tin="eyeline_whip", seg=True, look="memory", anim="storm")  # faster: he turns to them
+shot("hero", "fbh", 20.5, 24, 109.75, 110.95, tin="mist_pass", seg=True, look="memory", anim="converge")   # they pour into the real emblem; it lifts and charges
 # ---- the drop (e24-e51): NEON, the present, a new scene on every beat
 shot("ltrun", "fs2", 24, 26, 144.55, 145.40, tin="emblem_reboot", seg=False, face=None, cx=(1040, 1000), tmap=vel(24, 26, 144.55, 145.40), lin=True, flowmax=40, flowfall="blend")
 shot("charge", "fs5", 26, 28, 180.00, 180.90, tin="spark_jump", seg=True, anim="crackle")
@@ -101,12 +102,11 @@ shot("flight", "fbh", 30, 32, 81.00, 81.90, tin="smear17", seg=True, face=None, 
 shot("fire", "fbh", 32, 34, 84.45, 85.05, tin="glare_wash", seg=True, anim="embers")
 shot("airfield", "fs1", 34, 36, 199.60, 200.40, tin="ember_burn", seg=True, face=None, cx=(680, 800))
 shot("runlit", "fbh", 36, 38, 4.55, 6.10, tin="lightning_whip", seg=True, tmap=vel(36, 38, 4.55, 6.10), lin=True, flowmax=40, flowfall="blend")
-shot("breakout", "fbh", 38, 40, 52.92, 53.62, tin="cube_turn", seg=True, ev=0.25)
-shot("lrun", "fs5", 40, 42, 119.20, 120.60, tin="peel17", seg=True, face=None, cx=(930, 860), lin=True, flowmax=90, flowfall="blend")
+shot("breakout", "fbh", 38, 40, 52.92, 53.62, tin="world_swap", seg=True, ev=0.25)
+shot("lrun", "fs5", 40, 42, 119.20, 120.60, tin="pane_flip", seg=True, face=None, cx=(930, 860), lin=True, flowmax=90, flowfall="blend")
 shot("mgrin", "fs1", 42, 44, 252.25, 253.60, tin="streak_carry", seg=True)                       # the S1 suit grins
-shot("wet", "fs2", 44, 46, 77.20, 78.20, tin="zip17", seg=True, face=None, cx=(840, 820), flowmax=40, flowfall="blend")
-shot("run5b", "fs5", 46, 48, 113.00, 113.85, tin="speed_zoom", seg=True, flowmax=40, flowfall="blend")
-shot("trail", "fs5", 48, 50, 87.90, 88.90, tin="light_streak", seg=True, face=None, cx=(470, 400))
+shot("wet", "fs2", 44, 47, 77.20, 78.20, tin="zip17", seg=True, face=None, cx=(840, 820), flowmax=40, flowfall="blend")
+shot("trail", "fs5", 47, 50, 87.90, 88.90, tin="pixel_reboot", seg=True, face=None, cx=(470, 400))
 # ---- THE LOOP (e51-e56): he runs at us down the avenue; the pane holding frame 0 races toward us past him and fills the lens
 shot("avenue", "fbh", 50, 56, 64.80, 66.30, tin="bolt_window", seg=True, face=None, cx=(640, 640), tmap=vel(50, 56, 64.80, 66.30, lo=0.7, hi=1.4), lin=True, interp="hold")
 
@@ -115,9 +115,9 @@ EMB_TRACK = [(109.75, 552.6, 636.6, 59.3), (109.8, 563.4, 646.2, 58.0), (109.85,
              (110.25, 702.6, 667.0, 58.5), (110.3, 714.0, 667.5, 58.0), (110.35, 727.0, 668.0, 58.0), (110.4, 738.6, 668.5, 57.5), (110.45, 747.0, 670.2, 57.5),
              (110.5, 756.6, 672.5, 58.0), (110.55, 766.2, 674.0, 57.5), (110.6, 778.0, 676.0, 57.5), (110.65, 786.0, 678.0, 58.0), (110.7, 790.0, 679.5, 58.5),
              (110.8, 785.0, 679.8, 58.5), (110.9, 777.0, 679.8, 58.5), (111.0, 765.0, 679.8, 58.5)]   # the chest emblem in flash_b_hq 109.75-111.0 s (Hough on the source, outliers dropped, smoothed): (t, x, y, r)
-SET_PIECES = [("hook", th(0), th(3)), ("memory_storm", th(16), th(21)), ("emblem_reboot", th(21), th(26)), ("pane_loop", th(51), th(56))]
+SET_PIECES = [("hook", th(0), th(3)), ("memory_storm", th(16), th(20.5)), ("emblem_reboot", th(20.5), th(26)), ("pane_loop", th(51), th(56))]
 HERO = ["pane_draw"]
-HERO_TINS = ["pane_pass", "pane_dive", "emblem_reboot", "loop19"]
+HERO_TINS = ["pane_pass", "emblem_reboot", "loop19"]
 SIGNATURE = ["emblem_reboot", "pane_pass"]
 PLAN_ACCEPT = {'pf:hero motif:the hero asset (pane_draw) is drawn by 6': "the panes are drawn by pane_pass, pane_dive and the loop; the other transitions only show the edge frame of a memory shot whose living animation has panes drifting in its background"}
 SHOTS = S
