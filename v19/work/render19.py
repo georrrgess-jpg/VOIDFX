@@ -13191,7 +13191,7 @@ def a_sfbolts(img, person, s, f):
     return np.clip(o, 0, 1)
 
 _SFS = {}
-def sf_strike(A, B, j, f, sa, sb, pre=10, post=18):
+def sf_strike(A, B, j, f, sa, sb, pre=24, post=34):
     """SF STRIKE (on the cut in the Speed Force): leaders creep down the open side, the bolt strikes on the cut, and the next
     shot burns in outward from its channel."""
     x = _x(j, pre, post); xs = pre / (pre + post - 1)
@@ -13330,7 +13330,7 @@ def eye_dive(A, B, j, f, sa, sb, pre=34, post=24):
     return np.clip(o, 0, 1)
 
 ANIMS.update({"sfbolts": a_sfbolts, "skybolts": a_skybolts, "ignite": a_ignite})
-TR2.update({"sf_strike": (sf_strike, 10, 18), "eye_dive": (eye_dive, 34, 24), "emblem_reboot": (emblem_reboot, 18, 34)})
+TR2.update({"sf_strike": (sf_strike, 24, 34), "eye_dive": (eye_dive, 34, 24), "emblem_reboot": (emblem_reboot, 18, 34)})
 
 def prefinish(f):
     s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
