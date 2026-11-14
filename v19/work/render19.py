@@ -12854,6 +12854,8 @@ def a_converge(img, person, s, f):
 def emblem_reboot(A, B, j, f, sa, sb, pre=18, post=34):
     ff = f if j < 0 else sa["f1"] - 1
     ex, ey, er = emb_pt19(sa, ff)
+    if sa.get("anim") == "ignite":
+        lf = smooth(clamp((e_of(ff) - 22.0) / 1.2, 0, 1)); ey = ey - 30 * lf; er = er * (1 + 0.25 * lf)
     if j < 0:
         u = (j + pre + 1) / pre
         o = zoom_about(A, ex, ey, 1 + 0.10 * ein(u, 2))
@@ -13139,6 +13141,208 @@ def render(f):
     f0 = fh(E.E_LOOP); mix = None
     if s["n"] == "avenue" and f >= f0: mix = 1.0 if f >= E.DUR_F - 2 else smoother(clamp(((f - f0) / (E.DUR_F - f0) - 0.55) / 0.40, 0, 1))
     return (np.clip(finish19(out, f, s, mix), 0, 1) * 255 + 0.5).astype(np.uint8)
+
+
+# ============================================================================ v19 round 2 (the owner: the picture frames only at the beginning and the
+# loop; new Flash scenes in their place: one with a lightning bolt, one with the emblem, one with his eyes)
+def bolt_draw(cv, p0, p1, seed, w0=7, branches=4, val=255, rough=0.22):
+    """a detailed bolt: a main channel that tapers from w0 to a hair, with forked branches that taper too."""
+    pts = bolt_points(p0, p1, seed, rough, 8)
+    n = len(pts)
+    for i in range(1, n):
+        w = max(1, int(round(w0 * (1 - 0.70 * i / n))))
+        cv2.line(cv, (int(pts[i - 1][0] * 16), int(pts[i - 1][1] * 16)), (int(pts[i][0] * 16), int(pts[i][1] * 16)), int(val), w, cv2.LINE_AA, shift=4)
+    rng = np.random.default_rng(seed + 11)
+    for b in range(branches):
+        i = int(rng.integers(n // 6, max(n // 6 + 1, n - 4))); q0 = pts[i]
+        d = pts[-1] - pts[0]; ang = math.atan2(d[1], d[0]) + rng.uniform(0.5, 1.1) * (1 if b % 2 else -1)
+        L_ = np.linalg.norm(d) * rng.uniform(0.18, 0.40); q1 = (q0[0] + L_ * math.cos(ang), q0[1] + L_ * math.sin(ang))
+        bp = bolt_points(tuple(q0), q1, seed + 50 + b, 0.30, 6)
+        for k in range(1, len(bp)):
+            w = max(1, int(round(w0 * 0.45 * (1 - k / len(bp)))))
+            cv2.line(cv, (int(bp[k - 1][0] * 16), int(bp[k - 1][1] * 16)), (int(bp[k][0] * 16), int(bp[k][1] * 16)), int(val * 0.75), w, cv2.LINE_AA, shift=4)
+    return pts
+
+def strike_env(dt):
+    """a strike's light over time: the main stroke, then a re-strike 90 ms later."""
+    if dt < 0: return 0.0
+    return math.exp(-dt / 0.07) + 0.65 * math.exp(-((dt - 0.09) / 0.025) ** 2)
+
+# ---- THE SPEED FORCE STORM (the break): lightning strikes behind him in the Speed Force, faster and faster -----------------
+SF_STRIKES = [(16.35, 0.86, 0), (17.20, 0.12, 1), (17.80, 0.80, 2), (18.15, 0.20, 3), (18.85, 0.84, 4), (19.30, 0.14, 5), (19.70, 0.78, 6), (20.00, 0.22, 7), (20.25, 0.86, 8)]
+def a_sfbolts(img, person, s, f):
+    e = e_of(f); o = img
+    pm = np.clip(person * 1.25, 0, 1) if person is not None else np.zeros((H, W), F32)
+    fk = face_keep(s, f, 1.2)
+    for es, xr, k in SF_STRIKES:
+        dt = (e - es) * E.HB; env = strike_env(dt)
+        if env < 0.02: continue
+        x0 = W * xr + 60 * math.sin(k * 2.1); x1 = x0 + (180 if xr < 0.5 else -180) * (0.6 + 0.4 * math.cos(k))
+        cv = bolt_canvas()
+        bolt_draw(cv, (x0, -40.0), (x1, H * (0.55 + 0.25 * ((k * 0.37) % 1.0))), 19300 + k * 7 + (f // 3) % 2, 8, 5, 255)
+        lt = light_rgb(cv, 1.25 * min(env, 1.4), HOT, SFB * 0.7 + HOT * 0.3)
+        o = o + lt * (1 - pm)[..., None]                                                        # behind him
+        d = np.abs(_GX - x0)
+        wash = (np.exp(-(d / 500.0) ** 2) * 0.30 * env).astype(F32) * (1 - pm)                    # the mist lights up round it
+        o = o + wash[..., None] * (SFB * 0.6 + HOT * 0.4)
+        if person is not None:                                                                  # and a rim of it on his edge
+            rim = np.clip(pm - cv2.erode(pm, np.ones((9, 9), np.uint8)), 0, 1) * np.exp(-(d / 650.0) ** 2) * env
+            o = o + kmul((rim * 0.9).astype(F32), fk)[..., None] * (SFB * 0.4 + HOT * 0.6)
+    return np.clip(o, 0, 1)
+
+_SFS = {}
+def sf_strike(A, B, j, f, sa, sb, pre=10, post=18):
+    """SF STRIKE (on the cut in the Speed Force): leaders creep down the open side, the bolt strikes on the cut, and the next
+    shot burns in outward from its channel."""
+    x = _x(j, pre, post); xs = pre / (pre + post - 1)
+    if "cv" not in _SFS:
+        cv = bolt_canvas(); bolt_draw(cv, (W * 0.84, -60.0), (W * 0.70, H + 40), 19400, 11, 6, 255)
+        _SFS["cv"] = cv
+        q = 4; cq = cv2.resize(cv, (W // q, H // q), interpolation=cv2.INTER_AREA)
+        _SFS["d"] = cv2.resize((cv2.distanceTransform((cq < 40).astype(np.uint8), cv2.DIST_L2, 5) * q).astype(F32), (W, H))
+    cvm = _SFS["cv"]
+    if x < xs:                                                                                  # the leaders
+        y_end = H * (0.05 + 0.80 * x / xs)
+        cv = cvm.copy(); cv[int(y_end):] = 0
+        lt = light_rgb((cv * 0.45).astype(np.uint8), 0.9, HOT, SFB)
+        return np.clip(A * (1 - 0.25 * x / xs) + kmul(lt, live_keep(sa, sb, j, f, 0, 1.0)), 0, 1)
+    y = x - xs; b = math.exp(-y / 0.10) + 0.6 * math.exp(-((y - 0.22) / 0.04) ** 2)
+    R = 50 + W * 2.0 * eout(clamp(y / 0.34, 0, 1), 1.6)
+    m = np.clip((R - _SFS["d"]) / (40 + 0.25 * R) + 0.5, 0, 1).astype(F32)
+    o = A * 0.75 * (1 - m[..., None]) + B * m[..., None]
+    o = o * (1 + 0.25 * b)
+    lt = light_rgb(cvm, 1.5 * b + 0.3 * (1 - smooth(clamp(y / 0.7, 0, 1))), HOT, SFB * 0.6 + HOT * 0.4)
+    return np.clip(o + kmul(lt, live_keep(sa, sb, j, f, 1, 1.0)), 0, 1)
+
+# ---- the roof: lightning flickers in the clouds over the city ----------------------------------------------------------
+def a_skybolts(img, person, s, f):
+    e = e_of(f); o = img
+    pm = np.clip(person * 1.25, 0, 1) if person is not None else np.zeros((H, W), F32)
+    for es, xr, k in ((13.55, 0.18, 0), (14.45, 0.82, 1), (15.25, 0.30, 2), (15.75, 0.74, 3)):
+        env = strike_env((e - es) * E.HB)
+        if env < 0.02: continue
+        x0 = W * xr; cv = bolt_canvas()
+        bolt_draw(cv, (x0, -30.0), (x0 + 120 * (1 if k % 2 else -1), H * 0.30), 19500 + k, 4, 4, 230)
+        lt = light_rgb(cv, 0.9 * min(env, 1.3), HOT, CYAN19 * 0.5 + MAG19 * 0.2 + HOT * 0.3)
+        sky = (np.clip(1 - _GY / (H * 0.50), 0, 1) * np.exp(-((_GX - x0) / 600.0) ** 2) * 0.22 * env).astype(F32)
+        o = o + (lt + sky[..., None] * (CYAN19 * 0.5 + HOT * 0.5)) * (1 - pm)[..., None]
+    return np.clip(o, 0, 1)
+
+# ---- EMBLEM IGNITION (e20.5-e24): lightning crawls along his suit into the real emblem; it lifts, flips like a coin and
+#      charges, light pouring out of it; on the drop it fires the reboot ---------------------------------------------------
+def a_ignite(img, person, s, f):
+    e = e_of(f); ex, ey, er = emb_pt19(s, f); t = f / FPS
+    fk = face_keep(s, f, 1.15)
+    o = img
+    gath = smooth(clamp((e - 20.6) / 1.4, 0, 1)) * (1 - smooth(clamp((e - 22.4) / 0.8, 0, 1)))
+    if gath > 0.01 and person is not None:                                                      # 1. lightning gathers along his suit into it
+        fs = fs3_of(s, f); body = person.copy()
+        if fs: body[: int(min(H, fs[1] + fs[2] * 1.3))] = 0
+        q = 8; bq = cv2.resize(body, (W // q, H // q), interpolation=cv2.INTER_AREA); ys, xs = np.nonzero(bq > 0.6)
+        if len(xs) > 20:
+            rng = np.random.default_rng(1950 + f // 3); cv = bolt_canvas()
+            for k in range(5):
+                i_ = int(rng.integers(len(xs))); p0 = (xs[i_] * q + 4.0, ys[i_] * q + 4.0)
+                if math.hypot(p0[0] - ex, p0[1] - ey) < er * 2.2: continue
+                bolt_draw(cv, p0, (ex + er * 0.8 * math.cos(k * 1.3), ey + er * 0.8 * math.sin(k * 1.3)), 19600 + k + 7 * (f // 3), 3, 2, int(255 * gath))
+            o = o + kmul(light_rgb(cv, 1.2, HOT, GOLD18 * 0.6 + CYAN19 * 0.4), fk)
+    chg = smooth(clamp((e - 20.8) / 3.0, 0, 1))
+    lift = smooth(clamp((e - 22.0) / 1.2, 0, 1))
+    if lift > 0.002:                                                                            # 2. it lifts off his chest and flips once
+        patch, alpha, R = emb_patch(img, ex, ey, er)
+        o = emb_hole(o, ex, ey, er, (s["n"], int(f)))
+        phi = 2 * math.pi * smooth(clamp((e - 22.2) / 1.25, 0, 1)); cph = math.cos(phi)
+        sc = 1.0 + 0.25 * lift; py = ey - 30 * lift
+        spr = patch if cph >= 0 else coin_back(R, er)
+        o, _ = put_sprite(o, spr, alpha, R, ex, py, sc * max(abs(cph), 0.05), sc)
+        rimc = np.exp(-((np.sqrt(((_GX - ex) / max(abs(cph), 0.05)) ** 2 + (_GY - py) ** 2) - er * sc) / 3.0) ** 2).astype(F32)
+        addc(o, rimc * (0.4 + 0.6 * chg), GOLD18 * 0.6 + HOT * 0.4, 0.7)
+        ey = py; er = er * sc
+    d = np.sqrt((_GX - ex) ** 2 + (_GY - ey) ** 2); ang = np.arctan2(_GY - ey, _GX - ex)
+    fan = ((0.5 + 0.5 * np.cos(ang * 10 + t * 1.5)) ** 10 * np.exp(-d / (er * 7.0)) * np.clip(d / er - 1.0, 0, 1)).astype(F32)   # 3. light pours out of it
+    addc(o, kmul(fan * chg, fk), GOLD18 * 0.5 + HOT * 0.5, 0.55)
+    addc(o, kmul((np.exp(-(d / (er * (1.15 + 0.7 * chg))) ** 2) * chg).astype(F32), fk), GOLD18 * 0.4 + HOT * 0.6, 0.30)
+    cv = bolt_canvas()
+    for k in range(4):
+        a0 = 0.7 + 1.6 * k + 6.0 * t
+        put_bolt(cv, (ex + er * 1.12 * math.cos(a0), ey + er * 1.12 * math.sin(a0)), (ex + er * 1.12 * math.cos(a0 + 1.2), ey + er * 1.12 * math.sin(a0 + 1.2)), 19100 + k + 7 * (f // 2), 2, 0.3, 4, 0, val=int(230 * chg))
+    o = o + kmul(light_rgb(cv, 1.0, HOT, GOLD18 * 0.5 + CYAN19 * 0.5) * chg, fk)
+    return np.clip(o, 0, 1)
+
+_emblem_reboot_r1 = emblem_reboot
+def emblem_reboot(A, B, j, f, sa, sb, pre=18, post=34):
+    return _emblem_reboot_r1(A, B, j, f, sa, sb, pre, post)
+_emb_pt19_r1 = emb_pt19
+def emb_pt19(s, f):
+    x, y, r = _emb_pt19_r1(s, f)
+    if s.get("anim") == "ignite":                                                              # where the lifted emblem is
+        e = e_of(f); lift = smooth(clamp((e - 22.0) / 1.2, 0, 1))
+        if lift > 0 and not getattr(emb_pt19, "_raw", False): pass
+    return x, y, r
+
+# ---- EYE DIVE (the grin -> the wet street run): the camera pushes into his eye; the light in it flares, and his iris opens
+#      onto the next shot -------------------------------------------------------------------------------------------------
+def eye_pick(s, f):
+    fs = face_scr(s, f) if s.get("face") is not None else None
+    if not fs: return W * 0.45, H * 0.38, 300.0
+    e2 = fs[4] if fs[4][0] > fs[3][0] else fs[3]                                                # his left eye (screen right): clear in the mask
+    return e2[0] + 0.02 * fs[2], e2[1] - 0.035 * fs[2], fs[2]                                     # the tracker sits low on a masked face (measured on the shot)
+
+def eye_zoom(img, ex_, ey_, u):
+    Z = math.exp(math.log(8.0) * smooth(u) ** 1.35); g = smooth(clamp(u * 1.2, 0, 1))
+    cx_t = ex_ + (W / 2 - ex_) * g; cy_t = ey_ + (H / 2 - ey_) * g
+    M = np.float32([[Z, 0, cx_t - Z * ex_], [0, Z, cy_t - Z * ey_]])
+    return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+
+def eye_dive(A, B, j, f, sa, sb, pre=34, post=24):
+    ff = f if j < 0 else sa["f1"] - 1
+    ex_, ey_, fw = eye_pick(sa, ff)
+    if j < 0:
+        u = (j + pre + 1) / pre
+        o = eye_zoom(A, ex_, ey_, u)
+        o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + 0.08 * ein(u, 2.0), 6)
+        d = np.sqrt((_GX - W / 2) ** 2 + (_GY - H / 2) ** 2) / (H * 0.6)
+        o = o * (1 - 0.30 * ein(u, 1.5) * np.clip(d, 0, 1) ** 1.5)[..., None]                  # the world narrows to the eye
+        fl = smooth(clamp((u - 0.70) / 0.30, 0, 1))                                           # the catchlight flares
+        g = np.exp(-(((_GX - W * 0.47) ** 2 + (_GY - H * 0.47) ** 2) / (2 * (60 + 200 * fl) ** 2))).astype(F32)
+        st = (np.exp(-((_GY - H * 0.47) / 6.0) ** 2) * np.exp(-np.abs(_GX - W * 0.47) / (200 + 700 * fl))).astype(F32)
+        addc(o, g, HOT * 0.7 + CYAN19 * 0.3, 0.45 * fl); addc(o, st, HOT * 0.5 + CYAN19 * 0.5, 0.5 * fl)
+        return np.clip(rgb_split(o, 8 * ein(u, 2)), 0, 1)
+    v = (j + 1) / post
+    Ae = eye_zoom(A, ex_, ey_, 1.0)
+    Ae = radial_blur(Ae, W / 2, H / 2, 1.0, 1.08, 6) * 0.80
+    sm = cv2.resize(Ae, (32, 32), interpolation=cv2.INTER_AREA).reshape(-1, 3).mean(0)
+    irc = np.clip(sm / (sm.max() + 1e-3) * 0.9 + 0.15, 0, 1).astype(F32)                      # the iris's own colour
+    d = np.sqrt((_GX - W / 2) ** 2 + (_GY - H / 2) ** 2).astype(F32); ang = np.arctan2(_GY - H / 2, _GX - W / 2)
+    R = 30 + math.hypot(W, H) * 0.62 * eout(v, 2.0)
+    inside = np.clip((R - d) / (8 + 0.04 * R) + 0.5, 0, 1).astype(F32)
+    Bz = zoom_about(B, W / 2, H / 2, 1.0 + 0.45 * (1 - eout(v, 2.2)))
+    o = Ae * (1 - inside[..., None]) + Bz * inside[..., None]
+    fib = 0.5 + 0.5 * np.cos(ang * 46 + 2.5 * np.sin(ang * 5) + 1.7 * np.sin(ang * 13))         # the iris's fibres round the opening (irregular)
+    fib = cv2.GaussianBlur((fib * (0.6 + 0.4 * np.cos(ang * 9 + 1.3))).astype(F32), (0, 0), 2.0)
+    band = np.exp(-((d - R * 1.18) / (0.16 * R + 10)) ** 2)
+    ring = (band * (0.55 + 0.45 * fib) * (1 - v) ** 0.9).astype(F32)
+    rim = cv2.GaussianBlur((np.exp(-((d - R) / 4.0) ** 2) * (1 - v)).astype(F32), (0, 0), 1.5)
+    o = o * (1 - (ring * 0.55)[..., None]) + (ring * 0.55)[..., None] * (irc * 0.8 + 0.1)
+    o = o + rim[..., None] * (HOT * 0.6 + CYAN19 * 0.4) * 0.6
+    k = 0.10 * (1 - eout(v, 2))
+    if k > 0.004: o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + k, 6)
+    return np.clip(o, 0, 1)
+
+ANIMS.update({"sfbolts": a_sfbolts, "skybolts": a_skybolts, "ignite": a_ignite})
+TR2.update({"sf_strike": (sf_strike, 10, 18), "eye_dive": (eye_dive, 34, 24), "emblem_reboot": (emblem_reboot, 18, 34)})
+
+def prefinish(f):
+    s = shot_at(f); k = f - s["f0"]; n_ = nxt_of(s); kn = (f - n_["f0"]) if n_ else 999
+    P = prev_shot(s); tin = s.get("tin")
+    out, person = base19(s, f)
+    PERSON.clear(); PERSON[f] = person
+    if tin in TR2 and k < TR2[tin][2] and P is not None:
+        out = TR2[tin][0](edge15(P, "last"), out, k, f, P, s)
+    if n_ is not None:
+        nt = n_.get("tin")
+        if nt in TR2 and kn >= -TR2[nt][1]: out = TR2[nt][0](out, edge15(n_, "first"), kn, f, s, n_)
+    return np.clip(out, 0, 1)
 
 # >>> pipeline v2: speed   (an edit's own sections go ABOVE this line: tools/splice_section.py)
 # ============================================================================ pipeline v2: speed (WP2), same pictures
