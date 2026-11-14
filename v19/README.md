@@ -41,13 +41,14 @@ The hero is **THE MEMORY PANES**: the hook, the dive, the storm and the emblem's
 |---|---|---|
 | 0–3 | the S5 suit on a wet neon street at night; *memory panes drift behind him* | the loop |
 | 3–5 | the night run (S5) | **PANE PASS** (the hook) |
-| 5–7 | the S2 suit, the chest device lit | **CHROMA SPLIT** |
-| 7–9 | the S3 suit at night; *panes drift* | **BOKEH RACK** (v17, liked) |
+| 5–7 | the S5 suit, arms crossed, grinning | **CHROMA SPLIT** |
+| 7–9 | the S4 suit, masked, under a grey sky; *panes drift* | **BOKEH RACK** (v17, liked) |
 | 9–11 | he fires lightning from his hand (S4) | **FLARE CUT** (v17, liked) |
 | 11–13 | masked, the city at night behind him (S4) | **CRASH ZOOM** (v18) |
 | 13–16 | he stands over the city lights (S5); *panes drift* | **VERTIGO** (v18) |
-| 16–21 | the Speed Force (S3): **MEMORY STORM** | **PANE DIVE** |
-| 21–24 | the S6 suit; the memories pour into the real emblem | **MIST PASS** (v18) |
+| 16–18.5 | the Speed Force (S3): **MEMORY STORM** | **SPEED BEAM** |
+| 18.5–20.5 | the Speed Force: he turns to them; the storm faster | **EYELINE WHIP** (v18) |
+| 20.5–24 | the S6 suit; the memories pour into the real emblem; it lifts off his chest and charges | **MIST PASS** (v18) |
 | 24–26 | the lightning runner (S2) | **EMBLEM REBOOT** (the drop) |
 | 26–28 | the S5 suit charging; *the suit crackles* | **SPARK JUMP** (v18) |
 | 28–30 | the S3 suit at night | **LIGHT BAR STREAK** (v18) |
@@ -55,16 +56,35 @@ The hero is **THE MEMORY PANES**: the hook, the dive, the storm and the emblem's
 | 32–34 | Barry in the suit, lightning round him; *embers* | **GLARE WASH** (v17, liked) |
 | 34–36 | the airfield run with lightning (S1) | **EMBER BURN** (v18) |
 | 36–38 | running, lightning, daylight (S4) | **LIGHTNING WHIP** (v18) |
-| 38–40 | the breakout (S4) | **CUBE TURN** (v17, liked) |
-| 40–42 | the S5 run at night | **PEEL** (v17, liked) |
+| 38–40 | the breakout (S4) | **WORLD SWAP** |
+| 40–42 | the S5 run at night | **PANE FLIP** |
 | 42–44 | the S1 suit grins | **STREAK CARRY** (v18) |
-| 44–46 | the wet street run (S2) | **ZIP** (v17, liked) |
-| 46–48 | the S5 run | **SPEED ZOOM** (v17, liked) |
-| 48–50 | the S5 lightning trail | **LIGHT STREAK** (v17, liked) |
+| 44–47 | the wet street run (S2) | **ZIP** (v17, liked) |
+| 47–50 | the S5 lightning trail | **PIXEL REBOOT** |
 | 50–56 | he runs at us down the avenue (S4); **THE LOOP** from e51 | **BOLT WINDOW** (v17, liked) |
 
 23 shots, all Barry (no side characters), from the high-bitrate packs wherever possible. 22 transitions plus the loop; no
 text. The beat camera breathes in the memories, rests while time stops, and punches on every beat after the drop.
+
+## Review (before delivery)
+- **QC round 1:**
+  - the loop seam measured 1.46: the pane grew too late, then frame 0 drew in at a half-frame offset;
+  - the loop's last 8 frames now ease into frame 0 (seam 0.16), with frame 0's pane visible from about 2 s out;
+  - a source cut was avoided in the breakout (53.67 s).
+- **Fresh-eyes critique (4 HIGH), fixed:**
+  - **The panes read as cards across his face, the same move three times.**
+    - The hook's pane now rises up in the scaffolding and the camera pushes into it, so his face slides out of frame.
+    - The dive is now a Speed Force light beam (SPEED BEAM).
+    - The loop's pane stays behind him; he runs into it and his figure dissolves into its light.
+  - **The storm didn't read:** the panes now orbit behind him round his head, speeding up with motion trails, with a cut
+    halfway.
+  - **The light streak's block over his eyes:** replaced by PIXEL REBOOT.
+  - **Too many ports:** four new transitions (SPEED BEAM, WORLD SWAP, PANE FLIP, PIXEL REBOOT).
+- **Also fixed:**
+  - the soft clips (device, S3 night) were swapped for the crisp S5 arms-crossed and S4 masked shots;
+  - the emblem moment is twice as long, and the real emblem lifts off his chest and charges;
+  - the mist keeps off his face.
+- **QC (final):** 11/11 on the encode; loop seam 0.16; −12.3 LUFS, −4.3 dBTP after AAC.
 
 ## Sound (lean: 9 placed effects)
 The hook's rising whoosh into the pane; the dive; the emblem's charge (a crackle that builds through the break); the

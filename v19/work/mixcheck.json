@@ -91,7 +91,7 @@
    "buried": true
   },
   {
-   "name": "pane_dive",
+   "name": "speed_beam",
    "kind": "transition",
    "at": 6.66,
    "t0": 6.36,
@@ -106,32 +106,43 @@
    "kind": "set piece",
    "at": 6.66,
    "t0": 6.66,
-   "t1": 8.74,
-   "music_db": -17.3,
+   "t1": 8.53,
+   "music_db": -17.2,
    "fx_peak_db": -180.0,
-   "fx_minus_music": -162.7,
+   "fx_minus_music": -162.8,
+   "buried": true
+  },
+  {
+   "name": "eyeline_whip",
+   "kind": "transition",
+   "at": 7.7,
+   "t0": 7.4,
+   "t1": 8.15,
+   "music_db": -17.8,
+   "fx_peak_db": -180.0,
+   "fx_minus_music": -162.2,
    "buried": true
   },
   {
    "name": "mist_pass",
    "kind": "transition",
-   "at": 8.74,
-   "t0": 8.44,
-   "t1": 9.19,
-   "music_db": -18.1,
+   "at": 8.53,
+   "t0": 8.23,
+   "t1": 8.98,
+   "music_db": -17.4,
    "fx_peak_db": -180.0,
-   "fx_minus_music": -161.9,
+   "fx_minus_music": -162.6,
    "buried": true
   },
   {
    "name": "emblem_reboot",
    "kind": "set piece",
-   "at": 8.74,
-   "t0": 8.74,
+   "at": 8.53,
+   "t0": 8.53,
    "t1": 10.82,
-   "music_db": -13.0,
+   "music_db": -13.2,
    "fx_peak_db": -180.0,
-   "fx_minus_music": -167.0,
+   "fx_minus_music": -166.8,
    "buried": true
   },
   {
@@ -212,7 +223,7 @@
    "buried": false
   },
   {
-   "name": "cube_turn",
+   "name": "world_swap",
    "kind": "transition",
    "at": 15.81,
    "t0": 15.51,
@@ -223,7 +234,7 @@
    "buried": false
   },
   {
-   "name": "peel17",
+   "name": "pane_flip",
    "kind": "transition",
    "at": 16.64,
    "t0": 16.34,
@@ -256,25 +267,14 @@
    "buried": true
   },
   {
-   "name": "speed_zoom",
+   "name": "pixel_reboot",
    "kind": "transition",
-   "at": 19.14,
-   "t0": 18.84,
-   "t1": 19.59,
-   "music_db": -9.7,
+   "at": 19.56,
+   "t0": 19.26,
+   "t1": 20.01,
+   "music_db": -10.7,
    "fx_peak_db": -180.0,
-   "fx_minus_music": -170.3,
-   "buried": true
-  },
-  {
-   "name": "light_streak",
-   "kind": "transition",
-   "at": 19.97,
-   "t0": 19.67,
-   "t1": 20.42,
-   "music_db": -9.7,
-   "fx_peak_db": -180.0,
-   "fx_minus_music": -170.3,
+   "fx_minus_music": -169.3,
    "buried": true
   },
   {

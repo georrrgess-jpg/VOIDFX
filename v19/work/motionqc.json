@@ -2,31 +2,31 @@
  "file": "/home/user/VOIDFX/v19/out/reboot_voidfx_9x16.mp4",
  "frames": 1398,
  "activity_hb": [
-  3.85,
-  3.48,
-  5.29,
-  2.2,
-  1.75,
-  8.49,
-  4.54,
-  3.73,
-  1.37,
-  5.71,
+  3.89,
+  3.84,
+  10.3,
+  1.97,
+  1.71,
+  3.67,
+  1.9,
+  5.36,
+  2.69,
+  5.72,
   6.84,
   4.28,
-  1.93,
-  3.98,
-  1.56,
-  7.7,
-  3.52,
-  5.78,
-  5.93,
-  6.6,
-  7.07,
-  5.25,
-  4.21,
-  4.28,
-  11.56,
+  1.92,
+  3.95,
+  1.54,
+  5.39,
+  2.16,
+  3.05,
+  11.63,
+  4.88,
+  6.08,
+  3.9,
+  4.27,
+  5.4,
+  11.66,
   2.96,
   10.46,
   9.11,
@@ -39,33 +39,33 @@
   7.08,
   5.25,
   11.63,
-  9.56,
-  19.41,
-  7.28,
-  6.94,
+  9.83,
+  11.99,
+  7.52,
+  10.89,
   5.72,
   7.71,
   5.49,
-  9.13,
-  3.77,
-  13.59,
-  15.37,
-  7.67,
-  6.01,
-  17.78,
+  8.71,
+  1.63,
+  4.03,
+  7.48,
+  3.8,
+  4.74,
+  17.8,
   7.7,
-  11.43,
+  11.41,
   8.45,
-  12.15,
-  10.95
+  11.06,
+  9.18
  ],
  "dead": [],
  "pops": [
   {
    "f": 125,
    "t": 2.083,
-   "d": 16.8,
-   "med": 4.2,
+   "d": 12.3,
+   "med": 2.5,
    "kind": "cut",
    "near": "chroma_split @ 125",
    "hb_off": 0
@@ -73,8 +73,8 @@
   {
    "f": 126,
    "t": 2.1,
-   "d": 23.9,
-   "med": 4.6,
+   "d": 17.4,
+   "med": 2.8,
    "kind": "cut",
    "near": "chroma_split @ 125",
    "hb_off": 1
@@ -82,17 +82,26 @@
   {
    "f": 127,
    "t": 2.117,
-   "d": 17.8,
-   "med": 4.7,
+   "d": 19.2,
+   "med": 2.8,
    "kind": "UNEXPLAINED",
    "near": "chroma_split @ 125",
    "hb_off": 2
   },
   {
+   "f": 175,
+   "t": 2.917,
+   "d": 11.8,
+   "med": 2.1,
+   "kind": "cut",
+   "near": "bokeh_rack @ 175",
+   "hb_off": 0
+  },
+  {
    "f": 176,
    "t": 2.933,
-   "d": 45.9,
-   "med": 2.0,
+   "d": 47.6,
+   "med": 2.1,
    "kind": "cut",
    "near": "bokeh_rack @ 175",
    "hb_off": 1
@@ -100,26 +109,17 @@
   {
    "f": 177,
    "t": 2.95,
-   "d": 16.1,
-   "med": 1.8,
+   "d": 12.3,
+   "med": 2.1,
    "kind": "cadence",
    "near": "bokeh_rack @ 175",
    "hb_off": 2
   },
   {
-   "f": 225,
-   "t": 3.75,
-   "d": 8.3,
-   "med": 1.8,
-   "kind": "cut",
-   "near": "flare_cut @ 225",
-   "hb_off": 0
-  },
-  {
    "f": 226,
    "t": 3.767,
-   "d": 35.3,
-   "med": 2.0,
+   "d": 36.1,
+   "med": 2.4,
    "kind": "cut",
    "near": "flare_cut @ 225",
    "hb_off": 1
@@ -128,7 +128,7 @@
    "f": 227,
    "t": 3.783,
    "d": 10.4,
-   "med": 2.1,
+   "med": 2.4,
    "kind": "cadence",
    "near": "flare_cut @ 225",
    "hb_off": 2
@@ -136,7 +136,7 @@
   {
    "f": 230,
    "t": 3.833,
-   "d": 17.8,
+   "d": 17.9,
    "med": 4.3,
    "kind": "cadence",
    "near": "flare_cut @ 225",
@@ -215,12 +215,48 @@
    "hb_off": 1
   },
   {
+   "f": 952,
+   "t": 15.867,
+   "d": 40.3,
+   "med": 7.6,
+   "kind": "flash",
+   "near": "world_swap @ 949",
+   "hb_off": 3
+  },
+  {
+   "f": 955,
+   "t": 15.917,
+   "d": 29.6,
+   "med": 5.1,
+   "kind": "flash",
+   "near": "world_swap @ 949",
+   "hb_off": 6
+  },
+  {
+   "f": 958,
+   "t": 15.967,
+   "d": 35.0,
+   "med": 4.8,
+   "kind": "cadence",
+   "near": "world_swap @ 949",
+   "hb_off": 9
+  },
+  {
+   "f": 961,
+   "t": 16.017,
+   "d": 22.7,
+   "med": 4.1,
+   "kind": "flash",
+   "near": "world_swap @ 949",
+   "hb_off": 12
+  },
+  {
    "f": 964,
    "t": 16.067,
    "d": 23.9,
    "med": 4.1,
    "kind": "flash",
-   "near": "cube_turn @ 949",
+   "near": "world_swap @ 949",
    "hb_off": -10
   },
   {
@@ -229,7 +265,7 @@
    "d": 29.0,
    "med": 4.2,
    "kind": "cadence",
-   "near": "cube_turn @ 949",
+   "near": "world_swap @ 949",
    "hb_off": -7
   },
   {
@@ -238,22 +274,40 @@
    "d": 22.7,
    "med": 5.3,
    "kind": "cadence",
-   "near": "cube_turn @ 949",
+   "near": "world_swap @ 949",
    "hb_off": -4
   },
   {
    "f": 994,
    "t": 16.567,
-   "d": 27.9,
-   "med": 7.1,
-   "kind": "UNEXPLAINED",
-   "near": "peel17 @ 999",
+   "d": 27.7,
+   "med": 5.8,
+   "kind": "flash",
+   "near": "pane_flip @ 999",
    "hb_off": -5
+  },
+  {
+   "f": 1149,
+   "t": 19.15,
+   "d": 8.3,
+   "med": 1.4,
+   "kind": "beat",
+   "near": null,
+   "hb_off": 1
+  },
+  {
+   "f": 1173,
+   "t": 19.55,
+   "d": 56.9,
+   "med": 11.6,
+   "kind": "cut",
+   "near": "pixel_reboot @ 1173",
+   "hb_off": 0
   },
   {
    "f": 1255,
    "t": 20.917,
-   "d": 58.3,
+   "d": 58.4,
    "med": 16.8,
    "kind": "cadence",
    "near": "bolt_window @ 1248",
@@ -335,7 +389,7 @@
    "f": 1299,
    "t": 21.65,
    "d": 34.3,
-   "med": 0.9,
+   "med": 0.8,
    "kind": "beat",
    "near": null,
    "hb_off": 1
@@ -353,7 +407,7 @@
    "f": 1305,
    "t": 21.75,
    "d": 46.0,
-   "med": 1.1,
+   "med": 1.0,
    "kind": "cadence",
    "near": null,
    "hb_off": 7
@@ -362,7 +416,7 @@
    "f": 1308,
    "t": 21.8,
    "d": 40.5,
-   "med": 1.1,
+   "med": 1.0,
    "kind": "cadence",
    "near": null,
    "hb_off": 10
@@ -370,7 +424,7 @@
   {
    "f": 1313,
    "t": 21.883,
-   "d": 33.6,
+   "d": 33.5,
    "med": 1.1,
    "kind": "cadence",
    "near": null,
@@ -379,8 +433,8 @@
   {
    "f": 1317,
    "t": 21.95,
-   "d": 37.9,
-   "med": 1.3,
+   "d": 37.8,
+   "med": 1.2,
    "kind": "cadence",
    "near": null,
    "hb_off": -6
@@ -397,8 +451,8 @@
   {
    "f": 1326,
    "t": 22.1,
-   "d": 37.4,
-   "med": 1.6,
+   "d": 37.3,
+   "med": 1.5,
    "kind": "cadence",
    "near": null,
    "hb_off": 3
@@ -407,7 +461,7 @@
    "f": 1332,
    "t": 22.2,
    "d": 40.9,
-   "med": 1.6,
+   "med": 1.5,
    "kind": "cadence",
    "near": null,
    "hb_off": 9
@@ -416,7 +470,7 @@
    "f": 1335,
    "t": 22.25,
    "d": 36.5,
-   "med": 1.6,
+   "med": 1.5,
    "kind": "cadence",
    "near": null,
    "hb_off": 12
@@ -424,7 +478,7 @@
   {
    "f": 1341,
    "t": 22.35,
-   "d": 31.0,
+   "d": 31.1,
    "med": 1.3,
    "kind": "cadence",
    "near": null,
@@ -433,7 +487,7 @@
   {
    "f": 1344,
    "t": 22.4,
-   "d": 37.9,
+   "d": 38.0,
    "med": 1.2,
    "kind": "cadence",
    "near": null,
@@ -442,7 +496,7 @@
   {
    "f": 1349,
    "t": 22.483,
-   "d": 33.2,
+   "d": 33.4,
    "med": 1.1,
    "kind": "beat",
    "near": null,
@@ -451,7 +505,7 @@
   {
    "f": 1351,
    "t": 22.517,
-   "d": 33.5,
+   "d": 33.6,
    "med": 1.1,
    "kind": "cadence",
    "near": null,
@@ -460,8 +514,8 @@
   {
    "f": 1355,
    "t": 22.583,
-   "d": 38.3,
-   "med": 3.8,
+   "d": 38.0,
+   "med": 2.7,
    "kind": "cadence",
    "near": null,
    "hb_off": 7
@@ -469,8 +523,8 @@
   {
    "f": 1358,
    "t": 22.633,
-   "d": 46.2,
-   "med": 3.8,
+   "d": 45.1,
+   "med": 2.7,
    "kind": "cadence",
    "near": null,
    "hb_off": 10
@@ -478,8 +532,8 @@
   {
    "f": 1363,
    "t": 22.717,
-   "d": 40.9,
-   "med": 4.5,
+   "d": 38.8,
+   "med": 2.7,
    "kind": "cadence",
    "near": null,
    "hb_off": -10
@@ -487,11 +541,38 @@
   {
    "f": 1367,
    "t": 22.783,
-   "d": 25.2,
-   "med": 6.7,
+   "d": 26.2,
+   "med": 2.7,
    "kind": "cadence",
    "near": null,
    "hb_off": -6
+  },
+  {
+   "f": 1372,
+   "t": 22.867,
+   "d": 26.9,
+   "med": 3.3,
+   "kind": "beat",
+   "near": null,
+   "hb_off": -1
+  },
+  {
+   "f": 1376,
+   "t": 22.933,
+   "d": 35.1,
+   "med": 4.2,
+   "kind": "cadence",
+   "near": null,
+   "hb_off": 3
+  },
+  {
+   "f": 1382,
+   "t": 23.033,
+   "d": 29.8,
+   "med": 8.1,
+   "kind": "cadence",
+   "near": null,
+   "hb_off": 9
   }
  ],
  "judder": [
@@ -500,15 +581,12 @@
    "f0": 0,
    "f1": 75,
    "interp": "flow",
-   "repeat_frac": 0.22,
-   "cadence_frames": 17,
-   "cadence_range": [
-    37,
-    53
-   ],
-   "p20": 2.2,
-   "p80": 4.72,
-   "ratio": 2.15,
+   "repeat_frac": 0.19,
+   "cadence_frames": 0,
+   "cadence_range": null,
+   "p20": 2.62,
+   "p80": 4.92,
+   "ratio": 1.88,
    "flag": false
   },
   {
@@ -525,35 +603,35 @@
    "flag": false
   },
   {
-   "shot": "device",
+   "shot": "crossed",
    "f0": 125,
    "f1": 175,
    "interp": "flow",
-   "repeat_frac": 0.05,
+   "repeat_frac": 0.11,
    "cadence_frames": 5,
    "cadence_range": [
     164,
     168
    ],
-   "p20": 4.25,
-   "p80": 7.53,
-   "ratio": 1.77,
+   "p20": 1.16,
+   "p80": 1.51,
+   "ratio": 1.3,
    "flag": false
   },
   {
-   "shot": "s3night",
+   "shot": "masked",
    "f0": 175,
    "f1": 225,
    "interp": "flow",
-   "repeat_frac": 0.05,
-   "cadence_frames": 2,
+   "repeat_frac": 0.11,
+   "cadence_frames": 6,
    "cadence_range": [
-    217,
+    181,
     218
    ],
-   "p20": 0.85,
-   "p80": 1.72,
-   "ratio": 2.01,
+   "p20": 1.93,
+   "p80": 3.63,
+   "ratio": 1.88,
    "flag": false
   },
   {
@@ -567,9 +645,9 @@
     231,
     239
    ],
-   "p20": 2.45,
+   "p20": 2.46,
    "p80": 4.46,
-   "ratio": 1.82,
+   "ratio": 1.81,
    "flag": false
   },
   {
@@ -580,9 +658,9 @@
    "repeat_frac": 0.13,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.39,
-   "p80": 2.06,
-   "ratio": 1.48,
+   "p20": 1.37,
+   "p80": 2.05,
+   "ratio": 1.5,
    "flag": false
   },
   {
@@ -590,38 +668,51 @@
    "f0": 325,
    "f1": 399,
    "interp": "flow",
-   "repeat_frac": 0.03,
+   "repeat_frac": 0.02,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.28,
-   "p80": 1.68,
-   "ratio": 1.31,
+   "p20": 1.18,
+   "p80": 2.03,
+   "ratio": 1.71,
    "flag": false
   },
   {
    "shot": "sf",
    "f0": 399,
-   "f1": 524,
+   "f1": 462,
    "interp": "flow",
-   "repeat_frac": 0.0,
+   "repeat_frac": 0.08,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 5.3,
-   "p80": 6.59,
-   "ratio": 1.24,
+   "p20": 2.02,
+   "p80": 3.01,
+   "ratio": 1.49,
+   "flag": false
+  },
+  {
+   "shot": "sf2",
+   "f0": 462,
+   "f1": 512,
+   "interp": "flow",
+   "repeat_frac": 0.11,
+   "cadence_frames": 0,
+   "cadence_range": null,
+   "p20": 3.43,
+   "p80": 6.27,
+   "ratio": 1.83,
    "flag": false
   },
   {
    "shot": "hero",
-   "f0": 524,
+   "f0": 512,
    "f1": 599,
    "interp": "flow",
-   "repeat_frac": 0.1,
+   "repeat_frac": 0.03,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.25,
-   "p80": 5.66,
-   "ratio": 2.52,
+   "p20": 2.93,
+   "p80": 5.09,
+   "ratio": 1.73,
    "flag": false
   },
   {
@@ -632,9 +723,9 @@
    "repeat_frac": 0.0,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.01,
-   "p80": 12.13,
-   "ratio": 6.03,
+   "p20": 2.03,
+   "p80": 12.09,
+   "ratio": 5.97,
    "flag": false
   },
   {
@@ -708,11 +799,14 @@
    "f1": 949,
    "interp": "flow",
    "repeat_frac": 0.11,
-   "cadence_frames": 0,
-   "cadence_range": null,
-   "p20": 4.46,
-   "p80": 9.2,
-   "ratio": 2.06,
+   "cadence_frames": 1,
+   "cadence_range": [
+    942,
+    942
+   ],
+   "p20": 4.47,
+   "p80": 9.78,
+   "ratio": 2.19,
    "flag": false
   },
   {
@@ -726,9 +820,9 @@
     955,
     979
    ],
-   "p20": 3.89,
-   "p80": 8.7,
-   "ratio": 2.24,
+   "p20": 3.87,
+   "p80": 7.96,
+   "ratio": 2.06,
    "flag": false
   },
   {
@@ -736,12 +830,12 @@
    "f0": 999,
    "f1": 1049,
    "interp": "flow",
-   "repeat_frac": 0.08,
+   "repeat_frac": 0.05,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 2.52,
-   "p80": 4.39,
-   "ratio": 1.74,
+   "p20": 2.51,
+   "p80": 4.65,
+   "ratio": 1.85,
    "flag": false
   },
   {
@@ -752,48 +846,35 @@
    "repeat_frac": 0.05,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.99,
-   "p80": 4.54,
+   "p20": 1.98,
+   "p80": 4.55,
    "ratio": 2.29,
    "flag": false
   },
   {
    "shot": "wet",
    "f0": 1098,
-   "f1": 1148,
+   "f1": 1173,
    "interp": "flow",
-   "repeat_frac": 0.03,
+   "repeat_frac": 0.06,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 1.82,
-   "p80": 2.27,
-   "ratio": 1.25,
-   "flag": false
-  },
-  {
-   "shot": "run5b",
-   "f0": 1148,
-   "f1": 1198,
-   "interp": "flow",
-   "repeat_frac": 0.18,
-   "cadence_frames": 0,
-   "cadence_range": null,
-   "p20": 8.01,
-   "p80": 18.63,
-   "ratio": 2.32,
+   "p20": 1.44,
+   "p80": 1.74,
+   "ratio": 1.21,
    "flag": false
   },
   {
    "shot": "trail",
-   "f0": 1198,
+   "f0": 1173,
    "f1": 1248,
    "interp": "flow",
-   "repeat_frac": 0.13,
+   "repeat_frac": 0.16,
    "cadence_frames": 0,
    "cadence_range": null,
-   "p20": 3.41,
-   "p80": 6.15,
-   "ratio": 1.8,
+   "p20": 2.35,
+   "p80": 4.54,
+   "ratio": 1.93,
    "flag": false
   },
   {
@@ -801,21 +882,21 @@
    "f0": 1248,
    "f1": 1398,
    "interp": "hold",
-   "repeat_frac": 0.43,
-   "cadence_frames": 127,
+   "repeat_frac": 0.46,
+   "cadence_frames": 136,
    "cadence_range": [
     1254,
-    1380
+    1389
    ],
-   "p20": 0.79,
-   "p80": 29.27,
-   "ratio": 37.1,
+   "p20": 0.75,
+   "p80": 31.15,
+   "ratio": 41.31,
    "flag": true
   }
  ],
  "loop": {
   "wrap_step": 0.84,
-  "local_median": 3.27,
+  "local_median": 3.25,
   "spike": false
  }
 }
