@@ -12770,7 +12770,7 @@ def pane_fly(A, B, j, f, sa, sb, pre, post, p0, h0, yaw0, roll0, fade_in=0):
     u = (j + pre + 1) / pre
     a_in = 1.0 if fade_in <= 0 else smooth(clamp((f - 2) / fade_in, 0, 1))
     if a_in <= 0: return A
-    g_ = ein(u, 2.6)
+    g_ = ein(u, 1.7)
     h = h0 * math.exp(math.log(H * 1.0 / h0) * g_)
     cx = p0[0] + (W / 2 - p0[0]) * smooth(clamp(u * 1.15 - 0.15, 0, 1)) ** 1.3
     cy = p0[1] + (H / 2 - p0[1]) * smooth(clamp(u * 1.15 - 0.15, 0, 1)) ** 1.3
@@ -12788,9 +12788,9 @@ def pane_pass(A, B, j, f, sa, sb, pre=69, post=12):
     """THE HOOK: a memory pane rises out of the bokeh behind him (the run inside it), swings to the lens, we fall into it."""
     return pane_fly(A, B, j, f, sa, sb, pre, post, (W * 0.80, H * 0.28), 150.0, 0.85, 0.12, fade_in=10)
 
-def pane_dive(A, B, j, f, sa, sb, pre=42, post=12):
+def pane_dive(A, B, j, f, sa, sb, pre=60, post=12):
     """PANE DIVE (the roof -> the Speed Force): a pane hangs in the sky over the city; we dive into it."""
-    return pane_fly(A, B, j, f, sa, sb, pre, post, (W * 0.28, H * 0.22), 190.0, -0.75, -0.10)
+    return pane_fly(A, B, j, f, sa, sb, pre, post, (W * 0.16, H * 0.56), 190.0, -0.75, -0.10)
 
 # ---- MEMORY STORM (the break, e16-e21): his memories orbit him in the Speed Force, faster and faster ------------------
 def a_storm(img, person, s, f):
@@ -12878,7 +12878,7 @@ def emblem_reboot(A, B, j, f, sa, sb, pre=18, post=34):
 # ---- CHROMA SPLIT: the memory glitches; its colours tear apart sideways and come back together on the next one -------------
 def chroma_split(A, B, j, f, sa, sb, pre=5, post=8):
     x = _x(j, pre, post); k = math.sin(math.pi * clamp(x, 0, 1))
-    w = smooth(clamp((x - 0.40) / 0.20, 0, 1)); o = A * (1 - w) + B * w
+    w = smooth(clamp((x - 0.28) / 0.44, 0, 1)); o = A * (1 - w) + B * w
     o = hblur(o, 2 + 90 * k)
     return np.clip(rgb_split(o, 46 * k), 0, 1)
 
@@ -12889,16 +12889,18 @@ def loop_fx19(img, person, s, f):
     t = (f - f0) / N
     fv = f - E.DUR_F + (0.5 if f == E.DUR_F - 1 else 0.0)
     V = frame_virtual(max(fv, -9.0))
-    h0 = 120.0; g_ = ein(t, 2.4)
-    h = h0 * math.exp(math.log(H * 1.0 / h0) * g_)
-    cx = W * 0.50 + W * 0.10 * math.sin(math.pi * t) * (1 - t); cy = H * 0.40 + (H * 0.5 - H * 0.40) * smooth(t)
-    yaw = 0.35 * (1 - smooth(t)) * math.sin(3 * t)
-    beh = person if h < H * 0.40 else (person * (1 - smooth((h / H - 0.40) / 0.25)) if person is not None else None)
+    if t >= 0.93: return np.clip(frame_virtual(fv), 0, 1)                                      # it has filled the lens: frame 0, running on
+    h0 = 150.0; tt = clamp(t / 0.93, 0, 1); g_ = ein(tt, 1.6)
+    h = h0 * math.exp(math.log(H * 1.18 / h0) * g_)
+    pth = smooth(clamp(tt * 1.1 - 0.1, 0, 1)) ** 1.2                                          # from the sky over his shoulder to the middle
+    cx = W * 0.80 + (W * 0.50 - W * 0.80) * pth; cy = H * 0.17 + (H * 0.50 - H * 0.17) * pth
+    yaw = -0.45 * (1 - smooth(tt))
+    beh = person if h < H * 0.45 else (person * (1 - smooth((h / H - 0.45) / 0.25)) if person is not None else None)
     fm = face_soft(s, f, 1.2) if s.get("face") is not None else None
     vt = cv2.resize(V, (W // 2, H // 2), interpolation=cv2.INTER_AREA) if h < H * 0.6 else V
-    o = pane_draw(img, vt, pane_quad(cx, cy, h, yaw, 0.0), alpha=smooth(clamp(t / 0.06, 0, 1)), behind=beh, glow=1.3 * (1 - smooth(clamp((t - 0.85) / 0.13, 0, 1))),
-                  blur=max(0.0, 2.0 * (1 - g_ * 3)), face=(fm[..., 0] if fm is not None and h > H * 0.4 else None), sheen=0.7 * (1 - t))
-    k = smooth(clamp((t - 0.65) / 0.30, 0, 1)) * (1 - smooth(clamp((t - 0.93) / 0.05, 0, 1)))
+    o = pane_draw(img, vt, pane_quad(cx, cy, h, yaw, 0.0), alpha=smooth(clamp(t / 0.06, 0, 1)), behind=beh, glow=1.3 * (1 - smooth(clamp((tt - 0.80) / 0.20, 0, 1))),
+                  blur=max(0.0, 2.0 * (1 - g_ * 3)), face=(fm[..., 0] if fm is not None and h > H * 0.4 else None), sheen=0.7 * (1 - tt))
+    k = smooth(clamp((tt - 0.65) / 0.30, 0, 1)) * (1 - smooth(clamp((tt - 0.90) / 0.10, 0, 1)))
     if k > 0: o = radial_blur(o, W / 2, H / 2, 1.0, 1.0 + 0.04 * k, 5)
     if t > 0.985: o = V
     return np.clip(o, 0, 1)
@@ -12908,7 +12910,7 @@ def loop19(A, B, j, f, sa, sb):
 
 ANIMS.update({"panes": a_panes, "storm": a_storm, "converge": a_converge})
 HERO_FN = pane_draw
-TR2.update({"pane_pass": (pane_pass, 69, 12), "pane_dive": (pane_dive, 42, 12), "emblem_reboot": (emblem_reboot, 18, 34),
+TR2.update({"pane_pass": (pane_pass, 69, 12), "pane_dive": (pane_dive, 60, 12), "emblem_reboot": (emblem_reboot, 18, 34),
             "chroma_split": (chroma_split, 5, 8), "loop19": (loop19, 0, 1)})
 
 def base19(s, f):

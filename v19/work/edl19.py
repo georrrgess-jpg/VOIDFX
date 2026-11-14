@@ -43,7 +43,7 @@ E_BEAT, E_DIP = 0, 0
 E_BREAK = 16                                    # the bass drops out: time stops (MEMORY STORM)
 E_DROP = 24                                     # the drop: EMBLEM REBOOT
 E_STRIKE = 16
-E_LOOP = 51                                     # THE LOOP: the pane holding frame 0
+E_LOOP = 50.5                                     # THE LOOP: the pane holding frame 0
 E_REST = 50
 BAR = 8 * HB; BEAT = 2 * HB
 LOGO_W = 860
